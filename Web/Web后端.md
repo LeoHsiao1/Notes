@@ -1,0 +1,32 @@
+# Web后端
+
+## REST
+
+REST：表述性状态转移（Representational State Transfer），是一种与HTTP协议类似的API规范，规定如下：
+
+- 每个资源用一个唯一的URL标识。
+  - URL应该是名词性的，且区分单复数。比如 /students/names 要优于 /students/getName 。
+- 主要使用POST、GET、PUT、DELETE四种HTTP方法，进行CRUD四种操作。
+- 报文body通常采用JSON格式。
+  - 客户端与服务器之间采用无状态通信，所以客户端的每个请求都应该自带上下文信息。
+- 符合REST规范的API称为RESTful API。
+
+## WSGI
+
+WSGI（Web Server Gateway Interface）协议与CGI类似。
+
+- WSGI定义了server、application两个角色，server负责完成HTTP通信，application负责业务逻辑，两者解耦。
+  - 比如当客户端发来HTTP request时，server会将它解析并传给application。application处理之后会生成HTTP response并让server发送。
+  - WSGI协议是一个与编程语言无关的API规范，最初只有Python支持WSGI形式的API，后来Ruby、Java等语言也开始支持。
+
+### uWSGI
+
+uWSGI是一个基于C语言的Web服务器，通过自带的uwsgi协议实现了WSGI接口。
+
+- Django、Flask等框架实现了WSGI application，可部署到uWSGI服务器上运行。
+- 可以用Apache、nginx服务器作反向代理，处理客户端的静态请求，遇到动态请求时才转发给uWSGI服务器处理。
+
+```python
+import sys
+print(sys.path)
+```

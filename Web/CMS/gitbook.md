@@ -1,8 +1,8 @@
 # GitBook
 
-GitBook：一个制作静态网站的工具，基于Node.js，主要用于制作电子书、文档。
+GitBook：一个制作静态网站的工具，基于Node.js，主要用于制作文档网站。
 
-- 使用时，是将arkDown文件转换成HTML文件，再显示成电子书网站。
+- 使用时，会先将MarkDown文件转换成HTML文件，再在网页中显示。
 - 按MarkDown文件的文件路径生成目录，层次性好。
 - 用法很简单，但功能少、显示样式单调。
 
@@ -30,5 +30,5 @@ npm install gitbook-cli -g
 
 4. 执行`gitbook init`，初始化项目，这会创建SUMMARY.md中指定的所有文件。<br>
    往这些文件中添加内容即可。
-5. 执行`gitbook serve`，启动显示电子书的Web服务器。访问<http://127.0.0.1:4000>即可查看。<br>
-   启动服务器时，会自动执行`gitbook build`，生成电子书到_book目录下。
+5. 执行`gitbook serve`，启动Web服务器。访问<http://127.0.0.1:4000>即可查看。<br>
+   启动服务器时，会自动执行`gitbook build`，生成HTML网页，保存到_book目录下。

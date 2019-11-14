@@ -3,9 +3,10 @@
 ## 特征
 
 - 该笔记的主要目的是记录知识点，不注重原理讲解
+- 笔记保存为MarkDown格式，以便于Git管理
+- 笔记显示成文档形式，以便于结构化、系统化
+<!-- - 基于Jekyll构建静态网站，访问URL：<https://leohsiao1.github.io/> -->
 - 欢迎指正
-- 笔记保存为MarkDown格式的文件
-- 基于Jekyll构建静态网站，访问URL：<https://leohsiao1.github.io/>
 
 ## 网站还在施工中
 

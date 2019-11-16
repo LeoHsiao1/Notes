@@ -36,8 +36,8 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 ```
 
 - 主机一般都有一张物理网卡eth0，还有多张虚拟网卡，比如环回地址的网卡lo。
-- HWaddr：网卡的MAC地址。
-- inet addr：网卡的IP地址。
+- inet：网卡的IP地址。
+- ether：网卡的MAC地址。
 - flags
   - UP：表示网卡已被启用。
   - BROADCAST：表示支持广播。

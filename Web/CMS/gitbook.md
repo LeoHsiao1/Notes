@@ -9,7 +9,7 @@
 ## 安装
 
 ```shell
-安装node.js
+yum install nodejs
 npm install gitbook-cli -g
 ```
 

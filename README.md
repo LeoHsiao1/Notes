@@ -13,5 +13,6 @@
 ## 构建
 
 ```shell
+docker run -d --name nginx -p 80:80 -v /root/Notes/www:/root/Notes/www -v /root/Notes/nginx.conf:/etc/nginx/nginx.conf nginx
 
 ```

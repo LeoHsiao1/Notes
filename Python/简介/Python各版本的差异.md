@@ -130,7 +130,7 @@ Python的版本主要分为 2.× 、 3.× 两个系列。
 
 ### Python3.6
 
-- 于2016年发布：<https://www.python.org/downloads/release/python-360/>
+- 于2016年[发布](https://www.python.org/downloads/release/python-360/)
 - dict中的元素会按插入顺序存储。
 - 可以在数字中插入下划线作为分隔符，提高可读性。如下：
 
@@ -166,11 +166,11 @@ Python的版本主要分为 2.× 、 3.× 两个系列。
 
 ### Python3.7
 
-- 于2018年发布：<https://www.python.org/downloads/release/python-370/>
+- 于2018年[发布](https://www.python.org/downloads/release/python-370/)
 
 ### Python3.8
 
-- 于2019年发布：<https://www.python.org/downloads/release/python-380/>
+- 于2019年[发布](https://www.python.org/downloads/release/python-380/)
 - 增加了赋值表达式的语法，可以给表达式中的变量赋值。如下：
 
   ```python

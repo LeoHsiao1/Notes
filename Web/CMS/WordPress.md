@@ -4,8 +4,8 @@
 
 - 功能非常多，上手难度低。
 - 既可以制作静态网站，也可以制作动态网站。
-- 可以安装WordPress服务器，在它的Web页面上设计网站。也可以在其官网<https://wordpress.com>上设计网站。
-- 官方文档：<https://codex.wordpress.org/zh-cn:Main_Page>
+- 可以安装WordPress服务器，在它的Web页面上设计网站。也可以在其[官网](https://wordpress.com)上设计网站。
+- [官方文档](https://codex.wordpress.org/zh-cn:Main_Page)
 
 ## 安装
 

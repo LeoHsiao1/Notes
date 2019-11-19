@@ -1,8 +1,8 @@
 # 关于IP
 
-## ifconfig命令
+## ifconfig
 
-用法：
+命令：
 
     ifconfig    # 显示已启用网卡的信息
             -a  # 显示所有网卡的信息
@@ -51,9 +51,9 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
   - carrier：因为载体出错的数据包数，比如半双工模式时不可通信。
   - collisions：发生碰撞的数据包数。
 
-## route命令
+## route
 
-用法：
+命令：
 
     route   # 显示本机的路由表
 
@@ -68,11 +68,11 @@ default         gateway         0.0.0.0         UG    0      0        0 eth0
 link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 ```
 
-## ip命令
+## ip
 
 用于查看和管理ip地址、路由表，功能更强大。
 
-用法：
+命令：
 
     ip
         addr        # 显示所有网卡的信息（相当于ifconfig -a）

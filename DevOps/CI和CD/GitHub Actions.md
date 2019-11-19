@@ -2,7 +2,7 @@
 
 GitHub提供了Actions功能，以实现CI/CD。
 
-- 官方文档：<https://help.github.com/en/actions>
+- [官方文档](https://help.github.com/en/actions)
 
 ## Actions
 

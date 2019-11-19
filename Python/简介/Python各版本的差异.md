@@ -24,18 +24,18 @@ Python的版本主要分为 2.× 、 3.× 两个系列。
 
 ## Python2系列
 
-- Python2.0：于2000年发布<https://www.python.org/downloads/release/2.0/>
+- Python2.0：于2000年[发布](https://www.python.org/downloads/release/2.0/)
 - Python2.1 ~ Python2.6 略
-- Python2.7：于2010年发布<https://www.python.org/downloads/release/python-270/>
+- Python2.7：于2010年[发布](https://www.python.org/downloads/release/python-270/)
 
 ## Python3系列
 
-- Python3.0：于2008年发布<https://www.python.org/download/releases/3.0/>
+- Python3.0：于2008年[发布](https://www.python.org/download/releases/3.0/)
 - Python3.1 ~ Python3.3 略
 
 ### Python3.4
 
-- 于2014年发布：<https://www.python.org/downloads/release/python-340/>
+- 于2014年[发布](https://www.python.org/downloads/release/python-340/)
 - 采用`pip`作为Python包的默认安装方式。
 - 增加了标准库`pathlib`，用于按面向对象的方式操作文件路径。如下：
 
@@ -74,7 +74,7 @@ Python的版本主要分为 2.× 、 3.× 两个系列。
 
 ### Python3.5
 
-- 于2015年发布：<https://www.python.org/downloads/release/python-350/>
+- 于2015年[发布](https://www.python.org/downloads/release/python-350/)
 - 扩展了迭代拆包运算符 * 、字典拆包运算符 ** 的用法：
   - 可以在元组、列表、集合、字典表达式中使用
 

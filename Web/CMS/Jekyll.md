@@ -6,8 +6,8 @@
 - 有很多主题模板，显示样式丰富。
 - 可以灵活地定制网页模板，但也比较麻烦，要学习模板语言Liquid。
 - 博客文章默认按时间顺序排列，没有目录，关联性低。
-- 官方文档：<https://www.jekyll.com.cn/docs/>
-- 浏览主题：<http://jekyllthemes.org/>
+- [官方文档](https://www.jekyll.com.cn/docs/)
+- [浏览主题](http://jekyllthemes.org/)
 
 ## 安装
 

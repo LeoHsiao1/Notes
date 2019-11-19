@@ -61,7 +61,7 @@ Hello!
 
 将Python代码保存为一个 .py 文件，便可以用Python解释器执行它。
 
-用法：
+命令：
 
     python <脚本名>
 

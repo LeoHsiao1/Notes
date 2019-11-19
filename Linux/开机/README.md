@@ -51,3 +51,65 @@ init有七种运行级别（run level）：
     halt        # 关机
 
     reboot      # 重启
+
+## service、chkconfig
+
+System V风格的类Unix系统中，使用init进程在系统启动时进行初始化，使用service、chkconfig命令来管理系统服务。
+
+<details>
+<summary>已淘汰不用</summary>
+
+命令：
+
+    service
+            <name>
+                start     # 启动服务
+                stop      # 停止服务
+                restart   # 重启服务（先执行stop命令，再执行start命令）
+                status    # 查看服务的状态
+            --status-all  # 显示所有服务的状态
+  
+    chkconfig 
+            <name>        # 查看某服务是否开机自启动
+                on        # 设置某服务开机自启动
+                off       # 不开机自启动
+            --list        # 列出所有已启动的服务
+
+</details>
+
+## systemctl
+
+RHEL 7开始使用systemd进程代替init进程，使用systemctl命令代替service、chkconfig命令。
+
+- 用systemctl命令可以与systemd进行交互，从而管理系统。
+
+systemd以unit为单位管理系统。每个unit保存为特定后缀名的文件。常见的类型包括：
+
+- .service：系统服务
+- .socket：进程间通信的socket。
+- .device：硬件设备。
+- .mount：挂载点。
+- .target：一组unit。
+
+命令：
+
+    systemctl
+            start <unit>...         # 启动unit（会将它变成active状态）
+            stop <unit>...          # 停止unit
+            restart <unit>...       # 重启unit（先执行stop命令，再执行start命令）
+            reload <unit>...        # 重新加载unit
+            status <unit>...        # 显示unit的状态
+            is-active <unit>...     # 显示unit是否处于active状态
+            show <unit>...          # 显示unit的配置信息
+ 
+            enable <unit>...        # 启用unit
+            disable <unit>...       # 不启用unit
+            is-enabled <unit>...    # 查看unit是否被启用（从而会开机自启）
+ 
+            list-units              # 显示已启动的unit
+                    --all           # 显示所有unit
+                    --type=service  # 显示指定类型的unit
+                    --failed        # 显示启动失败的unit
+ 
+            rescue                  # 使系统进入救援模式
+            emergency               # 使系统进入紧急模式

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="description" content="Description">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="static/css/theme-simple.css">
+
+    <!-- 配置docsify-themeable主题 -->
+    <style>
+        :root {
+            --base-background-color: rgb(242, 235, 217);
+            --base-color: var(--mono-shade2);
+            --base-font-family: "Consolas", 'Microsoft YaHei';
+            --content-max-width: 80em;
+            --selection-color: #ffa1a1;
+            --link-color: rgb(6, 146, 230);
+            
+            --code-font-family: "Consolas", 'Microsoft YaHei';
+            --code-theme-background: rgb(41, 41, 41);
+            --code-theme-text: rgb(204, 204, 204);
+            --code-theme-selection: rgb(255, 163, 163);
+            --code-inline-background: rgb(223, 216, 199);
+            --code-inline-color:  rgb(221, 70, 70);
+
+            --sidebar-background: rgb(41, 41, 41);
+            --sidebar-toggle-background: rgb(41, 41, 41);
+            --sidebar-nav-link-color: rgb(204, 204, 204);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <!-- 配置docsify -->
+    <script>
+        window.$docsify = {
+            name: '',
+            repo: '',
+            maxLevel: 3,
+            subMaxLevel: 4,
+            auto2top: true,
+            loadSidebar: 'sidebar.md',
+        }
+    </script>
+
+    <!-- 导入docsify的脚本 -->
+    <script src="static/js/docsify.min.js"></script>
+
+    <!-- 使用主题docsify-themeable -->
+    <script src="static/js/docsify-themeable@0"></script>
+
+    <!-- 使用https://github.com/PrismJS/prism/tree/gh-pages/components的代码高亮脚本 -->
+    <script src="static/js/prism-c.js"></script>
+    <script src="static/js/prism-python.js"></script>
+    <script src="static/js/prism-json.js"></script>
+    <script src="static/js/prism-yaml.js"></script>
+</body>
+
+</html>

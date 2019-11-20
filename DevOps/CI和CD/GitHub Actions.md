@@ -1,7 +1,6 @@
 # GitHub Actions
 
 GitHub提供了Actions功能，以实现CI/CD。
-
 - [官方文档](https://help.github.com/en/actions)
 
 ## Actions
@@ -48,7 +47,6 @@ jobs:       # 开始流水线任务
 ## Runner
 
 Actions默认运行在GitHub提供的运行环境中（包括Linux、Windows、MacOS），用户也可以在仓库的Settings->Actions页面中添加自己的运行环境，称为Runner。
-
 - 作为Runner的机器要保持运行一个进程，连接到GitHub仓库，接受控制。
 - 在流水线文件中用`self-hosted`标签即可使用自己的Runner，如下：
 

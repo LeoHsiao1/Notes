@@ -1,7 +1,6 @@
 # docsify
 
 一个制作静态网站的工具，基于Node.js，主要用于制作文档网站。
-
 - 与gitbook相似，但功能多一些，显示更美观。
 - 使用时，不需要将MarkDown文件转换成HTML文件，在网页中显示时才会渲染成HTML格式。
 - 具有目录，层次性好。
@@ -50,14 +49,14 @@ docsify serve ./www     # 启动服务器，默认监听http://localhost:3000
 
 ## 配置
 
-### 目录
+### 侧边栏
 
 在index.html中加入配置：
 
 ```html
 window.$docsify = {
-  loadSidebar: true,  # 显示侧边栏
-  subMaxLevel: 3    # 目录的最大深度为3
+  loadSidebar: true,  # 显示侧边栏目录
+  subMaxLevel: 3      # 目录的最大深度为3
 }
 ```
 

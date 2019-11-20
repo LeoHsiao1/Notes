@@ -3,7 +3,6 @@
 ## Python的起源
 
 1989年，参与开发ABC语言的Guido van Rossum决定开发一款更好的脚本语言（也受到了C、Shell等语言的影响），取名为Python是因为他喜欢英国的六人喜剧团体Monty Python。
-
 - Monty Python团体在七八十年代很受欢迎，他们拍摄了巨蟒与圣杯等电影，其中一人还导演了十二猴子。
 
 ## Python的特点

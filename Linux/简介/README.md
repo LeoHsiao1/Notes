@@ -57,7 +57,6 @@ Linux常见的图形桌面GNOME、KDE都是基于X Window实现的。
 ### POSIX
 
 POSIX：可移植的操作系统接口（Portable Operating System Interface of UNIX），定义了操作系统为应用程序提供的接口的标准。
-
 - 90年代初，IEEE协会为了提高应用程序在Unix系统上的可移植性，定义了POSIX标准。如果两个操作系统都遵循POSIX标准，则可以将应用程序直接移植。
 - Unix系统采用POSIX标准。
 - Linux系统也采用POSIX标准，因此Linux上运行的程序能与大部分UNIX系统兼容。
@@ -66,6 +65,5 @@ POSIX：可移植的操作系统接口（Portable Operating System Interface of 
 ## 开源
 
 1998年，自由软件阵营中的部分成员分裂出来，并以“开源”为名继续开展活动。
-
 - 开源即对外公布软件的源代码，很多公司利用开源的方法来获取社区的支持，提高软件质量。
 - 开源软件不一定是自由软件。

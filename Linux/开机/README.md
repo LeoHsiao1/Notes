@@ -1,7 +1,6 @@
 # 开机
 
 Linux系统的启动（boot）过程：
-
 1. 计算机接通电源，启动ROM中的BIOS(Basic Input Output System)系统。
 2. BIOS系统会通电检查CPU、内存等计算机硬件，确定它们正常之后，就到硬盘的第一个扇区中找到Bootloader程序，读取并运行它（将CPU的控制权转交给它）。
    <br />Linux系统常见的Bootloader程序是grub，它允许用户在开机时从多个操作系统中选择一个启动。
@@ -17,13 +16,11 @@ Linux系统的启动（boot）过程：
 ## init
 
 init是所有用户态进程的父进程。
-
 - init会读取/etc/inittab文件，启动当前init级别下的各个进程（比如执行getty创建终端）。
 - init会根据/etc/fstab文件中的磁盘分区信息，挂载各个文件系统。
 - init会启动/etc/init.d目录下的各个系统服务（大多是脚本）。
 
 init有七种运行级别（run level）：
-
 - 0：关机。
 - 1：单用户模式（simple mode），又称为紧急模式（emergency mode），可以在忘了root密码时修改密码。
 - 2：多用户模式。
@@ -80,11 +77,9 @@ System V风格的类Unix系统中，使用init进程在系统启动时进行初�
 ## systemctl
 
 RHEL 7开始使用systemd进程代替init进程，使用systemctl命令代替service、chkconfig命令。
-
 - 用systemctl命令可以与systemd进行交互，从而管理系统。
 
 systemd以unit为单位管理系统。每个unit保存为特定后缀名的文件。常见的类型包括：
-
 - .service：系统服务
 - .socket：进程间通信的socket。
 - .device：硬件设备。

@@ -1,7 +1,6 @@
 # WordPress
 
 一个CMS平台，基于Php、Mysql，可以让用户不必编程就设计网站，非常流行。
-
 - 功能非常多，上手难度低。
 - 既可以制作静态网站，也可以制作动态网站。
 - 可以安装WordPress服务器，在它的Web页面上设计网站。也可以在其[官网](https://wordpress.com)上设计网站。
@@ -10,7 +9,6 @@
 ## 安装
 
 WP服务器有Linux版、Windows版，这里在Linux上安装它：
-
 1. 安装MySQL数据库
 2. 登录MySQL数据库，进行配置：
 
@@ -32,6 +30,5 @@ WP服务器有Linux版、Windows版，这里在Linux上安装它：
 ## 目录结构
 
 WP服务器的网站根目录默认是/var/www/html。
-
 - 将网站文件放到该目录下，即可被访问。
 - wp-config.php文件中记录了数据库密码等信息。

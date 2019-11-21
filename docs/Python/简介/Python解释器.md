@@ -18,7 +18,7 @@ Python解释器有多种。
 - 在Window上，要去[官网](https://www.python.org/downloads/windows/)下载Python的安装包。
 - 在Linux上，执行`yum/apt intall python3`不一定能找到Python的安装包，因此建议从[官网](https://www.python.org/downloads/source/)下载源代码包再编译安装：
 
-  ```bash
+  ```shell
   python_version=3.8.0      # 指定Python版本
   yum install -y gcc make openssl-devel zlib zlib-devel libffi-devel   # 安装编译环境
   curl -O https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tgz

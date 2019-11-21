@@ -10,14 +10,14 @@
 
 ## 安装
 
-```bash
+```shell
 yum install ruby
 gem install jekyll bundler
 ```
 
 ## 用法
 
-```bash
+```shell
 jekyll new myblog # 创建一个网站
 cd myblog         # 进入网站根目录
 jekyll build      # 构建网站

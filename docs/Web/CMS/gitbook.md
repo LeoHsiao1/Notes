@@ -7,7 +7,7 @@
 
 ## 安装
 
-```bash
+```shell
 yum install nodejs
 npm install gitbook-cli -g
 ```
@@ -18,14 +18,14 @@ npm install gitbook-cli -g
 2. 在项目目录下创建一个README.md，保存对书籍的介绍。
 3. 在项目目录下创建一个SUMMARY.md，保存书籍的目录，格式如下：
 
-    ```markdown
-    # SUMMARY
+   ```markdown
+   # SUMMARY
 
-    - [第一章](chapter1/README.md)
-      - [第1节](chapter1/section1.md)
-      - [第2节](chapter1/section2.md)
-    - [第二章](chapter2/README.md)
-    ```
+   - [第一章](chapter1/README.md)
+     - [第1节](chapter1/section1.md)
+     - [第2节](chapter1/section2.md)
+   - [第二章](chapter2/README.md)
+   ```
 
 4. 执行`gitbook init`，初始化项目，这会创建SUMMARY.md中指定的所有文件。<br>
    往这些文件中添加内容即可。

@@ -22,8 +22,3 @@ WSGI（Web Server Gateway Interface）协议与CGI类似。
 uWSGI是一个基于C语言的Web服务器，通过自带的uwsgi协议实现了WSGI接口。
 - Django、Flask等框架实现了WSGI application，可部署到uWSGI服务器上运行。
 - 可以用Apache、nginx服务器作反向代理，处理客户端的静态请求，遇到动态请求时才转发给uWSGI服务器处理。
-
-```python
-import sys
-print(sys.path)
-```

@@ -10,7 +10,7 @@
 
 ### 安装docsify并运行
 
-```bash
+```shell
 yum install nodejs
 npm install docsify-cli -g
 docsify init ./www

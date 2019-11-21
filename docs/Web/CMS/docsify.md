@@ -6,7 +6,9 @@
 - 具有目录，层次性好。
 - [官方文档](https://docsify.js.org/#/zh-cn/)
 
-## 安装docsify并运行
+## 安装
+
+### 安装docsify并运行
 
 ```shell
 yum install nodejs
@@ -15,7 +17,7 @@ docsify init ./www
 docsify serve ./www     # 启动服务器，默认监听http://localhost:3000
 ```
 
-## 免安装运行
+### 免安装运行
 
 可以不安装docsify，直接创建一个`index.html`文件，内容如下：
 
@@ -47,7 +49,7 @@ docsify serve ./www     # 启动服务器，默认监听http://localhost:3000
 
 然后启动一个Web服务器，以index.html所在目录作为网站根目录。如下：
 
-    python -m http.server --bind 127.0.0.1 80
+    python -m http.server 80
 
 ## 配置
 
@@ -64,12 +66,18 @@ window.$docsify = {
 侧边栏中的目录结构由URL所在目录下的`sidebar.md`决定，如下：
 
 ```markdown
+# 目录
+
 - [第一章](dir1/)   # 如果不指定.md文件，则默认读取该目录下的README.md
   - [第一节](dir1/1.md)
   - [第二节](dir1/2.md)
 - 第二章            # 可以不给链接，只显示名字
   - [第一节](dir2/1.md)
 ```
+
+可以给多个目录分别创建sidebar.md，从而分别显示侧边栏目录。
+- 如果URL所在目录下没有sidebar.md，则使用上一层目录的。
+- navbar.md的使用规则同理。
 
 ### 导航栏
 
@@ -108,7 +116,7 @@ window.$docsify = {
 }
 ```
 
-封面默认只有一个，显示在网站首页。按以下格式可以给多个目录定义封面：
+封面默认只有一个，显示在网站首页。可以按以下格式给多个目录分别定义封面：
 
 ```html
 window.$docsify = {
@@ -119,11 +127,9 @@ window.$docsify = {
 封面的显示内容由URL所在目录下的`coverpage.md`决定，如下：
 
 ```markdown
-![logo](static/logo.svg)    # 显示网页的logo
+![](static/logo.svg)    # 插入一张图片
 
 # docsify
-
-> A magical documentation site generator.
 
 - Simple and lightweight (~12kb gzipped)
 - Multiple themes
@@ -132,7 +138,16 @@ window.$docsify = {
 [GitHub](https://github.com/docsifyjs/docsify/)   # 显示一个链接
 [第一章](dir1/)
 
-![](static/bg.jpg)  # 显示背景图片
+![](_media/bg.png)  # 背景图片
+![color](#f0f0f0)   # 背景色
+```
+
+### 网页图标
+
+在index.html的head部分导入网页图标：
+
+```html
+<link rel="icon" href="static/img/logo.ico" type="image/x-icon"/>
 ```
 
 ### 其它配置
@@ -145,7 +160,6 @@ window.$docsify = {
   maxLevel: 3,     # 解析MarkDown文件时的最大目录层数
   subMaxLevel: 4,  # 侧边栏目录的最大层数
   auto2top: true,  # 切换显示的文档时，自动跳转到页面顶部
-  themeColor: '#3F51B5',    # 设置主题颜色
 }
 ```
 
@@ -156,6 +170,27 @@ window.$docsify = {
 ```markdown
 ![logo](https://docsify.js.org/_media/icon.svg ':size=50x100')
 ![logo](https://docsify.js.org/_media/icon.svg ':size=100')
+```
+
+### 嵌入文件
+
+从docsify 4.6开始，在链接末尾加上`':include'`即可嵌入该文件。
+
+支持的文件类型：
+
+type|文件后缀名
+-|-
+iframe  |.html .htm
+markdown|.markdown .md
+audio   |.mp3
+video   |.mp4 .ogg
+code    |other file extension
+
+例：
+
+```markdown
+[](example.md ':include :type=markdown')
+[](https://www.baidu.com/index.html ':include :type=iframe width=100% height=400px')
 ```
 
 ### 拷贝代码块
@@ -177,4 +212,3 @@ window.$docsify = {
 ### 使用主题
 
 <https://jhildenbiddle.github.io/docsify-themeable/#/>
-

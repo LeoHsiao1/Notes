@@ -1,6 +1,0 @@
-- [CMS](docs\Web\CMS\CMS.md)
-  - [docsify](docs\Web\CMS\docsify.md)
-  - [gitbook](docs\Web\CMS\gitbook.md)
-- Python
-  - [简介](docs\Python\简介\简介.md)
-- [README](docs\README.md)

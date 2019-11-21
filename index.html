@@ -22,14 +22,14 @@
             --link-color: rgb(6, 146, 230);
 
             --code-font-family: "Consolas", 'Microsoft YaHei';
-            --code-theme-background: rgb(41, 41, 41);
+            --code-theme-background: rgb(61, 61, 61);
             --code-theme-text: rgb(204, 204, 204);
             --code-theme-selection: rgb(255, 163, 163);
             --code-inline-background: rgb(238, 223, 221);
-            --code-inline-color: rgb(216, 48, 19);
+            --code-inline-color: rgb(216, 186, 19);
 
-            --sidebar-background: rgb(41, 41, 41);
-            --sidebar-toggle-background: rgb(41, 41, 41);
+            --sidebar-background: var(--code-theme-background);
+            --sidebar-toggle-background: var(--code-theme-background);
             --sidebar-nav-link-color: rgb(204, 204, 204);
         }
     </style>
@@ -62,11 +62,22 @@
     <!-- 使用主题docsify-themeable -->
     <script src="static/js/docsify-themeable@0"></script>
 
-    <!-- 使用https://github.com/PrismJS/prism/tree/gh-pages/components的代码高亮脚本 -->
-    <script src="static/js/prism-c.js"></script>
-    <script src="static/js/prism-python.js"></script>
-    <script src="static/js/prism-json.js"></script>
-    <script src="static/js/prism-yaml.js"></script>
+    <!-- 使用 https://github.com/PrismJS/prism/tree/gh-pages/components 的代码高亮脚本 -->
+    <script src="static/js/prismjs/prism-bash.js"></script>
+    <script src="static/js/prismjs/prism-c.js"></script>
+    <script src="static/js/prismjs/prism-cpp.js"></script>
+    <script src="static/js/prismjs/prism-csharp.js"></script>
+    <script src="static/js/prismjs/prism-css.js"></script>
+    <script src="static/js/prismjs/prism-go.js"></script>
+    <script src="static/js/prismjs/prism-groovy.js"></script>
+    <script src="static/js/prismjs/prism-java.js"></script>
+    <script src="static/js/prismjs/prism-javascript.js"></script>
+    <script src="static/js/prismjs/prism-json.js"></script>
+    <script src="static/js/prismjs/prism-markdown.js"></script>
+    <script src="static/js/prismjs/prism-php.js"></script>
+    <script src="static/js/prismjs/prism-python.js"></script>
+    <script src="static/js/prismjs/prism-sql.js"></script>
+    <script src="static/js/prismjs/prism-yaml.js"></script>
 </body>
 
 </html>

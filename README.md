@@ -7,16 +7,19 @@
 
 ## 构建
 
-```shell
+```bash
 docker run -d --name nginx -p 80:80 -v /root/Notes/www:/root/Notes/www -v /root/Notes/nginx.conf:/etc/nginx/nginx.conf nginx
 
-python -m http.server 80
+python -m http.server 80 --bind 127.0.0.1
 
 ```
 
 
-TODO：
+`TODO：`
 - 设置前四级标题的字体、目录字体
 - 修复目录激活点的错位
 - 把页面图标做成透明的
 - 设置背景图片
+- 搜索引擎
+- 缩小字号，直到与VS Code差不多
+- 将一些代码块改为bash类型

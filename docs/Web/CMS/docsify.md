@@ -10,7 +10,7 @@
 
 ### 安装docsify并运行
 
-```shell
+```bash
 yum install nodejs
 npm install docsify-cli -g
 docsify init ./www
@@ -200,6 +200,17 @@ code    |other file extension
 ```markdown
 <script src="//unpkg.com/docsify-copy-code"></script>
 ```
+
+### 代码高亮
+
+导入Prism的代码高亮脚本：
+
+```html
+<script src="//unpkg.com/prismjs/components/prism-bash.js"></script>
+<script src="//unpkg.com/prismjs/components/prism-c.js"></script>
+```
+
+[全部可用脚本](https://github.com/PrismJS/prism/tree/gh-pages/components)
 
 ### 分页按钮
 

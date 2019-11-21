@@ -8,8 +8,8 @@
     <meta name="description" content="Description">
     <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <link rel="stylesheet" href="static/css/theme-simple.css">
-    <link rel="icon" href="static/img/favicon.ico" type="image/x-icon"/>
+    <link rel="icon" href="static/img/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="static/css/theme-simple.css" />
 
     <!-- 配置docsify-themeable主题 -->
     <style>
@@ -25,12 +25,17 @@
             --code-theme-background: rgb(61, 61, 61);
             --code-theme-text: rgb(200, 200, 200);
             --code-theme-selection: var(--selection-color);
-            --code-inline-background: rgb(238, 223, 221);
-            --code-inline-color: rgb(216, 186, 19);
+            --code-inline-background: rgb(240, 237, 232);
+            --code-inline-color: rgb(201, 157, 12);
 
             --sidebar-background: var(--code-theme-background);
             --sidebar-toggle-background: var(--code-theme-background);
             --sidebar-nav-link-color: var(--code-theme-text);
+
+            --cover-background-color : var(--base-background-color);
+            --cover-background-image : 'static/img/2.jpg';
+            --cover-background-mask-color : var(--base-background-color);
+            --cover-background-mask-opacity : 0.8;
         }
     </style>
 </head>
@@ -59,10 +64,10 @@
     <!-- 导入docsify的脚本 -->
     <script src="static/js/docsify.min.js"></script>
 
-    <!-- 使用主题docsify-themeable -->
-    <script src="static/js/docsify-themeable@0"></script>
+    <!-- 导入主题docsify-themeable的脚本 -->
+    <!-- <script src="static/js/docsify-themeable@0"></script> -->
 
-    <!-- 使用 https://github.com/PrismJS/prism/tree/gh-pages/components 的代码高亮脚本 -->
+    <!-- 导入PrismJS的代码高亮脚本 -->
     <script src="static/js/prismjs/prism-bash.js"></script>
     <script src="static/js/prismjs/prism-c.js"></script>
     <script src="static/js/prismjs/prism-cpp.js"></script>
@@ -71,7 +76,9 @@
     <script src="static/js/prismjs/prism-go.js"></script>
     <script src="static/js/prismjs/prism-java.js"></script>
     <script src="static/js/prismjs/prism-javascript.js"></script>
+    <script src="static/js/prismjs/prism-markup.js"></script>
     <script src="static/js/prismjs/prism-python.js"></script>
+
 </body>
 
 </html>

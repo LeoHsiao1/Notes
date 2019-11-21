@@ -127,8 +127,6 @@ window.$docsify = {
 封面的显示内容由URL所在目录下的`coverpage.md`决定，如下：
 
 ```markdown
-![](static/logo.svg)    # 插入一张图片
-
 # docsify
 
 - Simple and lightweight (~12kb gzipped)
@@ -137,9 +135,6 @@ window.$docsify = {
 
 [GitHub](https://github.com/docsifyjs/docsify/)   # 显示一个链接
 [第一章](dir1/)
-
-![](_media/bg.png)  # 背景图片
-![color](#f0f0f0)   # 背景色
 ```
 
 ### 网页图标
@@ -203,14 +198,12 @@ code    |other file extension
 
 ### 代码高亮
 
-导入Prism的代码高亮脚本：
+导入[Prism](https://prismjs.com/)的代码高亮脚本：
 
 ```html
 <script src="//unpkg.com/prismjs/components/prism-bash.js"></script>
 <script src="//unpkg.com/prismjs/components/prism-c.js"></script>
 ```
-
-[全部可用脚本](https://github.com/PrismJS/prism/tree/gh-pages/components)
 
 ### 分页按钮
 

@@ -1,10 +1,9 @@
-![logo](_media/icon.svg)
-
 # LeoHsiao的笔记
 
 ```python
-print("Hello World!")
+printf("Hello World!\n");
+print('Hello World!')
 ```
 
-![](static\img\1.jpg)
+![](static/img/2.jpg)
 ![color](#FFFFf0)

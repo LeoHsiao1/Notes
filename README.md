@@ -21,7 +21,6 @@ docker run -d --name nginx -p 80:80 -v /root/Notes/www:/root/Notes/www -v /root/
 
 TODO：
 
-- 设置前四级标题的字体、目录字体
 - 搜索引擎
 - 将旧笔记整理到以下目录：
 
@@ -35,19 +34,3 @@ TODO：
     - [Web](docs/Web/index.md)
     - [DevOps](docs/DevOps/index.md)
     ```
-
-
-```python
-import sys
-
-class Test:
-    def fun1(self, x, y):
-        """ hello """
-        print('hello world')
-        sys.path
-        c = x + y
-        return c
-
-t = Test()  # hello
-t.fun1()
-```

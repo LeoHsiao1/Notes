@@ -58,7 +58,7 @@ docsify serve ./www     # 启动服务器，默认监听http://localhost:3000
 
 在index.html中加入配置：
 
-```html
+```js
 window.$docsify = {
   loadSidebar: 'sidebar.md',  # 显示侧边栏目录
 }
@@ -111,7 +111,7 @@ window.$docsify = {
 
 在index.html中加入配置：
 
-```html
+```js
 window.$docsify = {
   coverpage: 'coverpage.md'   # 显示封面
 }
@@ -119,7 +119,7 @@ window.$docsify = {
 
 封面默认只有一个，显示在网站首页。可以按以下格式给多个目录分别定义封面：
 
-```html
+```js
 window.$docsify = {
   coverpage: ['/', '/dir1/', '/dir2/']
 }
@@ -148,7 +148,7 @@ window.$docsify = {
 
 ### 其它配置
 
-```html
+```js
 window.$docsify = {
   name: '',        # 侧边栏顶部显示的文档标题
   nameLink: '/',   # 文档标题指向的链接
@@ -160,6 +160,23 @@ window.$docsify = {
 ```
 
 ## 扩展功能
+
+### 搜索框
+
+添加如下配置，即可在侧边栏上方显示一个搜索框：
+
+```html
+<script>
+window.$docsify = {
+  search: {
+      paths: 'auto',
+      placeholder: 'Search',
+      noData: 'No Results!',
+  }
+}
+</script>
+<script src="//unpkg.com/docsify/lib/plugins/search.js"></script>
+```
 
 ### 控制图片的尺寸
 

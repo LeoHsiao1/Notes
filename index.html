@@ -80,12 +80,18 @@
             auto2top: true,
             loadSidebar: 'index.md',
             loadNavbar: 'navbar.md',
-            coverpage: 'coverpage.md'
+            coverpage: 'coverpage.md',
+            search: {
+                paths: 'auto',
+                placeholder: 'Search',
+                noData: 'No Results!',
+            }
         }
     </script>
 
     <!-- 导入docsify的脚本 -->
     <script src="static/js/docsify.min.js"></script>
+    <script src="static/js/search.js"></script>
 
     <!-- 导入主题docsify-themeable的脚本 -->
     <script src="static/js/docsify-themeable@0"></script>

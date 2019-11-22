@@ -5,17 +5,33 @@
 - 基于docsify显示静态网站，访问URL：<http://leohsiao.com/>
 - 欢迎指正
 
-## 构建
 
+<!-- 该文件内不能再使用 # 标题，以免破坏目录排版 -->
+
+执行以下命令即可启动一个HTTP服务器：
+
+```
+python -m http.server 80 --bind 127.0.0.1
+```
+
+部署命令：
 ```
 docker run -d --name nginx -p 80:80 -v /root/Notes/www:/root/Notes/www -v /root/Notes/nginx.conf:/etc/nginx/nginx.conf nginx
-
-python -m http.server 80 --bind 127.0.0.1
-
 ```
 
+TODO：
 
-`TODO：`
 - 设置前四级标题的字体、目录字体
-- 修复目录激活点的错位
 - 搜索引擎
+- 将旧笔记整理到以下目录：
+
+    ```markdown
+    - [Theory](docs/Theory/index.md)
+    - [C](docs/C/index.md)
+    - [Python](docs/Python/index.md)
+    - [Linux](docs/Linux/index.md)
+    - [Database](docs/Database/index.md)
+    - [GUI](docs/GUI/index.md)
+    - [Web](docs/Web/index.md)
+    - [DevOps](docs/DevOps/index.md)
+    ```

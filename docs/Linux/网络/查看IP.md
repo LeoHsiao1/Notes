@@ -58,7 +58,7 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 命令：
 
 ```shell
-    route   # 显示本机的路由表
+route   # 显示本机的路由表
 ```
 
 例：

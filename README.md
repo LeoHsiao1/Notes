@@ -35,3 +35,19 @@ TODO：
     - [Web](docs/Web/index.md)
     - [DevOps](docs/DevOps/index.md)
     ```
+
+
+```python
+import sys
+
+class Test:
+    def fun1(self, x, y):
+        """ hello """
+        print('hello world')
+        sys.path
+        c = x + y
+        return c
+
+t = Test()  # hello
+t.fun1()
+```

@@ -86,8 +86,7 @@ window.$docsify = {
 
 ```html
 <nav>
-  <a href="#/dir1/">第一章</a>   # 在页面顶部显示导航栏链接
-  <a href="#/dir2/">第二章</a>
+  <<a href="#/">Navbar</a>   # 在页面顶部显示导航栏
 </nav>
 <div id="app"></div>
 <script>

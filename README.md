@@ -18,10 +18,3 @@ python -m http.server 80 --bind 127.0.0.1
 ```
 docker run -d --name nginx -p 80:80 -v /root/Notes/www:/root/Notes/www -v /root/Notes/nginx.conf:/etc/nginx/nginx.conf nginx
 ```
-
-TODO：
-
-先试下能否用gif背景，然后选个GIF
-
-
-找到目录灰色值所在代码，修改它，而不是在md中设置颜色

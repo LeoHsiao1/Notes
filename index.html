@@ -21,16 +21,37 @@
             --selection-color: rgb(255, 163, 163);
             --link-color: rgb(6, 146, 230);
 
+            --heading-color: rgb(58, 121, 129);
+            --heading-h1-font-weight: bold;
+            --heading-h2-font-weight: bold;
+            --heading-h3-font-weight: bold;
+
             --code-font-family: "Consolas", 'Microsoft YaHei';
             --code-theme-background: rgb(61, 61, 61);
             --code-theme-text: rgb(200, 200, 200);
+            --code-theme-comment: rgb(165, 165, 165);
+            --code-theme-keyword: rgb(198, 120, 221);
+            --code-theme-function: rgb(86, 182, 194);
+            --code-theme-operator: var(--code-theme-function);
+            --code-theme-punctuation: var(--code-theme-comment);
             --code-theme-selection: var(--selection-color);
-            --code-inline-background: rgb(240, 237, 232);
-            --code-inline-color: rgb(201, 157, 12);
+            --code-theme-selector: rgb(152, 195, 121);
 
-            --sidebar-background: var(--code-theme-background);
-            --sidebar-toggle-background: var(--code-theme-background);
-            --sidebar-nav-link-color: var(--code-theme-text);
+            --code-inline-background: rgb(230, 220, 195);
+            --code-inline-color: rgb(192, 14, 14);
+
+            --sidebar-background: rgb(228, 220, 201);
+            --sidebar-toggle-background: var(--sidebar-background);
+            --sidebar-nav-link-color: var(--base-color);
+            --sidebar-nav-link-color--hover: var(--link-color);
+            --sidebar-nav-indent: 0.5em;
+
+            --search-input-background-color: var(--sidebar-background);
+            --search-input-border-color: var(--sidebar-nav-link-color);
+
+            --navbar-root-color: ;
+            --navbar-root-color--hover: var(--link-color);
+            --navbar-menu-link-color--hover: var(--link-color);
 
             --cover-background-color: var(--base-background-color);
             --cover-background-image: url('/static/img/bg.jpg');
@@ -41,12 +62,6 @@
             --cover-button-primary-color: var(--base-background-color);
             --cover-button-primary-background: ;
             --cover-button-primary-background--hover: var(--link-color);
-
-            --navbar-root-color: ;
-            --navbar-root-color--hover: var(--link-color);
-            --navbar-menu-link-color--hover: var(--link-color);
-
-            --sidebar-nav-link-color--hover: var(--link-color);
         }
     </style>
 </head>
@@ -68,12 +83,18 @@
             auto2top: true,
             loadSidebar: 'index.md',
             loadNavbar: 'navbar.md',
-            coverpage: 'coverpage.md'
+            coverpage: 'coverpage.md',
+            search: {
+                paths: 'auto',
+                placeholder: 'Search',
+                noData: 'No Results!',
+            }
         }
     </script>
 
     <!-- 导入docsify的脚本 -->
     <script src="static/js/docsify.min.js"></script>
+    <script src="static/js/search.js"></script>
 
     <!-- 导入主题docsify-themeable的脚本 -->
     <script src="static/js/docsify-themeable@0"></script>
@@ -87,6 +108,7 @@
     <script src="static/js/prismjs/prism-go.js"></script>
     <script src="static/js/prismjs/prism-java.js"></script>
     <script src="static/js/prismjs/prism-javascript.js"></script>
+    <script src="static/js/prismjs/prism-markdown.js"></script>
     <script src="static/js/prismjs/prism-markup.js"></script>
     <script src="static/js/prismjs/prism-python.js"></script>
 

@@ -18,7 +18,7 @@ ifconfig eth0                     # 显示网卡eth0的信息
 
 例：
 
-```shell
+```
 [root@Centos ~]# ifconfig
 eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 10.0.0.1  netmask 255.255.255.0  broadcast 10.0.0.255
@@ -58,12 +58,12 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 命令：
 
 ```shell
-    route   # 显示本机的路由表
+route   # 显示本机的路由表
 ```
 
 例：
 
-```shell
+```
 [root@Centos ~]# route
 Kernel IP routing table
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface

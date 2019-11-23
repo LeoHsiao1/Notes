@@ -21,15 +21,7 @@ docker run -d --name nginx -p 80:80 -v /root/Notes/www:/root/Notes/www -v /root/
 
 TODO：
 
-- 将旧笔记整理到以下目录：
+先试下能否用gif背景，然后选个GIF
 
-    ```markdown
-    - [Theory](docs/Theory/index.md)
-    - [C](docs/C/index.md)
-    - [Python](docs/Python/index.md)
-    - [Linux](docs/Linux/index.md)
-    - [Database](docs/Database/index.md)
-    - [GUI](docs/GUI/index.md)
-    - [Web](docs/Web/index.md)
-    - [DevOps](docs/DevOps/index.md)
-    ```
+
+找到目录灰色值所在代码，修改它，而不是在md中设置颜色

@@ -13,3 +13,8 @@
 ```
 python -m http.server 80 --bind 127.0.0.1
 ```
+
+正式部署时，执行以下命令启动一个Nginx服务器：
+```
+docker run -d --name nginx --network host -v /root/Notes/:/root/Notes/ -v /root/Notes/nginx.conf:/etc/nginx/nginx.conf nginx
+```

@@ -8,13 +8,8 @@
 
 <!-- 该文件内不能再使用 # 标题，以免破坏目录排版 -->
 
-在调试时，执行以下命令启动一个HTTP服务器：
+调试时，执行以下命令启动一个HTTP服务器：
 
 ```
 python -m http.server 80 --bind 127.0.0.1
-```
-
-正式部署时，使用Nginx服务器：
-```
-docker run -d --name nginx -p 80:80 -v /root/Notes/:/root/Notes/ -v /root/Notes/nginx.conf:/etc/nginx/nginx.conf nginx
 ```

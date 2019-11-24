@@ -1,0 +1,15 @@
+name: Deploy
+
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+    - name: git pull
+      run: |
+        cd /root/Notes
+        git pull
+    - name: Check
+      run: |
+        curl -I leohsiao.com --connect-timeout 3

@@ -16,7 +16,6 @@ on: [push]  # 定义触发流水线的事件
 
 jobs:       # 开始流水线任务
   job1:     # 第一个任务
-
     runs-on: ${{ matrix.os }}   # 定义运行环境
     strategy:               # 定义多个运行环境，每个环境都会构建一次
       max-parallel: 4       # 可以同时运行的任务数量
@@ -25,14 +24,15 @@ jobs:       # 开始流水线任务
         python-version: [3.5, 3.6, 3.7, 3.8]
 
     steps:    # 开始流水线步骤
-    - uses: actions/checkout@v1    # 调用一个内置动作，其版本为v1
+    - name: git pull   # 一个流水线步骤的名字
+      uses: actions/checkout@v1    # 调用一个内置动作，其版本为v1
       with:
         ref: master
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1  # 安装Python
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies    # 一个流水线步骤的名字
+    - name: Install dependencies
       run: |
         pip install pytest psutil
         echo $VAR1 $VAR2
@@ -44,6 +44,8 @@ jobs:       # 开始流水线任务
         pytest -v
 ```
 
+- 执行每个step之前，都会切换到一个临时工作目录，例如：/root/actions-runner/_work/Notes/Notes
+
 ## Runner
 
 Actions默认运行在GitHub提供的运行环境中（包括Linux、Windows、MacOS），用户也可以在仓库的Settings->Actions页面中添加自己的运行环境，称为Runner。
@@ -52,4 +54,4 @@ Actions默认运行在GitHub提供的运行环境中（包括Linux、Windows、M
 
       runs-on: [self-hosted, linux]
 
-- 使用自己的Runner构建项目时，要避免仓库中有恶意代码被执行。
+- 使用自己的Runner构建项目时，要小心仓库中有恶意代码被执行。

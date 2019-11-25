@@ -1,6 +1,6 @@
 [Linux](docs/Linux/index.md)
 
-- 
+- <font color="#8f8f8f">简介</font>
   - [简介](docs/Linux/简介/简介.md)
   - [相关概念](docs/Linux/简介/相关概念.md)
 - <font color="#8f8f8f">开机</font>

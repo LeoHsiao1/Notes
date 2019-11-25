@@ -188,9 +188,7 @@ window.$docsify = {
 
 从docsify 4.6开始，在链接末尾加上`':include'`即可嵌入该文件。
 
-支持的文件类型：
-
-type|文件后缀名
+支持的文件类型|文件后缀名
 -|-
 iframe  |.html .htm
 markdown|.markdown .md

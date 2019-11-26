@@ -1,7 +1,7 @@
 # LeoHsiao的笔记
 
 ```python
-print('Hello World!')
+print('Hello 2020!')
 ```
 
 <!-- 首页的目录，拷贝navbar.md的Notes部分 -->

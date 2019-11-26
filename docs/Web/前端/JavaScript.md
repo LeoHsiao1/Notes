@@ -5,7 +5,7 @@
 ## 嵌入JS的方法
 
 - 通常在HTML的head部分或body部分嵌入JS代码。
-- 可以在script标签之内编写JS代码。
+- 可以用 `<script>` 标签声明JS代码。
 
     ```html
     <script>

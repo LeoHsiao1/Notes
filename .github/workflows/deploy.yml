@@ -8,8 +8,8 @@ jobs:
     steps:
     - name: git pull
       run: |
-        cd /root/Notes
+        cd /home/github/Notes
         git pull
-    - name: Check
+    - name: Test
       run: |
         curl -I leohsiao.com --connect-timeout 3

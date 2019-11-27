@@ -2,30 +2,36 @@
 
 层叠样式表（Cascading Style Sheets），嵌入HTML中，用于控制HTML的显示样式。
 
-## 嵌入CSS的方法
+## 使用CSS的方式
 
-- 在元素的开始标签里设置其style属性。
+- 内联样式（inline style）：用元素的 style 属性设置样式，只作用于该元素。
 
     ```html
-    <body style="background-color:yellow;">
-    <h1 style="font-family:verdana;">标题一</h1>
+    <body style="background-color:red">
+        <p style="font-family:arial;font-size:20px;text-align:center;">段落一</p>
+    </body>
     ```
 
-- 在style标签之内编写css。
+- 内部样式：在标签`<script>`之内编写css代码，作用于整个HTML。
 
     ```html
-    <style>
-    .sidebar-tree .double-li {
-        width:300px;
-    }
+    <style type="text/css">
+        body {
+            background-color: red
+        }
+
+        p {
+            margin-left: 20px
+        }
     </style>
     ```
 
-- 用 `<link>` 标签导入外部的css文件。（这样可以多个HTML共用一个css文件）
+- 外部样式：用标签`<link>`导入外部的css文件，作用于整个HTML。
 
     ```html
     <link rel="stylesheet" type="text/css" href="mystyle.css">
     ```
+
 
 
 

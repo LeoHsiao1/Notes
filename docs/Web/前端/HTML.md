@@ -118,7 +118,7 @@ HTML5提倡将它们都改用 css 设置显示样式。
 
 - 属性`href`用于显示一个超链接，实现超文本引用（hypertext reference）。
   - href的值是目标资源的位置，可以是本网站的URL，也可以是其它网站的URL。
-  - href="#" 指向当前页面的顶部，href="#tips" 指向当前页面中一个名为“tips”的锚点。如果没有找到该锚点，则指向 href="#" 。
+  - href="#" 指向当前网页的顶部，href="#tips" 指向当前网页中一个名为“tips”的锚点。如果没有找到该锚点，则指向 href="#" 。
 - 属性`target`用于控制载入href所指资源的方式
   - target="_self"：默认值，将目标资源载入到当前窗口或当前框架中。
   - target="_parent"：清空当前框架，将目标资源载入到父级框架中。
@@ -217,7 +217,7 @@ ordered list，用标签`<ol>`和`<li>`声明。
 - type="password"：输入密文。
 - type="submit"：提交按钮。
   - 当用户点击提交按钮时，浏览器会将表单数据放在HTTP请求报文中，发送到action指向的URL。
-    <br>如果没有设置属性action，则默认指向当前页面。
+    <br>如果没有设置属性action，则默认指向当前网页。
   - 默认method="GET"，浏览器会将表单数据放在请求的URL中发送。例如：http://127.0.0.1/login?username=Leo&password=123456
     <br>如果设置method="POST"，则浏览器会将表单数据放在报文body中发送.例如：username=Leo&password=123456
 
@@ -271,7 +271,7 @@ ordered list，用标签`<ol>`和`<li>`声明。
 - value="123456"：该输入控件的初始值，或者显示的名字。
 
 以下属性不需要赋值，只要写上属性名即可启用：
-- autofocus：打开该页面时，使该输入控件自动获得焦点。
+- autofocus：打开网页时，使该输入控件自动获得焦点。
 - disabled：禁用。不可使用、不可点击。
 - readonly：只读。
 - required：提交表单时的必填字段。
@@ -280,10 +280,11 @@ ordered list，用标签`<ol>`和`<li>`声明。
 
 用标签`<meta>`声明。用于设置网页的属性，通常放在HTML的头部。
 
+例：
 ```html
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  # 说明该网页内容的类型
-<meta http-equiv="refresh" content="30">                # 每隔30秒刷新该页面
-<meta name="keywords" content="HTML, CSS, XML, XHTML, JavaScript">    # 说明该网页的关键字
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  # 该网页内容的类型
+<meta name="keywords" content="HTML, CSS, XML, XHTML, JavaScript">     # 该网页的关键字
+<meta http-equiv="refresh" content="30">    # 每隔30秒刷新该网页
 ```
 
 ### 区块
@@ -320,7 +321,7 @@ ordered list，用标签`<ol>`和`<li>`声明。
 ## 属性
 
 可以在元素的开始标签中设置其属性。
-- 属性用键值对表示。
+- 每个属性用一个键值对表示，键值对用等号 = 赋值，用空格分隔。
 - HTML5中，属性的值可以用双引号或单引号包住，也可以不用引号包住（此时不能包含空格）。
   <br>如果值本身包含了双引号或单引号，则应该用另一种引号包住。
 
@@ -332,14 +333,16 @@ ordered list，用标签`<ol>`和`<li>`声明。
     ```
 
 不同类型的元素拥有的属性不一样，但所有元素都拥有以下属性：
-- class：使用一个css类。
-- contenteditable="true"：使该元素在显示时可被编辑
-- draggable="true"：使该元素可被拖动
-- hidden：使该元素不被显示
-- id：元素在网页中的id，只能取唯一值，用于定位该元素。
+- `id`：元素在网页中的id，只能取唯一值。可用作元素的唯一标识符、网页中的定位锚点。
+  <br>id的值区分大小写。
   <br>HTML4中，一些元素也可以用name定义锚点。
-- style：元素的显示样式。
-- title：元素的提示信息，当鼠标移到该元素上方时就会显示。
+- `style`：元素的显示样式。
+- `class`：使用一个css类。
+  <br>类名区分大小写。
+- `title`：元素的提示信息，当鼠标移到该元素上方时就会显示。
+- `hidden`：使该元素不被显示。
+- `contenteditable="true"`：使该元素在显示时可被编辑。
+- `draggable="true"`：使该元素可被拖动。
 
 例：
 

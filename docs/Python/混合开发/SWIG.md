@@ -59,8 +59,8 @@
     这会生成一个api_wrap.c文件。
 
 5. 编译生成动态链接库。
-    <br />原本是使用gcc等命令手动编译，但是用Python的distutils模块可以自动编译，更方便。
-    <br />先创建一个setup.py文件，内容如下：
+    <br>原本是使用gcc等命令手动编译，但是用Python的distutils模块可以自动编译，更方便。
+    <br>先创建一个setup.py文件，内容如下：
 
     ```python
     from distutils.core import setup, Extension

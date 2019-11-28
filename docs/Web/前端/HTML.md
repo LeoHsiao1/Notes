@@ -11,7 +11,7 @@
 - 1990年，欧洲粒子物理研究所的Tim Berners Lee在发明的Web技术的过程中创造了 HTML 语言。
 - 1993年，HTML1 标准发布。
 - 经历了 HTML2 和 HTML3 之后，W3C在1997年发布了 HTML4 标准，此后稳定使用多年。
-- 1998年，W3C停止更新 HTML4 ，开始研究将 HTML4 改为规范的XML格式，称为 XHTML 。
+- 1998年，W3C停止更新 HTML4 ，开始研究将 HTML4 改为严格的XML格式，称为 XHTML 。
 - 2014年，W3C正式发布 HTML5 标准。
 
 ## 基本结构
@@ -31,7 +31,7 @@
     <body>               # 标记主体开始
         <h1>标题一</h1>  # 标题
         <p>段落一</p>    # 段落
-        <br />           # 换行符
+        <br>           # 换行符
         <!-- 注释 -->    # 注释
     </body>              # 标记主体结束
 
@@ -42,7 +42,7 @@
 
 HTML中的一个元素由一对标签和夹在中间的内容组成。
 - 标签名用尖括号` < > `标记，通常一前一后成对出现，分别称为开始标签（opening tag）、结束标签（closing tag）。例如：`<p>段落一</p>`
-- 如果元素的内容为空，则可以省略结束标签，在开始标签的末尾加上斜杆 / 表示结束。例如：`<br />`
+- 如果元素的内容为空，则可以省略结束标签，在开始标签的末尾加上斜杆 / 表示结束。例如：`<br>`
 - 标签名不区分大小写，但一般小写。
 
 ### 标题
@@ -206,8 +206,8 @@ ordered list，用标签`<ol>`和`<li>`声明。
 
 ```html
 <form name="input" action="/login" method="POST">
-    username: <input type="text" name="username"><br />
-    password: <input type="password" name="password"><br />
+    username: <input type="text" name="username"><br>
+    password: <input type="password" name="password"><br>
     <input type="submit" value="提交">
 </form>
 ```
@@ -217,9 +217,9 @@ ordered list，用标签`<ol>`和`<li>`声明。
 - type="password"：输入密文。
 - type="submit"：提交按钮。
   - 当用户点击提交按钮时，浏览器会将表单数据放在HTTP请求报文中，发送到action指向的URL。
-    <br />如果没有设置属性action，则默认指向当前页面。
+    <br>如果没有设置属性action，则默认指向当前页面。
   - 默认method="GET"，浏览器会将表单数据放在请求的URL中发送。例如：http://127.0.0.1/login?username=Leo&password=123456
-    <br />如果设置method="POST"，则浏览器会将表单数据放在报文body中发送.例如：username=Leo&password=123456
+    <br>如果设置method="POST"，则浏览器会将表单数据放在报文body中发送.例如：username=Leo&password=123456
 
 - type="button"：普通按钮。点击后会执行属性onclick指定的动作。
 
@@ -231,7 +231,7 @@ ordered list，用标签`<ol>`和`<li>`声明。
 
     ```html
     <form>
-        <input type="radio" name="sex" value="male">Male<br />  # 
+        <input type="radio" name="sex" value="male">Male<br>  # 
         <input type="radio" name="sex" value="female">Female    # 
     </form>
     ```
@@ -266,7 +266,7 @@ ordered list，用标签`<ol>`和`<li>`声明。
 输入控件的常用属性：
 - autocomplete="on"：根据用户之前的输入值自动完成输入。
 - pattern="[A-Za-z]{3}"：按正则表达式检查输入是否有效。
-  <br />当输入不合法时，用户按下键盘也不会有响应。不过浏览器并不会报错，需要用JS显示报错。
+  <br>当输入不合法时，用户按下键盘也不会有响应。不过浏览器并不会报错，需要用JS显示报错。
 - maxlength="10"：输入的最大长度。
 - value="123456"：该输入控件的初始值，或者显示的名字。
 
@@ -322,15 +322,22 @@ ordered list，用标签`<ol>`和`<li>`声明。
 可以在元素的开始标签中设置其属性。
 - 属性用键值对表示。
 - HTML5中，属性的值可以用双引号或单引号包住，也可以不用引号包住（此时不能包含空格）。
-- 如果值本身包含了双引号或单引号，则应该用另一种引号包住。例如：name='Hello "World"!'
+  <br>如果值本身包含了双引号或单引号，则应该用另一种引号包住。
+
+    ```html
+    <p id="P 1">段落一</p>
+    <p id='P 1'>段落一</p>
+    <p id='Hello "World"!'>段落一</p>
+    <p id=P>段落一</p>
+    ```
 
 不同类型的元素拥有的属性不一样，但所有元素都拥有以下属性：
 - class：使用一个css类。
 - contenteditable="true"：使该元素在显示时可被编辑
 - draggable="true"：使该元素可被拖动
 - hidden：使该元素不被显示
-- id：元素在网页中的唯一id，用于定位该元素。
-  <br />HTML4中，一些元素也可以用name定义锚点。
+- id：元素在网页中的id，只能取唯一值，用于定位该元素。
+  <br>HTML4中，一些元素也可以用name定义锚点。
 - style：元素的显示样式。
 - title：元素的提示信息，当鼠标移到该元素上方时就会显示。
 

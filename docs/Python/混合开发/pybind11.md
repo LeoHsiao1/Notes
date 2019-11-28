@@ -30,9 +30,9 @@
     ```
 
 3. 编译生成pyd文件。
-    <br />原本是手动编译pybind11项目，但是用Python的setuptools模块可以自动编译，更方便。
-    <br />先安装：pip install pybind11
-    <br />然后下载[setup.py](https://github.com/pybind/python_example/blob/master/setup.py)文件，修改如下内容：
+    <br>原本是手动编译pybind11项目，但是用Python的setuptools模块可以自动编译，更方便。
+    <br>先安装：pip install pybind11
+    <br>然后下载[setup.py](https://github.com/pybind/python_example/blob/master/setup.py)文件，修改如下内容：
     ```python
     ext_modules = [
         Extension(

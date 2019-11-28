@@ -3,7 +3,7 @@
 XML文档对象模型（XML Document Object Model），是一个访问XML格式文本的API标准。
 - 通常研究通用的XML DOM，有时也专门研究HTML DOM。
 - DOM将XML文档表示成一个树形结构，XML中的每个元素都表示成一个单一的节点（元素的值也表示成子节点）。
-  <br />例如，下方表示节点book拥有一个属性节点category、一个元素节点year，节点year拥有一个值为"2000"的文本节点。
+  <br>例如，下方表示节点book拥有一个属性节点category、一个元素节点year，节点year拥有一个值为"2000"的文本节点。
     ```xml
     <book category="web">
         <year>2000</year> 
@@ -105,11 +105,11 @@ txt = xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue
 x = xmlDoc.childNodes;
 for (i = 0; i < x.length; i++) {
     document.write(x[i].nodeName);
-    document.write("<br />");
+    document.write("<br>");
 }
 
 // 判断节点类型
 if (y.nodeType == 1) {
-    document.write(y.nodeName + "<br />");
+    document.write(y.nodeName + "<br>");
 }
 ```

@@ -6,6 +6,7 @@
   - 支持的操作系统：Unix、Linux、Windows、MacOS等。
   - 支持C/C++的几乎所有版本，包括C99、C++17。
   - 支持的目标语言：C#、Java、JS、Perl、PHP、Python、Ruby、Go等。
+- [官方文档](http://www.swig.org/Doc4.0/Contents.html)
 - 安装：
   - 在Linux上，SWIG发布的是源代码，要执行以下命令编译、安装：
   
@@ -58,7 +59,7 @@
     这会生成一个api_wrap.c文件。
 
 5. 编译生成动态链接库。
-    <br />这里本来可以用gcc等命令手动编译，但是用Python的distutils模块来做更方便。
+    <br />原本是使用gcc等命令手动编译，但是用Python的distutils模块可以自动编译，更方便。
     <br />先创建一个setup.py文件，内容如下：
 
     ```python
@@ -97,8 +98,6 @@
     ```
 
 ## 其它
-
-官方教程：<http://www.swig.org/Doc4.0/Contents.html>
 
 暴露C++的类：
 

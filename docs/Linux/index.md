@@ -17,3 +17,5 @@
   - [查看IP](docs/Linux/网络/查看IP.md)
   - [查看端口](docs/Linux/网络/查看端口.md)
   - [测试网络连通性](docs/Linux/网络/测试网络连通性.md)
+- <font color="#8f8f8f">其它</font>
+  - [gcc](docs/Linux/其它/gcc.md)

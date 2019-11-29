@@ -1,6 +1,6 @@
 # ♢ Cython
 
-第三方库，用于Python与C/C++的混合开发。
+Python的第三方库，用于Python与C/C++的混合开发。
 - 安装：pip install Cython
 - Cython本身是一种混编语言，可以将C代码封装成Python模块，或者将Python代码编译成C代码。
 - Cython是Python的超集。不仅支持所有的Python语法，还可以使用C/C++的数据类型。将Python代码改写为Cython风格，会更接近C语言，有利于提高运行效率。

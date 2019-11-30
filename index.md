@@ -4,3 +4,4 @@
   - [Python](docs/Python/index.md)
   - [Linux](docs/Linux/index.md)
   - [Web](docs/Web/index.md)
+  - [DevOps](docs/DevOps/index.md)

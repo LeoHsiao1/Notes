@@ -51,77 +51,13 @@ Docker通过Linux namespace隔离各个容器的运行环境。
     docker run hello-world     # 运行镜像
     ``
 
-## 镜像
-
-镜像是容器的模板，是一些静态文件。
-- 每个镜像都有一个由Docker自动分配的 ImageID（一串编号），用户也可以自定义镜像名和tag（表示镜像的版本）。
-  - 通过 ImageID 或 ImageName:tag 可以确定一个唯一的 Image 。
-- Docker服务器使用的镜像都存储在宿主机上，也可以将镜像存储到镜像仓库服务器中。
-  - Docker默认使用的镜像仓库是官方的Docker hub。
-
-查看镜像：
-```shell
-docker
-    images                 # 列出本机的所有镜像
-    image rm <Image>...    # 删除镜像
-
-    tag <ImageName>:<tag> <ImageName>:<tag>  # 给镜像加上tag（两个tag指向的是同一个ImageID）
-```
-- 删除所有none镜像:
-    ```shell
-    docker images | awk '$2=="<none>" {print $3}' | xargs docker image rm
-    ```
-
-拉取镜像：
-```shell
-docker
-    pull <ImageName>:<tag>  # 从镜像仓库拉取镜像
-    push <ImageName>:<tag>  # 推送镜像到镜像仓库
-    search <ImageName>     # 在镜像仓库中搜索某个镜像
-    login -u will tencentyun.com    # 使用一个用户名登录一个镜像仓库（然后会提示输入密码）
-```
-- 如果不注明镜像的tag，则默认拉取latest版本。
-- 尽量不要拉取latest版本，而使用具体的版本名，比如 v1.0，否则在不同时间拉取的latest版本会不一样。
-
-镜像被Docker保存成一些散乱的文件，使用以下命令可以导出成文件包：
-```shell
-docker save -o images.tar <Image>...              # 将一个或多个镜像打包成tar文件
-docker save 镜像名:tag... | gzip > images.tar.gz  # 打包成tar.gz文件
-docker load -i images.tar                         # 导入镜像
-```
-
-### 制作镜像
-
-制作docker镜像的方法有两种：
-- 将一个容器提交为镜像：
-    ```shell
-    docker commit <容器ID> <要创建的镜像名:tag>
-    ```
-
-  - 每次commit时，实际上是在原有镜像上加上一层新的文件系统（file system layer），并不会删除原有的文件。因此commit次数越多，镜像的体积越大。
-- 编写一个Dockerfile文件，然后用docker build命令构建一个镜像。
-如果镜像构建失败，则ImageID的值为none。
-
-docker build <Dockerfile所在目录或URL>
--t <要创建的镜像名:tag>
---build-arg version=""  # 传入构建参数
---target <阶段名>    # 构建到某个阶段就停止
-
---network <name>    # 设置在build过程中，RUN指令使用哪个网络（默认不连到外网）
--m <bytes>      # 限制该容器能使用的内存最大值
---cpu-shares <int>  # 限制该容器能使用的CPU最大百分比
-- 例如：docker build . -t centos:v1 --network host
-- docker build命令会将Dockerfile所在目录作为上下文目录，将其下的所有文件都拷贝给docker daemon（可以在.dockerignore文件中注明不想被拷贝的文件）。docker-daemon在build时，处理的所有相对路径都是以该目录为起点。（如果处理的文件不在上下文目录之内，就会报错）
-
-
- 
 ## 容器
 
 容器是根据镜像运行起来的一个虚机环境，至少包含一个进程组。
 - 每个容器都有一个由Docker自动分配的 ContainerID（一串编号），用户也可以自定义容器名。
+  - 通过 ContainerID 或 ContainerName 可以指定一个唯一的 Container 。
 - 当容器内的进程都停止时，容器就会变成 stopped 状态。此时容器的文件依然会被Docker保留，可以再次启动。
 
-- 关于容器。
 - 创建容器。
 - docker run hello-world  # 创建一个容器来运行镜像hello-world
 #如果本地不存在该镜像，docker会自动从镜像仓库下载该镜像

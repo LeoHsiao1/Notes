@@ -17,15 +17,15 @@ on: [push]  # 定义触发流水线的事件
 jobs:       # 开始流水线任务
   job1:     # 第一个任务
     runs-on: ${{ matrix.os }}   # 定义运行环境
-    strategy:               # 定义多个运行环境，每个环境都会构建一次
-      max-parallel: 4       # 可以同时运行的任务数量
+    strategy:                   # 定义多个运行环境，每个环境都会构建一次
+      max-parallel: 4           # 可以同时运行的任务数量
       matrix:
         os: [ubuntu-18.04, windows-2019]
         python-version: [3.5, 3.6, 3.7, 3.8]
 
-    steps:    # 开始流水线步骤
-    - name: git pull   # 一个流水线步骤的名字
-      uses: actions/checkout@v1    # 调用一个内置动作，其版本为v1
+    steps:                      # 开始流水线步骤
+    - name: git pull            # 一个流水线步骤的名字
+      uses: actions/checkout@v1 # 调用一个内置动作，其版本为v1
       with:
         ref: master
     - name: Set up Python ${{ matrix.python-version }}

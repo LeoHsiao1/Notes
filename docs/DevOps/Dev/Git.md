@@ -193,16 +193,19 @@ git remote                   # 显示已配置的所有远端仓库的名字
         rm <name>            # 删除一个远端仓库
         rename <name> <name> # 重命名一个远端仓库
 
-git pull <name或URL>         # 拉取内容（会自动将被跟踪的远程分支合并到本地分支）
+git pull [name或URL]         # 拉取远端仓库的内容到本地仓库（会自动将被跟踪的远程分支合并到本地分支）
 
-git fetch <name或URL>        # 从远端仓库拉取所有本地仓库没有的内容（但不会自动合并）
+git fetch [name或URL]        # 从远端仓库拉取所有本地仓库没有的内容（不会自动合并，比较安全）
 
-git push
-        <name或URL>                   # 推送本地仓库到远端仓库
-            --force                   # 强制推送
-            --all                     # 推送本地仓库的所有分支
-        origin master : origin/master # 推送分支master到远端仓库origin，并与远端分支master合并
-        origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
+git push [name或URL]         # 推送本地仓库到远端仓库
+        --force                   # 强制推送
+        --all                     # 推送本地仓库的所有分支
         <标签名>                      # 推送一个标签
         --tags                        # 推送所有标签
 ```
+- 执行git pull、fetch、push时，如果不指定远端仓库，则使用默认的origin仓库。
+- 例：推送单个分支
+    ```shell
+    git push origin master : origin/master # 推送分支master到远端仓库origin，并与远端分支master合并
+    git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
+    ```

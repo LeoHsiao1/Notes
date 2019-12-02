@@ -13,6 +13,8 @@
 - <font color="#8f8f8f">进程</font>
   - [进程](docs/Linux/进程/进程.md)
   - [管理进程](docs/Linux/进程/管理进程.md)
+- <font color="#8f8f8f">文件</font>
+  - [目录](docs/Linux/文件/目录.md)
 - <font color="#8f8f8f">网络</font>
   - [查看IP](docs/Linux/网络/查看IP.md)
   - [查看端口](docs/Linux/网络/查看端口.md)

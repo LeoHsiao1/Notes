@@ -21,21 +21,21 @@
 - 用`<!--`和`-->`声明多行注释。
 - 例：
     ```html
-    <!DOCTYPE html>      # 声明为HTML5
-    <html>               # 标记HTML文件开始
+    <!DOCTYPE html>          # 声明为HTML5
+    <html>                   # 标记HTML文件开始
 
-    <head>               # 标记头部开始
-        <title>测试</title>   # 网页标题
-    </head>              # 标记头部结束
+    <head>                   # 标记头部开始
+        <title>测试</title>  # 网页标题
+    </head>                  # 标记头部结束
 
-    <body>               # 标记主体开始
-        <h1>标题一</h1>  # 标题
-        <p>段落一</p>    # 段落
-        <br>           # 换行符
-        <!-- 注释 -->    # 注释
-    </body>              # 标记主体结束
+    <body>                   # 标记主体开始
+        <h1>标题一</h1>      # 标题
+        <p>段落一</p>        # 段落
+        <br>                 # 换行符
+        <!-- 注释 -->        # 注释
+    </body>                  # 标记主体结束
 
-    </html>              # 标记HTML文件结束
+    </html>                  # 标记HTML文件结束
     ```
 
 ## 元素
@@ -106,17 +106,17 @@ HTML5提倡将它们都改用 css 设置显示样式。
     </pre>
     ```
 
-### 超链接
+### 链接
 
 用标签`<a>`声明。
 
 ```html
-<a href="https://www.baidu.com">超链接</a>
-<a href="https://www.baidu.com" target="_blank">超链接</a>
+<a href="https://www.baidu.com">链接</a>
+<a href="https://www.baidu.com" target="_blank">链接</a>
 <a href="#tips">查看提示</a>
 ```
 
-- 属性`href`用于显示一个超链接，实现超文本引用（hypertext reference）。
+- 属性`href`用于显示一个链接，实现超文本引用（hypertext reference）。
   - href的值是目标资源的位置，可以是本网站的URL，也可以是其它网站的URL。
   - href="#" 指向当前网页的顶部，href="#tips" 指向当前网页中一个名为“tips”的锚点。如果没有找到该锚点，则指向 href="#" 。
 - 属性`target`用于控制载入href所指资源的方式
@@ -357,7 +357,7 @@ ordered list，用标签`<ol>`和`<li>`声明。
 不同Web浏览器支持的HTML语法有所差异，因此需要考虑HTML文件的兼容性问题。
 
 Web浏览器按从上到下的顺序逐行解析HTML文件，一边解析一边显示给用户看。
-- 解析到href时，会在后台下载超链接的资源，不影响前台进程。
+- 解析到href时，会在后台下载链接的资源，不影响前台进程。
 - 解析到src时，会等该资源加载完毕再继续解析。
 - 解析到JavaScript时，会加载并执行该脚本，然后再继续解析。
   - 因此应该将script标签放在body的最后部分，避免阻塞前台进程。

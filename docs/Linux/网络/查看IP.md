@@ -5,10 +5,10 @@
 命令：
 
 ```shell
-ifconfig    # 显示已启用网卡的信息
-        -a  # 显示所有网卡的信息
+ifconfig      # 显示已启用网卡的信息
+        -a    # 显示所有网卡的信息
 
-ifconfig eth0                     # 显示网卡eth0的信息
+ifconfig eth0                 # 显示网卡eth0的信息
         up                    # 启用网卡
         down                  # 停用网卡
         10.0.0.1              # 设置网卡的IP地址

@@ -87,11 +87,6 @@ k8s中主要研究四种网络通信：
 - Job：定义只执行一次的任务。
 - CronJob
 
-
-k8s中管理yaml配置文件的常用工具：
-- helm
-- Kustomize
-
 ### Deployment：
 
 - Deployment：用于定义Pod、ReplicaSet。

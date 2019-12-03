@@ -3,17 +3,19 @@
 - <font color="#8f8f8f">简介</font>
   - [简介](docs/Linux/简介/简介.md)
   - [相关概念](docs/Linux/简介/相关概念.md)
-- <font color="#8f8f8f">开机</font>
-  - [开机](docs/Linux/开机/开机.md)
-  - [登录](docs/Linux/开机/登录.md)
-  - [用户](docs/Linux/开机/用户.md)
 - <font color="#8f8f8f">终端</font>
   - [终端](docs/Linux/终端/终端.md)
   - [命令](docs/Linux/终端/命令.md)
+  - [开机](docs/Linux/终端/开机.md)
+  - [登录](docs/Linux/终端/登录.md)
+  - [用户](docs/Linux/终端/用户.md)
 - <font color="#8f8f8f">进程</font>
   - [进程](docs/Linux/进程/进程.md)
   - [管理进程](docs/Linux/进程/管理进程.md)
 - <font color="#8f8f8f">文件</font>
+  - [文件](docs/Linux/文件/文件.md)
+  - [管理文件](docs/Linux/文件/管理文件.md)
+  - [处理文本](docs/Linux/文件/处理文本.md)
   - [目录](docs/Linux/文件/目录.md)
 - <font color="#8f8f8f">网络</font>
   - [查看IP](docs/Linux/网络/查看IP.md)

@@ -17,6 +17,12 @@
   - [管理文件](docs/Linux/文件/管理文件.md)
   - [处理文本](docs/Linux/文件/处理文本.md)
   - [目录](docs/Linux/文件/目录.md)
+- <font color="#8f8f8f">设备</font>
+  - [设备](docs/Linux/设备/设备.md)
+  - [外存](docs/Linux/设备/外存.md)
+  - [文件系统](docs/Linux/设备/文件系统.md)
+  - [内存](docs/Linux/设备/内存.md)
+  - [CPU](docs/Linux/设备/CPU.md)
 - <font color="#8f8f8f">网络</font>
   - [查看IP](docs/Linux/网络/查看IP.md)
   - [查看端口](docs/Linux/网络/查看端口.md)

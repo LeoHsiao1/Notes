@@ -73,7 +73,7 @@ k8s中主要研究四种网络通信：
 - Volume：存储卷。
 - Persistent Volume（PV）：持久化存储卷。
 - PersistentVolumeClaim（PVC）：用户存储的请求。
-- StorageClass
+- StorageClass：存储类
 
 ## Controller
 

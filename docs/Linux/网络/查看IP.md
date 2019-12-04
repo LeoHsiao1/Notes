@@ -1,19 +1,18 @@
-# 关于IP
+# 查看IP
 
 ## ifconfig
 
 命令：
 
 ```shell
-ifconfig      # 显示已启用网卡的信息
-        -a    # 显示所有网卡的信息
-
-ifconfig eth0                 # 显示网卡eth0的信息
-        up                    # 启用网卡
-        down                  # 停用网卡
-        10.0.0.1              # 设置网卡的IP地址
-        netmask 255.255.255.0 # 设置网卡的子网掩码
-        broadcast 10.0.0.255  # 设置网卡的广播地址
+$ ifconfig                         # 显示已启用网卡的信息
+            -a                     # 显示所有网卡的信息
+            eth0                   # 显示网卡eth0的信息
+            up                     # 启用网卡
+            down                   # 停用网卡
+            10.0.0.1               # 设置网卡的IP地址
+            netmask 255.255.255.0  # 设置网卡的子网掩码
+            broadcast 10.0.0.255   # 设置网卡的广播地址
 ```
 
 例：
@@ -58,7 +57,7 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 命令：
 
 ```shell
-route   # 显示本机的路由表
+$ route    # 显示本机的路由表
 ```
 
 例：
@@ -79,7 +78,7 @@ link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 命令：
 
 ```shell
-ip
+$ ip
     addr        # 显示所有网卡的信息（相当于ifconfig -a）
     route       # 显示路由表（相当于route命令）
 ```

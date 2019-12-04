@@ -1,6 +1,6 @@
 # gcc
 
-gcc是GNU编译器的一部分。
+：GNU编译器的一部分。
 - GNU编译器套件（GNU Compiler Collection）是类Unix系统上的标准编译器。
 - gcc最初只支持C语言，后来还支持C++、Objective-C、Fortran、Java等语言，并且被移植到多个平台。
 - gcc是C语言的编译器，g++是C++的编译器。

@@ -1,6 +1,6 @@
 # ♢ jenkinsapi
 
-Python的第三方库，用于调用Jenkins的API。
+：Python的第三方库，用于调用Jenkins的API。
 - 安装：pip install jenkinsapi
 
 ## 用法

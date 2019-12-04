@@ -1,6 +1,6 @@
 # Docker Compose
 
-一个Docker容器的编排工具，由Docker公司推出，基于Python。
+：一个Docker容器的编排工具，由Docker公司推出，基于Python。
 
 - 只能管理当前宿主机上的容器，不能管理服务器集群。
 - 它根据compose文件来创建、管理docker容器。

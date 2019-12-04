@@ -1,6 +1,6 @@
 # Docker
 
-Docker是目前最流行的容器引擎。
+：目前最流行的容器引擎。
 - 基于Go语言，运行在Linux平台上。也有Docker for Windows版本，只能运行windows上的应用程序。
 - 于2013年被Docker公司推出，掀起了容器技术的潮流。
 - 以镜像（image）作为模板，创建容器（container）。

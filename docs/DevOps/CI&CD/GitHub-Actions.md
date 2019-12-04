@@ -5,7 +5,7 @@ GitHub提供了Actions功能，以实现CI/CD。
 
 ## Actions
 
-Actions是类似Jenkins的流水线，用YAML的语法描述，保存为 .github/workflows/xx.yml 文件。
+：类似Jenkins的流水线，用YAML的语法描述，保存为 .github/workflows/xx.yml 文件。
 
 例：
 

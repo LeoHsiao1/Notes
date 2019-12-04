@@ -1,6 +1,6 @@
 # pybind11
 
-一个C++库，可以将C++代码封装成Python模块，或者在C++中导入Python模块。
+：一个C++库，可以将C++代码封装成Python模块，或者在C++中导入Python模块。
 
 - [官方文档](https://pybind11.readthedocs.io/en/master/index.html)
 - 需要使用支持C++11的编译器。（在Windows上需要Visual Studio不低于2015版本）

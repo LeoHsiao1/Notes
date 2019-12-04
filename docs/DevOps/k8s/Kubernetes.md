@@ -1,6 +1,6 @@
 # Kubernetes
 
-简称为 k8s ，8表示中间的8个字母。
+：简称为 k8s ，8表示中间的8个字母。
 - 2014年，Google开源了k8s项目，它源于Google内部的大规模集群管理系统Borg。
 - 2015年，Google将k8s项目捐赠给Linux基金会下属的云原生计算基金会（CNCF）托管。
 - [Kubernetes中文指南](https://jimmysong.io/kubernetes-handbook/concepts/)
@@ -77,7 +77,7 @@ k8s中主要研究四种网络通信：
 
 ## Controller
 
-控制器，用于控制Pod。
+：控制器，用于控制Pod。
 
 常见的Controller：
 - ReplicaSet：用于控制Pod的副本数。
@@ -132,7 +132,7 @@ spec:                       # 该Controller的规格
 
 ## minikube
 
-用于运行一个单节点的k8s实验环境。
+：用于运行一个单节点的k8s实验环境。
 
 ### 安装
 
@@ -157,7 +157,7 @@ minikube
 
 ## kubectl
 
-kubectl是k8s集群的管理工具。
+：k8s集群的管理工具。
 - 它作为client端，与master节点上的apiserver进程通信，从而进行控制。
 
 ### 安装

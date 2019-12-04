@@ -1,12 +1,12 @@
 # CMS
 
-CMS（Content Management System，内容管理系统）
+：内容管理系统（Content Management System）
 - 泛指让用户发布、编辑、管理内容的网站，比如博客、论坛、新闻网站。
 - 很多CMS都做成了静态网站。
 
 ## 静态网站
 
-静态网站：只提供HTML、JS、CSS等静态资源的网站。
+：只提供HTML、JS、CSS等静态资源的网站。
 - 制作简单，不用考虑后端。
 - 运行时消耗的系统资源少，访问速度快。
 - 功能较少，与用户的交互性低。

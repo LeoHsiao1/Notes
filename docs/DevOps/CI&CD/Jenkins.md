@@ -1,13 +1,13 @@
 # Jenkins
 
-一个开源的CI/CD工具，基于Java，主要用于项目构建、测试、部署，还提供了Web操作页面。
+：一个开源的CI/CD工具，基于Java，主要用于项目构建、测试、部署，还提供了Web操作页面。
 - 把项目的处理过程称为流水线，用Jenkinsfile描述。
 - 用户可以添加一些主机作为Jenkins的运行环境。
 - 用户可以将密码等私密数据保存成Jenkins的“凭证”。
 
 ## Jenkinsfile
 
-用于描述Jenkins流水线，基于Groovy语言。
+：用于描述Jenkins流水线，基于Groovy语言。
 
 Jenkinsfile有两种写法：
 - 脚本式（Scripted Pipeline）：将流水线定义在node{}中。

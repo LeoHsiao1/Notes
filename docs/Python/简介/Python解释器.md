@@ -1,17 +1,24 @@
 # Python解释器
 
+Python是解释型语言，它的代码不需要编译，可以直接Python解释器运行。
+
 安装Python解释器之后就可以执行Python脚本，也可以打开一个终端进行交互式编程。
 
-Python解释器有多种。
-- CPython：基于C语言实现，使用最广泛。
-  - 执行Python脚本时，会先把它解释成C语言代码，再编译成可执行文件。
-- Jython：基于Java实现。
-  - 执行Python脚本时，会先把它解释成Java字节码文件，再编译成可执行文件。
-- PyPy：基于RPython实现。
-  - 采用JIT技术进行动态编译（不是解释），使代码的执行速度大幅提高。
-- IPython：提供了功能更强的shell，通常与Jupyter编辑器搭配使用。
+## 分类
 
-本文使用的解释器是CPython。
+Python解释器有多种，通常使用的是CPython。
+
+- CPython
+  - 基于C语言实现，使用最广泛。
+  - 执行Python脚本时，会先把它解释成C语言代码，再编译成可执行文件。
+- Jython
+  - 基于Java实现。
+  - 执行Python脚本时，会先把它解释成Java字节码文件，再编译成可执行文件。
+- PyPy
+  - 基于RPython实现。
+  - 采用JIT技术进行动态编译（不是解释），使代码的执行速度大幅提高。
+- IPython
+  - 提供了功能更强的shell，通常与Jupyter编辑器搭配使用。
 
 ## 安装
 

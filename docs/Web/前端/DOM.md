@@ -1,7 +1,7 @@
 # DOM
 
-XML文档对象模型（XML Document Object Model），是一个访问XML格式文本的API标准。
-- 通常研究通用的XML DOM，有时也专门研究HTML DOM。
+：XML文档对象模型（XML Document Object Model），是一个访问XML格式文本的API标准。
+- 通常研究的是XML DOM，有时也研究HTML DOM。
 - DOM将XML文档表示成一个树形结构，XML中的每个元素都表示成一个单一的节点（元素的值也表示成子节点）。
   <br>例如，下方表示节点book拥有一个属性节点category、一个元素节点year，节点year拥有一个值为"2000"的文本节点。
     ```xml

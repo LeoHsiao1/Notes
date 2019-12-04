@@ -1,6 +1,6 @@
 # CSS
 
-层叠样式表（Cascading Style Sheets），嵌入HTML中，用于控制HTML元素的显示样式。
+：层叠样式表（Cascading Style Sheets），嵌入HTML中，用于控制HTML元素的显示样式。
 - 主要有三个版本：CSS1、CSS2、CSS3。各自向下兼容，但新的样式不一定被浏览器支持。
 - 有的浏览器不支持某些样式，有的浏览器有自己的默认样式，导致不同浏览器的显示效果有差异。
 

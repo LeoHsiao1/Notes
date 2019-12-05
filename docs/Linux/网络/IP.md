@@ -1,4 +1,4 @@
-# 查看IP
+# IP
 
 ## ifconfig
 
@@ -81,4 +81,68 @@ link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 $ ip
     addr        # 显示所有网卡的信息（相当于ifconfig -a）
     route       # 显示路由表（相当于route命令）
+```
+
+## ping
+
+：常用于测试网络是否连通、网络延迟、域名解析。
+
+原理：
+- 基于ICMP协议，向目标主机发送ICMP报文，根据收到回复的时间间隔就可以知道通信延迟。
+- ICMP报文的头部用1个字节记录了该报文的生存期（Time To Live，TTL）。
+- ICMP报文每经过一跳路由器，TTL的值就会被减一，当TTL为零时路由器就会丢弃该报文。
+
+命令：
+
+```shell
+$ ping <host>    # 启动ping
+        -c n     # 最多发送ICMP报文多少次（默认为无限次）
+        -i n     # 每次发送ICMP报文的间隔时间（默认为1秒）
+        -I eth0  # 使用本机的指定网卡来发送ICMP报文（默认自动选取网卡）
+```
+
+- host可以是IP地址或域名，如果是域名，在执行时还会显示出域名解析后的IP地址。
+
+例：
+
+```
+[root@Centos ~]# ping baidu.com
+PING baidu.com (39.156.69.79) 56(84) bytes of data.
+64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=1 ttl=250 time=37.0 ms
+64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=2 ttl=250 time=37.0 ms
+64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=3 ttl=250 time=37.0 ms
+64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=4 ttl=250 time=37.0 ms
+^C
+--- baidu.com ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3003ms
+rtt min/avg/max/mdev = 37.008/37.022/37.044/0.136 ms
+```
+
+- 可见它成功连接到目标主机，显示出ping的测试结果。
+- icmp_seq：表示这是第几个ICMP报文。
+- ttl：ICMP报文剩下的生存期。
+- time：发出ICMP报文之后，隔了多久才收到回复。
+- Linux的ping命令默认每隔一秒向目标主机发送一个ICMP报文，并且会一直发送，要按 `Ctrl+C` 终止。
+
+例：
+
+```
+[root@Centos ~]# ping google.com
+PING google.com (93.46.8.90) 56(84) bytes of data.
+
+^C
+```
+
+- 可见它一直尝试连接目标主机，但并没有成功。原因可能是：
+  - 与目标主机的网络不通
+  - 与目标主机的网络连通，但是目标主机没有开启ICMP协议
+
+## traceroute
+
+：用于查看发送一个数据包到目标主机时，要经过哪些路由。
+
+命令：
+
+```shell
+$ traceroute <host>
 ```

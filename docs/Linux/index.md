@@ -23,15 +23,14 @@
   - [文件系统](docs/Linux/设备/文件系统.md)
   - [内存](docs/Linux/设备/内存.md)
 - <font color="#8f8f8f">网络</font>
-  - [查看IP](docs/Linux/网络/查看IP.md)
-  - [查看端口](docs/Linux/网络/查看端口.md)
-  - [测试网络连通性](docs/Linux/网络/测试网络连通性.md)
+  - [IP](docs/Linux/网络/IP.md)
+  - [端口](docs/Linux/网络/端口.md)
   - [防火墙](docs/Linux/网络/防火墙.md)
   - [SSH](docs/Linux/网络/SSH.md)
   - [HTTP](docs/Linux/网络/HTTP.md)
   - [FTP](docs/Linux/网络/FTP.md)
 - <font color="#8f8f8f">测试</font>
-  - [测试简介](docs/Linux/测试/测试简介.md)
+  - [简介](docs/Linux/测试/简介.md)
   - [进程测试](docs/Linux/测试/进程测试.md)
   - [CPU测试](docs/Linux/测试/CPU测试.md)
   - [网络测试](docs/Linux/测试/网络测试.md)

@@ -22,10 +22,15 @@
   - [外存](docs/Linux/设备/外存.md)
   - [文件系统](docs/Linux/设备/文件系统.md)
   - [内存](docs/Linux/设备/内存.md)
-  - [CPU](docs/Linux/设备/CPU.md)
 - <font color="#8f8f8f">网络</font>
   - [查看IP](docs/Linux/网络/查看IP.md)
   - [查看端口](docs/Linux/网络/查看端口.md)
   - [测试网络连通性](docs/Linux/网络/测试网络连通性.md)
+- <font color="#8f8f8f">测试</font>
+  - [测试简介](docs/Linux/测试/测试简介.md)
+  - [进程测试](docs/Linux/测试/进程测试.md)
+  - [CPU测试](docs/Linux/测试/CPU测试.md)
+  - [网络测试](docs/Linux/测试/网络测试.md)
+  - [综合测试工具](docs/Linux/测试/综合测试工具.md)
 - <font color="#8f8f8f">其它</font>
   - [gcc](docs/Linux/其它/gcc.md)

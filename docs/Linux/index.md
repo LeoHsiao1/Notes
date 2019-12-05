@@ -37,3 +37,5 @@
   - [综合测试工具](docs/Linux/测试/综合测试工具.md)
 - <font color="#8f8f8f">其它</font>
   - [gcc](docs/Linux/其它/gcc.md)
+  - [插件工具](docs/Linux/其它/插件工具.md)
+  

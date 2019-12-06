@@ -1,0 +1,57 @@
+# Linux原理
+
+## 系统框架
+
+Linux系统的框架从上到下分为以下几层：
+- User Space：运行用户态进程。
+  - 用户启动的进程一般运行在用户态，只使用虚拟内存空间中的用户内存空间。
+  - 当用户态进程调用内核API、遇到中断或异常时，就会下沉到内核态，有权限执行内核内存空间中的代码。
+- Kernel Space：运行内核态进程。
+  - System Call Interface（SCI）：向上对用户空间提供内核接口。
+  - Virtual File System（VFS）：一个抽象的文件系统层，向下管理不同类型的文件系统，向上提供统一的文件系统接口。
+  - File System：实际的文件系统层，包括多种文件系统。
+  - General Block Device Layer：一个抽象的块设备层，向下管理不同类型的硬件设备，向上提供统一的IO接口。
+  - Device Driver：有很多种，分别管理不同设备。
+- Hardware Layer：计算机底层的硬件层。
+
+## 中断
+
+Linux系统处理中断的过程通常分为两步：
+1. 处理硬件中断请求，立即处理其中不能延误的任务。
+2. 以软件中断的形式执行剩下的任务，比如创建成内核线程。
+  - 这样既可以及时执行中断中重要的任务，又可以延迟执行耗时久的任务。
+  - 例如，当网卡收到数据帧时，会发出一个硬中断，让网卡驱动程序把数据帧放到内存中。然后网卡驱动程序会发出一个软中断，调用某个内核进程来解析数据帧，转换成IP数据包，最后发送给应用层的进程。
+
+## 常见的内核API
+
+- file类：使用文件描述作为参数的API。
+  - open
+  - close
+  - read
+  - write
+  - chmod
+- desc类
+  - mmap
+  - 
+- process类
+  - execve：执行一个command，启动一个进程。
+    - 例：
+      ```shell
+      execve("/usr/bin/echo", ["echo", "hello"], [/* 22 vars */]) = 0
+      ```
+  - exit
+  - getpid
+  - fork
+  - clone
+- signal类
+  - signal
+  - sigaction
+  - kill
+- ipc类：关于进程间通信
+  - shmget
+  - semget 
+- network类
+  - socket
+  - connect
+  - sendto
+  - sendmsg

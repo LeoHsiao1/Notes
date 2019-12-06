@@ -36,6 +36,10 @@
   - [网络测试](docs/Linux/测试/网络测试.md)
   - [综合测试工具](docs/Linux/测试/综合测试工具.md)
 - <font color="#8f8f8f">其它</font>
-  - [gcc](docs/Linux/其它/gcc.md)
+  - [系统信息](docs/Linux/其它/系统信息.md)
+  - [安装软件](docs/Linux/其它/安装软件.md)
   - [插件工具](docs/Linux/其它/插件工具.md)
+  - [定时任务](docs/Linux/其它/定时任务.md)
+  - [gcc](docs/Linux/其它/gcc.md)
+  - [OpenWrt](docs/Linux/其它/OpenWrt.md)
   

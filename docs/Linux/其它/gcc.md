@@ -53,23 +53,21 @@ gcc test.c -o test
 
 当源文件的规模较大、引用关系较复杂时，用gcc逐个编译比较麻烦，可以用工具make批量编译。
 - make会读取Makefile文件中的指令，获取模块间的依赖关系，判断哪些文件过时了需要重新编译，然后生成中间代码或最终的可执行程序。
-
-命令：
-```shell
-make			# 开始编译（默认使用当前目录下的Makefile）
-	clean  		# 删除所有被make创建的文件
-	install		# 编译并安装到系统中
-	uninstall 	# 卸载
-```
-
-相关概念：
-- 一些IDE能自动使用make完成编译。
-- cmake工具：可以根据CMakeList.txt文件自动生成Makefile文件。（在Windows上则是生成visual studio的project文件）
-- qmake工具：用于生成Qt项目的Makefile文件。
+- 命令：
+	```shell
+	make			# 开始编译（默认使用当前目录下的Makefile）
+		clean  		# 删除所有被make创建的文件
+		install		# 编译并安装到系统中
+		uninstall 	# 卸载
+	```
+- 相关概念：
+	- 一些IDE能自动使用make完成编译。
+	- cmake工具：可以根据CMakeList.txt文件自动生成Makefile文件。（在Windows上则是生成visual studio的project文件）
+	- qmake工具：用于生成Qt项目的Makefile文件。
 
 ## 库文件
 
-库文件：包含了一些代码，可以被程序导入、调用。
+：包含了一些代码，可以被程序导入、调用。
 
 库文件的用途。
 - 可以将程序的代码分离成多个模块，方便调整。
@@ -106,7 +104,6 @@ ar -rc lib1.a 1.o  ...          # 可以加上多个目标文件
 - 如果程序依赖Linux，则可以用Visual Studio、MinGW、Cygwin等工具编译成Window的可执行文件。
 
 相关概念。
-
 - MinGW（Minimalist GNU For Windows）：将GNU套件移植到了Windows上，让用户可以在Windows上使用GNU编译器（一般是在DOS窗口中使用），编译生成的可执行文件是 .exe 格式。
   - MinGW在编译时，会将源代码中调用的Linux库文件、API转换成Windows库文件、API。
   - MinGW有一个子项目Msys，提供了一个在Windows上运行的简单Linux系统。

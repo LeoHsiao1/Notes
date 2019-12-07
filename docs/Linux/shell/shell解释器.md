@@ -1,0 +1,86 @@
+# shell解释器
+
+狭义的shell是指提供终端的程序，也是shell命令的解释器。
+- 每个用户登录系统后，都要创建一个shell进程，显示终端供用户操作。
+- shell解释器会将用户输入的命令解释成可以被内核执行的代码，然后传给系统内核。
+- 广义的shell泛指位于用户与操作系统内核之间的壳程序，使得用户可以与操作系统内核进行交互。
+
+## shell分类
+
+- 起初，Ken Thompson在开发Unix系统时设计了一个shell解释器，名为 sh 。
+- 后来，Unix系统上出现了多种shell解释器，其中名为 bash 的shell解释器最流行（已经成为了Linux系统默认的shell），它兼容 sh 。
+- 例：查看系统可用的所有shell
+    ```shell
+    [root@Centos ~]# cat /etc/shells
+    /bin/sh
+    /bin/bash
+    /sbin/nologin
+    /usr/bin/sh
+    /usr/bin/bash
+    ```
+- 例：查看当前的shell
+    ```shell
+    [root@Centos ~]# sh   # 进入 sh 终端
+    sh-4.2# echo $SHELL   # 查看用户的登录shell
+    /bin/bash
+    sh-4.2# echo $0       # 查看当前使用的shell
+    sh
+    sh-4.2# e             # 输入一条不存在的命令，可以从报错信息中看出当前使用的shell
+    sh: e: command not found
+    ```
+
+## shell编程
+
+：编写多条shell命令，保存为shell脚本（shell scrpts）。
+- shell脚本通常使用 .sh 作为后缀名，可以在终端直接运行。
+
+shell语言的特点：
+- 属于解释型语言，可以被shell解释器直接解释运行，不需要编译。
+- 属于面向过程的语言，可以定义函数。
+- 用 # 声明单行注释。
+
+shell脚本的示例：
+```shell
+#!/bin/bash
+
+# this is for test
+
+if [ $# -ge 2 ];then
+    echo "The input are:"$*
+else
+    echo "The input should be at least 2 args."
+    exit 1
+fi
+```
+- 文件的第一行注释用 #! 声明一个shell解释器，使用 ./1.sh 的方式运行时，系统就会使用该路径的shell解释器。
+
+## 运行shell脚本的方式
+
+- 在终端输入文件路径，直接运行脚本：
+    ```shell
+    [root@Centos ~]# ./1.sh 
+    -bash: ./1.sh: Permission denied
+    ```
+  - 此时系统会自动选择一个shell解释器来运行它。
+  - 通常会因为没有该文件的可执行权限而报错，需要先执行： chmod +x 1.sh
+  - 运行shell脚本时可以输入参数，比如：./1.sh arg1 arg2
+
+- 用指定的shell解释器来运行脚本：
+    ```shell
+    $ bash 1.sh       # 启动一个子shell来运行脚本，执行完之后会退出该shell
+           -x          # 打印出执行的每条命令（每行开头会显示加号 + ）
+           -n          # 不运行脚本，而是检查是否有语法错误
+           -c <comman> # 不运行脚本，而是执行一条命令
+    ```
+
+- 
+    ```shell
+    $ source 1.sh    # 读取文件的每行字符串，放到当前shell中执行
+    ```
+  - source命令又称为点命令，可以用一个点表示，比如：`. 1.sh`
+
+- 
+    ```shell
+    $ exec <command>...    # 执行一条命令
+    ```
+  - exec执行完命令之后会退出当前shell，除非是对文件描述符进行操作，比如：exec 1> stdout.txt

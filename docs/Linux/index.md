@@ -29,6 +29,10 @@
   - [SSH](docs/Linux/网络/SSH.md)
   - [HTTP](docs/Linux/网络/HTTP.md)
   - [FTP](docs/Linux/网络/FTP.md)
+- <font color="#8f8f8f">shell</font>
+  - [shell解释器](docs/Linux/shell/shell解释器.md)
+  - [变量](docs/Linux/shell/变量.md)
+  - [基本语法](docs/Linux/shell/基本语法.md)
 - <font color="#8f8f8f">测试</font>
   - [简介](docs/Linux/测试/简介.md)
   - [进程测试](docs/Linux/测试/进程测试.md)
@@ -42,4 +46,3 @@
   - [定时任务](docs/Linux/其它/定时任务.md)
   - [gcc](docs/Linux/其它/gcc.md)
   - [OpenWrt](docs/Linux/其它/OpenWrt.md)
-  

@@ -29,4 +29,11 @@ Grafana支持通过GitLab、GitHub等第三方账号登录。
     allowed_groups =
     ```
 
-3. 启动Grafana，在它的登录页面可以看到一个新增的按钮：“Sign in with GitLab”
+3. 再修改该配置文件中的以下配置：
+    ```ini
+    protocol = http
+    http_port = 3000        # Grafana对外的访问端口
+    domain = mygrafana.com  # Grafana对外的访问域名
+    ```
+
+4. 启动Grafana，在它的登录页面可以看到一个新增的按钮：“Sign in with GitLab”

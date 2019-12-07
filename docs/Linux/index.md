@@ -29,16 +29,16 @@
   - [SSH](docs/Linux/网络/SSH.md)
   - [HTTP](docs/Linux/网络/HTTP.md)
   - [FTP](docs/Linux/网络/FTP.md)
-- <font color="#8f8f8f">shell</font>
-  - [shell解释器](docs/Linux/shell/shell解释器.md)
-  - [变量](docs/Linux/shell/变量.md)
-  - [基本语法](docs/Linux/shell/基本语法.md)
 - <font color="#8f8f8f">测试</font>
   - [简介](docs/Linux/测试/简介.md)
   - [进程测试](docs/Linux/测试/进程测试.md)
   - [CPU测试](docs/Linux/测试/CPU测试.md)
   - [网络测试](docs/Linux/测试/网络测试.md)
   - [综合测试工具](docs/Linux/测试/综合测试工具.md)
+- <font color="#8f8f8f">shell</font>
+  - [解释器](docs/Linux/shell/解释器.md)
+  - [变量](docs/Linux/shell/变量.md)
+  - [基本语法](docs/Linux/shell/基本语法.md)
 - <font color="#8f8f8f">其它</font>
   - [系统信息](docs/Linux/其它/系统信息.md)
   - [安装软件](docs/Linux/其它/安装软件.md)

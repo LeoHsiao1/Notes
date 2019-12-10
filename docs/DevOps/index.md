@@ -12,4 +12,9 @@
   - [Docker镜像](docs/DevOps/容器/Docker镜像.md)
   - [Docker Compose](docs/DevOps/容器/Docker-Compose.md)
 - <font color="#8f8f8f">k8s</font>
-  - [Kubernetes](docs/DevOps/k8s/Kubernetes.md)
+  - [简介](docs/DevOps/k8s/简介.md)
+  - [安装](docs/DevOps/k8s/安装.md)
+  - [管理对象](docs/DevOps/k8s/管理对象.md)
+  - [Controller](docs/DevOps/k8s/Controller.md)
+  - [配置管理](docs/DevOps/k8s/配置管理.md)
+  - [Rancher](docs/DevOps/k8s/Rancher.md)

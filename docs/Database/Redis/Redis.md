@@ -24,6 +24,7 @@
     redis-server                       # 启动Redis服务器
                 /etc/redis/redis.conf  # 使用某个配置文件启动
     ```
+    - 以daemon方式启动时，出现报错也不会显示。
 
 - 不安装，而是运行docker镜像：
     ```shell
@@ -38,6 +39,7 @@ redis-cli              # 启动客户端（默认连接到本地6379端口的服
           -h 127.0.0.1 # 指定服务器的IP地址
           -p 6379      # 指定服务器的端口
           -a ******    # 指定密码
+          [command]    # 不打开客户端，只是执行一条命令
 ```
   - Redis默认没有密码。如果设置了密码，却没有在启动Redis客户端时输入密码，也可以进入其终端，只是无权进行任何操作。
   - Redis只存在root权限，没有细致的权限划分。用户要么无法进行任何操作，要么可以进行任何操作。因此，如果要让多个应用使用的Redis相互隔离，应该给它们分别启动一个Redis实例。
@@ -121,7 +123,7 @@ flushall      # 删除所有数据库的所有key
 - keys pattern
   - 功能：查看匹配pattern的所有key。
   - 例：
-127.0.0.1:6379> keys key*
+127.0.0.1:6379> keys *
 1) "key1"
 2) "key2"
 - exists key [key ...]
@@ -391,21 +393,35 @@ requirepass ******
 ## 
 ## 
  
-测试
-## 
-## redis-benchmark：Redis官方提供的测试工具。
-redis-benchmark
--h 127.0.0.1    # redis服务器的IP地址
--p 6379      # redis服务器的端口号
--a ******    # 密码
--c 50      # 模拟连接的client数
--n 100000    # 模拟发出的请求数
--d 3        # 每个包的大小（单位bytes）
--r        # 写入随机的value
--l        # 循环测试，不停止
--t  set,lpush  # 只执行某些测试用例
-  - redis-benchmark -h 192.168.1.1 -p 6379 -c 20 -n 100000
-## 
-## 
-## 
+# 性能优化
 
+- Redis的QPS主要受网络延迟、CPU频率影响。
+- Redis的读写速度很快，IO压力小，没有必要读写分离，只是需要横向扩容。
+
+## redis-benchmark
+
+：Redis官方提供的性能测试工具，安装Redis时会自带。
+
+命令：
+```shell
+$ redis-benchmark
+                  -h 127.0.0.1 # redis服务器的IP地址
+                  -p 6379      # redis服务器的端口号
+                  -a ******    # 密码
+
+                  -c 50        # 模拟连接的client数（默认50个）
+                  -n 100000    # 模拟发出的请求数
+                  -l           # 循环测试，不停止
+                  -d 3         # set、get时的value大小（默认为 3 bytes）
+                  -r 10000     # 使用随机的名字创建key
+                  -t set,get   # 只执行某些测试用例（默认执行所有测试用例）
+                  -P 10        # 使用管道，每次通信发送10条命令（默认只发送一条）
+```
+- 例：
+  ```shell
+  redis-benchmark -h redis-1 -a ****** -t set,get
+  ```
+- 测试的是QPS，不会创建多少key、占用多少内存。
+- 当 -c 太少时，QPS会比较小。当QPS达到瓶颈时，增加 -c 数，QPS也不会增加。
+- 测试时会在Redis服务器的 0 号数据库中创建几个key，比如`mylist`、`key:__rand_int__`等。测试完之后不会删除。
+- 使用 -r 10000 选项时，会使用10000范围内的随机数给key命名，例如：`key:000000000913`、`key:000000000882`

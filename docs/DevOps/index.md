@@ -14,7 +14,8 @@
 - <font color="#8f8f8f">k8s</font>
   - [简介](docs/DevOps/k8s/简介.md)
   - [安装](docs/DevOps/k8s/安装.md)
-  - [管理对象](docs/DevOps/k8s/管理对象.md)
-  - [Controller](docs/DevOps/k8s/Controller.md)
-  - [配置管理](docs/DevOps/k8s/配置管理.md)
+  - [Pod](docs/DevOps/k8s/Pod.md)
+  - [网络](docs/DevOps/k8s/网络.md)
+  - [存储](docs/DevOps/k8s/存储.md)
+  - [插件](docs/DevOps/k8s/插件.md)
   - [Rancher](docs/DevOps/k8s/Rancher.md)

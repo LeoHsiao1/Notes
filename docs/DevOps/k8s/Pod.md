@@ -1,69 +1,44 @@
-# Controller
+# Pod
+
+## Pod的状态
+
+- Pending ：待定。此时kubelet正在部署该Pod。
+- Running ：运行中。此时kubelet已经启动了该Pod的所有容器。
+- Terminating ：正在终止运行。
+- Succeeded ：Pod中所有容器都被正常终止。
+- Failed ：Pod已经终止，且至少有一个容器是异常终止。
+  <br>当Pod中的容器因为异常而中断运行时，默认会被 kubelet 自动重启，如果重启成功就依然为Running状态。
+- Unkown ：状态未知。例如与Pod所在节点通信失败时就会不知道状态。
+
+当用户请求终止一个Pod时，kubelet会向Pod中的进程发送SIGTERM信号，并将Pod的状态标识为“Terminating”，超过宽限期（默认为30秒）之后再向Pod中仍在运行的进程发送SIGKILL信号。
+
+## Controller
 
 ：控制器，用于控制Pod。
+- k8s设计了多种Controller，用不同的配置文件进行管理。
 
-- Deployment：用于描述一次部署任务。
-  - k8s会保存用户每次使用的Deployment，从而方便回滚到以前的部署状态。
-  - 当用户删除一个Deployment时，k8s会自动销毁对应的Pod。当用户更新一个Deployment时，k8s会滚动更新，依然会销毁旧Pod。
-  - 例：滚动更新一个应用时，k8s会先创建一个新的ReplicaSet，启动需要的Pod数，然后迁移流量到新的Pod，最后把旧的ReplicaSet的Pod数减至0。从而保证在更新过程中不中断服务。
+### Deployment
 
-- ReplicaSet：副本集，用于控制、维持一个应用的Pod数量。
-  - 取代了以前的副本控制器（Replication Controller）。
-  - 通常写在Deployment中。
-  - 例：当用户指定运行n个Pod时，如果Pod数少于n，ReplicaSet就会自动创建新的副本；如果Pod数多于n，ReplicaSet就会终止多余的副本。
-  - 改变ReplicaSet的数量就可以方便地缩容、扩容，当ReplicaSet为0时就会删除所有Pod。
-  - 如果Pod出现故障、Pod需要的资源不足、或者Pod所在Node出现故障，ReplicaSet不会进行修复，而是直接创建新的Pod。
+：描述一个Pod的部署状态，让k8s据此部署Pod。
+- Deployment部署的是无状态应用，可以随时创建、销毁Pod。同一个应用的不同Pod实例没有差异，可以共享资源、配置文件。
 
-
-- StatefulSet
-- Job
-- CronJob
-
-
-k8s常见的应用类型：
-
-- 无状态服务
-  - 可以随时创建、销毁Pod，只需用ReplicaSet控制Pod数。
-  - 所有Pod基本没有差异，可以共享资源、配置文件
-- StatefulSet：有状态服务。
-  - 不能随时创建、销毁Pod，甚至连Pod名都不能变。
-  - 每个Pod使用独立的资源、配置文件，比如分别挂载目录。
-  - 例：以无状态服务的方式运行一个CentOS容器，所有状态都存储在容器里，不可靠。改成StatefulSet方式运行，就可以漂移到不同节点上，实现高可用。
-- Job：只执行一次的任务。执行成功就自动销毁。
-- CronJob
-- DaemonSet：担任宿主机上的daemon服务。
-  - 例：在集群中每个节点上以DaemonSet方式运行一些监控、存储、日志Pod。
-
-
-
-
-
-
-
-
-
-
-
-
-## Deployment：
-
-- Deployment：用于定义Pod、ReplicaSet。
-
-例：
+Deployment的配置文件可以任意命名，通常名为deployment.yml，内容示例如下：
 ```yaml
 apiVersion: apps/v1
 kind: Deployment            # 该Controller的类型
 metadata:                   # 该Controller的元数据
-  name: the-deployment
+  annotations:
+    creator: Leo
+  name: deployment-redis-1
 spec:                       # 该Controller的规格
   replicas: 3               # Pod运行的副本数
-  selector:                 # 通过Label选择Pod
+  selector:                 # 选择Pod（匹配Pod的spec.template.metadata.labels）
     matchLabels:
-      app: redis
+      workload.io/selector: redis-1
   template:                 # 定义一个Pod模板
     metadata:               # Pod的元数据
       labels:
-        deployment: redis
+        workload.io/selector: redis-1
     spec:                   # Pod的规格
       containers:           # 该Pod中包含的容器
       - name: redis         # 该Pod中的第一个容器
@@ -80,17 +55,62 @@ spec:                       # 该Controller的规格
 ```
 - spec ：规格，描述了期望中的对象状态。
 - Label ：对象的标签。
-  - 采用键值对格式，用于描述对象的一些特征，以便于通过Label检索对象。
+  - 采用键值对格式，用于描述对象的一些特征，以便于通过Label找到该对象。
   - 不同对象的Label可以重复。
   - key可以加上 alpha.istio.io/ 格式的前缀。前缀 kubernetes.io/ 被k8s保留。
 - Annotation ：对象的注释。
   - 与Label类似，但不能用于检索对象，只是单纯的注释。
-
+- 当用户修改了 Pod template 之后（改变ReplicaSet不算），就算创建了一个新版本的Deployment，k8s会据此重新部署Pod。
+  - k8s默认会保存最近两个版本的Deployment，便于将Pod回滚（rollback）到以前的部署状态。
+  - 当用户删除一个Deployment时，k8s会自动销毁对应的Pod。当用户修改一个Deployment时，k8s会滚动更新，依然会销毁旧Pod。
 
 一些k8s对象之间存在上下级的关系，上级称为Owner，下级称为Dependent。
 - 例如：一个ReplicaSet是多个Pod的Owner。
 - 删除一个Owner对象时，默认会级联删除它的所有Dependent。
 
+### ReplicaSet
+
+：副本集（RC），用于控制、维持一个应用的Pod数量。
+- 取代了以前的副本控制器（Replication Controller，RS）。
+- 通常写在Pod spec中配置。
+- 当用户指定运行n个Pod时，如果Pod数少于n，ReplicaSet就会自动创建新的副本；如果Pod数多于n，ReplicaSet就会终止多余的副本。
+- 改变ReplicaSet的数量就可以方便地缩容、扩容，当ReplicaSet为0时就会删除所有Pod。
+- 滚动更新一个应用时，k8s会先创建一个新的ReplicaSet，启动需要的Pod数，然后迁移流量到新的Pod，最后把旧的ReplicaSet的Pod数减至0。从而保证在更新过程中不中断服务。
+- 如果Pod出现故障、Pod需要的资源不足、或者Pod所在Node出现故障，ReplicaSet不会进行修复，而是直接创建新的Pod。
+
+### StatefulSet
+
+：与Deployment类似，但部署的是有状态服务。
+- 有状态服务不能随时创建、销毁Pod，甚至连Pod名都不能变。每个Pod使用独立的资源、配置文件，比如分别挂载目录。
+- 例如：以无状态服务的方式运行一个CentOS容器，所有状态都存储在容器里，不可靠。改成StatefulSet方式运行，就可以漂移到不同节点上，实现高可用。
+
+### DaemonSet
+
+：与Deployment类似，但部署的是宿主机上的daemon服务，例如监控、日志服务。
+- 一个DaemonSet服务通常在每个宿主机上只需部署一个Pod实例。
+
+### Job
+
+：与Deployment类似，但部署的是只执行一次的任务。
+
+### CronJob
+
+：与Deployment类似，但部署的是定时任务或周期性任务。
+
+## Sidecar
+
+一个Pod中只运行一个容器的情况最简单，但有时也会运行一些辅助容器（Sidecar）。
+
+辅助容器有两种类型：
+- 标准容器：与应用容器差不多。
+- init容器：在创建Pod时最先启动，用于执行初始化任务，执行成功之后就会自动终止。
+  - 可以给一个Pod创建多个init容器，它们会按顺序串行执行。当一个init容器执行成功之后，才会启动下一个init容器或应用容器。
+  - 如果init容器执行失败，则kubelet默认会重新启动该Pod（由Pod配置的restartPolicy决定）。为了避免反复重启出错，init容器应该满足幂等性。
+
+## Horizontal Pod Autoscaling
+
+：Pod的水平自动伸缩（HPA）。
+- k8s会监控服务的一些metrics指标（比如CPU负载），当超过一定阙值时就自动增加 ReplicaSet 数量，从而实现服务的横向扩容。
 
 ## 主机调度
 
@@ -175,4 +195,3 @@ spec:
       - 当operator为Exists时，如果effect、key与Taint的相同，则匹配该Taint。
       - 如果不指定key，则匹配Taint的所有key。
       - 如果不指定effect，则匹配Taint的所有effect。
-

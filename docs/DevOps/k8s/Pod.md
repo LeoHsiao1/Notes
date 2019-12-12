@@ -22,25 +22,28 @@
 ：描述一个Pod的部署状态，让k8s据此部署Pod。
 - Deployment部署的是无状态应用，可以随时创建、销毁Pod。同一个应用的不同Pod实例没有差异，可以共享资源、配置文件。
 
-Deployment的配置文件可以任意命名，通常名为deployment.yml，内容示例如下：
+Deployment的配置文件通常命名为deployment.yaml，内容示例如下：
 ```yaml
 apiVersion: apps/v1
 kind: Deployment            # 该Controller的类型
 metadata:                   # 该Controller的元数据
   annotations:
     creator: Leo
-  name: deployment-redis-1
-spec:                       # 该Controller的规格
+  labels:
+    app: redis
+  name: deployment-redis
+  namespace: default
+spec:                       # Controller的规格
   replicas: 3               # Pod运行的副本数
-  selector:                 # 选择Pod（匹配Pod的spec.template.metadata.labels）
+  selector:                 # 选择Pod
     matchLabels:
-      workload.io/selector: redis-1
-  template:                 # 定义一个Pod模板
+      app: redis
+  template:                 # 开始定义Pod的模板
     metadata:               # Pod的元数据
       labels:
-        workload.io/selector: redis-1
+        app: redis
     spec:                   # Pod的规格
-      containers:           # 该Pod中包含的容器
+      containers:           # 定义该Pod中包含的容器
       - name: redis         # 该Pod中的第一个容器
         image: redis:5.0.6
         command: ["redis-server"]
@@ -53,14 +56,29 @@ spec:                       # 该Controller的规格
               name: redis       # 选择名为redis的secret
               key: password     # 获取secret中名为password的key的值
 ```
-- spec ：规格，描述了期望中的对象状态。
-- Label ：对象的标签。
-  - 采用键值对格式，用于描述对象的一些特征，以便于通过Label找到该对象。
-  - 不同对象的Label可以重复。
-  - key可以加上 alpha.istio.io/ 格式的前缀。前缀 kubernetes.io/ 被k8s保留。
-- Annotation ：对象的注释。
-  - 与Label类似，但不能用于检索对象，只是单纯的注释。
-- 当用户修改了 Pod template 之后（改变ReplicaSet不算），就算创建了一个新版本的Deployment，k8s会据此重新部署Pod。
+- Metadata：对象的元数据，比如Annotation、Label等。
+  - Annotation：对象的注释，采用键值对格式。
+    - key、value可以配置任意内容，可以包含字母、数字、下划线、横杆、小数点。
+    - key可以加上 xx.xx.io/ 格式的DNS子域作为前缀。前缀 kubernetes.io/ 、k8s.io/ 被保留给k8s核心组件使用。
+  - Label：对象的标签。
+    - 与Annotation类似，但是可以用于检索对象。
+    - 不同对象的Label可以重复key，同一个对象的多个Label不能重复key。
+- spec：规格，描述了期望中的对象状态。
+- selector：选择器，通过metadata选择对象。
+  - 符合条件的对象可能有0个、1个、多个。
+  - 例：
+      ```yaml
+      selector:
+        name: deployment-redis    # 匹配对象的 metadata.name
+      ```
+  - 例：
+      ```yaml
+      selector:
+        matchLabels:              # 匹配对象的 metadata.labels
+          app: redis
+      ```
+
+- **Deployment的 spec.template 部分就是Pod的配置内容**，当用户修改了 template 之后（改变ReplicaSet不算），k8s就会创建一个新版本的Deployment，据此重新部署Pod。
   - k8s默认会保存最近两个版本的Deployment，便于将Pod回滚（rollback）到以前的部署状态。
   - 当用户删除一个Deployment时，k8s会自动销毁对应的Pod。当用户修改一个Deployment时，k8s会滚动更新，依然会销毁旧Pod。
 
@@ -72,7 +90,7 @@ spec:                       # 该Controller的规格
 
 ：副本集（RC），用于控制、维持一个应用的Pod数量。
 - 取代了以前的副本控制器（Replication Controller，RS）。
-- 通常写在Pod spec中配置。
+- 通常在Deployment的 spec 部分中配置。
 - 当用户指定运行n个Pod时，如果Pod数少于n，ReplicaSet就会自动创建新的副本；如果Pod数多于n，ReplicaSet就会终止多余的副本。
 - 改变ReplicaSet的数量就可以方便地缩容、扩容，当ReplicaSet为0时就会删除所有Pod。
 - 滚动更新一个应用时，k8s会先创建一个新的ReplicaSet，启动需要的Pod数，然后迁移流量到新的Pod，最后把旧的ReplicaSet的Pod数减至0。从而保证在更新过程中不中断服务。

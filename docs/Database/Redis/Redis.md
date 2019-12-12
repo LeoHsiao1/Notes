@@ -28,7 +28,6 @@
 
 - 不安装，而是运行docker镜像：
     ```shell
-    docker pull redis:5.0.5
     docker run -d --name redis -p 6379:6379 redis:5.0.5
     ```
 

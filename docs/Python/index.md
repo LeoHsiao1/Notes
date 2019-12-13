@@ -2,7 +2,7 @@
 
 - <font color="#8f8f8f">简介</font>
   - [简介](docs/Python/简介/简介.md)
-  - [Python解释器](docs/Python/简介/Python解释器.md)
+  - [解释器](docs/Python/简介/解释器.md)
   - [版本差异](docs/Python/简介/版本差异.md)
 - <font color="#8f8f8f">混合开发</font>
   - [混合开发](docs/Python/混合开发/混合开发.md)

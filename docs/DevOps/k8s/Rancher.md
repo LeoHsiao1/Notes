@@ -15,4 +15,3 @@
   - 部署应用时，如果添加了端口映射，会自动在“服务发现”页面创建相应的“DNS记录”，与应用同名。
   - Service可以是多种类型：ClusterIP、NodePort、负载均衡、Headless Service。
   - Service可以解析到多种EndPoint：外部IP、外部域名、Service名、工作负载、Pod。
-- 一个存储类（Volume Class）上可以创建多个持久卷（PV）。

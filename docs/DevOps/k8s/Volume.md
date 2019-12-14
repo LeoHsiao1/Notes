@@ -1,18 +1,65 @@
-# 存储
-
-
-## Volume
+# Volume
 
 ：存储卷。
-  - 将存储卷挂载到Pod中的某个目录之后，即使Pod被销毁，该目录下保存的数据也不会丢失。
-  - 给一个Pod挂载多个Volume时，它们的挂载目录不能重复。
+- 将Volume挂载到Pod中的某个目录之后，即使Pod被销毁，该目录下的文件依然会被持久化保存。
+- 同一个Pod中的多个容器会共享Volume，可通过Volume共享文件。
+- 给一个Pod挂载多个Volume时，它们的挂载目录不能重复。
 
+Docker中的Volume概念比较简单，只是挂载宿主机的目录到容器中。而k8s中的Volume概念比较复杂，分为很多种类型，比如：hostPath、nfs、PVC、secret等。
 
-- Persistent Volume（PV）：持久存储卷。
-- PersistentVolumeClaim（PVC）：持久存储卷声明。
-  - 一个PV上可以创建多个PVC，挂载到Pod使用。
-- StorageClass：存储类
+## StorageClass
 
+：存储类。
+- 将不同的物理存储器抽象为存储类，相当于PV的模板。
+
+## Persistent Volume（PV）
+
+：持久存储卷。
+- 一个存储类（Volume Class）上可以创建多个PV。
+
+PV的访问模式：
+- ReadWriteOnce：该卷可以被单主机读写
+- ReadOnlyMany：该卷可以被多主机只读
+- ReadWriteMany：该卷可以被多主机读写
+
+## PersistentVolumeClaim（PVC）
+
+：持久存储卷声明，代表用户使用存储卷的请求。
+- 当用户给Pod挂载PVC时，k8s会寻找符合该PVC需求的PV，
+  - 如果找到了，就把该PV与PVC一对一绑定，然后挂载到Pod上。
+  - 如果没找到，则不能部署该Pod。
+
+配置示例：
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+spec:
+  accessModes:
+    - ReadWriteMany   # 该PVC的访问模式
+  resources:
+    requests:
+      storage: 10Gi   # 该PVC需要的存储空间
+  storageClassName: local-volume  # 该PVC需要的存储类
+```
+
+例：在Deployment中挂载PVC
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: redis
+        image: redis:5.0.6
+        volumeMounts:
+            - name: volume1
+              mountPath: /opt/volume    # 将volume1挂载到该目录
+      volumes:
+      - name: volume1                   # 创建一个名为pvc1的PVC，再根据它创建名为volume1的Volume
+        persistentVolumeClaim:
+          claimName: pvc1
+```
 
 ## ConfigMap
 
@@ -65,7 +112,10 @@ spec:
 
 例：引用ConfigMap中的参数，生成Volume并挂载
 ```yaml
-    ...
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
     spec:
       containers:
       - name: redis

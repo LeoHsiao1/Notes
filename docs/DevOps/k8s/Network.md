@@ -1,4 +1,4 @@
-# 网络
+# Network
 
 k8s中常用的几种IP地址：
 - Node IP：集群中一个主机节点的IP地址。

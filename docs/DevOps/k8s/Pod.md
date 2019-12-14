@@ -49,12 +49,6 @@ spec:                       # Controller的规格
         command: ["redis-server"]
         ports:
         - containerPort: 6379   # 相当于Dockerfile中的 export 8080
-        env:
-        - name: REDIS_PASSWD    # 添加一个名为REDIS_PASSWD的环境变量
-          valueFrom:
-            secretKeyRef:       # 从secret中获取配置
-              name: redis       # 选择名为redis的secret
-              key: password     # 获取secret中名为password的key的值
 ```
 - Metadata：对象的元数据，比如Annotation、Label等。
   - Annotation：对象的注释，采用键值对格式。

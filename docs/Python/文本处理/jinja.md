@@ -72,29 +72,21 @@ All are False.
 安装：pip install jinja2
 
 用法示例：
-1. 编写一个模板文件，内容如下：
-    ```
-    k1: Hello
-    k2: {{ v2 }}
-    ```
-2. 用jinja渲染模板：
+```python
+>>> from jinja2 import Template
+>>> text="""
+... k1: Hello
+... k2: {{ v2 }}
+... """
+>>> Template(text).render(v2='World')    # 传入参数，渲染模板，返回str值
+'k1: Hello\nk2: World'
+```
+
+调用render()时：
+- 可以传入关键字参数，也可以传入一个字典。如下：
     ```python
-    >>> from jinja2 import Environment, FileSystemLoader
-    >>> loader = FileSystemLoader(searchpath='../templates')  # 创建loader
-    >>> env = Environment(loader=loader)
-    >>> template = env.get_template('1.txt')  # 根据文件名指定一个模板文件
-    >>> template.render(v2='World')           # 传入参数，渲染模板，返回str值
-    'k1: Hello\nk2: World'
+    template.render(v2='World')
+    template.render({v2:'World'})
     ```
-
-- 创建loader时，要指定模板文件所在目录。可以传入一个包含多个目录的列表，去这些目录下寻找模板。
-  - loader默认采用utf-8编码。
-- 调用render()时：
-    - 可以传入关键字参数，也可以传入一个字典。如下：
-        ```python
-        template.render(v2='World')
-        template.render({v2:'World'})
-        ```
-    - 如果某个参数在模板中声明了，却没有传入，则会被替换成空字符串。
-    - 如果某个参数在模板中没有声明，却传入了，则会被忽略。
-
+- 如果某个参数在模板中声明了，却没有传入，则会被替换成空字符串。
+- 如果某个参数在模板中没有声明，却传入了，则会被忽略。

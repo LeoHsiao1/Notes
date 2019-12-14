@@ -33,6 +33,8 @@ PV的访问模式：
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
+metadata:
+  name: pvc1
 spec:
   accessModes:
     - ReadWriteMany   # 该PVC的访问模式
@@ -56,7 +58,7 @@ spec:
             - name: volume1
               mountPath: /opt/volume    # 将volume1挂载到该目录
       volumes:
-      - name: volume1                   # 创建一个名为pvc1的PVC，再根据它创建名为volume1的Volume
+      - name: volume1    # 创建一个名为volume1的Volume，基于pvc1
         persistentVolumeClaim:
           claimName: pvc1
 ```

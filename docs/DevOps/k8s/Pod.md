@@ -20,7 +20,7 @@
 ### Deployment
 
 ：描述一个Pod的部署状态，让k8s据此部署Pod。
-- Deployment部署的是无状态应用，可以随时创建、销毁Pod。同一个应用的不同Pod实例没有差异，可以共享资源、配置文件。
+- Deployment部署的是无状态应用：同一个应用的不同Pod实例没有差异，可以随时创建、销毁Pod，可以共享资源、配置文件。
 
 Deployment的配置文件通常命名为deployment.yaml，内容示例如下：
 ```yaml
@@ -93,7 +93,7 @@ spec:                       # Controller的规格
 ### StatefulSet
 
 ：与Deployment类似，但部署的是有状态服务。
-- 有状态服务不能随时创建、销毁Pod，甚至连Pod名都不能变。每个Pod使用独立的资源、配置文件，比如分别挂载目录。
+- 一个有状态服务的每个Pod实例使用独立的资源、配置文件，不能随时创建、销毁Pod，甚至连Pod名都不能改变。
 - 例如：以无状态服务的方式运行一个CentOS容器，所有状态都存储在容器里，不可靠。改成StatefulSet方式运行，就可以漂移到不同节点上，实现高可用。
 
 ### DaemonSet

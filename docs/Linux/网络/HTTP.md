@@ -50,18 +50,3 @@ $ wget <URL>...                # 下载指定网址的文件，并自动保存�
         -p        # 下载显示在网页中的所有文件
         -k        # 将网页中的绝对链接改为本地链接
     ```
-
-## HTTP通信的常见报错
-
-- 例：
-    ```
-    curl http://10.0.0.1:80
-    Failed to connect to 10.0.0.1 port 80: Connection refused
-    ```
-    - 这是不能连接到服务器，可能是IP地址填错了、端口号填错了、网络不通。
-    - 此时可用`ping 10.0.0.1`试一下网络是否连通，用`telnet 127.0.0.1 80`试一下服务器是否开通了该端口。
-- 例：`Connection reset by peer`
-  - 当服务器已关闭socket连接之后，如果客户端仍然向socket发送数据，就会收到该报错。
-- 例：`Connection reset`
-  - 当服务器已关闭socket连接之后，如果客户端仍然从socket读取数据，就会收到该报错。
-- 有时需要确认是采用http协议还是https协议访问。

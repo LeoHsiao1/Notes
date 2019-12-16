@@ -24,7 +24,7 @@
   - [内存](docs/Linux/设备/内存.md)
 - <font color="#8f8f8f">网络</font>
   - [IP](docs/Linux/网络/IP.md)
-  - [端口](docs/Linux/网络/端口.md)
+  - [Socket](docs/Linux/网络/Socket.md)
   - [防火墙](docs/Linux/网络/防火墙.md)
   - [SSH](docs/Linux/网络/SSH.md)
   - [HTTP](docs/Linux/网络/HTTP.md)

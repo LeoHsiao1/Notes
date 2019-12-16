@@ -5,12 +5,14 @@
 未连接时的状态：
 - `LISTEN` ：该Socket已绑定到某个进程，内核正在监听该Socket。
 
+
 建立TCP连接时的状态：
 - `SYN_SENT` ：已发出SYN=1的TCP包，还没有收到ACK=1、SYN=1的TCP包。
 - `SYN_RECEIVED`
 - `ESTABLISHED` ：已建立连接，可以通信。
-- 如下图：
-  ![](建立连接.png)
+
+![](建立连接.png)
+
 
 断开TCP连接时的状态：
 - `FIN-WAIT-1`
@@ -22,8 +24,9 @@
 - `CLOSE_WAIT`
 - `LAST_ACK`
 - `CLOSED` ：已关闭连接。
-- 如下图：
-  ![](断开连接.png)
+
+![](断开连接.png)
+
 
 ## TCP通信的常见报错
 

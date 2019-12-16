@@ -1,16 +1,39 @@
-# Socket
+# TCP/UDP
 
 ## Socket的状态
 
-常见的状态：
-- LISTEN ：正在被某个进程监听。
-- ESTABLISHED ：已建立TCP连接。
-- TIME_WAIT ：本机已关闭Socket，正在等待对方关闭。
-  - 这是主动关闭方的最后阶段，总是会等待 2MSL 时间之后才变成CLOSED，避免对方来不及关闭连接。此时该端口占用的资源不会被内核释放。
+未连接时的状态：
+- `LISTEN` ：该Socket已绑定到某个进程，内核正在监听该Socket。
+
+建立TCP连接时的状态：
+- `SYN_SENT` ：已发出SYN=1的TCP包，还没有收到ACK=1、SYN=1的TCP包。
+- `SYN_RECEIVED`
+- `ESTABLISHED` ：已建立连接，可以通信。
+- 如下图：
+  ![](建立连接.png)
+
+断开TCP连接时的状态：
+- `FIN-WAIT-1`
+- `FIN-WAIT-2`
+- `TIME_WAIT`
+  - 主动关闭方在关闭连接之后，还要等待 2MSL 时间之后才能变成CLOSED，避免对方来不及关闭连接。此时该端口占用的资源不会被内核释放。
   - MSL的默认值为两分钟。
-  - 服务器应该尽量不要主动断开连接，否则TIME_WAIT状态的端口会浪费大量的服务器资源。
-- CLOSE_WAIT ：对方已关闭Socket，本机正在准备关闭。（收到FIN，被动关闭）
-- CLOSED ：已关闭连接。
+  - 服务器应该尽量不要主动断开连接，否则会经常产生TIME_WAIT状态的端口，浪费大量的服务器资源。
+- `CLOSE_WAIT`
+- `LAST_ACK`
+- `CLOSED` ：已关闭连接。
+- 如下图：
+  ![](断开连接.png)
+
+## TCP通信的常见报错
+
+- 当主机A向主机B的某个端口发送SYN包，请求建立TCP连接时：
+  - 如果主机B的防火墙禁用了该端口，或者启用了该端口但是没有进程在监听该端口，主机B的内核就会回复一个RST包（也可能一直不回复），导致主机A报错：`Connection refused`
+  - 如果主机A一直没有收到回复（连RST包都没收到），则超出等待时间之后会报错：`Connection timed out`
+
+- 当主机A与主机B通信过程中，主机B突然断开TCP连接时：
+  - 如果主机A继续读取数据包，主机B就会回复一个RST包，导致主机A报错：`Connection reset`
+  - 如果主机A继续发送数据包，主机B就会回复一个RST包，导致主机A报错：`Connection reset by peer`
 
 ## telnet
 
@@ -122,13 +145,3 @@ $ netstat
     [root@Centos ~]# ss -tapn | grep 8000
     LISTEN     0      128         :::8000               :::*             users:(("docker-proxy",pid=18614,fd=4))
     ```
-
-## TCP通信的常见报错
-
-- 当主机A向主机B的某个端口发送SYN包，请求建立TCP连接时：
-  - 如果主机B的防火墙禁用了该端口，或者启用了该端口但是没有进程在监听该端口，主机B的内核就会回复一个RST包（也可能一直不回复），导致主机A报错：`Connection refused`
-  - 如果主机A一直没有收到回复（连RST包都没收到），则超出等待时间之后会报错：`Connection timed out`
-
-- 当主机A与主机B通信过程中，主机B突然断开TCP连接时：
-  - 如果主机A继续读取数据包，主机B就会回复一个RST包，导致主机A报错：`Connection reset`
-  - 如果主机A继续发送数据包，主机B就会回复一个RST包，导致主机A报错：`Connection reset by peer`

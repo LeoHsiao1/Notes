@@ -9,6 +9,5 @@
   - [数据类型](docs/数据库/Redis/数据类型.md)
   - [其它功能](docs/数据库/Redis/其它功能.md)
   - [性能优化](docs/数据库/Redis/性能优化.md)
-  - [主从+哨兵集群](docs/数据库/Redis/主从+哨兵集群.md)
-  - [Cluster集群](docs/数据库/Redis/Cluster集群.md)
+  - [部署架构](docs/数据库/Redis/部署架构.md)
   - [♢ Redis](docs/数据库/Redis/^Redis.md)

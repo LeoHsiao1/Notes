@@ -28,7 +28,7 @@ MongoDB客户端的终端采用JavaScript的shell，因此：
 
 ### 启动
 
-```
+```shell
 mongo                         # 启动客户端（默认连接到本机6379端口的服务器，使用test数据库）
       127.0.0.1:27017/test                            # 指定要连接的服务器、数据库
       username:password@127.0.0.1:27017/admin         # 再指定用户名、密码
@@ -45,7 +45,7 @@ mongo                         # 启动客户端（默认连接到本机6379端�
 
 MongoDB默认没有启用密码认证，可按以下步骤设置密码：
 1.  添加用户：
-    ```
+    ```js
     use admin
     db.createUser(
       {
@@ -56,10 +56,10 @@ MongoDB默认没有启用密码认证，可按以下步骤设置密码：
     )
     ```
 2.  显示已存在的所有用户：
-    ```
+    ```js
     show users
-    ```
-3.  重启MongoDB服务器，启用密码认证：
-    ```
+    ```js
+3.  退出MongoDB终端，重启MongoDB服务器，启用密码认证：
+    ```shell
     mongod --db <path> --auth
     ```

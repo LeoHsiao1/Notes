@@ -16,6 +16,8 @@
   - [文件](docs/Linux/文件/文件.md)
   - [管理文件](docs/Linux/文件/管理文件.md)
   - [处理文本](docs/Linux/文件/处理文本.md)
+  - [文件属性](docs/Linux/文件/文件属性.md)
+  - [文件权限](docs/Linux/文件/文件权限.md)
   - [目录](docs/Linux/文件/目录.md)
 - <font color="#8f8f8f">设备</font>
   - [设备](docs/Linux/设备/设备.md)

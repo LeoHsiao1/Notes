@@ -1,6 +1,6 @@
 # Git
 
-：一个开源的、分布式的版本控制工具，常用于软件配置管理（Software Configuration Management，SCM）。
+：一个分布式的版本控制工具，常用于软件配置管理（Software Configuration Management，SCM）。
 
 主要原理:
 - 用户可以将当前状态的一些文件保存为一个版本，永久保存它们此时的状态。

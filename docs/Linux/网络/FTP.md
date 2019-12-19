@@ -7,7 +7,7 @@
 
 ## vsftpd
 
-：very secure ftp daemon，一个开源的加密型FTP服务器软件。
+：very secure ftp daemon，一个加密型FTP服务器软件。
 - 支持三种登录模式：
   - 匿名用户模式：允许任何客户端登录（用户名为anonymous，密码为空）。最不安全。
     - 默认使用匿名用户模式，开放/var/ftp目录供客户端访问。

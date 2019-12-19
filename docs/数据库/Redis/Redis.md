@@ -25,7 +25,7 @@
 - 启动服务器：
     ```shell
     redis-server                       # 启动Redis服务器
-                /etc/redis/redis.conf  # 使用配置文件启动
+                /etc/redis/redis.conf  # 使用指定的配置文件
     ```
     - 以daemon方式启动时，出现报错也不会在终端显示。
 
@@ -40,7 +40,7 @@
 - 如果使用配置文件启动Redis服务器，Redis会应用配置文件中的各个配置项，覆盖掉默认配置。
 - 每次修改配置文件之后，要使用该配置文件重启Redis才会生效。
 - 配置文件示例：
-  ```conf
+  ```ini
   bind 0.0.0.0
   port 6379
   daemonize yes               # 在后台运行（默认是在前台运行）

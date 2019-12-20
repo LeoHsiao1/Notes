@@ -9,6 +9,7 @@
   - [其它功能](docs/数据库/MongoDB/其它功能.md)
   - [性能优化](docs/数据库/MongoDB/性能优化.md)
   - [部署架构](docs/数据库/MongoDB/部署架构.md)
+  - [♢ pymongo](docs/数据库/MongoDB/^pymongo.md)
 - <font color="#8f8f8f">Redis</font>
   - [Redis](docs/数据库/Redis/Redis.md)
   - [管理单元](docs/数据库/Redis/管理单元.md)
@@ -16,4 +17,4 @@
   - [其它功能](docs/数据库/Redis/其它功能.md)
   - [性能优化](docs/数据库/Redis/性能优化.md)
   - [部署架构](docs/数据库/Redis/部署架构.md)
-  - [♢ Redis](docs/数据库/Redis/^Redis.md)
+  - [♢ redis](docs/数据库/Redis/^redis.md)

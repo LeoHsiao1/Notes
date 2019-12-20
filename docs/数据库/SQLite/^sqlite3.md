@@ -1,6 +1,6 @@
 # ♢ sqlite3
 
-：Python的标准库，能够打开SQLite数据库，直接执行SQL命令。
+：Python的标准库，用于连接到SQLite数据库，通过直接执行SQL语句的方式进行操作。
 
 ## 用法示例
 

@@ -1,8 +1,44 @@
-# ♢ Redis
+# ♢ redis
+
+：Python的第三方库，用于连接到Redis服务器，通过ORM API进行操作。
+- 安装：pip install redis
 
 ## 用法示例
 
+创建Redis客户端：
+```python
+>>> import redis
+>>> client = redis.Redis(host='127.0.0.1', port=6379, db=0, password='', decode_responses=True)
+>>> client.ping()
+True
+```
+- Redis服务器的响应消息默认是bytes类型，设置 decode_responses=True 会将它转换成str类型。
+- 如果要创建多个Redis客户端，可以让它们共用一个连接池，避免重复建立连接的开销。如下：
+    ```python
+    >>> pool = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0, password='', decode_responses=True)
+    >>> client = redis.Redis(connection_pool=pool)
+    ```
+
+client提供了与Redis大部分命令同名的方法，例如：
+
+- string类型的方法
+  - `def set(name, value, ex=None, px=None, nx=False, xx=False)`
+    - name表示key的名字。
+    - ex（单位秒）、px（单位毫秒）表示过期时间。
+    - 如果nx=True，则只有当该name不存在时，才执行该操作。
+    - 如果xx=True，则只有当该name存在时，才执行该操作。
+  - `def mset(mapping)`
+  - `def get(name)`
+  - `def mget(*names)`
+  
+- hash类型的方法
+  - `def hset(name, key, value)`
+  - `def hget(name, key)`
+  - `def hgetall(name) -> dict`
+
 ，，，待续
+
+
 
 ## 连接到主从+哨兵集群
 

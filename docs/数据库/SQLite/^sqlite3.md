@@ -4,20 +4,20 @@
 
 ## 用法示例
 
-连接数据库：
+连接到数据库：
 ```python
 >>> import sqlite3
 >>> 
 >>> db = sqlite3.connect("db.sqlite3")      # 连接到一个SQLite数据库，如果该文件不存在则自动创建
 >>> # db = sqlite3.connect(":memory:")      # 在内存中打开一个数据库
 >>> 
->>> db.execute("CREATE table table1(id INTEGER PRIMARY KEY, name TEXT)")     # 执行一条SQL命令
+>>> db.execute("CREATE table table1(id INTEGER PRIMARY KEY, name TEXT)") # 执行一条SQL语句
 <sqlite3.Cursor object at 0x000001715CB4BCE0>
 ```
 
 增：
 ```python
->>> db.execute("INSERT INTO table1 (id,name) VALUES (1,'one')")          # 直接输入一条SQL
+>>> db.execute("INSERT INTO table1 (id,name) VALUES (1,'one')")          # 直接输入一条SQL语句去执行
 <sqlite3.Cursor object at 0x000001715CBDB9D0>
 >>> db.execute("INSERT INTO table1 (id,name) VALUES (?, ?)", (2, 'two')) # 输入SQL模板和参数
 <sqlite3.Cursor object at 0x000001715CB4BCE0>

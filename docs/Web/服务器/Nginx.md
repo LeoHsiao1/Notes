@@ -1,32 +1,37 @@
-Nginx
-## Nginx（发音同 engine x）是一个轻量级的Web 服务器软件。
-- 特点。
-  - 适合做HTTP代理和反向代理
-  - 支持IMAP/POP3/SMTP代理
-  - 支持负载均衡
-  - 支持热部署
-  - 稳定性好，使用系统资源的效率高，并发能力强
-- 安装。
-  - 在Centos上安装：
-yum install nginx  
-  - 用docker运行：
-docker run -d --name=nginx -p 80:80 nginx:1.16.0
+# Nginx
 
-docker cp nginx.conf nginx:/etc/nginx/nginx.conf    # 拷贝配置文件
-docker exec nginx nginx -s reload
-- 命令：
-  - nginx          # 启动nginx服务器（默认作为守护进程运行）
--c $PWD/nginx.conf  # 使用指定的配置文件启动nginx服务器（默认是/etc/nginx/nginx.conf）
--t          # 不启动，而是测试配置文件的语法是否正确
--s quit        # 向Nginx进程发送一个quit信号（处理完HTTP请求之后就退出）
--s reload      # 重新加载配置文件
-## 
-## 
-## 
+：一个轻量级的Web服务器软件。
+- 发音相当于 engine + x
+- 适合用于HTTP反向代理，也提供了IMAP、POP3、SMTP代理。
+- 支持负载均衡。
+- 处理静态文件的效率高。
+
+## 启动
+
+- 用yum安装：
+  ```shell
+  yum install nginx  
+  ```
+
+- 启动：
+  ```shell
+  nginx                     # 启动nginx服务器（默认作为守护进程运行）
+        -c /root/nginx.conf # 使用指定的配置文件（默认使用/etc/nginx/nginx.conf）
+        -t                  # 不启动，而是测试配置文件的语法是否正确
+        -s quit             # 向Nginx进程发送一个quit信号（Nginx处理完当前的HTTP请求之后才会终止）
+        -s reload           # 重新加载配置文件
+  ```
+
+- 不安装，而是运行docker镜像：
+  ```shell
+  docker run -d --name=nginx -p 80:80 nginx
+  ```
  
-主要配置
-## /etc/nginx/nginx.conf中的主要参数：
-user  nginx;          # 使用nginx用户运行Nginx，可能需要给它分配权限
+## 主要配置
+
+Nginx默认使用`/etc/nginx/nginx.conf`作为主配置文件，用于保存全局配置，如下：
+```
+user  nginx;          # 使用nginx用户运行Nginx，可能需要给该用户分配权限
 worker_processes  1;
 
 error_log  /var/log/nginx/error.log warn;
@@ -37,80 +42,96 @@ events {
 }
 
 http {
-    …
-server{
-listen       80;
-location /{
-root   /usr/share/nginx/html;
-index  index.html;
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    include /etc/nginx/conf.d/*.conf;
 }
-}
-include /etc/nginx/conf.d/*.conf;
-}
-  - /etc/nginx/nginx.conf是Nginx的主要配置文件，它还会导入/etc/nginx/conf.d/*.conf。
-  - /etc/nginx/conf.d/default.conf中定义了一个监听80端口的server，返回Nginx的欢迎页面。
-- http{}中可以定义多个server{}，表示HTTP服务器。
-  - 每个server{}中可以定义多个location{}，表示该网站的URL路由规则。
-  - 当Nginx在某个端口收到一个HTTP请求时，会交给监听该端口的server处理。
-如果监听该端口的有多个server，则考虑请求头的Host与哪个server的域名（server_name）匹配。
-如果没有匹配的域名，或者请求头的Host是IP地址，则交给监听该端口的默认server。
-监听一个端口的默认server是nginx.conf中最先定义的那个，也可以手动指定：
-listen       80  default_server;
-  - 找到匹配的server之后，Nginx会寻找与HTTP请求的URL匹配的location，决定如何做出响应。
-## server{}中的主要参数：
+```
+- Nginx的配置文件的后缀名必须为 .conf ，采用Nginx自创的语法，用 # 声明单行注释。
+
+
+Nginx默认会导入`/etc/nginx/conf.d/`目录下的其它配置文件，它们用于保存一些server块的配置。比如默认存在一个default.conf，配置了Nginx的初始Web页面，如下：
+```
 server {
-    listen       80;      # Nginx监听的端口
-    server_name  localhost;  # Nginx监听的域名
+    listen       80;            # 监听的TCP端口（必填）
+    server_name  localhost;     # 监听的域名（不必填）
 
-    charset  utf-8;
-    access_log  /var/log/nginx/access.log;   # 设置保存日志的目录
-    error_log  /var/log/nginx/error.log;
-
-# root /www/;        # 设置网站的根目录，当没有与URL匹配的location时就到该目录寻找文件
-
-    location / {        # 当HTTP请求指向以 / 开头的URL时，做出以下响应
-        root   /www/;      # 定义root目录，到这里寻找与URL匹配的文件回复给客户端
-        index  index.html;    # 当客户端访问网站首页时，返回root目录下的index.html文件
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
     }
-
-    # 当HTTP请求报错时，返回以下html文件
-    error_page  404              /404.html;
-    error_page  500 502 503 504  /50x.html;
+    
+    error_page   500 502 503 504  /50x.html;  # 当客户端的HTTP请求出错时，返回这些html文件
     location = /50x.html {
         root   /usr/share/nginx/html;
     }
 }
-- server_name有以下几种格式，排在前面的优先匹配：
-server_name  www.test.com localhost;    # 匹配明确的域名（可以填多个，Nginx不会去验证DNS）
-server_name  *.test.com;          # 以 *. 开头，模糊匹配
-server_name  www.test.*;          # 以 .* 结尾
-server_name  ~^(?<www>.+)\.test\.com$;    # 正则表达式
-server_name  "";              # 空字符串，相当于不填server_name，不会匹配任何域名
-  - 如果两个server监听的端口和域名相同，运行Nginx时就会报错conflicting server name。
-- location的匹配规则。
+```
+- http块中可以定义多个server块，表示服务器的配置。
+- 当Nginx在某个TCP端口收到一个HTTP请求时，会交给监听该端口的server处理。
+  - 如果监听该端口的server有多个，则考虑Request Header中的Host与哪个server监听的server_name匹配。
+  - 如果没有匹配的server_name，或者Request Header中的Host是IP地址，则交给监听该端口的默认server处理。
+  - 监听一个端口的默认server是nginx.conf中最先定义的那个，也可以手动指定。如下：
+    ```
+    listen       80  default_server;
+    ```
+  - server_name有以下几种格式，排在前面的优先匹配：
+    ```
+    server_name  www.test.com localhost;    # 匹配明确的域名（可以填多个，Nginx不会去验证DNS）
+    server_name  *.test.com;                # 以 *. 开头，模糊匹配
+    server_name  www.test.*;                # 以 .* 结尾
+    server_name  ~^(?<www>.+)\.test\.com$;  # 正则表达式
+    server_name  "";                        # 空字符串，相当于不填server_name，不会匹配任何域名
+    ```
+  - 如果两个server监听的端口和域名都相同，则启动Nginx时会报错：conflicting server name
+
+- server块中可以定义多个location块，表示URL路由规则。如下：
   - location以 = 开头表示精确匹配，以 ~ 开头表示区分大小写（默认这样），以 ~* 开头表示不区分大小写。
   - location 以 / 结尾时会转发相对路径，不以 / 结尾时会转发绝对路径。
-  - 如下：
-location = / {      # 匹配以 / 开头的URL
-    # root /www/;
-    # proxy_pass http://127.0.0.1:79/;    # 把请求转发到另一个服务器（前提是不匹配其它规则）
-}
+  - 例：
+    ```
+    location = / {       # 匹配以 / 开头的URL
+        # root /www/;
+        # proxy_pass http://127.0.0.1:79/;    # 把请求转发到另一个服务器（前提是不匹配其它规则）
+    }
+    ```
+    ```
+    location /img {      # 匹配以 /img 开头的URL
+        root /www/;
+    }
+    ```
+    - 比如访问http://127.0.0.1/img/1.html时，会转发绝对路径img/1.html，转发到http://127.0.0.1:80/www/img/1.html
+    ```
+    location /img/ {     # 匹配以 /img 开头的URL
+        root /www/;
+    }
+    ```
+    - 比如访问http://127.0.0.1/img/1.html时，会转发相对路径1.html，转发到http://127.0.0.1:80/www/1.html
 
-location /img {      # 匹配以 /img 开头的URL
-    root /www/;
-}
-# 比如访问http://127.0.0.1/img/1.html时，会转发绝对路径img/1.html，转发到http://127.0.0.1:80/www/img/1.html
-
-location /img/ {      # 匹配以 /img 开头的URL
-    root /www/;
-}
-# 比如访问http://127.0.0.1/img/1.html时，会转发相对路径1.html，转发到http://127.0.0.1:80/www/1.html
-## 
-## 
-## 
+- server块中的其它配置项：
+    ```
+    charset  utf-8;
+    root /www/;          # 设置网站的根目录，当没有HTTP请求没有找到匹配的location时就到该目录下寻找文件
+    ```
  
-其它配置
-## 其它配置。
+
+
+## 其它配置
+
 - allow、deny语句：允许或禁止某些IP地址的访问。
 deny    192.168.1.1;
 allow   192.168.1.0/24;    # 允许一个内网网段访问
@@ -177,8 +198,9 @@ gzip_types text/plain application/json application/x-javascript application/css 
 ## https://mp.weixin.qq.com/s?__biz=MzI5ODQ2MzI3NQ==&mid=2247488524&idx=2&sn=d44b1bc4b5517a809242c6a71c16bc91&chksm=eca42d48dbd3a45e31e89dcd3daa5f08196efe5ac3fcf1191e36d00217ea09682aedbf403574&scene=0&xtrack=1&key=83644d814d6a4c0bbf9802bc0c7d2d1b4c7ee760bdcd57cc5d08ab3d6f8e2344d64c2c3d4935af9973e9a5464d667d62cd42ab4a987125de0a8cc6b209eb03d6edc89e2963b1f775473670f672590f99&ascene=1&uin=MTQxMjM2ODkyNQ%3D%3D&devicetype=Windows+10&version=62070158&lang=zh_CN&pass_ticket=MEWmVwE4YtSIQ0EODiOkMU1ZTN7%2FWBWc3kOacWGrzUAPUf%2BRk5G3PU%2FW9vS1%2Fz29
 ## 
  
-负载均衡
-## 可以用upstream设置多台可用的服务器，进行负载均衡。
+## 负载均衡
+
+可以用upstream设置多台可用的服务器，进行负载均衡。
 - 按轮询分配：将HTTP请求按时间顺序依次分配到不同后端服务器。只是进行简单的平均分配。
 1.  在http{}之内、server{}之外定义upstream。
 upstream my_cluster {        # 定义一个upstream，名为my_cluster

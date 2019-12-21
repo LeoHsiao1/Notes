@@ -1,7 +1,7 @@
 # Redis
 
 ：一个键值对数据库，基于C语言。
-
+- 发音相当于 red + diss
 - 采用C/S架构。
 - 以键值对的形式存储数据。
 - Redis服务器将数据保存在内存中，因此读写速度很快，常用作缓存。也可以将数据持久化保存到磁盘中。
@@ -22,7 +22,7 @@
     make install MALLOC=libc
     ```
 
-- 启动服务器：
+- 启动：
     ```shell
     redis-server                       # 启动Redis服务器
                 /etc/redis/redis.conf  # 使用指定的配置文件

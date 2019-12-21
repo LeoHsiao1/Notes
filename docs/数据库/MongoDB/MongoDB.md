@@ -22,7 +22,7 @@
   rm -f mongodb-org-*.rpm
   ```
 
-- 启动服务器：
+- 启动：
   ```shell
   mongod                      # 启动mongo服务器
         -f /etc/mongod.conf   # 使用指定的配置文件

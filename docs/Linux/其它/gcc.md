@@ -10,38 +10,35 @@
 gcc的编译过程分为四个步骤：
 
 1. **预处理(Pre-Processing)**：主要是处理C语言源文件中的预处理命令，生成一个**中间文件 *.i** 。
-
-	```
-	gcc -E test.c -o test.i      # -o选项表示output
-	```
+    ```shell
+    gcc -E test.c -o test.i      # -o选项表示output
+    ```
 
 2. **汇编（Assembling）**：由中间文件 *.i 生成**汇编语言文件 *.s**。
-
-	```
-	gcc -S test.i -o test.s
-	```
+    ```shell
+    gcc -S test.i -o test.s
+    ```
 
 3. **编译(Compiling）**：由汇编语言文件 *.s 生成目标文件。
-	```
-	gcc -c test.s -o test.o
-	```
-	目标文件又称为对象文件，它是二进制文件，与最终的可执行文件很像。
-
-	Linux、Windows系统上**目标文件的后缀名分别为 .o 、.obj**。
+    ```shell
+    gcc -c test.s -o test.o
+    ```
+    - 目标文件又称为对象文件，它是二进制文件，与最终的可执行文件很像。
+    - Linux、Windows系统上，**目标文件的后缀名分别为 .o 、.obj**。
 
 4. **链接(Linking)**：由目标文件生成最终的可执行文件。
-	```
-	gcc test.o -o 1
-	```
-	Linux上可执行文件没有后缀名，Windows上可执行文件的后缀名为 .exe 。
+    ```shell
+    gcc test.o -o 1
+    ```
+    - Linux系统的可执行文件没有后缀名，Windows系统的可执行文件的后缀名为 .exe 。
 
 这四个阶段可以简化为一个步骤：
 ```shell
 gcc test.c -o test
-	-I /root/test/include  # 添加头文件的检索目录
-	-L /root/test/lib      # 添加库文件的检索目录
-	-l lib1                # 链接一个名为lib1的库文件
-	-static                # 只使用静态链接库
+    -I /root/test/include  # 添加头文件的检索目录
+    -L /root/test/lib      # 添加库文件的检索目录
+    -l lib1                # 链接一个名为lib1的库文件
+    -static                # 只使用静态链接库
 ```
 - 用到头文件或库文件时，gcc会先检索-I、-L指定的目录，再检索环境变量PATH路径。
 
@@ -54,16 +51,16 @@ gcc test.c -o test
 当源文件的规模较大、引用关系较复杂时，用gcc逐个编译比较麻烦，可以用工具make批量编译。
 - make会读取Makefile文件中的指令，获取模块间的依赖关系，判断哪些文件过时了需要重新编译，然后生成中间代码或最终的可执行程序。
 - 命令：
-	```shell
-	make			# 开始编译（默认使用当前目录下的Makefile）
-		clean  		# 删除所有被make创建的文件
-		install		# 编译并安装到系统中
-		uninstall 	# 卸载
-	```
+    ```shell
+    make           # 开始编译（默认使用当前目录下的Makefile）
+        clean      # 删除所有被make创建的文件
+        install    # 编译并安装到系统中
+        uninstall  # 卸载
+    ```
 - 相关概念：
-	- 一些IDE能自动使用make完成编译。
-	- cmake工具：可以根据CMakeList.txt文件自动生成Makefile文件。（在Windows上则是生成visual studio的project文件）
-	- qmake工具：用于生成Qt项目的Makefile文件。
+    - 一些IDE能自动使用make完成编译。
+    - cmake工具：可以根据CMakeList.txt文件自动生成Makefile文件。（在Windows上则是生成visual studio的project文件）
+    - qmake工具：用于生成Qt项目的Makefile文件。
 
 ## 库文件
 
@@ -88,8 +85,8 @@ gcc test.c -o test
 从目标文件生成动态链接库：
 ```shell
 gcc -shared test.o... -o test.so    # 可以调用多个目标文件，还可以从.c文件生成
-	-fPIC      # 使生成的代码全部采用相对地址，这样就可以被加载到内存的任意位置
-	-shared    # 生成共享动态链接库
+    -fPIC      # 使生成的代码全部采用相对地址，这样就可以被加载到内存的任意位置
+    -shared    # 生成共享动态链接库
 ```
 
 从目标文件生成静态链接库：

@@ -17,8 +17,8 @@
     ```
 - 启动：
     ```shell
-    supervisord                             # 启动服务器
-                -c /etc/supervisord.conf	# 使用指定的配置文件
+    supervisord                           # 启动服务器
+                -c /etc/supervisord.conf  # 使用指定的配置文件
     ```
 
 ### 配置

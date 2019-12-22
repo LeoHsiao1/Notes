@@ -11,12 +11,12 @@
 
 使用docker-compose安装Ansible AWX：
 ```shell
-yum install -y docker-ce make git nodejs npm python python36-pip	# 安装依赖
-pip3 install docker docker-compose ansible	                      # 安装Ansible
-curl -O https://github.com/ansible/awx/archive/7.0.0.tar.gz	      # 下载Ansible AWX
+yum install -y docker-ce make git nodejs npm python python36-pip  # 安装依赖
+pip3 install docker docker-compose ansible                        # 安装Ansible
+curl -O https://github.com/ansible/awx/archive/7.0.0.tar.gz       # 下载Ansible AWX
 tar -zxvf awx-7.0.0.tar.gz
 cd awx-7.0.0/installer
-ansible-playbook -i inventory install.yml		  # 用Ansible启动Ansible AWX
+ansible-playbook -i inventory install.yml    # 用Ansible启动Ansible AWX
 ```
 
 ## 命令
@@ -73,16 +73,16 @@ Ansible将待执行任务（称为task）的配置信息保存在 .yml 文件中
 ```yaml
 - hosts: 192.168.0.1      # 待管理的host（可以是一个host或一个host组）
   remote_user: root       # 以哪个用户的身份管理host
-  # become: yes				    # SSH连接之后，用sudo切换用户
-  # become_user: nginx		# 切换到用户nginx
-  vars:						        # 定义变量
+  # become: yes           # SSH连接之后，用sudo切换用户
+  # become_user: nginx    # 切换到用户nginx
+  vars:                   # 定义变量
     - service_name: httpd
-  tasks:						                    # 任务列表
-    - name: disable selinux	            # 第一个任务
-      command: "/sbin/setenforce 0"	    # 调用command模块，执行一条命令
+  tasks:                                # 任务列表
+    - name: disable selinux             # 第一个任务
+      command: "/sbin/setenforce 0"     # 调用command模块，执行一条命令
     - name: start httpd                 # 第二个任务
       service: name=httpd state=started
-      notify:					                  # 执行一个handler
+      notify:                           # 执行一个handler
         - stop httpd
     handlers:                           # 定义handlers
       - name: stop httpd
@@ -120,11 +120,11 @@ Ansible提供了一些具有幂等性的模块。
 
 - 
   ```ini
-  command: ls					# 执行一条shell命令
+  command: ls         # 执行一条shell命令
   ```
   - 可用选项：
     ```ini
-    chdir=/root/		  # 在执行命令之前，先切换到指定目录
+    chdir=/root/      # 在执行命令之前，先切换到指定目录
     creates:/root/f1  # 如果该文件存在，则跳过该任务（这样有助于更好的幂等性）
     removes:/root/f1  # 如果该文件不存在，则跳过该任务
     ```
@@ -132,12 +132,12 @@ Ansible提供了一些具有幂等性的模块。
 
 - 
   ```ini
-  shell: "ls | grep ssh"		# 执行一条shell命令
+  shell: "ls | grep ssh"    # 执行一条shell命令
   ```
   - 兼容command模块的选项。
   - 特有的选项：
     ```ini
-    executable=/bin/bash		# 指定要执行shell命令的可执行文件（默认是/bin/sh）
+    executable=/bin/bash    # 指定要执行shell命令的可执行文件（默认是/bin/sh）
     ```
   - shell模块没有幂等性，常用于实现用户自定义的、不在乎幂等性的操作。
 
@@ -158,14 +158,14 @@ Ansible提供了一些具有幂等性的模块。
   - 当src是目录时，如果以 / 结尾，则会拷贝其中的所有文件到dest目录下，否则直接拷贝src目录。
   - 其它可用选项：
     ```ini
-    mode=0755	    # 拷贝后文件的权限
+    mode=0755     # 拷贝后文件的权限
     owner=root    # 拷贝后文件的所有者
     group=root    # 拷贝后文件的所有者组
     ```
 
 - 
   ```ini
-  fetch: "src=/root/f1 dest=/root/"		# 将host上的文件拷贝到服务器上
+  fetch: "src=/root/f1 dest=/root/"  # 将host上的文件拷贝到服务器上
   ```
   - src路径不能是目录。
   - 其它可用选项：
@@ -175,14 +175,14 @@ Ansible提供了一些具有幂等性的模块。
 
 - 
   ```ini
-  file: "path=/root/f1 state=touch"		# 创建一个文件
+  file: "path=/root/f1 state=touch"   # 创建一个文件
   ```
   - state选项可以取值为touch（创建文件）、directory（创建目录）、link（创建软链接）、hard（创建硬链接）、absent（删除文件）。
   - 兼容copy模块的mode、owner、group选项。
 
 - 
   ```ini
-  yum: "name=nginx state=latest"		# 安装软件
+  yum: "name=nginx state=latest"      # 安装软件
   ```
   - state选项可以取值为latest（安装最新版本）、installed（安装了即可）、absent（卸载软件）。
 
@@ -192,8 +192,8 @@ Ansible提供了一些具有幂等性的模块。
 
 - role的目录结构示例：
   ```
-  image_build/					    # role目录名
-  |-- files					        # 存放要拷贝到host的文件
+  image_build/                  # role目录名
+  |-- files                     # 存放要拷贝到host的文件
   |   |-- ansible.repo
   |   |-- Dockerfile.sdist
   |   |-- launch_awx.sh
@@ -202,9 +202,9 @@ Ansible提供了一些具有幂等性的模块。
   |   |-- settings.py
   |   |-- supervisor.conf
   |   `-- supervisor_task.conf
-  |-- tasks					        # 存放playbook
+  |-- tasks                     # 存放playbook
   |   `-- main.yml
-  `-- templates				      # 存放一些通用的模板文件
+  `-- templates                 # 存放一些通用的模板文件
       |-- Dockerfile.j2
       |-- Dockerfile.task.j2
       `-- nginx.conf.j2
@@ -216,7 +216,7 @@ Ansible提供了一些具有幂等性的模块。
     hosts: all
     gather_facts: false
     roles:
-      - { role: image_build }										                  # 调用一个role
+      - { role: image_build }                                     # 调用一个role
       - { role: image_push, when: "docker_registry is defined" }  # 调用第二个role
   ```
 

@@ -18,3 +18,9 @@
   - [Volume](docs/DevOps/k8s/Volume.md)
   - [插件](docs/DevOps/k8s/插件.md)
   - [Rancher](docs/DevOps/k8s/Rancher.md)
+- <font color="#8f8f8f">Ops</font>
+  - [Zabbix](docs/DevOps/Ops/Zabbix.md)
+  - [Supervisor](docs/DevOps/Ops/Supervisor.md)
+  - [Ansible](docs/DevOps/Ops/Ansible.md)
+  - [Grafana](docs/DevOps/Ops/Grafana.md)
+  - [ELK](docs/DevOps/Ops/ELK.md)

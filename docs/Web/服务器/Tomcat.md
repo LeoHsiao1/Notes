@@ -9,6 +9,9 @@
     ```
     yum install java-1.8.0-openjdk-devel    # 安装JDK
     yum install tomcat
+    ```
+- 启动：
+    ```
     systemctl start tomcat
     ```
 

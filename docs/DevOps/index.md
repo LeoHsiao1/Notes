@@ -23,4 +23,5 @@
   - [Supervisor](docs/DevOps/Ops/Supervisor.md)
   - [Ansible](docs/DevOps/Ops/Ansible.md)
   - [Grafana](docs/DevOps/Ops/Grafana.md)
+  - [logrotate](docs/DevOps/Ops/logrotate.md)
   - [ELK](docs/DevOps/Ops/ELK.md)

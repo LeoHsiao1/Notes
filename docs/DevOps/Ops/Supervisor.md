@@ -24,7 +24,7 @@
 ### 配置
 
 supervisor默认使用`/etc/supervisord.conf`作为主配置文件（用于保存supervisord的配置），还会导入`/etc/supervisord.d/`目录下的其它配置文件（用于保存各个进程的配置）。
-- supervisor的配置文件采用 .conf 或 .ini 后缀名，基于 ini 的语法。
+- 这些配置文件的后缀名为 .ini ，采用 ini 的语法。
 
 `/etc/supervisord.conf`的内容示例：
 ```

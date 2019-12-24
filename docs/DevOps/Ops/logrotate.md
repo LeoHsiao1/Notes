@@ -26,7 +26,7 @@ logrotate <configfile>  # 启动logrotate并读取某个配置文件
 ## 配置
 
 logrotate默认使用`/etc/logrotate.conf`作为主配置文件（用于保存logrotate本身的配置），还会导入`/etc/logrotate.d/`目录下的其它配置文件（用于保存各个日志切割任务的配置）。
-- logrotate的配置文件不必加后缀名，基于logrotate自定的语法，用 # 声明单行注释。
+- 这些配置文件不限制后缀名，采用logrotate自定的语法，用 # 声明单行注释。
 
 例：编写一个`/etc/logrotate.d/nginx`
 ```

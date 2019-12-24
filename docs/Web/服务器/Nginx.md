@@ -30,6 +30,7 @@
 ## 主配置文件
 
 Nginx默认使用`/etc/nginx/nginx.conf`作为主配置文件（用于保存全局配置），还会导入`/etc/nginx/conf.d/`目录下的其它配置文件（用于保存一些 server{} 的配置）。
+- 这些配置文件的后缀名为 .conf ，采用Nginx自定的语法，用 # 声明单行注释。
 
 `/etc/nginx/nginx.conf`的默认内容：
 ```
@@ -63,7 +64,6 @@ http {
     include /etc/nginx/conf.d/*.conf;
 }
 ```
-- Nginx的配置文件采用 .conf 后缀名，基于Nginx自定的语法，用 # 声明单行注释。
 - mime.types中记录了一些文件后缀名与文件类型的映射表，比如后缀名 html 对应的文件类型是 text/html ，当Nginx回复 html 文件时就会将HTTP响应报文Header中的Content-Type设置成 text/html 。如果一个文件的后缀名在 mime.types 中找不到，就用default_type的值设置Content-Type。
 - 当Nginx经常回复小文件时，使用sendfile模式可以提高传输速度；当Nginx经常回复大文件时，应该关闭sendfile模式，否则磁盘I/O负载会太高.
 - sendfile模式：让Linux内核从磁盘读取文件内容之后，直接写入TCP缓冲区，而不载入Nginx的内存空间。这样能提高文件传输速度。

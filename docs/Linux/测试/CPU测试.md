@@ -34,14 +34,16 @@
 ### uptime
 
 ```shell
-$ uptime  # 显示当前时间、系统的运行时长、当前登录的用户数、平均负载（最近1分钟、5分钟、15分钟的平均值）
+$ uptime      # 显示系统运行时长、CPU平均负载
 ```
 - 例：
     ```
     [root@Centos ~]# uptime
     up 21 days, 41 min,  1 users,  load average: 0.52, 0.58, 0.59
     ```
-    - up 21 days, 41 min 是指系统的运行时长。
+    - up 21 days, 41 min ：系统的运行时长。
+    - 1 users ：已登录的用户数。
+    - load average: 0.52, 0.58, 0.59 ：最近1分钟、5分钟、15分钟的平均负载。
 
 ### perf
 

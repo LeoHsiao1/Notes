@@ -10,8 +10,6 @@
   <br>当Pod中的容器因为异常而中断运行时，默认会被 kubelet 自动重启，如果重启成功就依然为Running状态。
 - Unkown ：状态未知。例如与Pod所在节点通信失败时就会不知道状态。
 
-当用户请求终止一个Pod时，kubelet会向Pod中的进程发送SIGTERM信号，并将Pod的状态标识为“Terminating”，超过宽限期（默认为30秒）之后再向Pod中仍在运行的进程发送SIGKILL信号。
-
 ## Controller
 
 ：控制器，用于控制Pod。
@@ -43,7 +41,7 @@ spec:                       # Controller的规格
       labels:
         app: redis
     spec:                   # Pod的规格
-      containers:           # 定义该Pod中包含的容器
+      containers:           # 定义该Pod中的容器
       - name: redis         # 该Pod中的第一个容器
         image: redis:5.0.6
         command: ["redis-server"]
@@ -76,9 +74,23 @@ spec:                       # Controller的规格
   - k8s默认会保存最近两个版本的Deployment，便于将Pod回滚（rollback）到以前的部署状态。
   - 当用户删除一个Deployment时，k8s会自动销毁对应的Pod。当用户修改一个Deployment时，k8s会滚动更新，依然会销毁旧Pod。
 
-一些k8s对象之间存在上下级的关系，上级称为Owner，下级称为Dependent。
-- 例如：一个ReplicaSet是多个Pod的Owner。
-- 删除一个Owner对象时，默认会级联删除它的所有Dependent。
+- 一些k8s对象之间存在上下级的关系，上级称为Owner，下级称为Dependent。
+  - 例如：一个ReplicaSet是多个Pod的Owner。
+  - 删除一个Owner对象时，默认会级联删除它的所有Dependent。
+
+- 当用户通过 kubectl delete 终止一个Pod时，kubelet会向该Pod所有容器中的进程发送SIGTERM信号，并将Pod的状态标识为“Terminating”。
+  - 超过宽限期（grace period，默认为30秒）之后，如果仍有进程在运行，kubelet则会发送SIGKILL信号，强制终止它们。
+  - Pod应该在收到SIGTERM信号时优雅退出，比如保存数据、清理占用的资源、反注册服务。
+  - 如果定义了容器的 PreStop Hook ，kubelet在终止容器时会先调用 PreStop Hook，超过宽限期之后会发送SIGTERM信号并再宽限2秒，最后才发送SIGKILL信号。
+    ```yaml
+    spec:
+      contaienrs:
+      - name: redis
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/usr/local/bin/redis-cli", "shutdown"]
+    ```
 
 ### ReplicaSet
 

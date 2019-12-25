@@ -37,8 +37,8 @@
 ### 配置
 
 - 启动Redis服务器时，默认没有配置文件，会使用默认配置。
-  - 如果使用配置文件启动Redis服务器，Redis会应用配置文件中的各个配置项。
-  - 每次修改配置文件之后，要使用该配置文件重启Redis才会生效。
+  - 可以将配置文件放在任意目录下，只要用配置文件启动Redis，Redis就会读取并应用该配置文件的内容，决定运行时的配置。
+  - 每次修改配置文件之后，要重启Redis才会生效。
 - Redis服务器启动之后，可以修改运行时的配置项。
   - 在客户端中，执行 `config get/set <name>` 可以查看、修改一个配置项。如下：
       ```
@@ -64,6 +64,11 @@ requirepass ******           # Redis服务器的密码
 
 maxmemory 4G                 # 限制Redis使用的最大内存
 maxmemory-policy allkeys-lru # 接近maxmemory时的删key策略
+
+# 生产环境要禁用掉一些危险的命令
+rename-command FLUSHDB ""
+rename-command FLUSHALL ""
+rename-command KEYS ""
 ```
 - Redis服务器默认没有设置密码，不安全。
   - Redis只存在root权限，没有细致的权限划分。用户要么无法进行任何操作，要么可以进行任何操作。因此，如果要让多个用户使用的Redis相互隔离，应该给它们分别启动一个Redis实例。
@@ -86,15 +91,22 @@ redis-cli               # 启动客户端（默认连接到本地6379端口的�
           -h 127.0.0.1  # 指定服务器的IP地址
           -p 6379       # 指定服务器的端口
           -a ******     # 指定密码
-          -n 0          # 选中0号数据库
-          [command]     # 不打开客户端，只是执行一条命令
+          -n 0          # 使用0号数据库
+          [command]     # 不进入客户端的字段，只是执行一条命令
+            -r 10       # 重复执行该命令3次
+            -i 1.2      # 每次重复执行的间隔时长为1.2s（可以使用小数）
 ```
 - 执行redis-cli命令时，即使不能连接到Redis服务器，也会进入客户端的终端。
-- 启动客户端时，默认不会进行密码认证。如果服务器设置了密码，就无权进行任何操作（连ping都不行），必须用 auth 命令完成密码认证。
-- Redis支持通过管道一次传入多条命令来执行。如下：
-  ```shell
-  echo -e "dbsize\ndbsize" | redis-cli
-  ```
+- 启动客户端时，默认不会进行密码认证。如果服务器设置了密码，就无权进行任何操作（连ping都不行），必须先完成密码认证。
+- 例：
+    ```shell
+    redis-cli info                                       # 查询redis的信息
+    redis-cli -r 100 -i 1 info | grep used_memory_human  # 轮序Redis占用的内存
+    ```
+- Redis支持通过Linux管道一次传入多条命令来执行。如下：
+    ```shell
+    echo -e "dbsize\ndbsize" | redis-cli
+    ```
 
 ### 常用命令
 

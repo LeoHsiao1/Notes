@@ -9,48 +9,42 @@
 
 ## 安装
 
-### 安装docsify并运行
-
 ```shell
-yum install nodejs
+# 需要已安装Node.js
 npm install docsify-cli -g
 docsify init ./www
 docsify serve ./www     # 启动服务器，默认监听http://localhost:3000
 ```
 
-### 免安装运行
+也可以不安装docsify：
+- 先创建一个`index.html`文件，内容如下：
 
-可以不安装docsify，直接创建一个`index.html`文件，内容如下：
+  ```html
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="description" content="Description">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      window.$docsify = {
+        name: '',
+        repo: ''
+      }
+    </script>
+    <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+  </body>
+  </html>
+  ```
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Document</title>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Description">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
-</head>
-<body>
-  <div id="app"></div>
-  <script>
-    window.$docsify = {
-      name: '',
-      repo: ''
-    }
-  </script>
-  <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
-</body>
-</html>
-```
-
-再创建一个README.md，为该页面提供显示内容。
-
-然后启动一个Web服务器，以index.html所在目录作为网站根目录。如下：
-
-    python -m http.server 80
+- 再创建一个README.md，为该页面提供显示内容。
+- 然后用`python -m http.server 80`启动一个Web服务器，以index.html所在目录作为网站根目录。
 
 ## 配置
 

@@ -8,7 +8,7 @@
 ## 安装
 
 ```shell
-yum install nodejs
+# 需要已安装Node.js
 npm install gitbook-cli -g
 ```
 

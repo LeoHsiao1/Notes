@@ -53,5 +53,4 @@ logrotate默认使用`/etc/logrotate.conf`作为主配置文件（用于保存lo
 
 按照上述配置，logrotate会定期轮询（rotate）一次Nginx的日志文件，比如 error.log 。如果内容不为空，就创建一个归档日志 error.log-xx ，将 error.log 的文件描述符重定向到 error.log-xx 上，然后再以指定权限创建一个新的 error.log 文件，供Nginx写入新的日志。
 - 不过此时必须要向Nginx发送 -USR1 信号，让它重新打开日志文件，刷新文件描述符。
-  - 大部分进程收到 -USR1 信号之后会进行复位操作，比如重新加载配置文件、重新打开日志文件。
 - 另一种做法：不创建新的 error.log ，而是将原 error.log 的内容拷贝到 error.log-xx 中。这样就不必让Nginx刷新文件描述符，但是在拷贝的过程中logrotate会一直占用 error.log 的文件描述符，导致Nginx不能写入日志。因此这种做法不够可靠。

@@ -3,7 +3,7 @@
 ：一个开发Web前端的框架。
 - 发音与 view 相同。
 - 是渐进式框架，自底向上设计，学习曲线平滑，能制作复杂的单页面应用。
-- [官方文档](https://cn.vuejs.org/v2/guide/)
+- [官方文档](https://vuejs.org/v2/guide/index.html)
 
 用法：
 - 开发简单的网页时，通常导入Vue的独立js文件即可。

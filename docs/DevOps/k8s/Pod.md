@@ -272,7 +272,7 @@ status:
   - terminated ：已终止。
 
 - Pod的状态取决于容器的状态。因此，分析Pod的状态时，需要考虑更细单位的容器。
-  - **kubelet创建一个容器之后，还要等容器中的业务进程成功启动，这个容器才算真正启动。**可以用readinessProbe探测容器是否成功启动。
+  - **kubelet创建一个容器之后，还要等容器中的业务进程成功启动，这个容器才算真正启动。**可以通过postStart判断容器是否已创建，通过readinessProbe判断容器是否已成功启动。
   - 当Pod中的所有容器都处于running状态时，Pod才能处于Running状态。
   - 当Pod中有某个容器处于terminated状态时，kubelet会按照restartPolicy重启它。在重启完成之前，Pod都处于 Unavailable 状态。
 

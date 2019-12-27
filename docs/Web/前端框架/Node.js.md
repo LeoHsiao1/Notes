@@ -1,7 +1,7 @@
 # Node.js
 
 ：一个JavaScript运行环境，基于Chrome V8 引擎，用于在服务器上运行JS代码。
-- [官方文档](https://nodejs.org/zh-cn/docs/guides/)
+- [官方文档](https://nodejs.org/en/docs/guides/)
 
 用途：
 - 构建前端文件。
@@ -54,8 +54,8 @@ npm
 - yarn的用法与npm类似，也是从npm源下载包，但是有以下优点：
   - 通过并行下载提高了包的安装速度。
   - 安装时会检查包文件的哈希值是否一致，更安全。
-  - 自动生成一个yarn.lock文件，记录已安装的所有包的版本、哈希值、依赖库，从而严格地管理依赖。
-- [官方文档](https://yarn.bootcss.com/docs/)
+  - 用一个yarn.lock文件记录已安装的所有包的版本、哈希值、依赖库，从而严格地管理依赖。
+- [官方文档](https://yarnpkg.com/en/docs)
 
 安装：
 ```shell
@@ -81,6 +81,7 @@ yarn                     # 相当于npm install
 
     run <name>           # 运行package.json中的一个脚本
 ```
+- 执行 yarn init 时会生成一个package.json文件，安装一个包之后会自动生成一个yarn.lock文件。
 
 ## gulp
 

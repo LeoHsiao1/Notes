@@ -153,6 +153,7 @@ CMD：用于设置容器启动时首先执行的命令。
 ENTRYPOINT 与 CMD ：
 - 构建镜像时，docker daemon 会将 ENTRYPOINT、CMD 命令都保存为exec格式。
 - 启动容器时，docker daemon 会将 ENTRYPOINT、CMD 命令都从exec格式转换成shell格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
+  - 因此，ENTRYPOINT 命令是容器启动时的真正入口端点。
 - 下表统计不同写法时，一个ENTRYPOINT命令与一个CMD命令组合的结果（即最终的容器启动命令是什么）：
 
   -|`ENTRYPOINT echo 1`|`ENTRYPOINT ["echo", "1"]`

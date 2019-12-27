@@ -56,7 +56,7 @@ user=root                   ; 用哪个用户启动该进程
 ;autorestart=true  ; 当进程异常终止时是否自动重启
 ;startretries=3    ; 启动失败后的重试次数
 ;startsecs=1       ; 启动几秒后进程没有异常终止，就视作进程启动成功了
-;exitcodes=0,2     ; 进程正常终止时的返回码，如果不取这些值则视作异常终止
+;exitcodes=0,2     ; 进程正常终止时的退出码，如果不取这些值则视作异常终止
 ;stopsignal=TERM   ; 当supervisor被用户要求终止该进程时，发送哪种信号（可以是TERM、HUP、INT、QUIT、KILL、USR1、USR2）
 ;stopwaitsecs=10   ; 发送stopsignal信号之后，如果超过stopwaitsecs秒进程仍然没终止，则发送SIGKILL信号强制终止
 

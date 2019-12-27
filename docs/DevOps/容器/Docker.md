@@ -79,11 +79,10 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器
             -e PATH=$PATH:/root      # 设置环境变量（可重复使用该命令选项）
 
             # 设置容器的重启策略
-            --restart no             # 在任何情况下都不会自动重启
-            --restart on-failure     # 只有当容器异常终止时才自动重启（用docker start重启）
-            --restart unless-stopped # 当容器终止时就自动重启，除非容器被docker stop了
-            --restart always         # 当容器终止时一定会自动重启容器
-                                     # 即使被docker stop了，当docker daemon重启时又会自动重启该容器
+            --restart no             # 总是不会自动重启
+            --restart on-failure     # 当容器异常终止时，才会自动重启（通过docker start重启）
+            --restart unless-stopped # 当容器终止时，就自动重启，除非容器是被docker stop终止的
+            --restart always         # 当容器终止时，总是会自动重启（即使被docker stop了，当docker daemon重启时又会自动重启该容器）
 
             --cpus 2                 # 限制该容器最多使用2个CPU（平均值）
             --cpu-shares 1024        # 与其它容器抢占CPU时的权重（取值为1~1024）

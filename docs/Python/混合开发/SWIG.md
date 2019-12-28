@@ -10,7 +10,7 @@
 - 安装：
   - 在Linux上，SWIG发布的是源代码，要执行以下命令编译、安装：
   
-      ```shell
+      ```sh
       cd swig-4.0.1/
       ./configure
       make

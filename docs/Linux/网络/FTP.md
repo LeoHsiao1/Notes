@@ -14,12 +14,12 @@
   - 本地用户模式：用FTP服务器的SSH账号登录。当FTP的账号密码泄露时，服务器也会被破解。
   - 虚拟用户模式：为FTP客户端独立创建账号密码，存储在一个数据库中。安全性最高。
 - 安装：
-    ```shell
+    ```sh
     yum install vsftpd
     systemctl enable vsftpd
     ```
 - 修改配置文件 /etc/vsftpd/vsftpd.conf ：
-    ```shell
+    ```sh
     anonymous_enable=YES        # 启用匿名用户模式
     anon-upload_enable=YES      # 允许匿名用户上传文件
     anon-umask=022              # 匿名用户上传的文件的umask值
@@ -40,6 +40,6 @@
 ：一个FTP客户端软件。
 - 安装：yum install ftp
 - 命令：
-```shell
+```sh
 $ ftp <ip>    # 登录到一个FTP服务器（这会进入FTP客户端的终端）
 ```

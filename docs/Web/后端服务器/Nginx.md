@@ -9,12 +9,12 @@
 ## 启动
 
 - 用yum安装：
-  ```shell
+  ```sh
   yum install nginx  
   ```
 
 - 启动：
-  ```shell
+  ```sh
   nginx                     # 启动nginx服务器（默认作为守护进程运行）
         -c /root/nginx.conf # 使用指定的配置文件（默认使用/etc/nginx/nginx.conf）
         -t                  # 不启动，而是测试配置文件的语法是否正确
@@ -23,7 +23,7 @@
   ```
 
 - 不安装，而是运行docker镜像：
-  ```shell
+  ```sh
   docker run -d --name=nginx -p 80:80 nginx
   ```
  

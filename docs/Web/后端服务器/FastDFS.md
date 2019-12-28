@@ -24,7 +24,7 @@ FastDFS的服务器分为两部分：
 
 启动tracker server：
 1. 运行docker镜像：
-    ```shell
+    ```sh
     docker pull delron/fastdfs
     docker run -d --name tracker --network host -v /var/fdfs/tracker:/var/fdfs delron/fastdfs tracker
     ```
@@ -35,7 +35,7 @@ FastDFS的服务器分为两部分：
 
 启动storage server：
 1. 运行docker镜像：
-    ```shell
+    ```sh
     docker run -d --name storage --network host -v /var/fdfs/storage:/var/fdfs -e TRACKER_SERVER=172.17.0.1:22122 delron/fastdfs storage
     ```
 2. 执行`docker exec -it storage bash`进入容器，再执行`vi /etc/fdfs/storage.conf`，修改配置文件：
@@ -46,7 +46,7 @@ FastDFS的服务器分为两部分：
     http.server_port=80        # storage server的HTTP端口号
     ```
 3. 重启storage server：
-    ```shell
+    ```sh
     /usr/bin/fdfs_storaged /etc/fdfs/storage.conf restart
     ```
 4. 执行`vi /usr/local/nginx/conf/nginx.conf`，修改Nginx的配置文件：
@@ -64,7 +64,7 @@ FastDFS的服务器分为两部分：
         }
     ```
 5. 重载Nginx的配置文件：
-    ```shell
+    ```sh
     /usr/local/nginx/sbin/nginx -s reload
     ```
 
@@ -75,11 +75,11 @@ FastDFS的服务器分为两部分：
     ```
 
 2. 上传文件：
-    ```shell
+    ```sh
     /usr/bin/fdfs_upload_file /etc/fdfs/client.conf f1
     ```
 
 3. 上传成功之后会返回文件的路径，可通过HTTP请求访问它：
-    ```shell
+    ```sh
     curl http://172.17.0.1:80/<path>
     ```

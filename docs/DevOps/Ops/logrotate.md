@@ -6,7 +6,7 @@
 ## 安装
 
 Centos默认安装了logrotate，也可以手动安装：
-```shell
+```sh
 yum install crontabs logrotate
 ```
 
@@ -17,7 +17,7 @@ yum install crontabs logrotate
 - 可以手动启动logrotate，测试一下效果。
 
 命令：
-```shell
+```sh
 logrotate <configfile>  # 启动logrotate并读取某个配置文件
           -d            # 开启调试模式，此时不会影响实际的日志文件
           -f            # 强制执行一次日志切割（logrotate可能认为此时不需要进行日志切割）

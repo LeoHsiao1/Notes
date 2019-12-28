@@ -5,7 +5,7 @@
 ：一个与网络服务器通信的工具，基于libcurl库，支持HTTP、HTTPS、FTP、SMTP等多种协议，功能丰富。
 
 命令：
-```shell
+```sh
 $ curl <URL>...                    # 访问指定网址（默认为GET方法），并将网页内容打印到stdout上
        -O                          # 下载该文件并保存到当前目录
        -o <path>                   # 下载该文件并保存到指定路径（目标路径必须已存在）
@@ -30,7 +30,7 @@ $ curl <URL>...                    # 访问指定网址（默认为GET方法）�
 ：一个从网络服务器下载文件的工具，只支持HTTP、HTTPS、FTP协议。
 
 命令：
-```shell
+```sh
 $ wget <URL>...               # 下载指定网址的文件，并自动保存为当前目录下的文件或目录
        -b                     # 后台下载
        -O f1.zip              # 保存为指定文件
@@ -42,7 +42,7 @@ $ wget <URL>...               # 下载指定网址的文件，并自动保存为
 ```
 - `wget URL` 相当于 `curl -O URL` 。
 - 例：爬取网页
-    ```shell
+    ```sh
     wget -e robots=off -r -np -p -k <网址>
          -e robots=off # 忽略robot协议
          -r            # 递归下载该目录下的所有文件

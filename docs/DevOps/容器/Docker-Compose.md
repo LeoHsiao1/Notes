@@ -11,13 +11,13 @@
 
 ## 安装
 
-```shell
+```sh
 pip3 install docker-compose
 ```
 
 ## 命令
 
-```shell
+```sh
 docker-compose
             -f <file>                 # 指定compose文件（默认使用当前目录下的docker-compose.yml）
 
@@ -45,7 +45,7 @@ docker-compose
                 -t                    # 显示时间戳
 ```
 - 编写好compose文件之后，通常只需在该目录下使用以下命令：
-  ```shell
+  ```sh
   docker-compose up         # 先尝试在前台运行，看看是否正常
   Ctrl + C                  # 终止前台进程
   docker-compose up -d      # 正式在后台运行

@@ -4,7 +4,7 @@
 
 命令：
 
-```shell
+```sh
 $ ifconfig                         # 显示已启用网卡的信息
             -a                     # 显示所有网卡的信息
             eth0                   # 显示网卡eth0的信息
@@ -56,7 +56,7 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 
 命令：
 
-```shell
+```sh
 $ route    # 显示本机的路由表
 ```
 
@@ -77,7 +77,7 @@ link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 
 命令：
 
-```shell
+```sh
 $ ip
     addr        # 显示所有网卡的信息（相当于ifconfig -a）
     route       # 显示路由表（相当于route命令）
@@ -94,7 +94,7 @@ $ ip
 
 命令：
 
-```shell
+```sh
 $ ping <host>    # 启动ping
         -c n     # 最多发送ICMP报文多少次（默认为无限次）
         -i n     # 每次发送ICMP报文的间隔时间（默认为1秒）
@@ -143,6 +143,6 @@ PING google.com (93.46.8.90) 56(84) bytes of data.
 
 命令：
 
-```shell
+```sh
 $ traceroute <host>
 ```

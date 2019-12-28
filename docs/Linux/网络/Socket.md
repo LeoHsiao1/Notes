@@ -43,7 +43,7 @@
 ：一个传统的远程登录工具。
 - 通信内容没有加密，容易被监听。因此不再适合用于远程登录，现在常用于测试TCP端口是否连通。
 - 命令：
-    ```shell
+    ```sh
     $ telnet <host> [port]    # 连接到某个主机的TCP端口（默认是23端口）
     ```
 
@@ -84,7 +84,7 @@
 ：一个端口扫描工具。
 - 安装：yum install nmap
 - 命令：
-    ```shell
+    ```sh
     $ nmap
           192.168.0.1               # 扫描目标主机有哪些端口可以连接
           192.168.0.1/24            # 扫描一个网段，检测有哪些可连接的主机，并扫描它们的端口
@@ -102,7 +102,7 @@
 
 命令：
 
-```shell
+```sh
 $ netstat
         -a  # 显示所有网络连接、socket
         -l  # 只显示LISTEN状态的
@@ -119,7 +119,7 @@ $ netstat
 ：socket statistics，用于查看socket的统计信息。与netstat命令类似，但运行速度更快。
 
 - 命令：
-    ```shell
+    ```sh
     $ ss        # 显示established状态的socket
         -a      # 显示所有状态的socket
         -l      # 只显示被进程listen的socket

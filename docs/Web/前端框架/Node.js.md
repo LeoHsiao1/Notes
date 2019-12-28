@@ -9,7 +9,7 @@
 - 作为中间层，接收前端的访问请求，然后转发给真正的后端服务器。
 
 安装：
-```shell
+```sh
 curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -  # 添加yum源，否则安装的nodejs版本很老
 yum install nodejs
 ```
@@ -19,7 +19,7 @@ yum install nodejs
 ：Node Package Manager，一个Node.js自带的包管理工具。
 
 命令：
-```shell
+```sh
 npm
     init               # 初始化项目，这会在当前目录下生成一个package.json
     install [name]     # 安装指定的包（默认安装到./node_modules目录下）
@@ -43,7 +43,7 @@ npm
   - 安装到./node_modules目录下：此时要通过`node_modules/.bin/<name>`的方式调用。
   - 安装到全局：此时会注册到系统PATH目录下，可以输入命令名直接调用。
 - 安装时可以指定版本号，如下：
-    ```shell
+    ```sh
     npm install jquery@3.0.0 --save
     npm update jquery@3.0.0 --save
     ```
@@ -58,14 +58,14 @@ npm
 - [官方文档](https://yarnpkg.com/en/docs)
 
 安装：
-```shell
+```sh
 # 需要已安装Node.js
 curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
 yum install yarn
 ```
 
 命令：
-```shell
+```sh
 yarn                     # 相当于npm install
     init                 # 相当于npm init
     add [name]...        # 相当于npm install --save
@@ -90,6 +90,6 @@ yarn                     # 相当于npm install
 - 安装：npm install -g gulp
 
 命令：
-```shell
+```sh
 gulp [task]...    # 执行任务（默认执行default任务）
 ```

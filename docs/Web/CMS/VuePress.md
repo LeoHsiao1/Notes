@@ -7,23 +7,23 @@
 ## 入门示例
 
 1. 安装：
-    ```shell
+    ```sh
     yarn global add vuepress
     ```
 2. 创建一个docs目录，存放要显示的MarkDown文档文件：
-    ```shell
+    ```sh
     mkdir docs
     echo hello > docs/README.md
     ```
 3. 启动开发环境的服务器：
-    ```shell
+    ```sh
     vuepress dev docs
     ```
 4. 构建出静态文件：
-    ```shell
+    ```sh
     vuepress build docs
     ```
-    - 构建结果默认保存在 docs/.vuepress/dist 目录下。
+    - 构建结果默认保存在 docs/.vuepress/dist 目录下，可用于运行静态网站。
 
 ## 目录结构
 

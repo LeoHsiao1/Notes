@@ -33,7 +33,7 @@
 
 ### uptime
 
-```shell
+```sh
 $ uptime      # 显示系统运行时长、CPU平均负载
 ```
 - 例：
@@ -49,7 +49,7 @@ $ uptime      # 显示系统运行时长、CPU平均负载
 
 ：用于查看各个事件占用的CPU时长。
 
-```shell
+```sh
 $ perf top    # 显示占用CPU的各个事件（采样分析）
        -g     # 增加显示各个进程的子进程
 ```
@@ -64,7 +64,7 @@ $ perf top    # 显示占用CPU的各个事件（采样分析）
     - Symbol  ：该事件的名称，大多为某个进程的函数名称，或者是内存地址。
     - 在显示窗口中，可按方向键上下选择事件，按回车键进入子菜单。
 
-```shell
+```sh
 $ perf record <命令>    # 记录执行某条命令时，其中各个事件的CPU使用率
 
 $ perf report           # 显示perf record记录的信息
@@ -75,7 +75,7 @@ $ perf report           # 显示perf record记录的信息
 
     ![](perf3.png)
 
-```shell
+```sh
 $ perf stat <命令>      # 分析某条命令占用CPU的过程
 ```
 - 例：

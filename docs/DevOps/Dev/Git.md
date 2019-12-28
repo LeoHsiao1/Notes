@@ -17,7 +17,7 @@ git的配置文件有三种：
 - 当前git仓库的配置文件：保存在仓库下的 .git/config 。只作用于当前git仓库，会覆盖上层的配置。
 
 可以在文本编辑器中修改配置文件，也可以使用以下命令进行修改：
-```shell
+```sh
 git config 
         --system      # 使用系统的配置文件
         --global      # 使用当前用户的配置文件
@@ -33,20 +33,20 @@ git config
 ## 安装
 
 1. 安装git：
-    ```shell
+    ```sh
     yum install git
     ```
     也可以安装git的GUI工具，比如Tortoisegit。
 
 2. 初始化配置：
-    ```shell
+    ```sh
     git config --global user.name "name"
     git config --global user.email "you@example.com"
     ```
     每次commit时git都会自动备注提交者的用户名和邮箱。
 
 3. 在某个目录下创建git仓库。
-    ```shell
+    ```sh
     git init
     ```
     这会创建一个 .git 子目录，还会创建一个默认的master分支。
@@ -54,7 +54,7 @@ git config
 ## 版本
 
 对文件进行版本控制：
-```shell
+```sh
 git add <文件名>      # 将文件相比上一版本的改动加入暂存区
 git add .             # 将当前目录的所有文件加入暂存区
 git rm --cached 1.py  # 从暂存区删除某个文件
@@ -62,12 +62,12 @@ git rm --cached 1.py  # 从暂存区删除某个文件
 - 被修改的文件应该先加入暂存区，以便之后提交成一个版本。
 - 用 git rm/mv 做出的改动会自动加入暂存区。
 - 可以创建一个 .gitignore 文件，记录不想进行版本控制的文件。如下：
-```shell
+```sh
 echo 1.py >> .gitignore
 ```
 
 提交版本：
-```shell
+```sh
 git commit 
         -m "initial version" # 将当前的暂存区提交为一个版本，需要加上备注信息
         -a                   # 提交从上一个版本以来被改动的所有文件
@@ -77,7 +77,7 @@ git commit
 - git会自动取每个版本的SHA-1值作为版本号。
 
 撤销：
-```shell
+```sh
 git reset            # 清空暂存区
         --hard       # 重置到当上一个版本（相当于git reset 加git checkout .）
         <版本号>     # 将当前分支回滚到指定版本
@@ -97,7 +97,7 @@ git revert <版本号>  # 通过新建一个版本来抵消某个历史版本的
 - 合并两个分支时，如果两个分支在同一个文件处的内容不同，就会产生冲突，要先解决冲突才能合并。
 
 命令：
-```shell
+```sh
 git branch          # 显示所有分支
         -v          # 显示每个分支所在的版本
         <分支名>    # 新建一个分支
@@ -117,7 +117,7 @@ git merge <分支名>  # 将指定分支合并到当前分支（这会产生一�
 标签相当于不能移动的分支名，永远指向某个版本，常用于版本发布。
 
 命令：
-```shell
+```sh
 git tag                 # 显示已有的所有标签
         -a v1.0 9fceb02 # 给版本9fceb02加上标签v1.0
         -d <tagName>    # 删除一个标签
@@ -134,7 +134,7 @@ git checkout <tagName>  # 切换到指定标签所在版本
 merge方式与rebase方式最终生成的版本都一样，但是rebase方式会删除次分支，将版本图简化成一条线。
 
 命令：
-```shell
+```sh
 git rebae
         <分支名>           # 将当前分支以变基方式合并到指定分支（这会产生一个新版本）
         branch1 branch2   # 将branch2以变基方式合并到branch1
@@ -143,7 +143,7 @@ git rebae
 
 ## 管理仓库
 
-```shell
+```sh
 git status    # 查看当前git仓库的状态（包括当前的分支名、暂存区内容）
 
 git log       # 在文本阅读器中查看git仓库的日志（按时间倒序显示每个事件）
@@ -157,7 +157,7 @@ git diff                # 比较当前仓库与上一次add或commit的差异
 ```
 
 从git仓库的所有版本中永久性地删除某个文件：
-```shell
+```sh
 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch <文件的相对路径>' --prune-empty --tag-name-filter cat -- --all
 git push origin --force --all --tags    # 强制推送，覆盖远端仓库
 ```
@@ -182,7 +182,7 @@ git push origin --force --all --tags    # 强制推送，覆盖远端仓库
   - 然后在本机连接到git服务器，使用私钥进行认证。
 
 命令：
-```shell
+```sh
 git clone <URL>              # 将一个远端仓库克隆到本地（这会在当前目录下创建该仓库目录）
 # 此时git会自动将这个远端仓库命名为origin，并让本地的master分支跟踪origin/master分支
 
@@ -205,7 +205,7 @@ git push [name或URL]         # 推送本地仓库到远端仓库
 ```
 - 执行git pull、fetch、push时，如果不指定远端仓库，则使用默认的origin仓库。
 - 例：推送单个分支
-    ```shell
+    ```sh
     git push origin master : origin/master # 推送分支master到远端仓库origin，并与远端分支master合并
     git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
     ```

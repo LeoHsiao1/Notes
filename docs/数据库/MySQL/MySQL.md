@@ -19,7 +19,7 @@ MySQL存在多个分支：
 这里使用的是Percona服务器。
 
 - 用yum安装：
-  ```shell
+  ```sh
   curl -O https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.28-31/binary/redhat/7/x86_64/Percona-Server-5.7.28-31-rd14ef86-el7-x86_64-bundle.tar
   tar -xvf Percona-Server-5.7.26-29-r11ad961-el7-x86_64-bundle.tar
   yum install -y Percona-Server*.rpm
@@ -32,7 +32,7 @@ MySQL存在多个分支：
   ```
 
 - 不安装，而是运行docker镜像：
-  ```shell
+  ```sh
   docker pull percona:5.7.26-centos
   docker run -d --name percona -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 percona:5.7.26-centos
   ```
@@ -81,18 +81,18 @@ init-connect='SET NAMES utf8mb4'      # 客户端连接后的初始字符集
 ### 安装
 
 - 安装的MySQL服务器会自带客户端，也可yum单独安装MySQL客户端：
-  ```shell
+  ```sh
   yum install mysql
   ```
 
 - 不安装，而是运行docker镜像：
-  ```shell
+  ```sh
   docker run -it --rm percona:5.7.26-centos mysql -h 127.0.0.1 -u root -p
   ```
 
 ### 用法
 
-```shell
+```sh
 mysql              # 启动MySQL客户端
       -h <host>    # 要连接的MySQL服务器的IP地址（默认是localhost）
       -P <port>    # 连接的端口号（默认为3306）

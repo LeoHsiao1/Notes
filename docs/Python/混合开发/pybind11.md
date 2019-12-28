@@ -8,7 +8,7 @@
 ## 用法示例
 
 1. 编写C++源文件api.cpp，如下：
-    ```C++
+    ```cpp
     #include <pybind11/pybind11.h>
     namespace py = pybind11;
 
@@ -21,7 +21,7 @@
 
 2. 编写绑定代码，加入到源文件api.cpp中：
 
-    ```C++
+    ```cpp
     PYBIND11_MODULE(api, m) {   // 生成一个Python模块，名为api，用变量m表示
         m.doc() = "pybind11 example module";  // 添加模块的说明
         m.def("sum", &sum, "A function");  // 绑定函数并添加说明
@@ -68,7 +68,7 @@ m.def("sum", &sum, "A function", "x"_a, "y"_a=2);   // 可以将py::arg(*)简写
 
 
 可以按以下格式输入多行注释：
-```C++
+```cpp
 m.doc() = R"pbdoc(
     Pybind11 example
     module

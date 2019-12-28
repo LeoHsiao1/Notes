@@ -6,17 +6,17 @@
 ## 启动
 
 - 用yum安装：
-    ```
+    ```sh
     yum install java-1.8.0-openjdk-devel    # 安装JDK
     yum install tomcat
     ```
 - 启动：
-    ```
+    ```sh
     systemctl start tomcat
     ```
 
 - 不安装，而是运行docker镜像：
-    ```
+    ```sh
     docker pull tomcat:8.5
     docker run -d --name=tomcat -p 8080:8080 tomcat:8.5
 
@@ -37,7 +37,7 @@
   - Tomcat会监控context.xml的状态，发现它被修改了就会自动加载。
 
 - 执行`vim tomcat/conf/tomcat-users.xml`，写入以下语句，添加一个管理员账号：
-  ```
+  ```xml
   <role rolename="manager-gui"/>
   <role rolename="manager-script"/>
   <role rolename="manager-jmx"/>
@@ -46,7 +46,7 @@
   ```
 
 - 运行jar包程序：
-  ```shell
+  ```sh
   java -jar xxx.jar                     # 在前台运行（这会阻塞终端）
   nohup java -jar xxx.jar & > output.log   # 在后台运行
   ```

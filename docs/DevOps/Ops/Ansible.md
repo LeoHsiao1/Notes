@@ -10,7 +10,7 @@
 ## 安装
 
 使用docker-compose安装Ansible AWX：
-```shell
+```sh
 yum install -y docker-ce make git nodejs npm python python36-pip  # 安装依赖
 pip3 install docker docker-compose ansible                        # 安装Ansible
 curl -O https://github.com/ansible/awx/archive/7.0.0.tar.gz       # 下载Ansible AWX
@@ -21,7 +21,7 @@ ansible-playbook -i inventory install.yml    # 用Ansible启动Ansible AWX
 
 ## 命令
 
-```shell
+```sh
 ansible-playbook <name>.yml...  # 执行playbook
                 --syntax-check  # 检查playbook的语法是否正确
                 --list-hosts    # 显示所有host
@@ -30,7 +30,7 @@ ansible-playbook <name>.yml...  # 执行playbook
                 -i <file>       # 指定Inventory文件
 ```
 
-```shell
+```sh
 ansible <host> [-m <name>] -a <args>  # 在指定主机上执行一个模块，并给模块传入参数
 ```
 - 不指定模块时，默认是执行command模块。
@@ -221,7 +221,7 @@ Ansible提供了一些具有幂等性的模块。
   ```
 
 - 可以到官方的roles分享平台 galaxy.ansible.com 上寻找可用的roles，然后用ansible-galaxy命令下载roles。命令如下：
-  ```shell
+  ```sh
   ansible-galaxy
                 install <name>
                 search <name>

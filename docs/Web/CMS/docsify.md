@@ -37,11 +37,11 @@
     ```
 
 2. 再创建一个 README.md 文件，为该页面提供显示内容：
-    ```shell
+    ```sh
     echo Hello > README.md
     ```
 3. 启动一个Web服务器：
-    ```shell
+    ```sh
     python3 -m http.server 80
     ```
 

@@ -13,11 +13,11 @@
 ### 启动
 
 - 用yum安装：
-    ```shell
+    ```sh
     yum install supervisor
     ```
 - 启动：
-    ```shell
+    ```sh
     supervisord                           # 启动服务器
                 -c /etc/supervisord.conf  # 使用指定的配置文件
     ```
@@ -71,7 +71,7 @@ stderr_logfile=/var/log/supervisor/%(program_name)s_stderr.log   ; stderr日志�
 
 ## 客户端命令
 
-```shell
+```sh
 supervisorctl
               start <name>             # 启动一个进程（name为all时会选中配置文件中的所有进程）
               stop <name>

@@ -7,7 +7,7 @@
 
 ## 安装
 
-```shell
+```sh
 # 需要已安装Node.js
 npm install gitbook-cli -g
 ```

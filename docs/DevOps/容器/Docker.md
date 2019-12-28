@@ -34,7 +34,7 @@ Docker采用C/S架构。
 
 - 在Centos上安装：
 
-    ```shell
+    ```sh
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo   # 添加docker的官方镜像源
     yum install docker-ce   # 下载docker社区版
     systemctl start docker  # 启动docker服务
@@ -42,7 +42,7 @@ Docker采用C/S架构。
 
 - 在ubuntu上，可使用官方脚本自动安装：
 
-    ```shell
+    ```sh
     curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
     ```
 
@@ -55,7 +55,7 @@ Docker采用C/S架构。
 
 ### docker run
 
-```shell
+```sh
 docker run <Image>            # 运行一个镜像，这会创建一个容器
                               # 如果本机不存在该镜像，则自动从镜像仓库下载该镜像
 
@@ -90,7 +90,7 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器
 ```
 
 - 例：
-    ```shell
+    ```sh
     docker run hello-world                       # 运行一个测试镜像
     docker run -it ubuntu:15.10 bash             # 创建容器，并进入该容器的终端
     docker run -d ubuntu:15.10 tail -f /dev/null # 创建一个容器（让它执行一个不会停止的启动命令）
@@ -101,19 +101,19 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器
 
 ### docker exec
 
-```shell
+```sh
 docker exec [options] <container> <command>  # 让容器执行一条命令
 ```
 
 - 这样可以在宿主机上让容器执行命令，不必进入容器的终端。执行后产生的stdout会打印到宿主机的当前终端，但是不会接受宿主机的stdin，在宿主机上按Ctrl + C不能发送关闭信号到容器中。
 - 例：
-    ```shell
+    ```sh
     docker exec -it centos1 bash    # 进入一个容器的终端
     ```
 
 ### 管理容器
 
-```shell
+```sh
 docker 
         ps                  # 显示所有处于运行状态的容器
             -a              # 显示所有状态的容器
@@ -142,7 +142,7 @@ docker
 
 ### docker cp
 
-```shell
+```sh
 docker cp /root/f1 <容器>:/root/    # 从宿主机拷贝文件到容器的指定目录
 docker cp <容器>:/root/f1 /root/    # 从容器拷贝文件到宿主机的指定目录
 ```
@@ -150,7 +150,7 @@ docker cp <容器>:/root/f1 /root/    # 从容器拷贝文件到宿主机的指�
 
 ### docker volume
 
-```shell
+```sh
 docker volume
             ls            # 显示所有的docker数据卷
             create <name> # 创建一个数据卷
@@ -175,7 +175,7 @@ docker volume
   - 将容器连接到 host 网络，让容器使用宿主机的 eth 网卡，无需再映射端口。
 
 命令：
-```shell
+```sh
 docker network
             ls                       # 显示所有的docker网络
             create <name>            # 创建一个网络（bridge类型）

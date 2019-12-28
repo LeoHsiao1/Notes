@@ -9,19 +9,19 @@
 ## 管理镜像
 
 查看镜像：
-```shell
+```sh
 docker
     images                 # 列出本机的所有镜像
     image rm <Image>...    # 删除镜像
     tag <Image> <ImageName>:<tag>  # 给镜像加上ImageName和tag
 ```
 - 例：删除所有none镜像
-    ```shell
+    ```sh
     docker images | awk '$2=="<none>" {print $3}' | xargs docker image rm
     ```
 
 拉取镜像：
-```shell
+```sh
 docker
     pull <ImageName>:<tag>  # 从镜像仓库拉取镜像
     push <ImageName>:<tag>  # 推送镜像到镜像仓库
@@ -32,7 +32,7 @@ docker
 - 尽量不要拉取latest版本，而使用具体的版本名，比如 v1.0，否则在不同时间拉取的latest版本会不一样。
 
 镜像被Docker保存成一些散乱的文件，使用以下命令可以导出成文件包：
-```shell
+```sh
 docker save -o images.tar <Image>...           # 将镜像打包成tar文件
 docker save <Image>... | gzip > images.tar.gz  # 打包成tar.gz文件
 docker load -i images.tar                      # 导入镜像
@@ -42,19 +42,19 @@ docker load -i images.tar                      # 导入镜像
 
 制作Docker镜像的方法有两种：
 - 将一个容器提交为镜像：
-    ```shell
+    ```sh
     docker commit <容器ID> <ImageName>:<tag>
     ```
   - 每次commit时，会在原镜像外部加上一层新的文件系统（file system layer）。因此commit次数越多，镜像的体积越大。
 - 编写Dockerfile文件，然后基于它构建镜像：
-    ```shell
+    ```sh
     docker build <Dockerfile所在目录> -t <生成的镜像名:tag>
         --build-arg VERSION="1.0"  # 传入构建参数给Dockerfile
         --target <阶段名>          # 构建到某个阶段就停止
         --network <name>           # 设置build过程中使用的网络
     ```
   - 例：
-    ```shell
+    ```sh
     docker build . -t centos:v1.0 --network host
     ```
   - docker build命令会将Dockerfile所在目录作为上下文目录，将该目录及其子目录下的所有文件都拷贝给 docker daemon 。

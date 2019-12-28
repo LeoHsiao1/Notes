@@ -12,7 +12,7 @@ WP服务器有Linux版、Windows版，这里在Linux上安装它：
 1. 安装MySQL数据库
 2. 登录MySQL数据库，进行配置：
 
-    ```bash
+    ```sh
     create user wordpress@"%" identified by "密码";
     create database wordpress;
     grant all on wordpress.* to wordpress@"%";
@@ -20,7 +20,7 @@ WP服务器有Linux版、Windows版，这里在Linux上安装它：
 
 3. 用docker安装WP服务器，该镜像集成了php、Apache环境
 
-    ```bash
+    ```sh
     docker pull wordpress:latest
     docker run -d --name wordpress -p 80:80 wordpress:latest
     ```

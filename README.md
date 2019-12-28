@@ -12,12 +12,12 @@
 <summary>部署方法</summary>
 
 调试时，执行以下命令启动一个HTTP服务器：
-```shell
+```sh
 python -m http.server 80 --bind 127.0.0.1
 ```
 
 正式部署时，执行以下命令启动一个Nginx服务器：
-```shell
+```sh
 docker run -d --name nginx --network host -v /home/github/Notes/:/root/Notes/ -v /home/github/Notes/nginx.conf:/etc/nginx/nginx.conf nginx
 ```
 </details>

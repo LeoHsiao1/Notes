@@ -23,14 +23,14 @@
   ```
 
 - 启动：
-  ```shell
+  ```sh
   mongod                      # 启动mongo服务器
         -f /etc/mongod.conf   # 使用指定的配置文件
   ```
   - 启动服务器时，默认使用的配置文件是 /etc/mongod.conf ，在前台运行，监听端口27017，
 
 - 不安装，而是运行docker镜像：
-  ```shell
+  ```sh
   docker pull mongo:4
   docker run -d --name mongo -p 27017:27017 mongo:4
   ```
@@ -82,7 +82,7 @@ MongoDB客户端的终端采用JavaScript的shell，因此：
 
 ### 启动
 
-```shell
+```sh
 mongo                         # 启动客户端（默认连接到本机6379端口的服务器，使用test数据库）
       127.0.0.1:27017/test                            # 指定要连接的服务器、数据库
       username:password@127.0.0.1:27017/admin         # 再指定用户名、密码

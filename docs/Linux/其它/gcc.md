@@ -10,30 +10,30 @@
 gcc的编译过程分为四个步骤：
 
 1. **预处理(Pre-Processing)**：主要是处理C语言源文件中的预处理命令，生成一个**中间文件 *.i** 。
-    ```shell
+    ```sh
     gcc -E test.c -o test.i      # -o选项表示output
     ```
 
 2. **汇编（Assembling）**：由中间文件 *.i 生成**汇编语言文件 *.s**。
-    ```shell
+    ```sh
     gcc -S test.i -o test.s
     ```
 
 3. **编译(Compiling）**：由汇编语言文件 *.s 生成目标文件。
-    ```shell
+    ```sh
     gcc -c test.s -o test.o
     ```
     - 目标文件又称为对象文件，它是二进制文件，与最终的可执行文件很像。
     - Linux、Windows系统上，**目标文件的后缀名分别为 .o 、.obj**。
 
 4. **链接(Linking)**：由目标文件生成最终的可执行文件。
-    ```shell
+    ```sh
     gcc test.o -o 1
     ```
     - Linux系统的可执行文件没有后缀名，Windows系统的可执行文件的后缀名为 .exe 。
 
 这四个阶段可以简化为一个步骤：
-```shell
+```sh
 gcc test.c -o test
     -I /root/test/include  # 添加头文件的检索目录
     -L /root/test/lib      # 添加库文件的检索目录
@@ -51,7 +51,7 @@ gcc test.c -o test
 当源文件的规模较大、引用关系较复杂时，用gcc逐个编译比较麻烦，可以用工具make批量编译。
 - make会读取Makefile文件中的指令，获取模块间的依赖关系，判断哪些文件过时了需要重新编译，然后生成中间代码或最终的可执行程序。
 - 命令：
-    ```shell
+    ```sh
     make           # 开始编译（默认使用当前目录下的Makefile）
         clean      # 删除所有被make创建的文件
         install    # 编译并安装到系统中
@@ -83,14 +83,14 @@ gcc test.c -o test
 - gcc在编译时会根据库名去寻找相应的库文件，且优先使用动态链接库，当动态链接库文件不存在时才寻找相同库名的静态链接库。
 
 从目标文件生成动态链接库：
-```shell
+```sh
 gcc -shared test.o... -o test.so    # 可以调用多个目标文件，还可以从.c文件生成
     -fPIC      # 使生成的代码全部采用相对地址，这样就可以被加载到内存的任意位置
     -shared    # 生成共享动态链接库
 ```
 
 从目标文件生成静态链接库：
-```shell
+```sh
 ar -rc lib1.a 1.o  ...          # 可以加上多个目标文件
 ```
 

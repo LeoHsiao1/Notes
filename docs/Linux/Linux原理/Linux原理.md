@@ -36,7 +36,7 @@ Linux系统处理中断的过程通常分为两步：
 - process类
   - execve：执行一个command，启动一个进程。
     - 例：
-      ```shell
+      ```sh
       execve("/usr/bin/echo", ["echo", "hello"], [/* 22 vars */]) = 0
       ```
   - exit

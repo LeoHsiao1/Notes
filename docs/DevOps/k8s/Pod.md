@@ -169,7 +169,7 @@ spec:
 
 例：
 - 给Node添加污点：
-    ```shell
+    ```sh
     kubectl taint nodes node1 k1=v1:NoSchedule
     ```
 - 在Pod spec中配置容忍度：

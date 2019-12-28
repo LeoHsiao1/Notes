@@ -82,6 +82,7 @@ yarn                     # 相当于npm install
     run <name>           # 运行package.json中的一个脚本
 ```
 - 执行 yarn init 时会生成一个package.json文件，安装一个包之后会自动生成一个yarn.lock文件。
+- 如果一个包被yarn安装到./node_modules目录下，则可以通过`yarn <name>`的方式调用，比npm更方便。
 
 ## gulp
 

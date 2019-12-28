@@ -2,51 +2,67 @@
 
 ：与gitbook相似，但功能多一些。
 - 基于Vue，显示美观。
-- 使用时，不需要将MarkDown文件转换成HTML文件，在网页中显示时才会即时渲染成HTML。这减少了构建时间，不需要安装依赖库，但不利于SEO。
+- 可以不安装docsify，直接使用。
+  - 使用时，不需要将MarkDown文件转换成HTML文件，在网页中显示时才会即时渲染成HTML。这减少了构建时间，不需要安装依赖库，但不利于SEO。
 - 具有目录，层次性好。
-- 目录可以折叠显示，不过只能以MarkDown文件为单位进行折叠。
+  - 目录可以折叠显示，不过只能以MarkDown文件为单位进行折叠。
 - [官方文档](https://docsify.js.org/#/)
 
-## 安装
+## 入门示例
 
-```shell
-# 需要已安装Node.js
-npm install docsify-cli -g
-docsify init ./www
-docsify serve ./www     # 启动服务器，默认监听http://localhost:3000
-```
+1. 在网站根目录下创建一个 index.html 文件，内容如下：
 
-也可以不安装docsify：
-- 先创建一个`index.html`文件，内容如下：
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Document</title>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+      <meta name="description" content="Description">
+      <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+      <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+    </head>
+    <body>
+      <div id="app"></div>
+      <script>
+        window.$docsify = {
+          name: '',
+          repo: ''
+        }
+      </script>
+      <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+    </body>
+    </html>
+    ```
 
-  ```html
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Document</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="description" content="Description">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
-  </head>
-  <body>
-    <div id="app"></div>
-    <script>
-      window.$docsify = {
-        name: '',
-        repo: ''
-      }
-    </script>
-    <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
-  </body>
-  </html>
-  ```
-
-- 再创建一个README.md，为该页面提供显示内容。
-- 然后用`python -m http.server 80`启动一个Web服务器，以index.html所在目录作为网站根目录。
+2. 再创建一个 README.md 文件，为该页面提供显示内容：
+    ```shell
+    echo Hello > README.md
+    ```
+3. 启动一个Web服务器：
+    ```shell
+    python3 -m http.server 80
+    ```
 
 ## 配置
+
+### 目录结构
+
+以下是docsify网站的目录结构示例：
+```
+.
+├─ docs           # 可以给该目录单独编写sidebar.md、navbar.md，否则使用上一级目录的
+│  ├─ Chapter1    # 可以给该目录单独编写sidebar.md、navbar.md，否则使用上一级目录的
+│  │  ├─ 1.md
+│  │  └─ 2.md
+│  └─ Chapter2
+│     └─ 1.md
+├─ index.html     # 网站的入口点
+├─ navbar.md
+└─ sidebar.md
+```
+- **index.html所在目录是网站的根目录，任何文件中使用的相对路径的URL，都必须从这里开始。**因为docsify网站是纯SPA网站，当前目录始终停留在网站根目录，不能移动。
 
 ### 侧边栏
 
@@ -63,16 +79,16 @@ window.$docsify = {
 ```markdown
 # 目录
 
-- [第一章](dir1/)   # 如果不指定.md文件，则默认读取该目录下的README.md
-  - [第一节](dir1/1.md)
-  - [第二节](dir1/2.md)
-- 第二章            # 可以不给链接，只显示名字
-  - [第一节](dir2/1.md)
+- [第一章](Chapter1/)         # 如果不指定.md文件，则默认读取该目录下的README.md
+  - [第一节](Chapter1/1.md)
+  - [第二节](Chapter1/2.md)
+- 第二章                      # 可以不给链接，只显示名字
+  - [第一节](Chapter2/1.md)
 ```
 
-可以给多个目录分别创建sidebar.md，从而分别显示侧边栏目录。
-- 如果URL所在目录下没有sidebar.md，则使用上一层目录的。
-- navbar.md的使用规则同理。
+- 可以给各个目录分别创建 sidebar.md ，从而分别显示侧边栏目录。
+  - 如果URL所在目录下没有 sidebar.md ，则使用上一层目录的。
+  - navbar.md 的使用规则同理。
 
 ### 导航栏
 
@@ -93,11 +109,11 @@ window.$docsify = {
 导航栏的下拉列表由URL所在目录下的`navbar.md`决定，如下：
 
 ```markdown
-- [第一章](dir1/)
-  - [第一节](dir1/1.md)
-  - [第二节](dir1/2.md)
+- [第一章](Chapter1/)
+  - [第一节](Chapter1/1.md)
+  - [第二节](Chapter1/2.md)
 - 第二章
-  - [第一节](dir2/1.md)
+  - [第一节](Chapter2/1.md)
 ```
 
 ### 封面
@@ -114,7 +130,7 @@ window.$docsify = {
 
 ```js
 window.$docsify = {
-  coverpage: ['/', '/dir1/', '/dir2/']
+  coverpage: ['/', '/Chapter1/', '/Chapter2/']
 }
 ```
 
@@ -128,7 +144,7 @@ window.$docsify = {
 - Not build static html files
 
 [GitHub](https://github.com/docsifyjs/docsify/)   # 显示一个链接
-[第一章](dir1/)
+[第一章](Chapter1/)
 ```
 
 ### 网页图标
@@ -207,7 +223,7 @@ code    |other file extension
 
 ### 代码高亮
 
-导入[Prism](https://prismjs.com/)的代码高亮脚本：
+导入[Prism](https://prismjs.com/)的js文件之后，可实现MarkDown文档代码块语法高亮：
 
 ```html
 <script src="//unpkg.com/prismjs/components/prism-bash.js"></script>

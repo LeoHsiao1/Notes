@@ -1,27 +1,27 @@
-[《DevOps》](docs/DevOps/index.md)
+[《DevOps》](index.md)
 
-- <font color="#8f8f8f">Dev</font>
-  - [Git](docs/DevOps/Dev/Git.md)
-- <font color="#8f8f8f">CI&CD</font>
-  - [Jenkins](docs/DevOps/CI&CD/Jenkins.md)
-  - [GitHub Actions](docs/DevOps/CI&CD/GitHub-Actions.md)
-- <font color="#8f8f8f">容器</font>
-  - [简介](docs/DevOps/容器/简介.md)
-  - [Docker](docs/DevOps/容器/Docker.md)
-  - [Docker镜像](docs/DevOps/容器/Docker镜像.md)
-  - [Docker Compose](docs/DevOps/容器/Docker-Compose.md)
-- <font color="#8f8f8f">k8s</font>
-  - [简介](docs/DevOps/k8s/简介.md)
-  - [安装](docs/DevOps/k8s/安装.md)
-  - [Pod](docs/DevOps/k8s/Pod.md)
-  - [Network](docs/DevOps/k8s/Network.md)
-  - [Volume](docs/DevOps/k8s/Volume.md)
-  - [插件](docs/DevOps/k8s/插件.md)
-  - [Rancher](docs/DevOps/k8s/Rancher.md)
-- <font color="#8f8f8f">Ops</font>
-  - [Zabbix](docs/DevOps/Ops/Zabbix.md)
-  - [Supervisor](docs/DevOps/Ops/Supervisor.md)
-  - [Ansible](docs/DevOps/Ops/Ansible.md)
-  - [Grafana](docs/DevOps/Ops/Grafana.md)
-  - [logrotate](docs/DevOps/Ops/logrotate.md)
-  - [ELK](docs/DevOps/Ops/ELK.md)
+- Dev
+  - [Git](Dev/Git.md)
+- CI&CD
+  - [Jenkins](CI&CD/Jenkins.md)
+  - [GitHub Actions](CI&CD/GitHub-Actions.md)
+- 容器
+  - [简介](容器/简介.md)
+  - [Docker](容器/Docker.md)
+  - [Docker镜像](容器/Docker镜像.md)
+  - [Docker Compose](容器/Docker-Compose.md)
+- k8s
+  - [简介](k8s/简介.md)
+  - [安装](k8s/安装.md)
+  - [Pod](k8s/Pod.md)
+  - [Network](k8s/Network.md)
+  - [Volume](k8s/Volume.md)
+  - [插件](k8s/插件.md)
+  - [Rancher](k8s/Rancher.md)
+- Ops
+  - [Zabbix](Ops/Zabbix.md)
+  - [Supervisor](Ops/Supervisor.md)
+  - [Ansible](Ops/Ansible.md)
+  - [Grafana](Ops/Grafana.md)
+  - [logrotate](Ops/logrotate.md)
+  - [ELK](Ops/ELK.md)

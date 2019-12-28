@@ -1,26 +1,26 @@
-[《数据库》](docs/数据库/index.md)
+[《数据库》](index.md)
 
-- <font color="#8f8f8f">简介</font>
-  - [简介](docs/数据库/简介/简介.md)
-- <font color="#8f8f8f">SQLite</font>
-  - [SQLite](docs/数据库/SQLite/SQLite.md)
-  - [♢ sqlite3](docs/数据库/SQLite/^sqlite3.md)
-- <font color="#8f8f8f">MySQL</font>
-  - [MySQL](docs/数据库/MySQL/MySQL.md)
-  - [♢ PyMySQL](docs/数据库/MySQL/^PyMySQL.md)
-  - [♢ SQLAlchemy](docs/数据库/MySQL/^SQLAlchemy.md)
-- <font color="#8f8f8f">MongoDB</font>
-  - [MongoDB](docs/数据库/MongoDB/MongoDB.md)
-  - [管理单元](docs/数据库/MongoDB/管理单元.md)
-  - [其它功能](docs/数据库/MongoDB/其它功能.md)
-  - [性能优化](docs/数据库/MongoDB/性能优化.md)
-  - [部署架构](docs/数据库/MongoDB/部署架构.md)
-  - [♢ pymongo](docs/数据库/MongoDB/^pymongo.md)
-- <font color="#8f8f8f">Redis</font>
-  - [Redis](docs/数据库/Redis/Redis.md)
-  - [管理单元](docs/数据库/Redis/管理单元.md)
-  - [数据类型](docs/数据库/Redis/数据类型.md)
-  - [其它功能](docs/数据库/Redis/其它功能.md)
-  - [性能优化](docs/数据库/Redis/性能优化.md)
-  - [部署架构](docs/数据库/Redis/部署架构.md)
-  - [♢ redis](docs/数据库/Redis/^redis.md)
+- 简介
+  - [简介](简介/简介.md)
+- SQLite
+  - [SQLite](SQLite/SQLite.md)
+  - [♢ sqlite3](SQLite/^sqlite3.md)
+- MySQL
+  - [MySQL](MySQL/MySQL.md)
+  - [♢ PyMySQL](MySQL/^PyMySQL.md)
+  - [♢ SQLAlchemy](MySQL/^SQLAlchemy.md)
+- MongoDB
+  - [MongoDB](MongoDB/MongoDB.md)
+  - [管理单元](MongoDB/管理单元.md)
+  - [其它功能](MongoDB/其它功能.md)
+  - [性能优化](MongoDB/性能优化.md)
+  - [部署架构](MongoDB/部署架构.md)
+  - [♢ pymongo](MongoDB/^pymongo.md)
+- Redis
+  - [Redis](Redis/Redis.md)
+  - [管理单元](Redis/管理单元.md)
+  - [数据类型](Redis/数据类型.md)
+  - [其它功能](Redis/其它功能.md)
+  - [性能优化](Redis/性能优化.md)
+  - [部署架构](Redis/部署架构.md)
+  - [♢ redis](Redis/^redis.md)

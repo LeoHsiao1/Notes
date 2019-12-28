@@ -1,25 +1,25 @@
-[《Web》](docs/Web/index.md)
+[《Web》](index.md)
 
-- <font color="#8f8f8f">前端</font>
-  - [简介](docs/Web/前端/简介.md)
-  - [HTML](docs/Web/前端/HTML.md)
-  - [CSS](docs/Web/前端/CSS.md)
-  - [JavaScript](docs/Web/前端/JavaScript.md)
-  - [DOM](docs/Web/前端/DOM.md)
-- <font color="#8f8f8f">前端框架</font>
-  - [Node.js](docs/Web/前端框架/Node.js.md)
-  - [Vue.js](docs/Web/前端框架/Vue.js.md)
-- <font color="#8f8f8f">后端</font>
-  - [简介](docs/Web/后端/简介.md)
-- <font color="#8f8f8f">后端服务器</font>
-  - [Apache](docs/Web/后端服务器/Apache.md)
-  - [Tomcat](docs/Web/后端服务器/Tomcat.md)
-  - [Nginx](docs/Web/后端服务器/Nginx.md)
-  - [FastDFS](docs/Web/后端服务器/FastDFS.md)
-- <font color="#8f8f8f">CMS</font>
-  - [CMS](docs/Web/CMS/CMS.md)
-  - [Jekyll](docs/Web/CMS/Jekyll.md)
-  - [WordPress](docs/Web/CMS/WordPress.md)
-  - [gitbook](docs/Web/CMS/gitbook.md)
-  - [docsify](docs/Web/CMS/docsify.md)
-  - [VuePress](docs/Web/CMS/VuePress.md)
+- 前端
+  - [简介](前端/简介.md)
+  - [HTML](前端/HTML.md)
+  - [CSS](前端/CSS.md)
+  - [JavaScript](前端/JavaScript.md)
+  - [DOM](前端/DOM.md)
+- 前端框架
+  - [Node.js](前端框架/Node.js.md)
+  - [Vue.js](前端框架/Vue.js.md)
+- 后端
+  - [简介](后端/简介.md)
+- 后端服务器
+  - [Apache](后端服务器/Apache.md)
+  - [Tomcat](后端服务器/Tomcat.md)
+  - [Nginx](后端服务器/Nginx.md)
+  - [FastDFS](后端服务器/FastDFS.md)
+- CMS
+  - [CMS](CMS/CMS.md)
+  - [Jekyll](CMS/Jekyll.md)
+  - [WordPress](CMS/WordPress.md)
+  - [gitbook](CMS/gitbook.md)
+  - [docsify](CMS/docsify.md)
+  - [VuePress](CMS/VuePress.md)

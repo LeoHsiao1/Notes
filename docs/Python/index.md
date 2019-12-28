@@ -1,14 +1,14 @@
-[《Python》](docs/Python/index.md)
+[《Python》](index.md)
 
-- <font color="#8f8f8f">简介</font>
-  - [简介](docs/Python/简介/简介.md)
-  - [解释器](docs/Python/简介/解释器.md)
-  - [版本差异](docs/Python/简介/版本差异.md)
-- <font color="#8f8f8f">文本处理</font>
-  - [jinja](docs/Python/文本处理/jinja.md)
-- <font color="#8f8f8f">混合开发</font>
-  - [混合开发](docs/Python/混合开发/混合开发.md)
-  - [♢ ctypes](docs/Python/混合开发/^ctypes.md)
-  - [♢ Cython](docs/Python/混合开发/^Cython.md)
-  - [SWIG](docs/Python/混合开发/SWIG.md)
-  - [pybind11](docs/Python/混合开发/pybind11.md)
+- 简介
+  - [简介](简介/简介.md)
+  - [解释器](简介/解释器.md)
+  - [版本差异](简介/版本差异.md)
+- 文本处理
+  - [jinja](文本处理/jinja.md)
+- 混合开发
+  - [混合开发](混合开发/混合开发.md)
+  - [♢ ctypes](混合开发/^ctypes.md)
+  - [♢ Cython](混合开发/^Cython.md)
+  - [SWIG](混合开发/SWIG.md)
+  - [pybind11](混合开发/pybind11.md)

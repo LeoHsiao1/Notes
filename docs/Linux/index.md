@@ -1,50 +1,50 @@
-[《Linux》](docs/Linux/index.md)
+[《Linux》](index.md)
 
-- <font color="#8f8f8f">简介</font>
-  - [简介](docs/Linux/简介/简介.md)
-  - [相关概念](docs/Linux/简介/相关概念.md)
-- <font color="#8f8f8f">终端</font>
-  - [终端](docs/Linux/终端/终端.md)
-  - [命令](docs/Linux/终端/命令.md)
-  - [开机](docs/Linux/终端/开机.md)
-  - [登录](docs/Linux/终端/登录.md)
-  - [用户](docs/Linux/终端/用户.md)
-- <font color="#8f8f8f">进程</font>
-  - [进程](docs/Linux/进程/进程.md)
-  - [管理进程](docs/Linux/进程/管理进程.md)
-- <font color="#8f8f8f">文件</font>
-  - [文件](docs/Linux/文件/文件.md)
-  - [管理文件](docs/Linux/文件/管理文件.md)
-  - [处理文本](docs/Linux/文件/处理文本.md)
-  - [文件属性](docs/Linux/文件/文件属性.md)
-  - [文件权限](docs/Linux/文件/文件权限.md)
-  - [目录](docs/Linux/文件/目录.md)
-- <font color="#8f8f8f">设备</font>
-  - [设备](docs/Linux/设备/设备.md)
-  - [外存](docs/Linux/设备/外存.md)
-  - [文件系统](docs/Linux/设备/文件系统.md)
-  - [内存](docs/Linux/设备/内存.md)
-- <font color="#8f8f8f">网络</font>
-  - [IP](docs/Linux/网络/IP.md)
-  - [Socket](docs/Linux/网络/Socket.md)
-  - [防火墙](docs/Linux/网络/防火墙.md)
-  - [SSH](docs/Linux/网络/SSH.md)
-  - [HTTP](docs/Linux/网络/HTTP.md)
-  - [FTP](docs/Linux/网络/FTP.md)
-- <font color="#8f8f8f">测试</font>
-  - [简介](docs/Linux/测试/简介.md)
-  - [进程测试](docs/Linux/测试/进程测试.md)
-  - [CPU测试](docs/Linux/测试/CPU测试.md)
-  - [网络测试](docs/Linux/测试/网络测试.md)
-  - [综合测试工具](docs/Linux/测试/综合测试工具.md)
-- <font color="#8f8f8f">shell</font>
-  - [解释器](docs/Linux/shell/解释器.md)
-  - [变量](docs/Linux/shell/变量.md)
-  - [基本语法](docs/Linux/shell/基本语法.md)
-- <font color="#8f8f8f">其它</font>
-  - [系统信息](docs/Linux/其它/系统信息.md)
-  - [安装软件](docs/Linux/其它/安装软件.md)
-  - [插件工具](docs/Linux/其它/插件工具.md)
-  - [定时任务](docs/Linux/其它/定时任务.md)
-  - [gcc](docs/Linux/其它/gcc.md)
-  - [OpenWrt](docs/Linux/其它/OpenWrt.md)
+- 简介
+  - [简介](简介/简介.md)
+  - [相关概念](简介/相关概念.md)
+- 终端
+  - [终端](终端/终端.md)
+  - [命令](终端/命令.md)
+  - [开机](终端/开机.md)
+  - [登录](终端/登录.md)
+  - [用户](终端/用户.md)
+- 进程
+  - [进程](进程/进程.md)
+  - [管理进程](进程/管理进程.md)
+- 文件
+  - [文件](文件/文件.md)
+  - [管理文件](文件/管理文件.md)
+  - [处理文本](文件/处理文本.md)
+  - [文件属性](文件/文件属性.md)
+  - [文件权限](文件/文件权限.md)
+  - [目录](文件/目录.md)
+- 设备
+  - [设备](设备/设备.md)
+  - [外存](设备/外存.md)
+  - [文件系统](设备/文件系统.md)
+  - [内存](设备/内存.md)
+- 网络
+  - [IP](网络/IP.md)
+  - [Socket](网络/Socket.md)
+  - [防火墙](网络/防火墙.md)
+  - [SSH](网络/SSH.md)
+  - [HTTP](网络/HTTP.md)
+  - [FTP](网络/FTP.md)
+- 测试
+  - [简介](测试/简介.md)
+  - [进程测试](测试/进程测试.md)
+  - [CPU测试](测试/CPU测试.md)
+  - [网络测试](测试/网络测试.md)
+  - [综合测试工具](测试/综合测试工具.md)
+- shell
+  - [解释器](shell/解释器.md)
+  - [变量](shell/变量.md)
+  - [基本语法](shell/基本语法.md)
+- 其它
+  - [系统信息](其它/系统信息.md)
+  - [安装软件](其它/安装软件.md)
+  - [插件工具](其它/插件工具.md)
+  - [定时任务](其它/定时任务.md)
+  - [gcc](其它/gcc.md)
+  - [OpenWrt](其它/OpenWrt.md)

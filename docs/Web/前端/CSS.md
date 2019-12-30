@@ -375,7 +375,7 @@ a:active {text-decoration:underline;}
 
 CSS根据框模型显示元素，如下图：
 
-![](border.jpg)
+![](./border.jpg)
 
 - 元素的实际显示内容位于最内层。
   - 默认内边距、边框、外边距的宽度为 0 ，框模型被元素的内容填满。

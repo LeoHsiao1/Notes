@@ -54,9 +54,16 @@ $ perf top    # 显示占用CPU的各个事件（采样分析）
        -g     # 增加显示各个进程的子进程
 ```
 - 例：
-
-    ![](perf1.png)
-
+    ```sh
+    [root@Centos ~]# perf top
+    Samples: 4K of event 'cpu-clock', 4000 Hz, Event count (approx.): 828026549 lost: 0/0 drop: 0/0
+    Overhead  Shared Object         Symbol
+      22.91%  perf                  [.] __symbols__insert
+       9.82%  perf                  [.] rb_next
+       7.34%  [kernel]              [k] clear_page_c_e
+       2.33%  libc-2.17.so          [.] __strchr_sse42
+       1.86%  perf                  [.] rb_insert_color
+    ```
     - 第一行中，Samples表示采样率，event表示事件类型，Event count表示占用CPU时钟周期的事件总数。
     - Overhead  ：该事件在样本中的比例。
     - Shared  ：该事件所在的动态共享对象，比如内核名、进程名。
@@ -70,18 +77,48 @@ $ perf record <命令>    # 记录执行某条命令时，其中各个事件的C
 $ perf report           # 显示perf record记录的信息
 ```
 - 例：
-
-    ![](perf2.png)
-
-    ![](perf3.png)
+    ```sh
+    [root@Centos ~]# perf record ls
+    actions-runner  node_modules  Notes  package.json  perf.data  yarn.lock
+    [ perf record: Woken up 1 times to write data ]
+    [ perf record: Captured and wrote 0.014 MB perf.data (6 samples) ]
+    ```
+    ```sh
+    [root@Centos ~]# perf report
+    Samples: 6  of event 'cpu-clock', Event count (approx.): 1500000
+    Overhead  Command  Shared Object      Symbol
+      16.67%  ls       [kernel.kallsyms]  [k] copy_user_enhanced_fast_string
+      16.67%  ls       [kernel.kallsyms]  [k] get_seconds
+      16.67%  ls       [kernel.kallsyms]  [k] prepend_name
+      16.67%  ls       [kernel.kallsyms]  [k] vma_interval_tree_insert
+      16.67%  ls       ld-2.17.so         [.] _dl_lookup_symbol_x
+      16.67%  ls       libc-2.17.so       [.] __sysconf
+    ```
 
 ```sh
 $ perf stat <命令>      # 分析某条命令占用CPU的过程
 ```
 - 例：
+    ```sh
+    [root@Centos ~]# perf stat uname
+    Linux
 
-    ![](perf4.png)
+     Performance counter stats for 'uname':
 
+                  0.89 msec task-clock                #    0.393 CPUs utilized          
+                     1      context-switches          #    0.001 M/sec                  
+                     0      cpu-migrations            #    0.000 K/sec                  
+                   165      page-faults               #    0.186 M/sec                  
+       <not supported>      cycles                                                      
+       <not supported>      instructions                                                
+       <not supported>      branches                                                    
+       <not supported>      branch-misses                                               
+
+           0.002252426 seconds time elapsed
+
+           0.000000000 seconds user
+           0.001507000 seconds sys
+    ```
     - task-clock (msec)  ：该命令使用CPU的毫秒数。（备注的CPUs utilized表示使用了CPU的几个核）
     - context-switches  ：进程上下文切换的次数。（不宜太大）
     - cache-misses    ：CPU在cache中找不到需要读取的数据的次数。

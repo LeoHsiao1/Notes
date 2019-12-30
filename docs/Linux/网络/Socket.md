@@ -11,7 +11,7 @@
 - `SYN_RECEIVED`
 - `ESTABLISHED` ：已建立连接，可以通信。
 
-![](建立连接.png)
+![](./connect.png)
 
 
 断开TCP连接时的状态：
@@ -25,7 +25,7 @@
 - `LAST_ACK`
 - `CLOSED` ：已关闭连接。
 
-![](断开连接.png)
+![](./disconnect.png)
 
 
 ## TCP通信的常见报错

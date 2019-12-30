@@ -129,7 +129,7 @@ git checkout <tagName>  # 切换到指定标签所在版本
 
 如下图，通过rebase方式将C3合并到master时，会先找到C3与C4的共同祖先C2；然后删除C3，将从C2到C3之间的所有变动应用到C4上，生成一个新版本C3'；最后将master分支快进到C3'处。
 
-![](rebase.png)
+![](./rebase.png)
 
 merge方式与rebase方式最终生成的版本都一样，但是rebase方式会删除次分支，将版本图简化成一条线。
 

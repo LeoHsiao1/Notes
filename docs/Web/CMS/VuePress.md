@@ -19,11 +19,13 @@
     ```sh
     vuepress dev docs
     ```
+    - 当项目文件被修改之后，该服务器会自动刷新网页内容，不需要手动按F5。
 4. 构建出静态文件：
     ```sh
     vuepress build docs
     ```
     - 构建结果默认保存在 docs/.vuepress/dist 目录下，可用于运行静态网站。
+    - 使用 vuepress dev 时，遇到错误可能会忽略。但使用 vuepress build 时，遇到错误就会中断构建。
 
 ## 目录结构
 
@@ -36,25 +38,24 @@
 │  │  ├─ index.md
 │  │  ├─ one.md
 │  │  └─ two.md
-│  └─ .vuepress         # 属于该docs目录的vuepress资源
-│     ├─ config.js      # vuepress的配置文件
-│     ├─ dist           # 保存vuepress build构建结果的目录
-│     │  ├─ index.html
-│     │  └─ 404.html
-│     ├─ static         # 存放静态文件
-│     │  └─ favicon.ico
-│     ├─ styles
-│     │  └─ palette.styl
-│     └─ theme
-│        └─ Layout.vue
+│  └─ .vuepress         # docs目录的VuePress资源文件
+│     ├─ config.js      # VuePress的配置文件
+│     ├─ dist           # 保存vuepress build的构建结果（该目录应该记入.gitignore）
+│     |  ├─ assets      # 保存VuePress内部使用的css、js、img文件
+│     |  ├─ favicon.ico # 从public目录拷贝而来
+│     |  ├─ index.html  # 从index.md构建生成
+│     |  └─ 404.html    # 被VuePress自动拷贝而来
+│     └─ public         # 存放一些没有被MarkDown引用但是被网站使用的静态文件，在构建时会被拷贝到dist目录下
+│        └─ favicon.ico # 网站的logo
 └─ package.json
 ```
-
+- 上例中，docs目录就是VuePress网站的根目录。
 - VuePress会扫描docs目录及其子目录，将每个目录下的 README.md 或 index.md 文件构建成 index.html 。比如上例中，访问URL为`/`时，是根据`docs/README.md`作出显示；访问URL为`/dir1/`时，是根据`docs/test/index.md`作出显示。
+- MarkDown文档中引用图片等资源时，建议使用相对路径，并且显示地以 ./ 开头，而且只包含英文字符，否则可能不能显示。
 
-## 配置
+## 基本配置
 
-VuePress网站的配置文件默认为`.vuepress/config.js`，配置示例：
+VuePress网站的配置文件默认为`.vuepress/config.js`，配置示例如下：
 ```js
 module.exports = {
     title: 'Hello VuePress',            // 网站的标题，还会显示在导航栏的左上角
@@ -64,27 +65,154 @@ module.exports = {
     base: '/',                          // 该VuePress网站监听的URL的起始路径，会成为以 / 开始的其它URL的前缀
     dest: '.vuepress/dist',             // 保存 vuepress build 构建结果的目录
     lang: 'zh-CN',                      // 网站的语言，会保存在<html lang="...">中
+    head: [                             // 定义一些标签，会保存在HTML的<head>中
+        ['link', { rel: 'icon', href: '/logo.png' }],
+        ['meta', { name: 'theme-color', content: '#3eaf7c' }]
+    ],
     markdown: {
         lineNumbers: true,              // 让代码块显示行号
-        toc: { includeLevel: [2, 3] },  // MarkDown文档中，让 [[toc]] 标签自动提取哪几级标题
-        extractHeaders: ['h2', 'h3'],   // MarkDown文档中，让VuePress提取哪几级标题作为Header
+        toc: { includeLevel: [2, 3] },  // MarkDown文档中，用 [[toc]] 标签建立目录时，收集哪几级标题
+        extractHeaders: ['h2', 'h3'],   // MarkDown文档中，对于哪几级标题建立搜索索引
     }
 }
 ```
-- VuePress 内置了基于 headers 的搜索 —— 它会自动为所有页面的标题、h2 和 h3 构建起一个简单的搜索索引。
 
+## 默认主题的配置
 
-## 主题
+### 侧边栏
+
+- 方式一：手动定义侧边栏中包含的链接
+    ```js
+    module.exports = {
+        themeConfig: {
+            sidebar: [
+                '/Chapter1/1',      // 定义一个链接，会自动提取链接最后一节的 1 作为显示的名字
+                ['/Chapter1/2', '第二节']	// 定义一个链接，并设置其显示的名字
+            ],
+        }
+    }
+    ```
+    - 这些链接必须是 docs 目录下的绝对路径，以 / 开头。
+    - 当用户访问的URL为'/Chapter1/1'时，VuePress会先查找是否存在'/Chapter1/1.html'文件，不存在的话再查找是否存在'/Chapter1/1/index.html'文件，依然不存在的话就报错404。
+
+- 方式二：定义分组的链接
 
 ```js
 module.exports = {
-    theme: 'vuepress-theme-xx',      // 使用的主题
-    themeConfig: {                   // 配置主题
-        logo: '/assets/img/logo.png',
+	themeConfig: {
+		sidebar: [
+            {
+				title: '第一章',    // 这一组链接的名字
+				path: '/Chapter1',  // 设置title指向的链接（也可以不设置）
+				collapsable: true,  // 是否折叠显示
+				sidebarDepth: 2,    // 自动从当前文档中提取标题链接，最深提取到 h3 级标题
+				children: [         // title下的子链接
+                    ['/Chapter1/1', '第一节'],
+                    ['/Chapter1/2', '第二节'],
+				]
+			},
+			{
+				title: '第二章',
+				children: [ ]
+			}
+		],
+		nextLinks: true,            // 根据侧边栏目录，显示到下一个页面的链接
+		prevLinks: true,            // 根据侧边栏目录，显示到上一个页面的链接
+	}
+}
+```
+
+- 方式三：让侧边栏只包含从当前页面提取的标题链接
+    ```js
+    module.exports = {
+        themeConfig: {
+            sidebar: 'auto'
+        }
+    }
+    ```
+
+### 导航栏
+
+添加以下格式的配置，即可在网站右上角显示导航栏链接：
+```js
+module.exports = {
+	themeConfig: {
+		nav: [
+            {                               // 定义导航栏
+				text: 'Home',               // 定义一个链接
+				link: '/'
+			},
+			{
+				text: 'External',
+				link: 'https://google.com'  // 可以定义跨域链接
+			},
+			{
+				text: 'Languages',
+				items: [                    // 定义一组链接，作为下拉框显示
+                    {
+						text: 'Chinese',
+						link: '/language/cn/'
+					},
+					{
+						text: 'English',
+						link: '/language/en/'
+					}
+				]
+			}
+		]
+	}
+}
+```
+
+### 首页
+
+只要docs目录下存在 README.md 或 index.md 文件，就可以让VuePress显示出网站的首页。
+
+特别地，可以在`docs/READMD.md`文件中插入以下YAML格式的内容，让VuePress网站显示一种特殊布局的首页（Homepage）。
+```markdown
+---
+home: true              # 开启显示Homepage
+heroImage: /hero.png    # 显示一张小图
+heroText: 大标题
+tagline: 副标题
+actionText: 开始阅读     # 按钮的名字（只能定义一个按钮）
+actionLink: /zh/guide/   # 按钮的链接
+features:
+- title: 特征1
+  details: 简短的描述...
+- title: 特征2
+  details: 简短的描述...
+footer: MIT Licensed | Copyright © 2018-present Evan You    # 页脚
+---
+
+（接着可以写入其它内容...）
+```
+- 这个Homepage的显示效果一般，不用也罢。
+
+### 其它配置
+
+```js
+module.exports = {
+    // theme: '@vuepress/theme-default',            // 使用的主题
+    themeConfig: {                                  // 主题的配置
+		repo: 'https://github.com/LeoHsiao1/Notes', // 启用到GitHub仓库的链接，显示在页面右上角
+		repoLabel: 'GitHub',                        // repo链接显示的名字
+		docsDir: 'docs',                            // 使用GitHub仓库中哪个目录下的文档
+		docsBranch: 'master',                       // 指向GitHub仓库的哪个分支
+		editLinks: true,                            // 启用快速编辑的链接，显示在文章末尾的左下角
+		editLinkText: 'Edit on GitHub',             // editlink显示的名字
+        lastUpdated: 'Last Updated',	            // 根据git commit记录显示每个页面的最后编辑时间
+		smoothScroll: true,                         // 在页面内进行跳转时，页面会平滑滚动
+        logo: '/logo.png',                          // 网站logo，会显示在导航栏的左侧
     }
 }
 ```
-    
+
+### 其它
+
+- VuePress使用Prism实现了MarkDown中代码块的语法高亮，不需要再自己下载Prism的插件。
+- VuePress内置了一个搜索框，不过只对所有页面的h1、h2、h3级标题建立了搜索索引，不能进行全文搜索。
+  - 使用 [Algolia插件](https://vuepress.vuejs.org/zh/theme/default-theme-config.html#algolia-%E6%90%9C%E7%B4%A2) 之后可以进行全文搜索。
 - 编辑`.vuepress/styles/palette.styl`文件可修改网站配色，默认的颜色值如下：
     ```
     $accentColor = #3eaf7c
@@ -95,8 +223,3 @@ module.exports = {
     $badgeWarningColor = darken(#ffe564, 35%)
     $badgeErrorColor = #DA5961
     ```
-
-
-## 插件
-
-- VuePress已使用Prism实现了MarkDown中代码块的语法高亮，不需要再自己下载Prism的插件。

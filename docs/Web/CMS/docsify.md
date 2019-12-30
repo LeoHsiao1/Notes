@@ -45,9 +45,7 @@
     python3 -m http.server 80
     ```
 
-## 配置
-
-### 目录结构
+## 目录结构
 
 以下是docsify网站的目录结构示例：
 ```
@@ -62,20 +60,20 @@
 ├─ navbar.md
 └─ sidebar.md
 ```
-- **index.html所在目录是网站的根目录，任何文件中使用的相对路径的URL，都必须从这里开始。**因为docsify网站是纯SPA网站，当前目录始终停留在网站根目录，不能移动。
+- index.html所在目录是网站的根目录，**任何文件中使用的相对路径的URL，都必须从这里开始。**因为docsify网站是纯SPA网站，当前目录始终停留在网站根目录，不能移动。
+
+## 配置
 
 ### 侧边栏
 
 在index.html中加入配置：
-
 ```js
 window.$docsify = {
-  loadSidebar: 'sidebar.md',  # 显示侧边栏目录
+  loadSidebar: 'sidebar.md',  // 显示侧边栏目录
 }
 ```
 
 侧边栏中的目录结构由URL所在目录下的`sidebar.md`决定，如下：
-
 ```markdown
 # 目录
 
@@ -85,7 +83,6 @@ window.$docsify = {
 - 第二章                      # 可以不给链接，只显示名字
   - [第一节](Chapter2/1.md)
 ```
-
 - 可以给各个目录分别创建 sidebar.md ，从而分别显示侧边栏目录。
   - 如果URL所在目录下没有 sidebar.md ，则使用上一层目录的。
   - navbar.md 的使用规则同理。
@@ -93,7 +90,6 @@ window.$docsify = {
 ### 导航栏
 
 在index.html中加入配置：
-
 ```html
 <nav>
   <<a href="#/">Navbar</a>   # 在页面顶部显示导航栏
@@ -107,7 +103,6 @@ window.$docsify = {
 ```
 
 导航栏的下拉列表由URL所在目录下的`navbar.md`决定，如下：
-
 ```markdown
 - [第一章](Chapter1/)
   - [第一节](Chapter1/1.md)
@@ -118,24 +113,15 @@ window.$docsify = {
 
 ### 封面
 
-在index.html中加入配置：
-
+docsify默认没有显示封面，需要在index.html中加入如下配置：
 ```js
 window.$docsify = {
-  coverpage: 'coverpage.md'   # 显示封面
+  coverpage: 'coverpage.md'   // 显示首页的封面
+  // coverpage: ['/', '/Chapter1/', '/Chapter2/']   // 给多个目录分别显示封面
 }
 ```
 
-封面默认只有一个，显示在网站首页。可以按以下格式给多个目录分别定义封面：
-
-```js
-window.$docsify = {
-  coverpage: ['/', '/Chapter1/', '/Chapter2/']
-}
-```
-
-封面的显示内容由URL所在目录下的`coverpage.md`决定，如下：
-
+`coverpage.md` 的内容必须遵守以下格式：
 ```markdown
 # docsify
 
@@ -150,7 +136,6 @@ window.$docsify = {
 ### 网页图标
 
 在index.html的head部分导入网页图标：
-
 ```html
 <link rel="icon" href="static/img/logo.ico" type="image/x-icon"/>
 ```
@@ -159,12 +144,12 @@ window.$docsify = {
 
 ```js
 window.$docsify = {
-  name: '',        # 侧边栏顶部显示的文档标题
-  nameLink: '/',   # 文档标题指向的链接
-  repo: '',        # 在页面右上角显示一个到GitHub的链接
-  maxLevel: 3,     # 解析MarkDown文件时的最大目录层数
-  subMaxLevel: 4,  # 侧边栏目录的最大层数
-  auto2top: true,  # 切换显示的文档时，自动跳转到页面顶部
+  name: '',        // 侧边栏顶部显示的文档标题
+  nameLink: '/',   // 文档标题指向的链接
+  repo: '',        // 在页面右上角显示一个到GitHub的链接
+  maxLevel: 3,     // 解析MarkDown文件时的最大目录层数
+  subMaxLevel: 4,  // 侧边栏目录的最大层数
+  auto2top: true,  // 切换显示的文档时，自动跳转到页面顶部
 }
 ```
 
@@ -172,8 +157,7 @@ window.$docsify = {
 
 ### 搜索框
 
-添加如下配置，即可在侧边栏上方显示一个搜索框：
-
+添加如下配置，即可在侧边栏上方显示一个搜索框，可对所有页面进行全文搜索：
 ```html
 <script>
 window.$docsify = {
@@ -196,7 +180,7 @@ window.$docsify = {
 
 ### 嵌入文件
 
-从docsify 4.6开始，在链接末尾加上`':include'`即可嵌入该文件。
+从docsify 4.6开始，在Markdown中引用链接时，加上`':include'`即可嵌入目标文件。
 
 支持的文件类型|文件后缀名
 -|-

@@ -7,6 +7,13 @@
   - [♢ sqlite3](docs/数据库/SQLite/^sqlite3.md)
 - <font color="#8f8f8f">MySQL</font>
   - [MySQL](docs/数据库/MySQL/MySQL.md)
+  - [管理单元](docs/数据库/MySQL/管理单元.md)
+  - [数据类型](docs/数据库/MySQL/数据类型.md)
+  - [备份数据](docs/数据库/MySQL/备份数据.md)
+  - [其它功能](docs/数据库/MySQL/其它功能.md)
+  - [数据库引擎](docs/数据库/MySQL/数据库引擎.md)
+  - [性能优化](docs/数据库/MySQL/性能优化.md)
+  - [部署架构](docs/数据库/MySQL/部署架构.md)
   - [♢ PyMySQL](docs/数据库/MySQL/^PyMySQL.md)
   - [♢ SQLAlchemy](docs/数据库/MySQL/^SQLAlchemy.md)
 - <font color="#8f8f8f">MongoDB</font>

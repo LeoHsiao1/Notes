@@ -7,6 +7,13 @@
   - [♢ sqlite3](SQLite/^sqlite3.md)
 - MySQL
   - [MySQL](MySQL/MySQL.md)
+  - [管理单元](MySQL/管理单元.md)
+  - [数据类型](MySQL/数据类型.md)
+  - [备份数据](MySQL/备份数据.md)
+  - [其它功能](MySQL/其它功能.md)
+  - [数据库引擎](MySQL/数据库引擎.md)
+  - [性能优化](MySQL/性能优化.md)
+  - [部署架构](MySQL/部署架构.md)
   - [♢ PyMySQL](MySQL/^PyMySQL.md)
   - [♢ SQLAlchemy](MySQL/^SQLAlchemy.md)
 - MongoDB

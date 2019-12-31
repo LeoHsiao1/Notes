@@ -59,11 +59,11 @@ VuePress网站的配置文件默认为`.vuepress/config.js`，配置示例如下
 ```js
 module.exports = {
     title: 'Hello VuePress',            // 网站的标题，还会显示在导航栏的左上角
-    description: 'Just playing around', // 网站的简单描述，会保存在HTML的<meta>中
+    description: 'some descriptions',   // 网站的简单描述，会保存在HTML的<meta>中
     host: '0.0.0.0',                    // 该VuePress网站监听的IP地址
     port: 8080,                         // 该VuePress网站监听的端口号
     base: '/',                          // 该VuePress网站监听的URL的起始路径，会成为以 / 开始的其它URL的前缀
-    dest: '.vuepress/dist',             // 保存 vuepress build 构建结果的目录
+    dest: 'docs/.vuepress/dist',        // 保存 vuepress build 构建结果的目录
     lang: 'zh-CN',                      // 网站的语言，会保存在<html lang="...">中
     head: [                             // 定义一些标签，会保存在HTML的<head>中
         ['link', { rel: 'icon', href: '/logo.png' }],
@@ -95,32 +95,31 @@ module.exports = {
     - 这些链接必须是 docs 目录下的绝对路径，以 / 开头。
     - 当用户访问的URL为'/Chapter1/1'时，VuePress会先查找是否存在'/Chapter1/1.html'文件，不存在的话再查找是否存在'/Chapter1/1/index.html'文件，依然不存在的话就报错404。
 
-- 方式二：定义分组的链接
-
-```js
-module.exports = {
-	themeConfig: {
-		sidebar: [
-            {
-				title: '第一章',    // 这一组链接的名字
-				path: '/Chapter1',  // 设置title指向的链接（也可以不设置）
-				collapsable: true,  // 是否折叠显示
-				sidebarDepth: 2,    // 自动从当前文档中提取标题链接，最深提取到 h3 级标题
-				children: [         // title下的子链接
-                    ['/Chapter1/1', '第一节'],
-                    ['/Chapter1/2', '第二节'],
-				]
-			},
-			{
-				title: '第二章',
-				children: [ ]
-			}
-		],
-		nextLinks: true,            // 根据侧边栏目录，显示到下一个页面的链接
-		prevLinks: true,            // 根据侧边栏目录，显示到上一个页面的链接
-	}
-}
-```
+- 方式二：定义一些分组的链接
+    ```js
+    module.exports = {
+        themeConfig: {
+            sidebar: [
+                {
+                    title: '第一章',    // 这一组链接的名字
+                    path: '/Chapter1',  // 设置title指向的链接（也可以不设置）
+                    collapsable: true,  // 是否折叠显示
+                    sidebarDepth: 2,    // 自动从当前文档中提取标题链接，最深提取到 h3 级标题
+                    children: [         // title下的子链接
+                        ['/Chapter1/1', '第一节'],
+                        ['/Chapter1/2', '第二节'],
+                    ]
+                },
+                {
+                    title: '第二章',
+                    children: [ ]
+                }
+            ],
+            nextLinks: true,            // 根据侧边栏目录，显示到下一个页面的链接
+            prevLinks: true,            // 根据侧边栏目录，显示到上一个页面的链接
+        }
+    }
+    ```
 
 - 方式三：让侧边栏只包含从当前页面提取的标题链接
     ```js
@@ -137,8 +136,8 @@ module.exports = {
 ```js
 module.exports = {
 	themeConfig: {
-		nav: [
-            {                               // 定义导航栏
+		nav: [                              // 定义导航栏
+            {
 				text: 'Home',               // 定义一个链接
 				link: '/'
 			},
@@ -202,8 +201,8 @@ module.exports = {
 		editLinks: true,                            // 启用快速编辑的链接，显示在文章末尾的左下角
 		editLinkText: 'Edit on GitHub',             // editlink显示的名字
         lastUpdated: 'Last Updated',	            // 根据git commit记录显示每个页面的最后编辑时间
-		smoothScroll: true,                         // 在页面内进行跳转时，页面会平滑滚动
         logo: '/logo.png',                          // 网站logo，会显示在导航栏的左侧
+		smoothScroll: true,                         // 在页面内进行跳转时，页面会平滑滚动
     }
 }
 ```

@@ -2,6 +2,6 @@
 - [Notes](README.md)
   - [《Python》](Python/index.md)
   - [《Linux》](Linux/index.md)
-  - [《数据库》](数据库/index.md)
+  - [《数据库》](Database/index.md)
   - [《Web》](Web/index.md)
   - [《DevOps》](DevOps/index.md)

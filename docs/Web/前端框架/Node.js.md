@@ -69,7 +69,7 @@ yum install yarn
 yarn                     # 相当于npm install
     init                 # 相当于npm init
     add [name]...        # 相当于npm install --save
-        --dev            # 相当于npm install --save-dev
+        -D               # 相当于npm install --save-dev
     remove [name]...     # 相当于npm uninstall --save
     upgrade [name]       # 相当于npm update --save
     list                 # 相当于npm list

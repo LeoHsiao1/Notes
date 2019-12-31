@@ -114,6 +114,7 @@ HTML5提倡将它们都改用 css 设置显示样式。
 <a href="https://www.baidu.com">链接</a>
 <a href="https://www.baidu.com" target="_blank">链接</a>
 <a href="#tips">查看提示</a>
+<a href="page_2.html" rel="next" rev="prev">链接</a>
 ```
 
 - 属性`href`用于显示一个链接，实现超文本引用（hypertext reference）。
@@ -124,6 +125,7 @@ HTML5提倡将它们都改用 css 设置显示样式。
   - target="_parent"：清空当前框架，将目标资源载入到父级框架中。
   - target="_top"：清空当前窗口的内容，然后载入目标资源。常用于跳出框架。
   - target="_blank"：跳转到一个新窗口，然后载入目标资源。
+- 属性`rel`表示从当前链接到目的链接的关系，属性`rev`表示从目的链接到当前链接的关系.
 
 ### 图片
 

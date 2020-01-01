@@ -24,7 +24,7 @@
     ```sh
     vuepress build docs
     ```
-    - 构建结果默认保存在 docs/.vuepress/dist 目录下，可用于运行静态网站。
+    - 构建结果默认保存在 `docs/.vuepress/dist` 目录下，可用于运行静态网站。
     - 使用 vuepress dev 时，遇到错误可能会忽略。但使用 vuepress build 时，遇到错误就会中断构建。
 
 ## 目录结构
@@ -55,7 +55,7 @@
 
 ## 基本配置
 
-VuePress网站的配置文件默认为`.vuepress/config.js`，配置示例如下：
+VuePress网站的配置文件默认为`docs/..vuepress/config.js`，配置示例如下：
 ```js
 module.exports = {
     title: 'Hello VuePress',            // 网站的标题，还会显示在导航栏的左上角
@@ -188,6 +188,27 @@ footer: MIT Licensed | Copyright © 2018-present Evan You    # 页脚
 ```
 - 这个Homepage的显示效果一般，不用也罢。
 
+### 显示样式
+
+- 编辑`docs/.vuepress/styles/palette.styl`文件可修改网站配色，如下：
+    ```
+    $accentColor = #3eaf7c  // 链接的颜色
+    $textColor = #2c3e50    // 文本的颜色
+    $borderColor = #eaecef  // 边框线的颜色
+    $codeBgColor = #282c34  // 代码块的背景色
+
+    $navbarHeight = 3.6rem  // 导航栏的高度
+    $sidebarWidth = 16rem   // 侧边栏的宽度
+    $contentWidth = 60rem   // 文章内容的宽度
+    ```
+
+- 编辑`docs/.vuepress/styles/index.styl`文件可定义一些样式，覆盖掉默认样式，如下：
+    ```css
+    body {
+        font-family: Consolas, "Microsoft YaHei", serif;
+    }
+    ```
+
 ### 其它配置
 
 ```js
@@ -207,18 +228,12 @@ module.exports = {
 }
 ```
 
-### 其它
+### 关于MarkDown
 
-- VuePress使用Prism实现了MarkDown中代码块的语法高亮，不需要再自己下载Prism的插件。
-- VuePress内置了一个搜索框，不过只对所有页面的h1、h2、h3级标题建立了搜索索引，不能进行全文搜索。
-  - 使用 [Algolia插件](https://vuepress.vuejs.org/zh/theme/default-theme-config.html#algolia-%E6%90%9C%E7%B4%A2) 之后可以进行全文搜索。
-- 编辑`.vuepress/styles/palette.styl`文件可修改网站配色，默认的颜色值如下：
-    ```
-    $accentColor = #3eaf7c
-    $textColor = #2c3e50
-    $borderColor = #eaecef
-    $codeBgColor = #282c34
-    $badgeTipColor = #42b983
-    $badgeWarningColor = darken(#ffe564, 35%)
-    $badgeErrorColor = #DA5961
-    ```
+VuePress使用Prism实现了MarkDown中代码块的语法高亮，不需要再自己下载Prism的插件。
+
+### 搜索
+
+VuePress内置了一个搜索框，不过只对所有页面的h1、h2、h3级标题建立了搜索索引，不能进行全文搜索。
+- 使用 [Algolia插件](https://vuepress.vuejs.org/zh/theme/default-theme-config.html#algolia-%E6%90%9C%E7%B4%A2) 之后可以进行全文搜索。
+

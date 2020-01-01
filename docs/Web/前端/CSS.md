@@ -133,12 +133,12 @@ html {
 }
 body {
     font-size: 40px;
-    width: 10em;        ## 等于400px
+    width: 10em;        # 等于400px
 }
 p {
-    font-size: 0.5em;   ## 等于20px
-    width: 10em;        ## 等于200px
-    height: 10rem;      ## 等于100px
+    font-size: 0.5em;   # 等于20px
+    width: 10em;        # 等于200px
+    height: 10rem;      # 等于100px
 }
 ```
 
@@ -147,20 +147,20 @@ p {
 绝大部分样式都支持赋值为 inherit ，表示继承父元素中该属性的值。
 - 例：
     ```css
-    background-color: inherit;    ## 背景色默认不会继承父元素，这里主动让它继承
+    background-color: inherit;    # 背景色默认不会继承父元素，这里主动让它继承
     ```
 
-### 关于背景
+### 背景
 
 background-color：背景色
 - 默认不继承父元素。
 - 可应用于绝大部分元素。
 - 例：
     ```css
-    background-color: transparent;     ## 默认值，透明
-    background-color: red;             ## 使用预设的颜色名字
-    background-color: #ff0000;         ## 使用颜色的十六进制值
-    background-color: rgb(255 ,0, 0);  ## 用 rgb() 选择颜色
+    background-color: transparent;     # 默认值，透明
+    background-color: red;             # 使用预设的颜色名字
+    background-color: #ff0000;         # 使用颜色的十六进制值
+    background-color: rgb(255 ,0, 0);  # 用 rgb() 选择颜色
     ```
 - 很多样式支持用一些预设的关键字赋值，比如red、center。**如果用户设置的值不是有效的关键字，则使用默认值。**
 
@@ -170,36 +170,36 @@ background-image：背景图片
 - 图片要用 url() 指定位置。
 - 例：
     ```css
-    background-image: none;             ## 默认值，不显示图片
-    background-image: url(/img/01.gif); ## 显示指定图片
+    background-image: none;             # 默认值，不显示图片
+    background-image: url(/img/01.gif); # 显示指定图片
     ```
 - 背景图片的重复策略：
     ```css
-    background-repeat: repeat;    ## 默认值，在水平、垂直方向上都重复显示图片
-    background-repeat: repeat-x;  ## 只在水平方向上重复
-    background-repeat: repeat-y;  ## 只在垂直方向上重复
-    background-repeat: no-repeat; ## 不重复
+    background-repeat: repeat;    # 默认值，在水平、垂直方向上都重复显示图片
+    background-repeat: repeat-x;  # 只在水平方向上重复
+    background-repeat: repeat-y;  # 只在垂直方向上重复
+    background-repeat: no-repeat; # 不重复
     ```
 - 背景图片的显示位置：
     ```css
-    background-position: top left;   ## 默认值，位于左上角
+    background-position: top left;   # 默认值，位于左上角
     background-position: top;
     ```
     - 水平方向的关键字：left、center、right
     - 垂直方向的关键字：top、center、bottom
     - 最多可设置两个方向的关键字，顺序任意。如果只设置一个方向，则另一个方向默认为center。
     ```css
-    background-position: 100% 33%;   ## 设置图片中心点在显示区域以内的百分比位置
-    background-position: 50px 100px; ## 设置图片左上角的绝对位置（可能超出显示区域）
+    background-position: 100% 33%;   # 设置图片中心点在显示区域以内的百分比位置
+    background-position: 50px 100px; # 设置图片左上角的绝对位置（可能超出显示区域）
     ```
 
 - 当用户滚动页面时，如果背景图片跟随滚动，就可能滚动到显示区域以外。可设置图片是否滚动：
     ```css
-    background-attachment: scroll;   ## 默认值，图片跟随滚动
-    background-attachment: fixed;    ## 不滚动
+    background-attachment: scroll;   # 默认值，图片跟随滚动
+    background-attachment: fixed;    # 不滚动
     ```
 
-### 关于文本
+### 文本
 
 color：文本颜色（前景色）
 - 例：
@@ -212,31 +212,31 @@ color：文本颜色（前景色）
 text-decoration：文本的装饰线
 - 例：
     ```css
-    text-decoration: none;          ## 默认值，不处理
-    text-decoration: underline;     ## 显示下划线
-    text-decoration: overline;      ## 显示上划线
-    text-decoration: line-through;  ## 显示删除线
-    text-decoration: blink;         ## 闪烁显示（大部分浏览器都不支持）
-    text-decoration: underline overline;  ## 可以组合使用多个装饰线
+    text-decoration: none;          # 默认值，不处理
+    text-decoration: underline;     # 显示下划线
+    text-decoration: overline;      # 显示上划线
+    text-decoration: line-through;  # 显示删除线
+    text-decoration: blink;         # 闪烁显示（大部分浏览器都不支持）
+    text-decoration: underline overline;  # 可以组合使用多个装饰线
     ```
 
 text-transform：大小写
 - 例：
     ```css
-    text-transform: none;       ## 默认值，不处理
-    text-transform: uppercase;  ## 所有字母显示成大写
-    text-transform: lowercase;  ## 所有字母显示成小写
-    text-transform: capitalize; ## 每个单词的首字母显示成大写
+    text-transform: none;       # 默认值，不处理
+    text-transform: uppercase;  # 所有字母显示成大写
+    text-transform: lowercase;  # 所有字母显示成小写
+    text-transform: capitalize; # 每个单词的首字母显示成大写
     ```
 
 text-align：对齐方式
 - 控制的是元素中的文本的位置，而HTML中的 center 等标签控制的是元素的位置。
 - 例：
     ```css
-    text-align: left;       ## 左对齐
-    text-align: center;     ## 居中对齐
-    text-align: right;      ## 右对齐
-    text-align: justify;    ## 两端对齐（调整字符间距，使每行的长度相等）
+    text-align: left;       # 左对齐
+    text-align: center;     # 居中对齐
+    text-align: right;      # 右对齐
+    text-align: justify;    # 两端对齐（调整字符间距，使每行的长度相等）
     ```
 
 text-indent：缩进
@@ -246,9 +246,9 @@ text-indent：缩进
   - 设置行级元素的左内边距，达到缩进的效果。
 - 例：
     ```css
-    text-indent: 5em;   ## 相对于父元素的倍值
-    text-indent: -5em;  ## 缩进可以为负值（可能超出显示区域）
-    text-indent: 20%;   ## 相对于父元素的百分比
+    text-indent: 5em;   # 相对于父元素的倍值
+    text-indent: -5em;  # 缩进可以为负值（可能超出显示区域）
+    text-indent: 20%;   # 相对于父元素的百分比
     ```
 
 line-height：行高
@@ -262,9 +262,9 @@ line-height：行高
 word-spacing：字或单词的间距
 - 例：
     ```css
-    word-spacing: normal;   ## 默认值，等于 0 px
+    word-spacing: normal;   # 默认值，等于 0 px
     word-spacing: 30px;
-    word-spacing: -0.5em;   ## 可以为负值
+    word-spacing: -0.5em;   # 可以为负值
     ```
 - 例：应用到HTML中
     ```css
@@ -282,16 +282,16 @@ letter-spacing：字母的间距
 white-space：处理空白字符的策略
 - 例：
     ```css
-    white-space: normal;    ## 默认值，将连续的空格合并为一个空格，忽略换行符，允许自动换行
-    white-space: nowrap;    ## 与normal相似，只是不允许自动换行
-    white-space: pre;       ## 保留所有空格、换行符，与原文本一致，不允许自动换行
+    white-space: normal;    # 默认值，将连续的空格合并为一个空格，忽略换行符，允许自动换行
+    white-space: nowrap;    # 与normal相似，只是不允许自动换行
+    white-space: pre;       # 保留所有空格、换行符，与原文本一致，不允许自动换行
     ```
 
 direction：文本方向
 - 例：
     ```css
-    direction: ltr;    ## 默认值，从左往右
-    direction: rtl;    ## 从右往左
+    direction: ltr;    # 默认值，从左往右
+    direction: rtl;    # 从右往左
     ```
 
 ### 字体
@@ -306,20 +306,20 @@ CSS将大部分字体划分为5种通用的字体系列：
 font-family：字体系列
 - 例：
     ```css
-    p {font-family: Consolas, "Microsoft YaHei", serif;}
+    p {font-family: 'Consolas', 'Microsoft YaHei', serif;}
     ```
     - 浏览器在显示时，会按先后顺序寻找这些字体（客户端是否存在对应的字体库），如果没找到就使用后一种字体，如果都没找到则使用默认的字体。
     - 如上，"Consolas"字体只包含英文字符。显示英文时会优先使用"Consolas"字体，显示中文时则使用后面的"Microsoft YaHei"字体。
 - 导入外部字体：
     ```css
     @font-face{
-        font-family: '字体名'; 
-        src:url('/font/字体名.woff') format('woff'),   ## 导入本地字体
+        font-family: '字体名';
+        src:url('/font/字体名.woff') format('woff'),   # 导入本地字体
             url('/font/字体名.svg') format('svg'),
-            url('https://fonts.gstatic.font.im/.../字体名.ttf') format('truetype');    ## 导入在线字体
+            url('https://fonts.gstatic.font.im/.../字体名.ttf') format('truetype');    # 导入在线字体
     }
 
-    h1{font-family: "字体名";}  ## 使用字体
+    h1{font-family: "字体名";}  # 使用字体
     ```
 
 font-size：字体大小
@@ -336,17 +336,17 @@ font-size：字体大小
 font-weight：字体的粗细
 - 例：
     ```css
-    font-weight: normal;    ## 默认值，正常显示
-    font-weight: bold;      ## 显示成粗体
-    font-weight: 900;       ## 设置粗度值
+    font-weight: normal;    # 默认值，正常显示
+    font-weight: bold;      # 显示成粗体
+    font-weight: 900;       # 设置粗度值
     ```
     粗度值的取值范围为100~900，400等价于normal，700等价于bold。
 
 font-style：字体风格
 - 例：
     ```css
-    font-style: normal;    ## 默认值，正常显示
-    font-style: italic;    ## 显示成斜体
+    font-style: normal;    # 默认值，正常显示
+    font-style: italic;    # 显示成斜体
     ```
 
 ### 链接
@@ -392,7 +392,7 @@ p {
     width: 30px;
     height: 1em;
     padding: 5%;
-    margin: auto;   ## 让浏览器自动处理（通常用于居中显示）
+    margin: auto;   # 让浏览器自动处理（通常用于居中显示）
 }
 ```
 
@@ -400,9 +400,9 @@ p {
 - 例：
     ```css
     p {
-        padding: 1em 1em 1em 1em;   ## 按顺序一次性设置四条边
+        padding: 1em 1em 1em 1em;   # 按顺序一次性设置四条边
 
-        padding-top: 1em;    ## 单独设置一条边
+        padding-top: 1em;    # 单独设置一条边
         padding-right: 1em;
         padding-bottom: 1em;
         padding-left: 1em;
@@ -413,9 +413,9 @@ p {
 配置边框：
 ```css
 p {
-    border-style: solid;  ## 边框线的类型
-    border-width: 5px;    ## 边框线的宽度
-    border-color: blue;   ## 边框线的颜色
+    border-style: solid;  # 边框线的类型
+    border-width: 5px;    # 边框线的宽度
+    border-color: blue;   # 边框线的颜色
 }
 ```
 
@@ -445,9 +445,9 @@ border-style的可用取值：
 例：
 ```css
 p {
-    position: relative;  ## 使用相对位置
-    left: -20px;         ## 元素外边距的左边界 相对于 其外部块的左边界 的偏移
-    top: 5%;             ## 可以使用相对于其外部块的百分比位置
+    position: relative;  # 使用相对位置
+    left: -20px;         # 元素外边距的左边界 相对于 其外部块的左边界 的偏移
+    top: 5%;             # 可以使用相对于其外部块的百分比位置
     /* bottom: 5%; */
     /* right: 5%; */
 }
@@ -461,7 +461,7 @@ z-index：元素的堆叠顺序
     ```css
     p {
         position: absolute;
-        z-index: -1;        ## 堆叠顺序可以取负值
+        z-index: -1;        # 堆叠顺序可以取负值
     }
     ```
 
@@ -482,7 +482,7 @@ float：让元素浮动
   - right：向右滑动。
 - 例：
     ```css
-    p > img {           ## 让p元素内的img元素浮动（可达到文本环绕图片的效果）
+    p > img {           # 让p元素内的img元素浮动（可达到文本环绕图片的效果）
         float: left;
         border: 1px;
         margin: auto;

@@ -9,10 +9,6 @@ module.exports = {
 	themeConfig: {
 		sidebar: 'auto',
 		nav: [
-            {
-				text: 'Home',
-				link: '/'
-			},
 			{
 				text: 'Notes',
 				items: [

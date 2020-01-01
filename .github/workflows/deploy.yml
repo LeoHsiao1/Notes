@@ -6,10 +6,13 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
-    - name: git pull
+    - name: Pull
       run: |
         cd /home/github/Notes
         git pull
+    - name: Build
+      run: |
+        vuepress build docs
     - name: Test
       run: |
-        curl -I leohsiao.com --connect-timeout 3
+        curl -I http://leohsiao.com/ --connect-timeout 3

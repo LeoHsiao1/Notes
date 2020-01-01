@@ -172,7 +172,7 @@ module.exports = {
 ---
 home: true              # 开启显示Homepage
 heroImage: /hero.png    # 显示一张小图
-heroText: 大标题
+heroText: 大标题        # 大标题（赋值为null则不显示）
 tagline: 副标题
 actionText: 开始阅读     # 按钮的名字（只能定义一个按钮）
 actionLink: /zh/guide/   # 按钮的链接

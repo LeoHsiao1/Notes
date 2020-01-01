@@ -1,6 +1,6 @@
 module.exports = {
     title: "LeoHsiao's Notes",
-    description: 'LeoHsiao的笔记',
+    description: ' ',
     host: '0.0.0.0',
     port: 80,
     base: '/',

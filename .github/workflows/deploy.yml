@@ -8,12 +8,11 @@ jobs:
     steps:
     - name: Pull
       run: |
-        sudo su -
         cd /home/github/Notes
-        git pull
+        sudo git pull
     - name: Build
       run: |
-        vuepress build docs
+        sudo /usr/local/bin/vuepress build docs
     - name: Test
       run: |
         curl -I http://leohsiao.com/ --connect-timeout 3

@@ -6,12 +6,10 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
-    - name: Pull
+    - name: Build
       run: |
         cd /home/github/Notes
         sudo git pull
-    - name: Build
-      run: |
         sudo /usr/local/bin/vuepress build docs
     - name: Test
       run: |

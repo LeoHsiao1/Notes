@@ -1,24 +1,10 @@
 ---
+pageClass: homepage_class
 navbar: false
 home: true
 heroText: null
 tagline: null
 ---
-
-<style type="text/css">
-    body {
-        background-color: #3d3961;
-        background-image: url(/cat.gif);
-        background-repeat: no-repeat;
-        background-position: 50% 50%;
-    }
-    #homepage_title {
-        color: #f8f8f8;
-        text-align: center;
-        font-size: 4em;
-        font-weight: normal;
-    }
-</style>
 
 <h1 id="homepage_title">LeoHsiao的笔记</h1>
 

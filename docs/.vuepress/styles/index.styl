@@ -4,12 +4,15 @@
 //     src:url('/mvboli.ttf') format('truetype');
 // }
 
-html {background-color: #ebe6dd;}
+html {
+    background-color: #ebe6dd;  // 当body部分（即正文）过短时，就能看到这个背景色
+}
 
 body {
+    background-color: #3d3961;  // 这个紫色的背景色，只是用于填充首页，正文部分会单独设置米色的背景色
+    color: #2c3e50;
     font-family: 'Consolas', 'Microsoft YaHei', serif;
     font-size: 16px;
-    color: #2c3e50;
 }
 
 body .site-name {
@@ -37,9 +40,9 @@ body .page {
 }
 
 body .page code {
-    font-family: 'Consolas', 'Microsoft YaHei', serif;
     background-color: #e0dbd2;
     color: #2c3e50;
+    font-family: 'Consolas', 'Microsoft YaHei', serif;
 }
 
 body div[class*="language-"] {
@@ -47,6 +50,20 @@ body div[class*="language-"] {
 }
 
 body div[class*="language-"] pre[class*="language-"] code {
-    font-family: 'Consolas', 'Microsoft YaHei', serif;
     color: #d9d9d9;
+    font-family: 'Consolas', 'Microsoft YaHei', serif;
+}
+
+// 自定义首页的CSS
+.theme-container.homepage_class div {
+    background-image: url(/cat.gif);
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
+.theme-container.homepage_class #homepage_title {
+    color: #f8f8f8;
+    text-align: center;
+    font-size: 4em;
+    font-weight: normal;
 }

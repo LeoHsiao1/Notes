@@ -8,6 +8,7 @@ jobs:
     steps:
     - name: Pull
       run: |
+        sudo su -
         cd /home/github/Notes
         git pull
     - name: Build

@@ -25,6 +25,10 @@ module.exports = {
 						link: '/Database/index'
 					},
 					{
+						text: '《计算机网络》',
+						link: '/Computer-Network/index'
+					},
+					{
 						text: '《Web》',
 						link: '/Web/index'
 					},

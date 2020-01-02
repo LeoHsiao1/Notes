@@ -136,21 +136,21 @@ module.exports = {
 ```js
 module.exports = {
 	themeConfig: {
-		nav: [                              // 定义导航栏
+		nav: [                                // 定义导航栏
             {
-				text: 'Home',               // 定义一个链接
+				text: 'Home',                 // 定义一个链接
 				link: '/'
 			},
 			{
 				text: 'External',
-				link: 'https://google.com'  // 可以定义跨域链接
+				link: 'https://google.com'    // 可以定义跨域链接
 			},
 			{
 				text: 'Languages',
-				items: [                    // 定义一组链接，作为下拉框显示
+				items: [                      // 定义一组链接，作为下拉框显示
                     {
 						text: 'Chinese',
-						link: '/language/cn/'
+						link: '/language/cn/' // 此处的items链接只能是英文
 					},
 					{
 						text: 'English',

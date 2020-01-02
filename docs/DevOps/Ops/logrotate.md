@@ -5,23 +5,22 @@
 
 ## 安装
 
-Centos默认安装了logrotate，也可以手动安装：
-```sh
-yum install crontabs logrotate
-```
+1. 需要先启动crond服务。
+2. Centos默认安装了logrotate，也可以手动安装：
+    ```sh
+    yum install logrotate
+    ```
 
 ## 用法
 
-- 在`/etc/logrotate.d/`目录下创建关于日志切割的配置文件即可。
-- logrotate会被crontab定期启动，启动之后会读取自己的配置文件，据此执行日志切割任务。
-- 可以手动启动logrotate，测试一下效果。
-
-命令：
-```sh
-logrotate <configfile>  # 启动logrotate并读取某个配置文件
-          -d            # 开启调试模式，此时不会影响实际的日志文件
-          -f            # 强制执行一次日志切割（logrotate可能认为此时不需要进行日志切割）
-```
+- logrotate安装之后不需要保持启动。它会被crond每天启动一次，启动之后会读取自己的配置文件，据此执行日志切割任务。
+  - 配置文件默认保存在`/etc/logrotate.d/`目录下。
+- 可以手动启动logrotate，测试一下效果：
+    ```sh
+    logrotate <configfile>  # 启动logrotate并读取某个配置文件
+              -d            # 开启调试模式，此时不会影响实际的日志文件
+              -f            # 强制执行一次日志切割（logrotate可能认为此时不需要进行日志切割）
+    ```
 
 ## 配置
 

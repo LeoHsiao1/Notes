@@ -6,7 +6,7 @@ heroText: null
 tagline: null
 ---
 
-<h1 id="homepage_title">LeoHsiao的笔记</h1>
+<h1 id="homepage_title">LeoHsiao's Notes</h1>
 
 <br>
 <br>
@@ -30,3 +30,4 @@ tagline: null
 <br>
 <br>
 <br>
+

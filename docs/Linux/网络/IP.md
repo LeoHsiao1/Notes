@@ -3,7 +3,6 @@
 ## ifconfig
 
 命令：
-
 ```sh
 $ ifconfig                         # 显示已启用网卡的信息
             -a                     # 显示所有网卡的信息
@@ -16,8 +15,7 @@ $ ifconfig                         # 显示已启用网卡的信息
 ```
 
 例：
-
-```
+```sh
 [root@Centos ~]# ifconfig
 eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 10.0.0.1  netmask 255.255.255.0  broadcast 10.0.0.255
@@ -35,7 +33,6 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
         TX packets 3615476  bytes 2842561090 (2.6 GiB)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 ```
-
 - 主机一般都有一张物理网卡eth0，还有多张虚拟网卡，比如环回地址的网卡lo。
 - inet：网卡的IP地址。
 - ether：网卡的MAC地址。
@@ -55,14 +52,12 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 ## route
 
 命令：
-
 ```sh
 $ route    # 显示本机的路由表
 ```
 
 例：
-
-```
+```sh
 [root@Centos ~]# route
 Kernel IP routing table
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
@@ -76,7 +71,6 @@ link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 ：用于查看和管理ip地址、路由表，功能更强大。
 
 命令：
-
 ```sh
 $ ip
     addr        # 显示所有网卡的信息（相当于ifconfig -a）
@@ -93,19 +87,16 @@ $ ip
 - ICMP报文每经过一跳路由器，TTL的值就会被减一，当TTL为零时路由器就会丢弃该报文。
 
 命令：
-
 ```sh
 $ ping <host>    # 启动ping
         -c n     # 最多发送ICMP报文多少次（默认为无限次）
         -i n     # 每次发送ICMP报文的间隔时间（默认为1秒）
         -I eth0  # 使用本机的指定网卡来发送ICMP报文（默认自动选取网卡）
 ```
-
 - host可以是IP地址或域名，如果是域名，在执行时还会显示出域名解析后的IP地址。
 
 例：
-
-```
+```sh
 [root@Centos ~]# ping baidu.com
 PING baidu.com (39.156.69.79) 56(84) bytes of data.
 64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=1 ttl=250 time=37.0 ms
@@ -117,7 +108,6 @@ PING baidu.com (39.156.69.79) 56(84) bytes of data.
 4 packets transmitted, 4 received, 0% packet loss, time 3003ms
 rtt min/avg/max/mdev = 37.008/37.022/37.044/0.136 ms
 ```
-
 - 可见它成功连接到目标主机，显示出ping的测试结果。
 - icmp_seq：表示这是第几个ICMP报文。
 - ttl：ICMP报文剩下的生存期。
@@ -125,14 +115,12 @@ rtt min/avg/max/mdev = 37.008/37.022/37.044/0.136 ms
 - Linux的ping命令默认每隔一秒向目标主机发送一个ICMP报文，并且会一直发送，要按 `Ctrl+C` 终止。
 
 例：
-
-```
+```sh
 [root@Centos ~]# ping google.com
 PING google.com (93.46.8.90) 56(84) bytes of data.
 
 ^C
 ```
-
 - 可见它一直尝试连接目标主机，但并没有成功。原因可能是：
   - 与目标主机的网络不通
   - 与目标主机的网络连通，但是目标主机没有开启ICMP协议
@@ -142,7 +130,6 @@ PING google.com (93.46.8.90) 56(84) bytes of data.
 ：用于查看发送一个数据包到目标主机时，要经过哪些路由。
 
 命令：
-
 ```sh
 $ traceroute <host>
 ```

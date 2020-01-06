@@ -1,9 +1,28 @@
 # Jenkins
 
-：一个目前流行的CI/CD工具，基于Java，主要用于项目构建、测试、部署，还提供了Web操作页面。
+：一个流行的CI/CD工具，基于Java，主要用于项目构建、测试、部署，提供了Web操作页面。
 - 把项目的处理过程称为流水线，用Jenkinsfile描述。
 - 用户可以添加一些主机作为Jenkins的运行环境。
 - 用户可以将密码等私密数据保存成Jenkins的“凭证”。
+- [官方文档](https://jenkins.io/zh/doc/)
+
+## 启动
+
+用Docker启动：
+```sh
+docker pull jenkinsci/blueocean
+docker run -p 8080:8080 jenkinsci/blueocean
+
+mkdir /var/jenkins_home
+docker run -d \
+        -p 8080:8080                                    # Jenkins的Web端的访问端口
+        -p 50000:50000                                  # 供Jenkins代理访问的端口
+        -v /var/jenkins_home:/var/jenkins_home          # 挂载Jenkins的数据目录，从而可以随时重启Jenkins容器
+        -v /var/run/docker.sock:/var/run/docker.sock    # 挂载docker.sock，使得Jenkins可以与docker daemon通信
+        jenkinsci/blueocean
+```
+- 第一次启动时，终端上会显示一个密钥，用于第一次登陆Web端。
+
 
 ## Jenkinsfile
 

@@ -56,10 +56,8 @@ Docker采用C/S工作模式。
 ### docker run
 
 ```sh
-docker run <Image>            # 运行一个镜像，这会创建一个容器
-                              # 如果本机不存在该镜像，则自动从镜像仓库下载该镜像
-
-            -i                # 开启容器的stdin
+docker run <Image>            # 运行一个镜像，这会创建一个容器（如果本机不存在该镜像，则会自动从镜像仓库下载该镜像）
+            -i                # 启用容器的stdin
             -t                # 创建一个伪终端绑定到容器的stdin上，供用户操作
             -d                # 让容器在后台运行
             
@@ -73,7 +71,7 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器
             -P                       # 从宿主机上随机选取端口映射到容器暴露的所有端口
             --network <网络名>       # 将容器连接到指定的docker网络
 
-            -v /root:/app           # 将宿主机的 /root 目录挂载到容器的 /app 目录（可重复使用该命令选项）
+            -v /root:/app            # 将宿主机的 /root 目录挂载到容器的 /app 目录（可重复使用该命令选项）
             --mount source=volume1, target=/tmp # 将一个数据卷挂载到容器中的某个目录
 
             -e PATH=$PATH:/root      # 设置环境变量（可重复使用该命令选项）
@@ -84,11 +82,11 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器
             --restart unless-stopped # 当容器终止时，就自动重启，除非容器是被docker stop终止的
             --restart always         # 当容器终止时，总是会自动重启（即使被docker stop了，当docker daemon重启时又会自动重启该容器）
 
+            # 限制容器占用的CPU、内存
             --cpus 2                 # 限制该容器最多使用2个CPU（平均值）
             --cpu-shares 1024        # 与其它容器抢占CPU时的权重（取值为1~1024）
             -m 256m                  # 限制最多使用的内存量（超过该值的2倍时就会被OOM杀死）
 ```
-
 - 例：
     ```sh
     docker run hello-world                       # 运行一个测试镜像
@@ -98,6 +96,8 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器
 - 默认由容器的启动命令作为容器中的 1 号进程。如果 1 号进程运行结束，容器就会立即终止。
   - 因此，容器的启动命令应该在前台运行，且能够一直保持运行，比如 `tail -f /dev/null`。
   - 当用户终止容器时，容器的 1 号进程要负责清理容器内的所有进程。如果 1 号进程只是个shell脚本，或者容器内运行了多个进程组，则容易清理不干净，留下僵尸进程。此时可以使用 init 作为 1 号进程，保证清理成功。
+- 容器内不能再创建嵌套的容器，甚至不能联系到docker daemon，因此不能使用docker命令。
+  - 可以将 /var/run/docker.sock 文件挂载到容器中，使得容器内的程序可以与docker daemon通信。
 
 ### docker exec
 

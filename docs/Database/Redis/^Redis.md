@@ -1,6 +1,7 @@
 # ♢ redis
 
-：Python的第三方库，用于连接到Redis服务器，通过ORM API进行操作。
+：Python的第三方库，提供了Redis客户端的功能。
+- 通过ORM API进行操作。
 - 安装：pip install redis
 
 ## 用法示例

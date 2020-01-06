@@ -1,6 +1,7 @@
 # ♢ pymongo
 
-：Python的第三方库，用于连接到MongoDB服务器，通过ORM API进行操作。
+：Python的第三方库，提供了MongoDB客户端的功能。
+- 通过ORM API进行操作。
 - 安装：pip install pymongo
 
 ## 用法示例

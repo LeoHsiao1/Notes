@@ -1,8 +1,8 @@
 # Ansible
 
 ：一个用于管理大量主机的工具，基于Python，常用于配置系统环境、批量执行脚本。
-- Ansible采用主从架构，而不是C/S架构。
-  - 在一台主机上安装Ansible服务器，以控制其它工作主机。
+- Ansible采用主从架构，而不是C/S工作模式。
+  - 在一个主机上安装Ansible服务器，以控制其它工作主机。
   - 工作主机上不需要安装Ansible客户端，只要能通过SSH登录，Ansible便可以连接到工作主机并执行命令。
 - Ansible Tower提供了Ansible的Web管理页面。
   - Ansible AWX是Ansible Tower的开源版本。

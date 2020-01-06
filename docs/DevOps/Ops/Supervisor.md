@@ -3,7 +3,7 @@
 ：一个进程管理工具，基于Python。
 - 它可以启动、停止、监听进程，还提供了Web管理页面。
   - 它会监听进程的状态，发现进程异常终止时就立即重启。
-- 采用C/S架构：
+- 采用C/S工作模式：
   - 运行一个守护进程supervisord作为服务器，负责管理进程。
   - 用户执行supervisorctl命令时，就是作为客户端与supervisord通信，发出控制命令。
 - [官方文档](http://supervisord.org/index.html)

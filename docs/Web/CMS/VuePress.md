@@ -79,57 +79,6 @@ module.exports = {
 
 ## 默认主题的配置
 
-### 侧边栏
-
-- 方式一：手动定义侧边栏中包含的链接
-    ```js
-    module.exports = {
-        themeConfig: {
-            sidebar: [
-                '/Chapter1/1',      // 定义一个链接，会自动提取链接最后一节的 1 作为显示的名字
-                ['/Chapter1/2', '第二节']	// 定义一个链接，并设置其显示的名字
-            ],
-        }
-    }
-    ```
-    - 这些链接必须是 docs 目录下的绝对路径，以 / 开头。
-    - 当用户访问的URL为'/Chapter1/1'时，VuePress会先查找是否存在'/Chapter1/1.html'文件，不存在的话再查找是否存在'/Chapter1/1/index.html'文件，依然不存在的话就报错404。
-
-- 方式二：定义一些分组的链接
-    ```js
-    module.exports = {
-        themeConfig: {
-            sidebar: [
-                {
-                    title: '第一章',    // 这一组链接的名字
-                    path: '/Chapter1',  // 设置title指向的链接（也可以不设置）
-                    collapsable: true,  // 是否折叠显示
-                    sidebarDepth: 2,    // 自动从当前文档中提取标题链接，最深提取到 h3 级标题
-                    children: [         // title下的子链接
-                        ['/Chapter1/1', '第一节'],
-                        ['/Chapter1/2', '第二节'],
-                    ]
-                },
-                {
-                    title: '第二章',
-                    children: [ ]
-                }
-            ],
-            nextLinks: true,            // 根据侧边栏目录，显示到下一个页面的链接
-            prevLinks: true,            // 根据侧边栏目录，显示到上一个页面的链接
-        }
-    }
-    ```
-
-- 方式三：让侧边栏只包含从当前页面提取的标题链接
-    ```js
-    module.exports = {
-        themeConfig: {
-            sidebar: 'auto'
-        }
-    }
-    ```
-
 ### 导航栏
 
 添加以下格式的配置，即可在网站右上角显示导航栏链接：
@@ -162,6 +111,88 @@ module.exports = {
 	}
 }
 ```
+
+### 侧边栏
+
+侧边栏有多种定义方式：
+- 方式一：手动定义侧边栏中的链接
+    ```js
+    module.exports = {
+        themeConfig: {
+            sidebar: [
+                '/Chapter1/1',              // 定义一个链接，会自动提取目标文档的标题作为链接名
+                ['/Chapter1/2', '第二节']	// 定义一个链接，并设置其显示的名字
+            ],
+        }
+    }
+    ```
+    - 这些链接必须是 docs 目录下的绝对路径，以 / 开头。
+    - 当用户访问的URL为'/Chapter1/1'时，VuePress会先查找是否存在'/Chapter1/1.html'文件，不存在的话再查找是否存在'/Chapter1/1/index.html'文件，依然不存在的话就报错404。
+
+- 方式二：让侧边栏只包含从当前页面提取的标题链接
+    ```js
+    module.exports = {
+        themeConfig: {
+            sidebar: 'auto'
+        }
+    }
+    ```
+
+- 方式三：将链接分成多组显示
+    ```js
+    sidebar: [
+        {
+            title: '第一章',    // 这一组链接的名字
+            path: '/Chapter1',  // 设置title指向的链接（只能包含英文，可以不设置）
+            collapsable: true,  // 是否折叠显示
+            sidebarDepth: 2,    // 自动从当前文档中提取标题链接，最深提取到 h3 级标题
+            children: [         // title下的子链接
+                ['/Chapter1/1', '第一节'],
+                ['/Chapter1/2', '第二节'],
+                {
+                    title: '第三节',    // 分组链接支持最多三层嵌套
+                    children: [
+                        '/Chapter1/3.1',
+                        '/Chapter1/3.2',
+                    ]
+                }
+            ]
+        },
+        {
+            title: '第二章',
+            children: [ ]
+        }
+    ],
+    nextLinks: true,    // 根据侧边栏目录，显示到下一个页面的链接
+    prevLinks: true,    // 根据侧边栏目录，显示到上一个页面的链接
+    ```
+    - 当用户访问某个文档页面时，如果该页面收录在侧边栏中，则会自动显示出该页面的目录。
+
+- 方式四：在不同的页面显示不同的侧边栏
+    ```js
+    sidebar: {
+        '/Chapter1/': [     // 如果当前URL在路径下，则显示这部分侧边栏
+            {
+                title: '第一章',
+                path: '/Chapter1/',
+                collapsable: true,
+                sidebarDepth: 2,
+                children: [
+                    ['1', '第一节'],
+                    ['2', '第二节'],
+                ]
+            },
+            {
+                title: '附录',
+                path: '/Chapter1/appendix',
+            }
+        ],
+        '/Chapter2/': [{
+            title: '第二章',
+            path: '/Computer-Network/'
+        }]
+    }
+    ```
 
 ### 首页
 

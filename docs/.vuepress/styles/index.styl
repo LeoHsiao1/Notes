@@ -13,11 +13,11 @@
 }
 
 html {
-    background-color: #ebe6dd;  // 当body部分（即正文）过短时，就能看到这个背景色
+    background-color: #ebe6dd;    // 当body部分（即正文）过短时，就能看到这个背景色
 }
 
 body {
-    background-color: #3d3961;  // 这个紫色的背景色，只是用于填充首页，正文部分会单独设置米色的背景色
+    background-color: #3d3961;    // 这个紫色的背景色，只是用于填充首页，正文部分会单独设置米色的背景色
     color: #2c3e50;
     font-family: 'Consolas', 'Microsoft YaHei', serif;
     font-size: 16px;
@@ -27,7 +27,7 @@ body .site-name {
     font-family: 'mv boli';
 }
 
-body .navbar {      // 导航栏
+body .navbar {                      // 导航栏
     background-color: #e0dbd2;
 }
 
@@ -39,12 +39,20 @@ body .navbar div.links .nav-dropdown {
     background-color: #e0dbd2;
 }
 
-body .sidebar {     // 侧边栏
+body .sidebar {                     // 侧边栏
     background-color: #e0dbd2;
 }
 
-body .page {        // 正文部分
+body .sidebar-heading {             // 侧边栏的分组标题（不带链接时）
+    font-weight: normal;
+}
+
+body .page {                        // 正文部分
     background-color: #ebe6dd;
+}
+
+body td, th {                       // 表格
+    border: 1px solid #a3a3a3;
 }
 
 body .theme-default-content code {  // MarkDown的行内代码块

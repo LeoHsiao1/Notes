@@ -20,7 +20,7 @@
   - [Socket](网络通信协议/Socket.md)
   - [邮件协议](网络通信协议/邮件协议.md)
   - [FTP](网络通信协议/FTP.md)
-  <!-- - [HTTP](网络通信协议/HTTP.md) -->
-  <!-- - [WebSocket](网络通信协议/WebSocket.md) -->
+  - [HTTP](网络通信协议/HTTP.md)
+  - [WebSocket](网络通信协议/WebSocket.md)
   - [代理服务器](网络通信协议/代理服务器.md)
   - [MQTT](网络通信协议/MQTT.md)

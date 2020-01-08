@@ -8,16 +8,14 @@
   - [CSS](前端/CSS.md)
   - [JavaScript](前端/JavaScript.md)
   - [DOM](前端/DOM.md)
-- 前端框架
-  - [Node.js](前端框架/Node.js.md)
-  - [Vue.js](前端框架/Vue.js.md)
+  - [Node.js](前端/Node.js.md)
+  - [Vue.js](前端/Vue.js.md)
 - 后端
   - [简介](后端/简介.md)
-- 后端服务器
-  - [Apache](后端服务器/Apache.md)
-  - [Tomcat](后端服务器/Tomcat.md)
-  - [Nginx](后端服务器/Nginx.md)
-  - [FastDFS](后端服务器/FastDFS.md)
+  - [Apache](后端/Apache.md)
+  - [Tomcat](后端/Tomcat.md)
+  - [Nginx](后端/Nginx.md)
+  - [FastDFS](后端/FastDFS.md)
 - CMS
   - [简介](CMS/简介.md)
   - [Jekyll](CMS/Jekyll.md)

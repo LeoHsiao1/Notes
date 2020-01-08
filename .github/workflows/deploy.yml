@@ -10,6 +10,7 @@ jobs:
       run: |
         cd /home/github/Notes
         sudo git pull
+        sudo yarn
         sudo /usr/local/bin/vuepress build docs
     - name: Test
       run: |

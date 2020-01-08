@@ -258,13 +258,19 @@ module.exports = {
     }
 }
 ```
+- VuePress使用Prism实现了MarkDown中代码块的语法高亮。
 
-### 关于MarkDown
-
-VuePress使用Prism实现了MarkDown中代码块的语法高亮，不需要再自己下载Prism的插件。
+## 插件
 
 ### 搜索
 
 VuePress内置了一个搜索框，不过只对所有页面的h1、h2、h3级标题建立了搜索索引，不能进行全文搜索。
 - 使用 [Algolia插件](https://vuepress.vuejs.org/zh/theme/default-theme-config.html#algolia-%E6%90%9C%E7%B4%A2) 之后可以进行全文搜索。
 
+### Google analytics
+
+：Google提供的一个分析网站访问流量的免费服务。
+
+用法：
+1. 访问<https://analytics.google.com/>，登录Google账号，创建一个Google Analytics的跟踪ID。
+2. 使用[ Google analytics 插件](https://v1.vuepress.vuejs.org/plugin/official/plugin-google-analytics.html)

@@ -15,6 +15,6 @@
   - 再点击Pod可查看其下的所有容器。此时点击“查看/编辑YAML”按钮查看的是Pod对象的YAML信息。
   - 配置“健康检查”时，默认是同时配置livenessProbe和readinessProbe，也可以分别配置。
 - Service称为“DNS记录”。
-  - 部署应用时，如果添加了端口映射，会自动在“服务发现”页面创建相应的“DNS记录”，与应用同名。
+  - 部署应用时，如果添加了端口映射，会自动在“服务发现”页面创建相应的Service，与应用同名。也可以不添加端口映射，手动创建Service。
   - Service可以是多种类型：ClusterIP、NodePort、负载均衡、Headless Service。
   - Service可以解析到多种EndPoint：外部IP、外部域名、Service名、工作负载、Pod。

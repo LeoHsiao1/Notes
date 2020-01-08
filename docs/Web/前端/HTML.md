@@ -2,8 +2,8 @@
 
 超文本标记语言（Hyper Text Markup Language），用于描述Web网页的内容。
 
-- 使用HTML编写的文件是文本文件，后缀名为 .html 或 .htm 。
-- Web浏览器读取了HTML文件之后就能显示出对应的网页，显示效果比纯文本丰富很多。
+- HTML是一种文本格式，编辑的内容一般保存为文本文件，后缀名为 .html 或 .htm 。
+- Web浏览器读取了HTML格式的文本之后就能显示出对应的Web网页，显示效果比纯文本丰富很多。
 - [HTML参考手册](https://www.w3school.com.cn/tags/index.asp)
 
 ## 版本

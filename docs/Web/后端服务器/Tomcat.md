@@ -1,6 +1,6 @@
 # Tomcat
 
-：一个服务器软件，由Apache基金会推出。支持Servlet、JSP，常用于运行中小型Java Web项目。
+：一个Web服务器软件，由Apache基金会推出。支持Servlet、JSP，常用于运行中小型Java Web项目。
 - Java web项目通常打包成后缀名为 .war 的文件，放到Tomcat的webapps目录下即可被解压运行。
 
 ## 启动

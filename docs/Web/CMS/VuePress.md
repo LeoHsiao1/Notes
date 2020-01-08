@@ -8,7 +8,7 @@
 
 1. 安装：
     ```sh
-    yarn global add vuepress
+    yarn add vuepress
     ```
 2. 创建一个docs目录，存放要显示的MarkDown文档文件：
     ```sh
@@ -261,6 +261,8 @@ module.exports = {
 - VuePress使用Prism实现了MarkDown中代码块的语法高亮。
 
 ## 插件
+
+[官方插件](https://v1.vuepress.vuejs.org/zh/plugin/)
 
 ### 搜索
 

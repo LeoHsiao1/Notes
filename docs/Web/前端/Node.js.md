@@ -10,9 +10,10 @@
 
 安装：
 ```sh
-curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -  # 添加yum源，否则安装的nodejs版本很老
+curl --silent --location https://rpm.nodesource.com/setup_12.x | sudo bash -
 yum install nodejs
 ```
+- 直接从Centos的默认yum源安装的话，会安装老旧的8.x版本。
 
 ## npm
 

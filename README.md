@@ -17,12 +17,12 @@
 
 调试时，只需启动开发环境的服务器：
 ```sh
-vuepress dev docs
+yarn vuepress dev docs
 ```
 
 正式部署时，先构建出静态文件，再启动一个Nginx服务器：
 ```sh
 cd /home/github/Notes
-vuepress build docs
+yarn vuepress build docs
 docker run -d --name nginx --network host -v /home/github/Notes/docs/.vuepress/dist/:/root/Notes/ -v /home/github/Notes/nginx.conf:/etc/nginx/nginx.conf nginx
 ```

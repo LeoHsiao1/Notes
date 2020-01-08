@@ -7,12 +7,10 @@ module.exports = {
 	dest: 'docs/.vuepress/dist',
 	lang: 'zh-CN',
 	plugins: [
-		[
-			'@vuepress/google-analytics',
-			{
-				'ga': 'UA-155748502-1'
-			}
-		]
+		['@vuepress/back-to-top', true],
+		['@vuepress/google-analytics', {
+			'ga': 'UA-155748502-1'
+		}]
 	],
 	themeConfig: {
 		repo: 'https://github.com/LeoHsiao1/Notes',

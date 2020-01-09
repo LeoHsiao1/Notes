@@ -318,6 +318,15 @@ module.exports = {
 						'网络通信协议/MQTT',
 					]
 				},
+				{
+					title: '计算机安全',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'计算机安全/恶意代码',
+						'计算机安全/网络安全',
+					]
+				},
 			],
 			'/Web/': [{
 					title: '《Web》',

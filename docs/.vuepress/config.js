@@ -385,6 +385,14 @@ module.exports = {
 					path: '/DevOps/',
 				},
 				{
+					title: '简介',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'简介/简介',
+					]
+				},
+				{
 					title: 'Dev',
 					collapsable: true,
 					sidebarDepth: 2,
@@ -431,9 +439,9 @@ module.exports = {
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'Ops/Zabbix',
-						'Ops/Supervisor',
 						'Ops/Ansible',
+						'Ops/Supervisor',
+						'Ops/Zabbix',
 						'Ops/Grafana',
 						'Ops/logrotate',
 						'Ops/ELK',

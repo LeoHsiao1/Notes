@@ -333,11 +333,20 @@ module.exports = {
 					path: '/Web/',
 				},
 				{
-					title: 'Web服务',
+					title: '简介',
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'Web服务/简介',
+						'简介/简介',
+					]
+				},
+				{
+					title: 'Web爬虫',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'Web爬虫/简介',
+						'Web爬虫/^urllib',
 					]
 				},
 				{

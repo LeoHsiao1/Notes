@@ -259,15 +259,12 @@ module.exports = {
 }
 ```
 - VuePress使用Prism实现了MarkDown中代码块的语法高亮。
+- VuePress内置了一个搜索框，不过只对所有页面的h1、h2、h3级标题建立了搜索索引，不能进行全文搜索。
 
 ## 插件
 
-[官方插件](https://v1.vuepress.vuejs.org/zh/plugin/)
-
-### 搜索
-
-VuePress内置了一个搜索框，不过只对所有页面的h1、h2、h3级标题建立了搜索索引，不能进行全文搜索。
-- 使用 [Algolia插件](https://vuepress.vuejs.org/zh/theme/default-theme-config.html#algolia-%E6%90%9C%E7%B4%A2) 之后可以进行全文搜索。
+- [官方插件](https://v1.vuepress.vuejs.org/zh/plugin/)
+- [vssue评论](https://vssue.js.org/)
 
 ### Google analytics
 

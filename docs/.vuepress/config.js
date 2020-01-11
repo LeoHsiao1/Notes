@@ -10,7 +10,7 @@ module.exports = {
 		['@vuepress/back-to-top', true],
 		['@vuepress/google-analytics', {
 			'ga': 'UA-155748502-1'
-		}]
+		}],
 	],
 	themeConfig: {
 		repo: 'https://github.com/LeoHsiao1/Notes',
@@ -77,7 +77,7 @@ module.exports = {
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'混合开发/混合开发',
+						'混合开发/简介',
 						'混合开发/^ctypes',
 						'混合开发/^Cython',
 						'混合开发/SWIG',

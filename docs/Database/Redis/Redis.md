@@ -112,16 +112,17 @@ redis-cli               # 启动客户端（默认连接到本地6379端口的�
 ### 常用命令
 
 ```
-auth ******     # 填入密码，进行认证
-ping            # 测试能否连接到Redis服务器
+auth ******                  # 填入密码，进行认证
+ping                         # 测试能否连接到Redis服务器
 
 client list                  # 显示与服务器连接的所有客户端
 client kill 127.0.0.1:59372  # 关闭一个客户端的连接
 
-info            # 显示服务器的详细信息
-monitor         # 实时显示服务器收到的所有命令
-shutdown        # 正常终止服务器（相当于发送SIGTERM信号）
+info                         # 显示服务器的详细信息
+monitor                      # 实时显示服务器收到的所有命令
+shutdown                     # 正常终止服务器（相当于发送SIGTERM信号）
 ```
 - 命令名不区分大小写。
 - 单个命令的执行都具有原子性。
 - Redis客户端可以一次发送多条命令（基于pipeline），减少服务器的响应次数，提高效率。
+- [info的参数含义](https://redis.io/commands/info)

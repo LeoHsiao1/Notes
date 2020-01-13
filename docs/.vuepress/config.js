@@ -347,6 +347,7 @@ module.exports = {
 					children: [
 						'Web爬虫/简介',
 						'Web爬虫/^urllib',
+						'Web爬虫/^requests',
 					]
 				},
 				{

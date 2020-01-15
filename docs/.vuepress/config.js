@@ -360,8 +360,15 @@ module.exports = {
 						'前端/CSS',
 						'前端/JavaScript',
 						'前端/DOM',
-						'前端/Node.js',
-						'前端/Vue.js',
+					]
+				},
+				{
+					title: '前端框架',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'前端框架/Node.js',
+						'前端框架/Vue.js',
 					]
 				},
 				{
@@ -370,10 +377,17 @@ module.exports = {
 					sidebarDepth: 2,
 					children: [
 						'后端/简介',
-						'后端/Apache',
-						'后端/Tomcat',
-						'后端/Nginx',
-						'后端/FastDFS',
+					]
+				},
+				{
+					title: '后端服务器',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'后端服务器/Apache',
+						'后端服务器/Tomcat',
+						'后端服务器/Nginx',
+						'后端服务器/FastDFS',
 					]
 				},
 				{

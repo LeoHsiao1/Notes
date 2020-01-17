@@ -9,8 +9,8 @@
 发出GET请求：
 ```python
 >>> import requests
->>> r = requests.get("http://www.baidu.com")
->>> r					      # 返回值是一个Response对象，代表响应报文
+>>> r = requests.get("http://www.baidu.com")    # 目标URL的开头必须说明协议，比如 http:// 
+>>> r                                           # 返回值是一个Response对象，通过它可以获取响应报文
 <Response [200]>
 ```
 
@@ -19,7 +19,7 @@
 >>> params= {'key1': 'value1', 'key2': 'value2', 'key3': None}
 >>> r = requests.get("http://httpbin.org/get", params=params)   # 添加的params会被转换成Query String
 >>> r.url                                                       # 查看最终的URL
-'http://httpbin.org/get?key1=value1&key2=value2'	              # params字典中value为None的key会被忽略
+'http://httpbin.org/get?key1=value1&key2=value2'                # params字典中value为None的key会被忽略
 ```
 
 查看请求报文的信息：
@@ -36,7 +36,7 @@ None
 
 发出POST请求：
 ```python
->>> data = {'key1': 'value1', 'key2': 'value2'}	
+>>> data = {'key1': 'value1', 'key2': 'value2'}  
 >>> r = requests.post("http://httpbin.org/post", data=data)   # 发出POST请求，body默认采用x-www-form-urlencoded格式
 ```
 
@@ -59,10 +59,10 @@ POST请求报文的body默认采用x-www-form-urlencoded格式，也可以主动
 
 创建Session之后可以在同一个会话中多次发出HTTP请求：
 ```python
->>> s = requests.Session()		        # 创建一个会话
->>> s.auth = ('user', 'pass')		      # 设置该会话的一些属性，作为HTTP通信的默认值
+>>> s = requests.Session()             # 创建一个会话
+>>> s.auth = ('user', 'pass')          # 设置该会话的一些属性，作为HTTP通信的默认值
 >>> r = s.get("http://www.baidu.com")
->>> s.close()                         # 关闭会话
+>>> s.close()                          # 关闭会话
 ```
 
 可以用with关键字创建一个会话，确保它会被关闭：
@@ -122,7 +122,7 @@ b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
 >>> r
 <Response [200]>
 >>> r.url
-'https://github.com/'		# 查看当前的url，可见http请求被重定向到了https
+'https://github.com/'    # 查看当前的url，可见http请求被重定向到了https
 ```
 
 可以主动禁止重定向：
@@ -153,8 +153,8 @@ Reponse对象的history属性记录了已经发出的每个HTTP请求的响应�
 
 requests会自动验证Web服务器的SSL证书（像浏览器一样）：
 ```python
->>> r = requests.get('https://kennethreitz.org', verify=False)		# 设置不验证SSL证书
-InsecureRequestWarning: Unverified HTTPS request is being made.		# requests发出警告
+>>> r = requests.get('https://kennethreitz.org', verify=False)    # 设置不验证SSL证书
+InsecureRequestWarning: Unverified HTTPS request is being made.   # requests发出警告
 >>> r
 <Response [200]>
 ```

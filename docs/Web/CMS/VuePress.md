@@ -84,31 +84,31 @@ module.exports = {
 添加以下格式的配置，即可在网站右上角显示导航栏链接：
 ```js
 module.exports = {
-	themeConfig: {
-		nav: [                                // 定义导航栏
+    themeConfig: {
+        nav: [                                // 定义导航栏
             {
-				text: 'Home',                 // 定义一个链接
-				link: '/'
-			},
-			{
-				text: 'External',
-				link: 'https://google.com'    // 可以定义跨域链接
-			},
-			{
-				text: 'Languages',
-				items: [                      // 定义一组链接，作为下拉框显示
+                text: 'Home',                 // 定义一个链接
+                link: '/'
+            },
+            {
+                text: 'External',
+                link: 'https://google.com'    // 可以定义跨域链接
+            },
+            {
+                text: 'Languages',
+                items: [                      // 定义一组链接，作为下拉框显示
                     {
-						text: 'Chinese',
-						link: '/language/cn/' // 此处的items链接只能是英文
-					},
-					{
-						text: 'English',
-						link: '/language/en/'
-					}
-				]
-			}
-		]
-	}
+                        text: 'Chinese',
+                        link: '/language/cn/' // 此处的items链接只能是英文
+                    },
+                    {
+                        text: 'English',
+                        link: '/language/en/'
+                    }
+                ]
+            }
+        ]
+    }
 }
 ```
 
@@ -121,7 +121,7 @@ module.exports = {
         themeConfig: {
             sidebar: [
                 '/Chapter1/1',              // 定义一个链接，会自动提取目标文档的标题作为链接名
-                ['/Chapter1/2', '第二节']	// 定义一个链接，并设置其显示的名字
+                ['/Chapter1/2', '第二节']    // 定义一个链接，并设置其显示的名字
             ],
         }
     }
@@ -246,15 +246,15 @@ footer: MIT Licensed | Copyright © 2018-present Evan You    # 页脚
 module.exports = {
     // theme: '@vuepress/theme-default',            // 使用的主题
     themeConfig: {                                  // 主题的配置
-		repo: 'https://github.com/LeoHsiao1/Notes', // 启用到GitHub仓库的链接，显示在页面右上角
-		repoLabel: 'GitHub',                        // repo链接显示的名字
-		docsDir: 'docs',                            // 使用GitHub仓库中哪个目录下的文档
-		docsBranch: 'master',                       // 指向GitHub仓库的哪个分支
-		editLinks: true,                            // 启用快速编辑的链接，显示在文章末尾的左下角
-		editLinkText: 'Edit on GitHub',             // editlink显示的名字
-        lastUpdated: 'Last Updated',	            // 根据git commit记录显示每个页面的最后编辑时间
+        repo: 'https://github.com/LeoHsiao1/Notes', // 启用到GitHub仓库的链接，显示在页面右上角
+        repoLabel: 'GitHub',                        // repo链接显示的名字
+        docsDir: 'docs',                            // 使用GitHub仓库中哪个目录下的文档
+        docsBranch: 'master',                       // 指向GitHub仓库的哪个分支
+        editLinks: true,                            // 启用快速编辑的链接，显示在文章末尾的左下角
+        editLinkText: 'Edit on GitHub',             // editlink显示的名字
+        lastUpdated: 'Last Updated',                // 根据git commit记录显示每个页面的最后编辑时间
         logo: '/logo.png',                          // 网站logo，会显示在导航栏的左侧
-		smoothScroll: true,                         // 在页面内进行跳转时，页面会平滑滚动
+        smoothScroll: true,                         // 在页面内进行跳转时，页面会平滑滚动
     }
 }
 ```

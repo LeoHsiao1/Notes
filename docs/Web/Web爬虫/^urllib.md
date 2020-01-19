@@ -12,7 +12,7 @@
 ...     print(f.status)    # 获取状态码
 ...
 200
->>> data.decode()		   # 将报文body从bytes类型解码成str类型
+>>> data.decode()          # 将报文body从bytes类型解码成str类型
 '<!DOCTYPE html>\n<!--STATUS OK-->\n\r...
 ```
 

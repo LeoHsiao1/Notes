@@ -11,7 +11,7 @@ yarn vuepress dev docs
 ```sh
 cd /home/github/Notes
 yarn vuepress build docs
-docker run -d --name nginx --network host -v $PWD/docs/.vuepress/dist/:/root/Notes/ -v $PWD/nginx.conf:/etc/nginx/nginx.conf nginx
+docker run -d --name nginx --network host -v $PWD/docs/.vuepress/dist/:/root/Notes/ -v $PWD/etc/nginx.conf:/etc/nginx/nginx.conf nginx
 ```
 
 ## 加工

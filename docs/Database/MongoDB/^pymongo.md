@@ -1,12 +1,12 @@
 # ♢ pymongo
 
-：Python的第三方库，提供了MongoDB客户端的功能。
-- 通过ORM API进行操作。
+：Python 的第三方库，提供了 MongoDB 客户端的功能。
+- 通过 ORM API 进行操作。
 - 安装：pip install pymongo
 
 ## 用法示例
 
-创建MongoDB客户端：
+创建 MongoDB 客户端：
 ```python
 >>> import pymongo
 >>> client = pymongo.MongoClient('127.0.0.1', 27017)
@@ -18,9 +18,9 @@
     client.test
     client["test"]
     ```
-    比如选择MongoDB中的数据库、数据库中的集合、集合中的文档、文档中的键值对。
+    比如选择 MongoDB 中的数据库、数据库中的集合、集合中的文档、文档中的键值对。
 
-数据库的操作方法与MongoDB shell中的差不多，如下：
+数据库的操作方法与 MongoDB shell 中的差不多，如下：
 ```python
 db.c1.insert_one({"name": "leo", "age": 10})
 db.c1.insert_many([{"age": 10}, {"age": 11}])

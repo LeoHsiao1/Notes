@@ -2,132 +2,132 @@
 
 ## Controller
 
-：控制器，用于控制Pod。
-- k8s设计了多种Controller，用不同的配置文件进行管理。
+：控制器，用于控制 Pod 。
+- k8s 设计了多种 Controller ，用不同的配置文件进行管理。
 
 ### Deployment
 
-：描述一个Pod的部署状态，让k8s据此部署Pod。
-- Deployment部署的是无状态应用：同一个应用的不同Pod实例没有差异，可以随时创建、销毁Pod，可以共享资源、配置文件。
+：描述一个 Pod 的部署状态，让 k8s 据此部署 Pod 。
+- Deployment 部署的是无状态应用：同一个应用的不同 Pod 实例没有差异，可以随时创建、销毁 Pod ，可以共享资源、配置文件。
 
-Deployment的配置文件通常命名为deployment.yaml，内容示例如下：
+Deployment 的配置文件通常命名为 deployment.yaml ，内容示例如下：
 ```yaml
 apiVersion: apps/v1
-kind: Deployment            # 该Controller的类型
-metadata:                   # 该Controller的元数据
+kind: Deployment            # 该 Controller 的类型
+metadata:                   # 该 Controller 的元数据
   annotations:
     creator: Leo
   labels:
     app: redis-1
   name: deployment-redis-1
   namespace: default
-spec:                       # Controller的规格
-  replicas: 3               # Pod运行的副本数
-  selector:                 # 选择Pod
+spec:                       # Controller 的规格
+  replicas: 3               # Pod 运行的副本数
+  selector:                 # 选择 Pod
     matchLabels:
       app: redis-1
-  template:                 # 开始定义Pod的模板
-    metadata:               # Pod的元数据
+  template:                 # 开始定义 Pod 的模板
+    metadata:               # Pod 的元数据
       labels:
         app: redis-1
-    spec:                   # Pod的规格
-      containers:           # 定义该Pod中的容器
-      - name: redis-1       # 该Pod中的第一个容器
+    spec:                   # Pod 的规格
+      containers:           # 定义该 Pod 中的容器
+      - name: redis-1       # 该 Pod 中的第一个容器
         image: redis:5.0.6
         command: ["redis-server /opt/redis/redis.conf"]
         ports:
-        - containerPort: 6379   # 相当于Dockerfile中的 export 8080
+        - containerPort: 6379   # 相当于 Dockerfile 中的 export 8080
 ```
 - metadata ：对象的元数据，包含多种字段。
   - annotations ：注释，采用键值对格式。
-    - key、value可以写入任意内容，可以包含字母、数字、下划线、横杆、小数点。
-    - key可以加上 xx.xx.io/ 格式的DNS子域作为前缀。前缀 kubernetes.io/ 、k8s.io/ 被保留给k8s核心组件使用。
+    - key、value 可以写入任意内容，可以包含字母、数字、下划线、横杆、小数点。
+    - key 可以加上 xx.xx.io/ 格式的 DNS 子域作为前缀。前缀 kubernetes.io/ 、k8s.io/ 被保留给 k8s 核心组件使用。
   - labels ：标签，采用键值对的格式。
-    - 与Annotation类似，但是可以用于筛选对象。
-    - 同一个对象的labels中不能存在重复的key，不同对象的labels之间可以存在重复的key-value。
+    - 与 Annotation 类似，但是可以用于筛选对象。
+    - 同一个对象的 labels 中不能存在重复的 key ，不同对象的 labels 之间可以存在重复的 key-value 。
 - spec ：规格，描述了期望中的对象状态。
-- selector ：选择器，根据labels筛选对象。匹配的对象可能有0个、1个或多个。
-  - 当selector中设置了多个筛选条件时，只会选中满足所有条件的对象。
-  - 当selector中没有设置筛选条件时，会选中所有对象。
+- selector ：选择器，根据 labels 筛选对象。匹配的对象可能有 0 个、1 个或多个。
+  - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
+  - 当 selector 中没有设置筛选条件时，会选中所有对象。
   - 例：
     ```yaml
     selector:
       matchLabels:
-        app: redis-1    # 要求labels中存在该键值对
+        app: redis-1    # 要求 labels 中存在该键值对
       matchExpressions:
-        - {key: app, operator: In, values: [redis-1, redis-2]}  # 要求labels中存在app键，且值为redis-1或redis-2
-        - {key: app, operator: Exists}                          # 运算符可以是In、NotIn、Exists、DidNotExist
+        - {key: app, operator: In, values: [redis-1, redis-2]}  # 要求 labels 中存在 app 键，且值为 redis-1 或 redis-2
+        - {key: app, operator: Exists}                          # 运算符可以是 In、NotIn、Exists、DidNotExist
     ```
-  - Deployment的spec.selector会被用于与spec.template.metadata.labels进行匹配，从而筛选Pod。
+  - Deployment 的 spec.selector 会被用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 。
 
-- **Deployment的 spec.template 部分就是Pod的配置内容**，当用户修改了 template 之后（改变ReplicaSet不算），k8s就会创建一个新版本的Deployment，据此重新部署Pod。
-  - k8s默认会保存最近两个版本的Deployment，便于将Pod回滚（rollback）到以前的部署状态。
-  - 当用户删除一个Deployment时，k8s会自动销毁对应的Pod。当用户修改一个Deployment时，k8s会滚动更新，依然会销毁旧Pod。
+- **Deployment 的 spec.template 部分就是 Pod 的配置内容**，当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
+  - k8s 默认会保存最近两个版本的 Deployment ，便于将 Pod 回滚（rollback）到以前的部署状态。
+  - 当用户删除一个 Deployment 时，k8s 会自动销毁对应的 Pod 。当用户修改一个 Deployment 时，k8s 会滚动更新，依然会销毁旧 Pod 。
 
-- 一些k8s对象之间存在上下级的关系，上级称为Owner，下级称为Dependent。
-  - 例如：一个ReplicaSet是多个Pod的Owner。
-  - 删除一个Owner对象时，默认会级联删除它的所有Dependent。
+- 一些 k8s 对象之间存在上下级的关系，上级称为 Owner ，下级称为 Dependent 。
+  - 例如：一个 ReplicaSet 是多个 Pod 的 Owner 。
+  - 删除一个 Owner 对象时，默认会级联删除它的所有 Dependent 。
 
 ### ReplicaSet
 
-：副本集（RC），用于控制、维持一个应用的Pod数量。
-- 取代了以前的副本控制器（Replication Controller，RS）。
-- 通常在Deployment的 spec 部分中配置。
-- 当用户指定运行n个Pod时，如果Pod数少于n，ReplicaSet就会自动创建新的副本；如果Pod数多于n，ReplicaSet就会终止多余的副本。
-- 改变ReplicaSet的数量就可以方便地缩容、扩容，当ReplicaSet为0时就会删除所有Pod。
-- 滚动更新一个应用时，k8s会先创建一个新的ReplicaSet，启动需要的Pod数，然后迁移流量到新的Pod，最后把旧的ReplicaSet的Pod数减至0。从而保证在更新过程中不中断服务。
-- 如果Pod出现故障、Pod需要的资源不足、或者Pod所在Node出现故障，ReplicaSet不会进行修复，而是直接创建新的Pod。
+：副本集（RC），用于控制、维持一个应用的 Pod 数量。
+- 取代了以前的副本控制器（Replication Controller ，RS）。
+- 通常在 Deployment 的 spec 部分中配置。
+- 当用户指定运行 n 个 Pod 时，如果 Pod 数少于 n ，ReplicaSet 就会自动创建新的副本；如果 Pod 数多于 n ，ReplicaSet 就会终止多余的副本。
+- 改变 ReplicaSet 的数量就可以方便地缩容、扩容，当 ReplicaSet 为 0 时就会删除所有 Pod 。
+- 滚动更新一个应用时，k8s 会先创建一个新的 ReplicaSet ，启动需要的 Pod 数，然后迁移流量到新的 Pod ，最后把旧的 ReplicaSet 的 Pod 数减至 0 。从而保证在更新过程中不中断服务。
+- 如果 Pod 出现故障、Pod 需要的资源不足、或者 Pod 所在 Node 出现故障，ReplicaSet 不会进行修复，而是直接创建新的 Pod 。
 
 ### StatefulSet
 
-：与Deployment类似，但部署的是有状态服务。
-- 一个有状态服务的每个Pod实例使用独立的资源、配置文件，不能随时创建、销毁Pod，甚至连Pod名都不能改变。
-- 例如：以无状态服务的方式运行一个CentOS容器，所有状态都存储在容器里，不可靠。改成StatefulSet方式运行，就可以漂移到不同节点上，实现高可用。
+：与 Deployment 类似，但部署的是有状态服务。
+- 一个有状态服务的每个 Pod 实例使用独立的资源、配置文件，不能随时创建、销毁 Pod ，甚至连 Pod 名都不能改变。
+- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。
 
 ### DaemonSet
 
-：与Deployment类似，但部署的是宿主机上的daemon服务，例如监控、日志服务。
-- 一个DaemonSet服务通常在每个宿主机上只需部署一个Pod实例。
+：与 Deployment 类似，但部署的是宿主机上的 daemon 服务，例如监控、日志服务。
+- 一个 DaemonSet 服务通常在每个宿主机上只需部署一个 Pod 实例。
 
 ### Job
 
-：与Deployment类似，但部署的是只执行一次的任务。
+：与 Deployment 类似，但部署的是只执行一次的任务。
 
 ### CronJob
 
-：与Deployment类似，但部署的是定时任务或周期性任务。
+：与 Deployment 类似，但部署的是定时任务或周期性任务。
 
 ## Sidecar
 
-一个Pod中只运行一个容器的情况最简单（称为主容器），但有时也会运行一些辅助容器（Sidecar）。
+一个 Pod 中只运行一个容器的情况最简单（称为主容器），但有时也会运行一些辅助容器（Sidecar）。
 
 辅助容器有两种类型：
 - 标准容器：与主容器差不多。
-- init容器：在创建Pod时最先启动，执行一些初始化任务，执行完成之后会自动退出。
-  - 可以给一个Pod设置多个init容器，它们会按顺序串行执行。当一个init容器执行成功之后，才会启动下一个init容器或应用容器。
-  - 如果某个init容器启动失败或异常退出，则kubelet会重新启动该Pod。
-  - 重启Pod时会重新启动各个init容器。因此，为了避免多次重启Pod时出错，init容器的行为应该满足幂等性。
+- init 容器：在创建 Pod 时最先启动，执行一些初始化任务，执行完成之后会自动退出。
+  - 可以给一个 Pod 设置多个 init 容器，它们会按顺序串行执行。当一个 init 容器执行成功之后，才会启动下一个 init 容器或应用容器。
+  - 如果某个 init 容器启动失败或异常退出，则 kubelet 会重新启动该 Pod 。
+  - 重启 Pod 时会重新启动各个 init 容器。因此，为了避免多次重启 Pod 时出错，init 容器的行为应该满足幂等性。
 
 ## Horizontal Pod Autoscaling
 
-：Pod的水平方向上的自动伸缩（HPA）。
-- k8s会监控服务的一些metrics指标（比如CPU负载），当超过一定阙值时就自动增加 ReplicaSet 数量，从而实现服务的横向扩容。
+：Pod 的水平方向上的自动伸缩（HPA）。
+- k8s 会监控服务的一些 metrics 指标（比如 CPU 负载），当超过一定阙值时就自动增加 ReplicaSet 数量，从而实现服务的横向扩容。
 
 ## 主机调度
 
-部署Pod时，k8s的scheduler会给Pod自动分配一个Node（这一过程称为主机调度），然后由Node上的kubelet部署该Pod。
-- scheduler会综合考虑Affinity、Taint、Tolerations等因素，从而选出一个Node。
-- 如果Pod所在的Node出现故障，该Pod会被立即迁移到其它Node运行。
+部署 Pod 时，k8s 的 scheduler 会给 Pod 自动分配一个 Node（这一过程称为主机调度），然后由 Node 上的 kubelet 部署该 Pod 。
+- scheduler 会综合考虑 Affinity、Taint、Tolerations 等因素，从而选出一个 Node 。
+- 如果 Pod 所在的 Node 出现故障，该 Pod 会被立即迁移到其它 Node 运行。
 
 ### Affinity
 
-：节点的亲和性，表示Pod适合部署在什么样的Node上。
-- 用法：先给Node添加Label，然后在Pod spec中配置该Pod需要的Node Label。
+：节点的亲和性，表示 Pod 适合部署在什么样的 Node 上。
+- 用法：先给 Node 添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
 - 亲和性的主要分类：
-  - requiredDuringScheduling ：当Pod开始部署时，只能部署到满足条件的Node上。如果没有这样的Node，则重新部署。（硬性要求）
-  - preferredDuringScheduling ：当Pod开始部署时，优先部署到符合条件的Node上。如果没有这样的Node，则部署到其它Node上。（软性要求）
-  - RequiredDuringExecution ：当Pod正在运行时，如果Node变得不满足条件，则重新部署。（硬性要求）
-  - IgnoredDuringExecution ：当Pod正在运行时，如果Node变得不满足条件，则忽略该问题，继续运行Pod。（软性要求）
+  - requiredDuringScheduling ：当 Pod 开始部署时，只能部署到满足条件的 Node 上。如果没有这样的 Node ，则重新部署。（硬性要求）
+  - preferredDuringScheduling ：当 Pod 开始部署时，优先部署到符合条件的 Node 上。如果没有这样的 Node ，则部署到其它 Node 上。（软性要求）
+  - RequiredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则重新部署。（硬性要求）
+  - IgnoredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则忽略该问题，继续运行 Pod 。（软性要求）
 - 例：
 ```yaml
 spec:
@@ -151,28 +151,28 @@ spec:
             - v2
 ```
 - 上例中在 nodeAffinity 下定义了两个亲和性。
-- nodeSelector下的条件只要满足一个即可，matchExpressions下的条件要全部满足。
-- 条件的operator可以是以下类型：
-  - Exists ：Node上存在该key。
-  - DoesNotExist ：与Exists相反。
-  - In ：Node上存在该key，且其值在给定的列表中。
-  - NotIn ：与In相反。
-  - Gt ：Node上存在该key，且其值大于给定值。
-  - Lt ：与Gt相反，是小于。
+- nodeSelector 下的条件只要满足一个即可，matchExpressions 下的条件要全部满足。
+- 条件的 operator 可以是以下类型：
+  - Exists ：Node 上存在该 key 。
+  - DoesNotExist ：与 Exists 相反。
+  - In ：Node 上存在该 key ，且其值在给定的列表中。
+  - NotIn ：与 In 相反。
+  - Gt ：Node 上存在该 key ，且其值大于给定值。
+  - Lt ：与 Gt 相反，是小于。
 
 ### Taint、Tolerations
 
-- Node Taint ：Node的污点。
-- Pod Tolerations ：Pod的容忍度。
-  - scheduler不会在将Pod调度到有污点的节点上，除非Pod能容忍该污点。
-  - 搭配使用污点和容忍度，可以限制某个Pod只能被调度到指定Node上。
+- Node Taint ：Node 的污点。
+- Pod Tolerations ：Pod 的容忍度。
+  - scheduler 不会在将 Pod 调度到有污点的节点上，除非 Pod 能容忍该污点。
+  - 搭配使用污点和容忍度，可以限制某个 Pod 只能被调度到指定 Node 上。
 
 例：
-- 给Node添加污点：
+- 给 Node 添加污点：
     ```sh
     kubectl taint nodes node1 k1=v1:NoSchedule
     ```
-- 在Pod spec中配置容忍度：
+- 在 Pod spec 中配置容忍度：
     ```yaml
     spec:
       containers:
@@ -191,28 +191,28 @@ spec:
         tolerationSeconds: 3600
     ```
     - 污点的效果分为三种：
-      - NoSchedule ：如果Pod不容忍该污点，则不部署到该Node上。如果已经部署了，则继续运行该Pod。
-      - PreferNoSchedule ：如果Pod不容忍该污点，则优先部署到其它Node上，不行的话才部署到该Node上。
-      - NoExecute ：如果Pod不容忍该污点，则不部署到该Node上。如果已经部署了，则驱除该Pod。
-        - 可以额外设置 tolerationSeconds ，表示即使Pod容忍该污点，也最多只能保留指定秒数，超时之后就会被驱除，除非在此期间该污点消失。
-    - 在Tolerations中：
-      - 当operator为Equal时，如果effect、key、value与Taint的相同，则匹配该Taint。
-      - 当operator为Exists时，如果effect、key与Taint的相同，则匹配该Taint。
-      - 如果不指定key，则匹配Taint的所有key。
-      - 如果不指定effect，则匹配Taint的所有effect。
+      - NoSchedule ：如果 Pod 不容忍该污点，则不部署到该 Node 上。如果已经部署了，则继续运行该 Pod 。
+      - PreferNoSchedule ：如果 Pod 不容忍该污点，则优先部署到其它 Node 上，不行的话才部署到该 Node 上。
+      - NoExecute ：如果 Pod 不容忍该污点，则不部署到该 Node 上。如果已经部署了，则驱除该 Pod 。
+        - 可以额外设置 tolerationSeconds ，表示即使 Pod 容忍该污点，也最多只能保留指定秒数，超时之后就会被驱除，除非在此期间该污点消失。
+    - 在 Tolerations 中：
+      - 当 operator 为 Equal 时，如果 effect、key、value 与 Taint 的相同，则匹配该 Taint 。
+      - 当 operator 为 Exists 时，如果 effect、key 与 Taint 的相同，则匹配该 Taint 。
+      - 如果不指定 key ，则匹配 Taint 的所有 key 。
+      - 如果不指定 effect ，则匹配 Taint 的所有 effect 。
 
-## Pod的生命周期
+## Pod 的生命周期
 
-Pod被kubelet启动、终止的大致流程：
-- 初始化：按顺序启动各个init容器。
-- 启动  ：启动主容器、sidecar容器。
+Pod 被 kubelet 启动、终止的大致流程：
+- 初始化：按顺序启动各个 init 容器。
+- 启动  ：启动主容器、sidecar 容器。
 - 运行  ：会被探针定期探测。
 - 终止  ：终止各个容器。
-- 重启  ：kubelet会按照restartPolicy重启容器。
+- 重启  ：kubelet 会按照 restartPolicy 重启容器。
 
 ### 状态
 
-以下是一个Pod对象的状态示例：
+以下是一个 Pod 对象的状态示例：
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -221,13 +221,13 @@ metadata:
 spec:
   containers:
     ...
-  restartPolicy: Always   # Pod中的容器restartPolicy
+  restartPolicy: Always   # Pod 中的容器 restartPolicy
   schedulerName: default-scheduler
   ...
 status:
-  conditions:             # Pod的状态
+  conditions:             # Pod 的状态
   - type: Initialized
-    status: "True"        # 结合type、status来看，该Pod已初始化
+    status: "True"        # 结合 type、status 来看，该 Pod 已初始化
     lastProbeTime: null   # 上次探测状态的时刻
     lastTransitionTime: "2019-12-24T08:20:23Z"  # 上次状态改变的时刻
   - type: Ready
@@ -250,75 +250,75 @@ status:
   phase: Running
   startTime: "2019-12-24T08:20:23Z"
 ```
-- status.phase 记录了Pod目前处于生命周期的哪一阶段，有以下几种取值：
-  - Pending ：待定。此时kubelet正在部署该Pod，包括分配Node、拉取镜像、启动容器等。
-  - Running ：运行中。此时kubelet已经启动了该Pod的所有容器。
-  - Succeeded ：Pod中的所有容器都已经正常终止。
-  - Failed ：Pod中的所有容器都已经终止，且至少有一个容器是异常终止。
-    - Failed的Pod会被kubelet自动重启，如果重启成功则会变回Running。
-  - Unkown ：状态未知。例如与Pod所在节点通信失败时就会不知道状态。
+- status.phase 记录了 Pod 目前处于生命周期的哪一阶段，有以下几种取值：
+  - Pending ：待定。此时 kubelet 正在部署该 Pod ，包括分配 Node、拉取镜像、启动容器等。
+  - Running ：运行中。此时 kubelet 已经启动了该 Pod 的所有容器。
+  - Succeeded ：Pod 中的所有容器都已经正常终止。
+  - Failed ：Pod 中的所有容器都已经终止，且至少有一个容器是异常终止。
+    - Failed 的 Pod 会被 kubelet 自动重启，如果重启成功则会变回 Running 。
+  - Unkown ：状态未知。例如与 Pod 所在节点通信失败时就会不知道状态。
 
-- status.conditions 是一个数组，包含了对Pod多种状态条件的判断，如下：
-  - PodScheduled ：Pod已被调度到一个节点上。
-  - Unschedulable ：Pod不能被调度到节点上。可能是缺乏可用节点、缺乏挂载卷等资源。
-  - Initialized ：Pod中的所有init容器都已成功启动（不管是否运行结束）。
-    - 运行init容器的过程中，Pod处于pending阶段，Initialized条件为True。
-  - ContainersReady ：Pod中的所有容器已成功启动。
-  - Ready ：Pod处于就绪状态。此时k8s才允许该Pod被Service发现。
+- status.conditions 是一个数组，包含了对 Pod 多种状态条件的判断，如下：
+  - PodScheduled ：Pod 已被调度到一个节点上。
+  - Unschedulable ：Pod 不能被调度到节点上。可能是缺乏可用节点、缺乏挂载卷等资源。
+  - Initialized ：Pod 中的所有 init 容器都已成功启动（不管是否运行结束）。
+    - 运行 init 容器的过程中，Pod 处于 pending 阶段，Initialized 条件为 True 。
+  - ContainersReady ：Pod 中的所有容器已成功启动。
+  - Ready ：Pod 处于就绪状态。此时 k8s 才允许该 Pod 被 Service 发现。
 
 - status.containerStatuses.state 记录了容器的状态，有以下几种取值：
-  - waiting ：正在准备启动。比如拉取镜像、取用ConfigMap，或者等待重启。
+  - waiting ：正在准备启动。比如拉取镜像、取用 ConfigMap ，或者等待重启。
   - running ：正在运行。
   - terminated ：已终止。
 
-- Pod的状态取决于容器的状态。因此，分析Pod的状态时，需要考虑更细单位的容器。
-  - **kubelet创建一个容器之后，还要等容器中的业务进程成功启动，这个容器才算真正启动。**可以通过postStart判断容器是否已创建，通过readinessProbe判断容器是否已成功启动。
-  - 当Pod中的所有容器都处于running状态时，Pod才能处于Running状态。
-  - 当Pod中有某个容器处于terminated状态时，kubelet会按照restartPolicy重启它。在重启完成之前，Pod都处于 Unavailable 状态。
+- Pod 的状态取决于容器的状态。因此，分析 Pod 的状态时，需要考虑更细单位的容器。
+  - **kubelet 创建一个容器之后，还要等容器中的业务进程成功启动，这个容器才算真正启动。**可以通过 postStart 判断容器是否已创建，通过 readinessProbe 判断容器是否已成功启动。
+  - 当 Pod 中的所有容器都处于 running 状态时，Pod 才能处于 Running 状态。
+  - 当 Pod 中有某个容器处于 terminated 状态时，kubelet 会按照 restartPolicy 重启它。在重启完成之前，Pod 都处于 Unavailable 状态。
 
 ### 探针
 
 探针：又称为健康检查。在 spec.contaienrs 中定义，用于定期探测容器是否在正常运行。
 - 探针每次的探测结果有三种：
   - Success ：容器在正常运行。
-  - Failure ：容器没在正常运行。此时kubelet会按照restartPolicy重启它。
+  - Failure ：容器没在正常运行。此时 kubelet 会按照 restartPolicy 重启它。
   - Unknown ：未知结果，此时不采取行动。
 - 探针有三种用途：
   - startupProbe ：启动探针，用于探测容器是否已成功启动。
   - readinessProbe ：就绪探针，用于探测容器是否处于就绪状态，可以开始工作。
   - livenessProbe ：存活探针，用于探测容器是否在正常运行。
 - 探针的影响：
-  - 如果用户没定义探针，则容器刚创建时，可能尚未成功启动业务进程，kubelet就会认为容器处于就绪状态，进而认为Pod处于就绪状态，提前接入Service的访问流量。
-  - 如果readinessProbe的结果为Farlure，则k8s会认为该容器所属的Pod不处于就绪状态，不允许被Service发现。
-  - 如果startupProbe、livenessProbe的结果为Farlure，则k8s会按照restartPolicy重启容器。
+  - 如果用户没定义探针，则容器刚创建时，可能尚未成功启动业务进程，kubelet 就会认为容器处于就绪状态，进而认为 Pod 处于就绪状态，提前接入 Service 的访问流量。
+  - 如果 readinessProbe 的结果为 Farlure ，则 k8s 会认为该容器所属的 Pod 不处于就绪状态，不允许被 Service 发现。
+  - 如果 startupProbe、livenessProbe 的结果为 Farlure ，则 k8s 会按照 restartPolicy 重启容器。
 - 探针有三种实现方式：
-  - ExecAction ：在容器中执行指定的命令，如果命令的退出码为0，则检查结果为Success。
-  - TCPSocketAction ：访问容器的指定端口，如果能建立TCP连接，则检查结果为Success。
-  - HTTPGetAction ：向容器的指定URL发出HTTP GET请求，如果收到响应报文，且状态码为2xx或3xx，则检查结果为Success。
+  - ExecAction ：在容器中执行指定的命令，如果命令的退出码为 0 ，则检查结果为 Success 。
+  - TCPSocketAction ：访问容器的指定端口，如果能建立 TCP 连接，则检查结果为 Success 。
+  - HTTPGetAction ：向容器的指定 URL 发出 HTTP GET 请求，如果收到响应报文，且状态码为 2xx 或 3xx ，则检查结果为 Success 。
 
 例：
 ```yaml
 contaienrs:
 - name: redis-1
-  livenessProbe:            # 定义livenessProbe用途、ExecAction方式的探针
+  livenessProbe:            # 定义 livenessProbe 用途、ExecAction 方式的探针
     exec:
       command:              # 每次探测时，在容器中执行命令：ls /tmp/health
       - ls
-      - /tmp/health         # 可见，当/tmp/health文件存在时，探测结果才会为Success
+      - /tmp/health         # 可见，当/tmp/health 文件存在时，探测结果才会为 Success
     initialDelaySeconds: 5  # 容器刚创建之后，等待几秒才开始第一次探测（用于等待容器成功启动）
     periodSeconds: 3        # 每隔几秒探测一次
     timeoutSeconds: 1       # 每次探测的超时时间
-    failureThreshold: 3     # 容器正常运行时，连续多少次探测为Failure，才判断容器为Failure
-    successThreshold: 1     # 容器启动时，或发现异常时，连续多少次探测为Success，才判断容器为Success
-  readinessProbe:           # 定义readinessProbe用途、TCPSocketAction方式的探针
+    failureThreshold: 3     # 容器正常运行时，连续多少次探测为 Failure ，才判断容器为 Failure
+    successThreshold: 1     # 容器启动时，或发现异常时，连续多少次探测为 Success ，才判断容器为 Success
+  readinessProbe:           # 定义 readinessProbe 用途、TCPSocketAction 方式的探针
     tcpSocket:
       port: 8080
     periodSeconds: 3
-  livenessProbe:            # 定义livenessProbe用途、HTTPGetAction方式的探针
+  livenessProbe:            # 定义 livenessProbe 用途、HTTPGetAction 方式的探针
     httpGet:
       path: /health
       port: 8080
-      httpHeaders:          # 添加请求报文的Headers
+      httpHeaders:          # 添加请求报文的 Headers
       - name: X-Custom-Header
         value: hello
     periodSeconds: 3
@@ -326,7 +326,7 @@ contaienrs:
 
 ### postStart、preStop
 
-用户可以给Pod中的单个容器定义 postStart、preStop 钩子，完善启动、终止过程。如下：
+用户可以给 Pod 中的单个容器定义 postStart、preStop 钩子，完善启动、终止过程。如下：
   ```yaml
   contaienrs:
   - name: redis-1
@@ -344,19 +344,19 @@ contaienrs:
           - -c
           - redis-cli shutdown
   ```
-- kubelet刚创建一个容器之后，会立即执行其 postStart 钩子。
-  - postStart与容器的ENTRYPOINT是异步执行的，因此执行顺序不能确定。不过只有等postStart执行完成之后，k8s才会将容器的状态标为Running。
-- kubelet终止一个容器时，会先执行其 preStop 钩子。超过宽限期之后会发送SIGTERM信号并再宽限2秒，最后才发送SIGKILL信号。
-  - 没有定义 preStop 时，kubelet会采用默认的终止方式：先向Pod中的所有容器的进程发送SIGTERM信号，并将Pod的状态标识为Terminating。超过宽限期（grace period，默认为30秒）之后，如果仍有进程在运行，则发送SIGKILL信号，强制终止它们。
-  - 这里说的终止是指容器被kubelet主动终止，不包括容器自己运行结束的情况。
+- kubelet 刚创建一个容器之后，会立即执行其 postStart 钩子。
+  - postStart 与容器的 ENTRYPOINT 是异步执行的，因此执行顺序不能确定。不过只有等 postStart 执行完成之后，k8s 才会将容器的状态标为 Running 。
+- kubelet 终止一个容器时，会先执行其 preStop 钩子。超过宽限期之后会发送 SIGTERM 信号并再宽限 2 秒，最后才发送 SIGKILL 信号。
+  - 没有定义 preStop 时，kubelet 会采用默认的终止方式：先向 Pod 中的所有容器的进程发送 SIGTERM 信号，并将 Pod 的状态标识为 Terminating 。超过宽限期（grace period ，默认为 30 秒）之后，如果仍有进程在运行，则发送 SIGKILL 信号，强制终止它们。
+  - 这里说的终止是指容器被 kubelet 主动终止，不包括容器自己运行结束的情况。
 
 ### 重启
 
 容器的重启策略分为以下几种：
-- `restartPolicy: Always` ：当容器终止时，或者被探针判断为Failure时，总是会自动重启。这是默认策略。
+- `restartPolicy: Always` ：当容器终止时，或者被探针判断为 Failure 时，总是会自动重启。这是默认策略。
 - `restartPolicy: OnFailure` ：只有当容器异常终止时，才会自动重启。
 - `restartPolicy: Never` ：总是不会自动重启。
 
 当容器重启时，
 - 如果多次重启失败，重启的间隔时间将按 10s、20s、40s 的形式倍增，上限为 5min 。当容器成功运行 10min 之后会重置。
-- 只会在当前Node上重启，除非因为Node故障等原因触发了主机调度。
+- 只会在当前 Node 上重启，除非因为 Node 故障等原因触发了主机调度。

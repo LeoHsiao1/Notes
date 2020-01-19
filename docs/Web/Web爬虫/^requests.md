@@ -1,46 +1,46 @@
 # ♢ requests
 
-：Python的第三方库，基于Python的标准库urllib，提供了一些很方便的访问Web服务器的方法。
+：Python 的第三方库，基于 Python 的标准库 urllib ，提供了一些很方便的访问 Web 服务器的方法。
 
 ## 关于请求报文
 
-### GET方法
+### GET 方法
 
-发出GET请求：
+发出 GET 请求：
 ```python
 >>> import requests
->>> r = requests.get("http://www.baidu.com")    # 目标URL的开头必须说明协议，比如 http:// 
->>> r                                           # 返回值是一个Response对象，通过它可以获取响应报文
+>>> r = requests.get("http://www.baidu.com")    # 目标 URL 的开头必须说明协议，比如 http:// 
+>>> r                                           # 返回值是一个 Response 对象，通过它可以获取响应报文
 <Response [200]>
 ```
 
-在URL中添加Query String：
+在 URL 中添加 Query String ：
 ```python
 >>> params= {'key1': 'value1', 'key2': 'value2', 'key3': None}
->>> r = requests.get("http://httpbin.org/get", params=params)   # 添加的params会被转换成Query String
->>> r.url                                                       # 查看最终的URL
-'http://httpbin.org/get?key1=value1&key2=value2'                # params字典中value为None的key会被忽略
+>>> r = requests.get("http://httpbin.org/get", params=params)   # 添加的 params 会被转换成 Query String
+>>> r.url                                                       # 查看最终的 URL
+'http://httpbin.org/get?key1=value1&key2=value2'                # params 字典中 value 为 None 的 key 会被忽略
 ```
 
 查看请求报文的信息：
 ```python
->>> r.url                   # 查看请求的URL
+>>> r.url                   # 查看请求的 URL
 'http://www.baidu.com/'
->>> r.request               # 获取请求报文的Request对象
+>>> r.request               # 获取请求报文的 Request 对象
 <PreparedRequest [GET]>
->>> print(r.request.body)   # 查看请求报文的body
+>>> print(r.request.body)   # 查看请求报文的 body
 None
 ```
 
-### POST方法
+### POST 方法
 
-发出POST请求：
+发出 POST 请求：
 ```python
 >>> data = {'key1': 'value1', 'key2': 'value2'}  
->>> r = requests.post("http://httpbin.org/post", data=data)   # 发出POST请求，body默认采用x-www-form-urlencoded格式
+>>> r = requests.post("http://httpbin.org/post", data=data)   # 发出 POST 请求，body 默认采用 x-www-form-urlencoded 格式
 ```
 
-POST请求报文的body默认采用x-www-form-urlencoded格式，也可以主动指定body的格式：
+POST 请求报文的 body 默认采用 x-www-form-urlencoded 格式，也可以主动指定 body 的格式：
 ```python
 >>> headers = {'Content-Type': 'application/json'}
 >>> r = requests.post("http://httpbin.org/post", json=data, headers=headers)
@@ -48,24 +48,24 @@ POST请求报文的body默认采用x-www-form-urlencoded格式，也可以主动
 
 ### timeout
 
-为了不阻塞进程，建议设置HTTP请求的超时时间：
+为了不阻塞进程，建议设置 HTTP 请求的超时时间：
 ```python
 >>> r = requests.get('http://www.baidu.com', timeout=1)
 ```
-- 当requests发出HTTP请求后，如果超过timeout秒之后还没有收到服务器的响应，就会抛出异常requests.exceptions.Timeout。
+- 当 requests 发出 HTTP 请求后，如果超过 timeout 秒之后还没有收到服务器的响应，就会抛出异常 requests.exceptions.Timeout 。
 - 如果不设置超时时间，程序就会一直等待，阻塞当前进程。
 
 ### Session
 
-创建Session之后可以在同一个会话中多次发出HTTP请求：
+创建 Session 之后可以在同一个会话中多次发出 HTTP 请求：
 ```python
 >>> s = requests.Session()             # 创建一个会话
->>> s.auth = ('user', 'pass')          # 设置该会话的一些属性，作为HTTP通信的默认值
+>>> s.auth = ('user', 'pass')          # 设置该会话的一些属性，作为 HTTP 通信的默认值
 >>> r = s.get("http://www.baidu.com")
 >>> s.close()                          # 关闭会话
 ```
 
-可以用with关键字创建一个会话，确保它会被关闭：
+可以用 with 关键字创建一个会话，确保它会被关闭：
 ```python
 with requests.Session() as s:
     r = s.get("http://www.baidu.com")
@@ -76,15 +76,15 @@ with requests.Session() as s:
 
 ```python
 >>> headers = {'user': 'me'}
->>> r = requests.get(url, headers=headers)    # 设置请求报文的headers
+>>> r = requests.get(url, headers=headers)    # 设置请求报文的 headers
 ```
-- 设置的headers可能会在某些情况下被覆盖掉。例如，如果在.netrc中设置了用户认证信息，则headers中设置的授权就不会生效。而如果设置了参数auth=... ，则.netrc的设置就无效了。
+- 设置的 headers 可能会在某些情况下被覆盖掉。例如，如果在.netrc 中设置了用户认证信息，则 headers 中设置的授权就不会生效。而如果设置了参数 auth=... ，则.netrc 的设置就无效了。
 
 ### cookies
 
 ```python
->>> r = requests.get(url, cookies={'k1': 'hello'})  # 在请求报文中添加cookies
->>> r.cookies                                       # 查看响应报文中的cookies
+>>> r = requests.get(url, cookies={'k1': 'hello'})  # 在请求报文中添加 cookies
+>>> r.cookies                                       # 查看响应报文中的 cookies
 <RequestsCookieJar[Cookie(version=0, name='BDORZ', value='27315', domain='.baidu.com', ...)]>
 ```
 
@@ -102,27 +102,27 @@ with requests.Session() as s:
 200
 >>> r.reason             # 查看状态码对应的原因
 'OK'
->>> r.raise_for_status() # 如果状态码是4xx或5xx就自动抛出异常
->>> r.headers            # 查看响应报文的headers
+>>> r.raise_for_status() # 如果状态码是 4xx 或 5xx 就自动抛出异常
+>>> r.headers            # 查看响应报文的 headers
 {'Cache-Control': 'private, no-cache, no-store, proxy-revalidate, no-transform', 'Connection': 'keep-alive', 'Content-Encoding': 'gzip', 'Content-Type': 'text/html', ...}
->>> r.encoding           # 查看响应报文的编码格式（requests会先检查r.headers中是否说明了编码格式，如果没说明则进行猜测）
+>>> r.encoding           # 查看响应报文的编码格式（requests 会先检查 r.headers 中是否说明了编码格式，如果没说明则进行猜测）
 'ISO-8859-1'
->>> r.encoding="utf-8"   # 可以修改r.encoding的值，指定一种编码格式
->>> r.content            # 查看响应报文的body（bytes类型）
+>>> r.encoding="utf-8"   # 可以修改 r.encoding 的值，指定一种编码格式
+>>> r.content            # 查看响应报文的 body（bytes 类型）
 b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
->>> r.text               # 查看响应报文的body（根据r.encoding自动解码成str类型）
+>>> r.text               # 查看响应报文的 body（根据 r.encoding 自动解码成 str 类型）
 '<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
 ```
 
 ### 重定向
 
-当Web服务器的响应报文要求重定向时，requests会自动跳转。如下：
+当 Web 服务器的响应报文要求重定向时，requests 会自动跳转。如下：
 ```python
 >>> r = requests.get('http://github.com')
 >>> r
 <Response [200]>
 >>> r.url
-'https://github.com/'    # 查看当前的url，可见http请求被重定向到了https
+'https://github.com/'    # 查看当前的 url ，可见 http 请求被重定向到了 https
 ```
 
 可以主动禁止重定向：
@@ -132,7 +132,7 @@ b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
 <Response [301]>
 ```
 
-HEAD方法默认禁止重定向，可以主动开启：
+HEAD 方法默认禁止重定向，可以主动开启：
 ```python
 >>> r = requests.head('http://github.com', allow_redirects=True)
 >>> r
@@ -141,30 +141,30 @@ HEAD方法默认禁止重定向，可以主动开启：
 
 ### 历史记录
 
-Reponse对象的history属性记录了已经发出的每个HTTP请求的响应报文：
+Reponse 对象的 history 属性记录了已经发出的每个 HTTP 请求的响应报文：
 ```python
 >>> r.history
-[<Response [301]>]            # 它是一个Reponse对象的列表
+[<Response [301]>]            # 它是一个 Reponse 对象的列表
 >>> r.history[0].status_code
 301
 ```
 
 ## HTTPS
 
-requests会自动验证Web服务器的SSL证书（像浏览器一样）：
+requests 会自动验证 Web 服务器的 SSL 证书（像浏览器一样）：
 ```python
->>> r = requests.get('https://kennethreitz.org', verify=False)    # 设置不验证SSL证书
-InsecureRequestWarning: Unverified HTTPS request is being made.   # requests发出警告
+>>> r = requests.get('https://kennethreitz.org', verify=False)    # 设置不验证 SSL 证书
+InsecureRequestWarning: Unverified HTTPS request is being made.   # requests 发出警告
 >>> r
 <Response [200]>
 ```
-- 调用 requests.urllib3.disable_warnings() 可以关掉因为没有验证SSL证书而出现的警告。
+- 调用 requests.urllib3.disable_warnings() 可以关掉因为没有验证 SSL 证书而出现的警告。
 
 设置客户端的证书：
 ```python
 >>> r=requests.get('https://kennethreitz.org', cert=('/path/to/client.cert', '/path/to/client.key'))
 ```
-- 需要将证书和私钥（必须是解密状态）的文件路径传给cert参数。
+- 需要将证书和私钥（必须是解密状态）的文件路径传给 cert 参数。
 
 ## 例
 
@@ -181,8 +181,8 @@ if r.status_code != 200:
 r.encoding = 'utf-8'
 html = r.text
 
-# 从html中筛选png图片的链接
-# html中的目标数据为 src=//www.baidu.com/img/bd_logo1.png
+# 从 html 中筛选 png 图片的链接
+# html 中的目标数据为 src=//www.baidu.com/img/bd_logo1.png
 result = re.findall(r'src=(.*\.png)', html)
 print(result)
 

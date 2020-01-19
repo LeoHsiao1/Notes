@@ -16,14 +16,15 @@ docker run -d --name nginx --network host -v $PWD/docs/.vuepress/dist/:/root/Not
 
 ## 加工
 
-使用 VS Code 的正则替换功能，处理 *.md 文件，修改英文、数字与汉字之间的间距：
+在Linux终端中执行以下命令，处理 *.md 文件，修改英文、数字与汉字之间的间距：
 ```
-([\u4e00-\u9fa5])(\w)   # Search
-$1 $2                   # Replace
-.md                     # files to include
-```
-```
-(\w)([\u4e00-\u9fa5])
-$1 $2
-.md
+file_list=`find docs -name "*.md" | grep -v index.md`
+file_list[${#file_list[*]}]=README.md
+file_list[${#file_list[*]}]=etc/README.md
+for file in $file_list
+do
+    python3 etc/replace.py --file $file --src '([\u4e00-\u9fa5])(\w)' --dst '$1 $2'
+    python3 etc/replace.py --file $file --src '(\w)([\u4e00-\u9fa5])' --dst '$1 $2'
+    python3 etc/replace.py --file $file --src '(\w)([，。：！？])' --dst '$1 $2'
+done
 ```

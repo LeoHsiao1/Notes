@@ -1,7 +1,7 @@
 # CSS
 
-：层叠样式表（Cascading Style Sheets），嵌入HTML中，用于控制HTML元素的显示样式。
-- 主要有三个版本：CSS1、CSS2、CSS3。各自向下兼容，但新的样式不一定被浏览器支持。
+：层叠样式表（Cascading Style Sheets），嵌入 HTML 中，用于控制 HTML 元素的显示样式。
+- 主要有三个版本：CSS1、CSS2、CSS3 。各自向下兼容，但新的样式不一定被浏览器支持。
 - 有的浏览器不支持某些样式，有的浏览器有自己的默认样式，导致不同浏览器的显示效果有差异。
 
 ## 使用方式
@@ -14,8 +14,8 @@
     </body>
     ```
 
-- 内部样式表：在标签`<script>`之内编写css代码，作用于整个HTML。
-  - 通常定义在HTML的head部分。
+- 内部样式表：在标签`<script>`之内编写 css 代码，作用于整个 HTML 。
+  - 通常定义在 HTML 的 head 部分。
   - 子元素会继承父元素的样式表。
 
     ```html
@@ -28,14 +28,14 @@
     </style>
     ```
 
-- 外部样式表：用标签`<link>`导入外部的 .css 文件，作用于整个HTML。
+- 外部样式表：用标签`<link>`导入外部的 .css 文件，作用于整个 HTML 。
   - 外部样式表通常保存在 .css 文件中。
-  - 使用外部样式表可以被多个HTML文件复用。
+  - 使用外部样式表可以被多个 HTML 文件复用。
     ```html
     <link rel="stylesheet" type="text/css" href="mystyle.css">
     ```
 
-Web浏览器按以下顺序使用CSS，如果上一级的CSS不存在才使用下一级的CSS。
+Web 浏览器按以下顺序使用 CSS ，如果上一级的 CSS 不存在才使用下一级的 CSS 。
 - 元素的内联样式
 - 内部样式表
 - 外部样式表
@@ -49,21 +49,21 @@ selector { [property: value;]... }
 
 - 一个样式表中包含一个或多个样式。
 - 每个样式由一个选择器和一个或多个属性组成，以分号 ; 结尾。
-  - 选择器用于选择一种或多种HTML元素。
+  - 选择器用于选择一种或多种 HTML 元素。
   - 每个属性用一个键值对表示，键值对用冒号 : 赋值，用分号 ; 分隔。
 
 ## 选择器
 
 选择器的分类：
-- 选择一种HTML元素
+- 选择一种 HTML 元素
     ```css
     h1 {color: red;}
     ```
-- 选择多种HTML元素
+- 选择多种 HTML 元素
     ```css
     h1,h2,h3{color: red;}
     ```
-- id选择器
+- id 选择器
     ```css
     #date {color:red;}    # 选择属性 id 的值为 date 的元素
     ```
@@ -94,21 +94,21 @@ selector { [property: value;]... }
     p.class1 {text-align: center;}  # 选择使用 class1 类的 p 元素
     ```
 - 伪类选择器（Pseudo-classes）
-  - link、visited、hover、active四种伪类作用于“链接”类型的元素。
-  - focus：选择拥有键盘焦点的元素。
-  - first-child：选择元素的第一个实例。
-  - lang：选择带有lang属性的元素。
+  - link、visited、hover、active 四种伪类作用于“链接”类型的元素。
+  - focus ：选择拥有键盘焦点的元素。
+  - first-child ：选择元素的第一个实例。
+  - lang ：选择带有 lang 属性的元素。
   - 例：
     ```css
     a:link {color: #FF0000}           # 在 : 后声明伪类
-    a.red : visited {color: #FF0000}  # 伪类可以与CSS类组合使用
+    a.red : visited {color: #FF0000}  # 伪类可以与 CSS 类组合使用
     p:first-child {font-weight: bold;}
     ```
 - 伪元素选择器（Pseudo-elements）
-  - first-letter：选择元素的首字母。
-  - first-line：选择元素的首行。
-  - before：在元素之前加入内容。
-  - after：在元素之后加入内容。
+  - first-letter ：选择元素的首字母。
+  - first-line ：选择元素的首行。
+  - before ：在元素之前加入内容。
+  - after ：在元素之后加入内容。
   - 例：
     ```css
     p:first-letter{color: #FF0000;}
@@ -119,12 +119,12 @@ selector { [property: value;]... }
 
 ### 尺寸单位
 
-- px：像素点数，用于设置绝对位置。
-- em：相对于父元素的倍数。
-  - 如果元素的 font-size 为 n em ，则等于`父元素的font-size × n`。
-  - 如果元素的 width、height、padding、margin 为 n em ，则等于`该元素的font-size × n`。
+- px ：像素点数，用于设置绝对位置。
+- em ：相对于父元素的倍数。
+  - 如果元素的 font-size 为 n em ，则等于`父元素的 font-size × n`。
+  - 如果元素的 width、height、padding、margin 为 n em ，则等于`该元素的 font-size × n`。
 - n%：相对于父元素的相应值的百分比。
-- rem：相对于根元素 html 的倍数。
+- rem ：相对于根元素 html 的倍数。
 
 例：
 ```css
@@ -133,12 +133,12 @@ html {
 }
 body {
     font-size: 40px;
-    width: 10em;        # 等于400px
+    width: 10em;        # 等于 400px
 }
 p {
-    font-size: 0.5em;   # 等于20px
-    width: 10em;        # 等于200px
-    height: 10rem;      # 等于100px
+    font-size: 0.5em;   # 等于 20px
+    width: 10em;        # 等于 200px
+    height: 10rem;      # 等于 100px
 }
 ```
 
@@ -152,7 +152,7 @@ p {
 
 ### 背景
 
-background-color：背景色
+background-color ：背景色
 - 默认不继承父元素。
 - 可应用于绝大部分元素。
 - 例：
@@ -162,9 +162,9 @@ background-color：背景色
     background-color: #ff0000;         # 使用颜色的十六进制值
     background-color: rgb(255 ,0, 0);  # 用 rgb() 选择颜色
     ```
-- 很多样式支持用一些预设的关键字赋值，比如red、center。**如果用户设置的值不是有效的关键字，则使用默认值。**
+- 很多样式支持用一些预设的关键字赋值，比如 red、center 。**如果用户设置的值不是有效的关键字，则使用默认值。**
 
-background-image：背景图片
+background-image ：背景图片
 - 默认不继承父元素。
 - 可应用于绝大部分元素。
 - 图片要用 url() 指定位置。
@@ -187,7 +187,7 @@ background-image：背景图片
     ```
     - 水平方向的关键字：left、center、right
     - 垂直方向的关键字：top、center、bottom
-    - 最多可设置两个方向的关键字，顺序任意。如果只设置一个方向，则另一个方向默认为center。
+    - 最多可设置两个方向的关键字，顺序任意。如果只设置一个方向，则另一个方向默认为 center 。
     ```css
     background-position: 100% 33%;   # 设置图片中心点在显示区域以内的百分比位置
     background-position: 50px 100px; # 设置图片左上角的绝对位置（可能超出显示区域）
@@ -201,7 +201,7 @@ background-image：背景图片
 
 ### 文本
 
-color：文本颜色（前景色）
+color ：文本颜色（前景色）
 - 例：
     ```css
     color: red;
@@ -209,7 +209,7 @@ color：文本颜色（前景色）
     color: rgb(255 ,0, 0);
     ```
 
-text-decoration：文本的装饰线
+text-decoration ：文本的装饰线
 - 例：
     ```css
     text-decoration: none;          # 默认值，不处理
@@ -220,7 +220,7 @@ text-decoration：文本的装饰线
     text-decoration: underline overline;  # 可以组合使用多个装饰线
     ```
 
-text-transform：大小写
+text-transform ：大小写
 - 例：
     ```css
     text-transform: none;       # 默认值，不处理
@@ -229,8 +229,8 @@ text-transform：大小写
     text-transform: capitalize; # 每个单词的首字母显示成大写
     ```
 
-text-align：对齐方式
-- 控制的是元素中的文本的位置，而HTML中的 center 等标签控制的是元素的位置。
+text-align ：对齐方式
+- 控制的是元素中的文本的位置，而 HTML 中的 center 等标签控制的是元素的位置。
 - 例：
     ```css
     text-align: left;       # 左对齐
@@ -239,7 +239,7 @@ text-align：对齐方式
     text-align: justify;    # 两端对齐（调整字符间距，使每行的长度相等）
     ```
 
-text-indent：缩进
+text-indent ：缩进
 - 默认会继承父元素。
 - 常应用于块级元素。想应用于行级元素时可采用以下方法：
   - 为一个行级元素单独创建一个块，然后设置该块级元素的缩进。
@@ -251,7 +251,7 @@ text-indent：缩进
     text-indent: 20%;   # 相对于父元素的百分比
     ```
 
-line-height：行高
+line-height ：行高
 - 不允许使用负值。
 - 例：
     ```css
@@ -259,14 +259,14 @@ line-height：行高
     line-height: 90%;
     ```
 
-word-spacing：字或单词的间距
+word-spacing ：字或单词的间距
 - 例：
     ```css
     word-spacing: normal;   # 默认值，等于 0 px
     word-spacing: 30px;
     word-spacing: -0.5em;   # 可以为负值
     ```
-- 例：应用到HTML中
+- 例：应用到 HTML 中
     ```css
     <style type="text/css">
         p.tight {word-spacing: -0.5em;}
@@ -277,17 +277,17 @@ word-spacing：字或单词的间距
     </p>
     ```
 
-letter-spacing：字母的间距
+letter-spacing ：字母的间距
 
-white-space：处理空白字符的策略
+white-space ：处理空白字符的策略
 - 例：
     ```css
     white-space: normal;    # 默认值，将连续的空格合并为一个空格，忽略换行符，允许自动换行
-    white-space: nowrap;    # 与normal相似，只是不允许自动换行
+    white-space: nowrap;    # 与 normal 相似，只是不允许自动换行
     white-space: pre;       # 保留所有空格、换行符，与原文本一致，不允许自动换行
     ```
 
-direction：文本方向
+direction ：文本方向
 - 例：
     ```css
     direction: ltr;    # 默认值，从左往右
@@ -296,14 +296,14 @@ direction：文本方向
 
 ### 字体
 
-CSS将大部分字体划分为5种通用的字体系列：
-- Serif：字符的宽度与字体大小成比例，一些字母的笔划的末端有短横杆装饰。
-- Sans-serif：字符的宽度与字体大小成比例，字母没有短横杆装饰。
-- Monospace：等宽字体。
-- Cursive：手写体。
-- Fantasy：其它类型的字体。
+CSS 将大部分字体划分为 5 种通用的字体系列：
+- Serif ：字符的宽度与字体大小成比例，一些字母的笔划的末端有短横杆装饰。
+- Sans-serif ：字符的宽度与字体大小成比例，字母没有短横杆装饰。
+- Monospace ：等宽字体。
+- Cursive ：手写体。
+- Fantasy ：其它类型的字体。
 
-font-family：字体系列
+font-family ：字体系列
 - 例：
     ```css
     p {font-family: 'Consolas', 'Microsoft YaHei', serif;}
@@ -322,7 +322,7 @@ font-family：字体系列
     h1{font-family: "字体名";}  # 使用字体
     ```
 
-font-size：字体大小
+font-size ：字体大小
 - 例：
     ```css
     h1 {font-size: 3em;}
@@ -333,16 +333,16 @@ font-size：字体大小
     ```
     段落文本的字体大小默认为 1em = 16px
 
-font-weight：字体的粗细
+font-weight ：字体的粗细
 - 例：
     ```css
     font-weight: normal;    # 默认值，正常显示
     font-weight: bold;      # 显示成粗体
     font-weight: 900;       # 设置粗度值
     ```
-    粗度值的取值范围为100~900，400等价于normal，700等价于bold。
+    粗度值的取值范围为 100~900 ，400 等价于 normal ，700 等价于 bold 。
 
-font-style：字体风格
+font-style ：字体风格
 - 例：
     ```css
     font-style: normal;    # 默认值，正常显示
@@ -352,10 +352,10 @@ font-style：字体风格
 ### 链接
 
 链接有 4 种状态：
-- link：普通状态，没有被点击过。
-- visited：被鼠标点击过。
-- hover：当鼠标悬停在链接上时。
-- active：当鼠标按住链接时。
+- link ：普通状态，没有被点击过。
+- visited ：被鼠标点击过。
+- hover ：当鼠标悬停在链接上时。
+- active ：当鼠标按住链接时。
 
 例：
 ```css
@@ -370,20 +370,20 @@ a:active {text-decoration:underline;}
 每个元素的显示内容都局限在一个矩形区域之内，该区域的边框默认不显示。
 
 一个块级元素有一个大的“块框”，其中的每行有一个“行框”，每行中的每个行内元素有一个“行内框”。
-- 块级元素：在一行内只能显示一个，比如div、h1、p等。
-- 行内元素：在一行内可以显示多个，比如strong、span等。
+- 块级元素：在一行内只能显示一个，比如 div、h1、p 等。
+- 行内元素：在一行内可以显示多个，比如 strong、span 等。
 
-CSS根据框模型显示元素，如下图：
+CSS 根据框模型显示元素，如下图：
 
 ![](./border.jpg)
 
 - 元素的实际显示内容位于最内层。
   - 默认内边距、边框、外边距的宽度为 0 ，框模型被元素的内容填满。
-- padding：内边距，元素内容与边框之间的距离。
-- border：边框。
+- padding ：内边距，元素内容与边框之间的距离。
+- border ：边框。
   - **元素的背景色、背景图片显示在边框以内的区域，简称“框内”。**
   - **边框以外的区域默认是透明的，简称“框外”。**
-- margin：外边距，边框与外部的距离。
+- margin ：外边距，边框与外部的距离。
   - 外边距可以为负值。
 
 例：
@@ -408,7 +408,7 @@ p {
         padding-left: 1em;
     }
     ```
-- 同理还有margin-top、border-top-style等。
+- 同理还有 margin-top、border-top-style 等。
 
 配置边框：
 ```css
@@ -419,28 +419,28 @@ p {
 }
 ```
 
-border-style的可用取值：
-- none：默认，不显示。
-- dotted：点状线，由一个个小方块组成。
-- dashed：虚线，由一个个短横线组成。
-- solid：实线。
-- double：双线。
-- groove：3D 凹槽。
-- ridge：3D 凸槽。
-- inset：3D 凹边。
-- outset：3D 凸边。
-- inherit：继承父元素。
+border-style 的可用取值：
+- none ：默认，不显示。
+- dotted ：点状线，由一个个小方块组成。
+- dashed ：虚线，由一个个短横线组成。
+- solid ：实线。
+- double ：双线。
+- groove ：3D 凹槽。
+- ridge ：3D 凸槽。
+- inset ：3D 凹边。
+- outset ：3D 凸边。
+- inherit ：继承父元素。
 
 ### 定位
 
 这里研究的元素定位，是指 元素外边距的边界 相当于 其外部块的边界 的位置。
 
-用position属性可设置元素的定位方式，分为四种：
-- static：默认方式。所有元素按HTML中的顺序从上到下显示。
-- relative：相对位置。元素相对于static位置的位置。（此时元素依然占据static空间）
-- absolute：绝对位置。元素相对于其外部块的绝对位置。
-- fixed：固定位置。元素相对于浏览器窗口的绝对位置。
-  - absolute、fixed定位的元素脱离了文档流（不占据static空间），且作为块级元素显示。
+用 position 属性可设置元素的定位方式，分为四种：
+- static ：默认方式。所有元素按 HTML 中的顺序从上到下显示。
+- relative ：相对位置。元素相对于 static 位置的位置。（此时元素依然占据 static 空间）
+- absolute ：绝对位置。元素相对于其外部块的绝对位置。
+- fixed ：固定位置。元素相对于浏览器窗口的绝对位置。
+  - absolute、fixed 定位的元素脱离了文档流（不占据 static 空间），且作为块级元素显示。
 
 例：
 ```css
@@ -453,10 +453,10 @@ p {
 }
 ```
 
-z-index：元素的堆叠顺序
-- 默认值为auto，会继承父元素的值。
+z-index ：元素的堆叠顺序
+- 默认值为 auto ，会继承父元素的值。
 - 取值越大，元素显示时的优先级越高。
-- absolute、fixed定位的元素在显示时可能发生堆叠，需要设置元素的堆叠顺序。
+- absolute、fixed 定位的元素在显示时可能发生堆叠，需要设置元素的堆叠顺序。
 - 例：
     ```css
     p {
@@ -465,36 +465,36 @@ z-index：元素的堆叠顺序
     }
     ```
 
-overflow：元素溢出显示区域时的对策
+overflow ：元素溢出显示区域时的对策
 - 取值：
-  - visible：默认值，显示元素的溢出部分。
-  - hidden：不显示元素的溢出部分。
-  - scroll：限制元素的显示区域，但浏览器会显示一个滚动条，供用户查看完整的元素。
-  - auto：当元素超出显示区域时才显示一个滚动条。
+  - visible ：默认值，显示元素的溢出部分。
+  - hidden ：不显示元素的溢出部分。
+  - scroll ：限制元素的显示区域，但浏览器会显示一个滚动条，供用户查看完整的元素。
+  - auto ：当元素超出显示区域时才显示一个滚动条。
 
 ### 浮动
 
-float：让元素浮动
-- 例如，当元素向左浮动时，会挤开static、relative定位的元素，移动到外部块的最左端。如果多个元素向左浮动，则会紧挨着排列，不会换行。
+float ：让元素浮动
+- 例如，当元素向左浮动时，会挤开 static、relative 定位的元素，移动到外部块的最左端。如果多个元素向左浮动，则会紧挨着排列，不会换行。
 - 取值：
-  - none：默认值，不浮动。
-  - left：向左滑动。
-  - right：向右滑动。
+  - none ：默认值，不浮动。
+  - left ：向左滑动。
+  - right ：向右滑动。
 - 例：
     ```css
-    p > img {           # 让p元素内的img元素浮动（可达到文本环绕图片的效果）
+    p > img {           # 让 p 元素内的 img 元素浮动（可达到文本环绕图片的效果）
         float: left;
         border: 1px;
         margin: auto;
     }
     ```
 
-clear：禁止浮动
+clear ：禁止浮动
 - 取值：
-  - none：默认值。
-  - left：该元素的左侧不允许存在浮动元素（会挤到下一行）。
-  - right：右侧不允许。
-  - both：左侧、右侧都不允许。
+  - none ：默认值。
+  - left ：该元素的左侧不允许存在浮动元素（会挤到下一行）。
+  - right ：右侧不允许。
+  - both ：左侧、右侧都不允许。
 - 例：
     ```css
     p > img {

@@ -1,7 +1,7 @@
 # jinja
 
-：一个通用的模板引擎，基于Python。
-- 由Flask作者开发，最初是模仿Django的模板引擎，处理HTML文件，后来推广到处理各种类型的文本文件。
+：一个通用的模板引擎，基于 Python 。
+- 由 Flask 作者开发，最初是模仿 Django 的模板引擎，处理 HTML 文件，后来推广到处理各种类型的文本文件。
 - [官方文档](https://jinja.palletsprojects.com/en/2.10.x/)
 
 ## 语法
@@ -24,11 +24,11 @@
 传入字典：{{ dict1['a'] }}
 传入列表：{{ list1[0] }}
 ```
-- 可以传入Python中任意类型的对象，甚至可以调用对象的属性、方法。
+- 可以传入 Python 中任意类型的对象，甚至可以调用对象的属性、方法。
 
 ### 控制结构
 
-if语句：
+if 语句：
 ```
 {% if a %}
 a is True.
@@ -60,9 +60,9 @@ All are False.
 
 继承：
 ```html
-{% extends "base.html" %}    # 继承base.html
+{% extends "base.html" %}    # 继承 base.html
  
-{% block head %}            # 重载父文件中，名为head的block
+{% block head %}            # 重载父文件中，名为 head 的 block
     {{ super() }}           # 插入父文件中，这部分的内容
     <title>Hello</title>
 {% endblock %}
@@ -81,11 +81,11 @@ All are False.
 ... k1: Hello
 ... k2: {{ v2 }}
 ... """
->>> Template(text).render(v2='World')    # 传入参数，渲染模板，返回str值
+>>> Template(text).render(v2='World')    # 传入参数，渲染模板，返回 str 值
 'k1: Hello\nk2: World'
 ```
 
-调用render()时：
+调用 render()时：
 - 可以传入关键字参数，也可以传入一个字典。如下：
     ```python
     template.render(v2='World')

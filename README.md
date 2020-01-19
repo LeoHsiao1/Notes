@@ -1,8 +1,8 @@
-# LeoHsiao的笔记
+# LeoHsiao 的笔记
 
 - 该笔记的主要目的是记录知识点。
-- 笔记保存为MarkDown格式，分为多个书籍，按章节目录排序。
-- 基于VuePress显示静态网站，访问URL：<http://leohsiao.com/>
+- 笔记保存为 MarkDown 格式，分为多个书籍，按章节目录排序。
+- 基于 VuePress 显示静态网站，访问 URL ：<http://leohsiao.com/>
 - 欢迎指正
 
 ## 目录结构
@@ -11,4 +11,4 @@
 - 书籍目录首先会在 docs/book/index.md 文件中登记，其次会在 docs/.vuepress/config.js 文件中登记。
 - 书籍目录的名字用《 》包住。
 - 文件名中的特殊字符（包括空格）替换成 - 。
-- 如果文件名以 ^ 开头，则表示某个Python模块，在显示时以 ♢ 开头。
+- 如果文件名以 ^ 开头，则表示某个 Python 模块，在显示时以 ♢ 开头。

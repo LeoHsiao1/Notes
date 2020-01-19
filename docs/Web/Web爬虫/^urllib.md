@@ -1,24 +1,24 @@
 # ♢ urllib
 
-：Python的标准库，提供了访问Web服务器的方法、URLencode的方法。
+：Python 的标准库，提供了访问 Web 服务器的方法、URLencode 的方法。
 
-## 访问Web服务器
+## 访问 Web 服务器
 
 例：
 ```python
 >>> from urllib import request
->>> with request.urlopen("http://www.baidu.com") as f:  # 访问指定的URL
-...     data = f.read()    # 获取HTTP响应报文的body（bytes类型）
+>>> with request.urlopen("http://www.baidu.com") as f:  # 访问指定的 URL
+...     data = f.read()    # 获取 HTTP 响应报文的 body（bytes 类型）
 ...     print(f.status)    # 获取状态码
 ...
 200
->>> data.decode()          # 将报文body从bytes类型解码成str类型
+>>> data.decode()          # 将报文 body 从 bytes 类型解码成 str 类型
 '<!DOCTYPE html>\n<!--STATUS OK-->\n\r...
 ```
 
 ## URLencode
 
-使用quote()、unquote()可进行URL转码、反转码。如下：
+使用 quote()、unquote()可进行 URL 转码、反转码。如下：
 ```python
 >>> from urllib import parse
 >>> r = parse.quote("http://www.你好.com")  # 转换成 Query String 格式的字符串
@@ -28,7 +28,7 @@
 'http://www.你好.com'
 ```
 
-使用urlencode()可以直接将dict类型转换成 Query String 格式的字符串。如下：
+使用 urlencode()可以直接将 dict 类型转换成 Query String 格式的字符串。如下：
 ```python
 >>> dict1 = {"id": 1, "wd": "你好"}
 >>> parse.urlencode(dict1)

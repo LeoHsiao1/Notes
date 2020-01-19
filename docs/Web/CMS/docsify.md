@@ -1,11 +1,11 @@
 # docsify
 
-：与gitbook相似，但功能多一些。
-- 基于Vue，显示美观。
-- 可以不安装docsify，直接使用。
-  - 使用时，不需要将MarkDown文件转换成HTML文件，在网页中显示时才会即时渲染成HTML。这减少了构建时间，不需要安装依赖库，但不利于SEO。
+：与 gitbook 相似，但功能多一些。
+- 基于 Vue ，显示美观。
+- 可以不安装 docsify ，直接使用。
+  - 使用时，不需要将 MarkDown 文件转换成 HTML 文件，在网页中显示时才会即时渲染成 HTML 。这减少了构建时间，不需要安装依赖库，但不利于 SEO 。
 - 具有目录，层次性好。
-  - 目录可以折叠显示，不过只能以MarkDown文件为单位进行折叠。
+  - 目录可以折叠显示，不过只能以 MarkDown 文件为单位进行折叠。
 - [官方文档](https://docsify.js.org/#/)
 
 ## 入门示例
@@ -40,18 +40,18 @@
     ```sh
     echo Hello > README.md
     ```
-3. 启动一个Web服务器：
+3. 启动一个 Web 服务器：
     ```sh
     python3 -m http.server 80
     ```
 
 ## 目录结构
 
-以下是docsify网站的目录结构示例：
+以下是 docsify 网站的目录结构示例：
 ```
 .
-├─ docs           # 可以给该目录单独编写sidebar.md、navbar.md，否则使用上一级目录的
-│  ├─ Chapter1    # 可以给该目录单独编写sidebar.md、navbar.md，否则使用上一级目录的
+├─ docs           # 可以给该目录单独编写 sidebar.md、navbar.md ，否则使用上一级目录的
+│  ├─ Chapter1    # 可以给该目录单独编写 sidebar.md、navbar.md ，否则使用上一级目录的
 │  │  ├─ 1.md
 │  │  └─ 2.md
 │  └─ Chapter2
@@ -60,36 +60,36 @@
 ├─ navbar.md
 └─ sidebar.md
 ```
-- index.html所在目录是网站的根目录，**任何文件中使用的相对路径的URL，都必须从这里开始。**因为docsify网站是纯SPA网站，当前目录始终停留在网站根目录，不能移动。
+- index.html 所在目录是网站的根目录，**任何文件中使用的相对路径的 URL ，都必须从这里开始。**因为 docsify 网站是纯 SPA 网站，当前目录始终停留在网站根目录，不能移动。
 
 ## 配置
 
 ### 侧边栏
 
-在index.html中加入配置：
+在 index.html 中加入配置：
 ```js
 window.$docsify = {
   loadSidebar: 'sidebar.md',  // 显示侧边栏目录
 }
 ```
 
-侧边栏中的目录结构由URL所在目录下的`sidebar.md`决定，如下：
+侧边栏中的目录结构由 URL 所在目录下的`sidebar.md`决定，如下：
 ```markdown
 # 目录
 
-- [第一章](Chapter1/)         # 如果不指定.md文件，则默认读取该目录下的README.md
+- [第一章](Chapter1/)         # 如果不指定.md 文件，则默认读取该目录下的 README.md
   - [第一节](Chapter1/1.md)
   - [第二节](Chapter1/2.md)
 - 第二章                      # 可以不给链接，只显示名字
   - [第一节](Chapter2/1.md)
 ```
 - 可以给各个目录分别创建 sidebar.md ，从而分别显示侧边栏目录。
-  - 如果URL所在目录下没有 sidebar.md ，则使用上一层目录的。
+  - 如果 URL 所在目录下没有 sidebar.md ，则使用上一层目录的。
   - navbar.md 的使用规则同理。
 
 ### 导航栏
 
-在index.html中加入配置：
+在 index.html 中加入配置：
 ```html
 <nav>
   <<a href="#/">Navbar</a>   # 在页面顶部显示导航栏
@@ -102,7 +102,7 @@ window.$docsify = {
 </script>
 ```
 
-导航栏的下拉列表由URL所在目录下的`navbar.md`决定，如下：
+导航栏的下拉列表由 URL 所在目录下的`navbar.md`决定，如下：
 ```markdown
 - [第一章](Chapter1/)
   - [第一节](Chapter1/1.md)
@@ -113,7 +113,7 @@ window.$docsify = {
 
 ### 封面
 
-docsify默认没有显示封面，需要在index.html中加入如下配置：
+docsify 默认没有显示封面，需要在 index.html 中加入如下配置：
 ```js
 window.$docsify = {
   coverpage: 'coverpage.md'   // 显示首页的封面
@@ -135,7 +135,7 @@ window.$docsify = {
 
 ### 网页图标
 
-在index.html的head部分导入网页图标：
+在 index.html 的 head 部分导入网页图标：
 ```html
 <link rel="icon" href="static/img/logo.ico" type="image/x-icon"/>
 ```
@@ -146,8 +146,8 @@ window.$docsify = {
 window.$docsify = {
   name: '',        // 侧边栏顶部显示的文档标题
   nameLink: '/',   // 文档标题指向的链接
-  repo: '',        // 在页面右上角显示一个到GitHub的链接
-  maxLevel: 3,     // 解析MarkDown文件时的最大目录层数
+  repo: '',        // 在页面右上角显示一个到 GitHub 的链接
+  maxLevel: 3,     // 解析 MarkDown 文件时的最大目录层数
   subMaxLevel: 4,  // 侧边栏目录的最大层数
   auto2top: true,  // 切换显示的文档时，自动跳转到页面顶部
 }
@@ -180,7 +180,7 @@ window.$docsify = {
 
 ### 嵌入文件
 
-从docsify 4.6开始，在Markdown中引用链接时，加上`':include'`即可嵌入目标文件。
+从 docsify 4.6 开始，在 Markdown 中引用链接时，加上`':include'`即可嵌入目标文件。
 
 支持的文件类型|文件后缀名
 -|-
@@ -199,7 +199,7 @@ code    |other file extension
 
 ### 拷贝代码块
 
-在index.html中添加如下脚本，即可在每个代码块右上角显示拷贝按钮。
+在 index.html 中添加如下脚本，即可在每个代码块右上角显示拷贝按钮。
 
 ```markdown
 <script src="//unpkg.com/docsify-copy-code"></script>
@@ -207,7 +207,7 @@ code    |other file extension
 
 ### 代码高亮
 
-导入[Prism](https://prismjs.com/)的js文件之后，可实现MarkDown文档代码块语法高亮：
+导入[Prism](https://prismjs.com/)的 js 文件之后，可实现 MarkDown 文档代码块语法高亮：
 
 ```html
 <script src="//unpkg.com/prismjs/components/prism-bash.js"></script>
@@ -216,7 +216,7 @@ code    |other file extension
 
 ### 分页按钮
 
-在index.html中添加如下脚本，即可在每个页面的底部显示跳转到前一文件、后一文件的按钮。
+在 index.html 中添加如下脚本，即可在每个页面的底部显示跳转到前一文件、后一文件的按钮。
 
 ```markdown
 <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>

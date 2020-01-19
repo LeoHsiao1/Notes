@@ -1,11 +1,11 @@
 # GitHub Actions
 
-GitHub提供了Actions功能，以实现CI/CD。
+GitHub 提供了 Actions 功能，以实现 CI/CD 。
 - [官方文档](https://help.github.com/en/actions)
 
 ## Actions
 
-：类似Jenkins的流水线，用YAML的语法描述，保存为 .github/workflows/xx.yml 文件。
+：类似 Jenkins 的流水线，用 YAML 的语法描述，保存为 .github/workflows/xx.yml 文件。
 
 例：
 
@@ -25,11 +25,11 @@ jobs:       # 开始流水线任务
 
     steps:                      # 开始流水线步骤
     - name: git pull            # 一个流水线步骤的名字
-      uses: actions/checkout@v1 # 调用一个内置动作，其版本为v1
+      uses: actions/checkout@v1 # 调用一个内置动作，其版本为 v1
       with:
         ref: master
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1  # 安装Python
+      uses: actions/setup-python@v1  # 安装 Python
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -44,19 +44,19 @@ jobs:       # 开始流水线任务
         pytest -v
 ```
 
-- 执行每个step之前，都会切换到一个临时工作目录，例如：/root/actions-runner/_work/Notes/Notes
+- 执行每个 step 之前，都会切换到一个临时工作目录，例如：/root/actions-runner/_work/Notes/Notes
 
 ## Runner
 
-Actions默认运行在GitHub提供的运行环境中（包括Linux、Windows、MacOS），用户也可以添加自己主机作为运行环境，称为Runner。
-- 作为Runner的机器要保持运行一个进程，连接到GitHub仓库，接受控制。
-- Github仓库的Settings->Actions页面上有添加Runner的教程，在自己的主机上执行它要求的命令即可。首先要创建一个非root用户：
+Actions 默认运行在 GitHub 提供的运行环境中（包括 Linux、Windows、MacOS），用户也可以添加自己主机作为运行环境，称为 Runner 。
+- 作为 Runner 的机器要保持运行一个进程，连接到 GitHub 仓库，接受控制。
+- Github 仓库的 Settings->Actions 页面上有添加 Runner 的教程，在自己的主机上执行它要求的命令即可。首先要创建一个非 root 用户：
   ```sh
   useradd github
   su - github
   ```
-- 在流水线文件中用`self-hosted`标签即可使用自己的Runner，如下：
+- 在流水线文件中用`self-hosted`标签即可使用自己的 Runner ，如下：
   ```yaml
   runs-on: [self-hosted, linux]
   ```
-- 使用自己的Runner构建项目时，要小心仓库中有恶意代码被执行。
+- 使用自己的 Runner 构建项目时，要小心仓库中有恶意代码被执行。

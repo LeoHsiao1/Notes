@@ -149,7 +149,7 @@ module.exports = {
 					sidebarDepth: 2,
 					children: [
 						'网络/IP',
-						'网络/Socket',
+						'网络/TCP-UDP',
 						'网络/防火墙',
 						'网络/SSH',
 						'网络/HTTP',
@@ -347,6 +347,7 @@ module.exports = {
 					children: [
 						'Web爬虫/简介',
 						'Web爬虫/^urllib',
+						'Web爬虫/^requests',
 					]
 				},
 				{
@@ -359,8 +360,15 @@ module.exports = {
 						'前端/CSS',
 						'前端/JavaScript',
 						'前端/DOM',
-						'前端/Node.js',
-						'前端/Vue.js',
+					]
+				},
+				{
+					title: '前端框架',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'前端框架/Node.js',
+						'前端框架/Vue.js',
 					]
 				},
 				{
@@ -369,10 +377,19 @@ module.exports = {
 					sidebarDepth: 2,
 					children: [
 						'后端/简介',
-						'后端/Apache',
-						'后端/Tomcat',
-						'后端/Nginx',
-						'后端/FastDFS',
+						'后端/cookie',
+						'后端/登录',
+					]
+				},
+				{
+					title: '后端服务器',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'后端服务器/Apache',
+						'后端服务器/Tomcat',
+						'后端服务器/Nginx',
+						'后端服务器/FastDFS',
 					]
 				},
 				{

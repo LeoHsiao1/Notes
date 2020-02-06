@@ -9,9 +9,9 @@ jobs:
     - name: Build
       run: |
         cd /home/github/Notes
-        sudo git pull
-        sudo yarn
-        sudo yarn vuepress build docs
+        git pull
+        yarn
+        yarn vuepress build docs
     - name: Test
       run: |
         curl -I http://leohsiao.com/ --connect-timeout 3

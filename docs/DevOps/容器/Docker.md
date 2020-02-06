@@ -33,15 +33,15 @@ Docker 采用 C/S 工作模式。
 ## 安装
 
 - 在 Centos 上安装：
-
     ```sh
+    yum install yum-utils       # 安装yum-config-manager
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo   # 添加 docker 的官方镜像源
-    yum install docker-ce   # 下载 docker 社区版
-    systemctl start docker  # 启动 docker 服务
+    yum install docker-ce       # 下载 docker 社区版
+    systemctl start docker      # 启动 docker daemon
+    systemctl enable docker     # 使docker开机自启
     ```
 
 - 在 ubuntu 上，可使用官方脚本自动安装：
-
     ```sh
     curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
     ```

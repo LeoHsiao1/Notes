@@ -76,12 +76,12 @@
     ```
 
 
-## 绑定代码的语法
+## 绑定函数
 
 可以给函数声明关键字参数：
 ```cpp
 m.def("sum", &sum, "A function", py::arg("x"), py::arg("y")=2);
-m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py::arg(*)简写为*_a
+m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py::arg(*) 简写为 *_a
 ```
 
 可以按以下格式添加多行注释：
@@ -91,6 +91,71 @@ m.doc() = R"pbdoc(
     module
 )pbdoc";
 ```
+
+## 绑定类
+
+例：
+- 编写C++代码：
+    ```cpp
+    #include <pybind11/pybind11.h>
+    #include <iostream>
+
+    namespace py = pybind11;
+
+    class Pet
+    {
+    public:
+        std::string name;
+        void setName(std::string _name)
+        {
+            name = _name;
+        }
+        const std::string getName()
+        {
+            return name;
+        }
+    };
+
+    PYBIND11_MODULE(api, m) {
+        py::class_<Pet>(m, "Pet")               // 用 class_ 可以绑定一个 C++ 的 class 或 struct
+            .def(py::init<>())                  // 绑定构造函数
+            .def_readwrite("name", &Pet::name)  // 绑定普通的类变量
+            .def("setName", &Pet::setName)      // 绑定类方法
+            .def("getName", &Pet::getName);     // 类的绑定代码只有一条语句，在最后才加分号 ;
+    }
+    ```
+- 编译后，在Python终端中测试：
+    ```python
+    >>> import api       
+    >>> p = api.Pet()
+    >>> p
+    <api.Pet object at 0x000001EC69DD63E8>
+    >>> p.name 
+    ''
+    >>> p.name = 'A' 
+    >>> p.name
+    'A'
+    >>> p.setName('B') 
+    >>> p.getName()      
+    'B'
+    ```
+- 可以定义对象的 `__repr__()` 方法：
+    ```cpp
+            .def("__repr__",
+                [](const Pet &p) {
+                    return "<Pet: " + p.name + ">";
+                });
+    ```
+    效果如下：
+    ```python
+    >>> import api
+    >>> p = api.Pet()    
+    >>> p
+    <Pet: >
+    >>> p.name = 'A' 
+    >>> p
+    <Pet: A>
+    ```
 
 ## 传递字符串
 

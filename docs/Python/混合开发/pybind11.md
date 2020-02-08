@@ -1,7 +1,7 @@
 # pybind11
 
 ：一个 C++库，可以将 C++代码封装成 Python 模块，或者在 C++中导入 Python 模块。
-- 需要使用支持 C++11 的编译器。在 Windows 上使用时，需要使用 2015 版本以上的 Visual Studio 。
+- 需要使用支持 C++11 的编译器。
 - [官方文档](https://pybind11.readthedocs.io/en/master/index.html)
 
 ## 基本示例
@@ -29,25 +29,41 @@
     }
     ```
 
-3. 最后要编译生成 pyd 文件。可以手动编译，也可以自动编译。
-
-手动编译的步骤：
-，，，
-
-
-用 Python 的 setuptools 模块可以自动编译，更方便。步骤如下：
-1. 安装：pip install pybind11
-2. 下载[setup.py](https://github.com/pybind/python_example/blob/master/setup.py)模板，修改其中的部分内容：
+3. 编译成 pyd 文件 或 so 文件。
+4. 在Python解释器中试用：
     ```python
+    >>> import api
+    >>> api.sum(1, 2)
+    3
+    >>> api.p1
+    'Hello world!'
+    ```
+
+## 编译
+
+首先要安装：pip install pybind11
+然后才可以开始编译。
+
+### 自动编译
+
+用 Python 的 setuptools 模块可以自动编译，比较方便。步骤如下：
+1. 编写一个 setup.py 文件：
+    ```python
+    from setuptools import setup, Extension
+    import pybind11
+
     ext_modules = [
         Extension(
-            'api',
-            ['api.cpp'],
+            name='api',
+            sources=['api.cpp'],
+            language='c++',
             include_dirs=[      # 添加编译时用到的头文件目录
                 get_pybind_include(),
                 get_pybind_include(user=True)
             ],
-            language='c++'
+            # libraries=['mylib'],
+            # library_dirs=['/path/to/lib'],
+            # extra_compile_args=['-std=c++11'],
         )
     ]
 
@@ -57,24 +73,32 @@
         ext_modules=ext_modules,
         install_requires=['pybind11>=2.4'],
         setup_requires=['pybind11>=2.4'],
-        cmdclass={'build_ext': BuildExt},
     )
     ```
-3. 执行 `python setup.py build` 编译 C++代码，会生成 `build/lib.xx/*.pyd` 文件。
-4. 执行以下命令，打开Python解释器：
-    ```sh
-    cd build/lib.xx
-    python
-    ```
-   尝试调用：
-    ```python
-    >>> import api
-    >>> api.sum(1, 2)
-    3
-    >>> api.p1
-    'Hello world!'
-    ```
+2. 执行 `python setup.py build` 编译 C++代码，这会生成 `build/lib.xx/*.pyd` 文件。
 
+### 手动编译
+
+在Linux上：
+1. 安装 g++ 。
+2. 编译：
+    ```sh
+    g++ api.cpp -o api.so -O3 -Wall -std=c++11 -shared -fPIC `python3 -m pybind11 --includes`
+    ```
+    - 03 表示绑定到 Python3 。
+    - 编译时，需要指定头文件、库文件的查找目录。
+    
+在Windows上：
+1. 安装 2015 版本以上的 Visual Studio 。
+2. 打开DOS窗口，执行以下文件，从而初始化环境。
+    ```cmd
+    "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+    ```
+3. 编译：
+    ```cmd
+    cl /MD /LD api.cpp /EHsc -I C:\Users\Leo\AppData\Local\Programs\Python\Python37\include /link C:\Users\Leo\AppData\Local\Programs\Python\Python37\libs\python37.lib /OUT:api.pyd
+    del api.exp api.obj api.lib
+    ```
 
 ## 绑定函数
 

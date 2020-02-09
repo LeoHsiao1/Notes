@@ -2,6 +2,7 @@
 
 ：一个 C++库，可以将 C++代码封装成 Python 模块，或者在 C++中导入 Python 模块。
 - 需要使用支持 C++11 的编译器。
+- 调用C++代码时，会自动捕捉异常。
 - [官方文档](https://pybind11.readthedocs.io/en/master/index.html)
 
 ## 基本示例
@@ -23,7 +24,7 @@
     PYBIND11_MODULE(api, m)                   // 创建一个 Python 模块，名为 api ，用变量 m 表示
     {
         m.doc() = "pybind11 example module";  // 给模块 m 添加说明文档
-        m.def("sum", &sum, "A function");     // 给模块 m 定义一个函数，名为 sum ，绑定到 C++代码中的 sum 函数，并添加说明文档
+        m.def("sum", &sum);                   // 给模块 m 定义一个函数，名为 sum ，绑定到 C++代码中的 sum 函数
         m.attr("p1") = p1;                    // 给模块 m 定义一个变量 p1 ，绑定到 C++代码中的指针 p1
         m.attr("p2") = 42;                    // 给模块 m 定义一个变量 p2 ，用常量直接赋值
     }
@@ -44,9 +45,31 @@
 首先要安装：pip install pybind11
 然后才可以开始编译。
 
-### 自动编译
+### 手动编译
 
-用 Python 的 setuptools 模块可以自动编译，比较方便。步骤如下：
+在Linux上：
+1. 安装 g++ 。
+2. 编译：
+    ```sh
+    g++ api.cpp -o api.so -O3 -Wall -std=c++11 -shared -fPIC `python3 -m pybind11 --includes`
+    ```
+    - 03 表示绑定到 Python3 。
+    - 编译时，需要指定头文件、库文件的查找目录。
+    
+在Windows上：
+1. 安装 2015 版本以上的 Visual Studio 。
+2. 打开DOS窗口，执行以下文件，从而初始化环境。
+    ```cmd
+    "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+    ```
+3. 编译：
+    ```cmd
+    cl /MD /LD api.cpp /EHsc -I C:\Users\Leo\AppData\Local\Programs\Python\Python37\include /link C:\Users\Leo\AppData\Local\Programs\Python\Python37\libs\python37.lib /OUT:api.pyd
+    del api.exp api.obj api.lib
+    ```
+
+### 通过 setuptools 编译
+
 1. 编写一个 setup.py 文件：
     ```python
     from setuptools import setup, Extension
@@ -77,46 +100,27 @@
     ```
 2. 执行 `python setup.py build` 编译 C++代码，这会生成 `build/lib.xx/*.pyd` 文件。
 
-### 手动编译
+## 绑定C++的函数
 
-在Linux上：
-1. 安装 g++ 。
-2. 编译：
-    ```sh
-    g++ api.cpp -o api.so -O3 -Wall -std=c++11 -shared -fPIC `python3 -m pybind11 --includes`
-    ```
-    - 03 表示绑定到 Python3 。
-    - 编译时，需要指定头文件、库文件的查找目录。
-    
-在Windows上：
-1. 安装 2015 版本以上的 Visual Studio 。
-2. 打开DOS窗口，执行以下文件，从而初始化环境。
-    ```cmd
-    "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-    ```
-3. 编译：
-    ```cmd
-    cl /MD /LD api.cpp /EHsc -I C:\Users\Leo\AppData\Local\Programs\Python\Python37\include /link C:\Users\Leo\AppData\Local\Programs\Python\Python37\libs\python37.lib /OUT:api.pyd
-    del api.exp api.obj api.lib
-    ```
+给函数添加说明文档：
+```cpp
+m.def("sum", &sum, "A function");
+```
 
-## 绑定函数
+将函数的定义语句与绑定语句合并：
+```cpp
+m.def("sum", [](int x, int y) { return (x + y); });
+```
+- 该函数的形参是`(int x, int y)`。
+- 该函数的返回类似不必声明，因为pybind11会自动处理。
 
-可以给函数声明关键字参数：
+给函数声明关键字参数：
 ```cpp
 m.def("sum", &sum, "A function", py::arg("x"), py::arg("y")=2);
 m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py::arg(*) 简写为 *_a
 ```
 
-可以按以下格式添加多行注释：
-```cpp
-m.doc() = R"pbdoc(
-    Pybind11 example
-    module
-)pbdoc";
-```
-
-## 绑定类
+## 绑定C++的类
 
 例：
 - 编写C++代码：
@@ -156,12 +160,12 @@ m.doc() = R"pbdoc(
     <api.Pet object at 0x000001EC69DD63E8>
     >>> p.name 
     ''
-    >>> p.name = 'A' 
+    >>> p.name = 'AA' 
     >>> p.name
-    'A'
-    >>> p.setName('B') 
+    'AA'
+    >>> p.setName('BB') 
     >>> p.getName()      
-    'B'
+    'BB'
     ```
 - 可以定义对象的 `__repr__()` 方法：
     ```cpp
@@ -176,14 +180,14 @@ m.doc() = R"pbdoc(
     >>> p = api.Pet()    
     >>> p
     <Pet: >
-    >>> p.name = 'A' 
+    >>> p.name = 'AA' 
     >>> p
-    <Pet: A>
+    <Pet: AA>
     ```
 
 ## 传递字符串
 
-将Python中的字符串传给 C++ 时：
+将 Python 中的字符串传给 C++ 时：
 - 如果Python输出的字符串为bytes类型，则会被pybind11直接传递。
 - 如果Python输出的字符串为str类型，则会被pybind11经过 str.encode('utf-8') 之后再传递。
   - 如果编码失败，则会抛出UnicodeDecodeError异常。
@@ -218,10 +222,10 @@ m.doc() = R"pbdoc(
     浣犲ソ
     ```
 
-将C++中的字符串传给 Python 时：
+将 C++ 中的字符串传给 Python 时：
 - 如果C++输出的字符串为 std::string 或 char * 类型，则会被pybind11经过 bytes.decode('utf-8') 之后再传递。如下：
     ```cpp
-    m.def("test_return",
+    m.def("return_str",
         []()
         {
             return std::string("Hello");
@@ -230,12 +234,18 @@ m.doc() = R"pbdoc(
     ```
     ```python
     >>> import api
-    >>> api.test_return()
+    >>> api.return_str()
     'Hello'
     ```
+
+- 也可以先在C++中转换成py::str对象，再传给Python：
+    ```cpp
+    m.def("return_str", []() { return py::str(std::string("Hello")); });
+    ```
+
 - 如果将C++输出的字符串转换为 py::bytes 对象，则会被pybind11当做bytes类型直接传递。如下：
     ```cpp
-    m.def("test_return",
+    m.def("return_str",
         []()
         {
             std::string s("\xe4\xbd\xa0\xe5\xa5\xbd");
@@ -245,9 +255,110 @@ m.doc() = R"pbdoc(
     ```
     ```python
     >>> import api
-    >>> api.test_return()
+    >>> api.return_str()
     b'\xe4\xbd\xa0\xe5\xa5\xbd'
-    >>> api.test_return().decode()
+    >>> api.return_str().decode()
     '你好'
     ```
 - pybind11读取C++的字符串时，遇到null才会终止。如果没有null，则会发生缓冲区溢出。
+
+
+## 在C++中使用Python的数据类型
+
+使用list的示例：
+```cpp
+py::object fun1()
+{
+    py::list list1;                  // 创建一个空列表
+
+    list1.append("hello");           // 添加一项元素
+    list1[0] = py::str("Hello");     // 赋值
+    list1.insert(0, "inserted-0");   // 插入
+
+    py::print("list[0]:", list1[0]); // 调用Python的print函数作出显示
+
+    int index = 0;
+    for (auto item : list1)          // 遍历列表（这里的item属于pybind11::handle类型，不能转换成pybind11::list类型）
+        std::cout << "list[" << index++ << "]: " << std::string(py::str(item)) << std::endl;
+
+    return list1;
+}
+```
+- 用 auto 关键字虽然可以方便地进行遍历，但得到的元素属于pybind11::handle类型，不能当作Python类型使用。可以按以下方法转换成Python类型：
+    ```cpp
+    for (auto _line : table){
+        py::list line;
+        for (auto item : _line)
+            line.append(item);
+    }
+    ```
+
+使用dict的示例：
+```cpp
+py::object test_dict()
+{
+    auto d1 = py::dict();   // 创建一个空字典，相当于 py::list d1;
+    auto d2 = py::dict("a"_a=1, "b"_a=2);  // 创建一个字典并赋值
+
+    d1["a"] = 1;            // 给字典添加键值对
+    d1["b"] = 2;
+
+    if(d1.contains("a"))    // 判断指定key是否存在
+        std::cout << "a=" << std::string(py::str(d1["a"])) << std::endl;    // 取出指定key的值
+
+    for (auto item : d1)    // 遍历字典
+        std::cout << "key=" << std::string(py::str(item.first)) << ", "
+                  << "value=" << std::string(py::str(item.second)) << std::endl;
+    
+    return d1;              // 将字典作为 py::object 传给Python
+}
+```
+- 用 `d1["a"]` 这样的格式即可查询字典中某个key的值。如果该key不存在，则会在Python解释器中抛出异常：KeyError。
+
+
+其它示例：<https://github.com/pybind/pybind11/blob/master/tests/test_pytypes.cpp>
+
+
+## 映射对象
+
+将C++对象映射到Python中：
+```cpp
+MyClass *p = ...;
+py::object obj = py::cast(p);
+```
+- 例：
+    ```cpp
+    py::object test_cast()
+    {
+        Pet *p = new Pet();
+        return py::cast(p);
+    }
+
+    PYBIND11_MODULE(api, m) {
+        m.def("test_cast", &test_cast);
+        py::class_<Pet>(m, "Pet")...
+    }
+    ```
+    ```python
+    >>> import api
+    >>> api.test_cast()
+    <Pet: >
+    ```
+    如果没有绑定Pet类，则pybind11就不知道如何转换函数test_cast()的返回值，会报错：
+    ```python
+    >>> import api       
+    >>> api.test_cast()
+    TypeError: Unable to convert function return value to a Python type! The signature was
+            () -> object
+    ```
+
+将Python对象映射到C++中：
+```cpp
+py::object obj = ...;
+MyClass *p = obj.cast<MyClass *>();
+```
+
+## 在C++中调用Python
+
+pybind11支持在C++中调用Python模块中的变量、函数、方法
+教程：<https://pybind11.readthedocs.io/en/master/advanced/pycpp/object.html#accessing-python-libraries-from-c>

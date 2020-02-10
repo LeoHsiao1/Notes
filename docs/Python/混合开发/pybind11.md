@@ -188,10 +188,10 @@ m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py
 ## 传递字符串
 
 将 Python 中的字符串传给 C++ 时：
+- C++函数接收字符串的形参可以为 std::string 或 char * 类型。
 - 如果Python输出的字符串为bytes类型，则会被pybind11直接传递。
 - 如果Python输出的字符串为str类型，则会被pybind11经过 str.encode('utf-8') 之后再传递。
   - 如果编码失败，则会抛出UnicodeDecodeError异常。
-- C++函数接收字符串的形参可以为 std::string 或 char * 类型。
 - 例：
     编写C++代码：
     ```cpp
@@ -262,6 +262,26 @@ m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py
     ```
 - pybind11读取C++的字符串时，遇到null才会终止。如果没有null，则会发生缓冲区溢出。
 
+可以在C++中转换 py::str 与 py::bytes 如下：
+```cpp
+void test_bytes(py::str str, py::str encoding)
+{
+    py::bytes bytes = str.attr("encode")(encoding);
+    std::cout << std::string(bytes) << std::endl;
+}
+```
+
+大部分数据类型都可以与 py::str 相互转换如下：
+```cpp
+void test_str(py::object x)     // 可以用 py::object 类型的形参接收各种Python对象
+{
+    py::str a = x;              // 各种Python对象可以转换成 py::str
+    a = "hello";                // C++的字符串可以转换成 py::str
+    a = std::string("hello");
+    a = py::list(a);
+    std::cout << std::string(a) << std::endl;   // py::str 可以转换成C++的 std::string
+}
+```
 
 ## 在C++中使用Python的数据类型
 
@@ -275,7 +295,7 @@ py::object fun1()
     list1[0] = py::str("Hello");     // 赋值
     list1.insert(0, "inserted-0");   // 插入
 
-    py::print("list[0]:", list1[0]); // 调用Python的print函数作出显示
+    std::cout << std::string(py::str(list1[0])) << std::endl;   // 读取列表中的一个元素
 
     int index = 0;
     for (auto item : list1)          // 遍历列表（这里的item属于pybind11::handle类型，不能转换成pybind11::list类型）
@@ -358,7 +378,31 @@ py::object obj = ...;
 MyClass *p = obj.cast<MyClass *>();
 ```
 
-## 在C++中调用Python
+## 在C++中调用Python模块
 
-pybind11支持在C++中调用Python模块中的变量、函数、方法
-教程：<https://pybind11.readthedocs.io/en/master/advanced/pycpp/object.html#accessing-python-libraries-from-c>
+pybind11支持在C++中调用Python模块中的变量、函数、方法，如下：
+```cpp
+m.def("test_import",
+    []()
+    {
+        // 调用变量
+        py::object os = py::module::import("os");
+        py::object sep = os.attr("path").attr("sep");   // 可以重复用 .attr() 提取成员
+        std::cout << std::string(py::str(sep)) << std::endl;
+
+        // 调用函数
+        py::object listdir = os.attr("listdir");
+        py::str ret = listdir("/root");
+        std::cout << std::string(ret) << std::endl;
+
+        // 调用Python的内建函数
+        py::print("listdir:", listdir("/root"));
+
+        // 调用方法
+        py::str str = py::str("hello world");
+        py::object split = str.attr("split");
+        py::str ret = split(" ");       // 可以合并为 str.attr("split")(" ");
+        std::cout << std::string(ret) << std::endl;
+    }
+);
+```

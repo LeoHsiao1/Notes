@@ -1,8 +1,8 @@
 # pybind11
 
-：一个 C++库，可以将 C++代码封装成 Python 模块，或者在 C++中导入 Python 模块。
+：一个 C++库，可以将 C++ 代码封装成 Python 模块，或者在 C++ 中导入 Python 模块。
+- 用 pybind11 编译出Python模块之后，用户不需要安装 pybind11 也可以导入该模块，但是必须使用与编译时版本一致的Python解释器。
 - 需要使用支持 C++11 的编译器。
-- 调用C++代码时，会自动捕捉异常。
 - [官方文档](https://pybind11.readthedocs.io/en/master/index.html)
 
 ## 基本示例
@@ -406,3 +406,9 @@ m.def("test_import",
     }
 );
 ```
+
+## 处理异常
+
+- 当Python调用的 C++ 代码抛出异常时，会被 pybind11 自动转换成 Python 的异常。
+- 当C++ 调用的Python代码抛出异常时，会被 pybind11 自动转换成 C++ 的异常。
+- [相关文档](https://pybind11.readthedocs.io/en/master/advanced/exceptions.html#built-in-exception-translation)

@@ -1,4 +1,4 @@
-# 部署
+# README
 
 ## 部署方法
 
@@ -14,9 +14,9 @@ yarn vuepress build docs
 docker run -d --name nginx --network host -v $PWD/docs/.vuepress/dist/:/root/Notes/ -v $PWD/etc/nginx.conf:/etc/nginx/nginx.conf nginx
 ```
 
-## 加工
+## 调整字符间距
 
-在Linux终端中执行以下命令，处理 *.md 文件，修改英文、数字与汉字之间的间距：
+在Linux终端中执行以下命令，处理 *.md 文件，调整英文、数字与汉字之间的间距：
 ```
 file_list=`find docs -name "*.md" | grep -v index.md`
 file_list[${#file_list[*]}]=README.md

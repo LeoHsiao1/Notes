@@ -49,7 +49,7 @@ PermitEmptyPasswords no           # 不允许用空密码登录
 
 ```sh
 $ ssh-keygen         # 生成一对 SSH 密钥（默认采用 RSA 加密算法）
-            -r rsa   # 指定加密算法（默认是rsa）
+            -r rsa   # 指定加密算法（默认是 rsa）
             -C "your_email@example.com"   # 添加备注信息
 ```
 - 默认会将私钥文件 id_rsa 、公钥文件 id_rsa.pub 保存到 ~/.ssh/ 目录下。

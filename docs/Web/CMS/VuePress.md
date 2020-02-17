@@ -79,6 +79,26 @@ module.exports = {
 
 ## 默认主题的配置
 
+```js
+module.exports = {
+    // theme: '@vuepress/theme-default',            // 使用的主题
+    themeConfig: {                                  // 主题的配置
+        repo: 'https://github.com/LeoHsiao1/Notes', // 启用到 GitHub 仓库的链接，显示在页面右上角
+        repoLabel: 'GitHub',                        // repo 链接显示的名字
+        docsDir: 'docs',                            // 使用 GitHub 仓库中哪个目录下的文档
+        docsBranch: 'master',                       // 指向 GitHub 仓库的哪个分支
+        editLinks: true,                            // 启用快速编辑的链接，显示在文章末尾的左下角
+        editLinkText: 'Edit on GitHub',             // editlink 显示的名字
+        lastUpdated: 'Last Updated',                // 根据 git commit 记录显示每个页面的最后编辑时间
+        logo: '/logo.png',                          // 网站 logo ，会显示在导航栏的左侧
+        smoothScroll: true,                         // 在页面内进行跳转时，页面会平滑滚动
+    }
+}
+```
+- VuePress 使用 Prism.js 实现了 MarkDown 中代码块的语法高亮。
+- VuePress 内置了一个搜索框，不过只对所有页面的 h1、h2、h3 级标题建立了搜索索引。
+  - 使用 Algolia 搜索引擎可以实现全文搜索，且功能丰富，但只有文档型网站能免费申请服务。
+
 ### 导航栏
 
 添加以下格式的配置，即可在网站右上角显示导航栏链接：
@@ -239,27 +259,6 @@ footer: MIT Licensed | Copyright © 2018-present Evan You    # 页脚
         font-family: Consolas, "Microsoft YaHei", serif;
     }
     ```
-
-### 其它配置
-
-```js
-module.exports = {
-    // theme: '@vuepress/theme-default',            // 使用的主题
-    themeConfig: {                                  // 主题的配置
-        repo: 'https://github.com/LeoHsiao1/Notes', // 启用到 GitHub 仓库的链接，显示在页面右上角
-        repoLabel: 'GitHub',                        // repo 链接显示的名字
-        docsDir: 'docs',                            // 使用 GitHub 仓库中哪个目录下的文档
-        docsBranch: 'master',                       // 指向 GitHub 仓库的哪个分支
-        editLinks: true,                            // 启用快速编辑的链接，显示在文章末尾的左下角
-        editLinkText: 'Edit on GitHub',             // editlink 显示的名字
-        lastUpdated: 'Last Updated',                // 根据 git commit 记录显示每个页面的最后编辑时间
-        logo: '/logo.png',                          // 网站 logo ，会显示在导航栏的左侧
-        smoothScroll: true,                         // 在页面内进行跳转时，页面会平滑滚动
-    }
-}
-```
-- VuePress 使用 Prism 实现了 MarkDown 中代码块的语法高亮。
-- VuePress 内置了一个搜索框，不过只对所有页面的 h1、h2、h3 级标题建立了搜索索引，不能进行全文搜索。
 
 ## 插件
 

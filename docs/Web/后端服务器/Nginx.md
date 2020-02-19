@@ -2,7 +2,7 @@
 
 ：一个轻量级的 Web 服务器软件。
 - 发音相当于 engine + x
-- 适合用于 HTTP 反向代理，也提供了 IMAP、POP3、SMTP 代理。
+- 可实现第七层的HTTP代理、第四层的TCP代理，也支持 IMAP、POP3、SMTP 代理。
 - 支持负载均衡。
 - 处理静态文件的效率高。
 
@@ -77,7 +77,7 @@ http {
 `/etc/nginx/conf.d/`目录下默认存在一个`default.conf`，配置了 Nginx 的初始 Web 页面，内容如下：
 ```
 server {
-    listen       80;            # 监听的 TCP 端口（必填）
+    listen       80;            # 监听的TCP端口（必填）
     server_name  localhost;     # 监听的域名（不必填）
 
     location / {
@@ -91,8 +91,14 @@ server {
     }
 }
 ```
-- http{} 中可以定义多个 server{} ，表示服务器的配置。
+- http{} 模块中可以定义多个 server{} ，表示服务器的配置。
 - 在 server{} 之外设置的日志是全局日志，在 server{} 之内设置的日志是局部日志。
+- listen 语句的例子：
+    ```
+    listen      80;              # 相当于listen *:80
+    listen      127.0.0.1:80;
+    listen      unix:/var/run/nginx.sock;
+    ```
 - 当 Nginx 在某个 TCP 端口收到一个 HTTP 请求时，会交给监听该端口的 server 处理。
   - 如果监听该端口的 server 有多个，则考虑 Request Header 中的 Host 与哪个 server 监听的 server_name 匹配。
   - 如果没有匹配的 server_name ，或者 Request Header 中的 Host 是 IP 地址，则交给监听该端口的默认 server 处理。
@@ -139,9 +145,7 @@ server {
     root  /www/;          # 设置网站的根目录，当没有 HTTP 请求没有找到匹配的 location 时就到该目录下寻找文件
     ```
 
-## 其它配置
-
-### 控制语句
+## 控制语句
 
 - **allow**、**deny**语句：允许或禁止某些 IP 地址的访问。如下：
     ```
@@ -186,7 +190,7 @@ server {
   - 该语句可以写在 server{} 或 location{} 中。
   - 当 Nginx 执行到 return 语句时会立即返回 HTTP 响应，不会执行之后的语句。
 
-### 负载均衡
+## 负载均衡
 
 可以定义 upstream{} ，添加多个可用的 server（即后端服务器），将受到的 HTTP 请求按某种策略转发给 server 处理，实现负载均衡。
 
@@ -241,12 +245,31 @@ server {
     }
     ```
 
-### 启用 HTTPS
+## TCP代理
+
+Nginx 1.9 版本新增了 stream{} 模块，用于实现第四层的TCP代理。可以在与 http{} 模块同级的位置配置，如下：
+```
+stream {
+    upstream mysql {
+        hash $remote_addr consistent;
+        server 10.0.0.1:3306 weight=5;
+        server 10.0.0.2:3306 weight=10;
+    }
+    server {
+        listen 3306;
+        proxy_pass mysql;
+        proxy_timeout 3s;
+        proxy_connect_timeout 1s;
+    }
+}
+```
+
+## 启用 HTTPS
 
 让服务器启用 HTTPS 的配置：
 ```
 server {
-    listen    443  ssl;     # 采用 ssl 协议监听一个端口
+    listen    443  ssl;     # 监听时采用 ssl 协议
     server_name localhost;
     
     ssl_certificate /etc/nginx/conf.d/cert.pem;       # 指明.crt 文件的路径
@@ -263,7 +286,7 @@ server {
 }
 ```
 
-### 启用 gzip
+## 启用 gzip
 
 启用 gzip 压缩响应报文 body 之后，可以降低通信耗时，但是会增加 Nginx 的 CPU 负载。
 

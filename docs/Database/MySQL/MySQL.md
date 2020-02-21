@@ -1,6 +1,6 @@
 # MySQL
 
-：一个流行的关系型数据库，基于 C++。
+：一个流行的关系型数据库，基于 C++ 开发。
 - [官方文档](https://dev.mysql.com/doc/refman/5.7/en/)
 
 MySQL 存在多个分支：

@@ -1,6 +1,7 @@
 # ♢ requests
 
-：Python 的第三方库，基于 Python 的标准库 urllib ，提供了一些很方便的访问 Web 服务器的方法。
+：Python 的第三方库，提供了一些很方便的访问 Web 服务器的方法。
+- 基于 Python 的标准库 urllib 实现。
 
 ## 关于请求报文
 

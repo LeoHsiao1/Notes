@@ -77,9 +77,9 @@ HTML4 采用以下方式控制文本的显示样式：
   - `strike`、`s`、`<del>`：删除线文本
   - `<u>`：下划线文本
 - 属性：
-  - align ：对齐方式。例如：``
-  - color ：字体颜色
-  - bgcolor ：背景色
+  - `align` ：对齐方式。
+  - `color` ：字体颜色
+  - `bgcolor` ：背景色
 - 例：
 
     ```html

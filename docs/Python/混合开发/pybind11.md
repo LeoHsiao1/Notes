@@ -19,7 +19,7 @@
     char *p1 = "Hello world!";
     ```
 
-2. 在 api.cpp 中加入 pybind11 的绑定代码：
+2. 在 api.cpp 中加入绑定代码，供 pybind11 读取：
     ```cpp
     PYBIND11_MODULE(api, m)                   // 创建一个 Python 模块，名为 api ，用变量 m 表示
     {
@@ -100,27 +100,65 @@
     ```
 2. 执行 `python setup.py build` 编译 C++代码，这会生成 `build/lib.xx/*.pyd` 文件。
 
-## 绑定 C++的函数
+## 绑定 C++ 的变量和函数
 
-给函数添加说明文档：
-```cpp
-m.def("sum", &sum, "A function");
-```
+例：
+- 编写 C++代码：
+    ```cpp
+    #include <pybind11/pybind11.h>
+    #include <iostream>
 
-将函数的定义语句与绑定语句合并：
-```cpp
-m.def("sum", [](int x, int y) { return (x + y); });
-```
-- 该函数的形参是`(int x, int y)`。
-- 该函数的返回类似不必声明，因为 pybind11 会自动处理。
+    namespace py = pybind11;
 
-给函数声明关键字参数：
-```cpp
-m.def("sum", &sum, "A function", py::arg("x"), py::arg("y")=2);
-m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py::arg(*) 简写为 *_a
-```
+    char *p1 = "Hello world!";
 
-## 绑定 C++的类
+    void test_print()
+    {
+        std::cout << p1 << std::endl;
+    }
+
+    PYBIND11_MODULE(api, m)
+    {
+        m.doc() = "pybind11 example module";
+        m.def("test_print", &test_print);
+        m.attr("p1") = p1;
+    }
+    ```
+- 编译后，在 Python 终端中测试：
+    ```python
+    >>> import api
+    >>> api.p1
+    'Hello world!'
+    >>> api.test_print()
+    Hello world!
+    ```
+- C++ 中的变量绑定到Python中时，是拷贝了一份值。修改拷贝时不会影响到原变量，如下：
+    ```python
+    >>> api.p1 = 'Hi'
+    >>> api.fun1()
+    Hello world!
+    ```
+
+其它特性：
+- 可以给函数添加说明文档：
+    ```cpp
+    m.def("sum", &sum, "Calculate the sum of two numbers.");
+    ```
+
+- 可以将函数的定义语句与绑定语句合并：
+    ```cpp
+    m.def("sum", [](int x, int y) { return (x + y); });
+    ```
+    - 该函数的形参是`(int x, int y)`。
+    - 该函数的返回类似不必声明，因为 pybind11 会自动处理。
+
+- 可以给函数声明关键字参数：
+    ```cpp
+    m.def("sum", &sum, "A function", py::arg("x"), py::arg("y")=2);
+    m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py::arg(*) 简写为 *_a
+    ```
+
+## 绑定 C++ 的类
 
 例：
 - 编写 C++代码：
@@ -154,7 +192,7 @@ m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py
     ```
 - 编译后，在 Python 终端中测试：
     ```python
-    >>> import api       
+    >>> import api
     >>> p = api.Pet()
     >>> p
     <api.Pet object at 0x000001EC69DD63E8>
@@ -163,8 +201,8 @@ m.def("sum", &sum, "A function", "x"_a, "y"_a=2);                // 可以将 py
     >>> p.name = 'AA' 
     >>> p.name
     'AA'
-    >>> p.setName('BB') 
-    >>> p.getName()      
+    >>> p.setName('BB')
+    >>> p.getName()
     'BB'
     ```
 - 可以定义对象的 `__repr__()` 方法：
@@ -283,7 +321,7 @@ void test_str(py::object x)     // 可以用 py::object 类型的形参接收各
 }
 ```
 
-## 在 C++中使用 Python 的数据类型
+## 在 C++ 中使用 Python 的数据类型
 
 使用 list 的示例：
 ```cpp
@@ -378,9 +416,9 @@ py::object obj = ...;
 MyClass *p = obj.cast<MyClass *>();
 ```
 
-## 在 C++中调用 Python 模块
+## 在 C++ 中调用 Python 模块
 
-pybind11 支持在 C++中调用 Python 模块中的变量、函数、方法，如下：
+pybind11 支持在 C++ 中调用 Python 模块中的变量、函数、方法，如下：
 ```cpp
 m.def("test_import",
     []()

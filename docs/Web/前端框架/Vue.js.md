@@ -1,6 +1,6 @@
 # Vue.js
 
-：一个开发 Web 前端的框架。
+：一个前端开发框架。
 - 发音与 view 相同。
 - [官方文档](https://vuejs.org/v2/guide/index.html)
 
@@ -26,13 +26,12 @@
   <p>{{ msg }}</p>    // 此处等待传入变量 msg
 </div>
 ```
-- Vue 的独立 js 文件主要有以下几种：
-    ```
-    https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js             # 体积较大，具备报错信息，适用于开发环境
-    https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js         # 体积较小，没有报错信息，适用于生产环境
-    https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.runtime.min.js # 体积很小，只是运行时版本，不包含 Vue 代码的编译器
-    ```
-- 导入 Vue 的独立 js 文件之后，便可使用全局变量 Vue
+- 可以从CDN导入Vue的独立js文件，也可以下载之后从本地导入。
+- 导入Vue 的独立 js 文件时需要注意其版本号，并且同一版本下也包含多种用途的 js 文件：
+  - vue.js ：体积较大，具有清晰的源代码、注释、报错信息，适用于开发环境。
+  - vue.min.js ：体积较小，没有报错信息，适用于生产环境。
+  - vue.runtime.min.js ：体积很小，只是运行时版本，不包含 Vue 代码的编译器。
+- 导入 Vue 的独立 js 文件之后，便可使用全局变量 Vue 。
 - 被 Web 浏览器渲染时，Vue 会将 msg 变量的值填入 HTML DOM 中，渲染出最终的 HTML 文件，显示给用户看。
 
 

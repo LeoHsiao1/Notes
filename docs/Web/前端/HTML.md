@@ -72,10 +72,11 @@ HTML4 采用以下方式控制文本的显示样式：
   - `<big>`：较大的字号
   - `<small>`：较小的字号
   - `<i>`：斜体（italic）
+  - `<em>`：强调（emphasize），通常是显示成斜体
   - `<sub>`：下标（subscript）
   - `<sup>`：上标（superscript）
-  - `strike`、`s`、`<del>`：删除线文本
-  - `<u>`：下划线文本
+  - `strike`、`s`、`<del>`：删除线
+  - `<u>`：下划线
 - 属性：
   - `align` ：对齐方式。
   - `color` ：字体颜色

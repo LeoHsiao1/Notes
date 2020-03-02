@@ -1,10 +1,10 @@
 # Bootstrap
 
-：一个前端开发框架，适用于设计网页组件、布局。
+：一个 CSS/HTML 开发框架，由 Twitter 推出。适用于设计网页组件、布局。
 - 一般用法：在HTML中导入Bootstrap的css、js文件，然后便可以调用Bootstrap的样式、组件。
 - 要求使用HTML5标准。
 
-## 示例
+## 入门示例
 
 如下是一个基于Bootstrap的HTML例子：
 

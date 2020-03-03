@@ -8,7 +8,7 @@
 - 在标签`<script>`之内编写 JS 代码。
 
     ```html
-    <script>
+    <script type="text/javascript">
         document.write("<p>Hello World!</p>");
         alert("test...");
     </script>
@@ -17,5 +17,5 @@
 - 导入外部的 .js 文件，然后便可以调用它。
 
     ```html
-    <script src="//static.mysite.com/main.js"></script>
+    <script type="text/javascript" src="//static.mysite.com/main.js"></script>
     ```

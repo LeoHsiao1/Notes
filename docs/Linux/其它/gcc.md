@@ -100,7 +100,7 @@ ar -rc lib1.a 1.o  ...          # 可以加上多个目标文件
 - 如果程序没有调用 Linux 上特有的库文件、API ，则可以直接放到 Windows 上运行。
 - 如果程序依赖 Linux ，则可以用 Visual Studio、MinGW、Cygwin 等工具编译成 Window 的可执行文件。
 
-相关概念。
+相关概念：
 - MinGW（Minimalist GNU For Windows）：将 GNU 套件移植到了 Windows 上，让用户可以在 Windows 上使用 GNU 编译器（一般是在 DOS 窗口中使用），编译生成的可执行文件是 .exe 格式。
   - MinGW 在编译时，会将源代码中调用的 Linux 库文件、API 转换成 Windows 库文件、API 。
   - MinGW 有一个子项目 Msys ，提供了一个在 Windows 上运行的简单 Linux 系统。

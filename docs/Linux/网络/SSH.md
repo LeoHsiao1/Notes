@@ -14,12 +14,13 @@
 
 ## 使用 SSH 服务
 
-- 安装：
+安装：
 ```sh
 yum install ssh
 systemctl start sshd
 ```
-- 命令：
+
+用法：
 ```sh
 $ ssh root@192.168.0.1    # 使用 ssh 登录到指定 ip 地址，用户名为 root
       -p 22        # 指定端口号
@@ -47,12 +48,16 @@ PermitEmptyPasswords no           # 不允许用空密码登录
 
 ## 相关命令
 
+### ssh-keygen
+
 ```sh
 $ ssh-keygen         # 生成一对 SSH 密钥（默认采用 RSA 加密算法）
             -r rsa   # 指定加密算法（默认是 rsa）
             -C "your_email@example.com"   # 添加备注信息
 ```
 - 默认会将私钥文件 id_rsa 、公钥文件 id_rsa.pub 保存到 ~/.ssh/ 目录下。
+
+### ssh-copy-id
 
 ```sh
 $ ssh-copy-id root@10.0.0.1         # 将本机的 SSH 公钥拷贝给某个主机上的某个用户

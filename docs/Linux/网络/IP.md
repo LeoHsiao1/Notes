@@ -2,7 +2,7 @@
 
 ## ifconfig
 
-命令：
+用法：
 ```sh
 $ ifconfig                         # 显示已启用网卡的信息
             -a                     # 显示所有网卡的信息
@@ -51,7 +51,7 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 
 ## route
 
-命令：
+用法：
 ```sh
 $ route    # 显示本机的路由表
 ```
@@ -70,7 +70,7 @@ link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 
 ：用于查看和管理 ip 地址、路由表，功能更强大。
 
-命令：
+用法：
 ```sh
 $ ip
     addr        # 显示所有网卡的信息（相当于 ifconfig -a）

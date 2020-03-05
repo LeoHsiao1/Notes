@@ -1,12 +1,12 @@
 # Bootstrap
 
 ：一个 CSS/HTML 开发框架，由 Twitter 推出。适用于设计网页组件、布局。
-- 一般用法：在HTML中导入Bootstrap的css、js文件，然后便可以调用Bootstrap的样式、组件。
-- 要求使用HTML5标准。
+- 一般用法：在 HTML 中导入 Bootstrap 的 css、js 文件，然后便可以调用 Bootstrap 的样式、组件。
+- 要求使用 HTML5 标准。
 
 ## 入门示例
 
-如下是一个基于Bootstrap的HTML例子：
+如下是一个基于 Bootstrap 的 HTML 例子：
 
 ```html
 <!DOCTYPE html>
@@ -15,18 +15,18 @@
 <head>
 	<title>Bootstrap Sample</title>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">  <!-- 用于兼容IE浏览器 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">  <!-- 用于兼容 IE 浏览器 -->
     <meta name="viewport" content="width=device-width, initial-scale=1">  <!-- 控制网页在移动设备上的显示 -->
-	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">  <!-- 导入Bootstrap的 css 文件 -->
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">  <!-- 导入 Bootstrap 的 css 文件 -->
 	<link href="css/style.css" rel="stylesheet">  <!-- 导入自己的 css 文件 -->
 </head>
 
 <body>
-	<div class="col-md-12">  <!-- 使用Bootstrap的样式 -->
+	<div class="col-md-12">  <!-- 使用 Bootstrap 的样式 -->
 		<h1>Hello, world!</h1>
 	</div>
-	<script src="https://code.jquery.com/jquery.min.js"></script>  <!-- 先导入Bootstrap的依赖 js 文件 -->
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>  <!-- 导入Bootstrap的 js 文件 -->
+	<script src="https://code.jquery.com/jquery.min.js"></script>  <!-- 先导入 Bootstrap 的依赖 js 文件 -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>  <!-- 导入 Bootstrap 的 js 文件 -->
 	<script src="js/scripts.js"></script>  <!-- 导入自己的 js 文件 -->
 </body>
 
@@ -34,8 +34,8 @@
 ```
 - `"X-UA-Compatible"` 是 IE8 新增的 meta ，用于选择一个浏览器引擎来渲染网页。
   - `IE=7`：使用 IE7 引擎。
-  - `IE=edge`：使用最新版本的IE引擎。
-  - `chrome=1`：激活Google Chrome Frame。
+  - `IE=edge`：使用最新版本的 IE 引擎。
+  - `chrome=1`：激活 Google Chrome Frame 。
 
 - `"viewport"` 是 Bootstrap3 新增的 meta ，用于控制网页在移动设备上的显示。其 content 属性的设置项包括：
   - `width=device-width`：网页显示的宽度。
@@ -50,5 +50,5 @@
 
 ：一个 Bootstrap 的在线 UI 编辑器。
 - 提供了一些现成的组件，可以直接拖拽，便于生成简单的网页布局。
-- 编辑之后，将 layoutit 生成的代码拷贝到HTML的body中即可。不过，用户需要自行导入相应版本的Bootstrap的 JS、CSS 文件。
+- 编辑之后，将 layoutit 生成的代码拷贝到 HTML 的 body 中即可。不过，用户需要自行导入相应版本的 Bootstrap 的 JS、CSS 文件。
 - [官网](https://www.layoutit.com/build)

@@ -2,7 +2,7 @@
 
 ：一个轻量级的 Web 服务器软件。
 - 发音相当于 engine + x
-- 可实现第七层的HTTP代理、第四层的TCP代理，也支持 IMAP、POP3、SMTP 代理。
+- 可实现第七层的 HTTP 代理、第四层的 TCP 代理，也支持 IMAP、POP3、SMTP 代理。
 - 支持负载均衡。
 - 处理静态文件的效率高。
 
@@ -77,7 +77,7 @@ http {
 `/etc/nginx/conf.d/`目录下默认存在一个`default.conf`，配置了 Nginx 的初始 Web 页面，内容如下：
 ```
 server {
-    listen       80;            # 监听的TCP端口（必填）
+    listen       80;            # 监听的 TCP 端口（必填）
     server_name  localhost;     # 监听的域名（不必填）
 
     location / {
@@ -95,7 +95,7 @@ server {
 - 在 server{} 之外设置的日志是全局日志，在 server{} 之内设置的日志是局部日志。
 - listen 语句的例子：
     ```
-    listen      80;              # 相当于listen *:80
+    listen      80;              # 相当于 listen *:80
     listen      127.0.0.1:80;
     listen      unix:/var/run/nginx.sock;
     ```
@@ -245,9 +245,9 @@ server {
     }
     ```
 
-## TCP代理
+## TCP 代理
 
-Nginx 1.9 版本新增了 stream{} 模块，用于实现第四层的TCP代理。可以在与 http{} 模块同级的位置配置，如下：
+Nginx 1.9 版本新增了 stream{} 模块，用于实现第四层的 TCP 代理。可以在与 http{} 模块同级的位置配置，如下：
 ```
 stream {
     upstream mysql {

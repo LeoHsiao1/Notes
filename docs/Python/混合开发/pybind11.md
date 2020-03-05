@@ -132,7 +132,7 @@
     >>> api.test_print()
     Hello world!
     ```
-- C++ 中的变量绑定到Python中时，是拷贝了一份值。修改拷贝时不会影响到原变量，如下：
+- C++ 中的变量绑定到 Python 中时，是拷贝了一份值。修改拷贝时不会影响到原变量，如下：
     ```python
     >>> api.p1 = 'Hi'
     >>> api.fun1()

@@ -13,14 +13,16 @@ $ curl <URL>...                    # 访问指定网址（默认为 GET 方法�
        -u <user>[:password]        # 发送用户名，或者用户名加密码
 
        -I                          # 只显示 response header
+       -L                          # 跟随重定向
        -v                          # 显示通信过程的具体信息
        --connect-timeout 3         # 连接上 Web 服务器的超时时间（单位为秒）
        -m 10                       # 整个操作的超时时间（单位为秒）
 
        -x [PROTOCOL://]HOST[:PORT] # 使用代理服务器
-       -X POST                     # POST 方法
-       -H "Connection: Keep-Alive" # 设置 header（可以重复使用该命令选项）
-       -d "id=001&name=leo"        # 设置 POST data（默认为 application/x-www-form-urlencoded 格式）
+       -X POST                     # 使用指定类型的 HTTP 方法
+       -H "Connection: Keep-Alive" # 加上 header（可以重复使用该命令选项）
+       -b "name=leo"               # 加上 cookies
+       -d "id=001&name=leo"        # 加上 POST data（默认为 application/x-www-form-urlencoded 格式）
 ```
 - 如果 URL 包含特殊字符，则要用双引号包住。
 - 也可以用 curl ip:port 测试网络端口能否连通。

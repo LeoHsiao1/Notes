@@ -50,5 +50,10 @@
 
 ：一个 Bootstrap 的在线 UI 编辑器。
 - 提供了一些现成的组件，可以直接拖拽，便于生成简单的网页布局。
-- 编辑之后，将 layoutit 生成的代码拷贝到 HTML 的 body 中即可。不过，用户需要自行导入相应版本的 Bootstrap 的 JS、CSS 文件。
 - [官网](https://www.layoutit.com/build)
+
+用法：
+- 首先在 Container 中拖入一个 GRID 布局，然后才能拖入具体组件。
+  - 布局`12`是指一个区块，宽度为12个单位。
+  - 布局`6 6`是指两列区块，宽度分别为6、6个单位。
+- 编辑之后，将 layoutit 生成的代码拷贝到 HTML 的 body 中即可。不过，用户需要自行导入相应版本的 Bootstrap 的 JS、CSS 文件。

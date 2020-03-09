@@ -3,7 +3,6 @@
 ：简称为 ES ，是一个搜索引擎，也可当做存储 JSON 格式数据的 NoSQL 数据库。
 - 基于 Java 开发，采用 Apache Lucene 搜索引擎作为核心。
 - 采用 C/S 工作模式。客户端通过 Restful API 访问服务器，降低了使用难度。
-- 采用分布式架构，既可以部署单个节点，也可以扩展到几百个节点，处理 PB 级别的数据。
 - 实时性高，可以很快地存储、搜索数据。
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
 - 同类的搜索引擎：Apache Solr ，也是采用 Apache Lucene 搜索引擎作为核心。

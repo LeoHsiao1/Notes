@@ -1,11 +1,12 @@
 # ElasticSearch
 
-：简称为 ES ，是一个搜索引擎，也可当做存储JSON格式数据的 NoSQL 数据库。
-- 基于 Java 开发，采用 Lucene 搜索引擎作为核心。
+：简称为 ES ，是一个搜索引擎，也可当做存储 JSON 格式数据的 NoSQL 数据库。
+- 基于 Java 开发，采用 Apache Lucene 搜索引擎作为核心。
 - 采用 C/S 工作模式。客户端通过 Restful API 访问服务器，降低了使用难度。
-- 采用分布式架构，既可以部署单个节点，也可以扩展到几百个节点，处理PB级别的数据。
+- 采用分布式架构，既可以部署单个节点，也可以扩展到几百个节点，处理 PB 级别的数据。
 - 实时性高，可以很快地存储、搜索数据。
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
+- 同类的搜索引擎：Apache Solr ，也是采用 Apache Lucene 搜索引擎作为核心。
 
 ## 启动
 
@@ -33,12 +34,12 @@ path.logs: /path/to/logs
 network.host: 0.0.0.0
 http.port: 9200
 ```
-- ES服务器默认监听的是 127.0.0.1:9200 。
+- ES 服务器默认监听的是 127.0.0.1:9200 。
 
 
 ## 入门示例
 
-客户端向ES服务器的根路径发出GET请求，即可查看ES的基本信息。如下：
+客户端向 ES 服务器的根路径发出 GET 请求，即可查看 ES 的基本信息。如下：
 ```sh
 [root@Centos ~]# curl 127.0.0.1:9200
 {
@@ -60,7 +61,7 @@ http.port: 9200
 }
 ```
 
-客户端向ES服务器发出请求的标准格式如下：
+客户端向 ES 服务器发出请求的标准格式如下：
 ```sh
 [root@Centos ~]# curl -X GET 127.0.0.1:9200/_count?pretty -H 'content-Type:application/json' -d '
 > {
@@ -78,9 +79,9 @@ http.port: 9200
   }
 }
 ```
-- ES返回的报文body是JSON格式的字符串。如果在请求URL末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的JSON字符串。
+- ES 返回的报文 body 是 JSON 格式的字符串。如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
 - 加上 `-H 'content-Type:application/json'` 之后，便可以发送 JSON 格式的查询参数。
-- 为了方便书写，可以将该客户端请求简记成如下格式：
+- 为了方便书写，下文将客户端请求简记成如下格式：
     ```
     GET /_count
     {

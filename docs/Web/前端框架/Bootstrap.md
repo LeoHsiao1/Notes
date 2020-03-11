@@ -43,10 +43,7 @@
   - `maximum-scale=1.0`：最大的显示比例。
   - `user-scalable=no`：是否允许用户缩放网页。
 
-
-## 相关编辑器
-
-### layoutit
+## layoutit
 
 ：一个 Bootstrap 的在线 UI 编辑器。
 - 提供了一些现成的组件，可以直接拖拽，便于生成简单的网页布局。

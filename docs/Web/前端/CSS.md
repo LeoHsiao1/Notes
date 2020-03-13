@@ -415,6 +415,7 @@ p {
 p {
     border-style: solid;  # 边框线的类型
     border-width: 5px;    # 边框线的宽度
+    border-radius: 5px;   # 将框角替换成指定半径的圆角
     border-color: blue;   # 边框线的颜色
 }
 ```

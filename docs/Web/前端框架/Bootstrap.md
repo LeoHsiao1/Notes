@@ -58,18 +58,21 @@ Bootstrap 通过自定的网格系统（Grid System）控制HTML元素的布局 
 - 例：
   ```html
   <body>
-    <div class="container-fluid">       <!-- 1. 先创建一个容器，因为只能在容器中划分网格 -->
-      <div class="row">                 <!-- 2. 再创建一个行 -->
-        <div class="col-4 col-sm-6">    <!-- 3. 然后创建一个指定宽度的列 -->
-          ...                           <!-- 4. 最后放置 HTML 元素 -->
-          </p>
+    <div class="container-fluid">           <!-- 1. 先创建一个容器，因为只能在容器中划分网格 -->
+      <div class="row">                     <!-- 2. 再创建一个行 -->
+        <div class="col-4 col-sm-6">        <!-- 3. 然后创建一个指定宽度的列 -->
+          ...                               <!-- 4. 最后放置 HTML 元素 -->
         </div>
-        <div class="col-8 col-sm-6">    <!-- 创建一个列。由于与上一列加在一起的宽度不超过12，会显示在同一行 -->
-          ...
+        <div class="col-8 col-sm-6">        <!-- 创建一个列。由于与上一列加在一起的宽度不超过12，会显示在同一行 -->
+          <div class="col-4">               <!-- 创建一个嵌套的子列，宽度为上一列的4/12 -->
+            ...
+          </div>
         </div>
       </div>
-      <div class="row">                 <!-- 创建一个行。会显示在上一行之下 -->
-        ...
+      <div class="row">                     <!-- 创建一个行。会显示在上一行之下 -->
+        <div class="col-md-6 offset-md-4">  <!-- 创建一个列，向右偏移4 -->
+          ...
+        </div>
       </div>
     </div>
   </body>

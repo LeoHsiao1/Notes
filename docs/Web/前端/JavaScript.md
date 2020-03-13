@@ -6,7 +6,6 @@
 ## 使用方式
 
 - 在标签`<script>`之内编写 JS 代码。
-
     ```html
     <script type="text/javascript">
         document.write("<p>Hello World!</p>");
@@ -14,8 +13,8 @@
     </script>
     ```
 
-- 导入外部的 .js 文件，然后便可以调用它。
-
+- 导入外部的 .js 文件。
     ```html
     <script type="text/javascript" src="//static.mysite.com/main.js"></script>
     ```
+    - 现代的大部分浏览器都默认将 `<script>` 看作 "text/javascript" 类型，因此可以不声明该属性。

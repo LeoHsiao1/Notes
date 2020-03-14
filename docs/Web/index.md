@@ -2,6 +2,10 @@
 
 - 简介
   - [简介](简介/简介.md)
+- Web爬虫
+  - [简介](Web爬虫/简介.md)
+  - [♢ urllib](Web爬虫/^urllib.md)
+  - [♢ requests](Web爬虫/^requests.md)
 - 前端
   - [简介](前端/简介.md)
   - [HTML](前端/HTML.md)
@@ -21,10 +25,6 @@
   - [Tomcat](后端服务器/Tomcat.md)
   - [Nginx](后端服务器/Nginx.md)
   - [FastDFS](后端服务器/FastDFS.md)
-- Web爬虫
-  - [简介](Web爬虫/简介.md)
-  - [♢ urllib](Web爬虫/^urllib.md)
-  - [♢ requests](Web爬虫/^requests.md)
 - Web安全
   - [前端安全](Web安全/前端安全.md)
   - [后端安全](Web安全/后端安全.md)

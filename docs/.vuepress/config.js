@@ -343,6 +343,16 @@ module.exports = {
 					]
 				},
 				{
+					title: 'Web爬虫',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'Web爬虫/简介',
+						'Web爬虫/^urllib',
+						'Web爬虫/^requests',
+					]
+				},
+				{
 					title: '前端',
 					collapsable: true,
 					sidebarDepth: 2,
@@ -383,16 +393,6 @@ module.exports = {
 						'后端服务器/Tomcat',
 						'后端服务器/Nginx',
 						'后端服务器/FastDFS',
-					]
-				},
-				{
-					title: 'Web爬虫',
-					collapsable: true,
-					sidebarDepth: 2,
-					children: [
-						'Web爬虫/简介',
-						'Web爬虫/^urllib',
-						'Web爬虫/^requests',
 					]
 				},
 				{

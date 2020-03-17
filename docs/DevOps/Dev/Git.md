@@ -215,3 +215,14 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
     git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并
     git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
     ```
+
+## git flow
+
+：一种流行的git使用策略，适合管理复杂的项目。
+- 在git仓库中至少使用以下两个分支：
+  - master分支：用于保存正式发布的版本。
+  - dev分支：用于保存开发环境的版本。
+- 可以视情况创建以下临时分支：
+  - feature分支：从dev分支创建，用于开发一个新功能，完成之后就合并到dev分支。
+  - hotfix分支：从dev分支创建，用于解决一个bug，完成之后就合并到dev分支。
+  - release分支：从dev分支创建，用于发布一个新版本，测试通过之后就合并到master分支，并添加版本号tag。

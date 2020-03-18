@@ -118,14 +118,14 @@ HTML5 提倡将它们都改用 css 设置显示样式。
 <a href="page_2.html" rel="next" rev="prev">链接</a>
 ```
 
-- 属性`href`用于显示一个链接，实现超文本引用（hypertext reference）。
+- 属性 href 用于显示一个链接，实现超文本引用（hypertext reference）。
   - href 的值是目标资源的位置，可以是本网站的 URL ，也可以是其它网站的 URL 。
-  - href="#" 指向当前网页的顶部，href="#tips" 指向当前网页中一个名为“tips”的锚点。如果没有找到该锚点，则指向 href="#" 。
-- 属性`target`用于控制载入 href 所指资源的方式
-  - target="_self"：默认值，将目标资源载入到当前窗口或当前框架中。
-  - target="_parent"：清空当前框架，将目标资源载入到父级框架中。
-  - target="_top"：清空当前窗口的内容，然后载入目标资源。常用于跳出框架。
-  - target="_blank"：跳转到一个新窗口，然后载入目标资源。
+  - `href="#"` 指向当前网页的顶部，`href="#tips"` 指向当前网页中一个名为“tips”的锚点。如果没有找到该锚点，则指向 `href="#"` 。
+- 属性 target 用于控制载入 href 所指资源的方式
+  - `target="_self"`：默认值，将目标资源载入到当前窗口或当前框架中。
+  - `target="_parent"`：清空当前框架，将目标资源载入到父级框架中。
+  - `target="_top"`：清空当前窗口的内容，然后载入目标资源。常用于跳出框架。
+  - `target="_blank"`：跳转到一个新窗口，然后载入目标资源。
 - 属性`rel`表示从当前链接到目的链接的关系，属性`rev`表示从目的链接到当前链接的关系.
 
 ### 图片
@@ -216,34 +216,30 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 ```
 
 `<input>`表示输入控件，常用的类型如下：
-- type="text"：输入纯文本。
-- type="password"：输入密文。
-- type="submit"：提交按钮。
+- `type="text"`：输入纯文本。
+- `type="password"`：输入密文。
+- `type="submit"`：提交按钮。
   - 当用户点击提交按钮时，浏览器会将表单数据放在 HTTP 请求报文中，发送到 action 指向的 URL 。
     <br>如果没有设置属性 action ，则默认指向当前网页。
-  - 默认 method="GET"，浏览器会将表单数据放在请求的 URL 中发送。例如：http://127.0.0.1/login?username=Leo&password=123456
-    <br>如果设置 method="POST"，则浏览器会将表单数据放在报文 body 中发送.例如：username=Leo&password=123456
+  - 默认 method="GET"，浏览器会将表单数据放在请求的 URL 中发送。例如：`http://127.0.0.1/login?username=Leo&password=123456`
+    <br>如果设置 method="POST"，则浏览器会将表单数据放在报文 body 中发送。例如：`username=Leo&password=123456`
 
-- type="button"：普通按钮。点击后会执行属性 onclick 指定的动作。
-
+- `type="button"`：普通按钮。点击后会执行属性 onclick 指定的动作。
     ```html
     <input type="button" onclick="alert('Hello World!')" value="Button 1">
     ```
 
-- type="radio"：单选按钮
-
+- `type="radio"`：单选按钮
     ```html
     <form>
         <input type="radio" name="sex" value="male">Male<br>  # 
         <input type="radio" name="sex" value="female">Female    # 
     </form>
     ```
-  name 属性表示该选项显示的名字。
+  - 属性 name 表示该选项显示的名字。
+  - 属性 value 表示该选项在 POST body 中的值。
 
-  value 属性表示该选项在 POST body 中的值。
-
-- type="checkbox"：复选按钮
-
+- `type="checkbox"`：复选按钮
     ```html
     <form>
         <input type="checkbox" name="sex" value="male">Male<br>
@@ -252,7 +248,6 @@ ordered list ，用标签`<ol>`和`<li>`声明。
     ```
 
 - 下拉框
-
     ```html
     <form>
         <select name="sex">
@@ -262,16 +257,17 @@ ordered list ，用标签`<ol>`和`<li>`声明。
     </form>
     ```
 
-- type="number"：只允许输入数字。
-- type="color"：输入颜色。点击该按钮会打开一个颜色选择对话框。
-- type="file"：上传文件。点击该按钮会打开一个文件选择对话框。
+- `type="number"`：只允许输入数字。
+- `type="color"`：输入颜色。点击该按钮会打开一个颜色选择对话框。
+- `type="file"`：上传文件。点击该按钮会打开一个文件选择对话框。
 
 输入控件的常用属性：
-- autocomplete="on"：根据用户之前的输入值自动完成输入。
-- pattern="[A-Za-z]{3}"：按正则表达式检查输入是否有效。
+- `autocomplete="on"`：根据用户之前的输入值自动完成输入。
+- `pattern="[A-Za-z]{3}"`：按正则表达式检查输入是否有效。
   <br>当输入不合法时，用户按下键盘也不会有响应。不过浏览器并不会报错，需要用 JS 显示报错。
-- maxlength="10"：输入的最大长度。
-- value="123456"：该输入控件的初始值，或者显示的名字。
+- `maxlength="10"`：输入的最大长度。
+- `value="123456"`：该输入控件的初始值，或者显示的名字。
+- `placeholder="Password"`：在输入框内显示提示语，插入光标时会自动消失。
 
 以下属性不需要赋值，只要写上属性名即可启用：
 - autofocus ：打开网页时，使该输入控件自动获得焦点。
@@ -360,18 +356,6 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 - 弃用 font 等标签，弃用 align、color、bgcolor 等属性。
 - 增加了一些功能。
 - 增加了一些语义元素，实现顾名思义的用途。例如：标签`<section>`用于划分一组内容。
-
-## 关于 Web 浏览器
-
-Web 浏览器按从上到下的顺序逐行解析 HTML 文件，一边解析一边显示给用户看。
-- 解析到 href 时，会在后台下载链接的资源，不影响前台进程。
-- 解析到 src 时，会等该资源加载完毕再继续解析。
-- 解析到 JavaScript 时，会加载并执行该脚本，然后再继续解析。
-  - 因此应该将 script 标签放在 body 的最后部分，避免阻塞前台进程。
-  - 或者使用 async 属性，等加载了该脚本之后再执行。
-  - 或者使用 defer 属性，等加载了该脚本、解析了整个 HTML 之后再执行。
-
-不同 Web 浏览器支持的 HTML 语法有所差异，因此需要考虑 HTML 文件的兼容性问题。
 
 ## 表单设计器
 

@@ -1,9 +1,9 @@
 # Nginx
 
-：一个轻量级的 Web 服务器软件。
-- 发音相当于 engine + x
-- 可实现第七层的 HTTP 代理、第四层的 TCP 代理，也支持 IMAP、POP3、SMTP 代理。
-- 支持负载均衡。
+：一个轻量级的 Web 服务器软件，还可用于反向代理、负载均衡。
+- 发音相当于 engine + x 。
+- 不仅支持 HTTP、HTTPS 协议，也支持 IMAP、POP3、SMTP 协议。
+- 支持第四层的 TCP 代理、第七层的 HTTP 代理。
 - 处理静态文件的效率高。
 
 ## 启动

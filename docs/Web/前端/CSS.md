@@ -115,40 +115,7 @@ selector { [property: value;]... }
     h1:before{content: url(logo.gif);}
     ```
 
-## 样式
-
-### 尺寸单位
-
-- px ：像素点数，用于设置绝对位置。
-- em ：相对于父元素的倍数。
-  - 如果元素的 font-size 为 n em ，则等于`父元素的 font-size × n`。
-  - 如果元素的 width、height、padding、margin 为 n em ，则等于`该元素的 font-size × n`。
-- n%：相对于父元素的相应值的百分比。
-- rem ：相对于根元素 html 的倍数。
-
-例：
-```css
-html {
-    font-size: 10px;
-}
-body {
-    font-size: 40px;
-    width: 10em;        # 等于 400px
-}
-p {
-    font-size: 0.5em;   # 等于 20px
-    width: 10em;        # 等于 200px
-    height: 10rem;      # 等于 100px
-}
-```
-
-### inherit
-
-绝大部分样式都支持赋值为 inherit ，表示继承父元素中该属性的值。
-- 例：
-    ```css
-    background-color: inherit;    # 背景色默认不会继承父元素，这里主动让它继承
-    ```
+## 常用样式
 
 ### 背景
 
@@ -162,7 +129,11 @@ background-color ：背景色
     background-color: #ff0000;         # 使用颜色的十六进制值
     background-color: rgb(255 ,0, 0);  # 用 rgb() 选择颜色
     ```
-- 很多样式支持用一些预设的关键字赋值，比如 red、center 。**如果用户设置的值不是有效的关键字，则使用默认值。**
+- 大部分样式支持用一些预设的关键字赋值，比如 red、center 。**如果用户设置的值不是有效的关键字，则使用默认值。**
+- 大部分样式都支持赋值为 inherit ，表示继承父元素中该属性的值。如下：
+    ```css
+    background-color: inherit;         # 背景色默认不会继承父元素，这里主动让它继承
+    ```
 
 background-image ：背景图片
 - 默认不继承父元素。
@@ -365,19 +336,47 @@ a:hover {text-decoration:underline;}
 a:active {text-decoration:underline;}
 ```
 
+### 尺寸单位
+
+- px ：像素点数，用于设置绝对位置。
+- em ：相对于父元素的倍数。
+  - 如果元素的 font-size 为 n em ，则等于`父元素的 font-size × n`。
+  - 如果元素的 width、height、padding、margin 为 n em ，则等于`该元素的 font-size × n`。
+- n%：相对于父元素的相应值的百分比。
+- rem ：相对于根元素 html 的倍数。
+
+例：
+```css
+html {
+    font-size: 10px;
+}
+body {
+    font-size: 40px;
+    width: 10em;        # 等于 400px
+}
+p {
+    font-size: 0.5em;   # 等于 20px
+    width: 10em;        # 等于 200px
+    height: 10rem;      # 等于 100px
+}
+```
+
+### 显示方式
+
+- `display:block;`：显示为块级元素。
+- `display:inline;`：显示为内联元素。
+- `display:inline-block;`：显示为内联块元素。
+- `display:none;`：不显示该元素。
+- `visibility:hidden;`：不显示该元素，但依然占用布局空间。
+
 ### 框模型
-
-每个元素的显示内容都局限在一个矩形区域之内，该区域的边框默认不显示。
-
-一个块级元素有一个大的“块框”，其中的每行有一个“行框”，每行中的每个行内元素有一个“行内框”。
-- 块级元素：在一行内只能显示一个，比如 div、h1、p 等。
-- 行内元素：在一行内可以显示多个，比如 strong、span 等。
 
 CSS 根据框模型显示元素，如下图：
 
 ![](./border.jpg)
 
-- 元素的实际显示内容位于最内层。
+- 每个元素的显示内容都局限在一个矩形区域之内，该区域的边框默认不显示。
+  - 元素的实际显示内容位于最内层。
   - 默认内边距、边框、外边距的宽度为 0 ，框模型被元素的内容填满。
 - padding ：内边距，元素内容与边框之间的距离。
 - border ：边框。
@@ -385,6 +384,10 @@ CSS 根据框模型显示元素，如下图：
   - **边框以外的区域默认是透明的，简称“框外”。**
 - margin ：外边距，边框与外部的距离。
   - 外边距可以为负值。
+- 一个块级元素有一个大的“块框”，其中的每行有一个“行框”，每行中的每个内联元素有一个“行内框”。
+  - 块级元素：在一行内只能显示一个，比如 div、h1、p 等。
+  - 内联元素：在一行内可以显示多个，比如 strong、span 等。不能设置 width、height、margin-top、margin-bottom 属性。
+  - 内联块元素：在一行内可以显示多个，且可以设置 width、height、margin-top、margin-bottom 属性。
 
 例：
 ```css

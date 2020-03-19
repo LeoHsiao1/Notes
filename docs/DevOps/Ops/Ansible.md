@@ -116,18 +116,16 @@ Ansible 提供了一些具有幂等性的模块。
 - 幂等性可以保证对同一个 host 重复执行一个 playbook 时，只会产生一次效果，不会因为重复执行而出错。比如使用 yum 模块安装软件时，它会检查是否已经安装，如果已经安装就不执行。
 
 
-常用的幂等性模块如下：
+常用的模块如下：
 
 - 
   ```ini
   command: ls         # 执行一条 shell 命令
   ```
   - 可用选项：
-    ```ini
-    chdir=/root/      # 在执行命令之前，先切换到指定目录
-    creates:/root/f1  # 如果该文件存在，则跳过该任务（这样有助于更好的幂等性）
-    removes:/root/f1  # 如果该文件不存在，则跳过该任务
-    ```
+    - `chdir=/root/`     ：在执行命令之前，先切换到指定目录。
+    - `creates:/root/f1` ：如果该文件存在，则跳过该任务（这样有利于保证幂等性）。
+    - `removes:/root/f1` ：如果该文件不存在，则跳过该任务。
   - 不支持 $ & < > | 等运算符。
 
 - 
@@ -136,9 +134,7 @@ Ansible 提供了一些具有幂等性的模块。
   ```
   - 兼容 command 模块的选项。
   - 特有的选项：
-    ```ini
-    executable=/bin/bash    # 指定要执行 shell 命令的可执行文件（默认是/bin/sh）
-    ```
+    `executable=/bin/bash`：指定要执行 shell 命令的可执行文件（默认是/bin/sh）。
   - shell 模块没有幂等性，常用于实现用户自定义的、不在乎幂等性的操作。
 
 - 
@@ -146,10 +142,7 @@ Ansible 提供了一些具有幂等性的模块。
   script: 1.sh              # 将服务器上的一个脚本拷贝到 host 上执行，执行完之后会删掉它
   ```
   - 兼容 shell 模块的选项。
-  - 例：
-    ```ini
-    script: "executable=/usr/bin/python 1.py"
-    ```
+  - 例：`script: "executable=/usr/bin/python 1.py"`
 
 - 
   ```ini
@@ -157,11 +150,9 @@ Ansible 提供了一些具有幂等性的模块。
   ```
   - 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录。
   - 其它可用选项：
-    ```ini
-    mode=0755     # 拷贝后文件的权限
-    owner=root    # 拷贝后文件的所有者
-    group=root    # 拷贝后文件的所有者组
-    ```
+    `mode=0755` ：拷贝后文件的权限。
+    `owner=root`：拷贝后文件的所有者。
+    `group=root`：拷贝后文件的所有者组。
 
 - 
   ```ini
@@ -169,9 +160,7 @@ Ansible 提供了一些具有幂等性的模块。
   ```
   - src 路径不能是目录。
   - 其它可用选项：
-    ```ini
-    flat=yes    # 保存路径为 dest 路径+文件名（默认为 dest 路径+host 名+src 路径）
-    ```
+    `flat=yes`：使保存路径为 `dest 路径 + 文件名` 。（默认为 `dest 路径 + host 名 + src 路径` ）
 
 - 
   ```ini

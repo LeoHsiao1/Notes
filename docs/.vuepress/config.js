@@ -180,11 +180,11 @@ module.exports = {
 					]
 				},
 				{
-					title: 'Linux原理',
+					title: '内核',
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'Linux原理/简介',
+						'内核/简介',
 					]
 				},
 				{

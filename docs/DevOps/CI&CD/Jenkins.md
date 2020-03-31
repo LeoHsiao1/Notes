@@ -1,17 +1,16 @@
 # Jenkins
 
-：一个流行的 CI/CD 工具，基于 Java 开发，主要用于项目构建、测试、部署，提供了 Web 操作页面。
-- 把项目的处理过程称为流水线，用 Jenkinsfile 描述。
-- 用户可以添加一些主机作为 Jenkins 的运行环境。
-- 用户可以将密码等私密数据保存成 Jenkins 的“凭证”。
+：一个流行的 CI/CD 平台，常用于项目构建、测试、部署。
+- 基于 Java 开发，提供了 Web 操作页面。
+
 - [官方文档](https://jenkins.io/zh/doc/)
 
 ## 启动
 
 用 Docker 启动：
 ```sh
-docker pull jenkinsci/blueocean
-docker run -p 8080:8080 jenkinsci/blueocean
+docker pull jenkins/jenkins
+docker run -p 8080:8080 jenkins/jenkins
 
 mkdir /var/jenkins_home
 docker run -d \
@@ -19,10 +18,19 @@ docker run -d \
         -p 50000:50000                                  # 供 Jenkins 代理访问的端口
         -v /var/jenkins_home:/var/jenkins_home          # 挂载 Jenkins 的数据目录，从而可以随时重启 Jenkins 容器
         -v /var/run/docker.sock:/var/run/docker.sock    # 挂载 docker.sock ，使得 Jenkins 可以与 docker daemon 通信
-        jenkinsci/blueocean
+        jenkins/jenkins
 ```
 - 第一次启动时，终端上会显示一个密钥，用于第一次登陆 Web 端。
 
+## 用法
+
+- Jenkins的主页的左上角显示了一列菜单，点击其中的“新建”即可创建一个项目（Project）或任务（Job），常见的几种类型如下：
+  - Freestyle ：自由风格的项目。
+  - Pipeline ：将项目的处理过程按先后顺序分为多个步骤，称为流水线，用 Jenkinsfile 描述。
+  - MultiJob ：用于组合调用多个Job。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个Job。
+  - Folder ：用于对项目进行分组管理。
+- 用户可以添加一些主机作为 Jenkins 的运行环境。
+- 用户可以将密码等私密数据保存成 Jenkins 的“凭证”。
 
 ## Jenkinsfile
 

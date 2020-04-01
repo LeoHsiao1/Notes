@@ -7,20 +7,21 @@
 
 ## 启动
 
-用 Docker 启动：
-```sh
-docker pull jenkins/jenkins
-docker run -p 8080:8080 jenkins/jenkins
+- 用 war 包启动：
+  1. 下载 Jenkins 的 war 包。
+  2. 安装 JDK 。
+  3. 执行 `java -jar jenkins.war --httpPort=8080` 启动 Jenkins ，然后访问便可以访问其 Web 网站 `http://localhost:8080` 。
 
-mkdir /var/jenkins_home
-docker run -d \
-        -p 8080:8080                                    # Jenkins 的 Web 端的访问端口
-        -p 50000:50000                                  # 供 Jenkins 代理访问的端口
-        -v /var/jenkins_home:/var/jenkins_home          # 挂载 Jenkins 的数据目录，从而可以随时重启 Jenkins 容器
-        -v /var/run/docker.sock:/var/run/docker.sock    # 挂载 docker.sock ，使得 Jenkins 可以与 docker daemon 通信
-        jenkins/jenkins
-```
-- 第一次启动时，终端上会显示一个密钥，用于第一次登陆 Web 端。
+- 用 Docker 启动：
+  ```sh
+  mkdir /var/jenkins_home
+  docker run -d \
+          -p 8080:8080                                    # Jenkins 的 Web 端的访问端口
+          -p 50000:50000                                  # 供 Jenkins 代理访问的端口
+          -v /var/jenkins_home:/var/jenkins_home          # 挂载 Jenkins 的数据目录，从而可以随时重启 Jenkins 容器
+          jenkins/jenkins
+  ```
+  - 第一次启动时，终端上会显示一个密钥，用于第一次登陆 Web 端。
 
 ## 用法
 
@@ -31,6 +32,8 @@ docker run -d \
   - Folder ：用于对项目进行分组管理。
 - 用户可以添加一些主机作为 Jenkins 的运行环境。
 - 用户可以将密码等私密数据保存成 Jenkins 的“凭证”。
+- Jenkins 默认把自己的所有数据保存在 `~/.jenkins/` 目录下，拷贝该目录就可以备份、迁移 Jenkins 。
+  - 如果在启动Jenkins之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
 
 ## Jenkinsfile
 
@@ -103,6 +106,22 @@ pipeline {
     }
 }
 ```
+
+## 插件
+
+在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理Jenkins的插件。
+- 安装、卸载插件时都要重启Jenkins才会生效。（访问 /restart 页面，会显示一个重启按钮）
+
+常用插件：
+
+- build-metrics
+  - 用于统计Job的构建次数。
+- monitoring
+  - 用于查看Jenkins的master节点的状态，或者统计Job的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
+- Localization: Chinese (Simplified)
+  - 用于对Jenkins的页面进行部分汉化。
+- Blue Ocean
+  - 提供了一种对pipeline项目的更美观的管理页面。
 
 ## ♢ jenkinsapi
 

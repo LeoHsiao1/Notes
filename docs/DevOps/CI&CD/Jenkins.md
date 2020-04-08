@@ -2,7 +2,6 @@
 
 ：一个流行的 CI/CD 平台，常用于项目构建、测试、部署。
 - 基于 Java 开发，提供了 Web 操作页面。
-
 - [官方文档](https://jenkins.io/zh/doc/)
 
 ## 启动
@@ -10,7 +9,7 @@
 - 用 war 包启动：
   1. 下载 Jenkins 的 war 包。
   2. 安装 JDK 。
-  3. 执行 `java -jar jenkins.war --httpPort=8080` 启动 Jenkins ，然后访问便可以访问其 Web 网站 `http://localhost:8080` 。
+  3. 执行 `java -jar jenkins.war --httpPort=8080` 启动 Jenkins ，然后便可以访问其 Web 网站 `http://localhost:8080` 。
 
 - 用 Docker 启动：
   ```sh
@@ -26,14 +25,37 @@
 ## 用法
 
 - Jenkins的主页的左上角显示了一列菜单，点击其中的“新建”即可创建一个项目（Project）或任务（Job），常见的几种类型如下：
-  - Freestyle ：自由风格的项目。
-  - Pipeline ：将项目的处理过程按先后顺序分为多个步骤，称为流水线，用 Jenkinsfile 描述。
+  - Freestyle ：自由风格的项目，可以实现大多数构建任务。
+  - Pipeline ：将项目的处理过程分成多个阶段，依次执行，称为流水线。适合一次性执行整个CI/CD流程。
   - MultiJob ：用于组合调用多个Job。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个Job。
-  - Folder ：用于对项目进行分组管理。
+  - Folder ：用于对Job进行分组管理。
 - 用户可以添加一些主机作为 Jenkins 的运行环境。
 - 用户可以将密码等私密数据保存成 Jenkins 的“凭证”。
 - Jenkins 默认把自己的所有数据保存在 `~/.jenkins/` 目录下，拷贝该目录就可以备份、迁移 Jenkins 。
   - 如果在启动Jenkins之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
+
+### 管理节点
+
+- Jenkins服务器所在的节点称为master节点，用户还可以添加其它slave节点，这些节点都可以用于运行Job。
+- 添加slave节点时，一般通过SSH方式连接。
+  - 需要安装“SSH Build Agents”插件。
+  - 建议在slave节点上创建jenkins用户，使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
+
+## 插件
+
+在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理Jenkins的插件。
+- 安装、卸载插件时都要重启Jenkins才会生效。（访问 /restart 页面，会显示一个重启按钮）
+
+常用插件：
+
+- build-metrics
+  - 用于统计Job的构建次数。
+- monitoring
+  - 用于查看Jenkins的master节点的状态，或者统计Job的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
+- Localization: Chinese (Simplified)
+  - 用于对Jenkins的页面进行部分汉化。
+- Blue Ocean
+  - 提供了一种对pipeline项目的更美观的管理页面。
 
 ## Jenkinsfile
 
@@ -107,28 +129,12 @@ pipeline {
 }
 ```
 
-## 插件
-
-在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理Jenkins的插件。
-- 安装、卸载插件时都要重启Jenkins才会生效。（访问 /restart 页面，会显示一个重启按钮）
-
-常用插件：
-
-- build-metrics
-  - 用于统计Job的构建次数。
-- monitoring
-  - 用于查看Jenkins的master节点的状态，或者统计Job的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
-- Localization: Chinese (Simplified)
-  - 用于对Jenkins的页面进行部分汉化。
-- Blue Ocean
-  - 提供了一种对pipeline项目的更美观的管理页面。
-
 ## ♢ jenkinsapi
 
 ：Python 的第三方库，用于调用 Jenkins 的 API 。
 - 安装：pip install jenkinsapi
 
-### 用法示例
+### 例
 
 创建客户端：
 ```python

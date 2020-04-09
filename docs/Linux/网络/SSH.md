@@ -22,13 +22,18 @@ systemctl start sshd
 
 用法：
 ```sh
-$ ssh root@192.168.0.1    # 使用 ssh 登录到指定 ip 地址，用户名为 root
-      -p 22        # 指定端口号
-      [command]      # 登录之后执行一条命令
+$ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登录指定主机（这会打开新 shell ）
+                  -p 22      # 指定端口号
+                  [command]  # 执行一条命令就退出登录（不会打开新 shell ）
 ```
+- 例：
+    ```sh
+    ssh root@10.0.0.1 "echo $HOSTNAME"  # 用双引号时，会先在本机取出变量的值，然后将命令发送到远端
+    ssh root@10.0.0.1 'echo $HOSTNAME'  # 用单引号时，会先将命令发送到远端，然后在远端取出变量的值
+    ```
 
 sshd 的主配置文件是 /etc/ssh/sshd_config ，内容示例：
-```sh
+```
 Port 22                           # 监听的端口号
 ListenAddress 192.168.0.1         # 允许连接的 IP
 
@@ -44,7 +49,7 @@ PermitEmptyPasswords no           # 不允许用空密码登录
 ```
 - 修改了配置文件之后，要重启 sshd 服务才能生效：systemctl restart sshd
 - ~/.ssh/authorized_keys 文件中保存了一些公钥，允许拿着这些公钥的主机通过 SSH、以指定的用户名登录到本机。
-- ~/.ssh/known_hosts 文件中保存了所有与本机进行过 SSH 连接的主机的公钥。下次再通过 IP 地址连接到这些主机时，如果其公钥发生变化，就可能是被冒充了。
+- ~/.ssh/known_hosts 文件中保存了所有与本机进行过 SSH 连接的主机的公钥。下次再连接到这些主机时，如果其公钥发生变化，就怀疑是被冒充了。
 
 ## 相关命令
 

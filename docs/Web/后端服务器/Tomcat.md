@@ -29,11 +29,20 @@
 
 ## 用法
 
-- `tomcat/bin/` 目录下有一些管理 Tomcat 的脚本：
+- tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
+  - startup.sh  ：用于启动 Tomcat ，实际上是调用 catalina.sh start 。
+  - shutdown.sh ：用于停止 Tomcat ，实际上是调用 catalina.sh stop 。
+  - version.sh  ：用于显示版本信息。
+
+- 每次更新 Tomcat 应用或配置时，建议重启 Tomcat ，使修改立即生效。可以自定义一个重启脚本 restart.sh ：
   ```sh
-  ./startup.sh     # 启动 Tomcat（调用./catalina.sh start）
-  ./shutdown.sh    # 停止 Tomcat（调用./catalina.sh stop）
-  ./version.sh     # 显示版本信息
+  tomcat/bin/shutdown.sh
+  sleep 5
+  pid=`ps -ef | grep Dcatalina.home=/opt/tomcat-7.0.100-jdk1.8 | grep -v grep | awk '{print $2}'`
+  kill -9 $pid
+  echo 已停止 Tomcat
+  rm -rf tomcat/work/Catalina/    # 删除JSP页面编译后的缓存
+  tomcat/bin/startup.sh
   ```
 
 ### 初始页面

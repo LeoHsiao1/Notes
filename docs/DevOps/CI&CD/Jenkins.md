@@ -41,7 +41,24 @@
   - 需要安装“SSH Build Agents”插件。
   - 建议在slave节点上创建jenkins用户，使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
 
-## 插件
+### 管理权限
+
+安装 Role-based Authorization Strategy 插件之后便可以实现基于角色的用户权限控制。用法：
+1. 进入“Manage Jenkins”页面，点击“Manage Users”，创建一个用户账号。
+2. 进入“Manage Jenkins”页面，点击“Manage and Assign Roles”->“Manage Roles”，创建角色。
+    - 建议创建一个全局角色 visitor ，给予 Overall 的 Read 权限。分配了该角色的用户才能查看 Jenkins 主页。
+    - 创建几个项目角色，分别拥有对不同项目的权限。
+    - 项目角色的 pattern 用于通过正则表达式选中多个项目，供他操作。
+    - 建议将不同类型的 Job 采用不同的前缀命名，方便通过正则表达式分别匹配。
+3. 进入“Manage Jenkins”页面，点击“Assign Roles”，给各个用户分配角色。
+
+管理权限的策略：
+- 给每个或每组 Job 创建两种项目角色，按需要分配给各个用户。
+  - *_user ：只是使用该 Job ，拥有 Job 的 Build、Cancel、Read 权限。
+  - *_admin ：负责管理该 Job ，拥有大部分权限。
+- 只有 admin 用户拥有最高权限，比如进行 Jenkins 的系统设置。
+
+### 插件
 
 在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理Jenkins的插件。
 - 安装、卸载插件时都要重启Jenkins才会生效。（访问 /restart 页面，会显示一个重启按钮）

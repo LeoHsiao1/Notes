@@ -41,7 +41,7 @@
   pid=`ps -ef | grep Dcatalina.home=/opt/tomcat-7.0.100-jdk1.8 | grep -v grep | awk '{print $2}'`
   kill -9 $pid
   echo 已停止 Tomcat
-  rm -rf tomcat/work/Catalina/    # 删除JSP页面编译后的缓存
+  rm -rf tomcat/work/Catalina/    # 删除 JSP 页面编译后的缓存
   tomcat/bin/startup.sh
   ```
 
@@ -67,11 +67,11 @@
 
 ### 部署 Web 应用
 
-在Tomcat中部署 Java Web 应用的方案有多种：
+在 Tomcat 中部署 Java Web 应用的方案有多种：
 
 - 方案一：将 war 包放到 `tomcat/webapps/` 目录下。Tomcat 会自动解压该 war 包并载入。
 
-- 方案二：编辑 `tomcat/conf/server.xml` ，在 Host 配置中添加一条 Context，如下：
+- 方案二：编辑 `tomcat/conf/server.xml` ，在 Host 配置中添加一条 Context ，如下：
   ```xml
   <Host name="www.test.com">
       <Valve ... />
@@ -89,7 +89,7 @@
   ```xml
   <Context path="/app1" docBase="tomcat/webapps/app1" reloadable="false" debug="0" privileged="true"/>
   ```
-  - 采用这种方案，容易加入、删除XML文件。
+  - 采用这种方案，容易加入、删除 XML 文件。
 
 - 方案四：用管理员账户登录 Tomcat 的初始页面，上传 war 包并点击“部署”，还可以点击“取消部署”。
 
@@ -117,16 +117,16 @@
   </Service>
 </Server>
 ```
-- `<Server>` 是根元素，代表Tomcat所在的主机。
-  - 上例中，执行`telnet 127.0.0.1:8005`，然后输入 SHUTDOWN ，即可停止 Server 。shutdown.sh 就是通过该端口停止Server的。
+- `<Server>` 是根元素，代表 Tomcat 所在的主机。
+  - 上例中，执行`telnet 127.0.0.1:8005`，然后输入 SHUTDOWN ，即可停止 Server 。shutdown.sh 就是通过该端口停止 Server 的。
 
-- `<Service>` 代表一个接受HTTP请求的服务器（逻辑上的）。
+- `<Service>` 代表一个接受 HTTP 请求的服务器（逻辑上的）。
   - 配置文件中只能定义一个`<Server>`，而`<Server>`中可以定义多个`<Service>`。
   - 每个`<Service>`中可以定义一个`<Engine>`和多个`<Connector>`。
-  - 每个`<Connector>`监听一个端口，它们收到的HTTP请求都会交给`<Engine>`处理。
-  - 每个`<Service>.<Engine>`中可以定义多个`<Host>`。`<Service>`收到的HTTP请求最终会交给与 name 匹配的`<Host>`处理，如果没有匹配的，则交给 defaultHost 处理。
+  - 每个`<Connector>`监听一个端口，它们收到的 HTTP 请求都会交给`<Engine>`处理。
+  - 每个`<Service>.<Engine>`中可以定义多个`<Host>`。`<Service>`收到的 HTTP 请求最终会交给与 name 匹配的`<Host>`处理，如果没有匹配的，则交给 defaultHost 处理。
 
-- `<Host>`代表一个匹配HTTP请求的主机（逻辑上的）。
+- `<Host>`代表一个匹配 HTTP 请求的主机（逻辑上的）。
   - 设置了`unpackWARs="true" autoDeploy="true"`之后，Tomcat 就能自动解压 webapps/ 目录下的 war 包并载入。
-  - `<Value>`代表一个处理HTTP请求的组件。上例中定义了一个记录日志的组件。
-  - `<Context>`代表一个URL。
+  - `<Value>`代表一个处理 HTTP 请求的组件。上例中定义了一个记录日志的组件。
+  - `<Context>`代表一个 URL 。

@@ -24,22 +24,22 @@
 
 ## 用法
 
-- Jenkins的主页的左上角显示了一列菜单，点击其中的“新建”即可创建一个项目（Project）或任务（Job），常见的几种类型如下：
+- Jenkins 的主页的左上角显示了一列菜单，点击其中的“新建”即可创建一个项目（Project）或任务（Job），常见的几种类型如下：
   - Freestyle ：自由风格的项目，可以实现大多数构建任务。
-  - Pipeline ：将项目的处理过程分成多个阶段，依次执行，称为流水线。适合一次性执行整个CI/CD流程。
-  - MultiJob ：用于组合调用多个Job。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个Job。
-  - Folder ：用于对Job进行分组管理。
+  - Pipeline ：将项目的处理过程分成多个阶段，依次执行，称为流水线。适合一次性执行整个 CI/CD 流程。
+  - MultiJob ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
+  - Folder ：用于对 Job 进行分组管理。
 - 用户可以添加一些主机作为 Jenkins 的运行环境。
 - 用户可以将密码等私密数据保存成 Jenkins 的“凭证”。
 - Jenkins 默认把自己的所有数据保存在 `~/.jenkins/` 目录下，拷贝该目录就可以备份、迁移 Jenkins 。
-  - 如果在启动Jenkins之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
+  - 如果在启动 Jenkins 之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
 
 ### 管理节点
 
-- Jenkins服务器所在的节点称为master节点，用户还可以添加其它slave节点，这些节点都可以用于运行Job。
-- 添加slave节点时，一般通过SSH方式连接。
+- Jenkins 服务器所在的节点称为 master 节点，用户还可以添加其它 slave 节点，这些节点都可以用于运行 Job 。
+- 添加 slave 节点时，一般通过 SSH 方式连接。
   - 需要安装“SSH Build Agents”插件。
-  - 建议在slave节点上创建jenkins用户，使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
+  - 建议在 slave 节点上创建 jenkins 用户，使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
 
 ### 管理权限
 
@@ -60,16 +60,16 @@
 
 ### 插件
 
-在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理Jenkins的插件。
-- 安装、卸载插件时都要重启Jenkins才会生效。（访问 /restart 页面，会显示一个重启按钮）
+在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理 Jenkins 的插件。
+- 安装、卸载插件时都要重启 Jenkins 才会生效。（访问 /restart 页面，会显示一个重启按钮）
 
 一些插件：
 - Localization: Chinese (Simplified)
-  - 用于对Jenkins的页面进行汉化。
+  - 用于对 Jenkins 的页面进行汉化。
 - build-metrics
-  - 用于统计Job的构建次数。
+  - 用于统计 Job 的构建次数。
 - monitoring
-  - 用于查看Jenkins的master节点的状态，或者统计Job的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
+  - 用于查看 Jenkins 的 master 节点的状态，或者统计 Job 的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
 - Blue Ocean
   - 提供了一种更美观的 Pipeline 管理页面。
 
@@ -182,7 +182,7 @@ jk.build_job("test_job", params={"tag":"v1.0.0"}) # 构建一个 job（按需要
 
 b = job.get_build(20)        # 返回指定编号的 build 对象
 b = job.get_last_build()     # 返回最后一次构建的 build 对象
-job.get_next_build_number()  # 返回下一次构建的编号（如果为1则说明还没有构建）
+job.get_next_build_number()  # 返回下一次构建的编号（如果为 1 则说明还没有构建）
 
 b.job.name                   # 返回这次构建所属 job 的名字
 b.get_number()               # 返回这次构建的编号

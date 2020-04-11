@@ -46,7 +46,7 @@
 安装 Role-based Authorization Strategy 插件之后便可以实现基于角色的用户权限控制。用法：
 1. 进入“Manage Jenkins”页面，点击“Manage Users”，创建一个用户账号。
 2. 进入“Manage Jenkins”页面，点击“Manage and Assign Roles”->“Manage Roles”，创建角色。
-    - 建议创建一个全局角色 visitor ，给予 Overall 的 Read 权限。分配了该角色的用户才能查看 Jenkins 主页。
+    - 建议创建一个全局角色 visitor ，给予 Overall 的 Read 权限 —— 可以查看 Jenkins 主页，但不能看不见任何 Job 。
     - 创建几个项目角色，分别拥有对不同项目的权限。
     - 项目角色的 pattern 用于通过正则表达式选中多个项目，供他操作。
     - 建议将不同类型的 Job 采用不同的前缀命名，方便通过正则表达式分别匹配。
@@ -63,35 +63,23 @@
 在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理Jenkins的插件。
 - 安装、卸载插件时都要重启Jenkins才会生效。（访问 /restart 页面，会显示一个重启按钮）
 
-常用插件：
-
+一些插件：
+- Localization: Chinese (Simplified)
+  - 用于对Jenkins的页面进行汉化。
 - build-metrics
   - 用于统计Job的构建次数。
 - monitoring
   - 用于查看Jenkins的master节点的状态，或者统计Job的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
-- Localization: Chinese (Simplified)
-  - 用于对Jenkins的页面进行部分汉化。
 - Blue Ocean
-  - 提供了一种对pipeline项目的更美观的管理页面。
+  - 提供了一种更美观的 Pipeline 管理页面。
 
 ## Jenkinsfile
 
-：用于描述 Jenkins 流水线，基于 Groovy 语言。
-
-Jenkinsfile 有两种写法：
-- 脚本式（Scripted Pipeline）：将流水线定义在 node{}中。
-- 声明式（Declarative Pipeline）：将流水线定义在 pipeline{}中，更推荐使用。
-
-用 `sh "command"` 的格式可以执行 shell 命令。
-- 每个 sh 语句会被 Jenkins 保存为一个临时的 .sh 文件，用 /bash/sh x.sh 来执行。因此每个 sh 语句都是在一个独立的子 shell 被执行。
-- 例如：sh "a=1; echo $a"
-  <br>命令中的 $a 会被当做 Jenkinsfile 的环境变量替换（如果不存在则报错）。
-  <br>如果要读取 shell 中的变量，则应该使用单引号，比如：sh 'a=1; echo $a'
-
-使用变量的方式：
-- 环境变量：在 environment{} 中定义，用 $ 获取变量的值。
-  - Jenkins 在执行 Jenkinsfile 之前，会先把各个变量名替换成其值（相当于字符串替换）。如果找不到某个变量的值，则 Groovy 报出语法错误。
-- 外部变量：从外部传入。又称为构建参数。
+：一个文本文件，用于描述 Pipeline 类型的 Job ，采用 Groovy 语法。
+- 有两种写法：
+  - 脚本式（Scripted Pipeline）：将流水线定义在 node{} 中。
+  - 声明式（Declarative Pipeline）：将流水线定义在 pipeline{} 中，更推荐使用。
+- 该文件可以保存在 Jenkins 里，也可以保存到项目的代码仓库中，被 Jenkins 引用。
 
 ### 例
 
@@ -146,6 +134,17 @@ pipeline {
 }
 ```
 
+用 `sh "command"` 的格式可以执行 shell 命令。
+- 每个 sh 语句会被 Jenkins 保存为一个临时的 .sh 文件，用 /bash/sh x.sh 来执行。因此每个 sh 语句都是在一个独立的子 shell 被执行。
+- 例：`sh "a=1; echo $a"`
+  - 命令中的 `$a` 会被当做 Jenkinsfile 的环境变量替换（如果不存在则报错）。
+  - 如果要读取 shell 中的变量，则应该使用单引号，比如：sh 'a=1; echo $a'
+
+使用变量的方式：
+- 环境变量：在 environment{} 中定义，用 $ 获取变量的值。
+  - Jenkins 在执行 Jenkinsfile 之前，会先把各个变量名替换成其值（相当于字符串替换）。如果找不到某个变量的值，则 Groovy 报出语法错误。
+- 外部变量：从外部传入。又称为构建参数。
+
 ## ♢ jenkinsapi
 
 ：Python 的第三方库，用于调用 Jenkins 的 API 。
@@ -157,16 +156,16 @@ pipeline {
 ```python
 from jenkinsapi.jenkins import Jenkins
 
-jk = Jenkins("10.0.0.1", username=None, password=None)
+jk = Jenkins("http://10.0.0.1:8080", username=None, password=None)
 ```
 
 查询 job ：
 ```python
-job_names = jk.keys()             # 返回 job 的名字列表
+job_names = jk.keys()             # 返回一个包含所有 job 名字的列表
 jk.get_jobs()                     # 返回一个可迭代对象，每次迭代返回一个二元组（job 名字，job 对象）
-jk.get_jobs_info()                # 返回一个可迭代对象，每次迭代返回一个二元组（job 的 URL ，job 名字）
 
 job = jk.get_job("test1")         # 根据名字，获取指定的 job 对象，如果不存在则抛出异常
+job.url                           # 返回 job 的 URL
 jk.delete_job("test1")            # 删除一个 job
 ```
 
@@ -181,17 +180,17 @@ job 的构建：
 ```python
 jk.build_job("test_job", params={"tag":"v1.0.0"}) # 构建一个 job（按需要发送参数）
 
-b = job.get_build(20)    # 返回指定编号的 build 对象
-b = job.get_last_build() # 返回最后一次构建的 build 对象
-job.get_last_build()
+b = job.get_build(20)        # 返回指定编号的 build 对象
+b = job.get_last_build()     # 返回最后一次构建的 build 对象
+job.get_next_build_number()  # 返回下一次构建的编号（如果为1则说明还没有构建）
 
-b.job.name               # 返回这次构建所属 job 的名字
-b.get_number()           # 返回这次构建的编号
-b.get_timestamp()        # 返回开始构建的时间
-b.get_params()           # 返回一个字典，包含这次构建的所有参数
-
-b.is_running()           # 如果这次构建正在运行，则返回 True
-b.get_status()           # 如果项目运行成功，则返回'SUCCESS'，否则返回'FAILURE'
-b.get_console()          # 返回这次构建的控制台 stdout
-b.stop()                 # 停止构建，如果成功停止则返回 True
+b.job.name                   # 返回这次构建所属 job 的名字
+b.get_number()               # 返回这次构建的编号
+b.get_params()               # 返回一个字典，包含这次构建的所有参数
+b.stop()                     # 停止构建，如果成功停止则返回 True
+b.is_running()               # 如果这次构建正在运行，则返回 True
+b.get_status()               # 返回这次构建的结果，可能是 SUCCESS、FAILURE、ABORTED 等状态，如果仍在构建则返回 None
+b.get_console()              # 返回这次构建的控制台 stdout
+b.get_timestamp().strftime("%Y/%m/%d-%H:%M:%S")  # 返回开始构建的时间
+b.get_duration().total_seconds()                 # 返回这次构建的耗时，如果仍在构建则返回 0
 ```

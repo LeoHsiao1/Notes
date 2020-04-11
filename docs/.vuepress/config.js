@@ -455,7 +455,6 @@ module.exports = {
 					children: [
 						'容器/简介',
 						'容器/Docker',
-						'容器/Docker镜像',
 						'容器/Docker-Compose',
 					]
 				},

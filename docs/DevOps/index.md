@@ -10,7 +10,6 @@
 - 容器
   - [简介](容器/简介.md)
   - [Docker](容器/Docker.md)
-  - [Docker镜像](容器/Docker镜像.md)
   - [Docker Compose](容器/Docker-Compose.md)
 - k8s
   - [简介](k8s/简介.md)

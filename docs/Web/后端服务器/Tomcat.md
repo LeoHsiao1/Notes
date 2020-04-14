@@ -5,47 +5,43 @@
 
 ## 启动
 
-- 用 yum 安装：
+- 下载源代码包并启动：
     ```sh
     yum install java-1.8.0-openjdk-devel  # 安装 jdk
-    yum install tomcat
-
     curl -O https://mirrors.tuna.tsinghua.edu.cn/apache/tomcat/tomcat-9/v9.0.33/bin/apache-tomcat-9.0.33.tar.gz
-    ```
-- 启动：
-    ```sh
-    systemctl start tomcat
+    tar -zxvf apache-tomcat-9.0.33.tar.gz
+    cd apache-tomcat-9.0.33/bin/
+    ./startup.sh
     ```
 
-- 不安装，而是运行 docker 镜像：
+- tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
+  - startup.sh  ：用于启动 Tomcat ，实际上是调用`catalina.sh start`。
+    - 默认以 daemon 方式运行，使用`catalina.sh run`则会在前台运行。
+  - shutdown.sh ：用于停止 Tomcat ，实际上是调用`catalina.sh stop`。
+  - version.sh  ：用于显示版本信息。
+
+- 每次更新 Tomcat 应用或配置时，建议重启 Tomcat ，使修改立即生效。可以自定义一个重启脚本 restart.sh ：
     ```sh
-    docker pull tomcat:8.5
-    docker run -d --name=tomcat -p 8080:8080 tomcat:8.5
+    tomcat/bin/shutdown.sh
+    sleep 5
+    pid=`ps -ef | grep Dcatalina.home=/opt/tomcat-7.0.100-jdk1.8 | grep -v grep | awk '{print $2}'`
+    kill -9 $pid
+    echo 已停止 Tomcat
+    rm -rf tomcat/work/Catalina/    # 删除 JSP 页面编译后的缓存
+    tomcat/bin/startup.sh
+    ```
+
+- 运行 docker 镜像：
+    ```sh
+    docker pull tomcat:9.0
+    docker run -d --name=tomcat -p 8080:8080 tomcat:9.0
 
     docker cp 1.war tomcat:/usr/local/tomcat/webapps      # 拷贝 war 包
     docker exec tomcat /usr/local/tomcat/bin/startup.sh   # 启动
     docker exec tomcat /usr/local/tomcat/bin/shutdown.sh  # 停止
     ```
 
-## 用法
-
-- tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
-  - startup.sh  ：用于启动 Tomcat ，实际上是调用 catalina.sh start 。
-  - shutdown.sh ：用于停止 Tomcat ，实际上是调用 catalina.sh stop 。
-  - version.sh  ：用于显示版本信息。
-
-- 每次更新 Tomcat 应用或配置时，建议重启 Tomcat ，使修改立即生效。可以自定义一个重启脚本 restart.sh ：
-  ```sh
-  tomcat/bin/shutdown.sh
-  sleep 5
-  pid=`ps -ef | grep Dcatalina.home=/opt/tomcat-7.0.100-jdk1.8 | grep -v grep | awk '{print $2}'`
-  kill -9 $pid
-  echo 已停止 Tomcat
-  rm -rf tomcat/work/Catalina/    # 删除 JSP 页面编译后的缓存
-  tomcat/bin/startup.sh
-  ```
-
-### 初始页面
+## 初始页面
 
 启动 Tomcat 之后，访问 `http://localhost:8080/` 即可进入 Tomcat 的初始页面，这里有 Server Status、Manager App、Host Manager 三个内置应用。相关配置如下：
 
@@ -65,7 +61,7 @@
   <user username="admin" password="123456" roles="manager-gui,manager-script,manager-jmx,manager-status"/>
   ```
 
-### 部署 Web 应用
+## 部署 Web 应用
 
 在 Tomcat 中部署 Java Web 应用的方案有多种：
 
@@ -93,7 +89,7 @@
 
 - 方案四：用管理员账户登录 Tomcat 的初始页面，上传 war 包并点击“部署”，还可以点击“取消部署”。
 
-### server.xml
+## server.xml
 
 `tomcat/conf/server.xml` 是 Tomcat 的主要配置文件，内容示例如下：
 ```xml
@@ -130,3 +126,11 @@
   - 设置了`unpackWARs="true" autoDeploy="true"`之后，Tomcat 就能自动解压 webapps/ 目录下的 war 包并载入。
   - `<Value>`代表一个处理 HTTP 请求的组件。上例中定义了一个记录日志的组件。
   - `<Context>`代表一个 URL 。
+
+## 日志
+
+Tomcat 的日志文件保存在 `tomcat/logs/` 目录下，常用的有以下几种：
+- catalina.out ：记录了 Tomcat 的 stdout、stderr 。
+- localhost_access_log.YYYY-MM-DD.txt ：记录了用户访问 Tomcat 的日志。
+
+

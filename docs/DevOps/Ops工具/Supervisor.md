@@ -58,16 +58,16 @@ user=root                   ; 用哪个用户启动该进程
 ;startsecs=1       ; 启动几秒后进程没有异常终止，就视作进程启动成功了
 ;exitcodes=0,2     ; 进程正常终止时的退出码，如果不取这些值则视作异常终止
 ;stopsignal=TERM   ; 当 supervisor 被用户要求终止该进程时，发送哪种信号（可以是 TERM、HUP、INT、QUIT、KILL、USR1、USR2）
-;stopwaitsecs=10   ; 发送 stopsignal 信号之后，如果超过 stopwaitsecs 秒进程仍然没终止，则发送 SIGKILL 信号强制终止
+;stopwaitsecs=5    ; 发送 stopsignal 信号之后，如果超过 stopwaitsecs 秒进程仍然没终止，则发送 SIGKILL 信号强制终止
 
 stdout_logfile=/var/log/supervisor/%(program_name)s_stdout.log   ; stdout 日志文件的保存路径（该目录需要已存在）
 stderr_logfile=/var/log/supervisor/%(program_name)s_stderr.log   ; stderr 日志文件的保存路径（该目录需要已存在）
 ;redirect_stderr=false                                           ; 是否把 stderr 重定向到 stdout
-;stdout_logfile_maxbytes=50MB                                    ; stdout 日志文件的最大大小，超出则会循环写入，设置成 0 则不限制大小
+;stdout_logfile_maxbytes=100MB                                   ; stdout 日志文件的最大大小，超出则会循环写入，设置成 0 则不限制大小
 ;stdout_logfile_backups=10                                       ; stdout 日志文件的备份数量。设置成 0 则不备份
 ```
-- **用 supervisor 启动的进程必须保持在前台运行，否则会脱离 supervisor 的控制，不能被捕捉输出，也不能被终止。**
-- 用 supervisor 启动 python 进程时，由于 Python 不会自动刷新输出缓冲区，导致它不能被记录 stdout 和 stderr 的日志，需要用 python -u 的方式启动，禁用输出缓冲区。
+- **用 supervisor 托管的进程必须保持在前台运行，否则会脱离 supervisor 的控制，不能捕捉它的 stdout、stderr ，也不能终止它。**
+- 用 supervisor 启动 python 进程时，由于 Python 不会自动刷新输出缓冲区，导致不能记录该进程的 stdout、stderr ，需要用 python -u 的方式启动，禁用输出缓冲区。
 
 ## 客户端命令
 

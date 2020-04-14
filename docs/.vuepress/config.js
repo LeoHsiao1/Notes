@@ -459,6 +459,8 @@ module.exports = {
 					sidebarDepth: 2,
 					children: [
 						'Jenkins/Jenkins',
+						'Jenkins/Jenkinsfile',
+						'Jenkins/^jenkinsapi',
 					]
 				},
 				{

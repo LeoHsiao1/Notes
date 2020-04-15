@@ -7,11 +7,11 @@
 
 ## 安装
 
-运行 docker 镜像：
-```sh
-docker run -d --name grafana -p 80:3000 grafana/grafana
-```
-- 默认的管理员用户、密码是 admin、admin 。
+- 运行 Docker 镜像：
+    ```sh
+    docker run -d --name grafana -p 80:3000 grafana/grafana
+    ```
+  - 默认的管理员用户、密码是 admin、admin 。
 
 ## Dashboard
 

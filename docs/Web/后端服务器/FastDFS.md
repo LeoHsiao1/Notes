@@ -22,22 +22,26 @@ FastDFS 的服务器分为两部分：
 
 ## 部署
 
-启动 tracker server ：
-1. 运行 docker 镜像：
+### 启动 tracker server
+
+1. 运行 Docker 镜像：
     ```sh
     docker pull delron/fastdfs
     docker run -d --name tracker --network host -v /var/fdfs/tracker:/var/fdfs delron/fastdfs tracker
     ```
+    
 2. 执行`docker exec -it tracker bash`进入容器，再执行`vi /etc/fdfs/tracker.conf`，修改配置文件：
     ```ini
     port=22122    # tracker server 监听的端口
     ```
 
-启动 storage server ：
-1. 运行 docker 镜像：
+### 启动 storage server
+
+1. 运行 Docker 镜像：
     ```sh
     docker run -d --name storage --network host -v /var/fdfs/storage:/var/fdfs -e TRACKER_SERVER=172.17.0.1:22122 delron/fastdfs storage
     ```
+
 2. 执行`docker exec -it storage bash`进入容器，再执行`vi /etc/fdfs/storage.conf`，修改配置文件：
     ```ini
     base_path=/var/fdfs        # 存储数据和日志的基础目录
@@ -45,10 +49,12 @@ FastDFS 的服务器分为两部分：
     tracker_server=172.17.0.1:22122  # tracker_server 的位置
     http.server_port=80        # storage server 的 HTTP 端口号
     ```
+
 3. 重启 storage server ：
     ```sh
     /usr/bin/fdfs_storaged /etc/fdfs/storage.conf restart
     ```
+
 4. 执行`vi /usr/local/nginx/conf/nginx.conf`，修改 Nginx 的配置文件：
     ```
         server {
@@ -68,7 +74,8 @@ FastDFS 的服务器分为两部分：
     /usr/local/nginx/sbin/nginx -s reload
     ```
 
-试用 client ：
+### 试用 client
+
 1. 进入 storage 容器，执行`vi /etc/fdfs/client.conf`，修改配置文件：
     ```ini
     tracker_server=172.17.0.1:22122

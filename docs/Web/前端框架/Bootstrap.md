@@ -46,14 +46,14 @@
 
 ## 网格系统
 
-Bootstrap 通过自定的网格系统（Grid System）控制HTML元素的布局 —— 先将页面划分成多行、多列，再放置要显示的 HTML 元素。
+Bootstrap 通过自定的网格系统（Grid System）控制 HTML 元素的布局 —— 先将页面划分成多行、多列，再放置要显示的 HTML 元素。
 - Bootstrap 将用户设备分为以下几类，分别处理：
 
   -|特小设备|小型设备|中型设备|大型设备|超大设备
   -|-|-|-|-|-
   显示宽度|<576px|≥576px|≥768px|≥992px|≥1200px
   最大列数|12|12|12|12
-  控制列数的CSS类|col-n|col-sm-n|col-md-n|col-lg-n|col-xl-n
+  控制列数的 CSS 类|col-n|col-sm-n|col-md-n|col-lg-n|col-xl-n
 
 - 例：
   ```html
@@ -63,14 +63,14 @@ Bootstrap 通过自定的网格系统（Grid System）控制HTML元素的布局 
         <div class="col-4 col-sm-6">        <!-- 3. 然后创建一个指定宽度的列 -->
           ...                               <!-- 4. 最后放置 HTML 元素 -->
         </div>
-        <div class="col-8 col-sm-6">        <!-- 创建一个列。由于与上一列加在一起的宽度不超过12，会显示在同一行 -->
-          <div class="col-4">               <!-- 创建一个嵌套的子列，宽度为上一列的4/12 -->
+        <div class="col-8 col-sm-6">        <!-- 创建一个列。由于与上一列加在一起的宽度不超过 12 ，会显示在同一行 -->
+          <div class="col-4">               <!-- 创建一个嵌套的子列，宽度为上一列的 4/12 -->
             ...
           </div>
         </div>
       </div>
       <div class="row">                     <!-- 创建一个行。会显示在上一行之下 -->
-        <div class="col-md-6 offset-md-4">  <!-- 创建一个列，向右偏移4 -->
+        <div class="col-md-6 offset-md-4">  <!-- 创建一个列，向右偏移 4 -->
           ...
         </div>
       </div>
@@ -86,6 +86,6 @@ Bootstrap 通过自定的网格系统（Grid System）控制HTML元素的布局 
 
 用法：
 - 要先在 Container 中拖入 GRID 布局，然后才能拖入具体组件。
-  - 布局`12`是指一个区块，宽度为12列。
-  - 布局`6 6`是指两列区块，宽度分别为6、6列。
+  - 布局`12`是指一个区块，宽度为 12 列。
+  - 布局`6 6`是指两列区块，宽度分别为 6、6 列。
 - 编辑之后，将 layoutit 生成的代码拷贝到 HTML 的 body 中即可。不过，用户需要自行导入相应版本的 Bootstrap 的 JS、CSS 文件。

@@ -7,7 +7,7 @@
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
 - 同类的搜索引擎：Apache Solr ，也是采用 Apache Lucene 搜索引擎作为核心。
 
-## 启动
+## 安装
 
 - 下载发行版并启动：
     ```sh
@@ -17,7 +17,7 @@
     ./elasticsearch
     ```
 
-- 用 Docker 运行：
+- 或者运行 Docker 镜像：
     ```sh
     docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.6
     ```

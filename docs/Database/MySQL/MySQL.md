@@ -14,34 +14,36 @@ MySQL 存在多个分支：
 运行 mysqld 进程的主机即可担任 MySQL 服务器。
 - 通常作为守护进程运行，监听 3306 端口，供 MySQL 客户端连接。
 
-### 启动
+### 安装
 
-这里使用的是 Percona 服务器。
+这里安装的是 Percona 。
 
 - 用 yum 安装：
-  ```sh
-  curl -O https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.28-31/binary/redhat/7/x86_64/Percona-Server-5.7.28-31-rd14ef86-el7-x86_64-bundle.tar
-  tar -xvf Percona-Server-5.7.26-29-r11ad961-el7-x86_64-bundle.tar
-  yum install -y Percona-Server*.rpm
-  rm -f Percona-Server*
-  systemctl start mysqld                    # 启动服务器
+    ```sh
+    curl -O https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.28-31/binary/redhat/7/x86_64/Percona-Server-5.7.28-31-rd14ef86-el7-x86_64-bundle.tar
+    tar -xvf Percona-Server-5.7.26-29-r11ad961-el7-x86_64-bundle.tar
+    yum install -y Percona-Server*.rpm
+    rm -f Percona-Server*
+    systemctl start mysqld                    # 启动服务器
+    ```
+  启动之后要修改密码：
+    ```sh
+    cat /var/log/mysqld.log | grep password   # 查看初始密码
+    mysql -u root -p                          # 登录，输入初始密码
+    set password for 'root'@'localhost' = password('******');  # 设置新密码
+    ```
 
-  cat /var/log/mysqld.log | grep password   # 查看初始密码
-  mysql -u root -p                          # 登录，输入初始密码
-  set password for 'root'@'localhost' = password('******');  # 设置新密码
-  ```
-
-- 不安装，而是运行 docker 镜像：
-  ```sh
-  docker pull percona:5.7.26-centos
-  docker run -d --name percona -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 percona:5.7.26-centos
-  ```
-  - 启动之后要修改密码：
+- 或者运行 Docker 镜像：
+    ```sh
+    docker pull percona:5.7.26-centos
+    docker run -d --name percona -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 percona:5.7.26-centos
+    ```
+  启动之后要修改密码：
     ```
     docker exec -it percona bash
     mysql -u root -p
     123456
-    set password for 'root'@'localhost' = password('******');  # 设置高强度的密码
+    set password for 'root'@'localhost' = password('******');
     ```
 
 ### 配置
@@ -84,7 +86,7 @@ init-connect='SET NAMES utf8mb4'      # 让客户端连接之后初始化字符�
   yum install mysql
   ```
 
-- 不安装，而是运行 docker 镜像：
+- 或者运行 Docker 镜像：
   ```sh
   docker run -it --rm percona:5.7.26-centos mysql -h 127.0.0.1 -u root -p
   ```

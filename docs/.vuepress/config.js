@@ -432,31 +432,46 @@ module.exports = {
 					]
 				},
 				{
-					title: 'Dev',
+					title: 'Dev工具',
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'Dev/Git',
+						'Dev工具/Git',
+						'Dev工具/GitHub-Actions',
 					]
 				},
 				{
-					title: 'CI&CD',
+					title: 'Ops工具',
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'CI&CD/Jenkins',
-						'CI&CD/GitHub-Actions',
+						'Ops工具/Ansible',
+						'Ops工具/Supervisor',
+						'Ops工具/Zabbix',
+						'Ops工具/Grafana',
+						'Ops工具/logrotate',
+						'Ops工具/ELK',
 					]
 				},
 				{
-					title: '容器',
+					title: 'Jenkins',
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'容器/简介',
-						'容器/Docker',
-						'容器/Docker镜像',
-						'容器/Docker-Compose',
+						'Jenkins/Jenkins',
+						'Jenkins/Jenkinsfile',
+						'Jenkins/^jenkinsapi',
+					]
+				},
+				{
+					title: 'Docker',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'Docker/简介',
+						'Docker/容器',
+						'Docker/镜像',
+						'Docker/Docker-Compose',
 					]
 				},
 				{
@@ -471,19 +486,6 @@ module.exports = {
 						'k8s/Volume',
 						'k8s/插件',
 						'k8s/Rancher',
-					]
-				},
-				{
-					title: 'Ops',
-					collapsable: true,
-					sidebarDepth: 2,
-					children: [
-						'Ops/Ansible',
-						'Ops/Supervisor',
-						'Ops/Zabbix',
-						'Ops/Grafana',
-						'Ops/logrotate',
-						'Ops/ELK',
 					]
 				},
 			],

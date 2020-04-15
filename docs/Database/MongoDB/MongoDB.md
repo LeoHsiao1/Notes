@@ -9,7 +9,7 @@
 
 ## 服务器
 
-### 启动
+### 安装
 
 - 用 yum 安装：
   ```
@@ -21,16 +21,15 @@
   rm -f mongodb-org-*.rpm
   ```
 
-- 启动：
+  然后启动：
   ```sh
   mongod                      # 启动 mongo 服务器
         -f /etc/mongod.conf   # 使用指定的配置文件
   ```
   - 启动服务器时，默认使用的配置文件是 /etc/mongod.conf ，在前台运行，监听端口 27017 ，
 
-- 不安装，而是运行 docker 镜像：
+- 或者运行 Docker 镜像：
   ```sh
-  docker pull mongo:4
   docker run -d --name mongo -p 27017:27017 mongo:4
   ```
 

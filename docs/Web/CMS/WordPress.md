@@ -21,11 +21,10 @@ WP 服务器有 Linux 版、Windows 版，这里在 Linux 上安装它：
 3. 用 docker 安装 WP 服务器，该镜像集成了 php、Apache 环境
 
     ```sh
-    docker pull wordpress:latest
     docker run -d --name wordpress -p 80:80 wordpress:latest
     ```
 
-4. 访问<http://127.0.0.1>即可看到 WP 服务器的初始页面，按照提示进行安装。
+4. 访问`http://127.0.0.1`即可看到 WP 服务器的初始页面，按照提示进行安装。
 
 ## 目录结构
 

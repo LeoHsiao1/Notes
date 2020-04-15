@@ -6,14 +6,13 @@
 - 支持第四层的 TCP 代理、第七层的 HTTP 代理。
 - 处理静态文件的效率高。
 
-## 启动
+## 安装
 
 - 用 yum 安装：
   ```sh
   yum install nginx  
   ```
-
-- 启动：
+  然后启动：
   ```sh
   nginx                     # 启动 nginx 服务器（默认作为守护进程运行）
         -c /root/nginx.conf # 使用指定的配置文件（默认使用/etc/nginx/nginx.conf）
@@ -22,7 +21,7 @@
         -s reload           # 重新加载配置文件
   ```
 
-- 不安装，而是运行 docker 镜像：
+- 或者运行 Docker 镜像：
   ```sh
   docker run -d --name=nginx -p 80:80 nginx
   ```

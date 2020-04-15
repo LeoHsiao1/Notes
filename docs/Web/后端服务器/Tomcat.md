@@ -3,7 +3,7 @@
 ：一个 Web 服务器软件，由 Apache 基金会推出。支持 Servlet、JSP ，常用于运行中小型 Java Web 项目。
 - [官方文档](http://tomcat.apache.org/tomcat-9.0-doc/index.html)
 
-## 启动
+## 安装
 
 - 下载源代码包并启动：
     ```sh
@@ -13,6 +13,17 @@
     cd apache-tomcat-9.0.33/bin/
     ./startup.sh
     ```
+
+- 或者运行 Docker 镜像：
+    ```sh
+    docker run -d --name=tomcat -p 8080:8080 tomcat:9.0
+
+    docker cp 1.war tomcat:/usr/local/tomcat/webapps      # 拷贝 war 包
+    docker exec tomcat /usr/local/tomcat/bin/startup.sh   # 启动
+    docker exec tomcat /usr/local/tomcat/bin/shutdown.sh  # 停止
+    ```
+
+## 启动与停止
 
 - tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
   - startup.sh  ：用于启动 Tomcat ，实际上是调用`catalina.sh start`。
@@ -29,16 +40,6 @@
     echo 已停止 Tomcat
     rm -rf tomcat/work/Catalina/    # 删除 JSP 页面编译后的缓存
     tomcat/bin/startup.sh
-    ```
-
-- 运行 docker 镜像：
-    ```sh
-    docker pull tomcat:9.0
-    docker run -d --name=tomcat -p 8080:8080 tomcat:9.0
-
-    docker cp 1.war tomcat:/usr/local/tomcat/webapps      # 拷贝 war 包
-    docker exec tomcat /usr/local/tomcat/bin/startup.sh   # 启动
-    docker exec tomcat /usr/local/tomcat/bin/shutdown.sh  # 停止
     ```
 
 ## 初始页面
@@ -132,5 +133,3 @@
 Tomcat 的日志文件保存在 `tomcat/logs/` 目录下，常用的有以下几种：
 - catalina.out ：记录了 Tomcat 的 stdout、stderr 。
 - localhost_access_log.YYYY-MM-DD.txt ：记录了用户访问 Tomcat 的日志。
-
-

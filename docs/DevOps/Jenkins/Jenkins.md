@@ -4,14 +4,14 @@
 - 基于 Java 开发，提供了 Web 操作页面。
 - [官方文档](https://jenkins.io/zh/doc/)
 
-## 启动
+## 安装
 
 - 用 war 包启动：
   1. 下载 Jenkins 的 war 包。
   2. 安装 JDK 。
   3. 执行 `java -jar jenkins.war --httpPort=8080` 启动 Jenkins ，然后便可以访问其 Web 网站 `http://localhost:8080` 。
 
-- 用 Docker 启动：
+- 或者运行 Docker 镜像：
   ```sh
   mkdir /var/jenkins_home
   docker run -d \
@@ -72,4 +72,4 @@
 - monitoring
   - 用于查看 Jenkins 的 master 节点的状态，或者统计 Job 的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
 - Blue Ocean
-  - 提供了一种更美观的 Pipeline 管理页面。
+  - 提供了对于流水线的一种更美观的操作页面。

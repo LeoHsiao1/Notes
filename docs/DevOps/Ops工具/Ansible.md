@@ -9,15 +9,15 @@
 
 ## 安装
 
-使用 docker-compose 安装 Ansible AWX ：
-```sh
-yum install -y docker-ce make git nodejs npm python python36-pip  # 安装依赖
-pip3 install docker docker-compose ansible                        # 安装 Ansible
-curl -O https://github.com/ansible/awx/archive/7.0.0.tar.gz       # 下载 Ansible AWX
-tar -zxvf awx-7.0.0.tar.gz
-cd awx-7.0.0/installer
-ansible-playbook -i inventory install.yml    # 用 Ansible 启动 Ansible AWX
-```
+- 用 docker-compose 安装 Ansible AWX ：
+  ```sh
+  yum install -y docker-ce make git nodejs npm python python36-pip  # 安装依赖
+  pip3 install docker docker-compose ansible                        # 安装 Ansible
+  curl -O https://github.com/ansible/awx/archive/7.0.0.tar.gz       # 下载 Ansible AWX
+  tar -zxvf awx-7.0.0.tar.gz
+  cd awx-7.0.0/installer
+  ansible-playbook -i inventory install.yml    # 用 Ansible 启动 Ansible AWX
+  ```
 
 ## 命令
 

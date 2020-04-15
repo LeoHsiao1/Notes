@@ -8,7 +8,7 @@
   - 当用户执行 supervisorctl 命令时，就是作为客户端与 supervisord 通信，发出操作命令。
 - [官方文档](http://supervisord.org/index.html)
 
-## 启动
+## 安装
 
 - 用 yum 安装：
     ```sh
@@ -18,6 +18,11 @@
     ```sh
     supervisord                           # 启动服务器
                 -c /etc/supervisord.conf  # 使用指定的配置文件
+    ```
+
+- 或者安装 Python 库：
+    ```sh
+    pip install supervisor
     ```
 
 ## 配置

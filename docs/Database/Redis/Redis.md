@@ -11,9 +11,9 @@
 
 ## 服务器
 
-### 启动
+### 安装
 
-- 从源代码安装：
+- 下载源代码，编译后安装：
     ```sh
     redis_version=redis-5.0.6
     curl -O http://download.redis.io/releases/${redis_version}.tar.gz
@@ -22,15 +22,14 @@
     yum install -y make gcc
     make install MALLOC=libc
     ```
-
-- 启动：
+  然后启动：
     ```sh
     redis-server                       # 启动 Redis 服务器
                 /etc/redis/redis.conf  # 使用指定的配置文件
     ```
     - 以 daemon 方式启动时，出现报错也不会在终端显示。
 
-- 不安装，而是运行 docker 镜像：
+- 或者运行 Docker 镜像：
     ```sh
     docker run -d --name redis -p 6379:6379 redis:5.0.5
     ```

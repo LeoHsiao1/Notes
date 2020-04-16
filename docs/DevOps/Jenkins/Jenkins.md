@@ -25,15 +25,16 @@
 ## 基本用法
 
 - Jenkins 的主页的左上角显示了一列菜单，点击其中的“新建”即可创建一个项目（Project）或任务（Job），常见的几种类型如下：
-  - Freestyle ：自由风格的项目，可以实现大多数构建任务。
+  - Freestyle ：自由风格，可以通过 Web 页面上的配置实现大多数构建任务。
   - Pipeline ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
+  - Multibranch Pipeline ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
   - MultiJob ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
   - Folder ：用于对 Job 进行分组管理。
 - 用户可以添加一些主机作为 Jenkins 的运行环境。
 - 用户可以将密码等私密数据保存成 Jenkins 的“凭证”，然后在执行 Job 时调用，从而保密。
 - Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，拷贝该目录就可以备份、迁移 Jenkins 。
   - 如果在启动 Jenkins 之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
-  - Jenkins 默认会在 `$JENKINS_HOME/workspace/$JOB_NAME` 目录下执行各个 Job ，但是每次执行之前、之后不会自动清空该目录。
+  - Jenkins 默认会在 `$JENKINS_HOME/workspace/$JOB_NAME` 目录（称为 workspace ）下执行各个 Job ，但是每次执行之前、之后不会自动清空该目录。
 
 ## 管理节点
 

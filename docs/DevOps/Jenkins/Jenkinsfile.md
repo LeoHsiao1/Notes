@@ -146,19 +146,19 @@ pipeline {
     ```groovy
     echo "任务名：${env.JOB_NAME} ，构建编号：${env.BUILD_ID} "
     ```
-  - 在 environment{} 中可以通过以下方式读取 Jenkins 的凭证：
+  - 在 environment{} 中可以通过以下方式读取 Jenkins 的凭据：
     ```groovy
     environment {
         ACCOUNT1 = credentials('account1')
     }
     ```
-    假设该凭证是 Username With Password 类型，值为"admin:123456"，则 Jenkins 会在 shell 中加入三个环境变量：
+    假设该凭据是 Username With Password 类型，值为"admin:123456"，则 Jenkins 会在 shell 中加入三个环境变量：
     ```sh
     ACCOUNT1=admin:123456
     ACCOUNT1_USR=admin
     ACCOUNT1_PSW=123456
     ```
-    读取其它类型的凭证时，建议打印出 shell 的所有环境变量，从而发现 Jenkins 加入的环境变量的名字。
+    读取其它类型的凭据时，建议打印出 shell 的所有环境变量，从而发现 Jenkins 加入的环境变量的名字。
     为了保密，如果直接将上述变量打印到 stdout 上，Jenkins 会将它们的值显示成 `****` 。
 
 ## steps{}
@@ -218,7 +218,7 @@ pipeline {
 ：用于发送邮件。
 - 例：
     ```groovy
-    emailext body: "this is for test.", subject: "Test Email", to: "123456@qq.com"
+    emailext body: "this is for test.", subject: "Test Email", to: "123456@email.com"
     ```
 
 ### parallel
@@ -272,13 +272,13 @@ pipeline {
 
 ### withCredentials
 
-：用于调用 Jenkins 的凭证。
+：用于调用 Jenkins 的凭据。
 - 例：
     ```groovy
     withCredentials([
         usernamePassword(
             credentialsId: "credential_1",
-            usernameVariable: "USERNAME",   // 将凭证的值存到变量中
+            usernameVariable: "USERNAME",   // 将凭据的值存到变量中
             passwordVariable: "PASSWORD"
         )]) {
         sh """

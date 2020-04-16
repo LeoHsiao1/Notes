@@ -31,7 +31,7 @@
   - MultiJob ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
   - Folder ：用于对 Job 进行分组管理。
 - 用户可以添加一些主机作为 Jenkins 的运行环境。
-- 用户可以将密码等私密数据保存成 Jenkins 的“凭证”，然后在执行 Job 时调用，从而保密。
+- 用户可以将密码等私密数据保存成 Jenkins 的“凭据”，然后在执行 Job 时调用，从而保密。
 - Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，拷贝该目录就可以备份、迁移 Jenkins 。
   - 如果在启动 Jenkins 之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
   - Jenkins 默认会在 `$JENKINS_HOME/workspace/$JOB_NAME` 目录（称为 workspace ）下执行各个 Job ，但是每次执行之前、之后不会自动清空该目录。
@@ -39,9 +39,12 @@
 ## 管理节点
 
 - Jenkins 服务器所在的节点称为 master 节点，用户还可以添加其它 slave 节点，这些节点都可以用于运行 Job 。
-- 添加 slave 节点时，一般通过 SSH 方式连接。
-  - 需要安装“SSH Build Agents”插件。
-  - 建议在 slave 节点上创建 jenkins 用户，使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
+- 添加 slave 节点时，一般通过 SSH 方式连接。步骤如下：
+  1. 安装“SSH Build Agents”插件。
+  2. 在 slave 节点上创建 jenkins 用户，使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
+  3. 将 master 节点的 ~/.ssh/id_rsa.pub 公钥拷贝到 slave 节点的 ~/.ssh/authorized_keys 中。
+  4. 在 Jenkins 上创建一个“SSH Username with private key”类型的凭据，填入 master 节点的 ~/.ssh/id_rsa 私钥。
+  5. 在 Jenkins 上新建一个节点，选择以“Launch agents via SSH”方式连接。
 
 ## 管理权限
 

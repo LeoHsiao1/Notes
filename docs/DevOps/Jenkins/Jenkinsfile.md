@@ -15,36 +15,36 @@
 ```groovy
 pipeline {
     agent {                     // 声明使用的节点
-        label "master"
+        label 'master'
     }
     environment {               // 定义环境变量
-        PORT = "80"
+        PORT = '80'
     }
     options {
         timestamps()
         timeout(time: 5, unit: 'MINUTES')
     }
     stages {
-        stage("拉取代码") {      // 开始一个阶段
+        stage('拉取代码') {      // 开始一个阶段
             environment {       // 定义该阶段的环境变量
-                GIT_BRANCH = "dev"
+                GIT_BRANCH = 'dev'
             }
             steps {             // 执行一些步骤
                 sh "git checkout $GIT_BRANCH"
-                echo "已切换分支"
+                echo '已切换分支'
             }
         }
-        stage("构建镜像") {
+        stage('构建镜像') {
             steps {
                 docker build -t ${image_hub}/${image_project}/${build_image_name}:${build_image_tag} .
                 docker push ${image_hub}/${image_project}/${build_image_name}:${build_image_tag}
                 docker image rm ${image_hub}/${image_project}/${build_image_name}:${build_image_tag}
             }
         }
-        stage("测试") {
+        stage('测试') {
             steps {
-                echo "测试中..."
-                echo "测试完成"
+                echo '测试中...'
+                echo '测试完成'
             }
         }
     }
@@ -80,23 +80,23 @@ pipeline {
     ```
     ```groovy
     agent {
-        label "master"  // 选择指定名字的节点
+        label 'master'  // 选择指定名字的节点
     }
     ```
     ```groovy
     agent {
         node {          // 选择指定名字的节点，并指定工作目录
-            label "master"
-            customWorkspace "/opt/jenkins_home/workspace/test1"
+            label 'master'
+            customWorkspace '/opt/jenkins_home/workspace/test1'
         }
     }
     ```
     ```groovy
     agent {
         docker {        // 运行一个容器
-            image "centos:7"
-            label "jenkins_workspace"
-            args  "-v /tmp:/tmp"
+            image 'centos:7'
+            label 'jenkins_workspace'
+            args  '-v /tmp:/tmp'
         }
     }
     ```
@@ -113,14 +113,14 @@ pipeline {
         agent any
         parameters {
             booleanParam(name: 'A', defaultValue: true, description: '')   // 布尔参数
-            string(name: "B", defaultValue: "Hello", description: '')      // 字符串参数，在 Web 页面上输入时不能换行
+            string(name: 'B', defaultValue: 'Hello', description: '')      // 字符串参数，在 Web 页面上输入时不能换行
             text(name: 'C', defaultValue: 'Hello\nWorld', description: '') // 文本参数，输入时可以换行
             password(name: 'D', defaultValue: '123456', description: '')   // 密文参数，输入时显示成密文
             choice(name: 'E', choices: ['A', 'B', 'C'], description: '')   // 单选参数，输入时显示成下拉框
             file(name: 'F', description: '')                               // 文件参数，输入时显示一个文件上传按钮
         }
         stages {
-            stage("Test") {
+            stage('Test') {
                 steps {
                     echo "$A"   // 也可通过 $params.A 的格式读取构建参数，避免与环境变量重名
                 }
@@ -134,13 +134,13 @@ pipeline {
   - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
   - 例：
     ```groovy
-    stage("测试") {
+    stage('测试') {
         environment {
             ID = 1
-            NAME = "hello"
+            NAME = 'hello'
         }
         steps {
-            echo "$ID"
+            echo '$ID'
             sh "ID=2; echo $ID"
         }
     }
@@ -157,7 +157,7 @@ pipeline {
         ACCOUNT1 = credentials('account1')
     }
     ```
-    假设该凭据是 Username With Password 类型，值为"admin:123456"，则 Jenkins 会在 shell 中加入三个环境变量：
+    假设该凭据是 Username With Password 类型，值为“admin:123456”，则 Jenkins 会在 shell 中加入三个环境变量：
     ```sh
     ACCOUNT1=admin:123456
     ACCOUNT1_USR=admin
@@ -176,7 +176,7 @@ pipeline {
 - 例：
     ```groovy
     steps {
-        echo "Hello"
+        echo 'Hello'
     }
     ```
 - 使用字符串时，要用双引号或单引号或三引号包住（除非是纯数字组成的字符串），否则会被当作变量取值。例如：`echo ID`会被当作`echo "$ID"`执行。
@@ -215,7 +215,7 @@ pipeline {
 ：触发一个 Job 。
 - 例：
     ```groovy
-    build "job1"
+    build 'job1'
     ```
 
 ### emailext
@@ -223,7 +223,7 @@ pipeline {
 ：用于发送邮件。
 - 例：
     ```groovy
-    emailext body: "this is for test.", subject: "Test Email", to: "123456@email.com"
+    emailext body: 'this is for test.', subject: 'Test Email', to: '123456@email.com'
     ```
 
 ### parallel
@@ -233,13 +233,13 @@ pipeline {
 - 例：
     ```groovy
     steps {
-        parallel "单元测试1": {
-            echo "测试中..."
-            echo "测试完成"
+        parallel '单元测试1': {
+            echo '测试中...'
+            echo '测试完成'
         },
-        "单元测试2": {
-            echo "测试中..."
-            echo "测试完成"
+        '单元测试2': {
+            echo '测试中...'
+            echo '测试完成'
         }
     }
     ```
@@ -250,7 +250,7 @@ pipeline {
 - 例：
     ```groovy
     retry(3) {       // 加上第一次失败的次数，最多执行 3 次
-        sh "ls /tmp/f1"
+        sh 'ls /tmp/f1'
     }
     ```
 
@@ -260,8 +260,8 @@ pipeline {
 - 超时之后则放弃执行，并将任务的状态标记成 ABORTED 。
 - 例：
     ```groovy
-    timeout(time: 3, unit: "SECONDS") {     // 单位可以是 SECONDS、MINUTES、HOURS
-        sh "ping baidu.com"
+    timeout(time: 3, unit: 'SECONDS') {     // 单位可以是 SECONDS、MINUTES、HOURS
+        sh 'ping baidu.com'
     }
     ```
 
@@ -271,7 +271,7 @@ pipeline {
 - 例：
     ```groovy
     waitUntil {
-        fileExists "/tmp/f1"
+        fileExists '/tmp/f1'
     }
     ```
 
@@ -282,9 +282,9 @@ pipeline {
     ```groovy
     withCredentials([
         usernamePassword(
-            credentialsId: "credential_1",
-            usernameVariable: "USERNAME",   // 将凭据的值存到变量中
-            passwordVariable: "PASSWORD"
+            credentialsId: 'credential_1',
+            usernameVariable: 'USERNAME',   // 将凭据的值存到变量中
+            passwordVariable: 'PASSWORD'
         )]) {
         sh """
             set -eu
@@ -299,9 +299,9 @@ pipeline {
 - 例：从 Git 仓库拉取代码
     ```groovy
     git(
-        branch: "master",
-        credentialsId: "credential_1",
-        url : "git@github.com/${repository}.git"
+        branch: 'master',
+        credentialsId: 'credential_1',
+        url : 'git@github.com/${repository}.git'
     )
     ```
 
@@ -339,8 +339,8 @@ pipeline {
 - 可以将 shell 命令执行后的 stdout 或返回码赋值给变量，如下：
     ```groovy
     script {
-        STDOUT = sh(script: "echo hello", returnStdout: true).trim()
-        EXIT_CODE = sh(script: "echo hello", returnStatus: true)
+        STDOUT = sh(script: 'echo hello', returnStdout: true).trim()
+        EXIT_CODE = sh(script: 'echo hello', returnStatus: true)
         echo "$STDOUT"
         echo "$EXIT_CODE"
     }
@@ -376,12 +376,12 @@ pipeline {
 - 常见的几种定义方式：
     ```groovy
     when {
-        environment name: "A", value: "1"  // 当环境变量等于指定值时
+        environment name: 'A', value: '1'  // 当环境变量等于指定值时
     }
     ```
     ```groovy
     when {
-        branch "dev"            // 当分支为 dev 时（仅适用于多分支流水线）
+        branch 'dev'            // 当分支为 dev 时（仅适用于多分支流水线）
     }
     ```
     ```groovy
@@ -394,24 +394,24 @@ pipeline {
     ```groovy
     when {
         not {                   // 当子条件为 false 时
-            environment name: "A", value: "1"
+            environment name: 'A', value: '1'
         }
     }
     ```
     ```groovy
     when {
         allOf {                 // 当子条件都为 true 时
-            environment name: "A", value: "1"
-            environment name: "B", value: "2"
+            environment name: 'A', value: '1'
+            environment name: 'B', value: '2'
         }
-        branch "dev"            // 默认就可以包含多个条件，相当于隐式的 allOf{}
+        branch 'dev'            // 默认就可以包含多个条件，相当于隐式的 allOf{}
     }
     ```
     ```groovy
     when {
         anyOf {                 // 当子条件只要有一个为 true 时
-            environment name: "A", value: "1"
-            environment name: "B", value: "2"
+            environment name: 'A', value: '1'
+            environment name: 'B', value: '2'
         }
     }
     ```
@@ -422,11 +422,11 @@ pipeline {
 - 例：
     ```groovy
     input {
-        message "等待输入..."
-        ok "确定"
-        submitter "admin, ops"  // 限制有输入权限的用户
+        message '等待输入...'
+        ok '确定'
+        submitter 'admin, ops'  // 限制有输入权限的用户
         parameters {            // 等待用户输入以下参数
-            string(name: "NODE", defaultValue: 'master', description: "部署到哪个节点？")
+            string(name: 'NODE', defaultValue: 'master', description: '部署到哪个节点？')
         }
     }
     ```
@@ -441,7 +441,7 @@ pipeline {
         stages {
             stage('Test') {
                 steps {
-                    sh 'make check'
+                    echo 'testing ...'
                 }
             }
         }

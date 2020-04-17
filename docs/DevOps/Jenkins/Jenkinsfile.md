@@ -20,6 +20,10 @@ pipeline {
     environment {               // 定义环境变量
         PORT = "80"
     }
+    options {
+        timestamps()
+        timeout(time: 5, unit: 'MINUTES')
+    }
     stages {
         stage("拉取代码") {      // 开始一个阶段
             environment {       // 定义该阶段的环境变量
@@ -52,11 +56,12 @@ pipeline {
 }
 ```
 
+- 区分大小写。
+- 用 // 声明单行注释。
+- 每个 {} 的内容不能为空。
 - pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一个或多个 stage{} ，表示执行的各个阶段。
   - 每个 stage{} 中只能定义一个 steps{} ，表示主要执行的操作步骤。
   - Jenkins 会按先后顺序执行各个 stage{} ，并在 Web 页面上显示执行进度。
-- 用 // 声明单行注释。
-- 区分大小写。
 
 ## agent{}
 
@@ -115,7 +120,7 @@ pipeline {
             file(name: 'F', description: '')                               // 文件参数，输入时显示一个文件上传按钮
         }
         stages {
-            stage('Example') {
+            stage("Test") {
                 steps {
                     echo "$A"   // 也可通过 $params.A 的格式读取构建参数，避免与环境变量重名
                 }
@@ -140,11 +145,11 @@ pipeline {
         }
     }
     ```
-    - 以上 echo 命令、sh 命令中，`$ID`都会被视作 Jenkinsfile 的环境变量取值，如果不存在则报错。
-    - 如果要读取 shell 中的变量，则应该执行被单引号包住的 sh 命令。例如：`sh 'ID=2; echo $ID'`
+    - 以上 echo 语句、sh 语句中，`$ID`都会被视作 Jenkinsfile 的环境变量取值，如果不存在则报错。
+    - 如果要读取 shell 中的变量，则应该执行被单引号包住的 sh 语句。例如：`sh 'ID=2; echo $ID'`
   - 在 environment{} 中可以通过以下方式读取 Jenkins 的一些内置变量：
     ```groovy
-    echo "任务名：${env.JOB_NAME} ，构建编号：${env.BUILD_ID} "
+    echo "任务名：${env.JOB_NAME} ，构建编号：${env.BUILD_ID} ，工作目录：${env.WORKSPACE}"
     ```
   - 在 environment{} 中可以通过以下方式读取 Jenkins 的凭据：
     ```groovy
@@ -163,7 +168,7 @@ pipeline {
 
 ## steps{}
 
-在 steps{} 中可以使用以下 DSL 命令：
+在 steps{} 中可以使用以下 DSL 语句：
 
 ### echo
 
@@ -186,8 +191,8 @@ pipeline {
         sh 'echo World'
     }
     ```
-- 每个 sh 命令会被 Jenkins 保存为一个临时的 x.sh 文件，用 `/bin/bash -ex x.sh` 的方式执行，且切换到该 Job 的工作目录。因此各个 sh 命令之间比较独立、解耦。
-- 使用三引号时，可以编写换行的 sh 命令。如下：
+- 每个 sh 语句会被 Jenkins 保存为一个临时的 x.sh 文件，用 `/bin/bash -ex x.sh` 的方式执行，且切换到该 Job 的工作目录。因此各个 sh 语句之间比较独立、解耦。
+- 使用三引号时，可以编写换行的 sh 语句。如下：
     ```groovy
     sh """
         A=1

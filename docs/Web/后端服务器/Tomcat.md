@@ -35,8 +35,7 @@
     ```sh
     tomcat/bin/shutdown.sh
     sleep 5
-    pid=`ps -ef | grep Dcatalina.home=/opt/tomcat-7.0.100-jdk1.8 | grep -v grep | awk '{print $2}'`
-    kill -9 $pid
+    kill -9 `ps -ef | grep Dcatalina.home=/opt/tomcat-7.0.100-jdk1.8 | grep -v grep | awk '{print $2}'`
     echo 已停止 Tomcat
     rm -rf tomcat/work/Catalina/    # 删除 JSP 页面编译后的缓存
     tomcat/bin/startup.sh

@@ -41,7 +41,8 @@
 - Jenkins 服务器所在的节点称为 master 节点，用户还可以添加其它 slave 节点，这些节点都可以用于运行 Job 。
 - 添加 slave 节点时，一般通过 SSH 方式连接。步骤如下：
   1. 安装“SSH Build Agents”插件。
-  2. 在 slave 节点上创建 jenkins 用户，使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
+  2. 在 slave 节点上安装 JDK 。
+     建议再创建 jenkins 用户，以便使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
   3. 将 master 节点的 ~/.ssh/id_rsa.pub 公钥拷贝到 slave 节点的 ~/.ssh/authorized_keys 中。
   4. 在 Jenkins 上创建一个“SSH Username with private key”类型的凭据，填入 master 节点的 ~/.ssh/id_rsa 私钥。
   5. 在 Jenkins 上新建一个节点，选择以“Launch agents via SSH”方式连接。

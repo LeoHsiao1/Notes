@@ -34,7 +34,10 @@
 - 用户可以将密码等私密数据保存成 Jenkins 的“凭据”，然后在执行 Job 时调用，从而保密。
 - Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，拷贝该目录就可以备份、迁移 Jenkins 。
   - 如果在启动 Jenkins 之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
-  - Jenkins 默认会在 `$JENKINS_HOME/workspace/$JOB_NAME` 目录（称为 workspace ）下执行各个 Job ，但是每次执行之前、之后不会自动清空该目录。
+- Jenkins 每次执行 Job 时，默认会将 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
+  - Jenkins 每次执行 Job 之前、之后都不会自动清空工作目录。
+- Jenkins 每次执行 Job 时会在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。
+  - 在 shell 中设置环境变量 `JENKINS_NODE_COOKIE=dontkillme` 可以阻止 Jenkins 杀死当前 shell 创建的进程。
 
 ## 管理节点
 
@@ -78,3 +81,5 @@
   - 用于查看 Jenkins 的 master 节点的状态，或者统计 Job 的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
 - Blue Ocean
   - 提供了对于流水线的一种更美观的操作页面。
+- Job Configuration History
+  - 用于记录所有 Job 以及系统配置的变更历史。

@@ -25,12 +25,23 @@
     pip install supervisor
     ```
 
+- 不能连接到外网时，拷贝 Python 库然后安装：
+    ```sh
+    tar -zxvf supervisor-4.1.0.tar.gz
+    cd supervisor-4.1.0
+    python setup.py install
+
+    mkdir /etc/supervisord.d/
+    mkdir /var/run/supervisor/
+    mkdir /var/log/supervisor/
+    ```
+    - supervisor 用到的目录必须已存在，因为它不会自己创建。
+
 ## 配置
 
 - 用户需要先在配置文件中定义要控制的进程，然后才能用 supervisor 管理。
 - supervisor 默认使用`/etc/supervisord.conf`作为主配置文件（用于保存 supervisord 的配置）。
   - 还会导入`/etc/supervisord.d/`目录下的其它配置文件（用于保存各个进程的配置），这些配置文件的后缀名为 .ini ，采用 ini 的语法。
-- supervisor 用到的 /var/run/supervisor/、/var/log/supervisor/ 等目录必须已存在。
 - **用 supervisor 管理的进程必须保持在前台运行，否则会脱离 supervisor 的控制，不能捕捉它的 stdout、stderr ，也不能终止它。**
 - 用 supervisor 启动 Python 进程时， Python 解释器默认不会自动刷新输出缓冲区，导致不能记录该进程的 stdout、stderr 。因此需要用 python -u 的方式启动，禁用输出缓冲区。
 

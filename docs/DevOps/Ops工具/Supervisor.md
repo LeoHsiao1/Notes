@@ -1,8 +1,9 @@
 # Supervisor
 
 ：一个进程管理工具，基于 Python 开发。
-- 可以启动、停止、监听进程，还提供了 Web 管理页面。
-- 可以监听进程的状态，当进程退出时自动重启。
+- 功能：
+  - 可以启动、停止、监听进程，还提供了 Web 管理页面。
+  - 可以监听进程的状态，当进程退出时自动重启。
 - 采用 C/S 工作模式：
   - 运行一个守护进程 supervisord 作为服务器，负责管理进程。
   - 当用户执行 supervisorctl 命令时，就是作为客户端与 supervisord 通信，发出操作命令。
@@ -24,18 +25,22 @@
     ```sh
     pip install supervisor
     ```
+  - 然后要手动创建 supervisor 用到的目录，因为它不会自己创建。
+    ```sh
+    sudo mkdir /etc/supervisord.d/
+    sudo mkdir /var/run/supervisor/
+    sudo mkdir /var/log/supervisor/
+    sudo chown -R leo:leo /etc/supervisord.d/
+    sudo chown -R leo:leo /var/run/supervisor/
+    sudo chown -R leo:leo /var/log/supervisor/
+    ```
 
-- 不能连接到外网时，拷贝 Python 库然后安装：
+- 不能连接到外网时，需要拷贝 Python 库然后安装：
     ```sh
     tar -zxvf supervisor-4.1.0.tar.gz
     cd supervisor-4.1.0
     python setup.py install
-
-    mkdir /etc/supervisord.d/
-    mkdir /var/run/supervisor/
-    mkdir /var/log/supervisor/
     ```
-    - supervisor 用到的目录必须已存在，因为它不会自己创建。
 
 ## 配置
 
@@ -66,12 +71,12 @@ pidfile=/var/run/supervisord.pid
 nodaemon=false
 
 [rpcinterface:supervisor]
-supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+supervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface
 
 [supervisorctl]
-serverurl=unix:///var/run/supervisor/supervisor.sock ; use a unix:// URL  for a unix socket
+serverurl=unix:///var/run/supervisor/supervisor.sock
 
-[include]                   ; 导入其它配置文件
+[include]   ; 导入其它配置文件
 files = supervisord.d/*.ini
 ```
 
@@ -96,7 +101,9 @@ stdout_logfile=/var/log/supervisor/%(program_name)s_stdout.log   ; stdout 日志
 stdout_logfile_maxbytes=100MB                                    ; stdout 日志文件的最大大小，超出则会循环写入，设置成 0 则不限制大小
 stdout_logfile_backups=0                                         ; 备份多少个以前的 stdout 日志文件（按 *.1、*.2、*.3 格式编号），设置成 0 则不备份
 ;redirect_stderr=false                                           ; 是否把 stderr 重定向到 stdout
-stderr_logfile=/var/log/supervisor/%(program_name)s_stderr.log   ; stderr 日志文件的保存路径（该目录需要已存在）
+stderr_logfile=/var/log/supervisor/%(program_name)s_stderr.log   ; stderr 日志文件的保存路径
+stderr_logfile_maxbytes=100MB
+stderr_logfile_backups=0
 ```
 
 - 进程的 command 不支持动态取值，比如：
@@ -108,8 +115,8 @@ stderr_logfile=/var/log/supervisor/%(program_name)s_stderr.log   ; stderr 日志
 
 - 当 supervisor 启动一个进程时（状态为 STARTING）：
   - 如果进程在 startsecs 秒之内退出了（包括正常退出、异常退出），则视作启动失败（状态为 BACKOFF ），最多尝试重启 startretries 次（依然失败的话则状态为 FATAL ）。
-  - 如果进程保持运行了 startsecs 秒，则视作进程启动成功了（状态为 RUNNING ）。
-  - 如果进程启动成功之后，退出了，则根据 autorestart 策略决定是否重启（不考虑 startretries ）。
+  - 如果进程在 startsecs 秒之内没有退出，则视作进程启动成功了（状态为 RUNNING ）。
+  - 如果进程在 startsecs 秒之后退出了，则根据 autorestart 策略决定是否重启它（不考虑 startretries ）。
 
 - autostart 有三种取值，决定了进程退出时是否重启它：
   - true ：总是重启。
@@ -127,9 +134,10 @@ supervisorctl
               status                  # 查看所有进程的状态
               update                  # 重新加载配置文件
 
-              reload                  # 重启 supervisord ，并重新加载其配置文件
+              reload                  # 重新加载配置文件（这会导致 supervisord 重启）
               shutdown                # 停止 supervisord
 ```
+- 直接执行 supervisorctl 的话会进入其交互式终端。
 - 使用 supervisorctl start 启动进程时，会阻塞前端 startsecs 秒。
 - 修改了配置文件之后，总是要执行 supervisorctl reload 命令才会生效。
 
@@ -144,3 +152,35 @@ supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
   ```
 - %(program_name)s_stdout.log ：记录了进程的 stdout 。
 - %(program_name)s_stderr.log ：记录了进程的 stderr 。
+
+## Cesi
+
+：一个基于 Python3 的 Flask 开发的 Web 管理平台，可以统一管理多台主机上的 Supervisor 。
+- 安装：
+  ```sh
+  wget https://github.com/gamegos/cesi/releases/download/v2.6.8/cesi-extended.tar.gz
+  mkdir cesi/
+  tar -zxvf cesi-extended.tar.gz -C cesi/
+  cd cesi/
+  pip3 install -r requirements.txt
+  python3 cesi/run.py --config-file defaults/cesi.conf.toml
+  ```
+  - 启动之后，访问`127.0.0.1:5000`即可，默认的账号、密码为 admin、admin 。
+
+- Cesi 的主配置文件是 defaults/cesi.conf.toml ，内容示例如下：
+  ```conf
+  [cesi]                            # 对 cesi 本身的配置
+  database = "sqlite:///users.db"   # SQLite 数据库的位置
+  activity_log = "activity.log"     # 日志文件的保存路径
+  admin_username = "admin"
+  admin_password = "admin"
+
+  [[nodes]]             # 对一个 Supervisor 节点的配置
+  name = "node1"
+  environment = "内网"  # 用于对 Supervisor 进行逻辑上的分组
+  host = "127.0.0.1"
+  port = "9001"
+  username = ""         # 用于登录 Supervisor 的账号
+  password = ""
+  ```
+  - Cesi 将数据存储在 SQLite 数据库中，因此不能通过配置文件创建账号、修改密码，要在 Web 页面上操作。

@@ -149,7 +149,9 @@ pipeline {
     - 如果要读取 shell 中的变量，则应该执行被单引号包住的 sh 语句。例如：`sh 'ID=2; echo $ID'`
   - 在 environment{} 中可以通过以下方式读取 Jenkins 的一些内置变量：
     ```groovy
-    echo "任务名：${env.JOB_NAME} ，构建编号：${env.BUILD_ID} ，工作目录：${env.WORKSPACE}"
+    echo "分支名：${env.BRANCH_NAME} ，提交者：${env.CHANGE_AUTHOR} ，版本链接：${env.CHANGE_URL}"
+    echo "节点名：${env.NODE_NAME} ，Jenkins主目录：${env.JENKINS_HOME} ，工作目录：${env.WORKSPACE}"
+    echo "任务名：${env.JOB_NAME} ，任务链接：${env.JOB_URL} ，构建编号：${env.BUILD_NUMBER} ，构建链接：${env.BUILD_URL}"
     ```
   - 在 environment{} 中可以通过以下方式读取 Jenkins 的凭据：
     ```groovy
@@ -179,7 +181,9 @@ pipeline {
         echo 'Hello'
     }
     ```
-- 使用字符串时，要用双引号或单引号或三引号包住（除非是纯数字组成的字符串），否则会被当作变量取值。例如：`echo ID`会被当作`echo "$ID"`执行。
+- 使用字符串时，要用双引号 " 或单引号 ' 包住（除非是纯数字组成的字符串），否则会被当作变量取值。
+  - 例如：`echo ID`会被当作`echo "$ID"`执行。
+  - 使用三引号 """ 或 ''' 包住时，可以输入换行的字符串。
 
 ### sh
 
@@ -189,22 +193,17 @@ pipeline {
     steps {
         sh "echo Hello"
         sh 'echo World'
+        sh """
+            A=1
+            echo $A     // 这会读取 Groovy 解释器中的变量 A
+        """
+        sh '''
+            A=1
+            echo $A     // 这会读取 shell 中的变量 A
+        '''
     }
     ```
 - 每个 sh 语句会被 Jenkins 保存为一个临时的 x.sh 文件，用 `/bin/bash -ex x.sh` 的方式执行，且切换到该 Job 的工作目录。因此各个 sh 语句之间比较独立、解耦。
-- 使用三引号时，可以编写换行的 sh 语句。如下：
-    ```groovy
-    sh """
-        A=1
-        echo $A     // 这会读取 Groovy 解释器中的变量 A
-    """
-    ```
-    ```groovy
-    sh '''
-        A=1
-        echo $A     // 这会读取 shell 中的变量 A
-    '''
-    ```
 
 ### bat
 
@@ -221,9 +220,21 @@ pipeline {
 ### emailext
 
 ：用于发送邮件。
+- 需要先在 Jenkins 系统配置中配置 SMTP 服务器。
 - 例：
     ```groovy
-    emailext body: 'this is for test.', subject: 'Test Email', to: '123456@email.com'
+    emailext (
+        subject: "[${currentBuild.fullDisplayName}]已构建，结果为${currentBuild.currentResult}",
+        to: '123456@email.com',
+        from: "Jenkins <123456@email.com>",
+        body: """
+            任务名：${env.JOB_NAME}
+            任务链接：${env.JOB_URL}
+            构建编号：${env.BUILD_NUMBER}
+            构建链接：${env.BUILD_URL}
+            构建耗时：${currentBuild.duration} ms
+        """
+    )
     ```
 
 ### parallel
@@ -366,6 +377,7 @@ pipeline {
     ```groovy
     triggers {
         cron('H */4 * * 1-5')       // 定期触发
+        pollSCM('H */4 * * 1-5')    // 定期检查 SCM 仓库，如果提交了新版本代码则构建一次
     }
     ```
 
@@ -467,3 +479,4 @@ pipeline {
         }
     }
     ```
+- pipeline 出现语法错误时，Jenkins 会直接报错，而不会执行 post 部分。

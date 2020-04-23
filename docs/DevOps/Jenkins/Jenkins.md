@@ -2,6 +2,7 @@
 
 ：一个流行的 CI/CD 平台，常用于项目构建、测试、部署。
 - 基于 Java 开发，提供了 Web 操作页面。
+- 老版本名为 Hudson 。
 - [官方文档](https://jenkins.io/zh/doc/)
 
 ## 安装
@@ -18,9 +19,20 @@
           -p 8080:8080                                    # Jenkins 的 Web 端的访问端口
           -p 50000:50000                                  # 供 Jenkins 代理访问的端口
           -v /var/jenkins_home:/var/jenkins_home          # 挂载 Jenkins 的数据目录，从而可以随时重启 Jenkins 容器
+          -v /var/run/docker.sock:/var/run/docker.sock    # 使容器内的 Jenkins 能与 docker daemon 通信
           jenkins/jenkins
   ```
   - 第一次启动时，终端上会显示一个密钥，用于第一次登陆 Web 端。
+
+## 运行原理
+
+- 用户创建一个任务之后，就可以让 Jenkins 去执行，类似执行 shell 脚本。
+- Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，因此拷贝该目录就可以备份、迁移 Jenkins 。
+  - 如果在启动 Jenkins 之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
+- Jenkins 每次执行 Job 时，默认会将 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
+  - Jenkins 每次执行 Job 之前、之后都不会自动清空工作目录。
+- Jenkins 每次执行 Job 时会在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。
+  - 在 shell 中设置环境变量 `JENKINS_NODE_COOKIE=dontkillme` 可以阻止 Jenkins 杀死当前 shell 创建的进程。
 
 ## 基本用法
 
@@ -30,17 +42,13 @@
   - Multibranch Pipeline ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
   - MultiJob ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
   - Folder ：用于对 Job 进行分组管理。
-- 用户可以添加一些主机作为 Jenkins 的运行环境。
-- 用户可以将密码等私密数据保存成 Jenkins 的“凭据”，然后在执行 Job 时调用，从而保密。
-- Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，拷贝该目录就可以备份、迁移 Jenkins 。
-  - 如果在启动 Jenkins 之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
-- Jenkins 每次执行 Job 时，默认会将 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
-  - Jenkins 每次执行 Job 之前、之后都不会自动清空工作目录。
-- Jenkins 每次执行 Job 时会在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。
-  - 在 shell 中设置环境变量 `JENKINS_NODE_COOKIE=dontkillme` 可以阻止 Jenkins 杀死当前 shell 创建的进程。
+- 新安装的 Jenkins 需要进行一些系统配置，比如添加节点、设置对外的URL
+- 点击 "Manage Jenkins" -> "Configure System" 可进行一些系统配置，比如设置 Jenkins 对外的URL、邮箱、全局的环境变量。
+- 用户可以将密码等私密数据保存成 Jenkins 的“凭据”，然后在执行 Job 时调用，从而避免泄露明文到终端上。
 
 ## 管理节点
 
+- 用户可以添加一些主机作为 Jenkins 的运行环境，称为节点（Node）。
 - Jenkins 服务器所在的节点称为 master 节点，用户还可以添加其它 slave 节点，这些节点都可以用于运行 Job 。
 - 添加 slave 节点时，一般通过 SSH 方式连接。步骤如下：
   1. 安装“SSH Build Agents”插件。
@@ -70,7 +78,7 @@
 ## 插件
 
 在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理 Jenkins 的插件。
-- 安装、卸载插件时都要重启 Jenkins 才会生效。（访问 /restart 页面，会显示一个重启按钮）
+- 安装、卸载插件时都要手动重启 Jenkins 才会生效。（访问 /restart 页面，会显示一个重启按钮）
 
 一些插件：
 - Localization: Chinese (Simplified)
@@ -81,5 +89,11 @@
   - 用于查看 Jenkins 的 master 节点的状态，或者统计 Job 的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
 - Blue Ocean
   - 提供了对于流水线的一种更美观的操作页面。
+- Jenkins Email Extension Plugin
+  - 用于让 Jenkins 发送邮件给用户。
+  - Jenkins 自带的邮件通知功能比较简陋，因此放弃不用。
 - Job Configuration History
-  - 用于记录所有 Job 以及系统配置的变更历史。
+  - 用于记录各个 Job 以及系统配置的变更历史。
+  - 原理是将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
+- Disk usage
+  - 用于记录各个 Job 占用的磁盘空间。

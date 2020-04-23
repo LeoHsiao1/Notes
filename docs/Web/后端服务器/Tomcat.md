@@ -39,6 +39,7 @@
     kill -9 `ps -ef | grep Dcatalina.home=$TOMCAT_DIR | grep -v grep | awk '{print $2}'`
     if [ "$TOMCAT_PID" ]
     then
+        echo "Tomcat 没有立即停止，正在强制终止它："
         kill -9 $TOMCAT_PID
     fi
     echo 已停止 Tomcat

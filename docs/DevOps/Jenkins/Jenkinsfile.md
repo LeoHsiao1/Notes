@@ -214,7 +214,12 @@ pipeline {
 ：触发一个 Job 。
 - 例：
     ```groovy
-    build 'job1'
+    build (
+        job: 'job1',
+        parameters: [
+            string(name: 'ACTION', value: 'start'),
+        ]
+    )
     ```
 
 ### emailext

@@ -18,3 +18,15 @@
     <script type="text/javascript" src="//static.mysite.com/main.js"></script>
     ```
     - 现代的大部分浏览器都默认将 `<script>` 看作 "text/javascript" 类型，因此可以不声明该属性。
+
+## gulp
+
+：一个自动化构建工具，基于node.js，常用于构建JavaScript项目。
+- 安装：
+    ```sh
+    npm install gulp
+    ```
+- 命令：
+    ```sh
+    gulp [task]...    # 执行任务（默认执行default任务）
+    ```

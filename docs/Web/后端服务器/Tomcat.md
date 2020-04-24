@@ -97,11 +97,11 @@
   - debug ：调试级别。取值范围为 0 ~ 9 ，0 级的调试信息最少。
   - privileged ：给予该 app 特权，允许访问 Tomcat 的内置应用。默认为 False 。
 
-- 方案三：创建 `tomcat/Catalina/localhost/app1.xml` ，添加一条 Context ：
+- 方案三：创建 `tomcat/conf/Catalina/localhost/app1.xml` ，添加一条 Context ：
   ```xml
   <Context path="/app1" docBase="tomcat/webapps/app1" reloadable="false" debug="0" privileged="true"/>
   ```
-  - 采用这种方案，容易加入、删除 XML 文件。
+  - 采用这种方案比较方便启用、禁用 app 。
 
 - 方案四：用管理员账户登录 Tomcat 的初始页面，上传 war 包并点击“部署”，还可以点击“取消部署”。
 

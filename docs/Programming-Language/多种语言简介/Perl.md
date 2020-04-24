@@ -1,11 +1,11 @@
 # Perl
 
 ：实用报表提取语言（Practical Extraction and Report Language）
-- 1987 年，由 Larry Wall 发布。
+- 1987 年由 Larry Wall 发布。
 - 是高级语言、脚本语言、动态语言。
 - 擅长文本处理（因为内置了正则表达式），后来扩展成为通用的编程语言，比如 Web 开发、系统管理、图形编程。
 
-## 基本语法
+## 语法特点
 
 - 代码保存在后缀名为 .pl 的文本文件中。
 - 每条语句以分号 ; 结尾。
@@ -14,7 +14,7 @@
 
 ## 解释器
 
-一般的 Linux 发行版已经安装了 Perl 的解释器，位于`/usr/bin/perl`
+一般的 Linux 发行版已经安装了 Perl 的解释器，位于`/usr/bin/perl`。
 
 ## 示例
 

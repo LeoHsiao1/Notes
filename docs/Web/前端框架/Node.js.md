@@ -1,19 +1,39 @@
 # Node.js
 
-：一个 JavaScript 运行环境，基于 Chrome V8 引擎，用于在服务器上运行 JS 代码。
+：一个 JavaScript 运行环境，基于 Chrome V8 引擎。
 - [官方文档](https://nodejs.org/en/docs/guides/)
 
-用途：
+## 用途
 - 构建前端文件。
-- 运行后端程序。
-- 作为中间层，接收前端的访问请求，然后转发给真正的后端服务器。
+- 运行基于 JavaScript 开发的后端程序。
+  - 一般作为中间层，接收前端的访问请求，然后转发给真正的后端服务器。
 
-安装：
+## 安装
+
 ```sh
 curl --silent --location https://rpm.nodesource.com/setup_12.x | sudo bash -
 yum install nodejs
 ```
 - 直接从 Centos 的默认 yum 源安装的话，会安装老旧的 8.x 版本。
+
+## 例
+
+下例是一个简单的 Node.js 应用：
+```js
+var http = require('http');   // 导入 http 模块
+
+http.createServer(function (request, response) {
+    response.writeHead(200, {'Content-Type': 'text/plain'});
+    response.end('Hello World\n');
+}).listen(80);
+
+console.log('Server running at http://127.0.0.1:80/');  // 打印信息到 Linux 终端
+```
+
+用如下命令运行它：
+```sh
+sudo node server.js
+```
 
 ## npm
 

@@ -115,9 +115,9 @@ pipeline {
             booleanParam(name: 'A', defaultValue: true, description: '')   // 布尔参数
             string(name: 'B', defaultValue: 'Hello', description: '')      // 字符串参数，在 Web 页面上输入时不能换行
             text(name: 'C', defaultValue: 'Hello\nWorld', description: '') // 文本参数，输入时可以换行
-            password(name: 'D', defaultValue: '123456', description: '')   // 密文参数，输入时显示成密文
-            choice(name: 'E', choices: ['A', 'B', 'C'], description: '')   // 单选参数，输入时显示成下拉框
-            file(name: 'F', description: '')                               // 文件参数，输入时显示一个文件上传按钮
+            password(name: 'D', defaultValue: '123456', description: '')   // 密文参数，输入时会显示成密文
+            choice(name: 'E', choices: ['A', 'B', 'C'], description: '')   // 单选参数，输入时会显示成下拉框
+            file(name: 'f1', description: '')                              // 文件参数，输入时会显示文件上传按钮
         }
         stages {
             stage('Test') {
@@ -129,6 +129,7 @@ pipeline {
     }
     ```
   - 如果定义了 parameters{} ，则会移除在 Jenkins Web 页面中定义的、在上游 Job 中定义的构建参数。
+  - 对于文件参数，上传的文件会存储到 ${workspace}/${job_name}/f1 路径处，而用 $f1 可获得上传的文件名。
 
 - 在 environment{} 中可以定义环境变量，它们会被 Jenkind 加入到 shell 的环境变量中。
   - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。

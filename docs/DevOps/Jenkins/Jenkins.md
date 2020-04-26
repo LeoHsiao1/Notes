@@ -28,7 +28,7 @@
 
 - 用户创建一个任务之后，就可以让 Jenkins 去执行，类似执行 shell 脚本。
 - Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，因此拷贝该目录就可以备份、迁移 Jenkins 。
-  - 如果在启动 Jenkins 之前设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，就可以改变 Jenkins 的主目录。
+  - 在启动 Jenkins 之前，可以通过设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，改变 Jenkins 的主目录。
   - 建议创建一个定期任务，自动备份 Jenkins 的主目录。
 - Jenkins 每次执行 Job 时，默认会将 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
   - Jenkins 每次执行 Job 之前、之后都不会自动清空工作目录。

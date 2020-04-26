@@ -150,6 +150,7 @@ supervisorctl
 - 直接执行 supervisorctl 的话会进入其交互式终端。
 - 使用 supervisorctl start 启动进程时，会阻塞前端 startsecs 秒。
 - 修改了配置文件之后，总是要执行 supervisorctl reload 命令才会生效。
+- 如果修改了 shell 的环境变量，要重启 supervisord 才会生效。
 
 ## 日志
 

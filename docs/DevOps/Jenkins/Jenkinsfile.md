@@ -63,44 +63,6 @@ pipeline {
   - 每个 stage{} 中只能定义一个 steps{} ，表示主要执行的操作步骤。
   - Jenkins 会按先后顺序执行各个 stage{} ，并在 Web 页面上显示执行进度。
 
-## agent{}
-
-在 pipeline{} 的开头要定义 agent{} ，表示选择哪个节点来执行流水线，适用于所有 stage{} 。
-- 也可以在一个 stage{} 中单独定义该阶段的 agent{} 。
-- 常见的几种定义方式：
-    ```groovy
-    agent {
-        agent none       // 不设置全局的 agent ，此时要在每个 stage{} 中单独定义 agent{}
-    }
-    ```
-    ```groovy
-    agent {
-        agent any       // 让 Jenkins 选择任一节点
-    }
-    ```
-    ```groovy
-    agent {
-        label 'master'  // 选择指定名字的节点
-    }
-    ```
-    ```groovy
-    agent {
-        node {          // 选择指定名字的节点，并指定工作目录
-            label 'master'
-            customWorkspace '/opt/jenkins_home/workspace/test1'
-        }
-    }
-    ```
-    ```groovy
-    agent {
-        docker {        // 运行一个容器
-            image 'centos:7'
-            label 'jenkins_workspace'
-            args  '-v /tmp:/tmp'
-        }
-    }
-    ```
-
 ## 使用变量
 
 - 用 `$变量名` 的格式可以读取变量的值。
@@ -130,6 +92,7 @@ pipeline {
     ```
   - 如果定义了 parameters{} ，则会移除在 Jenkins Web 页面中定义的、在上游 Job 中定义的构建参数。
   - 对于文件参数，上传的文件会存储到 ${workspace}/${job_name}/f1 路径处，而用 $f1 可获得上传的文件名。
+  - 每次修改了 parameters{} 之后，要执行一次 Job 才会在 Jenkins Web 页面上生效。
 
 - 在 environment{} 中可以定义环境变量，它们会被 Jenkind 加入到 shell 的环境变量中。
   - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
@@ -168,6 +131,40 @@ pipeline {
     ```
     读取其它类型的凭据时，建议打印出 shell 的所有环境变量，从而发现 Jenkins 加入的环境变量的名字。
     为了保密，如果直接将上述变量打印到 stdout 上，Jenkins 会将它们的值显示成 `****` 。
+
+## agent{}
+
+在 pipeline{} 中必须要定义 agent{} ，表示选择哪个节点来执行流水线，适用于所有 stage{} 。
+- 也可以在一个 stage{} 中单独定义该阶段的 agent{} 。
+- 常见的几种定义方式：
+    ```groovy
+    agent none       // 不设置全局的 agent ，此时要在每个 stage{} 中单独定义 agent{}
+    ```
+    ```groovy
+    agent any       // 让 Jenkins 选择任一节点
+    ```
+    ```groovy
+    agent {
+        label 'master'  // 选择指定名字的节点
+    }
+    ```
+    ```groovy
+    agent {
+        node {          // 选择指定名字的节点，并指定工作目录
+            label 'master'
+            customWorkspace '/opt/jenkins_home/workspace/test1'
+        }
+    }
+    ```
+    ```groovy
+    agent {
+        docker {        // 运行一个容器
+            image 'centos:7'
+            label 'jenkins_workspace'
+            args  '-v /tmp:/tmp'
+        }
+    }
+    ```
 
 ## steps{}
 
@@ -218,10 +215,11 @@ pipeline {
     build (
         job: 'job1',
         parameters: [
-            string(name: 'ACTION', value: 'start'),
+            string(name: 'AGENT', value: 'master'),  // 这里的 string 是指输入值的类型，可输入给大部分类型的 parameters
         ]
     )
     ```
+- 一个 Job 可以不指定 agent 、不执行具体命令，只是调用另一个 Job 。
 
 ### emailext
 

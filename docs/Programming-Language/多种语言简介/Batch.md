@@ -1,7 +1,7 @@
 # Batch
 
 ：批处理。
-- 它是微软的磁盘操作系统（Mircro Software Disk Operating System，MS-DOS）自带的一种脚本语言，用 cmd.exe 解释执行。
+- 它是微软的磁盘操作系统（Mircro Software Disk Operating System ，MS-DOS）自带的一种脚本语言，用 cmd.exe 解释执行。
 
 ## 语法特点
 
@@ -58,7 +58,7 @@ help                    :: 显示帮助信息
 关于进程：
 ```batch
 tasklist                :: 显示当前的所有进程
-taskkill /pid 6666 /f   :: 杀死一个进程，其pid为6666，f代表force强制杀死
+taskkill /pid 6666 /f   :: 杀死一个进程，其 pid 为 6666 ，f 代表 force 强制杀死
 ```
 
 定义变量：
@@ -71,7 +71,7 @@ echo %x%
 
 Windows 系统的相关概念：
 - 钩子（Hook）：用于监听某个进程或窗口的消息。
-  - 在Windows上，一般进程、窗口的消息都会经过钩子平台中转，因此可以被监听或拦截。
-- 句柄（Handler）：对象的唯一标识符。在32位系统中，是一个32位的无符号整型。
+  - 在 Windows 上，一般进程、窗口的消息都会经过钩子平台中转，因此可以被监听或拦截。
+- 句柄（Handler）：对象的唯一标识符。在 32 位系统中，是一个 32 位的无符号整型。
   - 比如窗口的句柄、钩子的句柄。
 - PowerShell ：微软于 2006 年推出的新一代脚本语言、shell 程序，基于 .NET Framework 运行，能实现强大、丰富的功能。

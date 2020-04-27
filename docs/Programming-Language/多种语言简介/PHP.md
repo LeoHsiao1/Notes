@@ -2,19 +2,19 @@
 
 ：超文本预处理器（Hypertext Preprocessor），一种用于 Web 后端的脚本语言。
 - PHP5.6 版本于 2014 年发布，PHP6 版本被跳过，PHP7 版本于 2015 年发布，优化了很多性能。
-- 常见的PHP运行环境：
+- 常见的 PHP 运行环境：
   - LAMP（Linux+Apache+MySql+PHP）框架
   - LNMP（Linux+Nginx+MySql+PHP）框架
   - WAMP（Windows+Apache+MySql+PHP）框架
   - WNMP（Windows+Nginx+MySql+PHP）框架
-  - WampServer：一款 WAMP 软件。
-  - phpStudy：一款兼容 WAMP 和 WNMP 的软件。
+  - WampServer ：一款 WAMP 软件。
+  - phpStudy ：一款兼容 WAMP 和 WNMP 的软件。
 
 ## 语法特点
 
 - 每行语句要以分号 ; 结尾。
 - 用 // 声明单行注释，用 /* 和 */ 声明多行注释。
-- PHP 代码可以通过标签 `<?php` 和 `?>` 嵌入到HTML文件中，但此时要将文件后缀名改为 .php 。如下：
+- PHP 代码可以通过标签 `<?php` 和 `?>` 嵌入到 HTML 文件中，但此时要将文件后缀名改为 .php 。如下：
     ```php
     <!DOCTYPE html>
     <html>
@@ -43,7 +43,7 @@
 ### 变量的定义
 
 - 变量的命名规范与 C 语言相同，只不过变量名要加上 $ 前缀。
-- 变量会在第一次赋值时被自动创建，不需要声明变量的类型，因此PHP是一种弱类型语言。如下：
+- 变量会在第一次赋值时被自动创建，不需要声明变量的类型，因此 PHP 是一种弱类型语言。如下：
     ```php
     $x = 1;
     echo $x;
@@ -51,24 +51,24 @@
 
 ### 变量的数据类型
 
-- null：空值。
+- null ：空值。
 - int
 - float
-- bool：布尔型，取值为 true 或 false 。
+- bool ：布尔型，取值为 true 或 false 。
 - string
   - 用单引号 ' 或双引号 " 作为定界符。
-  - 用 `<<<EOF` 和 `EOF;` 作为定界符时，会使字符串中的转义字符无效，但可以直接嵌入PHP的变量。如下：
+  - 用 `<<<EOF` 和 `EOF;` 作为定界符时，会使字符串中的转义字符无效，但可以直接嵌入 PHP 的变量。如下：
     ```php
     str1 = <<<EOF
         <h1>标题一</h1>
-        <p>x的值是：$x</p>
+        <p>x 的值是：$x</p>
     EOF;
     echo strlen($str1);    // 获取字符串的长度
     ```
   - 标识符的值不一定要是 EOL ，只需保证开始标识符与结束标识符相同。
 
-- array：数组。用 array() 函数定义，支持嵌套。
-  - 数值数组：访问时使用数字作为下标，像C语言的普通数组。如下：
+- array ：数组。用 array() 函数定义，支持嵌套。
+  - 数值数组：访问时使用数字作为下标，像 C 语言的普通数组。如下：
     ```php
     $text = array("hello","world","!");
     $text[0] = "hi";
@@ -76,7 +76,7 @@
     sort($text);        // 升序排列
     rsort($text);       // 降序排列
     ```
-  - 关联数组：访问时使用键名作为下标，像Python的字典。每个键值对用 => 连接。
+  - 关联数组：访问时使用键名作为下标，像 Python 的字典。每个键值对用 => 连接。
     ```php
     $text = array("line1" => "hello", "line2" => "world","line3"=>"!");
     $text["line1"] = "hi";
@@ -89,13 +89,13 @@
   echo URL;
   ```
   - 常量的值不能修改。
-  - 常量都是全局变量，而且可以在函数内直接访问，不需要用global关键字。
+  - 常量都是全局变量，而且可以在函数内直接访问，不需要用 global 关键字。
 
 ### 变量的作用域
 
 - 局部变量：在函数之内创建，只能在函数之内访问。
-  - 局部变量在函数执行完成之后会被自动销毁，也可以用关键字static声明为静态变量，避免被销毁。
-- 全局变量：在函数之外创建，可以从脚本的任意位置访问，但是在函数之内访问时要用global关键字声明，或者通过超全局变量 $GLOBALS[] 访问。
+  - 局部变量在函数执行完成之后会被自动销毁，也可以用关键字 static 声明为静态变量，避免被销毁。
+- 全局变量：在函数之外创建，可以从脚本的任意位置访问，但是在函数之内访问时要用 global 关键字声明，或者通过超全局变量 $GLOBALS[] 访问。
   - 例：
     ```php
     $x = 1;
@@ -109,27 +109,27 @@
 
 ### 超全局变量
 
-：一些关联数组，由PHP解释器提供，不需要声明就可以在所有PHP脚本中使用。
+：一些关联数组，由 PHP 解释器提供，不需要声明就可以在所有 PHP 脚本中使用。
 - $GLOBALS ：存储了所有全局变量。
 - $_SERVER ：存储了一些服务器的信息。
   - 执行 `print_r($_SERVER);` 即可查看其具体内容，如下：
     ```php
-    $_SERVER["SERVER_ADDR"] = 127.0.0.1   // 服务器的IP地址
+    $_SERVER["SERVER_ADDR"] = 127.0.0.1   // 服务器的 IP 地址
     $_SERVER["SERVER_PORT"] = 80          // 服务器的端口号
-    $_SERVER["REMOTE_ADDR"] = 127.0.0.1   // 客户端的IP地址
+    $_SERVER["REMOTE_ADDR"] = 127.0.0.1   // 客户端的 IP 地址
     $_SERVER["REMOTE_PORT"] = 51362       // 客户端的端口号
     $_SERVER["REQUEST_METHOD"] = "GET"    // 客户端的请求方法
-    $_SERVER["REQUEST_URI"] = "/index.php?id=1&page=2"   // 客户端请求的URI（域名之后的部分）
-    $_SERVER["QUERY_STRING"] = "id=1&page=2"             // 客户端请求的query string
+    $_SERVER["REQUEST_URI"] = "/index.php?id=1&page=2"   // 客户端请求的 URI（域名之后的部分）
+    $_SERVER["QUERY_STRING"] = "id=1&page=2"             // 客户端请求的 query string
     $_SERVER["SCRIPT_FILENAME"] => "/php/WWW/index.php"  // 该脚本在主机上的绝对路径
     $_SERVER["SCRIPT_NAME"] = "/index.php"               // 该脚本在网站中的相对路径
     ```
-- $_REQUEST ：存储了HTTP请求的表单数据。
+- $_REQUEST ：存储了 HTTP 请求的表单数据。
   - 例：
     ```php
     echo $_REQUEST["username"];
     ```
-- $_POST ：存储了HTTP请求的表单数据。
+- $_POST ：存储了 HTTP 请求的表单数据。
   - 例：
     ```php
     echo $_POST["username"];
@@ -141,8 +141,8 @@
     ```
 - $_COOKIE
 - $_SESSION
-- $_ENV ：存储了PHP脚本的所有环境变量。
-- $_FILES ：存储了Web客户端上传的文件。
+- $_ENV ：存储了 PHP 脚本的所有环境变量。
+- $_FILES ：存储了 Web 客户端上传的文件。
 
 ## 运算符
 

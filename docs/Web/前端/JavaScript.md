@@ -21,12 +21,12 @@
 
 ## gulp
 
-：一个自动化构建工具，基于node.js，常用于构建JavaScript项目。
+：一个自动化构建工具，基于 node.js ，常用于构建 JavaScript 项目。
 - 安装：
     ```sh
     npm install gulp
     ```
 - 命令：
     ```sh
-    gulp [task]...    # 执行任务（默认执行default任务）
+    gulp [task]...    # 执行任务（默认执行 default 任务）
     ```

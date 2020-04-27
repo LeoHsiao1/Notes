@@ -10,7 +10,7 @@
 yum install ruby
 ```
 
-执行Ruby脚本：
+执行 Ruby 脚本：
 ```sh
 ruby test.rb
 ```
@@ -45,7 +45,7 @@ ruby test.rb
     puts "结束..."
     }
     ```
-- Ruby 代码可通过标签 `<ruby>` 和 `</ruby>` 嵌入到HTML文件中。如下：
+- Ruby 代码可通过标签 `<ruby>` 和 `</ruby>` 嵌入到 HTML 文件中。如下：
     ```html
     <ruby>
     汉 <rp>(</rp><rt>Han</rt><rp>)</rp>   <!-- 用标签<rp>加上拼音 -->

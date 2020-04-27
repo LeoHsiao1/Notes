@@ -114,7 +114,7 @@ pipeline {
   - 在 environment{} 中可以通过以下方式读取 Jenkins 的一些内置变量：
     ```groovy
     echo "分支名：${env.BRANCH_NAME} ，提交者：${env.CHANGE_AUTHOR} ，版本链接：${env.CHANGE_URL}"
-    echo "节点名：${env.NODE_NAME} ，Jenkins主目录：${env.JENKINS_HOME} ，工作目录：${env.WORKSPACE}"
+    echo "节点名：${env.NODE_NAME} ，Jenkins 主目录：${env.JENKINS_HOME} ，工作目录：${env.WORKSPACE}"
     echo "任务名：${env.JOB_NAME} ，任务链接：${env.JOB_URL} ，构建编号：${env.BUILD_NUMBER} ，构建链接：${env.BUILD_URL}"
     ```
   - 在 environment{} 中可以通过以下方式读取 Jenkins 的凭据：
@@ -248,11 +248,11 @@ pipeline {
 - 例：
     ```groovy
     steps {
-        parallel '单元测试1': {
+        parallel '单元测试 1': {
             echo '测试中...'
             echo '测试完成'
         },
-        '单元测试2': {
+        '单元测试 2': {
             echo '测试中...'
             echo '测试完成'
         }

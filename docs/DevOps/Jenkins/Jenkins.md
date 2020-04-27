@@ -44,8 +44,8 @@
   - Multibranch Pipeline ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
   - MultiJob ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
   - Folder ：用于对 Job 进行分组管理。
-- 新安装的 Jenkins 需要进行一些系统配置，比如添加节点、设置对外的URL
-- 点击 "Manage Jenkins" -> "Configure System" 可进行一些系统配置，比如设置 Jenkins 对外的URL、邮箱、全局的环境变量。
+- 新安装的 Jenkins 需要进行一些系统配置，比如添加节点、设置对外的 URL
+- 点击 "Manage Jenkins" -> "Configure System" 可进行一些系统配置，比如设置 Jenkins 对外的 URL、邮箱、全局的环境变量。
 - 用户可以将密码等私密数据保存成 Jenkins 的“凭据”，然后在执行 Job 时调用，从而避免泄露明文到终端上。
 
 ## 管理节点

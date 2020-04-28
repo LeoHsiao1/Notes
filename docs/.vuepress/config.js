@@ -440,19 +440,6 @@ module.exports = {
 					]
 				},
 				{
-					title: 'Ops工具',
-					collapsable: true,
-					sidebarDepth: 2,
-					children: [
-						'Ops工具/Ansible',
-						'Ops工具/Supervisor',
-						'Ops工具/Zabbix',
-						'Ops工具/Grafana',
-						'Ops工具/logrotate',
-						'Ops工具/ELK',
-					]
-				},
-				{
 					title: 'Jenkins',
 					collapsable: true,
 					sidebarDepth: 2,
@@ -485,6 +472,34 @@ module.exports = {
 						'k8s/Volume',
 						'k8s/插件',
 						'k8s/Rancher',
+					]
+				},
+				{
+					title: '配置管理',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'配置管理/Ansible',
+					]
+				},
+				{
+					title: '监控告警',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'监控告警/Supervisor',
+						'监控告警/Grafana',
+						'监控告警/Zabbix',
+						'监控告警/Prometheus',
+					]
+				},
+				{
+					title: '日志处理',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'日志处理/logrotate',
+						'日志处理/ELK',
 					]
 				},
 			],

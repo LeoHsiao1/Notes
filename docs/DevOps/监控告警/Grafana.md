@@ -92,4 +92,3 @@ Grafana 支持通过 GitLab、GitHub 等第三方账号登录。
       ```
 
 2. 进入"Dashboard"页面，编辑任意 panel ，添加 Alert 告警规则。
-

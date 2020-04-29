@@ -75,20 +75,26 @@ Grafana 支持通过 GitLab、GitHub 等第三方账号登录。
 
 ## 告警
 
-使用告警功能的步骤：
-1. 进入"Alerting"页面，创建至少一个"Notification Channel"，表示发送告警信息到哪里。
-  - 如果以 Email 的形式发送告警，则需要先在 Grafana 的配置文件中配置邮箱信息，如下：
-      ```ini
-      [smtp]
-      enabled = true
-      host = 10.0.0.1:25      # SMTP 服务器的位置
-      user =                  # 登录 SMTP 服务器的账号
-      password =              # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
-      cert_file =
-      key_file =
-      skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 协议
-      from_address = admin@grafana.localhost    # 邮件的发件方邮箱
-      from_name = Grafana                       # 邮件的发送方名称
-      ```
+- 使用告警功能的步骤：
+    1. 进入"Alerting"页面，创建至少一个"Notification Channel"，表示发送告警信息到哪里。
+    2. 进入"Dashboard"页面，编辑任意 panel ，添加 Alert 告警规则。
 
-2. 进入"Dashboard"页面，编辑任意 panel ，添加 Alert 告警规则。
+- 如果以 Email 的形式发送告警，则需要先在 Grafana 的配置文件中配置邮箱信息，如下：
+    ```ini
+    [smtp]
+    enabled = true
+    host = 10.0.0.1:25      # SMTP 服务器的位置
+    user =                  # 登录 SMTP 服务器的账号
+    password =              # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
+    cert_file =
+    key_file =
+    skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 协议
+    from_address = admin@grafana.localhost    # 邮件的发件方邮箱
+    from_name = Grafana                       # 邮件的发送方名称
+    ```  
+
+- Alert 的默认触发条件为 "Evaluate every 1m, For 5m" ，意味着：
+  每隔 1m 检查一次，如果满足告警条件，则将 pannel 从 OK 状态切换为 Pending 状态。
+  如果处于 Pending 状态超过 5m ，才发送告警信息。并且以后不会再重复发送。
+
+- 在 panel 的 Alert 编辑页面，可以点击"State history"，查看告警历史。

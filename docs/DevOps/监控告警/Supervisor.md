@@ -22,25 +22,23 @@
                 -c /etc/supervisord.conf  # 使用指定的配置文件
     ```
 
-- 或者安装 Python 库：
+- 或者下载 Python 库然后安装：
     ```sh
-    pip install supervisor
+    wget https://github.com/Supervisor/supervisor/archive/4.1.0.tar.gz
+    tar -zxvf supervisor-4.1.0.tar.gz
+    cd supervisor-4.1.0
+    python setup.py install
     ```
-  - 然后要手动创建 supervisor 用到的目录，因为它不会自己创建。
+  还要手动创建 supervisor 用到的目录，因为它不会自己创建：
     ```sh
     sudo mkdir /etc/supervisord.d/
     sudo mkdir /var/run/supervisor/
     sudo mkdir /var/log/supervisor/
+
     sudo chown -R leo:leo /etc/supervisord.d/
+    sudo chown -R leo:leo /etc/supervisord.conf
     sudo chown -R leo:leo /var/run/supervisor/
     sudo chown -R leo:leo /var/log/supervisor/
-    ```
-
-- 不能连接到外网时，需要拷贝 Python 库然后安装：
-    ```sh
-    tar -zxvf supervisor-4.1.0.tar.gz
-    cd supervisor-4.1.0
-    python setup.py install
     ```
 
 ## 配置
@@ -142,10 +140,10 @@ supervisorctl
               restart <name>          # 重启进程
 
               status                  # 查看所有进程的状态
-              update                  # 重新加载配置文件
+              update                  # 重新加载配置文件，重启受影响的进程
 
-              reload                  # 重新加载配置文件（这会导致 supervisord 重启）
               shutdown                # 停止 supervisord
+              reload                  # 重启 supervisord
 ```
 - 直接执行 supervisorctl 的话会进入其交互式终端。
 - 使用 supervisorctl start 启动进程时，会阻塞前端 startsecs 秒。

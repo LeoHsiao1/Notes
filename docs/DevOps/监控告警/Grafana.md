@@ -95,6 +95,9 @@ Grafana 支持通过 GitLab、GitHub 等第三方账号登录。
 
 - Alert 的默认触发条件为 "Evaluate every 1m, For 5m" ，意味着：
   每隔 1m 检查一次，如果满足告警条件，则将 pannel 从 OK 状态切换为 Pending 状态。
-  如果处于 Pending 状态超过 5m ，才发送告警信息。并且以后不会再重复发送。
+  如果处于 Pending 状态超过 5m ，才发送告警信息。
+  
+- 在"Alerting"页面可以看到用户创建的所有 Alert Rule 。
+  每个 Alert Rule 只会触发一次，不会重复触发。用户必须手动将它从 Alerting 暂停，再点击启用，才能等待下一次触发。
 
 - 在 panel 的 Alert 编辑页面，可以点击"State history"，查看告警历史。

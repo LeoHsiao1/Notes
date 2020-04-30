@@ -8,7 +8,7 @@
 连接到 MySQL 服务器：
 ```python
 >>> import pymysql
->>> client = pymysql.Connect(host='localhost', user='root', passwd='******', db='db1', port=3306, charset='utf8mb4')
+>>> client = pymysql.Connect(host='localhost', port=3306, user='root', passwd='******', db='db1', charset='utf8mb4')
 ```
 - 默认的 connect_timeout 是 10 秒。
 

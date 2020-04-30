@@ -27,19 +27,34 @@
 
 - tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
   - startup.sh  ：用于启动 Tomcat ，实际上是调用`catalina.sh start`。
-    - 默认以 daemon 方式运行，使用`catalina.sh run`则会在前台运行。
+    - 默认将 Tomcat 作为 deamon 进程运行，使用`catalina.sh run`则会在前台运行。
   - shutdown.sh ：用于停止 Tomcat ，实际上是调用`catalina.sh stop`。
   - version.sh  ：用于显示版本信息。
 
 - 每次更新 Tomcat 应用或配置时，建议重启 Tomcat ，使修改立即生效。可以自定义一个重启脚本 restart.sh ：
     ```sh
-    tomcat/bin/shutdown.sh
+    cd $TOMCAT_DIR
+    bin/shutdown.sh
     sleep 5
-    pid=`ps -ef | grep Dcatalina.home=/opt/tomcat-7.0.100-jdk1.8 | grep -v grep | awk '{print $2}'`
-    kill -9 $pid
+    kill -9 `ps -ef | grep Dcatalina.home=$TOMCAT_DIR | grep -v grep | awk '{print $2}'`
+    if [ "$TOMCAT_PID" ]
+    then
+        echo "Tomcat 没有立即停止，正在强制终止它："
+        kill -9 $TOMCAT_PID
+    fi
     echo 已停止 Tomcat
+
     rm -rf tomcat/work/Catalina/    # 删除 JSP 页面编译后的缓存
-    tomcat/bin/startup.sh
+    bin/startup.sh
+    sleep 1
+    TOMCAT_PID=`ps -ef | grep Dcatalina.home=$TOMCAT_DIR | grep -v grep | awk '{print $2}'`
+    if [ "$TOMCAT_PID" ]
+    then
+        echo 已启动 Tomcat
+    else
+        echo 启动 Tomcat 失败
+        exit 1
+    fi
     ```
 
 ## 初始页面
@@ -82,11 +97,11 @@
   - debug ：调试级别。取值范围为 0 ~ 9 ，0 级的调试信息最少。
   - privileged ：给予该 app 特权，允许访问 Tomcat 的内置应用。默认为 False 。
 
-- 方案三：创建 `tomcat/Catalina/localhost/app1.xml` ，添加一条 Context ：
+- 方案三：创建 `tomcat/conf/Catalina/localhost/app1.xml` ，添加一条 Context ：
   ```xml
   <Context path="/app1" docBase="tomcat/webapps/app1" reloadable="false" debug="0" privileged="true"/>
   ```
-  - 采用这种方案，容易加入、删除 XML 文件。
+  - 采用这种方案比较方便启用、禁用 app 。
 
 - 方案四：用管理员账户登录 Tomcat 的初始页面，上传 war 包并点击“部署”，还可以点击“取消部署”。
 

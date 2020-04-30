@@ -9,7 +9,7 @@
 
 ## 安装
 
-- 下载发行版并启动：
+- 下载二进制版然后运行：
     ```sh
     curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.6.0-linux-x86_64.tar.gz
     tar -zxvf elasticsearch-7.6.0-linux-x86_64.tar.gz

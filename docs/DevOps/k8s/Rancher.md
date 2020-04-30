@@ -1,7 +1,6 @@
 # Rancher
 
 ：一个基于 k8s 的容器管理平台，提供了 Web 操作界面。
-- 由 Rancher Labs 公司推出。
 - RKE ：Rancher Kubernetes Engine
 
 使用经验：

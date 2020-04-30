@@ -28,9 +28,21 @@ $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登�
 ```
 - 例：
     ```sh
-    ssh root@10.0.0.1 "echo $HOSTNAME"  # 用双引号时，会先在本机取出变量的值，然后将命令发送到远端
-    ssh root@10.0.0.1 'echo $HOSTNAME'  # 用单引号时，会先将命令发送到远端，然后在远端取出变量的值
+    ssh root@10.0.0.1 "echo $HOSTNAME"  # 用双引号时，会先在本机读取变量的值，然后将命令发送到远端
+    ssh root@10.0.0.1 'echo $HOSTNAME'  # 用单引号时，会先将命令发送到远端，然后在远端读取变量的值
     ```
+- 采用以下格式可以发送多行命令：
+    ```sh
+    ssh -tt zhonghong@10.0.0.1 << EOL
+    uname -n
+    echo hello
+    exit
+    EOL
+    ```
+  - `-tt` 选项用于强制分配伪终端，从而将远程终端的内容显示到当前终端。
+  - 这里将 EOF 声明为定界符，将两个定界符之间的内容当作 sh 脚本发送到远程终端执行。
+  - 在两个定界符之间的内容不需要缩进，否则会连着缩进的空格一起发送。
+  - 最后一条命令是 exit ，用于主动退出远程终端。
 
 sshd 的主配置文件是 /etc/ssh/sshd_config ，内容示例：
 ```
@@ -56,11 +68,15 @@ PermitEmptyPasswords no           # 不允许用空密码登录
 ### ssh-keygen
 
 ```sh
-$ ssh-keygen         # 生成一对 SSH 密钥（默认采用 RSA 加密算法）
-            -r rsa   # 指定加密算法（默认是 rsa）
-            -C "your_email@example.com"   # 添加备注信息
+$ ssh-keygen          # 生成一对 SSH 密钥（默认采用 RSA 加密算法）
+            -r rsa    # 指定加密算法（默认是 rsa）
+            -C "123456@email.com"   # 添加备注信息
 ```
 - 默认会将私钥文件 id_rsa 、公钥文件 id_rsa.pub 保存到 ~/.ssh/ 目录下。
+- id_rsa.pub 的内容示例如下，只占一行，包括加密算法名称、公钥值、备注信息三个字段。
+    ```
+    ssh-rsa AAB3...mKu4S19Lw== root@Centos
+    ```
 
 ### ssh-copy-id
 

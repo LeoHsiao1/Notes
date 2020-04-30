@@ -61,18 +61,18 @@ args = parser.parse_args()
 
 
 try:
-    # read the file
     with open(args.file, 'r', encoding=args.encoding) as f:
-        text = f.read()
+        raw_text = f.read()
         print('Handling file: {} ...'.format(args.file), end='\t')
 
-    # handling
-    result = replace(text, args.src, args.dst)
+    result = replace(raw_text, args.src, args.dst)
 
-    # save the result
-    with open(args.file, 'w', encoding=args.encoding) as f:
-        f.write(result)
-        print('done')
+    if raw_text == result:
+        print('skip')
+    else:
+        with open(args.file, 'w', encoding=args.encoding) as f:
+            f.write(result)
+            print('done')
 
 except Exception as e:
     print('Error: {}'.format(str(e)))

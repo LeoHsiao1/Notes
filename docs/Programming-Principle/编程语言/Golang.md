@@ -41,7 +41,7 @@
 
 ## 协程
 
-Go 语言提供了 Goroutines ，可以创建轻量级的协程；还提供了 Channels 机制，用于协程之间的通信。
+Golang 提供了 Goroutines ，可以创建轻量级的协程；还提供了 Channels 机制，用于协程之间的通信。
 
 - 用关键字 go 可以创建一个协程：
     ```go

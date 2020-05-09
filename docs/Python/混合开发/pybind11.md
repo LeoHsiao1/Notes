@@ -376,6 +376,7 @@ py::object test_dict()
 
 其它示例：<https://github.com/pybind/pybind11/blob/master/tests/test_pytypes.cpp>
 
+不能将 C++ 的全局变量声明为 Python 的数据类型，否则其占用的内存不会被自动释放，从而引发内存错误。
 
 ## 映射对象
 

@@ -24,13 +24,18 @@
 
 ## Dashboard
 
-Grafana 上可以创建多个 Dashboard（仪表盘），每个 DashBoard 页面可以包含多个 Panel（面板）。
-- 可以将 Dashboard 或 Panel 导出 JSON 配置文件。
-- 存在多个 Dashboard 时，可以用 Folder 分类管理。
+- Grafana 上可以创建多个 Dashboard（仪表盘），每个 DashBoard 页面可以包含多个 Panel（面板）。
+  - 可以将 Dashboard 或 Panel 导出 JSON 配置文件。
+  - 存在多个 Dashboard 时，可以用 Folder 分类管理。
 - playlist ：包含多个 Dashboard 的播放清单。
 - snapshot ：对 Dashboard 或 Panel 的快照，只记录了此刻的数据，可以分享 URL 给任何人查看。
 
 ## Panel
+
+- 一个 panel 中存在多个图例（legend）的曲线时，用鼠标单击某个图例的名字，就会只显示该图例的曲线。按住 Ctrl 再单击，就可以同时选择多个图例。
+- 修改 Panel 时，是以 Dashboard 为单位进行修改，要点击"Save Dashboard"才会保存。
+  - 比如调整一个 Dashboard 显示的时间范围（time range）时，会影响到该 Dashboard 中的所有 panel 。
+- 用鼠标横向拖动选中 panel 中的一块区域，可以缩小 time range ；按 Ctrl+Z 可以放大 time range 。
 
 Panel 的配置项分为四页：
 - Queries ：数据源。
@@ -46,25 +51,21 @@ Panel 的配置项分为四页：
 
     Min time interval 1m                  # group by 分组的最短时间间隔（建议与查询间隔一致）
     ```
-
 - Visualization ：显示样式。
   - 大多数情况可采用以时间为横轴的曲线图，从而方便查看数据的变化历史。
+  - 每个曲线图上可以输入多个图例，从而显示多条曲线。
 - General ：一般的配置项，比如 Panel 的名字。
 - Alert ：告警规则。
-
-查看 Panel 时：
-- 调整一个 Dashboard 显示的时间范围（time range）时，会影响到该 Dashboard 中的所有 panel 。
-  - 用鼠标横向拖动选中 panel 中的一块区域，可以缩小 time range 。
-  - 按 Ctrl+Z 可以放大 time range 。
-- 一个 panel 中存在多个图例（legend）的曲线时，用鼠标单击某个图例的名字，就会只显示该图例的曲线。按住 Ctrl 再单击，就可以同时选择多个图例。
 
 ## 告警
 
 - 使用告警功能的步骤：
     1. 进入 Alerting 页面，创建至少一个"Notification Channel"，表示发送告警信息到哪里。
     2. 进入任意 Panel 的编辑页面，添加 Alert 告警规则。
-
 - 在 Alerting 页面可以看到用户创建的所有 Alert Rule 。
+- 在 Panel 的 Alert 编辑页面，
+  - 点击"State history" 可以查看告警历史。
+  - 点击 "Test Rule" 可以测试告警条件。
 
 - 如果以 Email 的形式发送告警，则需要先在 Grafana 的配置文件中配置邮箱信息，如下：
     ```ini
@@ -84,7 +85,7 @@ Panel 的配置项分为四页：
     ```
     Evaluate every 1m, For 5m
     ```
-  - 它表示每隔 1m 查询一次，如果满足告警条件，则将该 Panel 从 OK 状态标为 Pending 状态；如果处于 Pending 状态超过 5m ，则标为 Alerting 状态，并发送告警信息。
+  - 它表示每隔 1m 查询一次，如果满足告警条件，则将该 Panel 从 OK 状态标为 Pending 状态；如果保持 Pending 状态超过 5m ，则标为 Alerting 状态，并发送告警信息。
   - 如果该 Panel 一直处于 Alerting 状态，Grafana 不会再重复告警，除非用户手动暂停再启用其 Alert Rule 。
   - 如果该 Panel 不再满足告警条件，Grafana 会立即将它的状态标为 OK ，并且默认也会发送一条告警消息（除非在配置"Notification Channel"时，勾选"Disable Resolve Message"）。
 
@@ -95,14 +96,16 @@ Panel 的配置项分为四页：
     它表示查询最近 5 分钟之内、1 分钟之前的图例 A 的数据，看平均值是否大于 10 。
     如果图例 A 包含多个 Metric ，则只要有一个 Metric 的值符合条件就会告警。
     截止时间设置成 now-1m 是为了避免最近 1 分钟之内尚未采集到数据，导致报错：NO DATA 
-    下例是查询最后一次数据，因此不必担心尚未采集到数据：
+
+- 下例是查询最后一次数据，因此不必担心尚未采集到数据：
     ```
     WHEN last() OF query(A, 5m, now) IS ABOVE 10
     ```
-    
-- 在 Panel 的 Alert 编辑页面，
-  - 点击"State history" 可以查看告警历史。
-  - 点击 "Test Rule" 可以测试告警条件。
+
+- 下例是查询当前数据与 5 分钟之前的数据的差值（绝对值）：
+    ```
+    WHEN diff() OF query(A, 5m, now) IS ABOVE 10
+    ```
   
 ## 配置
 

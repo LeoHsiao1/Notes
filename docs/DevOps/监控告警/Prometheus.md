@@ -4,7 +4,6 @@
 - 源于 Google Borg 系统的监控系统，2016 年作为一个独立项目交给 CNCF 托管。
 - 擅长从大量节点上采集指标数据，且提供了 Web 管理页面。
 - 与 Zabbix 相比，更轻量级、可扩展性更高，而且特别适合监控容器。
-- 建议先用 Prometheus 采集指标数据，再把数据交给 Grafana 显示监控页面。
 - [官方文档](https://prometheus.io/docs/introduction/overview/)
 
 ## 安装
@@ -56,7 +55,7 @@
 
 ## 架构
 
-- 用户需要在每个被监控对象的主机上运行一个 exporter 进程，当用户访问该主机的 `http://localhost:9090/metrics` 时，就会触发 exporter 采集一次指标数据，放在 HTTP 响应报文中回复给用户。
+- 用户需要在每个被监控对象的主机上运行一个特定的 HTTP 服务器作为 exporter ，当用户访问该主机的 `http://localhost:9090/metrics` 时，就会触发 exporter 采集一次指标数据，放在 HTTP 响应报文中回复给用户。
   - exporter 一般只负责采集当前时刻的指标数据，不负责存储数据。
   - [官方的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/) 主流软件都提供了自己的 exporter 程序，例如：mysql_exporter、redis_exporter 。有的软件甚至提供了 exporter 风格的 API ，可以直接访问。
 
@@ -80,6 +79,7 @@
     ```
 
 - Prometheus 本身没有权限限制，不需要密码登录。
+- Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
 
 ## 指标
 
@@ -162,7 +162,7 @@
   ```sql
   go_goroutines == 2
   go_goroutines != 2
-  go_goroutines > 2
+  go_goroutines > 2       # 返回大于 2 的部分曲线
   go_goroutines < 2
   go_goroutines >= 2
   go_goroutines <= 2
@@ -224,7 +224,7 @@
 - 用户可以导入自己定义的 rule 文件，在其中定义规则。
 - 规则分为两类：
   - Recording Rules ：用于将某个查询表达式的结果保存为新指标。这样可以避免在用户查询时才计算，减少开销。
-  - Alerting Rules ：用于在满足某个条件时进行告警。
+  - Alerting Rules ：用于在满足某个条件时进行告警。（它只是标出告警状态，需要对接 Alertmanager 才能发出告警消息）
 - 下例是一个 rules.yml 文件的内容：
   ```yaml
   groups:
@@ -273,8 +273,49 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ## 插件
 
-- Alertmanager ：用于提供告警功能。
-- Push Gateway ：允许 exporter 主动推送数据到这里，相当于一个缓存，会被 Prometheus 定时拉取。
+### Push Gateway
+
+：允许 exporter 主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
+
+### Alertmanager
+
+：作为一个 HTTP 服务器运行，用于处理 Prometheus 生成的告警消息。
+- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦，但是可以在 Web 页面上搜索告警记录、分组管理。
+- [GitHub 页面](https://github.com/prometheus/alertmanager)
+- 下载二进制版：
+  ```sh
+  wget https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
+  ```
+- 启动：
+  ```sh
+  ./alertmanager --config.file=alertmanager.yml
+  ```
+  默认的访问地址是 <http://localhost:9093>
+- 使用时，需要在 Prometheus 的配置文件中加入如下配置，让 Prometheus 将告警消息发给 Alertmanager 处理。
+  ```yaml
+  alerting:
+    alertmanagers:
+    - static_configs:
+      - targets:
+        - 192.168.2.110:9093
+  ```
+- Alertmanager 的配置文件示例：
+  ```yaml
+  global:
+    smtp_smarthost: 'smtp.exmail.qq.com:465'
+    smtp_from: '123456@qq.com'
+    smtp_auth_username: '123456@qq.com'
+    smtp_auth_password: '******'
+    smtp_require_tls: false
+
+  route:
+    receiver: 'email_to_leo'
+    
+  receivers:
+    - name: 'email_to_leo'
+      email_configs:
+        - to: '123456@qq.com'
+  ```
 
 ### node_exporter
 
@@ -292,15 +333,17 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 ### process-exporter
 
 ：用于监控进程的一般状态。
+- 它主要通过读取 /proc/<pid>/ 目录下的信息，来收集进程指标。
 - [GitHub 页面](https://github.com/ncabatoff/process-exporter)
-- 下载二进制版然后运行：
-    ```
-    wget https://github.com/ncabatoff/process-exporter/releases/download/v0.6.0/process-exporter-0.6.0.linux-amd64.tar.gz
-    tar -zxvf process-exporter-0.6.0.linux-amd64.tar.gz
-    cd process-exporter-0.6.0.linux-amd64/
-    ./process-exporter --config.path exporter.yml
-    ```
-    默认的访问地址是 <http://localhost:9256/metrics>
+- 下载二进制版：
+  ```sh
+  wget https://github.com/ncabatoff/process-exporter/releases/download/v0.6.0/process-exporter-0.6.0.linux-amd64.tar.gz
+  ```
+- 启动：
+  ```sh
+  ./process-exporter --config.path exporter.yml   # 指定一个配置文件来启动
+  ```
+  默认的访问地址是 <http://localhost:9256/metrics>
 
 - 在配置文件中定义要监控的进程：
     ```yaml
@@ -309,7 +352,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
         - top                         # 可以定义多行 exe 条件，每个条件可能匹配零个、一个或多个进程
         - /bin/ping
 
-      - name: "{{.ExeBase}}"          # 定义一个要匹配的进程（该 name 会用作监控指标的 groupname，这里使用可执行文件的基本名作为 name ）
+      - name: "{{.ExeBase}}"          # 定义一个要匹配的进程（该 name 会用作监控指标的 groupname ，这里使用可执行文件的基本名作为 name ）
         cmdline:                      # cmdline 是基于正则匹配（此时只能定义一行条件）
         - prometheus --config.file
 
@@ -318,6 +361,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
         - ping www.(?P<name>.*).com   # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
     - 已经被匹配的进程不会被之后的条件重复匹配。
+    - 计算一个进程的指标时，默认会包含它的所有子进程的指标。
     - 如果进程 A 的数量变为 0 ，process-exporter 也会一直记录。但如果重启 process-exporter ，就只会发现此时存在的进程，不会再记录进程 A 。
 
 - 常用指标：
@@ -325,8 +369,8 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   - process_virtual_memory_bytes ：进程申请的虚拟内存大小。
   - process_resident_memory_bytes ：进程实际使用的内存大小。
   - namedprocess_namegroup_states ：进程的状态。
-  - namedprocess_namegroup_num_procs ：（各个条件匹配的）进程数。
-  - namedprocess_namegroup_num_threads ：（各个进程下的）线程数。
+  - namedprocess_namegroup_num_procs ：进程数。（统计属于同一个 groupname 的所有进程）
+  - namedprocess_namegroup_num_threads ：线程数。
 
 
 ### mysqld_exporter

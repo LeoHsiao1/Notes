@@ -76,7 +76,7 @@ Panel 的配置项分为四页：
     password =              # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
     cert_file =
     key_file =
-    skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 协议
+    skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 认证
     from_address = admin@grafana.localhost    # 邮件的发件方邮箱
     from_name = Grafana                       # 邮件的发送方名称
     ```  

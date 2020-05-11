@@ -3,25 +3,28 @@
 ：一个目前流行的监控系统，基于 Golang 开发。
 - 源于 Google Borg 系统的监控系统，2016 年作为一个独立项目交给 CNCF 托管。
 - 擅长从大量节点上采集指标数据，且提供了 Web 管理页面。
-- 与 Zabbix 相比，更轻量级、可扩展性更高，而且特别适合监控容器。
+- 与 Zabbix 相比，可监控的对象更多（比如监控容器），更轻量级，更高的可扩展性。
 - [官方文档](https://prometheus.io/docs/introduction/overview/)
 
 ## 安装
 
-- 下载二进制版然后运行：
-    ```sh
-    wget https://github.com/prometheus/prometheus/releases/download/v2.17.2/prometheus-2.17.2.linux-amd64.tar.gz
-    tar -zxvf prometheus-2.17.2.linux-amd64.tar.gz
-    cd prometheus-2.17.2.linux-amd64/
-    ./prometheus --config.file /etc/prometheus/prometheus.yml
-    ```
+- 下载二进制版：
+  ```sh
+  wget https://github.com/prometheus/prometheus/releases/download/v2.17.2/prometheus-2.17.2.linux-amd64.tar.gz
+  ```
+  然后启动：
+  ```sh
+  ./prometheus
+              --config.file /etc/prometheus/prometheus.yml   # 使用指定的配置文件
+              --web.enable-lifecycle                         # 启用关于终止、重启的 HTTP API 
+  ```
 
 - 或者运行 Docker 镜像：
-    ```sh
-    docker run -d --name prometheus -p 9090:9090 \
-            -v /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \    # 挂载配置文件（可选项）
-            prom/prometheus
-    ```
+  ```sh
+  docker run -d --name prometheus -p 9090:9090 \
+          -v /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \    # 挂载配置文件（可选项）
+          prom/prometheus
+  ```
 
 ## 示例
 
@@ -39,14 +42,17 @@
     #   - "rules_1.yml"
 
     scrape_configs:
-      - job_name: 'prometheus'      # 一项监控任务的名字
+      - job_name: 'prometheus'      # 一项监控任务的名字（可以包含多组监控对象）
         # metrics_path: /metrics
         # scheme: http
         # scrape_interval: 1s
         # scrape_timeout: 1s
         static_configs:
-          - targets: 
-            - '10.0.0.1:9090'       # 监控对象的 URL
+          - targets:                # 一组监控对象的 URL
+            - '10.0.0.1:9090'
+            # labels:               # 为这些数据添加标签
+            #   instance: '10.0.0.1:9090'
+          # - targets:              # 下一组监控对象
     ```
 
 2. 重启 Prometheus ，访问其 Web 页面。
@@ -78,7 +84,7 @@
         └──checkpoint.000002/
     ```
 
-- Prometheus 本身没有权限限制，不需要密码登录。
+- Prometheus 本身没有权限限制，不需要密码登录，不过可以用 Nginx 加上 HTTP Basic Auth 。
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
 
 ## 指标
@@ -124,11 +130,12 @@
   ```sql
   go_goroutines                                   # 查询具有该名称的指标
   {job="prometheus"}                              # 查询具有该标签值的指标
+  {__name__="go_goroutines", job='prometheus'}    # 通过内置的 __name__ 标签，可以匹配指标名
+
   go_goroutines{job="prometheus"}                 # 查询该名称、该标签值的指标
   go_goroutines{job!="prometheus"}                # 要求不具有该标签值
   go_goroutines{job=~`prometheu\w`}               # 要求标签的值匹配正则表达式
   go_goroutines{job!~`prometheu\w`}               # 要求标签的值不匹配正则表达式
-  {__name__="go_goroutines", job=~`.*`}           # 通过内置的 __name__ 标签，可以匹配指标名
 
   go_goroutines{job="prometheus"}[5m]             # 查询 5 分钟以内的数据
   go_goroutines{job="prometheus"}[30m:5m]         # 查询 30 分钟以内、5 分钟以前的数据
@@ -184,7 +191,7 @@
   max(go_goroutines)                    # 计算每个时刻处，全部矢量的数据点中的最大值
   avg(go_goroutines)                    # 计算每个时刻处，全部矢量的数据点的平均值
   stdvar(go_goroutines)                 # 计算每个时刻处，全部矢量的数据点之间的标准方差
-  count (go_goroutines)                 # 计算每个时刻处，全部矢量中数据点的数量
+  count(go_goroutines)                  # 计算每个时刻处，全部矢量中数据点的数量
   count_values("value", go_goroutines)  # 计算每个时刻处，全部矢量中各种值的数据点的数量，新曲线的命名格式为{value="xx"}
   topk(3, go_goroutines)                # 计算每个时刻处，全部矢量中最大的 3 个数据点
   bottomk(3, go_goroutines)             # 计算每个时刻处，全部矢量中最小的 3 个数据点
@@ -205,18 +212,18 @@
   abs(go_goroutines)                    # 在每个时刻处，将数据点的值转换为绝对值
   round(go_goroutines)                  # 在每个时刻处，计算数据点四舍五入后的整数值
   absent(go_goroutines)                 # 在每个时刻处，如果不存在数据点则返回 1 ，否则返回空值
-  absent_over_time(go_goroutines[5m])   # 在每个时刻处，如果过去 5 分钟以内不存在数据点则返回 1 ，否则返回空值
-  changes(go_goroutines[5m])            # 在每个时刻处，计算过去 5 分钟以内数据点变化的次数
-  delta(go_goroutines[5m])              # 在每个时刻处，计算该数据点减去 5 分钟之前数据点的差值（可能为负）
-  idelta(go_goroutines[5m])             # 在每个时刻处，计算过去 5 分钟以内最后两个数据点的差值（可能为负）
+  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内不存在数据点则返回 1 ，否则返回空值
+  changes(go_goroutines[1m])            # 在每个时刻处，计算最近 1m 以内的数据点变化的次数
+  delta(go_goroutines[1m])              # 在每个时刻处，计算该数据点减去 1m 之前数据点的差值（可能为负）
+  idelta(go_goroutines[1m])             # 在每个时刻处，计算过去 1m 以内最后两个数据点的差值（可能为负）
   vector(1)                             # 返回一个矢量
   ```
   以下算数函数适用于计数器类型的矢量：
   ```sql
-  resets(go_goroutines[5m])             # 在每个时刻处，计算过去 5 分钟以内计数器重置（即数值减少）的次数
-  increase(go_goroutines[5m])           # 在每个时刻处，计算过去 5 分钟以内的数值增量
-  rate(go_goroutines[5m])               # 在每个时刻处，计算过去 5 分钟以内平均的数值增长率
-  irate(go_goroutines[5m])              # 在每个时刻处，计算过去 5 分钟以内，最后两个数据点的增长率（结果曲线比 rate() 尖锐）
+  resets(go_goroutines[1m])             # 在每个时刻处，计算过去 1m 以内计数器重置（即数值减少）的次数
+  increase(go_goroutines[1m])           # 在每个时刻处，计算过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
+  rate(go_goroutines[1m])               # 在每个时刻处，计算过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
+  irate(go_goroutines[1m])              # 在每个时刻处，计算过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
   ```
 
 ## Rules
@@ -251,6 +258,15 @@
   - 满足告警条件但不超过阙值时间时，标为 Pending 状态。
   - 满足告警条件且超过阙值时间时，标为 Firing 状态。
 
+## API
+
+Prometheus 常用的 HTTP API 如下：
+```sh
+GET /-/healthy      # 用于健康检查
+POST /-/reload      # 重新加载配置文件
+POST /-/quit        # 终止
+```
+
 ## 分布式
 
 Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署。
@@ -273,20 +289,16 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ## 插件
 
-### Push Gateway
-
-：允许 exporter 主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
-
 ### Alertmanager
 
 ：作为一个 HTTP 服务器运行，用于处理 Prometheus 生成的告警消息。
-- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦，但是可以在 Web 页面上搜索告警记录、分组管理。
 - [GitHub 页面](https://github.com/prometheus/alertmanager)
+- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦，但是可以在 Web 页面上搜索告警记录、分组管理。
 - 下载二进制版：
   ```sh
   wget https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
   ```
-- 启动：
+  然后启动：
   ```sh
   ./alertmanager --config.file=alertmanager.yml
   ```
@@ -297,7 +309,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
     alertmanagers:
     - static_configs:
       - targets:
-        - 192.168.2.110:9093
+        - 10.0.0.1:9093
   ```
 - Alertmanager 的配置文件示例：
   ```yaml
@@ -317,31 +329,56 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
         - to: '123456@qq.com'
   ```
 
+### Push Gateway
+
+：作为一个 HTTP 服务器运行，允许其它 exporter 主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
+- [GitHub 页面](https://github.com/prometheus/pushgateway)
+
 ### node_exporter
 
-：用于监控主机的一般状态。
+：用于监控主机（主要是 Linux ）的状态。
 - [GitHub 页面](https://github.com/prometheus/node_exporter)
+- 监控 Docker 容器时建议使用 cAdvisor ，监控 Windows 主机时建议使用 wmi_exporter 。
+- 下载二进制版：
+  ```sh
+  wget https://github.com/prometheus/node_exporter/releases/download/v1.0.0-rc.0/node_exporter-1.0.0-rc.0.linux-amd64.tar.gz
+  ```
+  然后启动：
+  ```sh
+  ./process-exporter
+  ```
+  默认的访问地址是 <http://localhost:9100/metrics>
 
-，，，
+- 常用指标：
+  ```sh
+  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) by (mode) * 100    # CPU 使用率（%）
+  node_load1{instance='10.0.0.1:9100'}                                                # CPU 平均负载（类似的还有 node_load5 、node_load15 ）
 
+  node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / (1024^3)                     # 内存总容量（GB）
+  node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / (1024^3)                 # 内存可用量（GB）
 
+  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)     # 磁盘总容量（GB）
+  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)    # 磁盘空闲量（GB）
 
+  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / (1024^2)              # 磁盘读速率（MB/s）
+  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / (1024^2)           # 磁盘写速率（MB/s）
 
-
-
+  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024       # 网络下载速率（KB/s）
+  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024      # 网络上传速率（KB/s）
+  ```
 
 ### process-exporter
 
-：用于监控进程的一般状态。
-- 它主要通过读取 /proc/<pid>/ 目录下的信息，来收集进程指标。
+：用于监控进程的状态。
 - [GitHub 页面](https://github.com/ncabatoff/process-exporter)
+- 它主要通过读取 /proc/<pid>/ 目录下的信息，来收集进程指标。
 - 下载二进制版：
   ```sh
   wget https://github.com/ncabatoff/process-exporter/releases/download/v0.6.0/process-exporter-0.6.0.linux-amd64.tar.gz
   ```
-- 启动：
+  然后启动：
   ```sh
-  ./process-exporter --config.path exporter.yml   # 指定一个配置文件来启动
+  ./process-exporter --config.path exporter.yml
   ```
   默认的访问地址是 <http://localhost:9256/metrics>
 
@@ -365,15 +402,17 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
     - 如果进程 A 的数量变为 0 ，process-exporter 也会一直记录。但如果重启 process-exporter ，就只会发现此时存在的进程，不会再记录进程 A 。
 
 - 常用指标：
-  - process_cpu_seconds_total ：进程占用的 CPU 时长。
-  - process_virtual_memory_bytes ：进程申请的虚拟内存大小。
-  - process_resident_memory_bytes ：进程实际使用的内存大小。
-  - namedprocess_namegroup_states ：进程的状态。
-  - namedprocess_namegroup_num_procs ：进程数。（统计属于同一个 groupname 的所有进程）
-  - namedprocess_namegroup_num_threads ：线程数。
-
+  ```sh
+  process_cpu_seconds_total           # 进程占用的 CPU 时长
+  process_virtual_memory_bytes        # 进程申请的虚拟内存大小
+  process_resident_memory_bytes       # 进程实际使用的内存大小
+  namedprocess_namegroup_states       # 进程的状态
+  namedprocess_namegroup_num_procs    # 进程数（统计属于同一个 groupname 的所有进程）
+  namedprocess_namegroup_num_threads  # 线程数
+  ```
 
 ### mysqld_exporter
 
 ，，，
+
 

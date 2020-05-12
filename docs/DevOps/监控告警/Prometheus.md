@@ -118,6 +118,7 @@
 - 根据是否随时间变化对指标分类：
   - 标量（scalar）：包含一个或一些散列的值。
   - 矢量（vector）：包含一系列随时间变化的值。
+    - 一个矢量由 n≥1 个时间序列组成，显示成曲线图时有 n 条曲线，在每个时刻处最多有 n 个数据点（又称为元素），不过也可能缺少数据点（为空值）。
 
 ## 查询
 
@@ -141,7 +142,7 @@
   go_goroutines{job="prometheus"}[30m:5m]         # 查询 30 分钟以内、5 分钟以前的数据
 
   go_goroutines{job="prometheus"} offset 5m       # 相当于在 5 分钟之前查询
-  sum(go_goroutines{job="prometheus"} offset 5m)  # 使用函数时，offset 符号要放在函数括号内
+  sum(go_goroutines{job="prometheus"} offset 5m   # 使用函数时，offset 符号要放在函数括号内
   ```
   - 可以用 # 声明单行注释。
   - 将字符串用反引号包住时，不会让反斜杠转义。
@@ -186,16 +187,18 @@
 
 - 矢量可以使用以下聚合函数：
   ```sql
-  sum(go_goroutines)                    # 计算每个时刻处，全部矢量的数据点的总和（相当于将所有曲线叠加为一条曲线）
-  min(go_goroutines)                    # 计算每个时刻处，全部矢量的数据点中的最小值
-  max(go_goroutines)                    # 计算每个时刻处，全部矢量的数据点中的最大值
-  avg(go_goroutines)                    # 计算每个时刻处，全部矢量的数据点的平均值
-  stdvar(go_goroutines)                 # 计算每个时刻处，全部矢量的数据点之间的标准方差
-  count(go_goroutines)                  # 计算每个时刻处，全部矢量中数据点的数量
-  count_values("value", go_goroutines)  # 计算每个时刻处，全部矢量中各种值的数据点的数量，新曲线的命名格式为{value="xx"}
-  topk(3, go_goroutines)                # 计算每个时刻处，全部矢量中最大的 3 个数据点
-  bottomk(3, go_goroutines)             # 计算每个时刻处，全部矢量中最小的 3 个数据点
-  quantile(0.5, go_goroutines)          # 计算每个时刻处，全部矢量中排在 50% 位置处的数据点
+  count(go_goroutines)                  # 返回每个时刻处，该矢量包含的数据点的数量（即包含几个时间序列）
+  count_values("value", go_goroutines)  # 返回每个时刻处，各种值的数据点的数量，并按 {value="x"} 的命名格式生成多个时间序列
+  sum(go_goroutines)                    # 返回每个时刻处，所有数据点的总和（即将曲线图中所有曲线叠加为一条曲线）
+  min(go_goroutines)                    # 返回每个时刻处，数据点的最小值
+  max(go_goroutines)                    # 返回每个时刻处，数据点的最大值
+  avg(go_goroutines)                    # 返回每个时刻处，数据点的平均值
+  stdvar(go_goroutines)                 # 返回每个时刻处，数据点之间的标准方差
+  topk(3, go_goroutines)                # 返回每个时刻处，最大的 3 个数据点
+  bottomk(3, go_goroutines)             # 返回每个时刻处，最小的 3 个数据点
+  quantile(0.5, go_goroutines)          # 返回每个时刻处，大小排在 50% 位置处的数据点
+  vector(1)                             # 输入标量，返回一个矢量
+  scalar(vector(1))                     # 输入一个单时间序列的矢量，以标量的形式返回当前时刻处的值
   ```
   聚合函数可以与关键字 by、without 组合使用，如下：
   ```sql
@@ -204,26 +207,25 @@
   ```
   聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 _over_time 后缀的函数，如下：
   ```sql
-  sum_over_time(go_goroutines[10s])     # 在每个时刻处，计算过去 5 分钟之内数据点的总和
+  sum_over_time(go_goroutines[10s])     # 返回每个时刻处，过去 5 分钟之内数据点的总和
   ```
 
 - 矢量可以使用以下算术函数：
   ```sql
-  abs(go_goroutines)                    # 在每个时刻处，将数据点的值转换为绝对值
-  round(go_goroutines)                  # 在每个时刻处，计算数据点四舍五入后的整数值
+  abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
+  round(go_goroutines)                  # 返回每个时刻处，数据点四舍五入之后的整数值
   absent(go_goroutines)                 # 在每个时刻处，如果不存在数据点则返回 1 ，否则返回空值
   absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内不存在数据点则返回 1 ，否则返回空值
-  changes(go_goroutines[1m])            # 在每个时刻处，计算最近 1m 以内的数据点变化的次数
-  delta(go_goroutines[1m])              # 在每个时刻处，计算该数据点减去 1m 之前数据点的差值（可能为负）
-  idelta(go_goroutines[1m])             # 在每个时刻处，计算过去 1m 以内最后两个数据点的差值（可能为负）
-  vector(1)                             # 返回一个矢量
+  changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内的数据点变化的次数
+  delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负）
+  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
   ```
   以下算数函数适用于计数器类型的矢量：
   ```sql
-  resets(go_goroutines[1m])             # 在每个时刻处，计算过去 1m 以内计数器重置（即数值减少）的次数
-  increase(go_goroutines[1m])           # 在每个时刻处，计算过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
-  rate(go_goroutines[1m])               # 在每个时刻处，计算过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
-  irate(go_goroutines[1m])              # 在每个时刻处，计算过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
+  resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
+  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
+  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
+  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
   ```
 
 ## Rules
@@ -352,13 +354,14 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 - 常用指标：
   ```sh
   avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) by (mode) * 100    # CPU 使用率（%）
-  node_load1{instance='10.0.0.1:9100'}                                                # CPU 平均负载（类似的还有 node_load5 、node_load15 ）
+  {__name__=~`node_load\d*`, instance='10.0.0.1:9100'}                                # CPU 平均负载
+  count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})               # CPU 核数
 
   node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / (1024^3)                     # 内存总容量（GB）
   node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / (1024^3)                 # 内存可用量（GB）
 
   sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)     # 磁盘总容量（GB）
-  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)    # 磁盘空闲量（GB）
+  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)    # 磁盘可用量（GB）
 
   sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / (1024^2)              # 磁盘读速率（MB/s）
   sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / (1024^2)           # 磁盘写速率（MB/s）

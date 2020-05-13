@@ -16,7 +16,9 @@
   ```sh
   ./prometheus
               --config.file /etc/prometheus/prometheus.yml   # 使用指定的配置文件
-              --web.enable-lifecycle                         # 启用关于终止、重启的 HTTP API 
+              --storage.tsdb.retention 15d                   # TSDB 保存数据的最长时间（默认为 15 天）
+              --web.enable-admin-api                         # 启用管理员的 HTTP API
+              --web.enable-lifecycle                         # 启用关于终止的 HTTP API 
   ```
 
 - 或者运行 Docker 镜像：
@@ -50,9 +52,10 @@
         static_configs:
           - targets:                # 一组监控对象的 URL
             - '10.0.0.1:9090'
-            # labels:               # 为这些数据添加标签
-            #   instance: '10.0.0.1:9090'
-          # - targets:              # 下一组监控对象
+          #  labels:                      # 为这些数据添加标签
+          #    instance: '10.0.0.1:9090'  # 默认会自动添加该标签
+          #    node: 'centos-1'           # 加上主机的名字
+          # - targets:                    # 下一组监控对象
     ```
 
 2. 重启 Prometheus ，访问其 Web 页面。
@@ -63,11 +66,10 @@
 
 - 用户需要在每个被监控对象的主机上运行一个特定的 HTTP 服务器作为 exporter ，当用户访问该主机的 `http://localhost:9090/metrics` 时，就会触发 exporter 采集一次指标数据，放在 HTTP 响应报文中回复给用户。
   - exporter 一般只负责采集当前时刻的指标数据，不负责存储数据。
-  - [官方的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/) 主流软件都提供了自己的 exporter 程序，例如：mysql_exporter、redis_exporter 。有的软件甚至提供了 exporter 风格的 API ，可以直接访问。
 
 - Prometheus Server 会定时向各个 exporter 发出 HTTP 请求，获得指标数据，并存储到自己的时序数据库中。
   - 它属于离散采样，可能有遗漏、有延迟、有误差。
-  - 数据默认保存在 `${prometheus}/data` 目录下，最多保存 15 天。目录结构如下：
+  - 数据默认保存在 `${prometheus}/data` 目录下，目录结构如下：
     ```
     data/
     ├── 01E728KFZWGDM7HMY6M2D26QJD/   # 每隔两个小时就创建一个随机名字的子目录来存储数据
@@ -220,7 +222,7 @@
   delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负）
   idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
   ```
-  以下算数函数适用于计数器类型的矢量：
+  以下算术函数适用于计数器类型的矢量：
   ```sql
   resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
   increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
@@ -262,12 +264,19 @@
 
 ## API
 
-Prometheus 常用的 HTTP API 如下：
-```sh
-GET /-/healthy      # 用于健康检查
-POST /-/reload      # 重新加载配置文件
-POST /-/quit        # 终止
-```
+- 管理 Prometheus 的 HTTP API ：
+  ```sh
+  GET /-/healthy     # 用于健康检查
+  PUT /-/reload      # 重新加载配置文件
+  PUT /-/quit        # 终止
+  ```
+
+- 关于数据的 API ：
+  ```sh
+  GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600   # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
+  GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589256000&step=10s  # 查询一段时间内的所有值
+  PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589256000    # 删掉数据（不指定时间则删除所有时间的数据）
+  ```
 
 ## 分布式
 
@@ -289,9 +298,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
             - '10.0.0.3:9090'
     ```
 
-## 插件
-
-### Alertmanager
+## Alertmanager
 
 ：作为一个 HTTP 服务器运行，用于处理 Prometheus 生成的告警消息。
 - [GitHub 页面](https://github.com/prometheus/alertmanager)
@@ -331,10 +338,15 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
         - to: '123456@qq.com'
   ```
 
-### Push Gateway
+## Push Gateway
 
 ：作为一个 HTTP 服务器运行，允许其它 exporter 主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
 - [GitHub 页面](https://github.com/prometheus/pushgateway)
+
+## exporter
+
+- [官方的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/) 
+- 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就提供了 exporter 风格的 HTTP API 。
 
 ### node_exporter
 
@@ -359,12 +371,13 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
   node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / (1024^3)                     # 内存总容量（GB）
   node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / (1024^3)                 # 内存可用量（GB）
+  node_memory_SwapCached_bytes{instance='10.0.0.1:9100'} / (1024^3)                   # swap 使用量（GB）
 
-  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)     # 磁盘总容量（GB）
-  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)    # 磁盘可用量（GB）
+  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)    # 磁盘总容量（GB）
+  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)   # 磁盘可用量（GB）
 
-  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / (1024^2)              # 磁盘读速率（MB/s）
-  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / (1024^2)           # 磁盘写速率（MB/s）
+  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024                 # 磁盘读速率（KB/s）
+  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024              # 磁盘写速率（KB/s）
 
   irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024       # 网络下载速率（KB/s）
   irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024      # 网络上传速率（KB/s）
@@ -393,7 +406,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
         - /bin/ping
 
       - name: "{{.ExeBase}}"          # 定义一个要匹配的进程（该 name 会用作监控指标的 groupname ，这里使用可执行文件的基本名作为 name ）
-        cmdline:                      # cmdline 是基于正则匹配（此时只能定义一行条件）
+        cmdline:                      # cmdline 是基于正则匹配（此时只能定义一行条件，否则不会采集数据）
         - prometheus --config.file
 
       - name: "{{.Matches.name}}"     # 定义一个要匹配的进程（这里使用正则匹配的元素组作为 name ）
@@ -406,16 +419,14 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 - 常用指标：
   ```sh
-  process_cpu_seconds_total           # 进程占用的 CPU 时长
-  process_virtual_memory_bytes        # 进程申请的虚拟内存大小
-  process_resident_memory_bytes       # 进程实际使用的内存大小
-  namedprocess_namegroup_states       # 进程的状态
-  namedprocess_namegroup_num_procs    # 进程数（统计属于同一个 groupname 的所有进程）
-  namedprocess_namegroup_num_threads  # 线程数
+  sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程使用的 CPU 核数
+  namedprocess_namegroup_memory_bytes{memtype="resident"} / (1024^3)        # 进程实际使用的内存（GB）
+  namedprocess_namegroup_memory_bytes                                       # 进程使用的内存
+  namedprocess_namegroup_states                                             # 进程的状态
+  namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的所有进程）
+  namedprocess_namegroup_num_threads                                        # 线程数
   ```
 
 ### mysqld_exporter
 
 ，，，
-
-

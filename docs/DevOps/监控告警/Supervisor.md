@@ -103,13 +103,17 @@ stderr_logfile_maxbytes=100MB
 stderr_logfile_backups=0
 ```
 
-- 进程的 command 不支持动态取值，比如：
-  ```sh
+- 如果 command 是执行一个可执行文件，则必须使用绝对路径，如下：
+  ```ini
+  command=./test.sh         # 错误
+  command=/root/test.sh     # 正确
+  ```
+- command 不支持动态取值，如下：
+  ```ini
   command=echo $PWD     # 执行结果相当于 echo '$PWD'
   command=echo `date`   # 执行结果相当于 echo '`date`'
   ```
   如果需要动态取值，建议将 command 保存到一个 sh 脚本中，然后执行该 sh 脚本。
-
 - 用 supervisor 管理的进程必须保持在前台运行，否则会脱离 supervisor 的控制，不能捕捉它的 stdout、stderr ，也不能终止它。
 - 用 supervisor 启动 Python 进程时， Python 解释器默认不会自动刷新输出缓冲区，导致不能记录该进程的 stdout、stderr 。因此需要用 python -u 的方式启动，禁用输出缓冲区。
 

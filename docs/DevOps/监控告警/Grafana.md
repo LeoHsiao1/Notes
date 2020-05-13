@@ -1,36 +1,49 @@
 # Grafana
 
-：一个 Web 网站，实现可视化监控，基于 Golang 开发。
-- 支持多种数据源，比如 MySQL、influxdb、Elasticsearch、Prometheus 。
-  - 可添加 TestData DB 数据源来试用。
-- 提供了丰富、美观的图表，并可以配置告警策略。
+：一个 HTTP 服务器，基于 Golang 开发，可以在 Web 页面上显示丰富、美观的数据图表。
+- 常用作监控系统、数据分析的前端。
 - [官方文档](https://grafana.com/docs/grafana/latest/)
 
 ## 安装
 
-- 下载 rpm 包然后安装：
-    ```sh
-    wget https://dl.grafana.com/oss/release/grafana-6.7.3-1.x86_64.rpm
-    yum install grafana-6.7.3-1.x86_64.rpm
-    systemctl enable grafana-server
-    systemctl start grafana-server
-    ```
-  - 安装之后访问 <http://127.0.0.1:3000> 即可查看 Web 页面。默认的用户、密码是 admin、admin 。
+- 下载二进制包：
+  ```sh
+  wget https://dl.grafana.com/oss/release/grafana-6.7.3.linux-amd64.tar.gz
+  ```
+  解压后启动：
+  ```sh
+  bin/grafana-server
+  ```
+  - 默认的访问地址为 <http://localhost1:3000> 。默认的用户名、密码是 admin、admin 。
 
 - 或者运行 Docker 镜像：
-    ```sh
-    docker run -d --name grafana -p 3000:3000 grafana/grafana
-    ```
+  ```sh
+  docker run -d --name grafana -p 3000:3000 grafana/grafana
+  ```
 
-## Dashboard
+## 用法
+
+基本用法：
+1. 进入 "Configuration" -> "Data Sources" 页面，添加数据源。
+2. 进入 "Dashboard" 页面，利用数据源的数据绘制图表。
+
+- Grafana 支持多种数据源，比如 MySQL、influxdb、Elasticsearch、Prometheus 。
+  - 默认有一个 TestData DB 数据源可供试用。
+  - 某些数据源自带了一些 Dashboard 模板，可以导入试用。
 
 - Grafana 上可以创建多个 Dashboard（仪表盘），每个 DashBoard 页面可以包含多个 Panel（面板）。
   - 可以将 Dashboard 或 Panel 导出 JSON 配置文件。
   - 存在多个 Dashboard 时，可以用 Folder 分类管理。
+  - 官网提供了一些 Dashboard 示例，可供参考。
 - playlist ：包含多个 Dashboard 的播放清单。
-- snapshot ：对 Dashboard 或 Panel 的快照，只记录了此刻的数据，可以分享 URL 给任何人查看。
+- snapshot ：对 Dashboard 或 Panel 的快照，只记录了此刻的数据，可以分享 URL 给别人查看。
+- [官方的 Dashboard 市场](https://grafana.com/grafana/dashboards)
+  - Node Exporter Full ：显示 node_exporter 的指标。
+- [官方的 Plugins 市场](https://grafana.com/grafana/plugins)
+  - Zabbix 插件：用于分析 Zabbix 的监控数据，包含 Dashboard 模板。
+  - Pie Chart 插件：允许绘制饼状图。
 
-## Panel
+### Panel
 
 - 一个 panel 中存在多个图例（legend）的曲线时，用鼠标单击某个图例的名字，就会只显示该图例的曲线。按住 Ctrl 再单击，就可以同时选择多个图例。
 - 修改 Panel 时，是以 Dashboard 为单位进行修改，要点击"Save Dashboard"才会保存。
@@ -67,20 +80,6 @@ Panel 的配置项分为四页：
   - 点击"State history" 可以查看告警历史。
   - 点击 "Test Rule" 可以测试告警条件。
 
-- 如果以 Email 的形式发送告警，则需要先在 Grafana 的配置文件中配置邮箱信息，如下：
-    ```ini
-    [smtp]
-    enabled = true
-    host = 10.0.0.1:25      # SMTP 服务器的位置
-    user =                  # 登录 SMTP 服务器的账号
-    password =              # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
-    cert_file =
-    key_file =
-    skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 认证
-    from_address = admin@grafana.localhost    # 邮件的发件方邮箱
-    from_name = Grafana                       # 邮件的发送方名称
-    ```  
-
 - 下例是一种 Alert 的触发条件：
     ```
     Evaluate every 1m, For 5m
@@ -102,19 +101,40 @@ Panel 的配置项分为四页：
     WHEN last() OF query(A, 5m, now) IS ABOVE 10
     ```
 
-- 下例是查询当前数据与 5 分钟之前的数据的差值（绝对值）：
+- 下例是查询当前数据减去 5 分钟之前的数据的差值（可能为负）：
     ```
     WHEN diff() OF query(A, 5m, now) IS ABOVE 10
     ```
   
 ## 配置
 
-- 配置文件的位置：
-  - Grafana 默认的配置文件位于 $WORKING_DIR/conf/defaults.ini 。
-  - 用户自定义的配置文件位于 $WORKING_DIR/conf/defaults.ini 。
-  - 采用 rpm 包安装方式时，Grafana 的启动选项中用 `--config=/etc/grafana/grafana.ini` 指定了唯一的配置文件。
+- 以 rpm 包的方式安装 Grafana 时，有以下几个重要文件，拷贝它们就可以备份 Grafana ：
+  - /etc/grafana/grafana.ini ：配置文件。
+  - /var/lib/grafana/grafana.db ：保存 Grafana 运行时的数据、页面配置。
+  - /var/lib/grafana/plugins/ ：插件目录。
+  - /var/log/grafana/ ：日志目录。日志文件会被按天切割，最多保存 7 天。
+- 以二进制版的方式运行 Grafana 时，上述文件都保存在工作目录下：
+  - conf/defaults.ini
+  - data/grafana.db
+  - data/plugins/
+  - data/log/
 - 修改配置文件之后，要重启 Grafana 才会生效。
-- Grafana 默认将自己的数据保存在 SQLite 数据库中。
+
+### 启用 Email
+
+在配置文件中按如下格式配置邮箱，就可以以 Email 的形式发送告警。
+```ini
+[smtp]
+enabled = true
+host = 10.0.0.1:25      # SMTP 服务器的位置
+user =                  # 登录 SMTP 服务器的账号
+password =              # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
+cert_file =
+key_file =
+skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 认证
+from_address = admin@grafana.localhost    # 邮件的发件方邮箱
+from_name = Grafana                       # 邮件的发送方名称
+```
 
 ### 第三方登录
 

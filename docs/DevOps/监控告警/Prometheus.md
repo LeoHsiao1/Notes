@@ -12,7 +12,7 @@
   ```sh
   wget https://github.com/prometheus/prometheus/releases/download/v2.17.2/prometheus-2.17.2.linux-amd64.tar.gz
   ```
-  然后启动：
+  解压后启动：
   ```sh
   ./prometheus
               --config.file /etc/prometheus/prometheus.yml   # 使用指定的配置文件
@@ -44,23 +44,15 @@
     #   - "rules_1.yml"
 
     scrape_configs:
-      - job_name: 'prometheus'      # 一项监控任务的名字（可以包含多组监控对象）
-        # metrics_path: /metrics
-        # scheme: http
-        # scrape_interval: 1s
-        # scrape_timeout: 1s
+      - job_name: 'prometheus'
         static_configs:
-          - targets:                # 一组监控对象的 URL
-            - '10.0.0.1:9090'
-          #  labels:                      # 为这些数据添加标签
-          #    instance: '10.0.0.1:9090'  # 默认会自动添加该标签
-          #    node: 'centos-1'           # 加上主机的名字
-          # - targets:                    # 下一组监控对象
+          - targets: ['10.0.0.1:9090']
     ```
 
-2. 重启 Prometheus ，访问其 Web 页面。
-   在 Status -> Targets 页面，可以看到所有监控对象及其状态。
-   在 Graph 页面，执行一个查询表达式即可获得监控数据，比如 `go_goroutines` 。
+2. 重启 Prometheus 以重新加载配置文件，然后访问其 Web 页面。
+   - 在 Status -> Targets 页面，可以看到所有监控对象及其状态。
+   - 在 Graph 页面，执行一个查询表达式即可获得监控数据，比如 `go_goroutines` 。
+   - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 
 ## 架构
 
@@ -88,6 +80,52 @@
 
 - Prometheus 本身没有权限限制，不需要密码登录，不过可以用 Nginx 加上 HTTP Basic Auth 。
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
+
+## 监控对象
+
+用户必须在 Prometheus 的配置文件中描述需要监控的对象，格式如下：
+```yaml
+scrape_configs:
+  - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
+    # metrics_path: /metrics
+    # scheme: http
+    # scrape_interval: 1s
+    # scrape_timeout: 1s
+    static_configs:
+      - targets:                      # 一组监控对象的 IP:Port
+        - '10.0.0.1:9090'
+        - '10.0.0.1:9091'
+        # labels:                     # 为这些监控对象的数据加上额外的标签
+        #   nodename: 'centos-1'
+      - targets: ['10.0.0.2:9090']    # 下一组监控对象
+  
+  - job_name: 'node_exporter'
+    file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
+    - files:
+      - targets/node_exporter*.json
+      refresh_interval: 1m            # 每隔 1m 重新读取一次
+```
+- Prometheus 从各个监控对象处抓取指标数据时，默认会加上 `job: "$job_name"`、`instance: "$targets"` 两个标签。
+- 因为监控对象的 IP 可能变化，所以应该添加 nodename 等额外的标签便于筛选。
+- 通过 file_sd_configs 方式读取的文件格式如下：
+  ```json
+  [{
+    "targets": [
+      "10.0.0.1:9100"
+    ],
+    "labels": {
+      "nodename": "Centos-1"
+    }
+  },{
+    "targets": [
+      "10.0.0.2:9100"
+    ],
+    "labels": {
+      "nodename": "Centos-2"
+    }
+  }
+  ]
+  ```
 
 ## 指标
 
@@ -130,7 +168,7 @@
   - 大部分标量都不支持显示成曲线图。
 
 - 查询表达式中，选取指标的语法如下：
-  ```sql
+  ```sh
   go_goroutines                                   # 查询具有该名称的指标
   {job="prometheus"}                              # 查询具有该标签值的指标
   {__name__="go_goroutines", job='prometheus'}    # 通过内置的 __name__ 标签，可以匹配指标名
@@ -158,7 +196,7 @@
   - y ：年
 
 - 可以进行如下算术运算：
-  ```sql
+  ```sh
   go_goroutines + 1   # 加
   1 - 2               # 减
   1 * 2               # 乘
@@ -169,7 +207,7 @@
   - 只能对查询到的数据的值进行运算，不能对标签的值进行运算。
 
 - 可以进行如下比较运算：
-  ```sql
+  ```sh
   go_goroutines == 2
   go_goroutines != 2
   go_goroutines > 2       # 返回大于 2 的部分曲线
@@ -181,14 +219,14 @@
   - 如果在比较运算符之后加上关键字 bool ，比如 `1 == bool 2` ，就会返回比较运算的结果，用 1、0 分别表示 true、flase 。
 
 - 矢量之间可以进行如下集合运算：
-  ```sql
+  ```sh
   vector1 and vector2     # 交集
   vector1 or vector2      # 并集
   vector1 unless vector2  # 补集，即在 vector1 中存在、在 vector2 中不存在的数据点
   ```
 
 - 矢量可以使用以下聚合函数：
-  ```sql
+  ```sh
   count(go_goroutines)                  # 返回每个时刻处，该矢量包含的数据点的数量（即包含几个时间序列）
   count_values("value", go_goroutines)  # 返回每个时刻处，各种值的数据点的数量，并按 {value="x"} 的命名格式生成多个时间序列
   sum(go_goroutines)                    # 返回每个时刻处，所有数据点的总和（即将曲线图中所有曲线叠加为一条曲线）
@@ -203,17 +241,17 @@
   scalar(vector(1))                     # 输入一个单时间序列的矢量，以标量的形式返回当前时刻处的值
   ```
   聚合函数可以与关键字 by、without 组合使用，如下：
-  ```sql
+  ```sh
   sum(go_goroutines) by(job)            # 将所有曲线按 job 标签的值分组，分别执行 sum() 函数
   sum(go_goroutines) without(job)       # 将所有曲线按除了 job 以外的标签分组，分别执行 sum() 函数
   ```
   聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 _over_time 后缀的函数，如下：
-  ```sql
+  ```sh
   sum_over_time(go_goroutines[10s])     # 返回每个时刻处，过去 5 分钟之内数据点的总和
   ```
 
 - 矢量可以使用以下算术函数：
-  ```sql
+  ```sh
   abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
   round(go_goroutines)                  # 返回每个时刻处，数据点四舍五入之后的整数值
   absent(go_goroutines)                 # 在每个时刻处，如果不存在数据点则返回 1 ，否则返回空值
@@ -223,7 +261,7 @@
   idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
   ```
   以下算术函数适用于计数器类型的矢量：
-  ```sql
+  ```sh
   resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
   increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
   rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
@@ -307,11 +345,11 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   ```sh
   wget https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
   ```
-  然后启动：
+  解压后启动：
   ```sh
   ./alertmanager --config.file=alertmanager.yml
   ```
-  默认的访问地址是 <http://localhost:9093>
+  默认的访问地址为 <http://localhost:9093>
 - 使用时，需要在 Prometheus 的配置文件中加入如下配置，让 Prometheus 将告警消息发给 Alertmanager 处理。
   ```yaml
   alerting:
@@ -357,30 +395,32 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   ```sh
   wget https://github.com/prometheus/node_exporter/releases/download/v1.0.0-rc.0/node_exporter-1.0.0-rc.0.linux-amd64.tar.gz
   ```
-  然后启动：
+  解压后启动：
   ```sh
-  ./process-exporter
+  ./node_exporter
   ```
-  默认的访问地址是 <http://localhost:9100/metrics>
+  默认的访问地址为 <http://localhost:9100/metrics>
 
 - 常用指标：
   ```sh
-  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) by (mode) * 100    # CPU 使用率（%）
-  {__name__=~`node_load\d*`, instance='10.0.0.1:9100'}                                # CPU 平均负载
-  count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})               # CPU 核数
+  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) without (cpu) * 100          # CPU 使用率
+  node_load1{instance='10.0.0.1:9100'}                                                          # CPU 平均负载
+  count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})                         # CPU 核数
 
-  node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / (1024^3)                     # 内存总容量（GB）
-  node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / (1024^3)                 # 内存可用量（GB）
-  node_memory_SwapCached_bytes{instance='10.0.0.1:9100'} / (1024^3)                   # swap 使用量（GB）
+  node_memory_MemTotal_bytes{instance='10.0.0.1:9100'}                                          # 内存总容量
+  node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'}                                      # 内存可用量
+  node_memory_SwapCached_bytes{instance='10.0.0.1:9100'}                                        # swap 使用量
 
-  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)    # 磁盘总容量（GB）
-  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / (1024^3)   # 磁盘可用量（GB）
+  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'})                 # 磁盘总容量
+  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'})                # 磁盘可用量
 
-  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024                 # 磁盘读速率（KB/s）
-  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024              # 磁盘写速率（KB/s）
+  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m]))                          # 磁盘读速率
+  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m]))                       # 磁盘写速率
 
-  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024       # 网络下载速率（KB/s）
-  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024      # 网络上传速率（KB/s）
+  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m])   # 网络下载速率
+  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m])  # 网络上传速率
+  
+  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}             # 主机信息
   ```
 
 ### process-exporter
@@ -392,25 +432,25 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   ```sh
   wget https://github.com/ncabatoff/process-exporter/releases/download/v0.6.0/process-exporter-0.6.0.linux-amd64.tar.gz
   ```
-  然后启动：
+  解压后启动：
   ```sh
   ./process-exporter --config.path exporter.yml
   ```
-  默认的访问地址是 <http://localhost:9256/metrics>
+  默认的访问地址为 <http://localhost:9256/metrics>
 
 - 在配置文件中定义要监控的进程：
     ```yaml
     process_names:
-      - exe:                          # exe 是根据进程的可执行文件的名称（即 argv[0]）进行匹配
+      - exe:                          # exe 是对启动进程的可执行文件的名称（即 argv[0]）进行匹配
         - top                         # 可以定义多行 exe 条件，每个条件可能匹配零个、一个或多个进程
         - /bin/ping
 
       - name: "{{.ExeBase}}"          # 定义一个要匹配的进程（该 name 会用作监控指标的 groupname ，这里使用可执行文件的基本名作为 name ）
-        cmdline:                      # cmdline 是基于正则匹配（此时只能定义一行条件，否则不会采集数据）
+        cmdline:                      # cmdline 是对启动命令进行正则匹配（此时只能定义一行条件，否则不会采集数据）
         - prometheus --config.file
 
       - name: "{{.Matches.name}}"     # 定义一个要匹配的进程（这里使用正则匹配的元素组作为 name ）
-        cmdline:                      # cmdline 是基于正则匹配
+        cmdline:
         - ping www.(?P<name>.*).com   # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
     - 已经被匹配的进程不会被之后的条件重复匹配。
@@ -420,13 +460,28 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 - 常用指标：
   ```sh
   sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程使用的 CPU 核数
-  namedprocess_namegroup_memory_bytes{memtype="resident"} / (1024^3)        # 进程实际使用的内存（GB）
+  namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程实际使用的内存
   namedprocess_namegroup_memory_bytes                                       # 进程使用的内存
   namedprocess_namegroup_states                                             # 进程的状态
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的所有进程）
   namedprocess_namegroup_num_threads                                        # 线程数
+  namedprocess_namegroup_oldest_start_time_seconds                          # 进程组中最老的一个进程的启动时刻
+  namedprocess_namegroup_major_page_faults_total
+  namedprocess_namegroup_minor_page_faults_total
+  namedprocess_namegroup_major_page_faults_total
+  namedprocess_namegroup_open_filedesc
+  namedprocess_namegroup_read_bytes_total
+  namedprocess_namegroup_write_bytes_total
+
   ```
 
 ### mysqld_exporter
 
 ，，，
+
+
+### Grafana
+
+- 提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:3000/metrics> 。
+- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
+

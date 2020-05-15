@@ -236,8 +236,8 @@ scrape_configs:
 
 - 关于时间：
   ```sh
-  time()                                # 返回从1970年1月1日开始的 UTC 时间戳
-  timestamp(vector(1))                  # 返回矢量中每个数据点的时间戳
+  time()                                # 返回当前的时间戳（标量）
+  timestamp(vector(1))                  # 返回矢量中每个数据点的时间戳（矢量）
   ```
 
 - 修改矢量的标签：
@@ -332,7 +332,8 @@ scrape_configs:
   ```sh
   GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600   # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
   GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589256000&step=10s  # 查询一段时间内的所有值
-  PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589256000    # 删掉数据（不指定时间则删除所有时间的数据）
+  PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589256000    # 删除数据（不指定时间则删除所有时间的数据）
+  PUT /api/v1/admin/tsdb/clean_tombstones    # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
 
 ## 分布式
@@ -422,22 +423,22 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 - 常用指标：
   ```sh
-  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) without (cpu) * 100          # CPU 使用率
-  node_load1{instance='10.0.0.1:9100'}                                                          # CPU 平均负载
-  count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})                         # CPU 核数
+  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) without (cpu) * 100                  # CPU 使用率（%）
+  node_load1{instance='10.0.0.1:9100'}                                                                  # CPU 平均负载
+  count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})                                 # CPU 核数
 
-  node_memory_MemTotal_bytes{instance='10.0.0.1:9100'}                                          # 内存总容量
-  node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'}                                      # 内存可用量
-  node_memory_SwapCached_bytes{instance='10.0.0.1:9100'}                                        # swap 使用量
+  node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / 1024^3                                         # 内存总容量（GB）
+  node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / 1024^3                                     # 内存可用量（GB）
+  node_memory_SwapCached_bytes{instance='10.0.0.1:9100'} / 1024^3                                       # swap 使用量（GB）
 
-  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'})                 # 磁盘总容量
-  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'})                # 磁盘可用量
+  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3                # 磁盘总容量（GB）
+  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3               # 磁盘可用量（GB）
 
-  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m]))                          # 磁盘读速率
-  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m]))                       # 磁盘写速率
+  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024^2                         # 磁盘读速率（MB/s）
+  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024^2                      # 磁盘写速率（MB/s）
 
-  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m])   # 网络下载速率
-  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m])  # 网络上传速率
+  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2  # 网络下载速率（MB/s）
+  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2 # 网络上传速率（MB/s）
   
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}             # 主机信息
   ```
@@ -470,7 +471,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
       - name: "{{.Matches.name}}"     # 定义一个要匹配的进程（这里使用正则匹配的元素组作为 name ）
         cmdline:
-        - ping www.(?P<name>.*).com   # 用 ?P<name> 的格式命名正则匹配的元素组
+        - ping www.(?P<name>\S*).com   # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
     - 已经被匹配的进程不会被之后的条件重复匹配。
     - 计算一个进程的指标时，默认会包含它的所有子进程的指标。
@@ -480,17 +481,15 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   ```sh
   sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程使用的 CPU 核数
   namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程实际使用的内存
-  namedprocess_namegroup_memory_bytes                                       # 进程使用的内存
-  namedprocess_namegroup_states                                             # 进程的状态
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的所有进程）
   namedprocess_namegroup_num_threads                                        # 线程数
-  namedprocess_namegroup_oldest_start_time_seconds                          # 进程组中最老的一个进程的启动时刻
+  namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
+  timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 进程的运行时长（单位为 s ）
+  irate(namedprocess_namegroup_read_bytes_total[1m]) / 1024^2               # 磁盘读速率（MB/s）
+  irate(namedprocess_namegroup_write_bytes_total[1m]) / 1024^2              # 磁盘写速率（MB/s）
+  namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
   namedprocess_namegroup_major_page_faults_total
   namedprocess_namegroup_minor_page_faults_total
-  namedprocess_namegroup_major_page_faults_total
-  namedprocess_namegroup_open_filedesc
-  namedprocess_namegroup_read_bytes_total
-  namedprocess_namegroup_write_bytes_total
   ```
 
 ### mysqld_exporter

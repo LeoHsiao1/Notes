@@ -96,7 +96,7 @@ scrape_configs:
         - '10.0.0.1:9090'
         - '10.0.0.1:9091'
         # labels:                     # 为这些监控对象的数据加上额外的标签
-        #   nodename: 'centos-1'
+        #   nodename: 'CentOS-1'
       - targets: ['10.0.0.2:9090']    # 下一组监控对象
   
   - job_name: 'node_exporter'
@@ -106,25 +106,24 @@ scrape_configs:
       refresh_interval: 1m            # 每隔 1m 重新读取一次
 ```
 - Prometheus 从各个监控对象处抓取指标数据时，默认会加上 `job: "$job_name"`、`instance: "$targets"` 两个标签。
-- 因为监控对象的 IP 可能变化，所以应该添加 nodename 等额外的标签便于筛选。
+- 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，所以应该添加 nodename 等额外的标签便于筛选。
 - 通过 file_sd_configs 方式读取的文件格式如下：
   ```json
   [{
-    "targets": [
-      "10.0.0.1:9100"
-    ],
-    "labels": {
-      "nodename": "Centos-1"
-    }
-  },{
-    "targets": [
-      "10.0.0.2:9100"
-    ],
-    "labels": {
-      "nodename": "Centos-2"
-    }
-  }
-  ]
+      "targets": [
+          "10.0.0.1:9100"
+      ],
+      "labels": {
+          "nodename": "CentOS-1"
+      }
+  }, {
+      "targets": [
+          "10.0.0.2:9100"
+      ],
+      "labels": {
+          "nodename": "CentOS-2"
+      }
+  }]
   ```
 
 ## 指标
@@ -195,6 +194,8 @@ scrape_configs:
   - w ：周
   - y ：年
 
+### 运算符
+
 - 可以进行如下算术运算：
   ```sh
   go_goroutines + 1   # 加
@@ -225,6 +226,26 @@ scrape_configs:
   vector1 unless vector2  # 补集，即在 vector1 中存在、在 vector2 中不存在的数据点
   ```
 
+### 函数
+
+- 矢量与标量的转换：
+  ```sh
+  vector(1)                             # 输入标量，返回一个矢量
+  scalar(vector(1))                     # 输入一个单时间序列的矢量，以标量的形式返回当前时刻处的值
+  ```
+
+- 关于时间：
+  ```sh
+  time()                                # 返回从1970年1月1日开始的 UTC 时间戳
+  timestamp(vector(1))                  # 返回矢量中每个数据点的时间戳
+  ```
+
+- 修改矢量的标签：
+  ```sh
+  label_join(go_goroutines, "new_label", ",", "instance", "job")               # 给矢量 go_goroutines 添加一个标签 new_label ，其值为 instance、job 标签值的组合，用 , 分隔
+  label_replace(go_goroutines, "new_label", "$1-$2", "instance", "(.*):(.*)")  # 给矢量 go_goroutines 添加一个标签 new_label ，其值为对 instance 标签值的正则匹配的结果
+  ```
+
 - 矢量可以使用以下聚合函数：
   ```sh
   count(go_goroutines)                  # 返回每个时刻处，该矢量包含的数据点的数量（即包含几个时间序列）
@@ -237,8 +258,6 @@ scrape_configs:
   topk(3, go_goroutines)                # 返回每个时刻处，最大的 3 个数据点
   bottomk(3, go_goroutines)             # 返回每个时刻处，最小的 3 个数据点
   quantile(0.5, go_goroutines)          # 返回每个时刻处，大小排在 50% 位置处的数据点
-  vector(1)                             # 输入标量，返回一个矢量
-  scalar(vector(1))                     # 输入一个单时间序列的矢量，以标量的形式返回当前时刻处的值
   ```
   聚合函数可以与关键字 by、without 组合使用，如下：
   ```sh
@@ -472,7 +491,6 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   namedprocess_namegroup_open_filedesc
   namedprocess_namegroup_read_bytes_total
   namedprocess_namegroup_write_bytes_total
-
   ```
 
 ### mysqld_exporter

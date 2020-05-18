@@ -35,8 +35,8 @@
   - 可以将 Dashboard 或 Panel 导出 JSON 配置文件。
   - 存在多个 Dashboard 时，可以用 Folder 分类管理。
   - 官网提供了一些 Dashboard 示例，可供参考。
-- playlist ：包含多个 Dashboard 的播放清单。
-- snapshot ：对 Dashboard 或 Panel 的快照，只记录了此刻的数据，可以分享 URL 给别人查看。
+- playlist ：用于自动循环显示一些 Dashboard 。
+- snapshot ：对 Dashboard 或 Panel 的快照。只记录了此刻的数据，可以分享 URL 给别人查看。
 - [官方的 Dashboard 市场](https://grafana.com/grafana/dashboards)
   - Node Exporter Full ：显示 node_exporter 的指标。
 - [官方的 Plugins 市场](https://grafana.com/grafana/plugins)
@@ -77,7 +77,7 @@ Panel 的配置项分为四页：
     2. 进入任意 Panel 的编辑页面，添加 Alert 告警规则。
 - 在 Alerting 页面可以看到用户创建的所有 Alert Rule 。
 - 在 Panel 的 Alert 编辑页面，
-  - 点击"State history" 可以查看告警历史。
+  - 点击 "State history" 可以查看告警历史。
   - 点击 "Test Rule" 可以测试告警条件。
 
 - 下例是一种 Alert 的触发条件：
@@ -105,6 +105,8 @@ Panel 的配置项分为四页：
     ```
     WHEN diff() OF query(A, 5m, now) IS ABOVE 10
     ```
+
+- Grafana 支持定义变量并在 pannel 中调用，从而动态地改变 pannel 的数据，但是这样就不支持设置告警条件。
   
 ## 配置
 

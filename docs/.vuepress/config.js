@@ -191,10 +191,11 @@ module.exports = {
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
+						'其它/时间',
+						'其它/定时任务',
 						'其它/系统信息',
 						'其它/安装软件',
 						'其它/插件工具',
-						'其它/定时任务',
 						'其它/gcc',
 						'其它/OpenWrt',
 					]

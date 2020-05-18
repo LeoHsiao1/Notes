@@ -6,7 +6,7 @@
   - 可以记录进程的 stdout、stderr 。
   - 提供了 Web 管理页面。
 - 采用 C/S 工作模式：
-  - 运行一个守护进程 supervisord 作为服务器，负责管理进程。
+  - 运行一个守护进程 supervisord 作为服务器，负责托管进程。
   - 当用户执行 supervisorctl 命令时，就是作为客户端与 supervisord 通信，发出操作命令。
 - [官方文档](http://supervisord.org/index.html)
 
@@ -29,28 +29,46 @@
     cd supervisor-4.1.0
     python setup.py install
     ```
-  还要手动创建 supervisor 用到的目录，因为它不会自己创建：
-    ```sh
-    sudo mkdir /etc/supervisord.d/
-    sudo mkdir /var/run/supervisor/
-    sudo mkdir /var/log/supervisor/
 
-    sudo chown -R leo:leo /etc/supervisord.d/
-    sudo chown -R leo:leo /etc/supervisord.conf
-    sudo chown -R leo:leo /var/run/supervisor/
-    sudo chown -R leo:leo /var/log/supervisor/
+### 开机自启
+
+虽然 Supervisor 能自动重启它托管的进程，但 supervisord 本身还不能自动重启。因此建议用 systemd 启动 supervisord ，从而保证 supervisord 能够开机自启、自动重启。步骤如下：
+1. 添加配置文件 /usr/lib/systemd/system/supervisord.service ：
+    ```ini
+    [Unit]
+    Description=Supervisor Daemon
+
+    [Service]
+    User=leo
+    Group=leo
+    Type=forking
+    ExecStart=/usr/bin/supervisord -c /etc/supervisord.conf
+    ExecStop=/usr/bin/supervisorctl shutdown
+    ExecReload=/usr/bin/supervisorctl reload
+    KillMode=process
+    Restart=on-failure
+    RestartSec=1s
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+2. 然后启动 supervisord ：
+    ```sh
+    systemctl start supervisord
+    systemctl enable supervisord
     ```
 
-## 配置
+## 配置示例
 
-- 用户需要先在配置文件中定义要控制的进程，然后才能用 supervisor 管理。
-- supervisor 默认使用`/etc/supervisord.conf`作为主配置文件（用于保存 supervisord 的配置）。
-  - 还会导入`/etc/supervisord.d/`目录下的其它配置文件（用于保存各个进程的配置），这些配置文件的后缀名为 .ini ，采用 ini 的语法。
+- 用户需要先在配置文件中定义要控制的进程，然后才能用 Supervisor 管理。
+- Supervisor 默认使用 /etc/supervisord.conf 作为主配置文件（用于保存 supervisord 的配置）。
+  - 还会导入 /etc/supervisord.d/ 目录下的其它配置文件（用于保存各个进程的配置），这些配置文件的后缀名为 .ini ，采用 ini 的语法。
 
-`/etc/supervisord.conf`的内容示例：
+### /etc/supervisord.conf
+
 ```ini
 [unix_http_server]
-file=/var/run/supervisor/supervisor.sock   ; supervisor 的 sock 文件的路径
+file=/var/run/supervisor/supervisor.sock   ; supervisord 的 sock 文件的路径
 ;chmod=0700                 ; sock 文件的权限(默认为 0700)
 ;chown=nobody:nogroup       ; sock 文件的 uid:gid
 
@@ -77,7 +95,20 @@ serverurl=unix:///var/run/supervisor/supervisor.sock
 files = supervisord.d/*.ini
 ```
 
-`/etc/supervisord.d/*.ini`的内容示例：
+使用非 root 用户启动 supervisord 时，它会因为无法创建某些目录而无法启动。因此建议采用以下措施：
+- 将配置文件中的 /var/run/ 路径改为 /var/log/
+- 手动创建以下目录，并分配权限：
+    ```sh
+    sudo mkdir /etc/supervisord.d/
+    sudo mkdir /var/log/supervisor/
+
+    sudo chown -R leo:leo /etc/supervisord.d/
+    sudo chown -R leo:leo /etc/supervisord.conf
+    sudo chown -R leo:leo /var/log/supervisor/
+    ```
+
+### /etc/supervisord.d/*.ini
+
 ```ini
 [program:ping]              ; 被管理的进程名
 command=/bin/ping 127.0.0.1 ; 该进程的启动命令
@@ -91,7 +122,7 @@ autorestart=unexpected      ; 当进程启动成功之后退出时是否重启�
 startsecs=1                 ; 进程启动之后保持运行多少秒，才视作进程启动成功了
 startretries=3              ; 启动失败之后最多尝试重启多少次
 ;exitcodes=0,2              ; 如果进程以这些退出码退出，则视作正常退出（状态为 EXITED ），否则视作异常退出
-;stopsignal=TERM            ; 当 supervisor 主动终止该进程时，发送哪种信号（可以是 TERM、HUP、INT、QUIT、KILL、USR1、USR2）
+;stopsignal=TERM            ; 当 supervisord 主动终止该进程时，发送哪种信号（可以是 TERM、HUP、INT、QUIT、KILL、USR1、USR2）
 ;stopwaitsecs=10            ; 发送 stopsignal 信号之后，如果超过 stopwaitsecs 秒进程仍然没退出，则发送 SIGKILL 信号强制终止
 
 stdout_logfile=/var/log/supervisor/%(program_name)s_stdout.log   ; stdout 日志文件的保存路径（不配置的话就不会记录日志）
@@ -114,10 +145,10 @@ stderr_logfile_backups=0
   command=echo `date`   # 执行结果相当于 echo '`date`'
   ```
   如果需要动态取值，建议将 command 保存到一个 sh 脚本中，然后执行该 sh 脚本。
-- 用 supervisor 管理的进程必须保持在前台运行，否则会脱离 supervisor 的控制，不能捕捉它的 stdout、stderr ，也不能终止它。
-- 用 supervisor 启动 Python 进程时， Python 解释器默认不会自动刷新输出缓冲区，导致不能记录该进程的 stdout、stderr 。因此需要用 python -u 的方式启动，禁用输出缓冲区。
+- 用 supervisord 管理的进程必须保持在前台运行，否则会脱离 supervisord 的控制，不能捕捉它的 stdout、stderr ，也不能终止它。
+- 用 supervisord 启动 Python 进程时， Python 解释器默认不会自动刷新输出缓冲区，导致不能记录该进程的 stdout、stderr 。因此需要用 python -u 的方式启动，禁用输出缓冲区。
 
-- 当 supervisor 启动一个进程时（状态为 STARTING ）：
+- 当 supervisord 启动一个进程时（状态为 STARTING ）：
   - 如果进程在 startsecs 秒之内退出了（包括正常退出、异常退出），则视作启动失败（状态为 BACKOFF ），最多尝试重启 startretries 次（依然失败的话则状态为 FATAL ）。
   - 如果进程在 startsecs 秒之内没有退出，则视作进程启动成功了（状态为 RUNNING ）。
   - 如果进程在 startsecs 秒之后退出了，则根据 autorestart 策略决定是否重启它（不考虑 startretries ）。
@@ -127,7 +158,7 @@ stderr_logfile_backups=0
   - flase ：总是不重启。
   - unexpected ：异常退出时才重启，即退出码与 exitcodes 不同。
 
-- 建议让 Supervisor 只保留一份日志，如下，另外用 logrotate 来按日期切割日志。
+- 建议为进程只保留一份日志，另外用 logrotate 来按日期切割日志。配置如下：
     ```ini
     stdout_logfile=/var/log/supervisor/%(program_name)s.out
     stdout_logfile_maxbytes=0
@@ -135,7 +166,7 @@ stderr_logfile_backups=0
     redirect_stderr=true
     ```
 
-## 操作命令
+## supervisorctl 命令
 
 ```sh
 supervisorctl
@@ -156,7 +187,7 @@ supervisorctl
 
 ## 日志
 
-supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主要包括：
+Supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主要包括：
 - supervisord.log ：记录了 supervisord 的日志，例如：
   ```
   2020-01-12 06:42:25,426 INFO exited: kafka-consumer (exit status 1; not expected)     # 进程退出了，且没有使用预期的退出码
@@ -168,14 +199,15 @@ supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
 
 ## Cesi
 
-：一个基于 Python3 的 Flask 开发的 Web 管理平台，可以统一管理多台主机上的 Supervisor 。
+：一个基于 Python3 的 Flask 开发的 Web 管理平台，可以统一管理多台主机上的 Supervisor （需要它们开启 inet_http_server ）。
+- [Github 页面](https://github.com/gamegos/cesi)
 - 安装：
   ```sh
   wget https://github.com/gamegos/cesi/releases/download/v2.6.8/cesi-extended.tar.gz
   mkdir cesi/
   tar -zxvf cesi-extended.tar.gz -C cesi/
   cd cesi/
-  pip3 install -r requirements.txt
+  sudo pip3 install -r requirements.txt
   python3 cesi/run.py --config-file defaults/cesi.conf.toml
   ```
   - 启动之后，访问 <http://127.0.0.1:5000> 即可查看 Web 页面。默认的账号、密码为 admin、admin 。

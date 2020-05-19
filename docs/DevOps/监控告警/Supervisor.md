@@ -95,9 +95,9 @@ serverurl=unix:///var/run/supervisor/supervisor.sock
 files = supervisord.d/*.ini
 ```
 
-使用非 root 用户启动 supervisord 时，它会因为无法创建某些目录而无法启动。因此建议采用以下措施：
-- 将配置文件中的 /var/run/ 路径改为 /var/log/
-- 手动创建以下目录，并分配权限：
+- 使用非 root 用户启动 supervisord 时，它会因为无法创建某些目录而无法启动。因此建议采用以下措施：
+  - 将配置文件中的 /var/run/ 路径改为 /var/log/
+  - 手动创建以下目录，并分配权限：
     ```sh
     sudo mkdir /etc/supervisord.d/
     sudo mkdir /var/log/supervisor/
@@ -105,6 +105,13 @@ files = supervisord.d/*.ini
     sudo chown -R leo:leo /etc/supervisord.d/
     sudo chown -R leo:leo /etc/supervisord.conf
     sudo chown -R leo:leo /var/log/supervisor/
+    ```
+- 当 supervisord 开启了 inet_http_server 时，可以通过发出 HTTP 请求来管理该主机上的进程，如下：
+    ```sh
+    curl -L "http://10.0.0.1:9001/index.html?processname=ping&action=start" -u "admin:WJnhZdpFvtml"   # 启动
+    curl -L "http://10.0.0.1:9001/index.html?processname=ping&action=stop" -u "admin:WJnhZdpFvtml"    # 停止
+    curl -L "http://10.0.0.1:9001/index.html?processname=ping&action=restart" -u "admin:WJnhZdpFvtml" # 重启
+    curl -L "http://10.0.0.1:9001/logtail/ping" -u "admin:WJnhZdpFvtml"                               # 查看日志
     ```
 
 ### /etc/supervisord.d/*.ini
@@ -121,7 +128,7 @@ autostart=true              ; 当 supervisord 启动时是否自动启动该进�
 autorestart=unexpected      ; 当进程启动成功之后退出时是否重启它
 startsecs=1                 ; 进程启动之后保持运行多少秒，才视作进程启动成功了
 startretries=3              ; 启动失败之后最多尝试重启多少次
-;exitcodes=0,2              ; 如果进程以这些退出码退出，则视作正常退出（状态为 EXITED ），否则视作异常退出
+;exitcodes=0,2              ; 如果进程以这些退出码退出，则视作正常退出，否则视作异常退出
 ;stopsignal=TERM            ; 当 supervisord 主动终止该进程时，发送哪种信号（可以是 TERM、HUP、INT、QUIT、KILL、USR1、USR2）
 ;stopwaitsecs=10            ; 发送 stopsignal 信号之后，如果超过 stopwaitsecs 秒进程仍然没退出，则发送 SIGKILL 信号强制终止
 
@@ -152,10 +159,12 @@ stderr_logfile_backups=0
 - 用 supervisord 启动 Python 进程时， Python 解释器默认不会自动刷新输出缓冲区，导致不能记录该进程的 stdout、stderr 。因此需要用 python -u 的方式启动，禁用输出缓冲区。
 
 - 当 supervisord 启动一个进程时（状态为 STARTING ）：
-  - 如果进程在 startsecs 秒之内退出了（包括正常退出、异常退出），则视作启动失败（状态为 BACKOFF ），最多尝试重启 startretries 次（依然失败的话则状态为 FATAL ）。
+  - 如果进程在 startsecs 秒之内退出了（包括正常退出、异常退出），则视作启动失败（状态为 BACKOFF ），最多尝试重启 startretries 次（如果依然失败则状态为 FATAL ）。
   - 如果进程在 startsecs 秒之内没有退出，则视作进程启动成功了（状态为 RUNNING ）。
-  - 如果进程在 startsecs 秒之后退出了，则根据 autorestart 策略决定是否重启它（不考虑 startretries ）。
-- 因此，使用 supervisorctl start 启动进程时，至少会阻塞前端 startsecs 秒。
+  - 如果进程在 startsecs 秒之后退出了（包括正常退出、异常退出，状态为 EXITED ），则根据 autorestart 策略决定是否重启它（不受 startretries 限制）。
+  - 如果进程在 startsecs 秒之后被用户通过 supervisorctl stop 命令主动停止了，则状态为 STOPPED 。
+
+- 使用 supervisorctl start 启动进程时，至少会阻塞前端 startsecs 秒。
 
 - autostart 有三种取值，决定了进程（启动成功之后）退出时是否重启它：
   - true ：总是重启。

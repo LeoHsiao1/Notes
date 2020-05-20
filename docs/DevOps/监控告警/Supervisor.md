@@ -199,7 +199,9 @@ supervisorctl
   - `program_name` ：只选中指定名字的进程。
   - `group_name` ：选中一个组内的所有进程。
   - `group_name:program_name` ：选中一个组内的指定进程。
-- supervisord 启动的进程会继承它的 shell 环境。因此，如果修改了 shell 的环境变量，要重启 supervisord 才会生效。
+- supervisord 启动的进程都是它的子进程，因此：
+  - 如果修改了 shell 的环境变量，要重启 supervisord 才会生效。
+  - 如果 supervisord 进程退出了，通常会自动终止它管理的各个进程。
 
 ## 日志
 

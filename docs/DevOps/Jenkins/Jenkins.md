@@ -99,3 +99,4 @@
   - 原理是将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
 - Disk usage
   - 用于记录各个 Job 占用的磁盘空间。
+  - 为了限制 Job 占用的磁盘空间，建议设置 Job 的 Discard old builds 策略：频繁执行的任务最多保留 14 天日志，偶尔执行的任务最多保留 100 次日志。

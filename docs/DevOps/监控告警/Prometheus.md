@@ -3,8 +3,10 @@
 ：一个目前流行的监控系统，基于 Golang 开发。
 - 源于 Google Borg 系统的监控系统，2016 年作为一个独立项目交给 CNCF 托管。
 - 擅长从大量节点上采集指标数据，且提供了 Web 管理页面。
-- 与 Zabbix 相比，可监控的对象更多（比如监控容器），更轻量级，更高的可扩展性。
 - [官方文档](https://prometheus.io/docs/introduction/overview/)
+- 对比：
+  - Zabbix 只擅长监控主机，而且配置比较繁琐。
+  - Prometheus 可监控主机、进程、容器等多种对象,可扩展性高，而且自带查询语言，配置比较灵活。
 
 ## 安装
 
@@ -52,7 +54,6 @@
 2. 重启 Prometheus 以重新加载配置文件，然后访问其 Web 页面。
    - 在 Status -> Targets 页面，可以看到所有监控对象及其状态。
    - 在 Graph 页面，执行一个查询表达式即可获得监控数据，比如 `go_goroutines` 。
-   - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 
 ## 架构
 
@@ -64,19 +65,22 @@
   - 数据默认保存在 `${prometheus}/data` 目录下，目录结构如下：
     ```
     data/
-    ├── 01E728KFZWGDM7HMY6M2D26QJD/   # 每隔两个小时就创建一个随机名字的子目录来存储数据
+    ├── 01E728KFZWGDM7HMY6M2D26QJD/   # 一个 block 目录
     │   ├── chunks
-    │   │   └── 000001                # 数据保存为二进制文件
+    │   │   └── 000001                # 压缩后的数据，是二进制文件
     │   ├── index
     │   ├── meta.json
     │   └── tombstones
     ├── 01BKGTZQ1HHWHV8FBJXW1Y3W0K/
     ├── lock
     ├── queries.active
-    └── wal/                          # 临时保存最新一段时间的数据
+    └── wal/
         ├──00000003
         └──checkpoint.000002/
     ```
+  - 最新获得的数据尚未写入 tsdb ，会暂时保存在 wal/ 目录下，等待保存为 chunks 。
+  - 每隔两个小时就会创建一个随机名字的 block 目录，将数据经过压缩之后保存到其中的 chunks 目录下。
+    一段时间后这些 block 目录还会进一步压缩、合并。
 
 - Prometheus 本身没有权限限制，不需要密码登录，不过可以用 Nginx 加上 HTTP Basic Auth 。
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
@@ -398,13 +402,43 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ## Push Gateway
 
-：作为一个 HTTP 服务器运行，允许其它 exporter 主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
+：作为一个 HTTP 服务器运行，允许其它监控对象主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
 - [GitHub 页面](https://github.com/prometheus/pushgateway)
+- 缺点：不能实时判断监控对象是否在线，而且 Push Gateway 挂掉时会导致这些监控对象都丢失。
+
+
+
 
 ## exporter
 
+
 - [官方的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/) 
 - 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就提供了 exporter 风格的 HTTP API 。
+
+### Prometheus
+
+- 本身提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:9090/metrics> 。
+- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus 2.0 Stats" 仪表盘。
+- 常用指标：
+  ```sh
+  process_resident_memory_bytes{job="prometheus"} / 1024^3  # 占用的内存（GB）
+  irate(process_cpu_seconds_total{job="prometheus"}[1m])    # 使用的 CPU 核数
+  prometheus_tsdb_storage_blocks_bytes / 1024^3             # tsdb block 占用的磁盘空间（GB）
+
+  time() - process_start_time_seconds{job="prometheus"}     # 运行时长
+  sum(prometheus_sd_discovered_targets{job="prometheus"})   # 监控对象的在线数量
+  topk(3, irate(scrape_duration_seconds[1m]))               # 耗时最久的几次数据采集
+
+  prometheus_engine_query_duration_seconds
+  prometheus_http_request_duration_seconds_bucket
+  prometheus_rule_evaluation_duration_seconds
+  prometheus_rule_group_duration_seconds
+  ```
+
+### Grafana
+
+- 本身提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:3000/metrics> 。
+- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
 
 ### node_exporter
 
@@ -427,6 +461,9 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   node_load1{instance='10.0.0.1:9100'}                                                                  # CPU 平均负载
   count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})                                 # CPU 核数
 
+  node_time_seconds{instance='10.0.0.1:9100'} - node_boot_time_seconds{instance='10.0.0.1:9100'}        # 主机运行时长（s）
+  node_time_seconds{instance='10.0.0.1:9100'} - time()          # 目标主机与监控主机的时间差值（在 [scrape_interval, 0] 范围内才合理）
+
   node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / 1024^3                                         # 内存总容量（GB）
   node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / 1024^3                                     # 内存可用量（GB）
   node_memory_SwapCached_bytes{instance='10.0.0.1:9100'} / 1024^3                                       # swap 使用量（GB）
@@ -440,7 +477,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2  # 网络下载速率（MB/s）
   irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2 # 网络上传速率（MB/s）
   
-  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}             # 主机信息
+  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}        # 主机信息
   ```
 
 ### process-exporter
@@ -484,7 +521,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的所有进程）
   namedprocess_namegroup_num_threads                                        # 线程数
   namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
-  timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 进程的运行时长（单位为 s ）
+  timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 进程的运行时长（ s ）
   irate(namedprocess_namegroup_read_bytes_total[1m]) / 1024^2               # 磁盘读速率（MB/s）
   irate(namedprocess_namegroup_write_bytes_total[1m]) / 1024^2              # 磁盘写速率（MB/s）
   namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
@@ -494,11 +531,4 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ### mysqld_exporter
 
-，，，
-
-
-### Grafana
-
-- 提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:3000/metrics> 。
-- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
-
+：用于监控 MySQL 的状态。

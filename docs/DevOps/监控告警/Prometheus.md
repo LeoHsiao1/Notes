@@ -87,14 +87,14 @@
 
 ## 监控对象
 
-用户必须在 Prometheus 的配置文件中描述需要监控的对象，格式如下：
+用户必须在 Prometheus 的配置文件中配置需要监控的对象（称为 targets ），格式如下：
 ```yaml
 scrape_configs:
   - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
     # metrics_path: /metrics
     # scheme: http
-    # scrape_interval: 1s
-    # scrape_timeout: 1s
+    # scrape_interval: 10s
+    # scrape_timeout: 10s
     static_configs:
       - targets:                      # 一组监控对象的 IP:Port
         - '10.0.0.1:9090'
@@ -102,12 +102,16 @@ scrape_configs:
         # labels:                     # 为这些监控对象的数据加上额外的标签
         #   nodename: 'CentOS-1'
       - targets: ['10.0.0.2:9090']    # 下一组监控对象
-  
+    # basic_auth:
+      # username: <string>
+      # password: <string>
+    # proxy_url:
+
   - job_name: 'node_exporter'
     file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
     - files:
       - targets/node_exporter*.json
-      refresh_interval: 1m            # 每隔 1m 重新读取一次
+      refresh_interval: 5m            # 每隔 5m 重新读取一次
 ```
 - Prometheus 从各个监控对象处抓取指标数据时，默认会加上 `job: "$job_name"`、`instance: "$targets"` 两个标签。
 - 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，所以应该添加 nodename 等额外的标签便于筛选。
@@ -278,26 +282,25 @@ scrape_configs:
   abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
   round(go_goroutines)                  # 返回每个时刻处，数据点四舍五入之后的整数值
   absent(go_goroutines)                 # 在每个时刻处，如果不存在数据点则返回 1 ，否则返回空值
-  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内不存在数据点则返回 1 ，否则返回空值
-  changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内的数据点变化的次数
-  delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负）
-  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
+  absent_over_time(go_goroutines[5m])   # 在每个时刻处，如果过去 5m 以内不存在数据点则返回 1 ，否则返回空值
+  changes(go_goroutines[5m])            # 返回每个时刻处，最近 5m 以内的数据点变化的次数
+  delta(go_goroutines[5m])              # 返回每个时刻处，该数据点减去 5m 之前数据点的差值（可能为负）
+  idelta(go_goroutines[5m])             # 返回每个时刻处，过去 5m 以内最后两个数据点的差值（可能为负）
   ```
   以下算术函数适用于计数器类型的矢量：
   ```sh
-  resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
-  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
-  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
-  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
+  resets(go_goroutines[5m])             # 返回每个时刻处，过去 5m 以内计数器重置（即数值减少）的次数
+  increase(go_goroutines[5m])           # 返回每个时刻处，过去 5m 以内的数值增量（时间间隔越短，曲线高度越低）
+  rate(go_goroutines[5m])               # 返回每个时刻处，过去 5m 以内的平均增长率（时间间隔越短，曲线越尖锐）
+  irate(go_goroutines[5m])              # 返回每个时刻处，过去 5m 以内最后两个数据点之间的增长率（更接近实时图像）
   ```
 
 ## Rules
 
-- 用户可以导入自己定义的 rule 文件，在其中定义规则。
 - 规则分为两类：
   - Recording Rules ：用于将某个查询表达式的结果保存为新指标。这样可以避免在用户查询时才计算，减少开销。
   - Alerting Rules ：用于在满足某个条件时进行告警。（它只是标出告警状态，需要对接 Alertmanager 才能发出告警消息）
-- 下例是一个 rules.yml 文件的内容：
+- 用户可以导入自定义的 rules.yml 文件，格式如下：
   ```yaml
   groups:
   - name: recording_rules               # 规则组的名称
@@ -364,7 +367,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ：作为一个 HTTP 服务器运行，用于处理 Prometheus 生成的告警消息。
 - [GitHub 页面](https://github.com/prometheus/alertmanager)
-- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦，但是可以在 Web 页面上搜索告警记录、分组管理。
+- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦但是很灵活，而且可以在 Web 页面上搜索告警记录、分组管理。
 - 下载二进制版：
   ```sh
   wget https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
@@ -404,13 +407,17 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ：作为一个 HTTP 服务器运行，允许其它监控对象主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
 - [GitHub 页面](https://github.com/prometheus/pushgateway)
-- 缺点：不能实时判断监控对象是否在线，而且 Push Gateway 挂掉时会导致这些监控对象都丢失。
+- 优点：
+  - 不需要保持运行一个 exporter 进程。
+- 缺点：
+  - 不能控制 scrape 的间隔时间。
+  - 不能实时判断监控对象是否在线。
+  - Push Gateway 挂掉时会导致其上的监控对象都丢失。
 
 
 
 
 ## exporter
-
 
 - [官方的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/) 
 - 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就提供了 exporter 风格的 HTTP API 。
@@ -418,26 +425,28 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 ### Prometheus
 
 - 本身提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:9090/metrics> 。
-- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus 2.0 Stats" 仪表盘。
+- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 - 常用指标：
   ```sh
-  process_resident_memory_bytes{job="prometheus"} / 1024^3  # 占用的内存（GB）
-  irate(process_cpu_seconds_total{job="prometheus"}[1m])    # 使用的 CPU 核数
-  prometheus_tsdb_storage_blocks_bytes / 1024^3             # tsdb block 占用的磁盘空间（GB）
+  time() - process_start_time_seconds{instance='10.0.0.1:9090'}     # 运行时长（s）
+  sum(prometheus_sd_discovered_targets{instance='10.0.0.1:9090'})   # targets 的总数
+  count(process_start_time_seconds)                                 # 实际连接的 targets 的数量（需要它们都提供该指标）
 
-  time() - process_start_time_seconds{job="prometheus"}     # 运行时长
-  sum(prometheus_sd_discovered_targets{job="prometheus"})   # 监控对象的在线数量
-  topk(3, irate(scrape_duration_seconds[1m]))               # 耗时最久的几次数据采集
+  process_resident_memory_bytes{instance='10.0.0.1:9090'} / 1024^3          # 占用的内存（GB）
+  irate(process_cpu_seconds_total{instance='10.0.0.1:9090'}[5m])            # 占用的 CPU 核数
+  prometheus_tsdb_storage_blocks_bytes{instance='10.0.0.1:9090'} / 1024^3   # tsdb block 占用的磁盘空间（GB）
 
-  prometheus_engine_query_duration_seconds
-  prometheus_http_request_duration_seconds_bucket
-  prometheus_rule_evaluation_duration_seconds
-  prometheus_rule_group_duration_seconds
+  sum(irate(prometheus_http_requests_total{instance='10.0.0.1:9090'}[5m])) by (code)        # 平均每秒收到的 HTTP 请求数
+  sum(irate(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[5m]))    # 处理 HTTP 请求的耗时（s）
+  sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # 执行 scrape 的耗时（s）
+  irate(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[5m])                    # 平均每秒执行 rule 的总次数
+  irate(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[5m])            # 平均每秒执行 rule 的失败次数
+  irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[5m])      # 执行 rule 的耗时（s）
   ```
 
 ### Grafana
 
-- 本身提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:3000/metrics> 。
+- 本身提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:3000/metrics> 。访问时不需要身份认证，但只提供了关于 Grafana 运行状态的指标。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
 
 ### node_exporter
@@ -457,12 +466,13 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 - 常用指标：
   ```sh
-  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) without (cpu) * 100                  # CPU 使用率（%）
-  node_load1{instance='10.0.0.1:9100'}                                                                  # CPU 平均负载
+  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[5m])) without (cpu) * 100                  # CPU 使用率（%）
+  node_load5{instance='10.0.0.1:9100'}                                                                  # 每 5 分钟的 CPU 平均负载
   count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})                                 # CPU 核数
 
   node_time_seconds{instance='10.0.0.1:9100'} - node_boot_time_seconds{instance='10.0.0.1:9100'}        # 主机运行时长（s）
   node_time_seconds{instance='10.0.0.1:9100'} - time()          # 目标主机与监控主机的时间差值（在 [scrape_interval, 0] 范围内才合理）
+  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}        # 主机信息
 
   node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / 1024^3                                         # 内存总容量（GB）
   node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / 1024^3                                     # 内存可用量（GB）
@@ -471,18 +481,16 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3                # 磁盘总容量（GB）
   sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3               # 磁盘可用量（GB）
 
-  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024^2                         # 磁盘读速率（MB/s）
-  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024^2                      # 磁盘写速率（MB/s）
+  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[5m])) / 1024^2                         # 磁盘读速率（MB/s）
+  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[5m])) / 1024^2                      # 磁盘写速率（MB/s）
 
-  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2  # 网络下载速率（MB/s）
-  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2 # 网络上传速率（MB/s）
-  
-  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}        # 主机信息
+  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[5m]) / 1024^2  # 网络下载速率（MB/s）
+  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[5m]) / 1024^2 # 网络上传速率（MB/s）
   ```
 
 ### process-exporter
 
-：用于监控进程的状态。
+：用于监控进程、线程的状态。
 - [GitHub 页面](https://github.com/ncabatoff/process-exporter)
 - 它主要通过读取 /proc/<pid>/ 目录下的信息，来收集进程指标。
 - 下载二进制版：
@@ -516,14 +524,14 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 - 常用指标：
   ```sh
-  sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程使用的 CPU 核数
+  sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)   # 进程使用的 CPU 核数
   namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程实际使用的内存
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的所有进程）
   namedprocess_namegroup_num_threads                                        # 线程数
   namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 进程的运行时长（ s ）
-  irate(namedprocess_namegroup_read_bytes_total[1m]) / 1024^2               # 磁盘读速率（MB/s）
-  irate(namedprocess_namegroup_write_bytes_total[1m]) / 1024^2              # 磁盘写速率（MB/s）
+  irate(namedprocess_namegroup_read_bytes_total[5m]) / 1024^2               # 磁盘读速率（MB/s）
+  irate(namedprocess_namegroup_write_bytes_total[5m]) / 1024^2              # 磁盘写速率（MB/s）
   namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
   namedprocess_namegroup_major_page_faults_total
   namedprocess_namegroup_minor_page_faults_total

@@ -247,3 +247,25 @@ Supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
   password = ""
   ```
   - Cesi 将用户信息存储在 SQLite 数据库中，因此不能通过配置文件创建账号、修改密码，要在 Web 页面上操作。
+  - Cesi 只划分了两种用户权限：
+    - Admin ：有权使用 Cesi ，并管理用户。
+    - Normal User ：有权使用 Cesi 。
+  - 可以通过 Environment 对各个 Supervisor 进行分组。
+  - 可以通过 Group 对全部 Supervisor 中的进程进行分组（该 Group 参数在 Supervisor 中配置）。
+
+- Cesi 提供了一些 Restful API ：
+   ```sh
+   GET /api/v2/nodes/                                         # 获取全部 Supervisor 节点的信息
+   GET /api/v2/nodes/<node_name>/                             # 获取指定节点的信息（包括节点信息、进程信息）
+   GET /api/v2/nodes/<node_name>/processes/                   # 获取指定节点上全部进程的信息
+   GET /api/v2/nodes/<node_name>/processes/<process_name>/    # 获取指定节点上的指定进程的信息
+
+   GET /api/v2/nodes/<node_name>/processes/<process_name>/start/
+   GET /api/v2/nodes/<node_name>/processes/<process_name>/stop/
+   GET /api/v2/nodes/<node_name>/processes/<process_name>/restart/
+   GET /api/v2/nodes/<node_name>/processes/<process_name>/log/
+
+   GET /api/v2/nodes/<node_name>/all-processes/start/         # 启动指定节点上的全部进程
+   GET /api/v2/nodes/<node_name>/all-processes/stop/
+   GET /api/v2/nodes/<node_name>/all-processes/restart/
+   ```

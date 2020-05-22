@@ -428,16 +428,15 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 - 常用指标：
   ```sh
-  time() - process_start_time_seconds{instance='10.0.0.1:9090'}     # 运行时长（s）
-  sum(prometheus_sd_discovered_targets{instance='10.0.0.1:9090'})   # targets 的总数
-  count(process_start_time_seconds)                                 # 实际连接的 targets 的数量（需要它们都提供该指标）
-
-  process_resident_memory_bytes{instance='10.0.0.1:9090'} / 1024^3          # 占用的内存（GB）
+  time() - process_start_time_seconds{instance='10.0.0.1:9090'}             # 运行时长（s）
   irate(process_cpu_seconds_total{instance='10.0.0.1:9090'}[5m])            # 占用的 CPU 核数
+  process_resident_memory_bytes{instance='10.0.0.1:9090'} / 1024^3          # 占用的内存（GB）
   prometheus_tsdb_storage_blocks_bytes{instance='10.0.0.1:9090'} / 1024^3   # tsdb block 占用的磁盘空间（GB）
-
+  
   sum(irate(prometheus_http_requests_total{instance='10.0.0.1:9090'}[5m])) by (code)        # 平均每秒收到的 HTTP 请求数
   sum(irate(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[5m]))    # 处理 HTTP 请求的耗时（s）
+  sum(prometheus_sd_discovered_targets{instance='10.0.0.1:9090'})                           # targets 的总数
+  count(process_start_time_seconds)                                                         # 实际连接的 targets 的数量（需要它们都提供该指标）
   sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # 执行 scrape 的耗时（s）
   irate(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[5m])                    # 平均每秒执行 rule 的总次数
   irate(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[5m])            # 平均每秒执行 rule 的失败次数
@@ -448,6 +447,18 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 - 本身提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:3000/metrics> 。访问时不需要身份认证，但只提供了关于 Grafana 运行状态的指标。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
+- 常用指标：
+  ```sh
+  time() - process_start_time_seconds{instance='10.0.0.1:3000'}             # 运行时长（s）
+  irate(process_cpu_seconds_total{instance='10.0.0.1:3000'}[5m])            # 占用的 CPU 核数
+  process_resident_memory_bytes{instance='10.0.0.1:3000'} / 1024^3          # 占用的内存（GB）
+
+  http_request_total
+  http_request_duration_milliseconds_sum
+  grafana_alerting_active_alerts                          # 已启用的 Alert 数
+  increase(grafana_alerting_result_total[1d])             # 平均每天 Alert 的执行结果
+  increase(grafana_alerting_notification_sent_total[1d])  # 平均每天发出的告警次数
+  ```
 
 ### node_exporter
 
@@ -506,21 +517,30 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 - 在配置文件中定义要监控的进程：
     ```yaml
     process_names:
-      - exe:                          # exe 是对启动进程的可执行文件的名称（即 argv[0]）进行匹配
-        - top                         # 可以定义多行 exe 条件，每个条件可能匹配零个、一个或多个进程
+      - exe:                          # 定义多行条件，每个条件可能匹配零个、一个或多个进程
+        - top
         - /bin/ping
 
-      - name: "{{.ExeBase}}"          # 定义一个要匹配的进程（该 name 会用作监控指标的 groupname ，这里使用可执行文件的基本名作为 name ）
-        cmdline:                      # cmdline 是对启动命令进行正则匹配（此时只能定义一行条件，否则不会采集数据）
+      - comm:
+        - bash
+
+      - name: "{{.ExeBase}}"          # 这里使用可执行文件的基本名作为 name
+        cmdline:
         - prometheus --config.file
 
-      - name: "{{.Matches.name}}"     # 定义一个要匹配的进程（这里使用正则匹配的元素组作为 name ）
+      - name: "{{.Matches.name}}"     # 这里使用正则匹配的元素组作为 name
         cmdline:
         - ping www.(?P<name>\S*).com   # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
+    - 关于匹配规则：
+      - exe 是对进程的 /proc/<PID>/exe 进行匹配。
+      - comm 是对进程的 /proc/<PID>/common 进行匹配。
+      - cmdline 是对进程的 /proc/<PID>/cmdline 进行正则匹配。
+      - exe、comm 可以同时定义多行匹配条件，而 cmdline 同时只能定义一行条件，否则不会被执行。
+      - exe、comm 会自动使用匹配条件作为被匹配的进程的名称，并用作监控指标的 groupname 。而 cmdline 需要手动设置 name 。
     - 已经被匹配的进程不会被之后的条件重复匹配。
     - 计算一个进程的指标时，默认会包含它的所有子进程的指标。
-    - 如果进程 A 的数量变为 0 ，process-exporter 也会一直记录。但如果重启 process-exporter ，就只会发现此时存在的进程，不会再记录进程 A 。
+    - 当 process-exporter 已发现进程 A 时，如果进程 A 的数量变为 0 ，process-exporter 也会一直记录。但如果重启 process-exporter ，就只会发现此时存在的进程，不会再记录进程 A 。
 
 - 常用指标：
   ```sh

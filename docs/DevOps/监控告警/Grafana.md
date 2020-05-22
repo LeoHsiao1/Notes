@@ -8,7 +8,7 @@
 
 - 下载二进制包：
   ```sh
-  wget https://dl.grafana.com/oss/release/grafana-6.7.3.linux-amd64.tar.gz
+  wget https://dl.grafana.com/oss/release/grafana-7.0.0.linux-amd64.tar.gz
   ```
   解压后启动：
   ```sh
@@ -50,7 +50,7 @@
   - 比如调整一个 Dashboard 显示的时间范围（time range）时，会影响到该 Dashboard 中的所有 panel 。
 - 用鼠标横向拖动选中 panel 中的一块区域，可以缩小 time range ；按 Ctrl+Z 可以放大 time range 。
 
-Panel 的配置项分为四页：
+Panel 的主要配置项：
 - Queries ：数据源。
   - 首先要在 Grafana 的 Configuration 页面添加至少一个数据源（Data Sources），然后才能给 Panel 配置数据源、查询语句。
   - 下例是从 MySQL 数据库中查询数据的配置：

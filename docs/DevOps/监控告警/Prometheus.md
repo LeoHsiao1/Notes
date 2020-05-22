@@ -12,7 +12,7 @@
 
 - 下载二进制版：
   ```sh
-  wget https://github.com/prometheus/prometheus/releases/download/v2.17.2/prometheus-2.17.2.linux-amd64.tar.gz
+  wget https://github.com/prometheus/prometheus/releases/download/v2.18.1/prometheus-2.18.1.linux-amd64.tar.gz
   ```
   解压后启动：
   ```sh
@@ -36,9 +36,9 @@
 1. 在 Prometheus 的配置文件中加入监控任务：
     ```yaml
     global:
-      scrape_interval: 10s          # 每隔多久采集一次指标（这是全局值，可以被局部值覆盖）
+      scrape_interval: 1m           # 每隔多久采集一次指标（这是全局值，可以被局部值覆盖）
       scrape_timeout: 10s           # 每次采集的超时时间
-      evaluation_interval: 10s      # 每隔多久执行一次 rules
+      evaluation_interval: 1m       # 每隔多久执行一次 rules
       # external_labels:            # 与 Alertmanager 等外部组件通信时，加上这些标签
       #   monitor: 'codelab-monitor'
 
@@ -93,7 +93,7 @@ scrape_configs:
   - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
     # metrics_path: /metrics
     # scheme: http
-    # scrape_interval: 10s
+    # scrape_interval: 1m
     # scrape_timeout: 10s
     static_configs:
       - targets:                      # 一组监控对象的 IP:Port
@@ -111,7 +111,7 @@ scrape_configs:
     file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
     - files:
       - targets/node_exporter*.json
-      refresh_interval: 5m            # 每隔 5m 重新读取一次
+      refresh_interval: 1m            # 每隔 1m 重新读取一次
 ```
 - Prometheus 从各个监控对象处抓取指标数据时，默认会加上 `job: "$job_name"`、`instance: "$targets"` 两个标签。
 - 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，所以应该添加 nodename 等额外的标签便于筛选。
@@ -153,7 +153,7 @@ scrape_configs:
   - Gauge ：仪表，数值可以任意加减变化。
   - Histogram ：直方图。将时间平均分成一段段区间，将每段时间内的多个采样点取平均值再返回（由 Server 计算），相当于从散点图变成直方图。例如：
     - `prometheus_http_request_duration_seconds_count{}  10` 表示 HTTP 请求的样本总数有 10 个。
-    - `prometheus_http_request_duration_seconds_sum{}  1.103` 表示 HTTP 请求的耗时总和为 10s 。
+    - `prometheus_http_request_duration_seconds_sum{}  0.1` 表示 HTTP 请求的耗时总和为 0.1s 。
     - `prometheus_http_request_duration_seconds_bucket{le="60"}  10` 表示 HTTP 请求中，耗时低于 60s 的有 10 个。
   - Summary ：汇总。将所有采样点按数值从小到大排列，然后返回其中几个关键位置的采样点的值（由 exporter 计算），相当于正态分布图。例如：
     - `..._count`
@@ -185,11 +185,11 @@ scrape_configs:
   go_goroutines{job=~`prometheu\w`}               # 要求标签的值匹配正则表达式
   go_goroutines{job!~`prometheu\w`}               # 要求标签的值不匹配正则表达式
 
-  go_goroutines{job="prometheus"}[5m]             # 查询 5 分钟以内的数据
-  go_goroutines{job="prometheus"}[30m:5m]         # 查询 30 分钟以内、5 分钟以前的数据
+  go_goroutines{job="prometheus"}[1m]             # 查询 1 分钟以内的数据
+  go_goroutines{job="prometheus"}[30m:1m]         # 查询 30 分钟以内、1 分钟以前的数据
 
-  go_goroutines{job="prometheus"} offset 5m       # 相当于在 5 分钟之前查询
-  sum(go_goroutines{job="prometheus"} offset 5m   # 使用函数时，offset 符号要放在函数括号内
+  go_goroutines{job="prometheus"} offset 1m       # 相当于在 1 分钟之前查询
+  sum(go_goroutines{job="prometheus"} offset 1m   # 使用函数时，offset 符号要放在函数括号内
   ```
   - 可以用 # 声明单行注释。
   - 将字符串用反引号包住时，不会让反斜杠转义。
@@ -274,7 +274,7 @@ scrape_configs:
   ```
   聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 _over_time 后缀的函数，如下：
   ```sh
-  sum_over_time(go_goroutines[10s])     # 返回每个时刻处，过去 5 分钟之内数据点的总和
+  sum_over_time(go_goroutines[1m])     # 返回每个时刻处，过去 1 分钟之内数据点的总和
   ```
 
 - 矢量可以使用以下算术函数：
@@ -282,18 +282,19 @@ scrape_configs:
   abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
   round(go_goroutines)                  # 返回每个时刻处，数据点四舍五入之后的整数值
   absent(go_goroutines)                 # 在每个时刻处，如果不存在数据点则返回 1 ，否则返回空值
-  absent_over_time(go_goroutines[5m])   # 在每个时刻处，如果过去 5m 以内不存在数据点则返回 1 ，否则返回空值
-  changes(go_goroutines[5m])            # 返回每个时刻处，最近 5m 以内的数据点变化的次数
-  delta(go_goroutines[5m])              # 返回每个时刻处，该数据点减去 5m 之前数据点的差值（可能为负）
-  idelta(go_goroutines[5m])             # 返回每个时刻处，过去 5m 以内最后两个数据点的差值（可能为负）
+  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内不存在数据点则返回 1 ，否则返回空值
+  changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内的数据点变化的次数
+  delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负）
+  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
   ```
   以下算术函数适用于计数器类型的矢量：
   ```sh
-  resets(go_goroutines[5m])             # 返回每个时刻处，过去 5m 以内计数器重置（即数值减少）的次数
-  increase(go_goroutines[5m])           # 返回每个时刻处，过去 5m 以内的数值增量（时间间隔越短，曲线高度越低）
-  rate(go_goroutines[5m])               # 返回每个时刻处，过去 5m 以内的平均增长率（时间间隔越短，曲线越尖锐）
-  irate(go_goroutines[5m])              # 返回每个时刻处，过去 5m 以内最后两个数据点之间的增长率（更接近实时图像）
+  resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
+  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
+  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
+  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
   ```
+  - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同；如果矢量的单调性变化，则 increase() 会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，因此计算结果会比 delta() 大。
 
 ## Rules
 
@@ -304,7 +305,7 @@ scrape_configs:
   ```yaml
   groups:
   - name: recording_rules               # 规则组的名称
-    # interval: 10s                     # 每隔多久执行一次该 rules
+    # interval: 15s                     # 每隔多久执行一次该 rules
     rules:
     - record: sum:job:go_goroutines     # 定义一个新指标
       expr: sum(go_goroutines) by (job) # 查询表达式
@@ -338,7 +339,7 @@ scrape_configs:
 - 关于数据的 API ：
   ```sh
   GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600   # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
-  GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589256000&step=10s  # 查询一段时间内的所有值
+  GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589256000&step=1m  # 查询一段时间内的所有值
   PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589256000    # 删除数据（不指定时间则删除所有时间的数据）
   PUT /api/v1/admin/tsdb/clean_tombstones    # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
@@ -429,18 +430,18 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 - 常用指标：
   ```sh
   time() - process_start_time_seconds{instance='10.0.0.1:9090'}             # 运行时长（s）
-  irate(process_cpu_seconds_total{instance='10.0.0.1:9090'}[5m])            # 占用的 CPU 核数
+  irate(process_cpu_seconds_total{instance='10.0.0.1:9090'}[1m])            # 占用的 CPU 核数
   process_resident_memory_bytes{instance='10.0.0.1:9090'} / 1024^3          # 占用的内存（GB）
   prometheus_tsdb_storage_blocks_bytes{instance='10.0.0.1:9090'} / 1024^3   # tsdb block 占用的磁盘空间（GB）
   
-  sum(irate(prometheus_http_requests_total{instance='10.0.0.1:9090'}[5m])) by (code)        # 平均每秒收到的 HTTP 请求数
-  sum(irate(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[5m]))    # 处理 HTTP 请求的耗时（s）
+  sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到的 HTTP 请求数
+  sum(increase(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])) # 每分钟处理 HTTP 请求的耗时（s）
   sum(prometheus_sd_discovered_targets{instance='10.0.0.1:9090'})                           # targets 的总数
-  count(process_start_time_seconds)                                                         # 实际连接的 targets 的数量（需要它们都提供该指标）
+  count(process_start_time_seconds)                                                         # targets 的实际连接数量（需要它们都提供该指标）
   sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # 执行 scrape 的耗时（s）
-  irate(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[5m])                    # 平均每秒执行 rule 的总次数
-  irate(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[5m])            # 平均每秒执行 rule 的失败次数
-  irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[5m])      # 执行 rule 的耗时（s）
+  irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])      # 执行 rule 的耗时（s）
+  sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # 每分钟执行 rule 的总次数
+  sum(increase(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)  # 每分钟执行 rule 的失败次数
   ```
 
 ### Grafana
@@ -450,14 +451,14 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 - 常用指标：
   ```sh
   time() - process_start_time_seconds{instance='10.0.0.1:3000'}             # 运行时长（s）
-  irate(process_cpu_seconds_total{instance='10.0.0.1:3000'}[5m])            # 占用的 CPU 核数
+  irate(process_cpu_seconds_total{instance='10.0.0.1:3000'}[1m])            # 占用的 CPU 核数
   process_resident_memory_bytes{instance='10.0.0.1:3000'} / 1024^3          # 占用的内存（GB）
 
-  http_request_total
-  http_request_duration_milliseconds_sum
-  grafana_alerting_active_alerts                          # 已启用的 Alert 数
-  increase(grafana_alerting_result_total[1d])             # 平均每天 Alert 的执行结果
-  increase(grafana_alerting_notification_sent_total[1d])  # 平均每天发出的告警次数
+  sum(increase(http_request_total{instance='10.0.0.1:3000'}[1m])) by (statuscode)      # 每分钟收到的 HTTP 请求数
+  sum(increase(http_request_duration_milliseconds_sum{instance='10.0.0.1:3000'}[1m]))  # 处理 HTTP 请求的耗时（ms）
+  grafana_alerting_active_alerts{instance='10.0.0.1:3000'}                             # Alert Rule 的数量
+  increase(grafana_alerting_notification_sent_total{instance='10.0.0.1:3000'}[1h])     # 每小时发出的告警次数
+  increase(grafana_alerting_result_total{instance='10.0.0.1:3000'}[1h])                # 每小时的 Alert Rule 状态
   ```
 
 ### node_exporter
@@ -477,7 +478,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 - 常用指标：
   ```sh
-  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[5m])) without (cpu) * 100                  # CPU 使用率（%）
+  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) without (cpu) * 100                  # CPU 使用率（%）
   node_load5{instance='10.0.0.1:9100'}                                                                  # 每 5 分钟的 CPU 平均负载
   count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})                                 # CPU 核数
 
@@ -492,11 +493,11 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3                # 磁盘总容量（GB）
   sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3               # 磁盘可用量（GB）
 
-  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[5m])) / 1024^2                         # 磁盘读速率（MB/s）
-  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[5m])) / 1024^2                      # 磁盘写速率（MB/s）
+  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024^2                         # 磁盘读速率（MB/s）
+  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024^2                      # 磁盘写速率（MB/s）
 
-  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[5m]) / 1024^2  # 网络下载速率（MB/s）
-  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[5m]) / 1024^2 # 网络上传速率（MB/s）
+  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2  # 网络下载速率（MB/s）
+  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2 # 网络上传速率（MB/s）
   ```
 
 ### process-exporter
@@ -544,14 +545,14 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 - 常用指标：
   ```sh
-  sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)   # 进程使用的 CPU 核数
+  sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程使用的 CPU 核数
   namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程实际使用的内存
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的所有进程）
   namedprocess_namegroup_num_threads                                        # 线程数
   namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 进程的运行时长（ s ）
-  irate(namedprocess_namegroup_read_bytes_total[5m]) / 1024^2               # 磁盘读速率（MB/s）
-  irate(namedprocess_namegroup_write_bytes_total[5m]) / 1024^2              # 磁盘写速率（MB/s）
+  irate(namedprocess_namegroup_read_bytes_total[1m]) / 1024^2               # 磁盘读速率（MB/s）
+  irate(namedprocess_namegroup_write_bytes_total[1m]) / 1024^2              # 磁盘写速率（MB/s）
   namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
   namedprocess_namegroup_major_page_faults_total
   namedprocess_namegroup_minor_page_faults_total

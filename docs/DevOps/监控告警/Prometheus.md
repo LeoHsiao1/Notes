@@ -36,9 +36,9 @@
 1. 在 Prometheus 的配置文件中加入监控任务：
     ```yaml
     global:
-      scrape_interval: 1m           # 每隔多久采集一次指标（这是全局值，可以被局部值覆盖）
+      scrape_interval: 30s          # 每隔多久采集一次指标（这是全局值，可以被局部值覆盖）
       scrape_timeout: 10s           # 每次采集的超时时间
-      evaluation_interval: 1m       # 每隔多久执行一次 rules
+      evaluation_interval: 30s      # 每隔多久执行一次 rules
       # external_labels:            # 与 Alertmanager 等外部组件通信时，加上这些标签
       #   monitor: 'codelab-monitor'
 
@@ -93,7 +93,7 @@ scrape_configs:
   - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
     # metrics_path: /metrics
     # scheme: http
-    # scrape_interval: 1m
+    # scrape_interval: 30s
     # scrape_timeout: 10s
     static_configs:
       - targets:                      # 一组监控对象的 IP:Port
@@ -294,6 +294,7 @@ scrape_configs:
   rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
   irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
   ```
+  - 使用算术函数时，时间间隔 `[t]` 至少要大于矢量的采样间隔，才能获取到数据。
   - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同；如果矢量的单调性变化，则 increase() 会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，因此计算结果会比 delta() 大。
 
 ## Rules
@@ -511,7 +512,9 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   ```
   解压后启动：
   ```sh
-  ./process-exporter --config.path exporter.yml
+  ./process-exporter -config.path=exporter.yml
+                     -children=false             # 采集每个进程的指标时，是否包含其所有子进程的指标（默认为 true）
+                     -threads=false              # 是否采集每个线程的指标（默认为 true）
   ```
   默认的访问地址为 <http://localhost:9256/metrics>
 
@@ -540,7 +543,6 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
       - exe、comm 可以同时定义多行匹配条件，而 cmdline 同时只能定义一行条件，否则不会被执行。
       - exe、comm 会自动使用匹配条件作为被匹配的进程的名称，并用作监控指标的 groupname 。而 cmdline 需要手动设置 name 。
     - 已经被匹配的进程不会被之后的条件重复匹配。
-    - 计算一个进程的指标时，默认会包含它的所有子进程的指标。
     - 当 process-exporter 已发现进程 A 时，如果进程 A 的数量变为 0 ，process-exporter 也会一直记录。但如果重启 process-exporter ，就只会发现此时存在的进程，不会再记录进程 A 。
 
 - 常用指标：

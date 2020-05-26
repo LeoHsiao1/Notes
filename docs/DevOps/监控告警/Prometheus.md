@@ -1,3 +1,5 @@
+[toc]
+
 # Prometheus
 
 ：一个目前流行的监控系统，基于 Golang 开发。
@@ -91,7 +93,7 @@
 ```yaml
 scrape_configs:
   - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
-    # metrics_path: /metrics
+    # metrics_path: '/metrics'
     # scheme: http
     # scrape_interval: 30s
     # scrape_timeout: 10s
@@ -426,7 +428,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ### Prometheus
 
-- 本身提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:9090/metrics> 。
+- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 '/metrics' 。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 - 常用指标：
   ```sh
@@ -447,7 +449,8 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ### Grafana
 
-- 本身提供了 exporter 风格的 API ，默认的访问地址为 <http://localhost:3000/metrics> 。访问时不需要身份认证，但只提供了关于 Grafana 运行状态的指标。
+- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 '/metrics' 。
+  - 访问时不需要身份认证，但只提供了关于 Grafana 运行状态的指标。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
 - 常用指标：
   ```sh
@@ -461,6 +464,16 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   increase(grafana_alerting_notification_sent_total{instance='10.0.0.1:3000'}[1h])     # 每小时发出的告警次数
   increase(grafana_alerting_result_total{instance='10.0.0.1:3000'}[1h])                # 每小时的 Alert Rule 状态
   ```
+
+### Jenkins
+
+- 安装插件 "Prometheus metrics" 可提供 exporter 风格的 API ，默认的 metrics_path 为 '/prometheus/' 。
+  - 在 Jenkins 的 "Configure System" 页面可以对 "Prometheus" 栏进行配置。
+- 常用指标：
+  ```sh
+
+  ```
+
 
 ### node_exporter
 

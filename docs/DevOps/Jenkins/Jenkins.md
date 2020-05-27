@@ -29,22 +29,22 @@
 - 用户创建一个任务之后，就可以让 Jenkins 去执行，类似执行 shell 脚本。
 - Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，因此拷贝该目录就可以备份、迁移 Jenkins 。
   - 在启动 Jenkins 之前，可以通过设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，改变 Jenkins 的主目录。
-  - 建议创建一个定期任务，自动备份 Jenkins 的主目录。
-- Jenkins 每次执行 Job 时，默认会将 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
-  - Jenkins 每次执行 Job 之前、之后都不会自动清空工作目录。
-- Jenkins 每次执行 Job 时会在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。
-  - 在 shell 中设置环境变量 `JENKINS_NODE_COOKIE=dontkillme` 可以阻止 Jenkins 杀死当前 shell 创建的进程。
+- Jenkins 每次执行 Job 时：
+  - 会先将该 Job 加入构建队列，如果相应的 node 上有空闲的执行器，则用它执行该 Job ；否则在构建队列中阻塞该 Job ，等待出现空闲的执行器。（阻塞的时间会计入 Job 的持续时长）
+  - 默认会将 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ），不过执行 Job 之前、之后都不会自动清空工作目录。
+  - 会在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。
+    在 shell 中设置环境变量 `JENKINS_NODE_COOKIE=dontkillme` 可以阻止 Jenkins 杀死当前 shell 创建的进程。
 
 ## 基本用法
 
 - Jenkins 的 Web 页面上，很多地方都显示了 ？ 图标，点击它就会显示此处的帮助文档。
 - Jenkins 的主页的左上角显示了一列菜单，点击其中的“新建”即可创建一个项目（Project）或任务（Job），常见的几种类型如下：
-  - Freestyle ：自由风格，可以通过 Web 页面上的配置实现大多数构建任务。
+  - Freestyle Project ：自由风格的项目，可以通过 Web 页面上的配置实现大多数构建任务。
   - Pipeline ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
   - Multibranch Pipeline ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
-  - MultiJob ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
+  - MultiJob Project ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
   - Folder ：用于对 Job 进行分组管理。
-- 新安装的 Jenkins 需要进行一些系统配置，比如添加节点、设置对外的 URL
+- 新安装的 Jenkins 需要进行一些系统配置，比如添加节点、设置对外的 URL 。
 - 点击 "Manage Jenkins" -> "Configure System" 可进行一些系统配置，比如设置 Jenkins 对外的 URL、邮箱、全局的环境变量。
 - 用户可以将密码等私密数据保存成 Jenkins 的“凭据”，然后在执行 Job 时调用，从而避免泄露明文到终端上。
 
@@ -85,8 +85,6 @@
 一些插件：
 - Localization: Chinese (Simplified)
   - 用于对 Jenkins 的页面进行汉化。
-- build-metrics
-  - 用于统计 Job 的构建次数。
 - monitoring
   - 用于查看 Jenkins 的 master 节点的状态，或者统计 Job 的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
 - Blue Ocean

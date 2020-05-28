@@ -467,37 +467,32 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 - 安装插件 "Prometheus metrics" 可提供 exporter 风格的 API ，默认的 metrics_path 为 '/prometheus/' 。
   - 在 Jenkins 的 "Configure System" 页面可以对 "Prometheus" 栏进行配置。
+  - 不能统计到安装该插件以前的 Jenkins 指标。
 - 常用指标：
   ```sh
-  time() - process_start_time_seconds{instance='10.0.0.1:8080'}               # 运行时长（s）
-  irate(process_cpu_seconds_total{instance='10.0.0.1:8080'}[1m])              # 占用的 CPU 核数
-  process_resident_memory_bytes{instance='10.0.0.1:8080'} / 1024^3            # 占用的内存（GB）
+  time() - process_start_time_seconds{instance='10.0.0.1:8080'}     # 运行时长（s）
+  irate(process_cpu_seconds_total{instance='10.0.0.1:8080'}[1m])    # 占用的 CPU 核数
+  process_resident_memory_bytes{instance='10.0.0.1:8080'} / 1024^3  # 占用的内存（GB）
 
-  increase(http_requests_count{instance='10.0.0.1:8080'}[1m])                 # 每分钟收到的 HTTP 请求数
-  increase(http_requests{instance='10.0.0.1:8080', quantile=~"0.5|0.99"}[1m]) # 处理 HTTP 请求的耗时（ms）
-
-  jenkins_plugins_active{instance='10.0.0.1:8080'}          # 已启用的插件数
-  jenkins_plugins_inactive{instance='10.0.0.1:8080'}        # 禁用的插件数
-  jenkins_plugins_failed{instance='10.0.0.1:8080'}          # 启动失败的插件数
-  jenkins_plugins_withUpdate{instance='10.0.0.1:8080'}      # 可更新的插件数
+  increase(http_requests_count{instance='10.0.0.1:8080'}[1m])       # 每分钟收到的 HTTP 请求数
+  http_requests{instance='10.0.0.1:8080', quantile=~"0.5|0.99"}     # 处理 HTTP 请求的耗时（s）
 
   jenkins_node_count_value{instance='10.0.0.1:8080'}        # node 总数
   jenkins_node_online_value{instance='10.0.0.1:8080'}       # 在线的 node 数
-  jenkins_node_xxx_builds{instance='10.0.0.1:8080'}         # xxx 节点上的构建耗时
   jenkins_executor_count_value{instance='10.0.0.1:8080'}    # 执行器的总数
-  jenkins_executor_in_use_value{instance='10.0.0.1:8080'}   # 正在使用的执行器数量
+  jenkins_executor_in_use_value{instance='10.0.0.1:8080'}   # 执行器正在使用的数量
+  jenkins_node_builds_count{instance='10.0.0.1:8080'}       # 本次 Jenkins 启动以来的构建次数
 
   jenkins_job_count_value{instance='10.0.0.1:8080'}         # Job 总数
-  jenkins_queue_size_value{instance='10.0.0.1:8080'}        # 构建队列中的 Job 数
-  jenkins_queue_blocked_value{instance='10.0.0.1:8080'}     # 构建队列中被阻塞的 Job 数
+  jenkins_queue_size_value{instance='10.0.0.1:8080'}        # 构建队列中的 Job 数（最好为 0 ）
 
-  default_jenkins_builds_duration_milliseconds_summary_count{instance='10.0.0.1:8080', jenkins_job='xxx'}  # Job 的构建次数
-  default_jenkins_builds_duration_milliseconds_summary_sum{instance='10.0.0.1:8080', jenkins_job='xxx'}    # Job 的构建耗时（包括被阻塞的时长）
+  default_jenkins_builds_duration_milliseconds_summary_count{instance='10.0.0.1:8080', jenkins_job='xxx'}  # Job 的构建总次数
+  default_jenkins_builds_duration_milliseconds_summary_sum{instance='10.0.0.1:8080', jenkins_job='xxx'}    # Job 的构建总耗时（包括被阻塞的时长）
   default_jenkins_builds_success_build_count{instance='10.0.0.1:8080', jenkins_job='xxx'}                  # Job 构建成功的次数
   default_jenkins_builds_failed_build_count{instance='10.0.0.1:8080', jenkins_job='xxx'}                   # Job 构建失败的次数
   default_jenkins_builds_last_build_start_time_milliseconds{instance='10.0.0.1:8080', jenkins_job='xxx'}   # Job 最后一次构建的开始时间
   default_jenkins_builds_last_build_duration_milliseconds{instance='10.0.0.1:8080', jenkins_job='xxx'}     # Job 最后一次构建的持续时长
-  default_jenkins_builds_last_build_result{instance='10.0.0.1:8080', jenkins_job='xxx'}                    # Job 最后一次构建的结果（ 1 表示成功、0 表示失败）
+  default_jenkins_builds_last_build_result{instance='10.0.0.1:8080', jenkins_job='xxx'}                    # Job 最后一次构建的结果（ 1 代表 success 、0 代表其它状态）
   ```
 
 ### node_exporter

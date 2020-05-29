@@ -37,6 +37,7 @@
 
 ## 基本用法
 
+- 访问 "/restart" 页面，会显示一个重启按钮。
 - Jenkins 的 Web 页面上，很多地方都显示了 ？ 图标，点击它就会显示此处的帮助文档。
 - Jenkins 的主页的左上角显示了一列菜单，点击其中的“新建”即可创建一个项目（Project）或任务（Job），常见的几种类型如下：
   - Freestyle Project ：自由风格的项目，可以通过 Web 页面上的配置实现大多数构建任务。
@@ -80,21 +81,19 @@
 ## 插件
 
 在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理 Jenkins 的插件。
-- 安装、卸载插件时都要手动重启 Jenkins 才会生效。（访问 /restart 页面，会显示一个重启按钮）
+- 安装、卸载插件时都要手动重启 Jenkins 才会生效，甚至修改了插件的配置之后可能也不会立即生效。
 
 一些插件：
 - Localization: Chinese (Simplified)
   - 用于对 Jenkins 的页面进行汉化。
-- monitoring
-  - 用于查看 Jenkins 的 master 节点的状态，或者统计 Job 的构建时间（安装该插件之后才开始记录）。注意点击 + 号可以显示一些折叠的视图。
 - Blue Ocean
   - 提供了对于流水线的一种更美观的操作页面。
 - Jenkins Email Extension Plugin
-  - 用于让 Jenkins 发送邮件给用户。
+  - 支持 Jenkins 发送邮件给用户。
   - Jenkins 自带的邮件通知功能比较简陋，因此放弃不用。
 - Job Configuration History
   - 用于记录各个 Job 以及系统配置的变更历史。
   - 原理是将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
 - Disk usage
-  - 用于记录各个 Job 占用的磁盘空间。
+  - 用于统计各个 Job 占用的磁盘空间。
   - 为了限制 Job 占用的磁盘空间，建议设置 Job 的 Discard old builds 策略：频繁执行的任务最多保留 14 天日志，偶尔执行的任务最多保留 100 次日志。

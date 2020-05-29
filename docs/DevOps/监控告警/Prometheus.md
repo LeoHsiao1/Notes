@@ -295,7 +295,7 @@ scrape_configs:
   irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
   ```
   - 使用算术函数时，时间间隔 `[t]` 至少要大于矢量的采样间隔，才能获取到数据。
-  - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同；如果矢量的单调性变化，则 increase() 会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，因此计算结果会比 delta() 大。
+  - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同；如果矢量的单调性变化，则 increase() 会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，因此计算结果会比 delta() 大；即使矢量一直单调递增，如果时间间隔 `[t]` 不比 scrape_interval 大几倍，increase() 的计算结果也会偏大。因此，尽量使用 delta() 。
 
 ## Rules
 
@@ -486,7 +486,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   jenkins_job_count_value{instance='10.0.0.1:8080'}         # Job 总数
   jenkins_queue_size_value{instance='10.0.0.1:8080'}        # 构建队列中的 Job 数（最好为 0 ）
 
-  default_jenkins_builds_duration_milliseconds_summary_count{instance='10.0.0.1:8080', jenkins_job='xxx'}  # Job 的构建总次数
+  default_jenkins_builds_duration_milliseconds_summary_count{instance='10.0.0.1:8080', jenkins_job='xxx'}  # Job 的构建总次数（当构建结束时才记录）
   default_jenkins_builds_duration_milliseconds_summary_sum{instance='10.0.0.1:8080', jenkins_job='xxx'}    # Job 的构建总耗时（包括被阻塞的时长）
   default_jenkins_builds_success_build_count{instance='10.0.0.1:8080', jenkins_job='xxx'}                  # Job 构建成功的次数
   default_jenkins_builds_failed_build_count{instance='10.0.0.1:8080', jenkins_job='xxx'}                   # Job 构建失败的次数
@@ -494,6 +494,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   default_jenkins_builds_last_build_duration_milliseconds{instance='10.0.0.1:8080', jenkins_job='xxx'}     # Job 最后一次构建的持续时长
   default_jenkins_builds_last_build_result{instance='10.0.0.1:8080', jenkins_job='xxx'}                    # Job 最后一次构建的结果（ 1 代表 success 、0 代表其它状态）
   ```
+- 删除某个 Job 的某次构建记录时，会使总的构建次数减一。
 
 ### node_exporter
 

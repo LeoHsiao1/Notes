@@ -395,7 +395,7 @@ py::object obj = py::cast(p);
 
     PYBIND11_MODULE(api, m) {
         m.def("test_cast", &test_cast);
-        py::class_<Pet>(m, "Pet")...
+        py::class_<Pet>(m, "Pet");
     }
     ```
     ```python
@@ -410,6 +410,13 @@ py::object obj = py::cast(p);
     TypeError: Unable to convert function return value to a Python type! The signature was
             () -> object
     ```
+- 这只是映射了类名，并不会自动绑定类的成员，因此不能调用该类的方法、属性。如下：
+	```py
+	>>> api.Pet
+	<class 'api.Pet'>
+	>>> api.Pet.name
+	AttributeError: type object 'api.Pet' has no attribute 'name'
+	```
 
 将 Python 对象映射到 C++中：
 ```cpp

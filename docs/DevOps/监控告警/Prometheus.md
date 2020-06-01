@@ -19,6 +19,7 @@
   ./prometheus
               --config.file /etc/prometheus/prometheus.yml   # 使用指定的配置文件
               --storage.tsdb.retention 15d                   # TSDB 保存数据的最长时间（默认为 15 天）
+              --web.listen-address 0.0.0.0:9090              # 设置监听的地址
               --web.enable-admin-api                         # 启用管理员的 HTTP API
               --web.enable-lifecycle                         # 启用关于终止的 HTTP API 
   ```
@@ -82,7 +83,7 @@
   - 每隔两个小时就会创建一个随机名字的 block 目录，将数据经过压缩之后保存到其中的 chunks 目录下。
     一段时间后这些 block 目录还会进一步压缩、合并。
 
-- Prometheus 本身没有权限限制，不需要密码登录，不过可以用 Nginx 加上 HTTP Basic Auth 。
+- Prometheus 本身没有身份认证，不需要密码登录，不过可以用 Nginx 加上 HTTP Basic Auth ，或者通过防火墙只允许指定 IP 访问。
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
 
 ## 监控对象
@@ -91,6 +92,7 @@
 ```yaml
 scrape_configs:
   - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
+    # honor_labels: false
     # metrics_path: '/metrics'
     # scheme: http
     # scrape_interval: 30s
@@ -114,6 +116,9 @@ scrape_configs:
       refresh_interval: 1m            # 每隔 1m 重新读取一次
 ```
 - Prometheus 从各个监控对象处抓取指标数据时，默认会加上 `job: "$job_name"`、`instance: "$targets"` 两个标签。
+- 给抓取的指标添加标签时，如果原指标中已存在同名 label ，则根据 honor_labels 的值进行处理：
+  - `honor_labels: true` ：保留原指标不变，不再添加标签。
+  - `honor_labels: false` ：默认值，将原指标中的同名 label 改名为 `exported_<label_name>` ，再添加标签。
 - 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，所以应该添加 nodename 等额外的标签便于筛选。
 - 通过 file_sd_configs 方式读取的文件格式如下：
   ```json
@@ -338,13 +343,12 @@ scrape_configs:
   PUT /-/reload      # 重新加载配置文件
   PUT /-/quit        # 终止
   ```
-
 - 关于数据的 API ：
   ```sh
-  GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600   # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
+  GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600               # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
   GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589256000&step=1m  # 查询一段时间内的所有值
   PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589256000    # 删除数据（不指定时间则删除所有时间的数据）
-  PUT /api/v1/admin/tsdb/clean_tombstones    # 让 TSDB 立即释放被删除数据的磁盘空间
+  PUT /api/v1/admin/tsdb/clean_tombstones                                                       # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
 
 ## 分布式
@@ -355,7 +359,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
     ```yaml
     scrape_configs:
       - job_name: 'federate'
-        honor_labels: true              # 保护当前 Prometheus 的标签不被覆盖
+        honor_labels: true              # 设置 true ，以保存原指标中的 job 、instance 标签
         metrics_path: '/federate'
         params:
           'match[]':                    # 抓取匹配这些表达式的指标
@@ -387,7 +391,7 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
     alertmanagers:
     - static_configs:
       - targets:
-        - 10.0.0.1:9093
+        - '10.0.0.1:9093'
   ```
 - Alertmanager 的配置文件示例：
   ```yaml
@@ -413,13 +417,54 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 - [GitHub 页面](https://github.com/prometheus/pushgateway)
 - 优点：
   - 不需要保持运行一个 exporter 进程。
+  - 允许 exporter 与 Prometheus 异步工作。
+  - 提供了 Web 页面，可以查看其状态。
 - 缺点：
-  - 不能控制 scrape 的间隔时间。
-  - 不能实时判断监控对象是否在线。
+  - 不能控制监控对象生成指标的间隔时间。
+  - 不能直接判断监控对象是否在线，需要根据 push_time_seconds 进行判断。
   - Push Gateway 挂掉时会导致其上的监控对象都丢失。
+- 下载二进制版：
+  ```sh
+  wget https://github.com/prometheus/pushgateway/releases/download/v1.2.0/pushgateway-1.2.0.linux-amd64.tar.gz
+  ```
+  解压后启动：
+  ```sh
+  ./pushgateway
+                --web.listen-address 0.0.0.0:9091    # 设置监听的地址
+                --persistence.file  metrics.bak      # 将指标数据备份到该文件中（默认不会备份，因此重启后会丢失）
+  ```
+  默认的访问地址为 <http://localhost:9091>
+- 在 Prometheus 的配置文件中加入如下配置，使其抓取 Push Gateway ：
+  ```yaml
+  scrape_configs:
+    - job_name: 'pushgateway'
+      honor_labels: true
+      static_configs:
+        - targets:
+          - '10.0.0.1:9091'
+  ```
+- 例：推送指标到 Push Gateway
+  ```sh
+  cat <<EOF | curl --data-binary @- http://localhost:9091/metrics/job/test_job/instance/test_instance
+  # TYPE test_metric counter
+  # HELP test_metric Just an example.
+  test_metric{name="one"} 42
+  EOF
+  ```
+  `# TYPE <metric_name> <type>` 行必须存在，用于声明该指标的类型。
+  `# HELP <metric_name> <comment>` 行不是必要的，用于添加该指标的注释。
+  这会让 Push Gateway 记录下三个指标：
+  ```sh
+  test_metric{instance="test_instance", job="test_job", name="one"} 42                # test_metric 最后一次推送的值
+  push_time_seconds{instance="test_instance", job="test_job"} 1.5909774528190377e+09  # 最后一次成功推送的时间戳
+  push_failure_time_seconds{instance="test_instance", job="test_job"} 0               # 最后一次失败推送的时间戳
+  ```
+  重复推送 test_metric 时，只会更新这三个指标的值，不会保留历史的值。
 
-
-
+- 常用 API ：
+  ```sh
+  curl -X DELETE http://localhost:9091/metrics/job/test_job/instance/test_instance    # 删除某个指标
+  ```
 
 ## exporter
 

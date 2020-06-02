@@ -115,16 +115,25 @@ mysql                    # 启动 MySQL 客户端
   exit           # 退出 MySQL 客户端（相当于 quit）
   ```
 
-## SQL
+### mysqladmin
 
-：结构化查询语言（Structured Query Language)，是关系型数据库的标准操作语言。
-- SQL 是一种交互式操作语言，但不能进行编程。
-- SQL 独立于数据库之外，但在不同关系型数据库上的用法稍有不同，所以不能完全通用。
+：一个能够管理 MySQL 服务器的工具，使用时不需要进入 MySQL 客户端的终端。
 
-语法：
-- 不区分大小写。
-- 字符串只能用单引号 ' 包住（此时依然可以转义字符），或者不用引号（此时字符串不能包含空格）。
-  - MySQL 中，字符串也可以用双引号 " 包住。
-  - MySQL 中，如果用户使用的字符串与 MySQL 内部的保留子冲突，则必须用 \` \` 包住。
-- 每条语句必须以分号 ; 结尾。输入一条语句时，可以多次按回车换行输入，直到输入分号结束。
-- 用 -- 声明单行注释，用 /* */ 声明多行注释。
+```sh
+mysqladmin [OPTIONS] [command]...   # 连接到 MySQL 服务器，执行某种操作
+          -h <host>         # 输入主机名等信息，连接到 MySQL 服务器
+          -P <port>
+          -u <user>
+          -p
+          --password=****** 
+
+          password ******   # 修改该用户的密码
+          create <db>       # 创建一个 datebase
+          drop <db>         # 删除一个 datebase
+          processlist       # 显示 MySQL 服务器上所有线程的状态
+          kill <id>...      # 终止一个线程
+          status            # 查看 MySQL 服务器的状态
+          shutdown          # 关闭 MySQL 服务器
+
+          -c 10 -i 1        # 重复执行 10 次操作，每次间隔 1s
+```

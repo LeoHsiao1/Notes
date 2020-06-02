@@ -66,10 +66,12 @@ pipeline {
 ## 使用变量
 
 - 用 `$变量名` 的格式可以读取变量的值。
-  - Jenkins 在执行 Jenkinsfile 之前，会先将各个变量名替换成其值（相当于字符串替换）。如果使用的变量尚未定义，则会报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
+- Jenkins 在执行 Jenkinsfile 之前，会先将各个变量名替换成其值（相当于字符串替换）。如果使用的变量尚未定义，则会报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
 
-- 可以给 Job 声明构建参数，需要用户在启动 Job 时传入它们（像函数形参）。
-  - 其它类型的 Job 只能在 Jenkins Web 页面中定义构建参数，而 Pipeline Job 可以在 pipeline.parameters{} 中以代码的形式定义构建参数。如下：
+### 构建参数
+
+可以给 Job 声明构建参数，需要用户在启动 Job 时传入它们（像函数形参）。
+- 其它类型的 Job 只能在 Jenkins Web 页面中定义构建参数，而 Pipeline Job 可以在 pipeline.parameters{} 中以代码的形式定义构建参数。如下：
     ```groovy
     pipeline {
         agent any
@@ -90,13 +92,16 @@ pipeline {
         }
     }
     ```
-  - 如果定义了 parameters{} ，则会移除在 Jenkins Web 页面中定义的、在上游 Job 中定义的构建参数。
-  - 对于文件参数，上传的文件会存储到 ${workspace}/${job_name}/f1 路径处，而用 $f1 可获得上传的文件名。
-  - 每次修改了 parameters{} 之后，要执行一次 Job 才会在 Jenkins Web 页面上生效。
+- 如果定义了 parameters{} ，则会移除在 Jenkins Web 页面中定义的、在上游 Job 中定义的构建参数。
+- 每次修改了 parameters{} 之后，要执行一次 Job 才会在 Jenkins Web 页面上生效。
+- password 参数虽然在输入时显示成密文，但打印到终端上时会显示成明文，不如 credentials 安全。
+- 对于文件参数，上传的文件会存储到 ${workspace}/${job_name}/f1 路径处，而用 $f1 可获得上传的文件名。
 
-- 在 environment{} 中可以定义环境变量，它们会被 Jenkind 加入到 shell 的环境变量中。
-  - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
-  - 例：
+### 环境变量
+
+在 environment{} 中可以定义环境变量，它们会被 Jenkind 加入到 shell 的环境变量中。
+- 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
+- 例：
     ```groovy
     stage('测试') {
         environment {
@@ -109,15 +114,15 @@ pipeline {
         }
     }
     ```
-    - 以上 echo 语句、sh 语句中，`$ID`都会被视作 Jenkinsfile 的环境变量取值，如果不存在则报错。
-    - 如果要读取 shell 中的变量，则应该执行被单引号包住的 sh 语句。例如：`sh 'ID=2; echo $ID'`
-  - 在 environment{} 中可以通过以下方式读取 Jenkins 的一些内置变量：
+- 以上 echo 语句、sh 语句中，`$ID`都会被视作 Jenkinsfile 的环境变量取值，如果不存在则报错。
+- 如果要读取 shell 中的变量，则应该执行被单引号包住的 sh 语句。例如：`sh 'ID=2; echo $ID'`
+- 在 environment{} 中可以通过以下方式读取 Jenkins 的一些内置变量：
     ```groovy
     echo "分支名：${env.BRANCH_NAME} ，提交者：${env.CHANGE_AUTHOR} ，版本链接：${env.CHANGE_URL}"
     echo "节点名：${env.NODE_NAME} ，Jenkins 主目录：${env.JENKINS_HOME} ，工作目录：${env.WORKSPACE}"
     echo "任务名：${env.JOB_NAME} ，任务链接：${env.JOB_URL} ，构建编号：${env.BUILD_NUMBER} ，构建链接：${env.BUILD_URL}"
     ```
-  - 在 environment{} 中可以通过以下方式读取 Jenkins 的凭据：
+- 在 environment{} 中可以通过以下方式读取 Jenkins 的凭据：
     ```groovy
     environment {
         ACCOUNT1 = credentials('account1')
@@ -355,11 +360,29 @@ pipeline {
     ```groovy
     script {
         STDOUT = sh(script: 'echo hello', returnStdout: true).trim()
-        EXIT_CODE = sh(script: 'echo hello', returnStatus: true)
+        EXIT_CODE = sh(script: 'echo hello', returnStatus: true).trim()
         echo "$STDOUT"
         echo "$EXIT_CODE"
     }
     ```
+    .trim() 方法用于去掉字符串末尾的空字符、换行符。
+- 使用 Groovy 的 for 循环的示例：
+    ```groovy
+    script {
+        for ( i in [0, 1, 2, 3] ) {     // 遍历数组
+            sh "echo $i"
+        }
+    }
+    ```
+    ```groovy
+    script {
+        FILE_LIST = sh(script: "ls /", returnStdout: true)
+        for (f in FILE_LIST.tokenize("\n")){        // 遍历从 shell 中获得的数组
+            sh "echo $f"
+        }
+    }
+    ```
+    .tokenize() 方法用于将字符串分割成多个字段的数组，并忽略内容为空的字段。
 
 ## options{}
 

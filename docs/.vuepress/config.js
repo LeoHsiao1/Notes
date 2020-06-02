@@ -191,10 +191,11 @@ module.exports = {
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
+						'其它/时间',
+						'其它/定时任务',
 						'其它/系统信息',
 						'其它/安装软件',
 						'其它/插件工具',
-						'其它/定时任务',
 						'其它/gcc',
 						'其它/OpenWrt',
 					]
@@ -228,11 +229,12 @@ module.exports = {
 					sidebarDepth: 2,
 					children: [
 						'MySQL/MySQL',
+						'MySQL/用户权限',
 						'MySQL/管理单元',
 						'MySQL/数据类型',
-						'MySQL/备份数据',
-						'MySQL/其它功能',
+						'MySQL/函数',
 						'MySQL/数据库引擎',
+						'MySQL/备份数据',
 						'MySQL/性能优化',
 						'MySQL/部署架构',
 						'MySQL/^PyMySQL',

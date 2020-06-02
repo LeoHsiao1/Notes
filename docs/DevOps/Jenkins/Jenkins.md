@@ -60,6 +60,9 @@
   3. 将 master 节点的 ~/.ssh/id_rsa.pub 公钥拷贝到 slave 节点的 ~/.ssh/authorized_keys 中。
   4. 在 Jenkins 上创建一个“SSH Username with private key”类型的凭据，填入 master 节点的 ~/.ssh/id_rsa 私钥。
   5. 在 Jenkins 上新建一个节点，选择以“Launch agents via SSH”方式连接。
+- 当 Jenkins master 通过 SSH 连接到 slave 之后（以 notty 方式连接，不创建终端），会执行 java -jar remoting.jar  命令，保持运行一个客户端。
+  - master 每次连接 slave 时，不会加载 /etc/profile 和 ~/.bash_profile ，只会加载 /etc/bashrc 和 ~/.bashrc 。因此，需要在 slave 的配置页面添加 refix Start Agent Command ：`source /etc/profile;source ~/.bash_profile;` 。
+  - 客户端执行的所有 shell 命令都会继承它的 shell 环境变量。因此，当用户修改 shell 环境变量时，客户端不会自动更新，必须手动将 slave 断开重连。
 
 ## 管理权限
 

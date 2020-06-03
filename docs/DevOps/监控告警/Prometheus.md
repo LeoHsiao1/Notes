@@ -40,7 +40,7 @@
       scrape_interval: 30s          # 每隔多久采集一次指标（这是全局值，可以被局部值覆盖）
       scrape_timeout: 10s           # 每次采集的超时时间
       evaluation_interval: 30s      # 每隔多久执行一次 rules
-      # external_labels:            # 与 Alertmanager 等外部组件通信时，加上这些标签
+      # external_labels:            # 与 Alertmanager 等外部组件通信时，会加上这些标签
       #   monitor: 'codelab-monitor'
 
     # rule_files:                   # 导入 rule 文件
@@ -308,7 +308,7 @@ scrape_configs:
 
 - 规则分为两类：
   - Recording Rules ：用于将某个查询表达式的结果保存为新指标。这样可以避免在用户查询时才计算，减少开销。
-  - Alerting Rules ：用于在满足某个条件时进行告警。（它只是标出告警状态，需要对接 Alertmanager 才能发出告警消息）
+  - Alerting Rules ：用于在满足某个条件时进行告警。（它只是产生告警消息，需要由 Alertmanager 转发给用户）
 - 用户可以导入自定义的 rules.yml 文件，格式如下：
   ```yaml
   groups:
@@ -320,15 +320,26 @@ scrape_configs:
 
   - name: alerting_rules                # 规则组的名称
     rules:
-    - alert: Go协程数太多                # 定义一个告警规则
+    - alert: Go协程数过多                # 定义一个告警规则
       expr: go_goroutines > 100         # 设置告警条件（只要表达式的执行结果是矢量，就会报警）
       for: 5m                           # 连续满足条件 5 分钟之后才告警
       # labels:
       #   severity: small
       annotations:
-        summary: "节点地址：{{$labels.instance}}"
+        summary: "节点地址：{{$labels.instance}}, 协程数：{{$value}}"
   ```
   - 用户可以通过 labels、annotations 子句添加一些标签到告警信息中，并且这些标签的值中允许引用变量（基于 Golang 的模板语法）。
+  - 上例中，最终生成的告警消息包含以下内容：
+    ```json
+    {
+      "alertname":"Go协程数过多",
+      "status": "firing",
+      "summary":"节点地址：192.168.2.110:9090, 协程数：100",
+      "instance":"192.168.2.110:9090",
+      "job":"prometheus",
+      ...
+    }
+  - 当异常开始时，Prometheus 会产生状态为 "firing" 的告警消息；当异常结束时，会产生状态为 "resolved" 的告警消息。
 
 - 在 Web 页面上可以看到 Alerting Rules 的状态：
   - 不满足告警条件时，标为 Inactive 状态。
@@ -373,9 +384,10 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
 
 ## Alertmanager
 
-：作为一个 HTTP 服务器运行，用于处理 Prometheus 生成的告警消息。
+：作为一个 HTTP 服务器运行，用于管理 Prometheus 产生的告警消息、转发给用户。
 - [GitHub 页面](https://github.com/prometheus/alertmanager)
-- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦但是很灵活，而且可以在 Web 页面上搜索告警记录、分组管理。
+- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦但是很灵活，而且可以在 Web 页面上搜索告警消息、分组管理。
+  - 缺点是只能查看当前的告警消息，不能查看已发送的告警消息。
 - 下载二进制版：
   ```sh
   wget https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
@@ -393,23 +405,95 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
       - targets:
         - '10.0.0.1:9093'
   ```
+- Alertmanager 的主要概念：
+  - Filter
+    - ：通过 label=value 的形式筛选告警消息。
+    - 这项方便在 Web 页面上进行查询。
+  - Silence
+    - ：不发送某个或某些告警消息，使其静音。
+    - 这项需要在 Web 页面上配置，且重启 Alertmanager 之后不会丢失。
+  - Group
+    - ：根据某个或某些 label 的值对告警消息进行分组。
+    - 这项需要在配置文件中定义，但也可以在 Web 页面上调试。
+    - 如果 Alertmanager 同时收到多个告警消息，且它们属于同一个 group ，则会将它们放在同一个通知中发送给用户。然后该 group 被静音 repeat_interval 时间。
+    - 即使多个告警消息属于不同 group ，也可能放在同一个通知中发送给用户。
+  - Inhibit
+    - ：用于设置多个告警消息之间的抑制关系。当发出某个告警消息时，使其它的某些告警消息静音。
+    - 这项需要在配置文件中定义。
 - Alertmanager 的配置文件示例：
   ```yaml
-  global:
+  global:                                     # 配置一些全局参数
+    # resolve_timeout: 5m                     # 每个告警持续激活的最长时间，超时之后则认为已解决
     smtp_smarthost: 'smtp.exmail.qq.com:465'
     smtp_from: '123456@qq.com'
     smtp_auth_username: '123456@qq.com'
     smtp_auth_password: '******'
     smtp_require_tls: false
 
+  receivers:                                  # 定义告警消息的接受者
+    - name: 'email_to_leo'
+      email_configs:                          # 只配置少量 smtp 参数，其余的参数则继承全局配置
+        - to: '123456@qq.com'
+    - name: 'webhook_to_leo'
+      webhook_configs:
+        - url: 'http://localhost:80/email/'
+
+  route:                                      # 定义分组处理告警消息的路由表
+    receiver: 'email_to_leo'
+  
+  # templates:                                # 从文件中导入自定义的消息模板
+  #   - templates/*.tmpl
+  
+  # inhibit_rules:
+  #   - ...
+  ```
+- route 块详细的配置示例如下：
+  ```yaml
   route:
     receiver: 'email_to_leo'
-    
-  receivers:
-    - name: 'email_to_leo'
-      email_configs:
-        - to: '123456@qq.com'
+    # group_by:                         # 根据标签的值对已匹配的告警消息进行分组（默认不会分组）
+    #   - alertname
+    #   - instance
+    # group_wait: 30s                   # group 每次发送告警消息之前，需要等待多久（延长该时间有利于收集该组的其它告警消息）
+    # group_interval: 5m                # 非新增的 group 中，出现新的告警消息，首次发送它之前要等待多久
+    # repeat_interval: 4h               # group 重复发送告警消息的最短间隔时间（即使重启 Alertmanager 也不会中断）
+    # routes:
+    #   - receiver: 'webhook_to_leo'
+    #     match:                        # 任意对 label:value ，符合全部条件的告警消息才算匹配
+    #       job: prometheus
+    #     match_re:                     # value 是正则表达式
+    #       job: prometheus|grafana
+    #       instance: .*
+    #     continue: false
+    #   - receiver: 'xxx'
   ```
+  - 行首用 # 注释的行都不是必填项。
+  - 配置文件中至少有一个 route 块，称为根 route 节点。在它之下可以定义任意个嵌套的 route 块，构成一个树形结构的路由表。
+  - 子 route 节点会继承父 route 节点的所有参数值，作为自己的默认值。
+  - 每次产生告警消息时，会从根 route 节点往下逐个尝试匹配，直到遇到成功匹配的 route 节点，由它处理告警消息。
+    - 如果当前 route 节点配置了 `continue: true` ，则成功匹配的告警消息还会继续尝试匹配下一个同级的 route 节点。
+    - 根 route 节点不支持配置 continue 。如果它的所有子 route 节点都不匹配，则交给根 route 节点处理。
+  - 
+
+
+TODO:
+验证 group_wait 和 group_interval 是否首次才生效
+设置externalURL
+在URL中调用变量
+整理监控指标
+Prometheus的内置指标：ALERTS{alertname="xxx"}
+
+```
+inhibit_rules:
+- source_match:
+    severity: critical
+  target_match:
+    severity: warning
+  equal:
+  - alertname
+  - dev
+  - instance
+```
 
 ## Push Gateway
 
@@ -484,8 +568,8 @@ Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署
   
   sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到的 HTTP 请求数
   sum(increase(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])) # 每分钟处理 HTTP 请求的耗时（s）
-  sum(prometheus_sd_discovered_targets{instance='10.0.0.1:9090'})                           # targets 的总数
-  count(process_start_time_seconds)                                                         # targets 的实际连接数量（需要它们都提供该指标）
+  sum(prometheus_sd_discovered_targets{name="scrape", instance='10.0.0.1:9090'})            # 当前发现的 targets 总数
+  count(process_start_time_seconds)                                                         # 当前 targets 的实际连接数量（需要它们都提供该指标）
   sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # 执行 scrape 的耗时（s）
   irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])      # 执行 rule 的耗时（s）
   sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # 每分钟执行 rule 的总次数

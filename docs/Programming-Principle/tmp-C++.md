@@ -1,0 +1,101 @@
+C++
+## 
+## 
+## 
+## 输入输出流。
+#include <iostream>
+
+char name[10];
+std::cin >> name;
+std::cout << "The name is: " << name << std::endl;
+
+## 字符串流：可以输入各种类型的值，合成一个字符串对象。
+#include <sstream>
+
+std::stringstream ss;
+ss << "Hello World!";
+std::string *s = new std::string(ss.str());
+std::cout << s << std::endl;
+delete s;
+- 调用ss.str()会返回一个临时的string对象，需要及时保存。
+错误示例：在调用.c_str()时，ss.str()返回的string对象可能已经被销毁了，导致内存访问出错，使程序奔溃。
+const char* cstr = ss.str().c_str();
+
+正确示例：
+std::string &str = ss.str();
+const char *cstr = str.c_str();
+- 运行以下两行语句来清空字符串流：
+ss.clear();        // 复位标志位
+ss.str("");        // 清除内容
+## C++中创建对象有两种方式。
+- 在栈上创建对象：像结构体一样赋值创建，当作用域结束后会被自动销毁。用 . 访问对象的成员。
+std::string str1 = "Hello";
+std::cout << str1.length() << std::endl;
+- 在堆上创建对象：用new创建，用delete销毁。用 -> 访问对象的成员。
+std::string *str2 = new std::string("Hello");
+std::cout << str2->length() << std::endl;
+
+delete str2;
+
+## 
+## string：字符串类型。基于string类。
+#include <string>
+
+std::string str1 = "Hello";                # 创建一个字符串对象，名为str1
+std::string str2 = str1;                    # 字符串对象之间可以用等号 = 直接赋值
+std::cout << str1 << std::endl;
+std::cout << str1 + str2 << std::endl;        # 字符串对象之间可以用加号 + 拼接
+
+- std::string.c_str()
+  - 功能：返回该字符串对象的字符数组的首地址。
+  - 字符串对象将所有字符按顺序保存在一个内存空间中，c_str()会返回这个内存空间的首地址，可当作C语言的字符数组使用。
+  - 该指针是const char*类型，因此不能通过它改变字符串的值，只能用于读取。
+  - 要及时用strcpy()函数把这些字符拷贝出来，避免字符串对象被改变或析构。
+  - 例：
+char *buffer = NULL;
+char *make_buffer(std::string str)
+{
+    if (buffer){
+    free(buffer);
+buffer = NULL;
+}
+    buffer = (char *)malloc(str.length());
+    memset(buffer, 0, str.length());
+    strcpy(buffer, str.c_str());
+    return buffer;
+}
+## 
+
+
+用 std::string 存储字符串时，会自动在字符串末尾加上空字符串 \0 ，但并不会计入字符串的总长度。如下：
+```c++
+#include <iostream>
+#include <string>
+
+int main() {
+    std::cout << std::string("ab\0\0cd").size() << std::endl;  // 结果为 2
+}
+```
+
+C++ 中创建字符串时，如果其中包含空字符，则会被截断。如下：
+```c++
+std::cout << std::string("ab\0\0cd") << std::endl;           // 结果为 ab
+std::cout << std::string("ab\0\0cd").size() << std::endl;    // 结果为 2
+```
+
+C++11 新增了如下语法：
+```c++
+std::cout << std::string("ab\0\0cd", 6).size() << std::endl;         // 结果为 abcd
+std::cout << std::string({"ab\0\0cd", 6}).size() << std::endl;       // 结果为 6
+```
+
+C++14 新增了如下语法：
+```c++
+using namespace std::string_literals;
+
+std::cout << std::string("ab\0\0cd"s) << std::endl;     // 结果为 abcd
+```
+
+
+类还有另外一种写法，就是将 class 关键字换成 struct。没有成员函数的 struct 还是称作“结构”，结构变量不是对象；有成员函数的 struct 就是类。
+http://c.biancheng.net/view/215.html

@@ -489,6 +489,7 @@ module.exports = {
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
+						'监控告警/简介',
 						'监控告警/Supervisor',
 						'监控告警/Grafana',
 						'监控告警/Zabbix',

@@ -172,9 +172,17 @@
     {
     public:
         std::string name;
-        void setName(std::string _name)
+        int age;
+        Pet(std::string name_, int age_){
+            name = name_;
+            age = age_;
+        }
+        ~Pet(){
+            std::cout << "destructed" << std::endl;
+        }
+        void setName(std::string name_)
         {
-            name = _name;
+            name = name_;
         }
         const std::string getName()
         {
@@ -183,28 +191,34 @@
     };
 
     PYBIND11_MODULE(api, m) {
-        py::class_<Pet>(m, "Pet")               // 用 class_ 可以绑定一个 C++ 的 class 或 struct
-            .def(py::init<>())                  // 绑定构造函数
-            .def_readwrite("name", &Pet::name)  // 绑定普通的类变量
-            .def("setName", &Pet::setName)      // 绑定类方法
-            .def("getName", &Pet::getName);     // 类的绑定代码只有一条语句，在最后才加分号 ;
+        py::class_<Pet>(m, "Pet")                   // 用 class_ 可以绑定一个 C++ 的 class 或 struct
+            .def(py::init<std::string, int &>())    // 绑定构造函数（用 py::init<> 包装初始化参数）
+            .def_readwrite("name", &Pet::name)      // 绑定类变量
+            .def_readonly("age", &Pet::age)         // 绑定类变量并限制为只读（修改时会抛出 AttributeError 异常）
+            .def("setName", &Pet::setName)          // 绑定类方法
+            .def("getName", &Pet::getName);         // 类的绑定代码只有一条语句，在最后才加分号 ;
     }
     ```
+    类的构造函数需要主动绑定，而析构函数会自动绑定，且会自动被 Python 的内存回收机制调用。
+    
 - 编译后，在 Python 终端中测试：
     ```python
     >>> import api
-    >>> p = api.Pet()
+    >>> p = api.Pet('puppy', '3')
     >>> p
     <api.Pet object at 0x000001EC69DD63E8>
     >>> p.name 
-    ''
+    'puppy'
     >>> p.name = 'AA' 
     >>> p.name
     'AA'
     >>> p.setName('BB')
     >>> p.getName()
     'BB'
+    >>> del p
+    'destructed'        # 不一定会立即调用析构函数
     ```
+
 - 可以定义对象的 `__repr__()` 方法：
     ```cpp
             .def("__repr__",
@@ -228,7 +242,7 @@
 将 Python 中的字符串传给 C++ 时：
 - C++函数接收字符串的形参可以为 std::string 或 char * 类型。
 - 如果 Python 输出的字符串为 bytes 类型，则会被 pybind11 直接传递。
-- 如果 Python 输出的字符串为 str 类型，则会被 pybind11 经过 str.encode('utf-8') 之后再传递。
+- 如果 Python 输出的字符串为 str 类型，则会被 pybind11 自动经过 str.encode('utf-8') 之后再传递。
   - 如果编码失败，则会抛出 UnicodeDecodeError 异常。
 - 例：
     编写 C++代码：
@@ -241,12 +255,10 @@
     PYBIND11_MODULE(api, m)
     {
         m.def("test_print",
-            [](const std::string &a, const char *b)
-            {
-                std::cout << a << std::endl;
-                std::cout << b << std::endl;
-            }
-        );
+              [](const std::string &a, const char *b) {
+                  std::cout << a << std::endl;
+                  std::cout << b << std::endl;
+              });
     }
     ```
     编译后，在 Python 终端中测试：
@@ -261,14 +273,12 @@
     ```
 
 将 C++ 中的字符串传给 Python 时：
-- 如果 C++输出的字符串为 std::string 或 char * 类型，则会被 pybind11 经过 bytes.decode('utf-8') 之后再传递。如下：
+- 如果 C++ 输出的字符串为 std::string 或 char * 类型，则会被 pybind11 自动经过 bytes.decode('utf-8') 之后再传递。如下：
     ```cpp
     m.def("return_str",
-        []()
-        {
-            return std::string("Hello");
-        }
-    );
+          []() {
+              return std::string("Hello");
+          });
     ```
     ```python
     >>> import api
@@ -276,20 +286,22 @@
     'Hello'
     ```
 
-- 也可以先在 C++中转换成 py::str 对象，再传给 Python ：
-    ```cpp
-    m.def("return_str", []() { return py::str(std::string("Hello")); });
-    ```
-
-- 如果将 C++输出的字符串转换为 py::bytes 对象，则会被 pybind11 当做 bytes 类型直接传递。如下：
+- 也可以先在 C++ 中转换成 py::str 对象，再传给 Python ：
     ```cpp
     m.def("return_str",
-        []()
-        {
-            std::string s("\xe4\xbd\xa0\xe5\xa5\xbd");
-            return py::bytes(s);    // 可以合并为 return py::bytes("\xe4\xbd\xa0\xe5\xa5\xbd");
-        }
-    );
+          []() {
+              return py::str(std::string("Hello"));
+          });
+    ```
+
+- 如果将 C++ 输出的字符串转换为 py::bytes 对象，则会被 pybind11 当做 bytes 类型直接传递。如下：
+    ```cpp
+    m.def("return_str",
+          []() {
+              std::string s("\xe4\xbd\xa0\xe5\xa5\xbd");
+              return py::bytes(s);
+              // return py::bytes("\xe4\xbd\xa0\xe5\xa5\xbd");
+          });
     ```
     ```python
     >>> import api
@@ -298,9 +310,19 @@
     >>> api.return_str().decode()
     '你好'
     ```
-- pybind11 读取 C++的字符串时，遇到 null 才会终止。如果没有 null ，则会发生缓冲区溢出。
+- pybind11 读取 C++ 的字符串时，遇到空字符才会终止。如果没有空字符，则会一直读取，直到发生内存越界访问。如下：
+    ```cpp
+    m.def("return_str",
+          []() {
+              return py::bytes("Hello\x00\x00World"); // Python 得到的返回值为 "Hello"
+              // return py::str("Hello\x00\x00World");
+              // return std::string("Hello\x00\x00World");
+          });
+    ```
 
-可以在 C++中转换 py::str 与 py::bytes 如下：
+## 在 C++ 中使用 Python 的数据类型
+
+可以在 C++ 中转换 py::str 与 py::bytes 类型，如下：
 ```cpp
 void test_bytes(py::str str, py::str encoding)
 {
@@ -309,19 +331,17 @@ void test_bytes(py::str str, py::str encoding)
 }
 ```
 
-大部分数据类型都可以与 py::str 相互转换如下：
+大部分数据类型都可以与 py::str 相互转换，如下：
 ```cpp
 void test_str(py::object x)     // 可以用 py::object 类型的形参接收各种 Python 对象
 {
     py::str a = x;              // 各种 Python 对象可以转换成 py::str
-    a = "hello";                // C++的字符串可以转换成 py::str
+    a = "hello";                // C++ 的字符串可以转换成 py::str
     a = std::string("hello");
     a = py::list(a);
-    std::cout << std::string(a) << std::endl;   // py::str 可以转换成 C++的 std::string
+    std::cout << std::string(a) << std::endl;   // py::str 可以转换成 C++ 的 std::string
 }
 ```
-
-## 在 C++ 中使用 Python 的数据类型
 
 使用 list 的示例：
 ```cpp
@@ -395,7 +415,7 @@ py::object obj = py::cast(p);
 
     PYBIND11_MODULE(api, m) {
         m.def("test_cast", &test_cast);
-        py::class_<Pet>(m, "Pet")...
+        py::class_<Pet>(m, "Pet");
     }
     ```
     ```python
@@ -410,6 +430,13 @@ py::object obj = py::cast(p);
     TypeError: Unable to convert function return value to a Python type! The signature was
             () -> object
     ```
+- 这只是映射了类名，并不会自动绑定类的成员，因此不能调用该类的方法、属性。如下：
+	```py
+	>>> api.Pet
+	<class 'api.Pet'>
+	>>> api.Pet.name
+	AttributeError: type object 'api.Pet' has no attribute 'name'
+	```
 
 将 Python 对象映射到 C++中：
 ```cpp

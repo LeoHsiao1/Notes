@@ -1,5 +1,25 @@
 # IP
 
+## DNS
+
+- 可以在 /etc/hosts 文件中配置静态的 DNS 解析规则：
+  ```
+  127.0.0.1   localhost localhost4
+  ::1         localhost localhost6 
+  ```
+- 可以在 /etc/sysconfig/network-scripts/ifcfg-eth0 文件中配置网卡 eth0 采用的 DNS 服务器：
+  ```
+  DNS1=202.96.134.133
+  DNS2=202.96.128.166
+  DNS3=202.96.128.86
+  DNS4=114.114.114.114
+  ```
+- 可以在 /etc/resolv.conf 文件中配置 Linux 系统采用的 DNS 服务器：
+  ```
+  nameserver 114.114.114.114
+  nameserver 8.8.8.8
+  ```
+
 ## ifconfig
 
 用法：

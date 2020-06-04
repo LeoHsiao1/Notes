@@ -192,7 +192,7 @@
 
     PYBIND11_MODULE(api, m) {
         py::class_<Pet>(m, "Pet")                   // 用 class_ 可以绑定一个 C++ 的 class 或 struct
-            .def(py::init<std::string, int &>())    // 绑定构造函数（用 py::init<> 包装初始化参数）
+            .def(py::init<std::string, int>())      // 绑定构造函数（用 py::init<> 包装初始化参数）
             .def_readwrite("name", &Pet::name)      // 绑定类变量
             .def_readonly("age", &Pet::age)         // 绑定类变量并限制为只读（修改时会抛出 AttributeError 异常）
             .def("setName", &Pet::setName)          // 绑定类方法

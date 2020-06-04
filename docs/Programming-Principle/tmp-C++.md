@@ -99,3 +99,34 @@ std::cout << std::string("ab\0\0cd"s) << std::endl;     // 结果为 abcd
 
 类还有另外一种写法，就是将 class 关键字换成 struct。没有成员函数的 struct 还是称作“结构”，结构变量不是对象；有成员函数的 struct 就是类。
 http://c.biancheng.net/view/215.html
+
+
+
+## 引用
+
+- C++ 中可以用 & 运算符创建对象的引用。如下：
+    ```cpp
+	int a = 1;
+	int &b = a;                     // 创建 a 的引用 b
+	std::cout << b << std::endl;    // 显示为 1
+	b = 2;
+	std::cout << a << std::endl;    // 显示为 2
+    ```
+  - 创建一个引用时，必须对它进行初始化，且不能再改变它的指向。
+  - 引用相当于对象的别名，几乎可以当作该对象的标识符一样使用。
+  - 作用与指针类似，也是指向对象的地址，不属于值传递。而且不需要取消引用运算符 * 就可以访问该对象，比使用指针更方便。
+- 常引用：不能通过该引用修改目标对象的值。如下：
+    ```cpp
+	int a = 1;
+	const int &b = a;
+	b = 2;              // 编译时会报错： assignment of read-only reference
+    ```
+- 一个基类的引用可以指向它的子类：
+    ```cpp
+    class A;
+    class B: public A;
+    
+    B b;
+    A &a = b;
+    ```
+

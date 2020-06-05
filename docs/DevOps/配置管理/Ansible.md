@@ -2,8 +2,8 @@
 
 ：一个配置管理工具，基于 Python 开发，可以自动化地管理大量主机、批量执行脚本。
 - Ansible 采用主从架构，而不是 C/S 工作模式。
-  - 选取一个或多个主机运行 Ansible ，称为控制节点（Control node），负责控制其它主机。
-  - 其它主机上不需要运行 Ansible 客户端，只要能通过 SSH 登录，Ansible 便可以连接到其它主机并执行命令。
+  - 选取一个或多个主机运行 Ansible ，称为控制节点（Control node），负责控制其它远程主机。
+  - 远程主机上不需要运行 Ansible 客户端，只要能通过 SSH 登录，Ansible 便可以连接到远程主机并执行命令。
 - [官方文档](https://docs.ansible.com/ansible/latest/user_guide/index.html)
 
 ## 安装
@@ -17,47 +17,64 @@
 ## 命令
 
 ```sh
-ansible-playbook <name>.yml...  # 执行 playbook
-                --syntax-check  # 检查 playbook 的语法是否正确
-                --list-hosts    # 显示所有 host
-                --list-task     # 显示所有任务
-                -t <tags>       # 只执行某些 tags 的 task
-                -i <file>       # 指定 Inventory 文件
+ansible 
+        <pattern> [-m <name>] [-a <args>]  # 在远程主机上执行一个模块（默认是采用 command 模块），并给模块传入参数
+        --version                          # 显示版本、配置文件的位置
+```
+- pattern 是一个字符串，用于匹配 host 或组名，如果匹配结果为空则不执行任务。
+  - 默认可使用 shell 风格的通配符，以 ~ 开头时则视作正则表达式。
+- 例：
+  ```sh
+  ansible all -m ping           # 测试连接所有 host
+  ansible all -a ls
+  ansible 10.0.* -m shell -a "pwd"
+  ansible ~10.0.0.(1|2) -m shell -a "pwd"
+  ```
+
+执行 playbook ：
+```sh
+ansible-playbook <name>.yml...       # 执行 playbook
+                -t <tags>            # 只执行某些 tags 的 task
+                -i <file>            # 指定 Inventory 文件
+                -e "A=Hello B=World" # 传入变量
+                -v                   # 显示详细的执行信息
+                --syntax-check       # 不执行，只是检查 playbook 的语法是否正确
+                --list-task          # 不执行，只是显示所有任务
+                --list-hosts         # 不执行，只是显示所有 host
 ```
 
-```sh
-ansible <host> [-m <name>] -a <args>  # 在指定主机上执行一个模块，并给模块传入参数
+## 配置
+
+Ansible 的配置文件默认位于 `/etc/ansible/ansible.cfg` ，内容如下：
+```ini
+[defaults]
+; hostfile=/etc/ansible/hosts       ; Inventory 文件的路径
+; remote_tmp=$HOME/.ansible/tmp     ; 登录远程主机时使用的工作目录
+host_key_checking=False             ; 第一次连接到远程主机时，是否提示添加 authorized_keys
+log_path=/var/log/ansible.log       ; 记录每次执行 ansible 的 stdout（默认不保存日志）
+; forks=5                           ; 同时最多运行多少个 Ansible 进程
 ```
-- 不指定模块时，默认是执行 command 模块。
-- 例：
-    ```
-    ansible all -a ls
-    ansible all -m script -a "chdir=/root/ 1.sh"
-    ```
 
 ## Inventory
 
 Ansible 将待管理主机（称为 host）的配置信息保存在 .ini 文件中，称为 Inventory（资产清单）。
-- Ansible 默认使用的 Inventory 文件是`/etc/ansible/hosts`。
 
 配置示例：
 ```ini
-10.0.0.1  ansible_ssh_user='root'  ansible_ssh_pass='123456'   ; 定义一个 host ，不分组
+localhost ansible_connection=local    ; 定义一个不分组的 host
 
-[webservers]                      ; 定义一个 组
-www.example.com                   ; 添加一个 host 的地址
-www.test[a:f].com                 ; 添加一系列 host
+[webservers]                          ; 定义一个 组
+www.example.com                       ; 添加一个 host 的地址
 10.0.0.1
-10.0.0.[1:20]
-node100 ansible_host=10.0.0.100   ; 添加一个 host 的名字、地址
+node100 ansible_host=10.0.0.2         ; 添加一个 host 的名字、地址
 
-[webservers:vars]                 ; 设置组 webservers 的参数
-; ansible_connection=ssh          ; ansible 的连接方式
-; ansible_ssh_port=22             ; SSH 登录时的端口号
-ansible_ssh_user='root'           ; SSH 登录时的用户名
-ansible_ssh_pass='123456'         ; SSH 登录时的密码
-#ansible_ssh_private_key_file='~/.ssh/id_rsa'   ; 用密钥文件进行 SSH 登录
-#ansible_sudo_pass='123456'       ; SSH 登录后用 sudo 命令时的密码
+[webservers:vars]                     ; 设置组 webservers 的参数
+; ansible_connection=ssh              ; ansible 的连接方式
+; ansible_ssh_port=22                 ; SSH 登录时的端口号
+ansible_ssh_user='root'               ; SSH 登录时的用户名
+ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需要安装 yum install sshpass）
+; ansible_ssh_private_key_file='~/.ssh/id_rsa'   ; 用密钥文件进行 SSH 登录
+; ansible_become_pass='123456'        ; SSH 登录后用 sudo 命令时的密码
 ```
 - 默认有两个隐式的分组：
   - all ：包含所有 host 。
@@ -71,36 +88,32 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 
 配置示例：
 ```yaml
-- hosts: 10.0.0.1                       # 待管理的 host（可以是一个 host 或一个组）
-  remote_user: root                     # 以哪个用户的身份管理 host
-  # become: yes                         # SSH 连接之后，用 sudo 切换用户
-  # become_user: nginx                  # 切换到用户 nginx
-  vars:                                 # 定义变量
-    - service_name: httpd
-  tasks:                                # 任务列表
-    - name: disable selinux             # 第一个任务
-      command: "/sbin/setenforce 0"     # 调用 command 模块，执行一条命令
-    - name: start httpd                 # 第二个任务
-      service: name=httpd state=started
-      notify:                           # 执行一个 handler
+- name: Test
+  hosts: 10.0.*                          # 一个 pattern ，用于匹配要管理的 host 或 组
+  # become: yes                          # ssh 登录之后，用 sudo 命令切换用户
+  # become_user: root                    # 默认切换到 root 用户
+  vars:                                  # 定义变量
+    - tips: Hello
+    - service: httpd
+  tasks:                                 # 任务列表
+    - name: test echo                    # 第一个任务
+      command: echo {{tips}}             # 调用 shell 模块
+    - name: start httpd                  # 第二个任务
+      service: name=httpd state=started  # 调用 service 模块
+      notify:                            # 执行一个 handler
         - stop httpd
-    handlers:                           # 定义 handlers
+    handlers:                            # 定义 handlers
       - name: stop httpd
-        service: name={{service_name}} state=stop
+        service: name={{service}} state=stop
 ```
-- 每个 task 通过调用一个模块来执行某种操作。
+- Ansible 中的变量要使用 `{{var}}` 或 `"{{var}}"` 的格式读取。
+- 每个 task 通过调用一个模块来执行某项操作。
 - Ansible 会依次提取 playbook 中的 task ，在所有 host 上同时执行。
   - 等所有 host 都执行完当前 task 之后，才执行下一个 task 。
   - 如果某个 task 执行之后的返回值不为 0 ，Ansible 就会终止执行并报错。
-- 可以给 task 加上前置条件，当满足条件时才执行该 task 。如下：
-    ```ini
-    - name: start httpd
-      service: name=httpd state=started
-        when:
-          - service_name | match("httpd")
-    ```
+- handler 与 task 类似，由某个 task 通过 notify 激活，在所有 tasks 都执行完之后才会执行，且只会执行一次。
 - 可以给 task 加上 tags ，便于在执行 playbook 时选择只执行带有特定标签的 task 。如下：
-    ```ini
+    ```yaml
     - name: start httpd
       service: name=httpd state=started
       tags:
@@ -108,73 +121,176 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
         - always
     ```
   - 带有 always 标志的 task 总是会被选中执行。
-- handler 与 task 类似，由某个 task 通过 notify 激活，会在所有 tasks 执行完成之后执行，且只会执行一次。
+- 可以给 task 加上 when 条件，当满足条件时才执行该 task 。如下：
+    ```yaml
+    - name: start httpd
+      service: name=httpd state=started
+        when:
+          - service_name | match("httpd")
+    ```
+- 可以用 with_items 语句迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
+  ```yaml
+  - name: test echo
+    command: echo {{item}}
+    with_items:
+      - Hello
+      - World
+  - name: test echo
+    command: echo {{item.value}} {{item.length}}
+    with_items:
+      - {value: Hello, length: 5}
+      - {value: World, length: 5}
+  ```
 
 ## Module
 
 - 如果 host 上启用了 SELinux ，则需要先在它上面安装 `yum install libselinux-python` ，否则一些模块不能执行。
 - Ansible 提供了一些具有幂等性的模块。
   - 幂等性可以保证对同一个 host 重复执行一个 playbook 时，只会产生一次效果，不会因为重复执行而出错。比如使用 yum 模块安装软件时，它会检查是否已经安装，如果已经安装就不执行。
-  - 比如重复执行幂等性模块时，第一次执行结果中包含 "changed: true" ，表示已经修改了目标主机；后续的结果中都是 "changed: false" ，表示没有修改。
+  - 重复执行幂等性模块时，只有第一次的执行结果中的 "changed" 参数为 true ，表示成功将 host 改变成了目标状态。之后重复执行时，"changed" 参数应该总是为 false 。
+- [官方的模块列表](https://docs.ansible.com/ansible/latest/modules/list_of_all_modules.html)
 
-常用的模块如下：
+### 关于执行命令
 
-- 
-  ```ini
-  command: ls         ; 执行一条 shell 命令
+- 测试连接 host ：
+  ```yaml
+  ping:
   ```
-  - 可用选项：
-    - `chdir=/root/`     ：在执行命令之前，先切换到指定目录。
-    - `creates:/root/f1` ：如果该文件存在，则跳过该任务（这样有利于保证幂等性）。
-    - `removes:/root/f1` ：如果该文件不存在，则跳过该任务。
-  - 不支持 $ & < > | 等运算符。
+  - ping 模块会测试能否通过 ssh 登录 host，并检查是否有可用的 Python 解释器，如果操作成功则返回 pong 。
 
-- 
-  ```ini
-  shell: "ls | grep ssh"    ; 执行一条 shell 命令
+- 在 host 上执行 shell 命令：
+  ```yaml
+  command: /tmp/test.sh chdir=/tmp/
   ```
-  - 兼容 command 模块的选项。
-  - 特有的选项：
-    `executable=/bin/bash`：指定要执行 shell 命令的可执行文件（默认是/bin/sh）。
-  - shell 模块没有幂等性，常用于实现用户自定义的、不在乎幂等性的操作。
+  - 调用模块时也可以写作以下格式：
+    ```yaml
+    command:
+      cmd: /tmp/test.sh
+      # chdir: /tmp/      # 执行该命令之前，先切换到指定目录（可以是绝对路径或相对路径）
+      # creates: /tmp/f1  # 如果该文件存在，则跳过该任务（这样有利于实现幂等性）
+      # removes: /tmp/f1  # 如果该文件不存在，则跳过该任务
+    ```
+  - command 模块不是直接在 shell 终端中执行命令的，因此可以防止 shell 注入攻击，但是不支持一些 shell 语法。如下：
+    ```sh
+    [root@Centos ~]# ansible all -a 'echo $PWD | xargs'
+    10.0.0.1 | CHANGED | rc=0 >>
+    /root | xargs                                         # 不支持管道符
+    [root@Centos ~]# ansible all -m shell -a 'echo $PWD | xargs'
+    10.0.0.1 | CHANGED | rc=0 >>
+    /root
+    ```
+  - 虽然 command 、shell 模块可以自由地执行命令，但是使用 copy 等具体的模块可以保证幂等性。
 
-- 
-  ```ini
-  script: 1.sh              ; 将服务器上的一个脚本拷贝到 host 上执行，执行完之后会删掉它
+- 在 host 上执行 shell 命令：
+  ```yaml
+  shell:
+    cmd: ls | grep ssh
+    # executable: /bin/sh   # 指定要执行 shell 命令的可执行文件
+    # chdir: /tmp/
+    # creates: /tmp/f1
+    # removes: /tmp/f1
   ```
-  - 兼容 shell 模块的选项。
-  - 例：`script: "executable=/usr/bin/python 1.py"`
 
-- 
-  ```ini
-  copy: "src=f1 dest=/root/"  ; 将服务器上的一个文件或目录拷贝到 host 上
+- 在 host 上执行脚本：
+  ```yaml
+  script:
+    cmd: /tmp/test.sh
+    # executable=/bin/bash  # 设置执行该脚本的程序
+    # chdir: /tmp/
+    # creates: /tmp/f1
+    # removes: /tmp/f1
   ```
-  - 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录。
-  - 其它可用选项：
-    `mode=0755` ：拷贝后文件的权限。
-    `owner=root`：拷贝后文件的所有者。
-    `group=root`：拷贝后文件的所有者组。
+  - cmd 是本机上的一个脚本的路径，它会被拷贝到 host 上执行，执行完之后会自动删除。
+  - executable 不一定是 shell 解释器，比如：`script: "executable=/usr/bin/python /tmp/1.py"`
 
-- 
-  ```ini
-  fetch: "src=/root/f1 dest=/root/"  ; 将 host 上的文件拷贝到服务器上
-  ```
-  - src 路径不能是目录。
-  - 其它可用选项：
-    `flat=yes`：使保存路径为 `dest 路径 + 文件名` 。（默认为 `dest 路径 + host 名 + src 路径` ）
+### 关于管理文件
 
-- 
-  ```ini
-  file: "path=/root/f1 state=touch"   ; 创建一个文件
+- 在 host 上创建文件或目录：
+  ```yaml
+  file:
+    path: /tmp/f1
+    state: touch    # 可以取值为 touch（创建文件）、directory（创建目录）、link（创建软链接）、hard（创建硬链接）、absent（删除文件）
+    # mode=0755     # 拷贝后文件的权限
+    # owner=root    # 拷贝后文件的所有者
+    # group=root    # 拷贝后文件的所有者组
   ```
-  - state 选项可以取值为 touch（创建文件）、directory（创建目录）、link（创建软链接）、hard（创建硬链接）、absent（删除文件）。
-  - 兼容 copy 模块的 mode、owner、group 选项。
 
-- 
-  ```ini
-  yum: "name=nginx state=latest"      ; 安装软件
+- 将本机的文件拷贝到 host 上：
+  ```yaml
+  copy:
+    src: f1         # 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录
+    dest: /tmp/
+    # mode=0755
+    # owner=root
+    # group=root
   ```
-  - state 选项可以取值为 latest（安装最新版本）、installed（安装了即可）、absent（卸载软件）。
+
+- 将 host 上的文件拷贝到本机：
+  ```yaml
+  fetch:
+    src: /tmp/f1    # src 必须是一个文件的路径，不能是一个目录
+    dest: /tmp/
+    # flat=yes      # 使保存路径为 dest_path/filename ，默认为 dest_path/hostname/src_path
+  ```
+
+### 关于配置系统
+
+- 用 yum 安装软件：
+  ```yaml
+  yum:
+    name: ['vim', 'git', 'tmux']
+    state: latest     # 可以取值为 installed（安装了即可）、latest（安装最新版本）、removed（卸载）
+  ```
+
+- 创建用户：
+  ```yaml
+  user:
+    name: leo
+    # home: /home/leo
+    # password: "{{'123456' | password_hash('sha512')}}"    # 设置密码
+    # update_password: always # 可以取值为 always（总是设置密码）、on_create（仅在创建用户时才设置密码）
+    # shell: /bin/bash
+    # group: root             # 设置基本用户组（该 group 必须已存在）
+    # groups: root,docker     # 设置扩展用户组
+    # append: no              # 默认取值为 no ，会将用户从其它组删除
+    # comment: testing        # 添加备注信息
+    # expires: 1591343903     # 设置过期时间
+    # generate_ssh_key: no    # 是否生成 ssh 密钥（已存在密钥的话不会覆盖）
+  ```
+  ```yaml
+  user:
+    name: leo
+    state: absent         # 删除用户
+    # remove: yes         # 删除家目录
+  ```
+
+- 管理 systemd 服务：
+  ```yaml
+  systemd:
+    name: httpd
+    state: started        # 可以取值为 started、stopped、restarted、reloaded
+    # enabled: yes
+    # daemon-reload: no   # 是否重新加载 unit 的配置文件
+  ```
+
+- 配置 firewalld 防火墙：
+  ```yaml
+  firewalld:              # 设置启用的 zone
+    zone: public
+    state: present        # zone 的 state 可以取值为 present 或 absent
+    permanent: yes
+  ```
+  ```yaml
+  firewalld:
+    port: 80/tcp          # 同时指定一个端口
+    state: enabled        # 端口的 state 可以取值为 enabled 或 disabled
+    # service: http       # 同时只能指定一个 service
+    # rich_rule: rule family='ipv4' port port=22 protocol=tcp accept
+    # zone: public
+    # interface: eth2
+    permanent: yes
+    immediate: yes        # 是否立即生效（当 permanent 为 yes 时，默认 immediate 为 no ）
+  ```
 
 ## role
 
@@ -201,16 +317,16 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
 
 - 调用 role 的示例：
-  ```ini
+  ```yaml
   - name: Build AWX Docker Images
     hosts: all
     gather_facts: false
     roles:
-      - { role: image_build }                                     ; 调用一个 role
-      - { role: image_push, when: "docker_registry is defined" }  ; 调用第二个 role
+      - { role: image_build }                                     # 调用一个 role
+      - { role: image_push, when: "docker_registry is defined" }  # 调用另一个个 role
   ```
 
-- 可以到官方的 roles 分享平台 galaxy.ansible.com 上寻找可用的 roles ，然后用 ansible-galaxy 命令下载 roles 。命令如下：
+- 可以到官方的 roles 分享平台 <galaxy.ansible.com> 上寻找可用的 roles ，然后用 ansible-galaxy 命令下载 roles 。命令如下：
   ```sh
   ansible-galaxy
                 install <name>
@@ -220,7 +336,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 ## Ansible AWX
 
 - Ansible Tower 提供了 Ansible 的 Web 操作页面，基于 Django 开发，其开源版本是 Ansible AWX 。
-- [GitHub 页面](https://github.com/ansible/awx)
+- [官方文档](https://docs.ansible.com/ansible-tower/latest/html/userguide/index.html)
 - 用 docker-compose 部署 Ansible AWX ：
   ```sh
   pip3 install docker-compose
@@ -232,5 +348,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   默认将 docker-compose 的配置文件保存在 ~/.awx/awxcompose/docker-compose.yml 。
   默认访问地址为 <http://localhost:80> ，用户名、密码为 admin 、 password 。
 
-- 以 Project 为单位执行任务，可以从 Git、SVN仓库或本地目录导入 Playbook 文件。
-- 删除一个机构时，会自动删除其下的 Inventory 等配置。
+- 用法：
+  - 可以在 Web 页面上方便地调用大量 playbook ，不过不能直接在 Web 页面上编辑 playbook 。
+  - 以 Project 为单位执行任务，可以从 Git、SVN仓库或本地目录导入 Playbook 文件。
+  - 删除一个机构时，会自动删除其下的 Inventory 等配置。

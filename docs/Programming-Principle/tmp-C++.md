@@ -68,7 +68,7 @@ buffer = NULL;
 
 
 用 std::string 存储字符串时，会自动在字符串末尾加上空字符串 \0 ，但并不会计入字符串的总长度。如下：
-```c++
+```cpp
 #include <iostream>
 #include <string>
 
@@ -78,19 +78,19 @@ int main() {
 ```
 
 C++ 中创建字符串时，如果其中包含空字符，则会被截断。如下：
-```c++
+```cpp
 std::cout << std::string("ab\0\0cd") << std::endl;           // 结果为 ab
 std::cout << std::string("ab\0\0cd").size() << std::endl;    // 结果为 2
 ```
 
 C++11 新增了如下语法：
-```c++
+```cpp
 std::cout << std::string("ab\0\0cd", 6).size() << std::endl;         // 结果为 abcd
 std::cout << std::string({"ab\0\0cd", 6}).size() << std::endl;       // 结果为 6
 ```
 
 C++14 新增了如下语法：
-```c++
+```cpp
 using namespace std::string_literals;
 
 std::cout << std::string("ab\0\0cd"s) << std::endl;     // 结果为 abcd

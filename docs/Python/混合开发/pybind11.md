@@ -55,7 +55,14 @@
     ```
     - 03 表示绑定到 Python3 。
     - 编译时，需要指定头文件、库文件的查找目录。
-    
+
+在 Darwin 上：
+1. 安装 g++ 。
+2. 编译：
+    ```sh
+    g++ api.cpp -o api.so -O3 -Wall -std=c++11 -shared -fPIC `python3 -m pybind11 --includes` -undefined dynamic_lookup
+    ```
+
 在 Windows 上：
 1. 安装 2015 版本以上的 Visual Studio 。
 2. 打开 DOS 窗口，执行以下文件，从而初始化环境。

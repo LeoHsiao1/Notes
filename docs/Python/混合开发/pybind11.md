@@ -59,11 +59,11 @@
 在 Windows 上：
 1. 安装 2015 版本以上的 Visual Studio 。
 2. 打开 DOS 窗口，执行以下文件，从而初始化环境。
-    ```cmd
+    ```batch
     "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
     ```
 3. 编译：
-    ```cmd
+    ```batch
     cl /MD /LD api.cpp /EHsc -I C:\Users\Leo\AppData\Local\Programs\Python\Python37\include /link C:\Users\Leo\AppData\Local\Programs\Python\Python37\libs\python37.lib /OUT:api.pyd
     del api.exp api.obj api.lib
     ```

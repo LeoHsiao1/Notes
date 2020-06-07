@@ -231,7 +231,7 @@ Supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
   - 启动之后，访问 <http://127.0.0.1:5000> 即可查看 Web 页面。默认的账号、密码为 admin、admin 。
 
 - Cesi 的主配置文件是 defaults/cesi.conf.toml ，内容示例如下：
-  ```conf
+  ```ini
   [cesi]                            # 对 cesi 本身的配置
   database = "sqlite:///users.db"   # SQLite 数据库的位置
   activity_log = "activity.log"     # 日志文件的保存路径

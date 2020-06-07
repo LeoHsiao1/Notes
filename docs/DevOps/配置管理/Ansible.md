@@ -106,7 +106,9 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - name: stop httpd
         service: name={{service}} state=stop
 ```
+::: v-pre
 - Ansible 中的变量要使用 `{{var}}` 或 `"{{var}}"` 的格式读取。
+:::
 - 每个 task 通过调用一个模块来执行某项操作。
 - Ansible 会依次提取 playbook 中的 task ，在所有 host 上同时执行。
   - 等所有 host 都执行完当前 task 之后，才执行下一个 task 。

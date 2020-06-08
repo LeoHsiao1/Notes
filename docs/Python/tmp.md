@@ -1363,12 +1363,6 @@ KeyError: 'time'
 ...
 >>> d.get("time")            # 用get()方法判断key是否存在
 
-
-不能在迭代字典的过程中修改字典
-```py
-
-```
-
 ## 
 ## 
 ## 
@@ -1450,6 +1444,30 @@ None
 ('name', 'Leo')
 >>> d.popitem()
 KeyError: 'popitem(): dictionary is empty'
+
+
+在迭代字典的过程中，如果增减字典的 key ，会引发异常：
+```py
+>>> d = {'name': 'Leo', 'age': 10}
+>>> for k in d.keys():
+...   d.pop(k)
+...
+'Leo'
+RuntimeError: dictionary changed size during iteration
+>>> d
+{'age': 10}
+```
+因此应该先迭代完毕，再增减字典的 key ：
+```py
+>>> d = {'name': 'Leo', 'age': 10}
+>>> for k in list(d.keys()): 
+...   d.pop(k)
+... 
+'Leo'
+10
+```
+
+
 ## 
 ## 
 ## 
@@ -4651,6 +4669,8 @@ re.compile('.*', re.I|re.S)
 'AS'
 >>> re.search("(as)(AS)","asasAS").group(3)
 IndexError: no such group
+
+
 ## re.sub(pattern, replace, string, count=0, flags=0)
 - 将string中匹配的部分换替换成replace。
   - 最多替换count次，count等于0时表示次数不限。
@@ -4666,6 +4686,12 @@ IndexError: no such group
 >>> re.sub(r'((l)\w)', '*', 'Hello World')
 'He*o Wor*'
 
+
+>>> re.sub('(\d{4})-(\d{2})-(\d{2})', r'\2-\3-\1', '2018-12-27')        # 修改时间的格式
+'12-27-2018'                        # 这里用\2、\3、\1引用匹配结果中的第2、3、1个元素组
+
+
+
 ## re.split(pattern, string[, maxsplit=0, flags=0])
 - 用匹配的子串将string分割成多项，以list的形式返回。
   - 最多分割maxsplit次，maxsplit等于0时表示次数不限。
@@ -4674,8 +4700,7 @@ IndexError: no such group
 ['www', 'baidu', 'com']
 ## 例子。
 - re.sub(r"# .*$",'', line)            # 删除某行的注释
-- >>> re.sub('(\d{4})-(\d{2})-(\d{2})', r'\2/\3/\1', '2018-12-27')        # 修改时间的格式
-'12/27/2018'                        # 这里用\2、\3、\1引用匹配结果中的第2、3、1个子串
+
 ## 
 ## 
 ## 

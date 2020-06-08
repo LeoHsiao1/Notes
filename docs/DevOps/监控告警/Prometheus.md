@@ -6,7 +6,7 @@
 - [官方文档](https://prometheus.io/docs/introduction/overview/)
 - 对比：
   - Zabbix 只擅长监控主机，而且配置比较繁琐。
-  - Prometheus 可监控主机、进程、容器等多种对象,可扩展性高，而且自带查询语言，配置比较灵活。
+  - Prometheus 可监控主机、进程、容器等多种对象，可扩展性高，而且自带查询语言，配置比较灵活。
 
 ## 安装
 

@@ -140,7 +140,7 @@ INSTALLED_APPS = [
 ]
 
 # 也可指向app1.apps.App1Config，从而可以在app1的apps.py 中配置该应用。如下：
-```python
+```py
 from django.apps import AppConfig
 
 

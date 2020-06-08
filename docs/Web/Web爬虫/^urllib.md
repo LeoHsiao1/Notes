@@ -5,7 +5,7 @@
 ## 访问 Web 服务器
 
 例：
-```python
+```py
 >>> from urllib import request
 >>> with request.urlopen("http://www.baidu.com") as f:  # 访问指定的 URL
 ...     data = f.read()    # 获取 HTTP 响应报文的 body（bytes 类型）
@@ -19,7 +19,7 @@
 ## URLencode
 
 使用 quote()、unquote()可进行 URL 转码、反转码。如下：
-```python
+```py
 >>> from urllib import parse
 >>> r = parse.quote("http://www.你好.com")  # 转换成 Query String 格式的字符串
 >>> r
@@ -29,7 +29,7 @@
 ```
 
 使用 urlencode()可以直接将 dict 类型转换成 Query String 格式的字符串。如下：
-```python
+```py
 >>> dict1 = {"id": 1, "wd": "你好"}
 >>> parse.urlencode(dict1)
 'id=1&wd=%E4%BD%A0%E5%A5%BD'

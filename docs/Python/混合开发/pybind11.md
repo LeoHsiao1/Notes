@@ -32,7 +32,7 @@
 
 3. 编译成 pyd 文件 或 so 文件。
 4. 在 Python 解释器中试用：
-    ```python
+    ```py
     >>> import api
     >>> api.sum(1, 2)
     3
@@ -78,7 +78,7 @@
 ### 通过 setuptools 编译
 
 1. 编写一个 setup.py 文件：
-    ```python
+    ```py
     from setuptools import setup, Extension
     import pybind11
 
@@ -132,7 +132,7 @@
     }
     ```
 - 编译后，在 Python 终端中测试：
-    ```python
+    ```py
     >>> import api
     >>> api.p1
     'Hello world!'
@@ -140,7 +140,7 @@
     Hello world!
     ```
 - C++ 中的变量绑定到 Python 中时，是拷贝了一份值。修改拷贝时不会影响到原变量，如下：
-    ```python
+    ```py
     >>> api.p1 = 'Hi'
     >>> api.fun1()
     Hello world!
@@ -209,7 +209,7 @@
     类的构造函数需要主动绑定，而析构函数会自动绑定，且会自动被 Python 的内存回收机制调用。
     
 - 编译后，在 Python 终端中测试：
-    ```python
+    ```py
     >>> import api
     >>> p = api.Pet('puppy', '3')
     >>> p
@@ -234,7 +234,7 @@
                 });
     ```
     效果如下：
-    ```python
+    ```py
     >>> import api
     >>> p = api.Pet()    
     >>> p
@@ -269,7 +269,7 @@
     }
     ```
     编译后，在 Python 终端中测试：
-    ```python
+    ```py
     >>> import api
     >>> api.test_print(b'hello', 'hello')
     hello
@@ -287,7 +287,7 @@
               return std::string("Hello");
           });
     ```
-    ```python
+    ```py
     >>> import api
     >>> api.return_str()
     'Hello'
@@ -310,7 +310,7 @@
               // return py::bytes("\xe4\xbd\xa0\xe5\xa5\xbd");
           });
     ```
-    ```python
+    ```py
     >>> import api
     >>> api.return_str()
     b'\xe4\xbd\xa0\xe5\xa5\xbd'
@@ -425,13 +425,13 @@ py::object obj = py::cast(p);
         py::class_<Pet>(m, "Pet");
     }
     ```
-    ```python
+    ```py
     >>> import api
     >>> api.test_cast()
     <Pet: >
     ```
     如果没有绑定 Pet 类，则 pybind11 就不知道如何转换函数 test_cast()的返回值，会报错：
-    ```python
+    ```py
     >>> import api       
     >>> api.test_cast()
     TypeError: Unable to convert function return value to a Python type! The signature was

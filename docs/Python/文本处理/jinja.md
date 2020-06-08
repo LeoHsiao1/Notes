@@ -75,7 +75,7 @@ All are False.
 安装：pip install jinja2
 
 用法示例：
-```python
+```py
 >>> from jinja2 import Template
 >>> text="""
 ... k1: Hello
@@ -87,7 +87,7 @@ All are False.
 
 调用 render()时：
 - 可以传入关键字参数，也可以传入一个字典。如下：
-    ```python
+    ```py
     template.render(v2='World')
     template.render({v2:'World'})
     ```

@@ -27,7 +27,7 @@
 
 2. 在 Python 中调用：
 
-    ```python
+    ```py
     import ctypes
     lib = ctypes.CDLL("msvcrt.dll")
     lib.printf(b"hello world!")
@@ -42,7 +42,7 @@ ctypes 支持创建任意 C 语言数据类型的变量，包括数组、指针�
 - 创建这些变量是为了传给 C 函数，不能在 Python 中使用。
 - 例：
 
-    ```python
+    ```py
     i = ctypes.c_int(1)              # 创建一个 C 语言的 int 型变量
     print(i.value)                   # 获取 C 语言变量的值
 
@@ -62,7 +62,7 @@ ctypes 支持创建任意 C 语言数据类型的变量，包括数组、指针�
 ctypes 提供了一种创建字符串缓存的方法，可以把它传给 C 函数作为实参。例：
 - 创建字符串缓存：
 
-    ```python
+    ```py
     >>> p = ctypes.create_string_buffer(10)      # 创建一个 char 型数组，用作缓存，长度为 10
     >>> p = ctypes.create_string_buffer(b"hello\n")  # 也可以根据 bytes 创建数组缓存
     >>> p.value      # 获取数组存储的字符串内容
@@ -86,7 +86,7 @@ ctypes 提供了一种创建字符串缓存的方法，可以把它传给 C 函�
 
 - 在 Python 中调用它：
 
-    ```python
+    ```py
     >>> lib.fun1(p)
     hello
     0
@@ -116,7 +116,7 @@ ctypes 提供了一种创建字符串缓存的方法，可以把它传给 C 函�
 
 - 在 Python 中调用：
 
-    ```python
+    ```py
     >>> lib.fun1.restype = ctypes.c_char_p    # 声明 C 函数的返回类型（默认采用 int 型）
     >>> a = lib.fun1(p)
     >>> a          # 可以直接查看 a 的值，因为它被 ctypes 自动转换成了 bytes 类型
@@ -130,7 +130,7 @@ ctypes 提供了一种创建字符串缓存的方法，可以把它传给 C 函�
 可以在 Python 中写一个回调函数，作为参数传给 C 函数，让 C 程序调用。例：
 1. 在 Python 中定义：
 
-    ```python
+    ```py
     # 声明回调函数的返回值类型、各个形参的类型
     @ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.c_int)
     def callback(a, b):

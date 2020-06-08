@@ -62,7 +62,7 @@
     <br>原本是使用 gcc 等命令手动编译，但是用 Python 的 distutils 模块可以自动编译，更方便。
     <br>先创建一个 setup.py 文件，内容如下：
 
-    ```python
+    ```py
     from distutils.core import setup, Extension
 
     module = Extension('_api', sources=['api.c', 'api_wrap.c'])    # 这里要在模块名之前加上 _ 前缀
@@ -85,7 +85,7 @@
 
 6.  在 Python 中调用：
 
-    ```python
+    ```py
     >>> import api
     >>> api.sum
     <function sum at 0x000001B2FF948D08>

@@ -7,7 +7,7 @@
 ## 用法示例
 
 创建 Redis 客户端：
-```python
+```py
 >>> import redis
 >>> client = redis.Redis(host='127.0.0.1', port=6379, db=0, password='', decode_responses=True)
 >>> client.ping()
@@ -15,7 +15,7 @@ True
 ```
 - Redis 服务器的响应消息默认是 bytes 类型，设置 decode_responses=True 会将它转换成 str 类型。
 - 如果要创建多个 Redis 客户端，可以让它们共用一个连接池，避免重复建立连接的开销。如下：
-    ```python
+    ```py
     >>> pool = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0, password='', decode_responses=True)
     >>> client = redis.Redis(connection_pool=pool)
     ```
@@ -44,14 +44,14 @@ client 提供了与 Redis 大部分命令同名的方法，例如：
 ## 连接到主从+哨兵集群
 
 连接到哨兵：
-```python
+```py
 >>> from redis.sentinel import Sentinel
 >>> sentinels = [('10.0.0.1', 26379), ('10.0.0.2', 26379), ('10.0.0.3', 26379)]
 >>> sentinel = Sentinel(sentinels, socket_timeout=1)
 ```
 
 连接到 master ：
-```python
+```py
 >>> master = sentinel.master_for('master1', socket_timeout=1, password='******', db=0)
 >>> master
 Redis<SentinelConnectionPool<service=master1(master)>
@@ -63,7 +63,7 @@ True
   - 此时并没有建立连接，等到执行 master.set()等实际操作时才会开始建立与 Redis 实例的连接，才能判断是否连接成功。
 
 连接到 slave ：
-```python
+```py
 >>> slave = sentinel.slave_for('master1', socket_timeout=1, password='******', db=0)
 >>> slave.get('key1')
 b'Hello'
@@ -72,7 +72,7 @@ b'Hello'
 ```
 
 发现 master 和 slave ：
-```python
+```py
 >>> sentinel.discover_master('master1')
 ('10.0.0.3', 6379)
 >>> sentinel.discover_slaves('master1')
@@ -82,7 +82,7 @@ b'Hello'
 客户端与 Redis 实例建立连接之后，会保持并复用该连接。
 - 当客户端执行操作时，如果 master 故障了，则执行操作时会抛出以下异常，表示与服务器的连接已断开：
 
-  ```python
+  ```py
   >>> master.set('key1', 'Hello')
   redis.exceptions.ConnectionError: Connection closed by server
   ConnectionRefusedError: Connection refused
@@ -90,14 +90,14 @@ b'Hello'
 
 - 如果客户端继续尝试执行操作，则会抛出以下异常：
 
-  ```python
+  ```py
   >>> master.set('key1', 'Hello')
   redis.sentinel.MasterNotFoundError: No master found for 'master1'
   ```
 
 - 等哨兵选出新 master 之后，客户端才能成功执行操作
 
-  ```python
+  ```py
   >>> master.set('key1', 'Hello')
   True
   ```

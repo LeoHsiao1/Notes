@@ -16,7 +16,7 @@ Cython 主要使用的文件：
 
 1.  创建一个 testC.pyx 文件，内容如下：
 
-    ```python
+    ```py
     def fun1():
         cdef char *p="Hello World!"
         print(p)
@@ -25,7 +25,7 @@ Cython 主要使用的文件：
 
 2.  创建一个 setup.py 文件，在其中声明要处理的.pyx 文件。如下：
 
-    ```python
+    ```py
     from distutils.core import setup
     from Cython.Build import cythonize
 
@@ -48,7 +48,7 @@ Cython 主要使用的文件：
 
 4.  在 Python 解释器中直接导入编译生成的库文件。如下：
 
-    ```python
+    ```py
     >>> import testC
     >>> testC.fun1()
     b'Hello World!'

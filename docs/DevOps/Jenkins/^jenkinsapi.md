@@ -6,14 +6,14 @@
 ## 例
 
 创建客户端：
-```python
+```py
 from jenkinsapi.jenkins import Jenkins
 
 jk = Jenkins("http://10.0.0.1:8080", username=None, password=None)
 ```
 
 查询 job ：
-```python
+```py
 job_names = jk.keys()             # 返回一个包含所有 job 名字的列表
 jk.get_jobs()                     # 返回一个可迭代对象，每次迭代返回一个二元组（job 名字，job 对象）
 
@@ -23,14 +23,14 @@ jk.delete_job("test1")            # 删除一个 job
 ```
 
 job 的配置：
-```python
+```py
 xml = job.get_config()            # 导出 job 的 XML 配置
 job = jk.create_job(jobname, xml) # 创建一个 job
 job.update_config(xml)            # 修改 job 的 XML 配置
 ```
 
 job 的构建：
-```python
+```py
 jk.build_job("test_job", params={"tag":"v1.0.0"}) # 构建一个 job（按需要发送参数）
 
 b = job.get_build(20)        # 返回指定编号的 build 对象

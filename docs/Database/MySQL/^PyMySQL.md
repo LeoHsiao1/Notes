@@ -6,20 +6,20 @@
 ## 用法示例
 
 连接到 MySQL 服务器：
-```python
+```py
 >>> import pymysql
 >>> client = pymysql.Connect(host='localhost', port=3306, user='root', passwd='******', db='db1', charset='utf8mb4')
 ```
 - 默认的 connect_timeout 是 10 秒。
 
 创建游标：
-```python
+```py
 >>> cursor = client.cursor()
 ```
 - 游标用于执行 SQL 命令。
 
 执行一条 SQL 命令：
-```python
+```py
 >>> cursor.execute('show tables;')     # 执行一条 SQL 命令
 5                                      # 返回查询结果的行数
 >>> cursor.fetchone()                  # 提取一行（这会使游标下移一行）
@@ -32,7 +32,7 @@
 ```
 
 其它操作：
-```python
+```py
 client.executemany(...)     # 执行多条 SQL 命令
 
 client.commit()             # 提交修改

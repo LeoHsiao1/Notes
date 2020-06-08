@@ -8,7 +8,7 @@
 ### GET 方法
 
 发出 GET 请求：
-```python
+```py
 >>> import requests
 >>> r = requests.get("http://www.baidu.com")    # 目标 URL 的开头必须说明协议，比如 http:// 
 >>> r                                           # 返回值是一个 Response 对象，通过它可以获取响应报文
@@ -16,7 +16,7 @@
 ```
 
 在 URL 中添加 Query String ：
-```python
+```py
 >>> params= {'key1': 'value1', 'key2': 'value2', 'key3': None}
 >>> r = requests.get("http://httpbin.org/get", params=params)   # 添加的 params 会被转换成 Query String
 >>> r.url                                                       # 查看最终的 URL
@@ -24,7 +24,7 @@
 ```
 
 查看请求报文的信息：
-```python
+```py
 >>> r.url                   # 查看请求的 URL
 'http://www.baidu.com/'
 >>> r.request               # 获取请求报文的 Request 对象
@@ -36,13 +36,13 @@ None
 ### POST 方法
 
 发出 POST 请求：
-```python
+```py
 >>> data = {'key1': 'value1', 'key2': 'value2'}  
 >>> r = requests.post("http://httpbin.org/post", data=data)   # 发出 POST 请求，body 默认采用 x-www-form-urlencoded 格式
 ```
 
 POST 请求报文的 body 默认采用 x-www-form-urlencoded 格式，也可以主动指定 body 的格式：
-```python
+```py
 >>> headers = {'Content-Type': 'application/json'}
 >>> r = requests.post("http://httpbin.org/post", json=data, headers=headers)
 ```
@@ -50,7 +50,7 @@ POST 请求报文的 body 默认采用 x-www-form-urlencoded 格式，也可以�
 ### timeout
 
 为了不阻塞进程，建议设置 HTTP 请求的超时时间：
-```python
+```py
 >>> r = requests.get('http://www.baidu.com', timeout=1)
 ```
 - 当 requests 发出 HTTP 请求后，如果超过 timeout 秒之后还没有收到服务器的响应，就会抛出异常 requests.exceptions.Timeout 。
@@ -59,7 +59,7 @@ POST 请求报文的 body 默认采用 x-www-form-urlencoded 格式，也可以�
 ### Session
 
 创建 Session 之后可以在同一个会话中多次发出 HTTP 请求：
-```python
+```py
 >>> s = requests.Session()             # 创建一个会话
 >>> s.auth = ('user', 'pass')          # 设置该会话的一些属性，作为 HTTP 通信的默认值
 >>> r = s.get("http://www.baidu.com")
@@ -67,7 +67,7 @@ POST 请求报文的 body 默认采用 x-www-form-urlencoded 格式，也可以�
 ```
 
 可以用 with 关键字创建一个会话，确保它会被关闭：
-```python
+```py
 with requests.Session() as s:
     r = s.get("http://www.baidu.com")
     ...
@@ -75,7 +75,7 @@ with requests.Session() as s:
 
 ### headers
 
-```python
+```py
 >>> headers = {'user': 'me'}
 >>> r = requests.get(url, headers=headers)    # 设置请求报文的 headers
 ```
@@ -83,7 +83,7 @@ with requests.Session() as s:
 
 ### cookies
 
-```python
+```py
 >>> r = requests.get(url, cookies={'k1': 'hello'})  # 在请求报文中添加 cookies
 >>> r.cookies                                       # 查看响应报文中的 cookies
 <RequestsCookieJar[Cookie(version=0, name='BDORZ', value='27315', domain='.baidu.com', ...)]>
@@ -91,14 +91,14 @@ with requests.Session() as s:
 
 ### 代理服务器
 
-```python
+```py
 >>> proxies = {"http": "http://10.10.1.10:3128", "https": "http://10.10.1.10:1080", 'http://10.20.1.128': 'http://10.10.1.10:5323'}
 >>> r = requests.get("http://example.org", proxies=proxies)
 ```
 
 ## 关于响应报文
 
-```python
+```py
 >>> r.status_code        # 查看响应报文的状态码
 200
 >>> r.reason             # 查看状态码对应的原因
@@ -118,7 +118,7 @@ b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
 ### 重定向
 
 当 Web 服务器的响应报文要求重定向时，requests 会自动跳转。如下：
-```python
+```py
 >>> r = requests.get('http://github.com')
 >>> r
 <Response [200]>
@@ -127,14 +127,14 @@ b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
 ```
 
 可以主动禁止重定向：
-```python
+```py
 >>> r = requests.get('http://github.com', allow_redirects=False)
 >>> r
 <Response [301]>
 ```
 
 HEAD 方法默认禁止重定向，可以主动开启：
-```python
+```py
 >>> r = requests.head('http://github.com', allow_redirects=True)
 >>> r
 <Response [200]>
@@ -143,7 +143,7 @@ HEAD 方法默认禁止重定向，可以主动开启：
 ### 历史记录
 
 Reponse 对象的 history 属性记录了已经发出的每个 HTTP 请求的响应报文：
-```python
+```py
 >>> r.history
 [<Response [301]>]            # 它是一个 Reponse 对象的列表
 >>> r.history[0].status_code
@@ -153,7 +153,7 @@ Reponse 对象的 history 属性记录了已经发出的每个 HTTP 请求的响
 ## HTTPS
 
 requests 会自动验证 Web 服务器的 SSL 证书（像浏览器一样）：
-```python
+```py
 >>> r = requests.get('https://kennethreitz.org', verify=False)    # 设置不验证 SSL 证书
 InsecureRequestWarning: Unverified HTTPS request is being made.   # requests 发出警告
 >>> r
@@ -162,7 +162,7 @@ InsecureRequestWarning: Unverified HTTPS request is being made.   # requests 发
 - 调用 requests.urllib3.disable_warnings() 可以关掉因为没有验证 SSL 证书而出现的警告。
 
 设置客户端的证书：
-```python
+```py
 >>> r=requests.get('https://kennethreitz.org', cert=('/path/to/client.cert', '/path/to/client.key'))
 ```
 - 需要将证书和私钥（必须是解密状态）的文件路径传给 cert 参数。
@@ -170,7 +170,7 @@ InsecureRequestWarning: Unverified HTTPS request is being made.   # requests 发
 ## 例
 
 下例是爬取百度首页上的图片：
-```python
+```py
 import re
 import requests
 

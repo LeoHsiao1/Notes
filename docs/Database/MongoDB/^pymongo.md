@@ -7,7 +7,7 @@
 ## 用法示例
 
 创建 MongoDB 客户端：
-```python
+```py
 >>> import pymongo
 >>> client = pymongo.MongoClient('127.0.0.1', 27017)
 >>> db = client.test    # 选择数据库
@@ -21,7 +21,7 @@
     比如选择 MongoDB 中的数据库、数据库中的集合、集合中的文档、文档中的键值对。
 
 数据库的操作方法与 MongoDB shell 中的差不多，如下：
-```python
+```py
 db.c1.insert_one({"name": "leo", "age": 10})
 db.c1.insert_many([{"age": 10}, {"age": 11}])
 

@@ -351,6 +351,6 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   默认访问地址为 <http://localhost:80> ，用户名、密码为 admin 、 password 。
 
 - 用法：
-  - 可以在 Web 页面上方便地调用大量 playbook ，不过不能直接在 Web 页面上编辑 playbook 。
+  - 可以在 Web 页面上方便地调用大量 playbook ，不过不能直接在 Web 页面上编辑 playbook 。因此只适合管理已稳定可用的 playbook 。
   - 以 Project 为单位执行任务，可以从 Git、SVN仓库或本地目录导入 Playbook 文件。
   - 删除一个机构时，会自动删除其下的 Inventory 等配置。

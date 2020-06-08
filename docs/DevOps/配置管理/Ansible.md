@@ -92,23 +92,17 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   hosts: 10.0.*                          # 一个 pattern ，用于匹配要管理的 host 或 组
   # become: yes                          # ssh 登录之后，用 sudo 命令切换用户
   # become_user: root                    # 默认切换到 root 用户
-  vars:                                  # 定义变量
-    - tips: Hello
-    - service: httpd
   tasks:                                 # 任务列表
-    - name: test echo                    # 第一个任务
-      command: echo {{tips}}             # 调用 shell 模块
+    - name: test echo                    # 第一个任务（如果不设置 name ，会默认设置成模块名）
+      command: echo Hello                # 调用 shell 模块
     - name: start httpd                  # 第二个任务
       service: name=httpd state=started  # 调用 service 模块
       notify:                            # 执行一个 handler
         - stop httpd
     handlers:                            # 定义 handlers
       - name: stop httpd
-        service: name={{service}} state=stop
+        service: name=httpd state=stop
 ```
-::: v-pre
-- Ansible 中的变量要使用 `{{var}}` 或 `"{{var}}"` 的格式读取。
-:::
 - 每个 task 通过调用一个模块来执行某项操作。
 - Ansible 会依次提取 playbook 中的 task ，在所有 host 上同时执行。
   - 等所有 host 都执行完当前 task 之后，才执行下一个 task 。
@@ -144,6 +138,62 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - {value: World, length: 5}
   ```
 
+### 使用变量
+
+- 例：
+  ```yaml
+  - name: Test
+    hosts: 10.0.*
+    vars:                   # 定义变量
+      - tips: Hello         # 定义键值对类型的变量
+      - service:            # 定义字典类型的变量
+          name: httpd
+          port: 80
+    # vars_files:           # 从文件中导入变量
+    #   - external_vars.yml
+    tasks:
+      - name: test echo
+        command: echo {{tips}}
+      - name: start httpd
+        service: name={{service.name}} state=started
+  ```
+
+::: v-pre
+- Ansible 采用 Jinja2 模板语言渲染 Playbook ，因此其中的变量要使用 `{{var}}` 的格式取值。不过这样可能不会被 YAML 视作字符串，报出语法错误。因此最好用 `"{{var}}"` 的格式取值。
+:::
+- 变量名只能包含字母、数字、下划线，且只能以字母开头。
+- 字典类型的变量可以用以下两种格式取值：
+  ```yaml
+  echo {{service.name}}       # 这种格式的缺点是：key 的名字不能与 Python 中字典对象的成员名冲突
+  echo {{service['name']}}
+  ```
+- 变量的值允许换行输入，如下：
+  ```yaml
+  vars:
+    - text: |
+        Hello
+          World
+  tasks:
+    - shell: echo "{{text}}" >> f1
+  ```
+
+- Ansible 会将每个模块的执行结果记录成一段 JSON 信息，可以用 register 选项获取。如下：
+  ```yaml
+  tasks:
+    - name: step1
+      command: ls f1
+      register: step1_result    # 将模块的执行结果赋值给变量 step1_result
+      ignore_errors: True       # 即使该模块执行失败，也继续执行下一个模块
+
+    - command: echo {{step1_result}}        # 输出示例： {changed: True, end: 2020-06-08 13:50:28.332773, stdout: f1, cmd: ls f1, rc: 0, start: 2020-06-08 13:50:28.329216, stderr: , delta: 0:00:00.003557, stdout_lines: [f1], stderr_lines: [], failed: False}
+    
+    - command: echo {{step1_result.stdout}} # 输出示例： f1
+
+    - command: echo "step1 failed!"
+      when: step1_result.failed
+      # when: step1_result.rc != 0
+  ```
+
 ## Module
 
 - 如果 host 上启用了 SELinux ，则需要先在它上面安装 `yum install libselinux-python` ，否则一些模块不能执行。
@@ -174,12 +224,9 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     ```
   - command 模块不是直接在 shell 终端中执行命令的，因此可以防止 shell 注入攻击，但是不支持一些 shell 语法。如下：
     ```sh
-    [root@Centos ~]# ansible all -a 'echo $PWD | xargs'
-    10.0.0.1 | CHANGED | rc=0 >>
-    /root | xargs                                         # 不支持管道符
-    [root@Centos ~]# ansible all -m shell -a 'echo $PWD | xargs'
-    10.0.0.1 | CHANGED | rc=0 >>
-    /root
+    [root@Centos ~]# ansible localhost -a 'echo $PWD >> f1 && ls'
+    localhost | CHANGED | rc=0 >>
+    /etc/ansible >> f1 && ls
     ```
   - 虽然 command 、shell 模块可以自由地执行命令，但是使用 copy 等具体的模块可以保证幂等性。
 
@@ -220,12 +267,14 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 - 将本机的文件拷贝到 host 上：
   ```yaml
   copy:
-    src: f1         # 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录
+    src: f1
     dest: /tmp/
     # mode=0755
     # owner=root
     # group=root
   ```
+- src 可以是绝对路径或相对路径。
+- 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录。
 
 - 将 host 上的文件拷贝到本机：
   ```yaml
@@ -235,14 +284,17 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # flat=yes      # 使保存路径为 dest_path/filename ，默认为 dest_path/hostname/src_path
   ```
 
-### 关于配置系统
-
-- 用 yum 安装软件：
+- 对 host 上的文本文件进行正则替换（基于 Python ）：
   ```yaml
-  yum:
-    name: ['vim', 'git', 'tmux']
-    state: latest     # 可以取值为 installed（安装了即可）、latest（安装最新版本）、removed（卸载）
+  replace:
+    path: /tmp/f1
+    regexp: 'Hello(\w*)'    # 将匹配 regexp 的部分替换为 replace
+    replace: 'Hi\1'       # 这里用 \1 引用匹配的第一个元素组
+    # after: 'line_1'       # 在某位置之后开始匹配
+    # before: 'line_10.*'   # 在某位置之前开始匹配
   ```
+
+### 关于配置系统
 
 - 创建用户：
   ```yaml
@@ -264,6 +316,13 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     name: leo
     state: absent         # 删除用户
     # remove: yes         # 删除家目录
+  ```
+
+- 用 yum 安装软件：
+  ```yaml
+  yum:
+    name: ['vim', 'git', 'tmux']
+    state: latest     # 可以取值为 installed（安装了即可）、latest（安装最新版本）、removed（卸载）
   ```
 
 - 管理 systemd 服务：
@@ -292,6 +351,29 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # interface: eth2
     permanent: yes
     immediate: yes        # 是否立即生效（当 permanent 为 yes 时，默认 immediate 为 no ）
+  ```
+
+- 配置 crontab 任务：
+  ```yaml
+  cron:
+    name: "sync the time"       # 添加一个任务，该 name 会作为一行注释写入
+    # minute: "*"
+    hour: "1"
+    # day: "*"
+    # month : "*"
+    # weekday : "*"
+    job: "ntpdate 0.cn.pool.ntp.org"
+  ```
+  ```yaml
+  cron:
+    name: "test"
+    special_time: reboot        # 添加一个每次系统重启时执行的任务
+    job: "/root/tmp.sh"
+  ```
+  ```yaml
+  cron:
+    name: "sync the time"
+    state: absent               # 根据 name 删除一个任务
   ```
 
 ## role

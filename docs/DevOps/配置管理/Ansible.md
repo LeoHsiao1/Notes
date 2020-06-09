@@ -38,6 +38,7 @@ ansible-playbook <name>.yml...       # 执行 playbook
                 -i <file>            # 指定 Inventory 文件
                 -e "A=Hello B=World" # 传入变量
                 -v                   # 显示详细的执行信息
+                -vvv                 # 显示更详细的信息
                 --syntax-check       # 不执行，只是检查 playbook 的语法是否正确
                 --list-task          # 不执行，只是显示所有任务
                 --list-hosts         # 不执行，只是显示所有 host
@@ -81,6 +82,12 @@ ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需
   - ungrouped ：包含所有未分组的 host 。
 - host 的地址可以为 IP 、域名或主机名，只要能被 SSH 连接。
 - 一个 host 可以同时属于多个组，甚至一个组可以是另一个组的成员。
+- 组名支持使用下标，如下：
+  ```ini
+  webservers[0]     # 选取第一个 host
+  webservers[0:4]   # 选取一串 host
+  webservers[-1]
+  ```
 
 ## Playbook
 
@@ -92,9 +99,10 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   hosts: 10.0.*                          # 一个 pattern ，用于匹配要管理的 host 或 组
   # become: yes                          # ssh 登录之后，用 sudo 命令切换用户
   # become_user: root                    # 默认切换到 root 用户
+  # gather_facts: true
   tasks:                                 # 任务列表
     - name: test echo                    # 第一个任务（如果不设置 name ，会默认设置成模块名）
-      command: echo Hello                # 调用 shell 模块
+      shell: echo Hello                  # 调用 shell 模块
     - name: start httpd                  # 第二个任务
       service: name=httpd state=started  # 调用 service 模块
       notify:                            # 执行一个 handler
@@ -103,8 +111,13 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - name: stop httpd
         service: name=httpd state=stop
 ```
-- 每个 task 通过调用一个模块来执行某项操作。
-- Ansible 会依次提取 playbook 中的 task ，在所有 host 上同时执行。
+- 每个 task 通过调用一个模块来完成某项操作。
+  - Ansible 每执行一个 task 时，会生成一个临时的 .py 文件，传送到 host 上，用 python 解释器执行。如下：
+    ```sh
+    /bin/sh -c '/usr/bin/python /root/.ansible/tmp/ansible-tmp-xxx.py && sleep 0'
+    ```
+  - 默认执行的第一个任务是 Gathering Facts ，收集 host 的信息。管理大量 host 时，禁用该任务可以节省一些时间。
+- Ansible 会逐个提取 playbook 中的 task ，在所有 host 上同时执行。
   - 等所有 host 都执行完当前 task 之后，才执行下一个 task 。
   - 如果某个 task 执行之后的返回值不为 0 ，Ansible 就会终止执行并报错。
 - handler 与 task 类似，由某个 task 通过 notify 激活，在所有 tasks 都执行完之后才会执行，且只会执行一次。
@@ -127,12 +140,12 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 - 可以用 with_items 语句迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
   ```yaml
   - name: test echo
-    command: echo {{item}}
+    shell: echo {{item}}
     with_items:
       - Hello
       - World
   - name: test echo
-    command: echo {{item.value}} {{item.length}}
+    shell: echo {{item.value}} {{item.length}}
     with_items:
       - {value: Hello, length: 5}
       - {value: World, length: 5}
@@ -153,7 +166,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     #   - external_vars.yml
     tasks:
       - name: test echo
-        command: echo {{tips}}
+        shell: echo {{tips}}
       - name: start httpd
         service: name={{service.name}} state=started
   ```
@@ -173,6 +186,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     - text: |
         Hello
           World
+        # 注意缩进到这个位置
   tasks:
     - shell: echo "{{text}}" >> f1
   ```
@@ -181,18 +195,19 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```yaml
   tasks:
     - name: step1
-      command: ls f1
-      register: step1_result    # 将模块的执行结果赋值给变量 step1_result
-      ignore_errors: True       # 即使该模块执行失败，也继续执行下一个模块
+      shell: ls f1
+      register: step1_result              # 将模块的执行结果赋值给变量 step1_result
+      ignore_errors: True                 # 即使该模块执行失败，也继续执行下一个模块
 
-    - command: echo {{step1_result}}        # 输出示例： {changed: True, end: 2020-06-08 13:50:28.332773, stdout: f1, cmd: ls f1, rc: 0, start: 2020-06-08 13:50:28.329216, stderr: , delta: 0:00:00.003557, stdout_lines: [f1], stderr_lines: [], failed: False}
+    - shell: echo {{step1_result}}        # 输出示例： {changed: True, end: 2020-06-08 13:50:28.332773, stdout: f1, cmd: ls f1, rc: 0, start: 2020-06-08 13:50:28.329216, stderr: , delta: 0:00:00.003557, stdout_lines: [f1], stderr_lines: [], failed: False}
     
-    - command: echo {{step1_result.stdout}} # 输出示例： f1
+    - shell: echo {{step1_result.stdout}} # 输出示例： f1
 
-    - command: echo "step1 failed!"
+    - shell: echo "step1 failed!"
       when: step1_result.failed
       # when: step1_result.rc != 0
   ```
+  不同模块的执行结果的格式可能不同，返回码表示的含义也可能不同。
 
 ## Module
 
@@ -210,11 +225,13 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
   - ping 模块会测试能否通过 ssh 登录 host，并检查是否有可用的 Python 解释器，如果操作成功则返回 pong 。
 
-- 在 host 上执行 shell 命令：
-  ```yaml
-  command: /tmp/test.sh chdir=/tmp/
-  ```
-  - 调用模块时也可以写作以下格式：
+- 用 command、shell、raw 模块可以在 host 上执行 shell 命令：
+  
+  - 
+    ```yaml
+    command: /tmp/test.sh chdir=/tmp/
+    ```
+    调用模块时也可以写作以下格式：
     ```yaml
     command:
       cmd: /tmp/test.sh
@@ -222,35 +239,49 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       # creates: /tmp/f1  # 如果该文件存在，则跳过该任务（这样有利于实现幂等性）
       # removes: /tmp/f1  # 如果该文件不存在，则跳过该任务
     ```
-  - command 模块不是直接在 shell 终端中执行命令的，因此可以防止 shell 注入攻击，但是不支持一些 shell 语法。如下：
+  - 
+    ```yaml
+    shell:
+      cmd: ls | grep ssh
+      # executable: /bin/sh   # 指定要执行 shell 命令的可执行文件
+      # chdir: /tmp/
+      # creates: /tmp/f1
+      # removes: /tmp/f1
+    ```
+    shell 模块时会在 Python 中调用 subprocess.Popen(cmd, shell=True) ，新建一个 shell 终端来执行 cmd 命令。
+    而 command 模块是调用 subprocess.Popen(cmd, shell=False) ，不在 shell 终端中执行 cmd 命令。因此可以防止 shell 注入攻击，但是不支持一些 shell 语法。此如下：
     ```sh
     [root@Centos ~]# ansible localhost -a 'echo $PWD >> f1 && ls'
     localhost | CHANGED | rc=0 >>
     /etc/ansible >> f1 && ls
     ```
-  - 虽然 command 、shell 模块可以自由地执行命令，但是使用 copy 等具体的模块可以保证幂等性。
-
-- 在 host 上执行 shell 命令：
-  ```yaml
-  shell:
-    cmd: ls | grep ssh
-    # executable: /bin/sh   # 指定要执行 shell 命令的可执行文件
-    # chdir: /tmp/
-    # creates: /tmp/f1
-    # removes: /tmp/f1
-  ```
+  - 
+    ```yaml
+    raw: echo hello
+    # args:
+    #   executable: /bin/bash   # 指定解释器
+    ```
+    raw 模块是通过 ssh 直接向 host 发送 shell 命令。适用于 host 上没有安装 Python 解释器，而无法使用 command、shell 模块的情况。
+  - 可以一次执行多行命令，如下：
+    ```yaml
+    shell: |
+      cd /tmp
+      pwd
+      touch f1
+    ```
+  - 虽然这三个模块可以自由地执行命令，通用性强，但是使用 copy 等具体的模块可以保证幂等性。
 
 - 在 host 上执行脚本：
   ```yaml
   script:
     cmd: /tmp/test.sh
-    # executable=/bin/bash  # 设置执行该脚本的程序
+    # executable: /bin/bash  # 设置执行该脚本的程序
     # chdir: /tmp/
     # creates: /tmp/f1
     # removes: /tmp/f1
   ```
   - cmd 是本机上的一个脚本的路径，它会被拷贝到 host 上执行，执行完之后会自动删除。
-  - executable 不一定是 shell 解释器，比如：`script: "executable=/usr/bin/python /tmp/1.py"`
+  - executable 不一定是 shell 解释器，因此执行的不一定是 shell 脚本，比如：`script: "executable=/usr/bin/python /tmp/1.py"`
 
 ### 关于管理文件
 
@@ -259,9 +290,9 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   file:
     path: /tmp/f1
     state: touch    # 可以取值为 touch（创建文件）、directory（创建目录）、link（创建软链接）、hard（创建硬链接）、absent（删除文件）
-    # mode=0755     # 拷贝后文件的权限
-    # owner=root    # 拷贝后文件的所有者
-    # group=root    # 拷贝后文件的所有者组
+    # mode: 0755    # 拷贝后文件的权限
+    # owner: root   # 拷贝后文件的所有者
+    # group: root   # 拷贝后文件的所有者组
   ```
 
 - 将本机的文件拷贝到 host 上：
@@ -269,9 +300,9 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   copy:
     src: f1
     dest: /tmp/
-    # mode=0755
-    # owner=root
-    # group=root
+    # mode: 0755
+    # owner: root
+    # group: root
   ```
 - src 可以是绝对路径或相对路径。
 - 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录。
@@ -281,7 +312,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   fetch:
     src: /tmp/f1    # src 必须是一个文件的路径，不能是一个目录
     dest: /tmp/
-    # flat=yes      # 使保存路径为 dest_path/filename ，默认为 dest_path/hostname/src_path
+    # flat: yes     # 使保存路径为 dest_path/filename ，默认为 dest_path/hostname/src_path
   ```
 
 - 对 host 上的文本文件进行正则替换（基于 Python ）：
@@ -292,6 +323,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     replace: 'Hi\1'       # 这里用 \1 引用匹配的第一个元素组
     # after: 'line_1'       # 在某位置之后开始匹配
     # before: 'line_10.*'   # 在某位置之前开始匹配
+    # encoding: 'utf-8'
   ```
 
 ### 关于配置系统
@@ -330,7 +362,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   systemd:
     name: httpd
     state: started        # 可以取值为 started、stopped、restarted、reloaded
-    # enabled: yes
+    enabled: yes
     # daemon-reload: no   # 是否重新加载 unit 的配置文件
   ```
 
@@ -343,10 +375,10 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
   ```yaml
   firewalld:
-    port: 80/tcp          # 同时指定一个端口
-    state: enabled        # 端口的 state 可以取值为 enabled 或 disabled
-    # service: http       # 同时只能指定一个 service
+    service: http         # 同时只能指定一个 service
+    # port: 80/tcp        # 同时只能指定一个端口
     # rich_rule: rule family='ipv4' port port=22 protocol=tcp accept
+    state: enabled        # 可以取值为 enabled 或 disabled
     # zone: public
     # interface: eth2
     permanent: yes

@@ -3053,6 +3053,10 @@ if not os.system("..."):
   - 例如：
 with os.popen("ipconfig") as p:
     result = p.read()
+
+
+再学习更强大的 subprocess.Popen()
+
 ## 关于文件路径。
 >>> os.path.split('D:/1/2.py')        # 将一个文件路径分割成目录名和文件名
 ('D:/1', '2.py')

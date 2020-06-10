@@ -10,7 +10,7 @@
 
 - 用 pip 安装 Ansible ：
   ```sh
-  yum install docker-ce python36 python36-pip    # 安装依赖
+  yum install python36 sshpass    # 安装依赖
   pip3 install ansible
   ```
 
@@ -73,9 +73,12 @@ node100 ansible_host=10.0.0.2         ; 添加一个 host 的名字、地址
 ; ansible_connection=ssh              ; ansible 的连接方式
 ; ansible_ssh_port=22                 ; SSH 登录时的端口号
 ansible_ssh_user='root'               ; SSH 登录时的用户名
-ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需要安装 yum install sshpass）
+ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需要安装 sshpass）
 ; ansible_ssh_private_key_file='~/.ssh/id_rsa'   ; 用密钥文件进行 SSH 登录
-; ansible_become_pass='123456'        ; SSH 登录后用 sudo 命令时的密码
+; ansible_become=false                ; SSH 登录之后是否切换用户
+; ansible_become_user=root            ; 切换到哪个用户
+; ansible_become_method=sudo          ; 切换用户的方法
+; ansible_become_pass='123456'        ; 用 sudo 切换用户时的密码
 ```
 - 默认有两个隐式的分组：
   - all ：包含所有 host 。
@@ -85,7 +88,7 @@ ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需
 - 组名支持使用下标，如下：
   ```ini
   webservers[0]     # 选取第一个 host
-  webservers[0:4]   # 选取一串 host
+  webservers[0:4]   # 选取第 0 ~ 4 个 host （包括第 4 个）
   webservers[-1]
   ```
 
@@ -97,8 +100,8 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 ```yaml
 - name: Test
   hosts: 10.0.*                          # 一个 pattern ，用于匹配要管理的 host 或 组
-  # become: yes                          # ssh 登录之后，用 sudo 命令切换用户
-  # become_user: root                    # 默认切换到 root 用户
+  # become: yes                          # SSH 登录之后是否切换用户
+  # become_user: root
   # gather_facts: true
   tasks:                                 # 任务列表
     - name: test echo                    # 第一个任务（如果不设置 name ，会默认设置成模块名）
@@ -111,32 +114,49 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - name: stop httpd
         service: name=httpd state=stop
 ```
+
+### task
+
+- Ansible 会依次提取 playbook 中的 task ，在所有 host 上并行执行。
+  - 等所有 host 都执行完当前 task 之后，才执行下一个 task 。
+  - 如果某个 task 执行之后的返回值不为 0 ，Ansible 就会终止执行并报错。
 - 每个 task 通过调用一个模块来完成某项操作。
   - Ansible 每执行一个 task 时，会生成一个临时的 .py 文件，传送到 host 上，用 python 解释器执行。如下：
     ```sh
     /bin/sh -c '/usr/bin/python /root/.ansible/tmp/ansible-tmp-xxx.py && sleep 0'
     ```
   - 默认执行的第一个任务是 Gathering Facts ，收集 host 的信息。管理大量 host 时，禁用该任务可以节省一些时间。
-- Ansible 会逐个提取 playbook 中的 task ，在所有 host 上同时执行。
-  - 等所有 host 都执行完当前 task 之后，才执行下一个 task 。
-  - 如果某个 task 执行之后的返回值不为 0 ，Ansible 就会终止执行并报错。
 - handler 与 task 类似，由某个 task 通过 notify 激活，在所有 tasks 都执行完之后才会执行，且只会执行一次。
+- 可以给整个 playbook 设置 become 选项，也可以给单独某个 task 设置 become 选项。
+  ```yaml
+  - name: test echo
+    # become: yes
+    # become_user: root
+    shell: echo Hello
+  ```
+
 - 可以给 task 加上 tags ，便于在执行 playbook 时选择只执行带有特定标签的 task 。如下：
-    ```yaml
-    - name: start httpd
-      service: name=httpd state=started
-      tags:
-        - debug
-        - always
-    ```
+  ```yaml
+  - name: start httpd
+    service: name=httpd state=started
+    tags:
+      - debug
+      - always
+  ```
   - 带有 always 标志的 task 总是会被选中执行。
-- 可以给 task 加上 when 条件，当满足条件时才执行该 task 。如下：
-    ```yaml
-    - name: start httpd
-      service: name=httpd state=started
-        when:
-          - service_name | match("httpd")
-    ```
+
+- 可以给 task 加上 when 条件，当满足条件时才执行该 task ，否则跳过该 task 。如下：
+  ```yaml
+  - name: test echo
+    shell: echo {{A}}
+    when:
+      - A is defined                                 # 如果变量 A 已定义
+      - A | int >= 1                                 # 将变量 A 转换成 int 类型再比较大小
+      - ( A == '1' ) or (A == 'Hello' and B == '2')  # 使用逻辑运算符
+      - not (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "7")
+  ```
+  注意 `1` 表示数字 1 ，而 `'1'` 表示字符串 1 。 
+
 - 可以用 with_items 语句迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
   ```yaml
   - name: test echo
@@ -147,8 +167,9 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - name: test echo
     shell: echo {{item.value}} {{item.length}}
     with_items:
-      - {value: Hello, length: 5}
-      - {value: World, length: 5}
+      - {src: A, dest: 1}
+      - src: B
+        dest: 2
   ```
 
 ### 使用变量
@@ -306,6 +327,8 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
 - src 可以是绝对路径或相对路径。
 - 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录。
+- 如果 dest 目录并不存在，则会自动创建。
+- 如果 dest 目录下存在同名文件，且 md5 值相同，则不拷贝，否则会拷贝并覆盖。
 
 - 将 host 上的文件拷贝到本机：
   ```yaml
@@ -315,15 +338,26 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # flat: yes     # 使保存路径为 dest_path/filename ，默认为 dest_path/hostname/src_path
   ```
 
-- 对 host 上的文本文件进行正则替换（基于 Python ）：
+- 对 host 上的文本文件进行正则替换：
   ```yaml
   replace:
     path: /tmp/f1
     regexp: 'Hello(\w*)'    # 将匹配 regexp 的部分替换为 replace
-    replace: 'Hi\1'       # 这里用 \1 引用匹配的第一个元素组
+    replace: 'Hi\1'         # 这里用 \1 引用匹配的第一个元素组
     # after: 'line_1'       # 在某位置之后开始匹配
     # before: 'line_10.*'   # 在某位置之前开始匹配
     # encoding: 'utf-8'
+  ```
+  - 采用 Python 的正则引擎，默认的编码格式是 utf-8 。
+
+- 渲染 Jinja2 模块文件，生成新文件：
+  ```yaml
+  template:
+    src: templates/test.j2
+    dest: /tmp/test.conf
+    # mode: 0755    # 拷贝后文件的权限
+    # owner: root   # 拷贝后文件的所有者
+    # group: root   # 拷贝后文件的所有者组
   ```
 
 ### 关于配置系统

@@ -5,7 +5,6 @@
 - Dev工具
   - [Git](Dev工具/Git.md)
   - [GitHub Actions](Dev工具/GitHub-Actions.md)
-  - [Nextcloud](Dev工具/Nextcloud.md)
 - Jenkins
   - [Jenkins](Jenkins/Jenkins.md)
   - [Jenkinsfile](Jenkins/Jenkinsfile.md)
@@ -34,3 +33,5 @@
 - 日志处理
   - [logrotate](日志处理/logrotate.md)
   - [ELK](日志处理/ELK.md)
+- 其它
+  - [Nextcloud](其它/Nextcloud.md)

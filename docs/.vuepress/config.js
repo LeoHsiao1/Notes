@@ -439,7 +439,6 @@ module.exports = {
 					children: [
 						'Dev工具/Git',
 						'Dev工具/GitHub-Actions',
-						'Dev工具/Nextcloud',
 					]
 				},
 				{
@@ -504,6 +503,14 @@ module.exports = {
 					children: [
 						'日志处理/logrotate',
 						'日志处理/ELK',
+					]
+				},
+				{
+					title: '其它',
+					collapsable: true,
+					sidebarDepth: 2,
+					children: [
+						'其它/Nextcloud',
 					]
 				},
 			],

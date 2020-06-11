@@ -212,7 +212,23 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     - shell: echo "{{text}}" >> f1
   ```
 
-- Ansible 会将每个模块的执行结果记录成一段 JSON 信息，可以用 register 选项获取。如下：
+- Ansible 提供了一些内置变量。如下：
+  ```yaml
+  debug:
+    var: inventory_hostname         # 获取当前 host 的名称
+  ```
+  获取指定 host 的配置变量：
+  ```yaml
+  hostvars['localhost']             # 一个字典
+  hostvars['localhost']['inventory_hostname']
+  ```
+  获取从当前 host 收集的信息：
+  ```yaml
+  ansible_facts                     # 一个字典
+  ansible_facts['distribution']
+  ```
+
+- Ansible 会将每个模块的执行结果记录成一段 JSON 信息，可以用 register 选项暂存。如下：
   ```yaml
   tasks:
     - name: step1
@@ -303,6 +319,20 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
   - cmd 是本机上的一个脚本的路径，它会被拷贝到 host 上执行，执行完之后会自动删除。
   - executable 不一定是 shell 解释器，因此执行的不一定是 shell 脚本，比如：`script: "executable=/usr/bin/python /tmp/1.py"`
+
+- 打印调试信息：
+  ```yaml
+  debug:
+    var: hostvars[inventory_hostname]
+  ```
+  ```yaml
+  debug:
+    msg: System {{inventory_hostname}} has gateway {{ansible_default_ipv4.gateway}}
+  when: ansible_default_ipv4.gateway is defined
+  ```
+  - var 、msg 选项不能同时使用。
+  - when 条件、debug 模块的 var 选项已经隐式地用花括号包装，因此不需要再给变量加花括号取值。
+
 
 ### 关于管理文件
 

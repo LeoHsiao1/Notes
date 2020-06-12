@@ -14,6 +14,16 @@ module.exports = {
 		['sitemap', {
 			hostname: 'http://leohsiao.com'
 		}],
+		['vuepress-plugin-meilisearch',
+			{
+				hostUrl: 'http://leohsiao.com:7700',
+				apiKey: '57557c7907388a064d88e127e15ac43ce01f9fcb2fb07321d3f3c4ff14d66f92',
+				indexUid: 'docs',
+				placeholder: '',
+				maxSuggestions: 5,
+				cropLength: 50,
+			},
+		],
 	],
 	themeConfig: {
 		repo: 'https://github.com/LeoHsiao1/Notes',

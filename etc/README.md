@@ -13,8 +13,15 @@ yarn vuepress dev docs
 cd /home/github/Notes
 yarn
 yarn vuepress build docs
-docker run -d --name nginx --network host -v $PWD/docs/.vuepress/dist/:/root/Notes/ -v $PWD/etc/nginx.conf:/etc/nginx/nginx.conf nginx
+docker run -d --name nginx \
+        --restart on-failure \
+        -p 80:80 \
+        -v $PWD/docs/.vuepress/dist/:/root/Notes/ \
+        -v $PWD/etc/nginx.conf:/etc/nginx/nginx.conf \
+        nginx
 ```
+
+另外，还需要部署 meilisearch 服务器、执行 scrape 工具，才能使用搜索栏。
 
 ## 调整字符间距
 

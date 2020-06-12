@@ -96,7 +96,7 @@ module.exports = {
 }
 ```
 - VuePress 使用 Prism.js 实现了 MarkDown 中代码块的语法高亮。
-
+- VuePress 内置了一个搜索框，不过只对所有页面的 h1、h2、h3 级标题建立了搜索索引。
 
 ### 首页
 
@@ -278,9 +278,97 @@ module.exports = {
         ],
     }
     ```
+3. 重新编译 Vuepress 网站。
+
+### vuepress-plugin-meilisearch
+
+- 该插件用于让 Vuepress 对接到 meilisearch 服务器，并显示一个全文搜索的搜索栏。
+- 当用户在搜索栏中输入字符串时，该插件会实时地向 meilisearch 服务器发出 AJAX 形式的查询请求，然后将查询结果显示在搜索栏下方。
+
+meilisearch 是一个开源的搜索引擎，基于 Rust 语言开发，借鉴了 Algolia 引擎，适合用于实现个人网站的搜索栏。
+- [官网](https://docs.meilisearch.com/)
+- 使用 meilisearch 的主要流程如下：
+  1. 运行 meilisearch 服务器。
+  2. 执行 meilisearch 的 scrape 工具，抓取目标网站的内容信息，并送到 meilisearch 服务器中存储。
+      每当目标网站的内容更新时，就应该抓取一次。
+  3. 向 meilisearch 服务器发出 HTTP 查询请求，搜索某一字符串在目标网站上的位置。
+
+该插件的使用步骤如下：
+1. 启动 meilisearch 服务器：
+    ```sh
+    docker run -d --name meilisearch \
+            --restart on-failure \
+            -p 7700:7700 \
+            -e MEILI_MASTER_KEY=****** \
+            -e MEILI_HTTP_ADDR=0.0.0.0:7700 \
+            -v /opt/meilisearch:/data.ms \
+            getmeili/meilisearch
+    ```
+    - 启动 meilisearch 服务器时，默认没有设置密钥，允许用户访问任意 URL 。设置密钥就可以拒绝非法用户的访问。
+    - 可以设置环境变量 `MEILI_MASTER_KEY=******` 作为主密钥，此时会自动生成私钥和公钥，发送以下 HTTP 请求即可查询到：
+        ```sh
+        [root@Centos ~]# curl 'http://localhost:7700/keys' -H "X-Meili-API-Key: $MEILI_MASTER_KEY"
+        {"private":"3fced9cfe0467f23a94ac4bb8368a58f815fa167da226418a417dc58cdec8259","public":"3e7193b91276c4ec577014a99188682280a2bc674f45557d11bad94c7e0e6843"}
+        ```
+    - 如果用户在发出的 HTTP 查询请求的 headers 中加上私钥（主密钥一般不用于查询），才有权访问除了 `/keys` 以外的 URL 。如果使用公钥，则只有权查询 `/indexes` 下的部分内容。
+
+2. 执行 meilisearch 的 scrape 工具：
+    ```sh
+    docker run -it --rm \
+        --network=host \
+        -e MEILISEARCH_HOST_URL='http://leohsiao.com:7700' \
+        -e MEILISEARCH_API_KEY='$private_key' \
+        -v $PWD/etc/docs-scraper.json:/docs-scraper/config.json \
+        getmeili/docs-scraper pipenv run ./docs_scraper config.json
+    ```
+    这里需要创建 scrape 的配置文件 docs-scraper.json ，如下：
+    ```json
+    {
+        "index_uid": "docs",                                    // 索引 ID ，用于区分不同的抓取结果
+        "sitemap_urls": ["http://leohsiao.com/sitemap.xml"],
+        "start_urls": ["http://leohsiao.com"],                  // 待抓取的目标网站
+        "selectors": {
+            "lvl0": {
+                "selector": ".sidebar-heading.open",
+                "global": true,
+                "default_value": "Documentation"
+            },
+            "lvl1": ".theme-default-content h1",
+            "lvl2": ".theme-default-content h2",
+            "lvl3": ".theme-default-content h3",
+            "lvl4": ".theme-default-content h4",
+            "lvl5": ".theme-default-content h5",
+            "text": ".theme-default-content p, .theme-default-content li"
+        },
+        "strip_chars": " .,;:#",
+        "scrap_start_urls": true
+    }
+    ```
+
+3. 安装：`yarn add vuepress-plugin-meilisearch`
+
+4. 在 config.js 中添加如下配置：
+    ```js
+    module.exports = {
+        plugins: [
+            ['vuepress-plugin-meilisearch',
+                {
+                    hostUrl: 'http://leohsiao.com:7700',        // 该 URL 应该能在用户的浏览器上被访问，不能为 localhost
+                    apiKey: '57557c7907388a064d88e127e15a',     // 这里应该使用 public key
+                    indexUid: 'docs',
+                    placeholder: 'Search as you type...',       // 在搜索栏中显示的占位符
+                    maxSuggestions: 5,                          // 最多显示几个搜索结果
+                    cropLength: 30,                             // 每个搜索结果最多显示多少个字符
+                },
+            ],
+        ],
+    }
+    ```
+
+5. 重新编译 Vuepress 网站。
 
 ### google-analytics
 
-该插件用于让 Vuepress 对接 Google 提供的的 Google analytics 平台，从而分析网站访问流量。使用步骤如下：
+该插件用于让 Vuepress 对接到 Google 提供的的 Google analytics 平台，从而分析网站访问流量。使用步骤如下：
 1. 访问 <https://analytics.google.com/> ，登录 Google 账号，创建一个 Google Analytics 的跟踪 ID 。
 2. 添加[ Google analytics 插件](https://v1.vuepress.vuejs.org/plugin/official/plugin-google-analytics.html)

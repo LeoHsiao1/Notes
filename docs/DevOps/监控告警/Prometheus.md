@@ -677,7 +677,7 @@ inhibit_rules:
   ```
   解压后启动：
   ```sh
-  ./process-exporter -config.path=exporter.yml
+  ./process-exporter -config.path=config.yml
                      -children=false             # 采集每个进程的指标时，是否包含其所有子进程的指标（默认为 true）
                      -threads=false              # 是否采集每个线程的指标（默认为 true）
   ```

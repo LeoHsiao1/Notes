@@ -193,7 +193,8 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
 
 ::: v-pre
-- Ansible 采用 Jinja2 模板语言渲染 Playbook ，因此其中的变量要使用 `{{var}}` 的格式取值。不过这样可能不会被 YAML 视作字符串，报出语法错误。因此最好用 `"{{var}}"` 的格式取值。
+- Ansible 采用 Jinja2 模板语言渲染 Playbook ，因此其中的变量要使用 `{{var}}` 的格式取值。
+  不过在 YAML 文件中，如果该变量独占一个字段，则需要用 `"{{var}}"` 的格式取值，否则不会被 YAML 视作字符串，导致语法错误。
 :::
 - 变量名只能包含字母、数字、下划线，且只能以字母开头。
 - 字典类型的变量可以用以下两种格式取值：
@@ -333,17 +334,16 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - var 、msg 选项不能同时使用。
   - when 条件、debug 模块的 var 选项已经隐式地用花括号包装，因此不需要再给变量加花括号取值。
 
-
 ### 关于管理文件
 
-- 在 host 上创建文件或目录：
+- 管理 host 上的文件或目录：
   ```yaml
   file:
     path: /tmp/f1
-    state: touch    # 可以取值为 touch（创建文件）、directory（创建目录）、link（创建软链接）、hard（创建硬链接）、absent（删除文件）
-    # mode: 0755    # 拷贝后文件的权限
-    # owner: root   # 拷贝后文件的所有者
-    # group: root   # 拷贝后文件的所有者组
+    # state: touch    # 可以取值为 touch（创建文件）、directory（创建目录）、link（创建软链接）、hard（创建硬链接）、absent（删除文件）
+    # mode: 0774      # 设置文件的权限（加上前缀 0 ，声明这是八进制）
+    # owner: root     # 设置文件的所有者
+    # group: root     # 设置文件的所有者组
   ```
 
 - 将本机的文件拷贝到 host 上：
@@ -351,7 +351,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   copy:
     src: f1
     dest: /tmp/
-    # mode: 0755
+    # mode: 0774
     # owner: root
     # group: root
   ```
@@ -383,9 +383,9 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 - 渲染 Jinja2 模块文件，生成新文件：
   ```yaml
   template:
-    src: templates/test.j2
+    src: templates/test.conf.j2
     dest: /tmp/test.conf
-    # mode: 0755    # 拷贝后文件的权限
+    # mode: 0774    # 拷贝后文件的权限
     # owner: root   # 拷贝后文件的所有者
     # group: root   # 拷贝后文件的所有者组
   ```
@@ -398,7 +398,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     name: leo
     # home: /home/leo
     # password: "{{'123456' | password_hash('sha512')}}"    # 设置密码
-    # update_password: always # 可以取值为 always（总是设置密码）、on_create（仅在创建用户时才设置密码）
+    # update_password: always # 可以取值为 always（默认，总是设置密码）、on_create（仅在创建用户时才设置密码）
     # shell: /bin/bash
     # group: root             # 设置基本用户组（该 group 必须已存在）
     # groups: root,docker     # 设置扩展用户组
@@ -503,7 +503,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     gather_facts: false
     roles:
       - { role: image_build }                                     # 调用一个 role
-      - { role: image_push, when: "docker_registry is defined" }  # 调用另一个个 role
+      - { role: image_push, when: "docker_registry is defined" }  # 调用另一个 role
   ```
 
 - 可以到官方的 roles 分享平台 <galaxy.ansible.com> 上寻找可用的 roles ，然后用 ansible-galaxy 命令下载 roles 。命令如下：

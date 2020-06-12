@@ -79,9 +79,9 @@
         ├──00000003
         └──checkpoint.000002/
     ```
-  - 最新获得的数据尚未写入 tsdb ，会暂时保存在 wal/ 目录下，等待保存为 chunks 。
-  - 每隔两个小时就会创建一个随机名字的 block 目录，将数据经过压缩之后保存到其中的 chunks 目录下。
-    一段时间后这些 block 目录还会进一步压缩、合并。
+  - 最新获得的数据尚未写入 tsdb ，会暂时保存在 wal/ 目录下。此时还不算写入 Prometheus 的 tsdb 。
+  - 每隔两个小时就会创建一个随机名字的 block 目录，将 wal/ 目录下的数据经过压缩之后保存到 xxx_block/chunks 目录下。此时才算写入 tsdb 。
+  - 每过一段时间， block 目录还会被进一步压缩、合并。
 
 - Prometheus 本身没有身份认证，不需要密码登录，不过可以用 Nginx 加上 HTTP Basic Auth ，或者通过防火墙只允许指定 IP 访问。
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
@@ -198,6 +198,7 @@ scrape_configs:
   ```
   - 可以用 # 声明单行注释。
   - 将字符串用反引号包住时，不会让反斜杠转义。
+  - 查询表达式不能为空的 {} ，也不能为完全正则匹配的 ".*" 。
 
 - 可以使用以下时间单位：
   - s ：秒
@@ -361,11 +362,12 @@ scrape_configs:
   PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589256000    # 删除数据（不指定时间则删除所有时间的数据）
   PUT /api/v1/admin/tsdb/clean_tombstones                                                       # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
+  data/wal/ 目录下缓存的数据不会被删除，因此即使删除 tsdb 中的所有数据， Prometheus 依然会自动从 data/wal/ 目录加载最近的部分数据。
 
 ## 分布式
 
-Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署。
-- 只能抓取当前时刻的指标数据，就像抓取 exporter 。
+- Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署。
+- 不过只能抓取当前时刻的数据， 就像抓取一般的 exporter 。
 - 在配置文件中按如下格式定义一个 job ，即可抓取其它 Prometheus 的数据：
     ```yaml
     scrape_configs:
@@ -481,7 +483,7 @@ TODO:
 设置externalURL
 在URL中调用变量
 整理监控指标
-Prometheus的内置指标：ALERTS{alertname="xxx"}
+Prometheus的内置指标：ALERTS{alertname="xxx"}，会不会不能查询到聚合的其它prometheus
 
 ```
 inhibit_rules:
@@ -505,6 +507,7 @@ inhibit_rules:
   - 提供了 Web 页面，可以查看其状态。
 - 缺点：
   - 不能控制监控对象生成指标的间隔时间。
+  - 只会抓取当前时刻的数据，不会同步历史数据。并且，如果监控对象离线，依然会将最后一次抓取的数据作为当前值。
   - 不能直接判断监控对象是否在线，需要根据 push_time_seconds 进行判断。
   - Push Gateway 挂掉时会导致其上的监控对象都丢失。
 - 下载二进制版：

@@ -3,7 +3,7 @@ name: Deploy
 on: [push]
 
 jobs:
-  deploy:
+  build-vuepress:
     runs-on: self-hosted
     steps:
     - name: Build
@@ -15,3 +15,20 @@ jobs:
     - name: Test
       run: |
         curl -I http://leohsiao.com/ --connect-timeout 3
+  
+  scrap-docs:
+    needs: build-vuepress
+    runs-on: self-hosted
+    steps:
+    - name: Copy docs-scraper.json
+      run: |
+        cp -f /home/github/Notes/etc/docs-scraper.json .
+    - name: Run docs-scraper
+      env:
+        API_KEY: ${{ secrets.MEILISEARCH_API_KEY }}
+      run: |
+        docker run -t --rm \
+          -e MEILISEARCH_HOST_URL='http://leohsiao.com:7700' \
+          -e MEILISEARCH_API_KEY=$API_KEY \
+          -v $PWD/docs-scraper.json:/docs-scraper/config.json \
+          getmeili/docs-scraper:v0.9.0 pipenv run ./docs_scraper config.json

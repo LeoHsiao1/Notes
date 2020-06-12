@@ -96,8 +96,53 @@ module.exports = {
 }
 ```
 - VuePress 使用 Prism.js 实现了 MarkDown 中代码块的语法高亮。
-- VuePress 内置了一个搜索框，不过只对所有页面的 h1、h2、h3 级标题建立了搜索索引。
-  - 使用 Algolia 搜索引擎可以实现全文搜索，且功能丰富，但只有文档型网站能免费申请服务。
+
+
+### 首页
+
+只要 docs 目录下存在 README.md 或 index.md 文件，就可以让 VuePress 显示出网站的首页。
+
+特别地，可以在`docs/READMD.md`文件中插入以下 YAML 格式的内容，让 VuePress 网站显示一种特殊布局的首页（Homepage）。
+```markdown
+---
+home: true              # 开启显示 Homepage
+heroImage: /hero.png    # 显示一张小图
+heroText: 大标题        # 大标题（赋值为 null 则不显示）
+tagline: 副标题
+actionText: 开始阅读     # 按钮的名字（只能定义一个按钮）
+actionLink: /zh/guide/   # 按钮的链接
+features:
+- title: 特征 1
+  details: 简短的描述...
+- title: 特征 2
+  details: 简短的描述...
+footer: MIT Licensed | Copyright © 2018-present Evan You    # 页脚
+---
+
+（接着可以写入其它内容...）
+```
+- 这个 Homepage 的显示效果一般，不用也罢。
+
+### 显示样式
+
+- 编辑`docs/.vuepress/styles/palette.styl`文件可修改网站配色，如下：
+    ```
+    $accentColor = #3eaf7c  // 链接的颜色
+    $textColor = #2c3e50    // 文本的颜色
+    $borderColor = #eaecef  // 边框线的颜色
+    $codeBgColor = #282c34  // 代码块的背景色
+
+    $navbarHeight = 3.6rem  // 导航栏的高度
+    $sidebarWidth = 16rem   // 侧边栏的宽度
+    $contentWidth = 60rem   // 文章内容的宽度
+    ```
+
+- 编辑`docs/.vuepress/styles/index.styl`文件可定义一些样式，覆盖掉默认样式，如下：
+    ```css
+    body {
+        font-family: Consolas, "Microsoft YaHei", serif;
+    }
+    ```
 
 ### 导航栏
 
@@ -214,61 +259,28 @@ module.exports = {
     }
     ```
 
-### 首页
+## 插件
 
-只要 docs 目录下存在 README.md 或 index.md 文件，就可以让 VuePress 显示出网站的首页。
+- [官方插件列表](https://v1.vuepress.vuejs.org/zh/plugin/)
+- [vssue 评论](https://vssue.js.org/)
 
-特别地，可以在`docs/READMD.md`文件中插入以下 YAML 格式的内容，让 VuePress 网站显示一种特殊布局的首页（Homepage）。
-```markdown
----
-home: true              # 开启显示 Homepage
-heroImage: /hero.png    # 显示一张小图
-heroText: 大标题        # 大标题（赋值为 null 则不显示）
-tagline: 副标题
-actionText: 开始阅读     # 按钮的名字（只能定义一个按钮）
-actionLink: /zh/guide/   # 按钮的链接
-features:
-- title: 特征 1
-  details: 简短的描述...
-- title: 特征 2
-  details: 简短的描述...
-footer: MIT Licensed | Copyright © 2018-present Evan You    # 页脚
----
+### vuepress-plugin-sitemap
 
-（接着可以写入其它内容...）
-```
-- 这个 Homepage 的显示效果一般，不用也罢。
-
-### 显示样式
-
-- 编辑`docs/.vuepress/styles/palette.styl`文件可修改网站配色，如下：
-    ```
-    $accentColor = #3eaf7c  // 链接的颜色
-    $textColor = #2c3e50    // 文本的颜色
-    $borderColor = #eaecef  // 边框线的颜色
-    $codeBgColor = #282c34  // 代码块的背景色
-
-    $navbarHeight = 3.6rem  // 导航栏的高度
-    $sidebarWidth = 16rem   // 侧边栏的宽度
-    $contentWidth = 60rem   // 文章内容的宽度
-    ```
-
-- 编辑`docs/.vuepress/styles/index.styl`文件可定义一些样式，覆盖掉默认样式，如下：
-    ```css
-    body {
-        font-family: Consolas, "Microsoft YaHei", serif;
+该插件用于为 Vuepress 网站自动生成 sitemap.xml 文件。使用步骤如下：
+1. 安装：`yarn add vuepress-plugin-sitemap`
+2. 在 config.js 中添加如下配置：
+    ```js
+    module.exports = {
+        plugins: [
+            ['sitemap', {
+                hostname: 'http://leohsiao.com'
+            }],
+        ],
     }
     ```
 
-## 插件
+### google-analytics
 
-- [官方插件](https://v1.vuepress.vuejs.org/zh/plugin/)
-- [vssue 评论](https://vssue.js.org/)
-
-### Google analytics
-
-：Google 提供的一个分析网站访问流量的免费服务。
-
-用法：
-1. 访问<https://analytics.google.com/>，登录 Google 账号，创建一个 Google Analytics 的跟踪 ID 。
-2. 使用[ Google analytics 插件](https://v1.vuepress.vuejs.org/plugin/official/plugin-google-analytics.html)
+该插件用于让 Vuepress 对接 Google 提供的的 Google analytics 平台，从而分析网站访问流量。使用步骤如下：
+1. 访问 <https://analytics.google.com/> ，登录 Google 账号，创建一个 Google Analytics 的跟踪 ID 。
+2. 添加[ Google analytics 插件](https://v1.vuepress.vuejs.org/plugin/official/plugin-google-analytics.html)

@@ -11,6 +11,9 @@ module.exports = {
 		['@vuepress/google-analytics', {
 			'ga': 'UA-155748502-1'
 		}],
+		['sitemap', {
+			hostname: 'http://leohsiao.com'
+		}],
 	],
 	themeConfig: {
 		repo: 'https://github.com/LeoHsiao1/Notes',

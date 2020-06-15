@@ -2,7 +2,7 @@
 
 ：一个进程管理工具，基于 Python 开发。
 - 功能：
-  - 可以启动、停止、监听进程，当进程退出时自动重启它。
+  - 可以启动、停止、监听进程，当进程退出时自动重启它，类似于 systemd 。
   - 可以记录进程的 stdout、stderr 。
   - 提供了 Web 管理页面。
 - 采用 C/S 工作模式：
@@ -166,7 +166,7 @@ stderr_logfile_backups=0
 
 - 使用 supervisorctl start 启动进程时，至少会阻塞前端 startsecs 秒。
 
-- autostart 有三种取值，决定了进程（启动成功之后）退出时是否重启它：
+- autorestart 有三种取值，决定了进程（启动成功之后）退出时是否重启它：
   - true ：总是重启。
   - flase ：总是不重启。
   - unexpected ：异常退出时才重启，即退出码与 exitcodes 不同。

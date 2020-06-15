@@ -219,7 +219,14 @@ scrape_configs:
   1 % 3               # 取模
   2 ^ 3               # 取幂
   ```
-  - 只能对查询到的数据的值进行运算，不能对标签的值进行运算。
+  - 只能对指标的值进行运算，不能对标签的值进行运算。
+  - 两个矢量通常要拥有完全一致的标签名、标签值，才能进行算术运算。如下：
+    ```sh
+    go_goroutines - go_goroutines
+    sum(go_goroutines) by (job) + sum(go_goroutines) without (instance) 
+    go_goroutines{instance="10.0.0.1:9090", job="prometheus"} - go_goroutines{instance="10.0.0.2:9090", job="prometheus"}
+    go_goroutines{instance="10.0.0.1:9090"} - go_goroutines{instance="10.0.0.1:9090"}   # 标签值不同，不能运算
+    ```
 
 - 可以进行如下比较运算：
   ```sh
@@ -280,15 +287,15 @@ scrape_configs:
   ```
   聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 _over_time 后缀的函数，如下：
   ```sh
-  sum_over_time(go_goroutines[1m])     # 返回每个时刻处，过去 1 分钟之内数据点的总和
+  sum_over_time(go_goroutines[1m])      # 返回每个时刻处，过去 1 分钟之内数据点的总和
   ```
 
 - 矢量可以使用以下算术函数：
   ```sh
   abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
   round(go_goroutines)                  # 返回每个时刻处，数据点四舍五入之后的整数值
-  absent(go_goroutines)                 # 在每个时刻处，如果不存在数据点则返回 1 ，否则返回空值
-  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内不存在数据点则返回 1 ，否则返回空值
+  absent(go_goroutines)                 # 在每个时刻处，如果所有时间序列都不存在数据点则返回 1 ，否则返回空值
+  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内都不存在数据点则返回 1 ，否则返回空值
   changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内的数据点变化的次数
   delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负）
   idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
@@ -571,8 +578,7 @@ inhibit_rules:
   
   sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到的 HTTP 请求数
   sum(increase(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])) # 每分钟处理 HTTP 请求的耗时（s）
-  sum(prometheus_sd_discovered_targets{name="scrape", instance='10.0.0.1:9090'})            # 当前发现的 targets 总数
-  count(process_start_time_seconds)                                                         # 当前 targets 的实际连接数量（需要它们都提供该指标）
+  count(process_start_time_seconds)                                                         # 当前在线的 targets 数量（需要它们都提供该指标）
   sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # 执行 scrape 的耗时（s）
   irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])      # 执行 rule 的耗时（s）
   sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # 每分钟执行 rule 的总次数
@@ -649,7 +655,7 @@ inhibit_rules:
   ```sh
   avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) without (cpu) * 100                  # CPU 使用率（%）
   node_load5{instance='10.0.0.1:9100'}                                                                  # 每 5 分钟的 CPU 平均负载
-  count(node_cpu_seconds_total{mode='steal', instance='10.0.0.1:9100'})                                 # CPU 核数
+  count(node_cpu_seconds_total{mode='idle', instance='10.0.0.1:9100'})                                  # CPU 核数
 
   node_time_seconds{instance='10.0.0.1:9100'} - node_boot_time_seconds{instance='10.0.0.1:9100'}        # 主机运行时长（s）
   node_time_seconds{instance='10.0.0.1:9100'} - time()          # 目标主机与监控主机的时间差值（在 [scrape_interval, 0] 范围内才合理）
@@ -705,7 +711,7 @@ inhibit_rules:
         - ping www.(?P<name>\S*).com   # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
     - 关于匹配规则：
-      - exe 是对进程的 /proc/<PID>/exe 进行匹配。
+      - exe 是对进程的 /proc/<PID>/exe 指向的可执行文件名进行匹配。
       - comm 是对进程的 /proc/<PID>/common 进行匹配。
       - cmdline 是对进程的 /proc/<PID>/cmdline 进行正则匹配。
       - exe、comm 可以同时定义多行匹配条件，而 cmdline 同时只能定义一行条件，否则不会被执行。
@@ -717,7 +723,7 @@ inhibit_rules:
   ```sh
   sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程使用的 CPU 核数
   namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程实际使用的内存
-  namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的所有进程）
+  namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的进程实例数量）
   namedprocess_namegroup_num_threads                                        # 线程数
   namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 进程的运行时长（ s ）
@@ -726,6 +732,7 @@ inhibit_rules:
   namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
   namedprocess_namegroup_major_page_faults_total
   namedprocess_namegroup_minor_page_faults_total
+  # 不能监控进程的网络 IO
   ```
 
 ### mysqld_exporter

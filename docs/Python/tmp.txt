@@ -279,7 +279,18 @@ statement_block
 ## 
 ## 
 ## 
- 
+
+Python的for、while循环支持与else连用，如下：
+```py
+for i in "Hello":
+    print(i)
+    # break
+else:
+    print('else...')
+```
+如果正常结束循环，则执行else语句块；如果用break等方式跳出循环，则不执行else语句块。
+
+
 变量
 ## Python中，使用变量之前不需要先定义或声明它，变量会在第一次赋值时被自动创建。
 - Python中的变量只是一个标识符，本身没有存储数据。像一个不受限制的指针，可以指向任何类型的对象。

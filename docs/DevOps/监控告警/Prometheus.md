@@ -115,10 +115,16 @@ scrape_configs:
       - targets/node_exporter*.json
       refresh_interval: 1m            # 每隔 1m 重新读取一次
 ```
-- Prometheus 从各个监控对象处抓取指标数据时，默认会加上 `job: "$job_name"`、`instance: "$targets"` 两个标签。
+- Prometheus 从每个监控对象处抓取指标数据时，默认会自动加上 `job: "$job_name"`、`instance: "$target"` 两个标签。
+  还会自动记录以下指标：
+  ```sh
+  up{job="$job_name", instance="$target"}                       # 该监控对象是否在线（取值为 1、0 表示在线、不在线）
+  scrape_samples_scraped{job="$job_name", instance="$target"}   # 本次抓取的指标数
+  scrape_duration_seconds{job="$job_name", instance="$target"}  # 本次抓取的耗时
+  ```
 - 给抓取的指标添加标签时，如果原指标中已存在同名 label ，则根据 honor_labels 的值进行处理：
-  - `honor_labels: true` ：保留原指标不变，不再添加标签。
-  - `honor_labels: false` ：默认值，将原指标中的同名 label 改名为 `exported_<label_name>` ，再添加标签。
+  - `honor_labels: true` ：保留原指标不变，不添加新标签。
+  - `honor_labels: false` ：默认值，将原指标中的同名 label 改名为 `exported_<label_name>` ，再添加新标签。
 - 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，所以应该添加 nodename 等额外的标签便于筛选。
 - 通过 file_sd_configs 方式读取的文件格式如下：
   ```json
@@ -220,13 +226,6 @@ scrape_configs:
   2 ^ 3               # 取幂
   ```
   - 只能对指标的值进行运算，不能对标签的值进行运算。
-  - 两个矢量通常要拥有完全一致的标签名、标签值，才能进行算术运算。如下：
-    ```sh
-    go_goroutines - go_goroutines
-    sum(go_goroutines) by (job) + sum(go_goroutines) without (instance) 
-    go_goroutines{instance="10.0.0.1:9090", job="prometheus"} - go_goroutines{instance="10.0.0.2:9090", job="prometheus"}
-    go_goroutines{instance="10.0.0.1:9090"} - go_goroutines{instance="10.0.0.1:9090"}   # 标签值不同，不能运算
-    ```
 
 - 可以进行如下比较运算：
   ```sh
@@ -242,9 +241,33 @@ scrape_configs:
 
 - 矢量之间可以进行如下集合运算：
   ```sh
-  vector1 and vector2     # 交集
-  vector1 or vector2      # 并集
-  vector1 unless vector2  # 补集，即在 vector1 中存在、在 vector2 中不存在的数据点
+  vector1 and vector2     # 交集（返回两个矢量中标签列表相同的时间序列，取第一个矢量中的值）
+  vector1 or vector2      # 并集（将两个矢量中的所有时间序列组合在一起，如果存在标签列表相同的时间序列，则取第一个矢量中的值）
+  vector1 unless vector2  # 补集（返回在第一个矢量中存在、但在第二个矢量中不存在的时间序列）
+  ```
+  如下：
+  ```sh
+  go_goroutines{instance="10.0.0.1:9100"}*0 and go_goroutines
+  go_goroutines{instance="10.0.0.1:9100"}*0 or go_goroutines{instance="10.0.0.1:9100"}
+  go_goroutines{instance="10.0.0.1:9100"}*0 unless go_goroutines{instance!~"10.0.0.1:9100"}
+  ```
+
+- 矢量之间进行运算时，默认只会对两个矢量中标签列表相同的时间序列（即标签名、标签值完全相同）进行运算。如下：
+  ```sh
+  go_goroutines - go_goroutines
+  go_goroutines{instance="10.0.0.1:9100"} - go_goroutines                            # 两个矢量中存在匹配的时间序列，可以进行运算
+  go_goroutines{instance="10.0.0.1:9100"} - go_goroutines{instance="10.0.0.2:9100"}  # 两个矢量中不存在匹配的时间序列，因此运算结果为空
+  go_goroutines{instance="10.0.0.1:9100"} - go_gc_duration_seconds_sum{instance="10.0.0.1:9100"}  # 指标名不同，但标签列表相同，依然可以运算
+  ```
+  可以按以下格式，对只有部分标签匹配的时间序列进行运算：
+  ```sh
+  go_goroutines{instance="10.0.0.1:9100"} - on(job) go_goroutines{instance="10.0.0.2:9100"}             # 只考虑 job 标签，则能找到匹配的时间序列
+  go_goroutines{instance="10.0.0.1:9100"} - ignoring(instance) go_goroutines{instance="10.0.0.2:9100"}  # 忽略 instance 标签，则能找到匹配的时间序列
+  ```
+  以上只是对时间序列进行一对一匹配，可以按下格式进行一对多的匹配：
+  ```sh
+  go_goroutines - on() group_left vector(1)   # 不考虑任何标签，用右边的一个时间序列匹配左边的多个时间序列，分别进行运算，相当于 go_goroutines - 1
+  vector(1) + on() group_right go_goroutines  # group_right 表示用左边的一个时间序列匹配右边的多个时间序列，group_left 则相反
   ```
 
 ### 函数
@@ -365,8 +388,8 @@ scrape_configs:
 - 关于数据的 API ：
   ```sh
   GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600               # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
-  GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589256000&step=1m  # 查询一段时间内的所有值
-  PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589256000    # 删除数据（不指定时间则删除所有时间的数据）
+  GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589266000&step=1m  # 查询一段时间内的所有值
+  PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000    # 删除数据（不指定时间则删除所有时间的数据）
   PUT /api/v1/admin/tsdb/clean_tombstones                                                       # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
   data/wal/ 目录下缓存的数据不会被删除，因此即使删除 tsdb 中的所有数据， Prometheus 依然会自动从 data/wal/ 目录加载最近的部分数据。
@@ -571,6 +594,8 @@ inhibit_rules:
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 - 常用指标：
   ```sh
+  prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息
+
   time() - process_start_time_seconds{instance='10.0.0.1:9090'}             # 运行时长（s）
   irate(process_cpu_seconds_total{instance='10.0.0.1:9090'}[1m])            # 占用的 CPU 核数
   process_resident_memory_bytes{instance='10.0.0.1:9090'} / 1024^3          # 占用的内存（GB）
@@ -578,7 +603,8 @@ inhibit_rules:
   
   sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到的 HTTP 请求数
   sum(increase(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])) # 每分钟处理 HTTP 请求的耗时（s）
-  count(process_start_time_seconds)                                                         # 当前在线的 targets 数量（需要它们都提供该指标）
+  count(up == 1)                                                                            # 在线的 targets 总数
+  sum(scrape_samples_scraped{instance='10.0.0.1:9090'})                                     # 抓取的指标总数
   sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # 执行 scrape 的耗时（s）
   irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])      # 执行 rule 的耗时（s）
   sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # 每分钟执行 rule 的总次数
@@ -592,6 +618,8 @@ inhibit_rules:
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
 - 常用指标：
   ```sh
+  grafana_build_info{branch="HEAD", edition="oss", goversion="go1.14.1", instance="10.0.0.1:3000", job="grafana", revision="aee1438ff2", version="7.0.0"}  # 版本信息
+
   time() - process_start_time_seconds{instance='10.0.0.1:3000'}             # 运行时长（s）
   irate(process_cpu_seconds_total{instance='10.0.0.1:3000'}[1m])            # 占用的 CPU 核数
   process_resident_memory_bytes{instance='10.0.0.1:3000'} / 1024^3          # 占用的内存（GB）
@@ -653,13 +681,15 @@ inhibit_rules:
 
 - 常用指标：
   ```sh
+  node_exporter_build_info{branch="HEAD", goversion="go1.13.8", instance="10.0.0.1:9100", job="node_exporter", revision="ef7c05816adcb0e8923defe34e97f6afcce0a939", version="1.0.0-rc.0"}  # 版本信息
+  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
+
   avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) without (cpu) * 100                  # CPU 使用率（%）
   node_load5{instance='10.0.0.1:9100'}                                                                  # 每 5 分钟的 CPU 平均负载
   count(node_cpu_seconds_total{mode='idle', instance='10.0.0.1:9100'})                                  # CPU 核数
 
   node_time_seconds{instance='10.0.0.1:9100'} - node_boot_time_seconds{instance='10.0.0.1:9100'}        # 主机运行时长（s）
   node_time_seconds{instance='10.0.0.1:9100'} - time()          # 目标主机与监控主机的时间差值（在 [scrape_interval, 0] 范围内才合理）
-  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}        # 主机信息
 
   node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / 1024^3                                         # 内存总容量（GB）
   node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / 1024^3                                     # 内存可用量（GB）

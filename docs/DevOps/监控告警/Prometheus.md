@@ -202,9 +202,9 @@ scrape_configs:
   go_goroutines{job="prometheus"} offset 1m       # 相当于在 1 分钟之前查询
   sum(go_goroutines{job="prometheus"} offset 1m   # 使用函数时，offset 符号要放在函数括号内
   ```
-  - 可以用 # 声明单行注释。
+  - 用 # 声明单行注释。
   - 将字符串用反引号包住时，不会让反斜杠转义。
-  - 查询表达式不能为空的 {} ，也不能为完全正则匹配的 ".*" 。
+  - 查询表达式不能为空的 `{}` ，同理也不能使用 `{__name__=~".*"}` 选中所有指标。
 
 - 可以使用以下时间单位：
   - s ：秒
@@ -284,11 +284,42 @@ scrape_configs:
   timestamp(vector(1))                  # 返回矢量中每个数据点的时间戳（矢量）
   ```
 
+- 关于排序：
+  ```sh
+  sort(go_goroutines)                   # 升序排列
+  sort_desc(go_goroutines)              # 降序排列
+  ```
+  - 排序时，先将所有时间序列按照指标的名称进行排序；如果指标的名称相同，则按照第一个标签的值进行排序；如果第一个标签的值相同，则按照第二个标签的值进行排序，以此类推。
+  - 在 Prometheus 中进行查询时，默认返回的时间序列会用 sort() 进行排序。如果用 by 或 without 处理，则会按剩下的第一个标签的值进行排序。
+
 - 修改矢量的标签：
   ```sh
-  label_join(go_goroutines, "new_label", ",", "instance", "job")               # 给矢量 go_goroutines 添加一个标签 new_label ，其值为 instance、job 标签值的组合，用 , 分隔
-  label_replace(go_goroutines, "new_label", "$1-$2", "instance", "(.*):(.*)")  # 给矢量 go_goroutines 添加一个标签 new_label ，其值为对 instance 标签值的正则匹配的结果
+  label_join(go_goroutines, "new_label", ",", "instance", "job")               # 给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance、job 标签的值的组合，用 , 分隔
+  label_replace(go_goroutines, "new_label", "$1-$2", "instance", "(.*):(.*)")  # 给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance 标签的值的正则匹配的结果
   ```
+
+- 矢量可以使用以下算术函数：
+  ```sh
+  abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
+  round(go_goroutines)                  # 返回每个时刻处，数据点四舍五入之后的整数值
+  absent(go_goroutines)                 # 在每个时刻处，如果矢量为空（不存在任何数据点），则返回 1 ，否则返回空值
+  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内矢量一直为空，则返回 1 ，否则返回空值
+  changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内的数据点变化的次数
+  delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负）
+  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
+  ```
+  以下算术函数适用于计数器类型的矢量：
+  ```sh
+  resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
+  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
+  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
+  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
+  ```
+  - 如果矢量包含多个时间序列，算术函数会分别对这些时间序列进行运算，而聚合函数会将它们合并成一个或多个时间序列。
+  - 使用算术函数时，时间间隔 `[t]` 至少要大于矢量的采样间隔，才能获取到数据。
+  - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同。
+    如果矢量的单调性变化，则 increase() 会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，因此计算结果会比 delta() 大。因此用 increase() 能发现数据的单调性变化，用 delta() 能忽略数据的单调性变化。
+    另外，即使矢量一直单调递增，如果时间间隔 `[t]` 不比 scrape_interval 大几倍，increase() 和 delta() 的计算结果也会偏大。
 
 - 矢量可以使用以下聚合函数：
   ```sh
@@ -303,37 +334,15 @@ scrape_configs:
   bottomk(3, go_goroutines)             # 返回每个时刻处，最小的 3 个数据点
   quantile(0.5, go_goroutines)          # 返回每个时刻处，大小排在 50% 位置处的数据点
   ```
-  聚合函数可以与关键字 by、without 组合使用，如下：
-  ```sh
-  sum(go_goroutines) by(job)            # 将所有曲线按 job 标签的值分组，分别执行 sum() 函数
-  sum(go_goroutines) without(job)       # 将所有曲线按除了 job 以外的标签分组，分别执行 sum() 函数
-  ```
-  聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 _over_time 后缀的函数，如下：
-  ```sh
-  sum_over_time(go_goroutines[1m])      # 返回每个时刻处，过去 1 分钟之内数据点的总和
-  ```
-
-- 矢量可以使用以下算术函数：
-  ```sh
-  abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
-  round(go_goroutines)                  # 返回每个时刻处，数据点四舍五入之后的整数值
-  absent(go_goroutines)                 # 在每个时刻处，如果所有时间序列都不存在数据点则返回 1 ，否则返回空值
-  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内都不存在数据点则返回 1 ，否则返回空值
-  changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内的数据点变化的次数
-  delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负）
-  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
-  ```
-  以下算术函数适用于计数器类型的矢量：
-  ```sh
-  resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
-  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
-  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的平均增长率（时间间隔越短，曲线越尖锐）
-  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的增长率（更接近实时图像）
-  ```
-  - 使用算术函数时，时间间隔 `[t]` 至少要大于矢量的采样间隔，才能获取到数据。
-  - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同。
-    如果矢量的单调性变化，则 increase() 会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，因此计算结果会比 delta() 大。因此用 increase() 能发现数据的单调性变化，用 delta() 能忽略数据的单调性变化。
-    另外，即使矢量一直单调递增，如果时间间隔 `[t]` 不比 scrape_interval 大几倍，increase() 和 delta() 的计算结果也会偏大。
+  - 聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 _over_time 后缀的函数，如下：
+    ```sh
+    sum_over_time(go_goroutines[1m])      # 返回每个时刻处，过去 1 分钟之内数据点的总和
+    ```
+  - 聚合函数可以与关键字 by、without 组合使用，如下：
+    ```sh
+    sum(go_goroutines) by(job)            # 将所有曲线按 job 标签的值分组，分别执行 sum() 函数
+    sum(go_goroutines) without(job)       # 将所有曲线按除了 job 以外的标签分组，分别执行 sum() 函数
+    ```
 
 ## Rules
 
@@ -502,10 +511,14 @@ scrape_configs:
   - 行首用 # 注释的行都不是必填项。
   - 配置文件中至少有一个 route 块，称为根 route 节点。在它之下可以定义任意个嵌套的 route 块，构成一个树形结构的路由表。
   - 子 route 节点会继承父 route 节点的所有参数值，作为自己的默认值。
-  - 每次产生告警消息时，会从根 route 节点往下逐个尝试匹配，直到遇到成功匹配的 route 节点，由它处理告警消息。
-    - 如果当前 route 节点配置了 `continue: true` ，则成功匹配的告警消息还会继续尝试匹配下一个同级的 route 节点。
-    - 根 route 节点不支持配置 continue 。如果它的所有子 route 节点都不匹配，则交给根 route 节点处理。
-  - 
+  - 每次产生告警消息时，会从根 route 节点往下逐个尝试匹配。
+    - 如果当前节点匹配，
+      - 且子节点不匹配，则交给当前节点处理。
+      - 且子节点也匹配，则交给子节点处理。（相当于子节点覆盖了父节点的配置）
+      - 且配置了 `continue: false` ，则结束匹配，退出路由表。
+      - 且配置了 `continue: true` ，则还会继续尝试匹配之后的同级节点。
+    - 如果当前节点不匹配，则会继续尝试匹配之后的同级节点。
+    - 告警消息默认匹配根节点。因此，如果所有节点都不匹配，则会交给根节点处理。
 
 
 TODO:
@@ -692,7 +705,7 @@ inhibit_rules:
   node_time_seconds{instance='10.0.0.1:9100'} - time()          # 目标主机与监控主机的时间差值（在 [scrape_interval, 0] 范围内才合理）
 
   node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / 1024^3                                         # 内存总容量（GB）
-  node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / 1024^3                                     # 内存可用量（GB）
+  node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / 1024^3                                     # 内存可用量（GB），CentOS7 开始才有该指标
   node_memory_SwapCached_bytes{instance='10.0.0.1:9100'} / 1024^3                                       # swap 使用量（GB）
 
   sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3                # 磁盘总容量（GB）
@@ -768,3 +781,8 @@ inhibit_rules:
 ### mysqld_exporter
 
 ：用于监控 MySQL 的状态。
+
+### blackbox_exporter
+
+：可以测试 DNS、ICMP、TCP、HTTP，以及 SSL 证书过期时间。
+ 

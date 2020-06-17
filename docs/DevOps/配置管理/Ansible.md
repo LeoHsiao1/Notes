@@ -153,7 +153,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - A is defined                                 # 如果变量 A 已定义
       - A | int >= 1                                 # 将变量 A 转换成 int 类型再比较大小
       - ( A == '1' ) or (A == 'Hello' and B == '2')  # 使用逻辑运算符
-      - not (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "7")
+      - not (A == '2' and B == "2")
   ```
   注意 `1` 表示数字 1 ，而 `'1'` 表示字符串 1 。 
 
@@ -334,6 +334,17 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - var 、msg 选项不能同时使用。
   - when 条件、debug 模块的 var 选项已经隐式地用花括号包装，因此不需要再给变量加花括号取值。
 
+- 加入断言：
+  ```yaml
+  assert:
+    that:                                                     # 相当于 when 条件
+      - ansible_facts['distribution'] == "CentOS"
+      - ansible_facts['distribution_major_version'] == "7"
+    # quiet: no                                               # 是否显示执行的结果信息
+    # fail_msg: "This system is not CentOS7."                 # 失败时显示该消息（需要 quiet 为 no ）
+    # success_msg: "This system is CentOS7."
+  ```
+
 ### 关于管理文件
 
 - 管理 host 上的文件或目录：
@@ -355,17 +366,17 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # owner: root
     # group: root
   ```
-- src 可以是绝对路径或相对路径。
-- 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录。
-- 如果 dest 目录并不存在，则会自动创建。
-- 如果 dest 目录下存在同名文件，且 md5 值相同，则不拷贝，否则会拷贝并覆盖。
+  - src 可以是绝对路径或相对路径。
+  - 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录。
+  - 如果 dest 目录并不存在，则会自动创建。
+  - 如果 dest 目录下存在同名文件，且 md5 值相同，则不拷贝，否则会拷贝并覆盖。
 
 - 将 host 上的文件拷贝到本机：
   ```yaml
   fetch:
     src: /tmp/f1    # src 必须是一个文件的路径，不能是一个目录
-    dest: /tmp/
-    # flat: yes     # 使保存路径为 dest_path/filename ，默认为 dest_path/hostname/src_path
+    dest: /tmp/     # 以 / 结尾，表示这是一个已存在的目录
+    # flat: no      # 默认为 no ，表示保存路径为 dest_path/hostname/src_path ，设置成 yes 则是 dest_path/filename
   ```
 
 - 对 host 上的文本文件进行正则替换：

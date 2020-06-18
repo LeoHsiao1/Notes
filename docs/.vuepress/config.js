@@ -524,6 +524,7 @@ module.exports = {
 					sidebarDepth: 2,
 					children: [
 						'其它/Nextcloud',
+						'其它/Artifactory',
 					]
 				},
 			],

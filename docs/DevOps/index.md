@@ -35,3 +35,4 @@
   - [ELK](日志处理/ELK.md)
 - 其它
   - [Nextcloud](其它/Nextcloud.md)
+  - [Artifactory](其它/Artifactory.md)

@@ -7,8 +7,9 @@
 用法：
 ```sh
 $ curl <URL>...                    # 访问指定网址（默认为 GET 方法），并将 HTTP 响应内容打印到 stdout
-       -O                          # 保存为当前目录下的文件（自动设置文件名）
        -o <PATH>                   # 保存为指定路径的文件
+       -O                          # 保存为当前目录下的文件（自动设置文件名）
+
        -k                          # 允许不验证网站证书就连接到 HTTPS 网站
        -u USER[:PASSWORD]          # 发送用户名，或者用户名加密码
        -x [PROTOCOL://]HOST[:PORT] # 使用代理服务器
@@ -16,6 +17,7 @@ $ curl <URL>...                    # 访问指定网址（默认为 GET 方法�
        -H "Connection: Keep-Alive" # 加上 header（可以重复使用该命令选项）
        -b "name=leo"               # 加上 cookies
        -d "id=001&name=leo"        # 加上 POST data（默认为 application/x-www-form-urlencoded 格式）
+       -T f1                       # 上传文件
 
        -I                          # 只显示 response header
        -L                          # 如果 HTTP 响应报文是重定向，则自动跟随

@@ -252,6 +252,7 @@ Supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
     - Normal User ：有权使用 Cesi 。
   - 可以通过 Environment 对各个 Supervisor 进行分组。
   - 可以通过 Group 对全部 Supervisor 中的进程进行分组（该 Group 参数在 Supervisor 中配置）。
+  - 只要有一个 node 无法连接， Cesi 就会抛出异常，导致所有 node 都不会显示。
 
 - Cesi 提供了一些 Restful API ：
    ```sh

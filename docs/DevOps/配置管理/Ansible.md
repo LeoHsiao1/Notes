@@ -300,13 +300,16 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     #   executable: /bin/bash   # 指定解释器
     ```
     raw 模块是通过 ssh 直接向 host 发送 shell 命令。适用于 host 上没有安装 Python 解释器，而无法使用 command、shell 模块的情况。
-  - 可以一次执行多行命令，如下：
+    
+  - 按以下格式可以给模块输入多行字符串：
     ```yaml
     shell: |
       cd /tmp
       pwd
       touch f1
     ```
+    注意输入的内容要缩进一层。
+
   - 虽然这三个模块可以自由地执行命令，通用性强，但是使用 copy 等具体的模块可以保证幂等性。
 
 - 在 host 上执行脚本：
@@ -374,10 +377,35 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 - 将 host 上的文件拷贝到本机：
   ```yaml
   fetch:
-    src: /tmp/f1    # src 必须是一个文件的路径，不能是一个目录
+    src: /tmp/f1
     dest: /tmp/     # 以 / 结尾，表示这是一个已存在的目录
     # flat: no      # 默认为 no ，表示保存路径为 dest_path/hostname/src_path ，设置成 yes 则是 dest_path/filename
   ```
+  - src 必须是一个文件的路径，不能是一个目录。
+
+- 对 host 上的文本文件插入多行字符串：
+  ```yaml
+  blockinfile:
+    path: /var/spool/cron/root
+    block: |
+      */1 * * * * echo Hello
+      */1 * * * * echo World
+    # create: no                  # 如果不存在该文件，是否自动创建它
+    # state: present              # 取值为 absent 则会删除该 block
+    # insertafter: EOF            # 将 block 插入到该正则表达式的最后一个匹配项之后（默认取值为 EOF ，即插入到文件末尾）
+    # insertbefore: BOF           # 将 block 插入到该正则表达式的最后一个匹配项之前（取值为 BOF 则插入到文件开头）
+    # marker: # {mark} ANSIBLE MANAGED BLOCK    # 设置该 block 的标记语，其中 {mark} 会被 marker_begin 或 marker_end 替换
+    # marker_begin: BEGIN 
+    # marker_end: END
+  ```
+  - 上例中最终插入的 block 如下：
+    ```sh
+    # BEGIN ANSIBLE MANAGED BLOCK
+    */1 * * * * echo Hello
+    */1 * * * * echo World
+    # END ANSIBLE MANAGED BLOCK
+    ```
+  - Ansible 在插入 block 时，会自动在开始、结束处加上一行 marker 字符串作为标记。重复插入该 block 时，如果检查到该标记，且标记中的内容相同，则不会修改文件。
 
 - 对 host 上的文本文件进行正则替换：
   ```yaml

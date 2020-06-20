@@ -23,9 +23,9 @@
 
 ## 用法
 
-基本用法：
-1. 进入 "Configuration" -> "Data Sources" 页面，添加数据源。
-2. 进入 "Dashboard" 页面，利用数据源的数据绘制图表。
+- 基本用法：
+    1. 进入 "Configuration" -> "Data Sources" 页面，添加数据源。
+    2. 进入 "Dashboard" 页面，利用数据源的数据绘制图表。
 
 - Grafana 支持多种数据源，比如 MySQL、influxdb、Elasticsearch、Prometheus 。
   - 默认有一个 TestData DB 数据源可供试用。
@@ -39,11 +39,8 @@
 - snapshot ：对 Dashboard 或 Panel 的快照。只记录了此刻的数据，可以分享 URL 给别人查看。
 - [官方的 Dashboard 市场](https://grafana.com/grafana/dashboards)
   - Node Exporter Full ：显示 node_exporter 的指标。
-- [官方的 Plugins 市场](https://grafana.com/grafana/plugins)
-  - Zabbix 插件：用于分析 Zabbix 的监控数据，包含 Dashboard 模板。
-  - Pie Chart 插件：允许绘制饼状图。
 
-### Panel
+## Panel
 
 - 一个 panel 中存在多个图例（legend）的曲线时，用鼠标单击某个图例的名字，就会只显示该图例的曲线。按住 Ctrl 再单击，就可以同时选择多个图例。
 - 修改 Panel 时，是以 Dashboard 为单位进行修改，要点击"Save Dashboard"才会保存。
@@ -108,7 +105,20 @@ Panel 的主要配置项：
     ```
 
 - Grafana 支持定义变量并在 pannel 中调用，从而动态地改变 pannel 的数据，但是这样就不支持设置告警条件。
-  
+
+## 插件
+
+- 安装插件时，需要到 Grafana 工作目录下执行以下命令，然后重启 Grafana ：
+  ```sh
+  bin/grafana-cli plugins install <plugin_name>
+                  --pluginsDir $PWD/data/plugins      # 指定插件的安装目录
+  ```
+- [官方的 Plugins 市场](https://grafana.com/grafana/plugins)
+- 常用插件：
+  - Zabbix 插件：用于分析 Zabbix 的监控数据，包含 Dashboard 模板。
+  - Pie Chart 插件：允许绘制饼状图。
+
+
 ## 配置
 
 - 以 rpm 包的方式安装 Grafana 时，有以下几个重要文件，拷贝它们就可以备份 Grafana ：

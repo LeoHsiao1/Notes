@@ -460,29 +460,6 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     immediate: yes        # 是否立即生效（当 permanent 为 yes 时，默认 immediate 为 no ）
   ```
 
-- 配置 crontab 任务：
-  ```yaml
-  cron:
-    name: "sync the time"       # 添加一个任务，该 name 会作为一行注释写入
-    # minute: "*"
-    hour: "1"
-    # day: "*"
-    # month : "*"
-    # weekday : "*"
-    job: "ntpdate 0.cn.pool.ntp.org"
-  ```
-  ```yaml
-  cron:
-    name: "test"
-    special_time: reboot        # 添加一个每次系统重启时执行的任务
-    job: "/root/tmp.sh"
-  ```
-  ```yaml
-  cron:
-    name: "sync the time"
-    state: absent               # 根据 name 删除一个任务
-  ```
-
 ## role
 
 处理大型任务时，可以将一些 playbook、配置文件整合在一个目录下，称为 role ，可以被其它 playbook 调用。

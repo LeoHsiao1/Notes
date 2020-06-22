@@ -34,26 +34,30 @@ ansible
 执行 playbook ：
 ```sh
 ansible-playbook <name>.yml...       # 执行 playbook
-                -t <tags>            # 只执行某些 tags 的 task
                 -i <file>            # 指定 Inventory 文件
                 -e "A=Hello B=World" # 传入变量
+                -t tag1,tag2,tag3    # 只执行具有某些 tag 的 task ，这些 tag 不必是实际存在的
                 -v                   # 显示详细的执行信息
                 -vvv                 # 显示更详细的信息
+
                 --syntax-check       # 不执行，只是检查 playbook 的语法是否正确
-                --list-task          # 不执行，只是显示所有任务
-                --list-hosts         # 不执行，只是显示所有 host
+                --list-hosts         # 不执行，只是列出所有 host
+                --list-task          # 不执行，只是列出所有 task
+                --list-tags          # 不执行，只是列出所有 tag
 ```
+- 如果不使用 -t 选项，则默认会执行所有 task 。
+- 如果使用 -t 选项指定的 tag 在 playbook 中并不存在，则不会执行任何 task 。
 
 ## 配置
 
 Ansible 的配置文件默认位于 `/etc/ansible/ansible.cfg` ，内容如下：
 ```ini
 [defaults]
-; inventory=/etc/ansible/hosts      ; Inventory 文件的路径
-log_path=/var/log/ansible.log       ; 记录每次执行 ansible 的 stdout（默认不保存日志）
-; forks=5                           ; 同时最多运行多少个 Ansible 进程
-host_key_checking=False             ; 第一次连接到远程主机时，是否提示添加 authorized_keys
-; remote_tmp=$HOME/.ansible/tmp     ; 登录远程主机时使用的工作目录
+; inventory = /etc/ansible/hosts    ; Inventory 文件的路径
+log_path = /var/log/ansible.log     ; 记录每次执行 ansible 的 stdout（默认不保存日志）
+; forks = 5                         ; 同时最多运行多少个 Ansible 进程
+host_key_checking = False           ; 第一次连接到远程主机时，是否提示添加 authorized_keys
+; remote_tmp = $HOME/.ansible/tmp   ; 登录远程主机时使用的工作目录
 ```
 
 ## Inventory
@@ -114,19 +118,20 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - name: stop httpd
         service: name=httpd state=stop
 ```
-
-### task
-
-- Ansible 会依次提取 playbook 中的 task ，在所有 host 上并行执行。
+- 执行一个 playbook 时，Ansible 会依次提取 playbook 中的 task ，在所有 host 上并行执行。
   - 等所有 host 都执行完当前 task 之后，才执行下一个 task 。
   - 如果某个 task 执行之后的返回值不为 0 ，Ansible 就会终止执行并报错。
-- 每个 task 通过调用一个模块来完成某项操作。
-  - Ansible 每执行一个 task 时，会生成一个临时的 .py 文件，传送到 host 上，用 python 解释器执行。如下：
+- playbook 中，默认执行的第一个任务是 Gathering Facts ，收集 host 的信息。处理大量 host 时，设置 `gather_facts: false` 可以节省一些时间。
+- handler 与 task 类似，由某个 task 通过 notify 激活，在所有 tasks 都执行完之后才会执行，且只会执行一次。
+
+## task
+
+- task 是 Ansible 执行任务的基本单位，而模块是 Ansible 执行任务的基本方式。每个 task 通过调用一个模块来实现某种操作。
+- Ansible 每执行一个 task 时，会生成一个临时的 .py 文件，传送到 host 上，用 python 解释器执行。如下：
     ```sh
     /bin/sh -c '/usr/bin/python /root/.ansible/tmp/ansible-tmp-xxx.py && sleep 0'
     ```
-  - 默认执行的第一个任务是 Gathering Facts ，收集 host 的信息。管理大量 host 时，禁用该任务可以节省一些时间。
-- handler 与 task 类似，由某个 task 通过 notify 激活，在所有 tasks 都执行完之后才会执行，且只会执行一次。
+  
 - 可以给整个 playbook 设置 become 选项，也可以给单独某个 task 设置 become 选项。
   ```yaml
   - name: test echo
@@ -135,7 +140,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     shell: echo Hello
   ```
 
-- 可以给 task 加上 tags ，便于在执行 playbook 时选择只执行带有特定标签的 task 。如下：
+- 可以给 task 加上 tags ，从而允许在使用 playbook 时只执行具有特定标签的 task 。如下：
   ```yaml
   - name: start httpd
     service: name=httpd state=started
@@ -143,9 +148,9 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - debug
       - always
   ```
-  - 带有 always 标志的 task 总是会被选中执行。
+  - 带有 always 标签的 task 总是会被选中执行。
 
-- 可以给 task 加上 when 条件，当满足条件时才执行该 task ，否则跳过该 task 。如下：
+- 可以给 task 加上 when 条件选项，当满足条件时才执行该 task ，否则跳过该 task 。如下：
   ```yaml
   - name: test echo
     shell: echo {{A}}
@@ -157,7 +162,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
   注意 `1` 表示数字 1 ，而 `'1'` 表示字符串 1 。 
 
-- 可以用 with_items 语句迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
+- 可以用 with_items 选项迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
   ```yaml
   - name: test echo
     shell: echo {{item}}
@@ -174,6 +179,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 
 ### 使用变量
 
+- Ansible 支持在 playbook 中定义变量并调用，或者从外部传入变量。
 - 例：
   ```yaml
   - name: Test
@@ -193,9 +199,10 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
 
 ::: v-pre
-- Ansible 采用 Jinja2 模板语言渲染 Playbook ，因此其中的变量要使用 `{{var}}` 的格式取值。
+- Ansible 采用 Jinja2 模板语言渲染 playbook ，因此其中的变量要使用 `{{var}}` 的格式取值。
   不过在 YAML 文件中，如果该变量独占一个字段，则需要用 `"{{var}}"` 的格式取值，否则不会被 YAML 视作字符串，导致语法错误。
 :::
+- 如果 playbook 中的某部分内容调用了未定义的变量，则执行到这部分内容时就会报错。
 - 变量名只能包含字母、数字、下划线，且只能以字母开头。
 - 字典类型的变量可以用以下两种格式取值：
   ```yaml
@@ -229,7 +236,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ansible_facts['distribution']
   ```
 
-- Ansible 会将每个模块的执行结果记录成一段 JSON 信息，可以用 register 选项暂存。如下：
+- Ansible 会将每个模块的执行结果记录成一段 JSON 信息，可以用 register 选项赋值给变量。如下：
   ```yaml
   tasks:
     - name: step1
@@ -245,15 +252,15 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       when: step1_result.failed
       # when: step1_result.rc != 0
   ```
-  不同模块的执行结果的格式可能不同，返回码表示的含义也可能不同。
+  不同模块的执行结果的格式可能不同，返回码代表的含义也可能不同。
 
 ## Module
 
+- Anisble 内置了很多种用途的模块，参考 [官方的模块列表](https://docs.ansible.com/ansible/latest/modules/list_of_all_modules.html)
 - 如果 host 上启用了 SELinux ，则需要先在它上面安装 `yum install libselinux-python` ，否则一些模块不能执行。
-- Ansible 提供了一些具有幂等性的模块。
+- Ansible 内置的模块大多具有幂等性。
   - 幂等性可以保证对同一个 host 重复执行一个 playbook 时，只会产生一次效果，不会因为重复执行而出错。比如使用 yum 模块安装软件时，它会检查是否已经安装，如果已经安装就不执行。
   - 重复执行幂等性模块时，只有第一次的执行结果中的 "changed" 参数为 true ，表示成功将 host 改变成了目标状态。之后重复执行时，"changed" 参数应该总是为 false 。
-- [官方的模块列表](https://docs.ansible.com/ansible/latest/modules/list_of_all_modules.html)
 
 ### 关于执行命令
 
@@ -287,12 +294,14 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       # removes: /tmp/f1
     ```
     shell 模块时会在 Python 中调用 subprocess.Popen(cmd, shell=True) ，新建一个 shell 终端来执行 cmd 命令。
-    而 command 模块是调用 subprocess.Popen(cmd, shell=False) ，不在 shell 终端中执行 cmd 命令。因此可以防止 shell 注入攻击，但是不支持一些 shell 语法。此如下：
+    而 command 模块是调用 subprocess.Popen(cmd, shell=False) ，不在 shell 终端中执行 cmd 命令。因此可以防止 shell 注入攻击，但是不支持管道符等 shell 语法。如下：
     ```sh
-    [root@Centos ~]# ansible localhost -a 'echo $PWD >> f1 && ls'
+    [root@Centos ~]# ansible localhost -a 'echo $PWD | wc -l >> f1 && echo $PWD'
     localhost | CHANGED | rc=0 >>
-    /etc/ansible >> f1 && ls
+    /etc/ansible | wc -l >> f1 && echo /etc/ansible
     ```
+    如果 command 模块中调用了 shell 环境变量，则会在执行命令之前就完成替换。
+
   - 
     ```yaml
     raw: echo hello
@@ -334,13 +343,13 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     msg: System {{inventory_hostname}} has gateway {{ansible_default_ipv4.gateway}}
   when: ansible_default_ipv4.gateway is defined
   ```
-  - var 、msg 选项不能同时使用。
-  - when 条件、debug 模块的 var 选项已经隐式地用花括号包装，因此不需要再给变量加花括号取值。
+  - debug 模块的 var 、msg 选项不能同时使用。
+  - when 选项、debug 模块的 var 选项已经隐式地用花括号包装，因此不需要再给变量加花括号取值。
 
 - 加入断言：
   ```yaml
   assert:
-    that:                                                     # 相当于 when 条件
+    that:                                                     # 相当于 when 选项
       - ansible_facts['distribution'] == "CentOS"
       - ansible_facts['distribution_major_version'] == "7"
     # quiet: no                                               # 是否显示执行的结果信息
@@ -405,7 +414,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     */1 * * * * echo World
     # END ANSIBLE MANAGED BLOCK
     ```
-  - Ansible 在插入 block 时，会自动在开始、结束处加上一行 marker 字符串作为标记。重复插入该 block 时，如果检查到该标记，且标记中的内容相同，则不会修改文件。
+  - Ansible 在插入 block 时，会自动在开始、结束处加上一行 marker 字符串作为标记。重复插入该 block 时，如果检查到该标记，且标记中的内容相同，则不会修改该文件。
 
 - 对 host 上的文本文件进行正则替换：
   ```yaml
@@ -435,16 +444,16 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```yaml
   user:
     name: leo
-    # home: /home/leo
     # password: "{{'123456' | password_hash('sha512')}}"    # 设置密码
     # update_password: always # 可以取值为 always（默认，总是设置密码）、on_create（仅在创建用户时才设置密码）
+    # generate_ssh_key: no    # 是否生成 ssh 密钥（已存在密钥的话不会覆盖）
+    # home: /home/leo
     # shell: /bin/bash
     # group: root             # 设置基本用户组（该 group 必须已存在）
     # groups: root,docker     # 设置扩展用户组
     # append: no              # 默认取值为 no ，会将用户从其它组删除
     # comment: testing        # 添加备注信息
     # expires: 1591343903     # 设置过期时间
-    # generate_ssh_key: no    # 是否生成 ssh 密钥（已存在密钥的话不会覆盖）
   ```
   ```yaml
   user:
@@ -546,5 +555,5 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 
 - 用法：
   - 可以在 Web 页面上方便地调用大量 playbook ，不过不能直接在 Web 页面上编辑 playbook 。因此只适合管理已稳定可用的 playbook 。
-  - 以 Project 为单位执行任务，可以从 Git、SVN仓库或本地目录导入 Playbook 文件。
+  - 以 Project 为单位执行任务，可以从 Git、SVN仓库或本地目录导入 playbook 文件。
   - 删除一个机构时，会自动删除其下的 Inventory 等配置。

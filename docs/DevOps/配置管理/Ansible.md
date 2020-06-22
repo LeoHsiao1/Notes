@@ -36,7 +36,8 @@ ansible
 ansible-playbook <name>.yml...       # 执行 playbook
                 -i <file>            # 指定 Inventory 文件
                 -e "A=Hello B=World" # 传入变量
-                -t tag1,tag2,tag3    # 只执行具有某些 tag 的 task ，这些 tag 不必是实际存在的
+                -t tag1,tag2,tag3    # 只执行具有某些 tag 的 task
+                --skip-tags tag1     # 不执行具有某些 tag 的 task
                 -v                   # 显示详细的执行信息
                 -vvv                 # 显示更详细的信息
 
@@ -45,8 +46,8 @@ ansible-playbook <name>.yml...       # 执行 playbook
                 --list-task          # 不执行，只是列出所有 task
                 --list-tags          # 不执行，只是列出所有 tag
 ```
-- 如果不使用 -t 选项，则默认会执行所有 task 。
-- 如果使用 -t 选项指定的 tag 在 playbook 中并不存在，则不会执行任何 task 。
+- 如果不输入 -t 选项，则默认会输入 -t all ，选中所有 tag 。
+- 如果输入 -t 选项，且指定的 tag 在 playbook 中并不存在，则不会执行任何 task 。
 
 ## 配置
 
@@ -102,10 +103,8 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 
 配置示例：
 ```yaml
-- name: Test
-  hosts: 10.0.*                          # 一个 pattern ，用于匹配要管理的 host 或 组
-  # become: yes                          # SSH 登录之后是否切换用户
-  # become_user: root
+- name: Test                             # 定义一个 playbook
+  hosts: 10.0.*                          # 是一个 pattern ，用于匹配要管理的 host 或 组
   # gather_facts: true
   tasks:                                 # 任务列表
     - name: test echo                    # 第一个任务（如果不设置 name ，会默认设置成模块名）
@@ -118,10 +117,12 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - name: stop httpd
         service: name=httpd state=stop
 ```
-- 执行一个 playbook 时，Ansible 会依次提取 playbook 中的 task ，在所有 host 上并行执行。
+- 每个 .yml 文件中可以定义一组 playbook ，每个 playbook 中可以定义一组 task 。
+  - 定义 playbook 时，只有 hosts 是必填项。
+- 执行一个 playbook 时，Ansible 会逐个提取其中的 task ，在所有 host 上并行执行。
   - 等所有 host 都执行完当前 task 之后，才执行下一个 task 。
   - 如果某个 task 执行之后的返回值不为 0 ，Ansible 就会终止执行并报错。
-- playbook 中，默认执行的第一个任务是 Gathering Facts ，收集 host 的信息。处理大量 host 时，设置 `gather_facts: false` 可以节省一些时间。
+- playbook 中默认执行的第一个任务是 Gathering Facts ，收集 host 的信息。处理大量 host 时，设置 `gather_facts: false` 可以节省一些时间。
 - handler 与 task 类似，由某个 task 通过 notify 激活，在所有 tasks 都执行完之后才会执行，且只会执行一次。
 
 ## task
@@ -132,23 +133,30 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     /bin/sh -c '/usr/bin/python /root/.ansible/tmp/ansible-tmp-xxx.py && sleep 0'
     ```
   
-- 可以给整个 playbook 设置 become 选项，也可以给单独某个 task 设置 become 选项。
+- 可以给 playbook 或 task 设置 become 选项，用于控制在 SSH 登录之后是否切换用户。如下：
   ```yaml
-  - name: test echo
-    # become: yes
-    # become_user: root
-    shell: echo Hello
+  - name: Test
+    hosts: localhost
+    # become: yes               # 默认在 SSH 登录之后会切换用户
+    # become_user: root         # 默认切换到 root 用户
+    tasks:
+      - shell: echo Hello
+        # become: yes
+        # become_user: root
   ```
 
-- 可以给 task 加上 tags ，从而允许在使用 playbook 时只执行具有特定标签的 task 。如下：
+- 可以给 playbook 或 task 设置 tags 选项，从而允许只执行具有特定标签的部分内容。如下：
   ```yaml
-  - name: start httpd
-    service: name=httpd state=started
-    tags:
-      - debug
-      - always
+  - name: Test
+    hosts: localhost
+    tags: test
+    tasks:
+      - shell: echo Hello
+        tags:
+          - always
+          - debug
   ```
-  - 带有 always 标签的 task 总是会被选中执行。
+  - 具有 always 标签代表着总是会被执行。
 
 - 可以给 task 加上 when 条件选项，当满足条件时才执行该 task ，否则跳过该 task 。如下：
   ```yaml
@@ -160,7 +168,8 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - ( A == '1' ) or (A == 'Hello' and B == '2')  # 使用逻辑运算符
       - not (A == '2' and B == "2")
   ```
-  注意 `1` 表示数字 1 ，而 `'1'` 表示字符串 1 。 
+  - 注意 `1` 表示数字 1 ，而 `'1'` 表示字符串 1 。 
+  - 判断变量的值时，如果该变量未定义，则会报错。
 
 - 可以用 with_items 选项迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
   ```yaml
@@ -179,7 +188,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 
 ### 使用变量
 
-- Ansible 支持在 playbook 中定义变量并调用，或者从外部传入变量。
+- Ansible 支持在 playbook 中定义变量并调用。
 - 例：
   ```yaml
   - name: Test
@@ -203,6 +212,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   不过在 YAML 文件中，如果该变量独占一个字段，则需要用 `"{{var}}"` 的格式取值，否则不会被 YAML 视作字符串，导致语法错误。
 :::
 - 如果 playbook 中的某部分内容调用了未定义的变量，则执行到这部分内容时就会报错。
+- 启动 playbook 时，可以用 `ansible-playbook test.yml -e "tips=Hello"` 的格式传入外部变量，这会覆盖同名的内部变量。
 - 变量名只能包含字母、数字、下划线，且只能以字母开头。
 - 字典类型的变量可以用以下两种格式取值：
   ```yaml
@@ -497,45 +507,79 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     immediate: yes        # 是否立即生效（当 permanent 为 yes 时，默认 immediate 为 no ）
   ```
 
+## include
+
+用 include 选项可以从其它文件中导入 tasks 或 playbook 并执行，如下：
+```yaml
+- name: test1
+  hosts: "{{host}}"
+  vars:
+    - tips: Hello
+  tasks:
+    - include: test2.yml      # 调用一个 playbook
+      vars:                   # 传入变量
+        tips: Hi
+
+- include: test3.yml
+  vars:
+    tips: Hello
+```
+- 上例中， test2.yml 是导入到 test1 playbook 中，因此它必须是一个纯 tasks 列表，如下：
+    ```yaml
+    - command: echo {{tips}}
+    - command: ls
+    ```
+  因为是导入到 test1 playbook 中，所以执行 test2.yml 时会继承 test1 的 vars ，且接受同样的外部变量。
+
+- test3.yml 是导入到 test1 playbook 之后，因此它必须是一个独立的 playbook 。
+  它不会继承 test1 的 vars ，只会使用与 test1 相同的 host 。
+  例如，如果不给 test3.yml 定义 tips 变量，也没有从外部传入 tips 变量，则执行 test3.yml 时会报错。
+
 ## role
 
-处理大型任务时，可以将一些 playbook、配置文件整合在一个目录下，称为 role ，可以被其它 playbook 调用。
-
-- role 的目录结构示例：
-  ```
-  image_build/                  # role 目录名
-  |-- files                     # 存放要拷贝到 host 的文件
-  |   |-- ansible.repo
-  |   |-- Dockerfile.sdist
-  |   |-- launch_awx.sh
-  |   |-- launch_awx_task.sh
-  |   |-- RPM-GPG-KEY-ansible-release
-  |   |-- settings.py
-  |   |-- supervisor.conf
-  |   `-- supervisor_task.conf
-  |-- tasks                     # 存放 playbook
-  |   `-- main.yml
-  `-- templates                 # 存放一些通用的模板文件
-      |-- Dockerfile.j2
-      |-- Dockerfile.task.j2
-      `-- nginx.conf.j2
-  ```
-
-- 调用 role 的示例：
-  ```yaml
-  - name: Build AWX Docker Images
-    hosts: all
-    gather_facts: false
-    roles:
-      - { role: image_build }                                     # 调用一个 role
-      - { role: image_push, when: "docker_registry is defined" }  # 调用另一个 role
-  ```
-
+- 处理大型任务时，可以将一些 playbook、配置文件整合在一个目录下，称为 role 。
 - 可以到官方的 roles 分享平台 <galaxy.ansible.com> 上寻找可用的 roles ，然后用 ansible-galaxy 命令下载 roles 。命令如下：
   ```sh
   ansible-galaxy
                 install <name>
                 search <name>
+  ```
+
+- 项目的目录结构示例：
+  ```
+  ├── hosts
+  ├── README.md
+  ├── roles/
+  │   └── build_image/              # 一个 role
+  │       ├── defaults/             # 保存该 role 的默认变量
+  │       │   └── main.yml
+  │       ├── files/                # 存放一些文件，比如要拷贝到 host 上的文件
+  │       │   ├── settings.py
+  │       │   └── supervisor.conf
+  │       ├── handlers/
+  │       │   └── main.yml
+  │       ├── meta/
+  │       │   └── main.yml
+  │       ├── tasks/
+  │       │   └── main.yml
+  │       ├── templates/            # 存放一些 Jinja2 模板文件
+  │       │   ├── Dockerfile.j2
+  │       │   └── nginx.conf.j2
+  │       └── vars/                 # 存放一些变量
+  │           └── main.yml
+  └── site.yml
+  ```
+- 以上的目录结构是一种规范。
+  - 调用一个 role 时，会自动导入它的 defaults/、handlers/、meta/、tasks/、vars/ 子目录下的 main.yml 文件的内容。如果这些文件不存在则忽略。
+  - 使用 copy 、script 模块时会自动到 files/ 目录下寻找相应的文件，不需要指明相对路径；使用 template 模块时会自动引用 templates/ 目录；使用 include 选项时会自动引用 tasks/ 目录。
+
+- 在 roles/ 目录同级处定义的 playbook 可以直接调用 role ，如下：
+  ```yaml
+  - name: Build Docker Image
+    hosts: all
+    roles:
+      - { role: build_image }                                     # 调用一个 role
+      - { role: push_image, when: "docker_registry is defined" }  # 调用另一个 role
   ```
 
 ## Ansible AWX

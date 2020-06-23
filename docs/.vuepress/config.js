@@ -197,6 +197,7 @@ module.exports = {
 					sidebarDepth: 2,
 					children: [
 						'内核/简介',
+						'内核/内核参数',
 					]
 				},
 				{

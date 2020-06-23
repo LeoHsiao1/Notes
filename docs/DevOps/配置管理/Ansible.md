@@ -46,8 +46,6 @@ ansible-playbook <name>.yml...       # 执行 playbook
                 --list-task          # 不执行，只是列出所有 task
                 --list-tags          # 不执行，只是列出所有 tag
 ```
-- 如果不输入 -t 选项，则默认会输入 -t all ，选中所有 tag 。
-- 如果输入 -t 选项，且指定的 tag 在 playbook 中并不存在，则不会执行任何 task 。
 
 ## 配置
 
@@ -125,14 +123,14 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 - playbook 中默认执行的第一个任务是 Gathering Facts ，收集 host 的信息。处理大量 host 时，设置 `gather_facts: false` 可以节省一些时间。
 - handler 与 task 类似，由某个 task 通过 notify 激活，在所有 tasks 都执行完之后才会执行，且只会执行一次。
 
-## task
+### task
 
 - task 是 Ansible 执行任务的基本单位，而模块是 Ansible 执行任务的基本方式。每个 task 通过调用一个模块来实现某种操作。
 - Ansible 每执行一个 task 时，会生成一个临时的 .py 文件，传送到 host 上，用 python 解释器执行。如下：
     ```sh
     /bin/sh -c '/usr/bin/python /root/.ansible/tmp/ansible-tmp-xxx.py && sleep 0'
     ```
-  
+
 - 可以给 playbook 或 task 设置 become 选项，用于控制在 SSH 登录之后是否切换用户。如下：
   ```yaml
   - name: Test
@@ -144,19 +142,6 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
         # become: yes
         # become_user: root
   ```
-
-- 可以给 playbook 或 task 设置 tags 选项，从而允许只执行具有特定标签的部分内容。如下：
-  ```yaml
-  - name: Test
-    hosts: localhost
-    tags: test
-    tasks:
-      - shell: echo Hello
-        tags:
-          - always
-          - debug
-  ```
-  - 具有 always 标签代表着总是会被执行。
 
 - 可以给 task 加上 when 条件选项，当满足条件时才执行该 task ，否则跳过该 task 。如下：
   ```yaml
@@ -171,7 +156,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 注意 `1` 表示数字 1 ，而 `'1'` 表示字符串 1 。 
   - 判断变量的值时，如果该变量未定义，则会报错。
 
-- 可以用 with_items 选项迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
+- task 可以通过 with_items 选项迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
   ```yaml
   - name: test echo
     shell: echo {{item}}
@@ -185,6 +170,33 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - src: B
         dest: 2
   ```
+
+### tags
+
+- 可以给 playbook 或 task 设置 tags 选项，从而允许只执行具有特定标签的内容。如下：
+  ```yaml
+  - name: Test
+    hosts: localhost
+    tags: test
+    tasks:
+      - shell: echo step1
+        tags:                     # 按 YAML 列表的格式定义标签
+          - debug
+
+      - shell: echo step2
+        tags: debug, test         # 按逗号分隔符的格式定义标签
+
+      - shell: echo step3
+        tags: ["debug", "never"]  # 按数组的格式定义标签
+  ```
+  - playbook 的标签会被它的所有 task 继承。
+  - never 标签默认不会被执行，除非被指定执行。
+  - always 标签总是会被执行，除非被 --skip-tags 指定跳过。
+
+- 例如：`ansible-playbook test.yml -t debug` 表示只执行具有 debug 标签的内容。
+  - 如果不输入 -t 选项，则默认会输入 `-t all` ，选中所有标签。
+  - 如果输入 -t 选项，且指定的标签在 playbook 中并不存在，则不会执行任何 task 。（除非具有 always 标签）
+  - 输入 `-t tagged` 会执行所有打了标签的，输入 `-t untagged` 会执行所有没打标签的。
 
 ### 使用变量
 
@@ -509,31 +521,66 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 
 ## include
 
-用 include 选项可以从其它文件中导入 tasks 或 playbook 并执行，如下：
+Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当前文件中，不过从 2.4 版本开始拆分成多个具体的选项，如下：
+- import_tasks
+- include_tasks ：用于导入 tasks 列表文件。
+- import_playbook ：用于导入 playbook 文件。
+- import_role ：用于导入 role ，与 role 选项的原理相同。
+- include_role
+
+特点：
+- import_* 导入的内容会在所有 playbook 启动之前就被预处理，比如确定变量的值，属于静态导入。
+- include_* 导入的内容会在被执行时才开始解析，比如可以每次循环使用不同的变量值，属于动态导入。
+
+例：
 ```yaml
 - name: test1
   hosts: "{{host}}"
   vars:
     - tips: Hello
   tasks:
-    - include: test2.yml      # 调用一个 playbook
-      vars:                   # 传入变量
+    - include_tasks: tasks/test2.yml  # 导入一个 playbook ，不指定路径则默认是在当前目录下
+      vars:                           # 传入变量
         tips: Hi
 
-- include: test3.yml
+- name: test3
+  import_playbook: test4.yml
+  # hosts: localhost                  # 不能设置 hosts 选项，它会沿用前一个 playbook 的 host
   vars:
     tips: Hello
 ```
-- 上例中， test2.yml 是导入到 test1 playbook 中，因此它必须是一个纯 tasks 列表，如下：
+- include_tasks 必须作为一个 playbook 的 task 使用，且导入的目标文件必须是一个纯 tasks 列表，如下：
     ```yaml
     - command: echo {{tips}}
     - command: ls
     ```
-  因为是导入到 test1 playbook 中，所以执行 test2.yml 时会继承 test1 的 vars ，且接受同样的外部变量。
+  上例中，被导入的 test2.yml 会继承 test1 的 vars ，且接受从外部传入的变量、标签。
 
-- test3.yml 是导入到 test1 playbook 之后，因此它必须是一个独立的 playbook 。
-  它不会继承 test1 的 vars ，只会使用与 test1 相同的 host 。
-  例如，如果不给 test3.yml 定义 tips 变量，也没有从外部传入 tips 变量，则执行 test3.yml 时会报错。
+- import_playbook 必须在已定义的 playbook 之后使用，导入一个独立的 playbook 文件。
+  上例中，被导入的 test4.yml 不会继承 test1 的 vars ，只会接受从外部传入的变量、标签。
+
+- 使用 include 这类选项时，不能选择只导入具有某些标签的内容，如下：
+  ```yaml
+  - name: test3
+    import_playbook: test4.yml
+    tags:             # 这里声明的 tags 会作用于 test3
+      - debug
+  ```
+  因此，只能将要导入的内容拆分成不同文件，或者通过变量判断是否执行某些内容，如下：
+  ```yaml
+  - name: test3
+    import_playbook: test4.yml
+    vars:
+      debug:
+      tips: Hello
+  ```
+  ```yaml
+  - name: test4
+    host: "{{host}}"
+    tasks:
+    - shell: echo {{tips}}
+      when: debug is defined
+  ```
 
 ## role
 
@@ -550,7 +597,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ├── hosts
   ├── README.md
   ├── roles/
-  │   └── build_image/              # 一个 role
+  │   └── common/                   # 一个 role
   │       ├── defaults/             # 保存该 role 的默认变量
   │       │   └── main.yml
   │       ├── files/                # 存放一些文件，比如要拷贝到 host 上的文件
@@ -570,16 +617,19 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   └── site.yml
   ```
 - 以上的目录结构是一种规范。
-  - 调用一个 role 时，会自动导入它的 defaults/、handlers/、meta/、tasks/、vars/ 子目录下的 main.yml 文件的内容。如果这些文件不存在则忽略。
+  - 导入一个 role 时，会自动导入它的 defaults/、handlers/、meta/、tasks/、vars/ 子目录下的 main.yml 文件的内容。如果这些文件不存在则忽略。
   - 使用 copy 、script 模块时会自动到 files/ 目录下寻找相应的文件，不需要指明相对路径；使用 template 模块时会自动引用 templates/ 目录；使用 include 选项时会自动引用 tasks/ 目录。
 
-- 在 roles/ 目录同级处定义的 playbook 可以直接调用 role ，如下：
+- 在 playbook 中导入 role 的示例：
   ```yaml
   - name: Build Docker Image
     hosts: all
     roles:
-      - { role: build_image }                                     # 调用一个 role
-      - { role: push_image, when: "docker_registry is defined" }  # 调用另一个 role
+      - role: common                # 导入一个 role ，写作 YAML 格式
+        vars:
+          tips: Hello
+      - role: 'roles/build_image'   # 根据路径导入 role
+      - { role: push_image, when: "docker_registry is defined" }  # 导入一个 role ，写作字典格式
   ```
 
 ## Ansible AWX

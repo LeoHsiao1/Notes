@@ -67,7 +67,7 @@ services:                         # 开始定义服务
             - 9000:8000
             - 9001:8001
         networks:                 # 连接到的 docker 网络
-            - net
+            - net_1
         # network_mode: "host"    # 使用的网络模式
 
         links:                    # 创建到其它容器的网络连接
@@ -83,7 +83,7 @@ services:                         # 开始定义服务
         ...
 
 networks:                         # 创建网络（默认会创建一个 compose_default 网络）
-    net:
+    net_1:
         driver: bridge
 ```
 

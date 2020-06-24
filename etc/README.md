@@ -5,6 +5,7 @@
 调试时，只需启动开发环境的服务器：
 ```sh
 cd /home/github/Notes
+yarn
 yarn vuepress dev docs
 ```
 

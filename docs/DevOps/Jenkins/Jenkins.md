@@ -86,7 +86,7 @@
 在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理 Jenkins 的插件。
 - 安装、卸载插件时都要手动重启 Jenkins 才会生效，甚至修改了插件的配置之后可能也不会立即生效。
 
-一些插件：
+常用的插件：
 - Localization: Chinese (Simplified)
   - 用于对 Jenkins 的页面进行汉化。
 - Blue Ocean
@@ -102,3 +102,6 @@
   - 设置 Project 或 Job 的 Discard old builds 策略，可以限制其占用的磁盘空间，比如频繁执行的任务最多保留 14 天日志。不过这会导致统计的总构建次数变少。
 - Generic Webhook Trigger
   - 支持以 webhook 的方式触发 Jenkins 的 Job 。例如：`curl http://10.0.0.1:8080/generic-webhook-trigger/invoke?token=123456`
+- SonarQube Scanner for Jenkins
+  - 用于对接 SonarQube 。
+  - 使用之前，需要在 Jenkins 的 "Configure System" 页面配置 "SonarQube servers" ，在 "Global Tool Configuration" 页面配置 "SonarQube Scanner" 。

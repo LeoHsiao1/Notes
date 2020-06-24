@@ -526,6 +526,7 @@ module.exports = {
 					children: [
 						'其它/Nextcloud',
 						'其它/Artifactory',
+						'其它/SonarQube',
 					]
 				},
 			],

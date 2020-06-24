@@ -35,8 +35,10 @@ MySQL 存在多个分支：
 
 - 或者运行 Docker 镜像：
     ```sh
-    docker pull percona:5.7.26-centos
-    docker run -d --name percona -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 percona:5.7.26-centos
+    docker run -d --name percona -p 3306:3306 \
+            -e MYSQL_ROOT_PASSWORD=123456 \
+            -v mysql_data:/var/lib/mysql \
+            percona:5.7.26-centos
     ```
   启动之后要修改密码：
     ```

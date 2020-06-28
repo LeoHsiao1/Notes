@@ -18,43 +18,51 @@
 2. 用 docker-compose 部署：
     ```yaml
     version: "3"
-
+    
     services:
-    sonarqube:
+      sonarqube:
         image: sonarqube:8-community
         restart: unless-stopped
         ports:
-        - 9000:9000
+          - 9000:9000
         networks:
-        - sonarqube_net
+          - net
         environment:
-        - sonar.jdbc.url=jdbc:postgresql://db:5432/sonarqube
-        - sonar.jdbc.username=sonarqube
-        - sonar.jdbc.password=******
+          - sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube
+          - sonar.jdbc.username=sonarqube
+          - sonar.jdbc.password=******  # 待填密码
         volumes:
-        - /opt/sonarqube/conf:/opt/sonarqube/conf
-        - /opt/sonarqube/data:/opt/sonarqube/data
-        - /opt/sonarqube/extensions:/opt/sonarqube/extensions
-        - /opt/sonarqube/logs:/opt/sonarqube/logs
-
-    postgres:
+          - conf:/opt/sonarqube/conf
+          - data:/opt/sonarqube/data
+          - extensions:/opt/sonarqube/extensions
+          - logs:/opt/sonarqube/logs
+    
+      postgres:
         image: postgres:12
         restart: unless-stopped
         networks:
-        - sonarqube_net
+          - net
         environment:
-        - POSTGRES_USER=sonarqube
-        - POSTGRES_PASSWORD=******
-        - POSTGRES_DB=sonarqube
+          - POSTGRES_USER=sonarqube
+          - POSTGRES_PASSWORD=******    # 待填密码
+          - POSTGRES_DB=sonarqube
         volumes:
-        - /opt/opt/sonarqube/postgresql/data:/var/lib/postgresql/data
-
+          - postgres:/var/lib/postgresql/data
+    
     networks:
-    sonarqube_net:
+      net:
         driver: bridge
+    
+    volumes:
+      conf:
+      data:
+      extensions:
+      logs:
+      postgres:
     ```
     - 默认用户名、密码为 admin、admin 。
-    - SonarQube 支持的外部数据库包括：Oracle、PostgreSQL、SQL Server 。如果不配置外部数据库，默认会使用内置数据库，但不方便迁移数据、不支持版本更新。
+    - SonarQube 容器需要挂载数据卷，而不是直接挂载目录，否则不能安装默认插件。
+    - SonarQube 支持的外部数据库包括：Oracle、PostgreSQL、SQL Server 。如果不配置外部数据库，则默认会使用内置数据库，但不方便迁移数据、不支持版本更新。
 
 ## 用法
 

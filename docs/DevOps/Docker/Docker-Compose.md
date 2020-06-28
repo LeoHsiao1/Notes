@@ -11,9 +11,10 @@
 
 ## 安装
 
-```sh
-pip3 install docker-compose
-```
+- 用 pip 安装：
+    ```sh
+    pip3 install docker-compose
+    ```
 
 ## 命令
 
@@ -25,9 +26,9 @@ docker-compose
                 -d                    # 在后台运行（否则会阻塞当前终端）
                 --scale web=2 mysql=1 # 设置服务运行的实例数量
                 --build               # 在启动容器之前，先构建镜像
-            down <service>...         # 停止并删除容器
-                --rmi all             # 删除该服务用到的所有镜像
-                -v                    # 删除 compose 文件中设置的 volumes 以及用到的匿名 volumes
+            down <service>...         # 销毁服务（默认会删除用到的容器、网络）
+                -v                    # 再删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
+                --rmi all             # 再删除该服务用到的所有镜像
 
             ps                        # 显示所有正在运行的容器
             stop <service>...         # 停止服务
@@ -49,42 +50,52 @@ docker-compose
   docker-compose up         # 先尝试在前台运行，看看是否正常
   Ctrl + C                  # 终止前台进程
   docker-compose up -d      # 正式在后台运行
-  docker-compose down       # 终止服务
+  docker-compose down       # 销毁服务
   ```
 
 ## compose 文件的语法
 
 ```yaml
-version: '3'                      # 声明 compose 文件的版本
-services:                         # 开始定义服务
-    web:                          # 第一个服务的名称
-        # container_name: web     # 指定容器名（不指定则自动生成）
-        image: centos             # 使用的镜像名
-        command: [tail, -f, /dev/null]  # 启动命令
-        init: true                # 使用 init 作为 1 号进程
-        restart: unless-stopped   # 容器的重启策略
-        ports:                    # 映射端口
-            - 9000:8000
-            - 9001:8001
-        networks:                 # 连接到的 docker 网络
-            - net_1
-        # network_mode: "host"    # 使用的网络模式
+version: '3'                  # 声明 compose 文件的版本
 
-        links:                    # 创建到其它容器的网络连接
-            - mysql               # 可以使用 mysql 作为 hostname ，连接到 mysql 容器的网络
-        volumes:                  # 挂载目录
-            - /root:/root
-        environment:              # 定义环境变量
-            VAR1: 1
-            VAR2: hello
+services:                     # 开始定义服务
+  web:                        # 第一个服务的名称
+    # container_name: web     # 指定容器名
+    image: centos             # 使用的镜像名
+    command: [tail, -f, /dev/null]  # 启动命令
+    init: true                # 使用 init 作为 1 号进程
+    restart: unless-stopped   # 容器的重启策略
+    ports:                    # 映射端口
+      - 9000:8000             # 注意这里的每行配置是一个字符串，因此冒号 : 之后不能加空格
+      - 9001:8001
+    networks:                 # 连接到的 docker 网络
+      - net
+    # network_mode: "host"    # 网络模式
+    volumes:                  # 挂载目录
+      - /root/data:/root/data # 可以直接挂载目录
+      - ./log:/root/log       # 可以挂载相对路径
+      - conf:/root/conf       # 可以挂载数据卷
+    environment:              # 定义环境变量
+      var1: 1
+      var2: hello
+    
+  redis:                      # 定义第二个服务
+    image: redis:5.0.5
+    restart: unless-stopped
+    networks:
+      - net
+    volumes:                  # 挂载目录
+      - db:/etc/redis
 
-    mysql:                        # 定义第二个服务
-        image: mysql
-        ...
+networks:                     # 定义网络（默认会创建一个 compose_default 网络）
+  net:
+    driver: bridge
 
-networks:                         # 创建网络（默认会创建一个 compose_default 网络）
-    net_1:
-        driver: bridge
+volumes:                      # 定义数据卷（服务挂载的数据卷都必须在这里声明）
+  conf:                       # 实际会按 "当前目录名_数据卷名" 的格式命名，比如：web_conf
+  db:
 ```
-
-- compose 文件还支持写入 Dockerfile 的构件参赛，在创建容器之前先构建镜像，这里忽略。
+- 乳沟用户不指定生成的容器苗，则按 "当前目录名_服务名_第几个实例" 的规则自动命名，比如：web_web_1 。
+- 上例中，web 容器向宿主机映射了两个端口，而 redis 容器没有映射端口，因此不能被宿主机访问。
+  两个容器都连接到了 net_1 网络，因此可以相互访问。比如 web 容器可以通过 `127.0.0.1:6379` 或 `redis:6379` 访问到 redis 容器。
+- compose 文件还支持写入 Dockerfile 的构件参数，在创建容器之前先构建镜像。

@@ -61,7 +61,7 @@ $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登�
 
 - 采用以下格式可以发送多行命令：
     ```sh
-    ssh -tt zhonghong@10.0.0.1 << EOL
+    ssh -tt root@10.0.0.1 << EOL
       uname -n
       echo hello
     exit

@@ -390,6 +390,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # owner: root     # 设置文件的所有者
     # group: root     # 设置文件的所有者组
   ```
+  - 在 path 字符串中不能使用 * 通配符。
 
 - 将本机的文件拷贝到 host 上：
   ```yaml

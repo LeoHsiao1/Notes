@@ -689,6 +689,8 @@ inhibit_rules:
   解压后启动：
   ```sh
   ./node_exporter
+                 # --web.listen-address=":9100"
+                 # --web.telemetry-path="/metrics"
   ```
   默认的访问地址为 <http://localhost:9100/metrics>
 

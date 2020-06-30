@@ -514,10 +514,10 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # port: 80/tcp        # 同时只能指定一个端口
     # rich_rule: rule family='ipv4' port port=22 protocol=tcp accept
     state: enabled        # 可以取值为 enabled 或 disabled
-    # zone: public
-    # interface: eth2
     permanent: yes
     immediate: yes        # 是否立即生效（当 permanent 为 yes 时，默认 immediate 为 no ）
+    # zone: public
+    # interface: eth2
   ```
 
 ## include

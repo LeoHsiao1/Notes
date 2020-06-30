@@ -101,7 +101,4 @@
   - 用于统计各个 Project 占用的磁盘空间（不包括 Job ）。
   - 设置 Project 或 Job 的 Discard old builds 策略，可以限制其占用的磁盘空间，比如频繁执行的任务最多保留 14 天日志。不过这会导致统计的总构建次数变少。
 - Generic Webhook Trigger
-  - 支持以 webhook 的方式触发 Jenkins 的 Job 。例如：`curl http://10.0.0.1:8080/generic-webhook-trigger/invoke?token=123456`
-- SonarQube Scanner for Jenkins
-  - 用于对接 SonarQube 。
-  - 使用之前，需要在 Jenkins 的 "Configure System" 页面配置 "SonarQube servers" ，在 "Global Tool Configuration" 页面配置 "SonarQube Scanner" 。
+  - 支持以 webhook 的方式触发 Jenkins 的 Job ，需要在 Job 的配置页面定义。例如：`curl http://10.0.0.1:8080/generic-webhook-trigger/invoke?token=123456`

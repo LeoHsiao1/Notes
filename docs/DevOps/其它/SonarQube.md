@@ -1,7 +1,7 @@
 # SonarQube
 
 ：一个开源的、检查代码质量的平台，基于 Java 开发。
-- 主要用于扫描静态代码，找出语法错误、漏洞，以及可优化之处。
+- 主要用于扫描静态代码，找出语法错误、漏洞、可优化之处。
 - 支持 C、C++、C#、Java、JavaScrip、PHP、Python、Golang 等语言。
 - 工作架构：
   - 先运行一个 SonarQube 服务器。
@@ -121,24 +121,9 @@
           --workdir /app \
           maven:3.6-jdk-11 bash
       ```
-  2. 在 Maven 的 settings.xml 配置文件中加入如下内容，启用 sonar-scanner ：
-      ```xml
-      <settings>
-          <pluginGroups>
-              <pluginGroup>org.sonarsource.scanner.maven</pluginGroup>
-          </pluginGroups>
-          <profiles>
-              <profile>
-                  <id>sonar</id>
-                  <activation>
-                      <activeByDefault>true</activeByDefault>
-                  </activation>
-              </profile>
-          </profiles>
-      </settings>
-      ```
-  3. 进入项目目录，开始扫描：
+  2. 进入项目目录，开始扫描：
       ```sh
+      mvn clean compile
       mvn sonar:sonar \                             # sonar.projectKey 会自动配置
           -Dsonar.host.url=http://10.0.0.1:9000 \
           -Dsonar.login=31bbe4de2a8260ef2f427c6e318f05dbc8e92af6

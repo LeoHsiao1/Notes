@@ -5,7 +5,7 @@
 - 支持 C、C++、C#、Java、JavaScrip、PHP、Python、Golang 等语言。
 - 工作架构：
   - 先运行一个 SonarQube 服务器。
-  - 然后执行一次 SonarScanner 扫描器，它会扫描代码，并将扫描结果上传到 SonarQube 服务器。
+  - 然后执行一次 SonarScanner 扫描器，它会扫描代码，并上传到 SonarQube 服务器进行分析。
 - [官方文档](https://docs.sonarqube.org/latest/)
 
 ## 部署
@@ -74,6 +74,22 @@
     比如 "Chinese Pack" 插件可以汉化页面。
     下载插件之后，网页会提示需要重启服务器才能安装。
 
+每个用户都可以在 SonarQube 首页看到所有项目。如下：
+
+![](sonarqube_1.png)
+
+- 每个项目都从 Bugs、漏洞、复审热点等多个方面进行了评分。
+- SonarQube 会根据 “质量阀” 判断项目是否 “正常” 。
+
+点击项目的名字即可进入其详情页面，如下：
+
+![](sonarqube_2.png)
+
+- 在 “问题” 页面可以处理 Bugs、漏洞、异味，可以将它们的状态改为 “解决” 或 “标记为不会修复” 。
+  如果关闭了所有严重的问题（允许存在次要问题），相关的评分就会变成 A 。
+- 在 “安全热点” 页面可以处理安全问题，可以将它们的状态改为 “已修复” 或 “安全”。
+  如果关闭了所有的安全问题，项目的 “安全复审比率” 就会变成 100% ，评分为 A 。
+
 ## SonarScanner
 
 基本用法：
@@ -94,7 +110,7 @@
     - 如果 SonarQube 服务器上不存在该项目，则会自动创建。
     - 如果该项目的扫描结果没有通过质量阀（quality gate），则 sonar-scanner 命令的返回码为非 0 。
 
-扫描 Java 项目时：
+如果项目用到了 Java 语言：
 - 不能直接扫描 .java 文件，需要先编译，再用 `-Dsonar.java.binaries=target` 命令选项指明 .class 文件的位置，不过这比较麻烦。
 - 使用 Maven 等构建工具时，可通过专用的 sonar-scanner 插件扫描，自动定位源文件和类文件。步骤如下：
   1. 安装 Maven 3.x ，并且它使用的 sonar-scanner 插件需要 JRE 11 。比如：

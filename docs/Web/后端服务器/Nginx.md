@@ -9,7 +9,7 @@
   - 处理静态文件的效率高。
 - [官方文档](http://nginx.org/en/docs/)
 
-## 安装
+## 部署
 
 - 用 yum 安装：
   ```sh
@@ -19,7 +19,7 @@
   ```sh
   nginx                     # 启动 nginx 服务器（默认作为守护进程运行）
         -c /root/nginx.conf # 使用指定的配置文件（默认使用 /etc/nginx/nginx.conf ）
-        -g 'daemon off;'    # 加上配置参数（这里是要求在前台运行）
+        -g 'daemon off;'    # 加上指令（这里是要求在前台运行）
         -t                  # 不启动，而是测试配置文件的语法是否正确
         -s quit             # 向 Nginx 进程发送一个 quit 信号（Nginx 处理完当前的 HTTP 请求之后才会终止）
         -s reload           # 重新加载配置文件
@@ -28,16 +28,19 @@
 - 或者运行 Docker 镜像：
   ```sh
   docker run -d --name nginx -p 80:80
-        -c /root/nginx.conf:/etc/nginx/nginx.conf       # 挂载配置文件
+        -v /opt/web/dist:/usr/share/nginx/html         # 挂载静态文件目录
+        -v /opt/web/nginx.conf:/etc/nginx/nginx.conf   # 挂载配置文件
         nginx
   ```
 
-## 主配置文件
+## 配置文件
 
-Nginx 默认使用`/etc/nginx/nginx.conf`作为主配置文件（用于保存全局配置），还会导入`/etc/nginx/conf.d/`目录下的其它配置文件（用于保存一些 server{} 的配置）。
+Nginx 默认使用 `/etc/nginx/nginx.conf` 作为主配置文件（用于保存全局配置），还会导入 `/etc/nginx/conf.d/` 目录下的其它配置文件（通常用于保存一些 server{} 的配置）。
 - 这些配置文件的后缀名为 .conf ，采用 Nginx 自定的语法，用 # 声明单行注释。
 
-`/etc/nginx/nginx.conf`的默认内容：
+### nginx.conf 的配置示例
+
+`/etc/nginx/nginx.conf` 的默认内容：
 ```sh
 user  nginx;          # 启动 Nginx 进程的用户名，可能需要给该用户分配权限
 worker_processes  1;  # 启动的 Nginx 进程数，与 CPU 核数相等时性能最高
@@ -53,7 +56,7 @@ http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
 
-    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '   # 日志格式
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '   # 定义日志格式
                       '$status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
@@ -77,12 +80,12 @@ http {
   - tcp_nodelay 模式：一有数据就立即发送。这样能减少通信延迟。
 - keepalive_timeout 表示客户端 TCP 连接的最大时长（单位为秒），超过该时间之后，Nginx 会关闭连接。
 
-## server 配置
+### server{} 的配置示例
 
-`/etc/nginx/conf.d/`目录下默认存在一个`default.conf`，配置了 Nginx 的初始 Web 页面，内容如下：
+`/etc/nginx/conf.d/` 目录下默认存在一个 `default.conf` ，配置了 Nginx 的初始 Web 页面，如下：
 ```sh
 server {
-    listen       80;            # 监听的 TCP 端口（必填）
+    listen       80;            # 定义该 server 监听的 TCP 端口（必填）
     server_name  localhost;     # 监听的域名（不必填）
 
     location / {
@@ -96,9 +99,8 @@ server {
     }
 }
 ```
-- http{} 模块中可以定义多个 server{} ，表示服务器的配置。
-- 在 server{} 之外设置的日志是全局日志，在 server{} 之内设置的日志是局部日志。
-- listen 语句的例子：
+- http{} 模块中可以定义多个 server{} 模块，每个 server{} 模块代表一个 HTTP 服务器。
+- listen 指令的例子：
     ```sh
     listen      80;              # 相当于 listen *:80
     listen      127.0.0.1:80;
@@ -123,7 +125,7 @@ server {
 
 - server{} 中可以定义多个 location{} ，表示 URL 路由规则。如下：
   - location 以 = 开头表示精确匹配，以 ~ 开头表示区分大小写（默认是这种），以 ~* 开头表示不区分大小写。
-  - location 以 / 结尾时会转发相对路径，不以 / 结尾时会转发绝对路径。
+  - location 以 / 结尾则会转发相对路径，不以 / 结尾则会转发绝对路径。
   - 例：
     ```sh
     location = / {       # 匹配以 / 开头的 URL
@@ -146,38 +148,72 @@ server {
 
 - server{} 中的其它配置项：
     ```sh
-    charset  utf-8;
-    root  /www/;          # 设置网站的根目录，当没有 HTTP 请求没有找到匹配的 location 时就到该目录下寻找文件
+    charset  utf-8;       # 配置 HTTP 响应报文的 Content-Type
+    root  /www/;          # 配置网站的根目录，当没有 HTTP 请求没有找到匹配的 location 时就到该目录下寻找文件
+    access_log off;       # 在 server{} 之外配置的日志是全局日志，在 server{} 之内配置的日志是局部日志
     ```
 
-## 控制语句
+## 指令
 
-- **allow**、**deny** 语句：允许或禁止某些 IP 地址的访问。如下：
+- Nginx 的配置文件中可以写入多种指令（directives）。
+- 有的指令允许重复配置。
+  - 在配置文件中，写在在局部作用域的指令，比起外部作用域的指令，优先级更高。
+  - 在同一个作用域内，写在前面的指令，比起写在后面的指令，优先级更高。（因为 Nginx 一读取到前面的指令就开始应用了）
+
+### allow 、deny
+
+：用于允许或禁止某些 IP 地址的访问。
+- 这两个指令可以写在 http{} 、server{} 或 location{} 中。
+- 例：
     ```sh
     deny    192.168.1.1;
     allow   192.168.1.0/24;    # 允许一个网段访问
     deny    all;               # 禁止所有 IP
     allow   all;
     ```
-  - 该语句可以写在 http{} 、server{} 或 location{} 中。写在局部作用域的规则的优先级更高，而同一个作用域内，写在前面的规则的优先级更高。
-  - Nginx 会给禁止访问的 IP 回复 HTTP 403 报文。
+- Nginx 会给禁止访问的 IP 回复 HTTP 403 报文。
 
-- **auth_basic** 语句：启用 HTTP Basic Auth 。如下：
+### auth_basic 等
+
+：用于启用 HTTP Basic Auth 。
+- 例：
     ```sh
-    auth_basic              "closed site";      # 只要不设置成 auth_basic off; 就会启用认证
+    auth_basic              "";                 # 只要不设置成 auth_basic off; 就会启用认证
     auth_basic_user_file    /etc/nginx/passwd;  # 使用哪个密码文件
     ```
-    - auth_basic 与 auth_basic_user_file 语句写在 http{} 、server{} 或 location{} 中，并且可以分开使用。
-    - 密码文件中保存了可用的用户名、密码，在运行时修改也会自动刷新。可用以下命令生成：
-        ```sh
-        yum install httpd-tools
-        htpasswd -cb passwd leo 123456   # 往密码文件 passwd 中添加一个用户 leo ，并保存其密码的 MD5 值。加上 -c 选项会创建该文件，如果该文件已存在则会被覆盖
-        htpasswd -b passwd leo 1234      # 往密码文件 passwd 中添加一个用户 leo 。如果该用户名已存在，则会覆盖其密码
-        htpasswd -D passwd leo           # 删除一个用户
-        ```
-    - 如果客户端没有进行 HTTP Basic Auth ，或者进行了但不通过，则会返回 HTTP 401 Authorization Required 报文。
+- 这两个指令可以写在 http{} 、server{} 或 location{} 中，并且可以分开使用，比如给某个 server 使用专门的密码文件。
+- 密码文件中保存了可用的用户名、密码，在运行时修改也会自动刷新。可用以下命令生成：
+    ```sh
+    yum install httpd-tools
+    htpasswd -cb passwd leo 123456   # 往密码文件 passwd 中添加一个用户 leo ，并保存其密码的 MD5 值。加上 -c 选项会创建该文件，如果该文件已存在则会被覆盖
+    htpasswd -b passwd leo 1234      # 往密码文件 passwd 中添加一个用户 leo 。如果该用户名已存在，则会覆盖其密码
+    htpasswd -D passwd leo           # 删除一个用户
+    ```
+- 如果客户端没有进行 HTTP Basic Auth ，或者进行了但不通过，则会返回 HTTP 401 Authorization Required 报文。
 
-- **proxy_pass** 语句：将收到的 HTTP 请求转发给某个服务器，实现反向代理。如下：
+### gzip 等
+
+：用于 gzip 压缩响应报文 body 。
+- 该指令可以写在 http{} 、server{} 或 location{} 中。
+- 例：
+    ```sh
+    location ~ .*\.(jpg|gif|png|bmp)$ {
+        gzip on;                    # 启用 gzip
+        gzip_vary on;               # 在响应头中加入 Vary: Accept-Encoding ，告诉浏览器这是 gzip 报文
+        gzip_min_length 1k;         # 启用压缩的文件的最小体积（低于该值则不会压缩）
+        gzip_comp_level 1;          # 压缩率（取值为 1~9 ，1 的压缩率最低，CPU 负载也最小）
+        gzip_http_version 1.0;      # 基于哪个版本的 HTTP 协议来传输 gzip 报文（默认为 HTTP 1.1）
+        gzip_types text/plain application/json application/x-javascript application/css application/xml application/xml+rss text/javascript application/x-httpd-php image/jpeg image/gif image/png image/x-ms-bmp;  # 压缩哪些类型的响应报文 body
+    }
+    ```
+- 这样能降低通信耗时，但是会增加 Nginx 的 CPU 负载。
+- 版本较老的浏览器可能只支持 HTTP 1.0 协议，甚至不能解析 gzip 报文。
+
+### proxy_pass
+
+：将收到的 HTTP 请求转发给某个服务器，实现反向代理。
+- 该指令只能写在 location{} 中。
+- 例：
     ```sh
     location / {
         proxy_pass    http://127.0.0.1:79;
@@ -186,19 +222,25 @@ server {
         # proxy_cache_valid 200 304 2m;     # 客户端 2 分钟之内发出状态码为 200、304 的 HTTP 请求都会使用缓存
     }
     ```
-  - 该语句只能写在 location{} 中。
-  - 如果 proxy_pass 的 URL 以 / 结尾，则转发相对路径，否则转发绝对路径。
-  - 使用 proxy_cache 时，Nginx 会将 proxy_pass 服务器响应的静态文件缓存一段时间，如果客户端发来的请求 URL 与缓存的某个 URL 的 hash 值相同，则直接从缓存中取出静态文件回复给客户端（响应头中包含 Nginx-Cache: HIT），否则将 HTTP 请求转发给 proxy_pass 服务器处理（响应头中包含 Nginx-Cache: MISS）。
+- 如果 proxy_pass 的 URL 以 / 结尾，则转发相对路径，否则转发绝对路径。
+- 使用 proxy_cache 时，Nginx 会将 proxy_pass 服务器响应的静态文件缓存一段时间，如果客户端发来的请求 URL 与缓存的某个 URL 的 hash 值相同，则直接从缓存中取出静态文件回复给客户端（响应头中包含 Nginx-Cache: HIT），否则将 HTTP 请求转发给 proxy_pass 服务器处理（响应头中包含 Nginx-Cache: MISS）。
 
-- **rewrite** 语句：将收到的 HTTP 请求重定向到某个 URL 。如下：
+### rewrite
+
+：将收到的 HTTP 请求重定向到某个 URL 。
+- 可以写在 server{} 或 location{} 中。
+- 例：
     ```sh
     rewrite  /1.html  /2.html ;         # 访问 1.html 时重定向到 2.html
     rewrite  ^(.*)$  https://$host$1;   # 重定向到 https 的 URL
     ```
-  - 该语句可以写在 server{} 或 location{} 中。
-  - 如果目标 URL 以 http:// 或 https:// 开头，则返回 301 永久重定向，否则返回 302 临时重定向。
+- 如果目标 URL 以 http:// 或 https:// 开头，则返回 301 永久重定向，否则返回 302 临时重定向。
 
-- **return** 语句：收到 HTTP 请求时直接返回 HTTP 响应。如下：
+### return
+
+：直接返回 HTTP 响应报文给客户端。
+- 可以写在 server{} 或 location{} 中。
+- 例：
     ```sh
     server{
         listen  80;
@@ -207,12 +249,56 @@ server {
         return  200 '{"name":"test","id":"001"}';   # 返回状态码和 JSON 格式的字符串
     }
     ```
-  - 该语句可以写在 server{} 或 location{} 中。
-  - 当 Nginx 执行到 return 语句时会立即返回 HTTP 响应，不会执行之后的语句。
+- 当 Nginx 执行到 return 指令时会立即返回 HTTP 响应，不会执行之后的指令。
 
-## 负载均衡
+### ssl_protocols 等
 
-可以定义 upstream{} ，添加多个可用的 server（即后端服务器），将受到的 HTTP 请求按某种策略转发给 server 处理，实现负载均衡。
+：用于启用 HTTPS 协议。
+- 例：
+    ```sh
+    server {
+        listen    443  ssl;                     # 监听时采用 ssl 协议
+        server_name localhost;
+        
+        ssl_certificate /etc/nginx/conf.d/cert.pem;       # 指明.crt 文件的路径
+        ssl_certificate_key /etc/nginx/conf.d/cert.key;   # 指明.key 文件的路径
+        
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;  # 设置 ssl 加密套件
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;    # 设置可用的 ssl 协议版本
+        ssl_prefer_server_ciphers on;           # 在 ssl 握手时使用 server 的密码
+
+        # 在一段时间内复用一个 ssl 会话，以节省 ssl 握手的时间
+        ssl_session_cache   shared:SSL:10m;     # 设置 ssl 缓存的大小，10M 大概可以存储 40000 个 ssl 会话
+        ssl_session_timeout 10m;                # 设置缓存的失效时间
+        ...
+    }
+    ```
+
+### stream
+
+：用于实现 TCP 代理。
+- 可以在与 http{} 模块同级的位置定义。
+- 例：
+    ```sh
+    stream {
+        upstream mysql {
+            hash $remote_addr consistent;
+            server 10.0.0.1:3306 weight=5;
+            server 10.0.0.2:3306 weight=10;
+        }
+        server {
+            listen 3306;
+            proxy_pass mysql;
+            proxy_timeout 3s;
+            proxy_connect_timeout 1s;
+        }
+    }
+    ```
+
+### upstream
+
+：用于定义任意个可用的 server（即后端服务器），从而可以将收到的 HTTP 请求按某种策略转发给 server 处理，实现负载均衡。
+- 只能在 http{} 模块中定义。
 
 常见的分配策略如下：
 - 按轮询分配：将 HTTP 请求按时间顺序依次分配给各个 server ，实现简单的平均分配。配置如下：
@@ -223,7 +309,7 @@ server {
         server 127.0.0.1:8086;
     }
     ```
-    2. 设置 proxy_pass 语句，将 HTTP 请求转发到 my_cluster 。
+    2. 设置 proxy_pass 指令，将 HTTP 请求转发到 my_cluster 。
     ```sh
     location / {
         proxy_pass    http://my_cluster;    # 这个域名会在 Nginx 每次启动时解析
@@ -264,62 +350,3 @@ server {
         server 127.0.0.1:8086;
     }
     ```
-
-## TCP 代理
-
-Nginx 1.9 版本新增了 stream{} 模块，用于实现第四层的 TCP 代理。可以在与 http{} 模块同级的位置配置，如下：
-```sh
-stream {
-    upstream mysql {
-        hash $remote_addr consistent;
-        server 10.0.0.1:3306 weight=5;
-        server 10.0.0.2:3306 weight=10;
-    }
-    server {
-        listen 3306;
-        proxy_pass mysql;
-        proxy_timeout 3s;
-        proxy_connect_timeout 1s;
-    }
-}
-```
-
-## 启用 HTTPS
-
-让服务器启用 HTTPS 的配置：
-```sh
-server {
-    listen    443  ssl;     # 监听时采用 ssl 协议
-    server_name localhost;
-    
-    ssl_certificate /etc/nginx/conf.d/cert.pem;       # 指明.crt 文件的路径
-    ssl_certificate_key /etc/nginx/conf.d/cert.key;   # 指明.key 文件的路径
-    
-    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;  # 设置 ssl 加密套件
-    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;    # 设置可用的 ssl 协议版本
-    ssl_prefer_server_ciphers on;           # 在 ssl 握手时使用 server 的密码
-
-    # 在一段时间内复用一个 ssl 会话，以节省 ssl 握手的时间
-    ssl_session_cache   shared:SSL:10m;     # 设置 ssl 缓存的大小，10M 大概可以存储 40000 个 ssl 会话
-    ssl_session_timeout 10m;                # 设置缓存的失效时间
-    ...
-}
-```
-
-## 启用 gzip
-
-启用 gzip 压缩响应报文 body 之后，可以降低通信耗时，但是会增加 Nginx 的 CPU 负载。
-
-启用 gzip 的配置如下：
-```sh
-location ~ .*\.(jpg|gif|png|bmp)$ {
-    gzip on;                    # 启用 gzip
-    gzip_vary on;               # 在响应头中加入 Vary: Accept-Encoding ，告诉浏览器这是 gzip 报文
-    gzip_min_length 1k;         # 启用压缩的文件的最小体积（低于该值则不会压缩）
-    gzip_comp_level 1;          # 压缩率（取值为 1~9 ，1 的压缩率最低，CPU 负载也最小）
-    gzip_http_version 1.0;      # 基于哪个版本的 HTTP 协议来传输 gzip 报文（默认为 HTTP 1.1）
-    gzip_types text/plain application/json application/x-javascript application/css application/xml application/xml+rss text/javascript application/x-httpd-php image/jpeg image/gif image/png image/x-ms-bmp;  # 压缩哪些类型的响应报文 body
-}
-```
-- 该语句可以写在 http{} 、server{} 或 location{} 中。
-- 版本较老的浏览器可能只支持 HTTP 1.0 协议，甚至不能解析 gzip 报文。

@@ -1,10 +1,13 @@
 # Nginx
 
-：一个轻量级的 Web 服务器软件，还可用于反向代理、负载均衡。
+：一个轻量级的 Web 服务器软件。
 - 发音相当于 engine + x 。
-- 不仅支持 HTTP、HTTPS 协议，也支持 IMAP、POP3、SMTP 协议。
-- 支持第四层的 TCP 代理、第七层的 HTTP 代理。
-- 处理静态文件的效率高。
+- 特点：
+  - 支持反向代理、负载均衡。
+  - 不仅支持 HTTP、HTTPS 协议，也支持 IMAP、POP3、SMTP 协议。
+  - 支持第四层的 TCP 代理、第七层的 HTTP 代理。
+  - 处理静态文件的效率高。
+- [官方文档](http://nginx.org/en/docs/)
 
 ## 安装
 
@@ -15,7 +18,8 @@
   然后启动：
   ```sh
   nginx                     # 启动 nginx 服务器（默认作为守护进程运行）
-        -c /root/nginx.conf # 使用指定的配置文件（默认使用/etc/nginx/nginx.conf）
+        -c /root/nginx.conf # 使用指定的配置文件（默认使用 /etc/nginx/nginx.conf ）
+        -g 'daemon off;'    # 加上配置参数（这里是要求在前台运行）
         -t                  # 不启动，而是测试配置文件的语法是否正确
         -s quit             # 向 Nginx 进程发送一个 quit 信号（Nginx 处理完当前的 HTTP 请求之后才会终止）
         -s reload           # 重新加载配置文件
@@ -23,19 +27,21 @@
 
 - 或者运行 Docker 镜像：
   ```sh
-  docker run -d --name=nginx -p 80:80 nginx
+  docker run -d --name nginx -p 80:80
+        -c /root/nginx.conf:/etc/nginx/nginx.conf       # 挂载配置文件
+        nginx
   ```
- 
+
 ## 主配置文件
 
 Nginx 默认使用`/etc/nginx/nginx.conf`作为主配置文件（用于保存全局配置），还会导入`/etc/nginx/conf.d/`目录下的其它配置文件（用于保存一些 server{} 的配置）。
 - 这些配置文件的后缀名为 .conf ，采用 Nginx 自定的语法，用 # 声明单行注释。
 
 `/etc/nginx/nginx.conf`的默认内容：
-```
+```sh
 user  nginx;          # 启动 Nginx 进程的用户名，可能需要给该用户分配权限
 worker_processes  1;  # 启动的 Nginx 进程数，与 CPU 核数相等时性能最高
-
+#daemon off;          # 默认以 daemon 方式运行
 error_log  /var/log/nginx/error.log warn;   # 全局的报错日志，及其日志等级
 pid        /var/run/nginx.pid;
 
@@ -74,7 +80,7 @@ http {
 ## server 配置
 
 `/etc/nginx/conf.d/`目录下默认存在一个`default.conf`，配置了 Nginx 的初始 Web 页面，内容如下：
-```
+```sh
 server {
     listen       80;            # 监听的 TCP 端口（必填）
     server_name  localhost;     # 监听的域名（不必填）
@@ -93,7 +99,7 @@ server {
 - http{} 模块中可以定义多个 server{} ，表示服务器的配置。
 - 在 server{} 之外设置的日志是全局日志，在 server{} 之内设置的日志是局部日志。
 - listen 语句的例子：
-    ```
+    ```sh
     listen      80;              # 相当于 listen *:80
     listen      127.0.0.1:80;
     listen      unix:/var/run/nginx.sock;
@@ -102,11 +108,11 @@ server {
   - 如果监听该端口的 server 有多个，则考虑 Request Header 中的 Host 与哪个 server 监听的 server_name 匹配。
   - 如果没有匹配的 server_name ，或者 Request Header 中的 Host 是 IP 地址，则交给监听该端口的默认 server 处理。
   - 监听一个端口的默认 server 是 nginx.conf 中最先定义的那个，也可以手动指定。如下：
-    ```
+    ```sh
     listen       80  default_server;
     ```
   - server_name 有以下几种格式，排在前面的优先匹配：
-    ```
+    ```sh
     server_name  www.test.com localhost;    # 匹配明确的域名（可以填多个，Nginx 不会去验证 DNS）
     server_name  *.test.com;                # 以 *. 开头，模糊匹配
     server_name  www.test.*;                # 以 .* 结尾
@@ -119,19 +125,19 @@ server {
   - location 以 = 开头表示精确匹配，以 ~ 开头表示区分大小写（默认是这种），以 ~* 开头表示不区分大小写。
   - location 以 / 结尾时会转发相对路径，不以 / 结尾时会转发绝对路径。
   - 例：
-    ```
+    ```sh
     location = / {       # 匹配以 / 开头的 URL
         root /www/;
         # proxy_pass http://127.0.0.1:79/;    # 把请求转发到另一个服务器（前提是不匹配其它规则）
     }
     ```
-    ```
+    ```sh
     location /img {      # 匹配以 /img 开头的 URL
         root /www/;
     }
     ```
     - 比如访问 http://127.0.0.1/img/1.html 时，会转发绝对路径 img/1.html ，转发到 http://127.0.0.1:80/www/img/1.html
-    ```
+    ```sh
     location /img/ {     # 匹配以 /img 开头的 URL
         root /www/;
     }
@@ -139,15 +145,15 @@ server {
     - 比如访问 http://127.0.0.1/img/1.html 时，会转发相对路径 1.html ，转发到 http://127.0.0.1:80/www/1.html
 
 - server{} 中的其它配置项：
-    ```
+    ```sh
     charset  utf-8;
     root  /www/;          # 设置网站的根目录，当没有 HTTP 请求没有找到匹配的 location 时就到该目录下寻找文件
     ```
 
 ## 控制语句
 
-- **allow**、**deny**语句：允许或禁止某些 IP 地址的访问。如下：
-    ```
+- **allow**、**deny** 语句：允许或禁止某些 IP 地址的访问。如下：
+    ```sh
     deny    192.168.1.1;
     allow   192.168.1.0/24;    # 允许一个网段访问
     deny    all;               # 禁止所有 IP
@@ -156,8 +162,8 @@ server {
   - 该语句可以写在 http{} 、server{} 或 location{} 中。写在局部作用域的规则的优先级更高，而同一个作用域内，写在前面的规则的优先级更高。
   - Nginx 会给禁止访问的 IP 回复 HTTP 403 。
 
-- **proxy_pass**语句：将收到的 HTTP 请求转发给某个服务器，实现反向代理。如下：
-    ```
+- **proxy_pass** 语句：将收到的 HTTP 请求转发给某个服务器，实现反向代理。如下：
+    ```sh
     location / {
         proxy_pass    http://127.0.0.1:79;
         # proxy_cache cache;                # 使用缓存
@@ -169,16 +175,16 @@ server {
   - 如果 proxy_pass 的 URL 以 / 结尾，则转发相对路径，否则转发绝对路径。
   - 使用 proxy_cache 时，Nginx 会将 proxy_pass 服务器响应的静态文件缓存一段时间，如果客户端发来的请求 URL 与缓存的某个 URL 的 hash 值相同，则直接从缓存中取出静态文件回复给客户端（响应头中包含 Nginx-Cache: HIT），否则将 HTTP 请求转发给 proxy_pass 服务器处理（响应头中包含 Nginx-Cache: MISS）。
 
-- **rewrite**语句：将收到的 HTTP 请求重定向到某个 URL 。如下：
-    ```
+- **rewrite** 语句：将收到的 HTTP 请求重定向到某个 URL 。如下：
+    ```sh
     rewrite  /1.html  /2.html ;         # 访问 1.html 时重定向到 2.html
     rewrite  ^(.*)$  https://$host$1;   # 重定向到 https 的 URL
     ```
   - 该语句可以写在 server{} 或 location{} 中。
   - 如果目标 URL 以 http:// 或 https:// 开头，则返回 301 永久重定向，否则返回 302 临时重定向。
 
-- **return**语句：收到 HTTP 请求时直接返回 HTTP 响应。如下：
-    ```
+- **return** 语句：收到 HTTP 请求时直接返回 HTTP 响应。如下：
+    ```sh
     server{
         listen  80;
         return  403;                                # 只返回状态码
@@ -196,21 +202,21 @@ server {
 常见的分配策略如下：
 - 按轮询分配：将 HTTP 请求按时间顺序依次分配给各个 server ，实现简单的平均分配。配置如下：
     1. 在 http{} 之内、server{} 之外定义 upstream 。
-    ```
+    ```sh
     upstream my_cluster {         # 定义一个 upstream ，名为 my_cluster
         server 127.0.0.1:8085;    # 添加一个 server
         server 127.0.0.1:8086;
     }
     ```
     2. 设置 proxy_pass 语句，将 HTTP 请求转发到 my_cluster 。
-    ```
+    ```sh
     location / {
         proxy_pass    http://my_cluster;    # 这个域名会在 Nginx 每次启动时解析
     }
     ```
 
 - 按轮询加权重分配：权重较大的 server 优先被分配。适合处理几台 server 性能不均的情况。
-    ```
+    ```sh
     upstream my_cluster {
         server 127.0.0.1:8085 weight=5; 
         server 127.0.0.1:8086 weight=10;
@@ -218,7 +224,7 @@ server {
     ```
 
 - 按响应时间分配：响应时间短的 server 优先被分配。
-    ```
+    ```sh
     upstream my_cluster {
         fair; 
         server 127.0.0.1:8085 weight=5; 
@@ -227,7 +233,7 @@ server {
     ```
 
 - 按 ip_hash 分配：将客户端 ip 的 hash 值相同的 HTTP 请求分配给同一个 server 。适合保持 session 。
-    ```
+    ```sh
     upstream my_cluster {
         ip_hash;
         server 127.0.0.1:8085; 
@@ -236,7 +242,7 @@ server {
     ```
 
 - 按 url_hash 分配：将目标 url 的 hash 值相同的 HTTP 请求分配给同一个 server 。适合利用缓存。
-    ```
+    ```sh
     upstream my_cluster { 
         url_hash;
         server 127.0.0.1:8085; 
@@ -247,7 +253,7 @@ server {
 ## TCP 代理
 
 Nginx 1.9 版本新增了 stream{} 模块，用于实现第四层的 TCP 代理。可以在与 http{} 模块同级的位置配置，如下：
-```
+```sh
 stream {
     upstream mysql {
         hash $remote_addr consistent;
@@ -266,7 +272,7 @@ stream {
 ## 启用 HTTPS
 
 让服务器启用 HTTPS 的配置：
-```
+```sh
 server {
     listen    443  ssl;     # 监听时采用 ssl 协议
     server_name localhost;
@@ -290,7 +296,7 @@ server {
 启用 gzip 压缩响应报文 body 之后，可以降低通信耗时，但是会增加 Nginx 的 CPU 负载。
 
 启用 gzip 的配置如下：
-```
+```sh
 location ~ .*\.(jpg|gif|png|bmp)$ {
     gzip on;                    # 启用 gzip
     gzip_vary on;               # 在响应头中加入 Vary: Accept-Encoding ，告诉浏览器这是 gzip 报文

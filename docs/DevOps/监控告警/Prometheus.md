@@ -105,8 +105,8 @@ scrape_configs:
         #   nodename: 'CentOS-1'
       - targets: ['10.0.0.2:9090']    # 下一组监控对象
     # basic_auth:
-      # username: <string>
-      # password: <string>
+    #   username: <string>
+    #   password: <string>
     # proxy_url:
 
   - job_name: 'node_exporter'
@@ -423,123 +423,6 @@ scrape_configs:
             - '10.0.0.3:9090'
     ```
 
-## Alertmanager
-
-：作为一个 HTTP 服务器运行，用于管理 Prometheus 产生的告警消息、转发给用户。
-- [GitHub 页面](https://github.com/prometheus/alertmanager)
-- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦但是很灵活，而且可以在 Web 页面上搜索告警消息、分组管理。
-  - 缺点是只能查看当前的告警消息，不能查看已发送的告警消息。
-- 下载二进制版：
-  ```sh
-  wget https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
-  ```
-  解压后启动：
-  ```sh
-  ./alertmanager --config.file=alertmanager.yml
-  ```
-  默认的访问地址为 <http://localhost:9093>
-- 使用时，需要在 Prometheus 的配置文件中加入如下配置，让 Prometheus 将告警消息发给 Alertmanager 处理。
-  ```yaml
-  alerting:
-    alertmanagers:
-    - static_configs:
-      - targets:
-        - '10.0.0.1:9093'
-  ```
-- Alertmanager 的主要概念：
-  - Filter
-    - ：通过 label=value 的形式筛选告警消息。
-    - 这项方便在 Web 页面上进行查询。
-  - Silence
-    - ：不发送某个或某些告警消息，使其静音。
-    - 这项需要在 Web 页面上配置，且重启 Alertmanager 之后不会丢失。
-  - Group
-    - ：根据某个或某些 label 的值对告警消息进行分组。
-    - 这项需要在配置文件中定义，但也可以在 Web 页面上调试。
-    - 如果 Alertmanager 同时收到多个告警消息，且它们属于同一个 group ，则会将它们放在同一个通知中发送给用户。然后该 group 被静音 repeat_interval 时间。
-    - 即使多个告警消息属于不同 group ，也可能放在同一个通知中发送给用户。
-  - Inhibit
-    - ：用于设置多个告警消息之间的抑制关系。当发出某个告警消息时，使其它的某些告警消息静音。
-    - 这项需要在配置文件中定义。
-- Alertmanager 的配置文件示例：
-  ```yaml
-  global:                                     # 配置一些全局参数
-    # resolve_timeout: 5m                     # 每个告警持续激活的最长时间，超时之后则认为已解决
-    smtp_smarthost: 'smtp.exmail.qq.com:465'
-    smtp_from: '123456@qq.com'
-    smtp_auth_username: '123456@qq.com'
-    smtp_auth_password: '******'
-    smtp_require_tls: false
-
-  receivers:                                  # 定义告警消息的接受者
-    - name: 'email_to_leo'
-      email_configs:                          # 只配置少量 smtp 参数，其余的参数则继承全局配置
-        - to: '123456@qq.com'
-    - name: 'webhook_to_leo'
-      webhook_configs:
-        - url: 'http://localhost:80/email/'
-
-  route:                                      # 定义分组处理告警消息的路由表
-    receiver: 'email_to_leo'
-  
-  # templates:                                # 从文件中导入自定义的消息模板
-  #   - templates/*.tmpl
-  
-  # inhibit_rules:
-  #   - ...
-  ```
-- route 块详细的配置示例如下：
-  ```yaml
-  route:
-    receiver: 'email_to_leo'
-    # group_by:                         # 根据标签的值对已匹配的告警消息进行分组（默认不会分组）
-    #   - alertname
-    #   - instance
-    # group_wait: 30s                   # group 每次发送告警消息之前，需要等待多久（延长该时间有利于收集该组的其它告警消息）
-    # group_interval: 5m                # 非新增的 group 中，出现新的告警消息，首次发送它之前要等待多久
-    # repeat_interval: 4h               # group 重复发送告警消息的最短间隔时间（即使重启 Alertmanager 也不会中断）
-    # routes:
-    #   - receiver: 'webhook_to_leo'
-    #     match:                        # 任意对 label:value ，符合全部条件的告警消息才算匹配
-    #       job: prometheus
-    #     match_re:                     # value 是正则表达式
-    #       job: prometheus|grafana
-    #       instance: .*
-    #     continue: false
-    #   - receiver: 'xxx'
-  ```
-  - 行首用 # 注释的行都不是必填项。
-  - 配置文件中至少有一个 route 块，称为根 route 节点。在它之下可以定义任意个嵌套的 route 块，构成一个树形结构的路由表。
-  - 子 route 节点会继承父 route 节点的所有参数值，作为自己的默认值。
-  - 每次产生告警消息时，会从根 route 节点往下逐个尝试匹配。
-    - 如果当前节点匹配，
-      - 且子节点不匹配，则交给当前节点处理。
-      - 且子节点也匹配，则交给子节点处理。（相当于子节点覆盖了父节点的配置）
-      - 且配置了 `continue: false` ，则结束匹配，退出路由表。
-      - 且配置了 `continue: true` ，则还会继续尝试匹配之后的同级节点。
-    - 如果当前节点不匹配，则会继续尝试匹配之后的同级节点。
-    - 告警消息默认匹配根节点。因此，如果所有节点都不匹配，则会交给根节点处理。
-
-
-TODO:
-验证 group_wait 和 group_interval 是否首次才生效
-设置externalURL
-在URL中调用变量
-整理监控指标
-Prometheus的内置指标：ALERTS{alertname="xxx"}，会不会不能查询到聚合的其它prometheus
-
-```
-inhibit_rules:
-- source_match:
-    severity: critical
-  target_match:
-    severity: warning
-  equal:
-  - alertname
-  - dev
-  - instance
-```
-
 ## Push Gateway
 
 ：作为一个 HTTP 服务器运行，允许其它监控对象主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
@@ -595,6 +478,134 @@ inhibit_rules:
   ```sh
   curl -X DELETE http://localhost:9091/metrics/job/test_job/instance/test_instance    # 删除某个指标
   ```
+
+## Alertmanager
+
+：作为一个 HTTP 服务器运行，用于管理 Prometheus 产生的告警消息、转发给用户。
+- [GitHub 页面](https://github.com/prometheus/alertmanager)
+- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦但是很灵活，而且可以在 Web 页面上搜索告警消息、分组管理。
+  - 缺点是只能查看当前的告警消息，不能查看已发送的告警消息。
+- 主要概念：
+  - Filter
+    - ：通过 label=value 的形式筛选告警消息。
+    - 这项方便在 Web 页面上进行查询。
+  - Silence
+    - ：不发送某个或某些告警消息，使其静音。
+    - 这项需要在 Web 页面上配置，且重启 Alertmanager 之后不会丢失。
+  - Group
+    - ：根据某个或某些 label 的值对告警消息进行分组。
+    - 这项需要在配置文件中定义，但也可以在 Web 页面上调试。
+    - 如果 Alertmanager 同时收到多个告警消息，且它们属于同一个 group ，则会将它们放在同一个通知中发送给用户。然后该 group 被静音 repeat_interval 时间。
+    - 即使多个告警消息属于不同 group ，也可能放在同一个通知中发送给用户。
+  - Inhibit
+    - ：用于设置多个告警消息之间的抑制关系。当发出某个告警消息时，使其它的某些告警消息静音。
+    - 这项需要在配置文件中定义。
+
+### 部署
+
+- 下载二进制版：
+  ```sh
+  wget https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
+  ```
+  解压后启动：
+  ```sh
+  ./alertmanager --config.file=alertmanager.yml
+                # --web.listen-address "0.0.0.0:9093"       # 监听的端口
+                # --cluster.listen-address "0.0.0.0:9094"   # 集群监听的端口
+                # --data.retention 120h                     # 将数据保存多久
+  ```
+  默认的访问地址为 <http://localhost:9093>
+
+### 配置
+
+- 使用 Alertmanager 时，需要在 Prometheus 的配置文件中加入如下配置，让 Prometheus 将告警消息转发给它处理。
+  ```yaml
+  alerting:
+    alertmanagers:
+    - static_configs:
+      - targets:
+        - '10.0.0.1:9093'
+  ```
+
+- alertmanager.yml 的配置示例：
+  ```yaml
+  global:                                     # 配置一些全局参数
+    # resolve_timeout: 5m                     # 每个告警持续激活的最长时间，超时之后则认为已解决
+    smtp_smarthost: 'smtp.exmail.qq.com:465'
+    smtp_from: '123456@qq.com'
+    smtp_auth_username: '123456@qq.com'
+    smtp_auth_password: '******'
+    smtp_require_tls: false
+
+  receivers:                                  # 定义告警消息的接受者
+    - name: 'email_to_leo'
+      email_configs:                          # 只配置少量 smtp 参数，其余的参数则继承全局配置
+        - to: '123456@qq.com'
+    - name: 'webhook_to_leo'
+      webhook_configs:
+        - url: 'http://localhost:80/email/'
+
+  route:                                      # 定义分组处理告警消息的路由表
+    receiver: 'email_to_leo'
+  
+  # templates:                                # 从文件中导入自定义的消息模板
+  #   - templates/*.tmpl
+  
+  # inhibit_rules:
+  #   - ...
+  ```
+
+- route 块的详细配置示例：
+  ```yaml
+  route:
+    receiver: 'email_to_leo'
+    # group_by:                         # 根据标签的值对已匹配的告警消息进行分组（默认不会分组）
+    #   - alertname
+    #   - instance
+    # group_wait: 30s                   # group 每次发送告警消息之前，需要等待多久（延长该时间有利于收集该组的其它告警消息）
+    # group_interval: 5m                # 非新增的 group 中，出现新的告警消息，首次发送它之前要等待多久
+    # repeat_interval: 4h               # group 重复发送告警消息的最短间隔时间（即使重启 Alertmanager 也不会中断）
+    # routes:
+    #   - receiver: 'webhook_to_leo'
+    #     match:                        # 任意对 label:value ，符合全部条件的告警消息才算匹配
+    #       job: prometheus
+    #     match_re:                     # value 是正则表达式
+    #       job: prometheus|grafana
+    #       instance: .*
+    #     continue: false
+    #   - receiver: 'xxx'
+  ```
+  - 行首用 # 注释的行都不是必填项。
+  - 配置文件中至少有一个 route 块，称为根 route 节点。在它之下可以定义任意个嵌套的 route 块，构成一个树形结构的路由表。
+  - 子 route 节点会继承父 route 节点的所有参数值，作为自己的默认值。
+  - 每次产生告警消息时，会从根 route 节点往下逐个尝试匹配。
+    - 如果当前节点匹配，
+      - 且子节点不匹配，则交给当前节点处理。
+      - 且子节点也匹配，则交给子节点处理。（相当于子节点覆盖了父节点的配置）
+      - 且配置了 `continue: false` ，则结束匹配，退出路由表。
+      - 且配置了 `continue: true` ，则还会继续尝试匹配之后的同级节点。
+    - 如果当前节点不匹配，则会继续尝试匹配之后的同级节点。
+    - 告警消息默认匹配根节点。因此，如果所有节点都不匹配，则会交给根节点处理。
+
+
+TODO:
+验证 group_wait 和 group_interval 是否首次才生效
+设置externalURL
+在URL中调用变量
+整理监控指标
+Prometheus的内置指标：ALERTS{alertname="xxx"}，会不会不能查询到聚合的其它prometheus
+
+```
+inhibit_rules:
+- source_match:
+    severity: critical
+  target_match:
+    severity: warning
+  equal:
+  - alertname
+  - dev
+  - instance
+```
 
 ## exporter
 

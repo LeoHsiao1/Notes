@@ -73,7 +73,7 @@ services:                     # 开始定义服务
     # network_mode: "host"    # 网络模式
     volumes:                  # 挂载目录
       - /root/data:/root/data # 可以直接挂载目录
-      - ./log:/root/log       # 可以挂载相对路径
+      - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）
       - conf:/root/conf       # 可以挂载数据卷
     environment:              # 定义环境变量
       var1: 1

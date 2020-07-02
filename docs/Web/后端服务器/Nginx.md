@@ -160,7 +160,22 @@ server {
     allow   all;
     ```
   - 该语句可以写在 http{} 、server{} 或 location{} 中。写在局部作用域的规则的优先级更高，而同一个作用域内，写在前面的规则的优先级更高。
-  - Nginx 会给禁止访问的 IP 回复 HTTP 403 。
+  - Nginx 会给禁止访问的 IP 回复 HTTP 403 报文。
+
+- **auth_basic** 语句：启用 HTTP Basic Auth 。如下：
+    ```sh
+    auth_basic              "closed site";      # 只要不设置成 auth_basic off; 就会启用认证
+    auth_basic_user_file    /etc/nginx/passwd;  # 使用哪个密码文件
+    ```
+    - auth_basic 与 auth_basic_user_file 语句写在 http{} 、server{} 或 location{} 中，并且可以分开使用。
+    - 密码文件中保存了可用的用户名、密码，在运行时修改也会自动刷新。可用以下命令生成：
+        ```sh
+        yum install httpd-tools
+        htpasswd -cb passwd leo 123456   # 往密码文件 passwd 中添加一个用户 leo ，并保存其密码的 MD5 值。加上 -c 选项会创建该文件，如果该文件已存在则会被覆盖
+        htpasswd -b passwd leo 1234      # 往密码文件 passwd 中添加一个用户 leo 。如果该用户名已存在，则会覆盖其密码
+        htpasswd -D passwd leo           # 删除一个用户
+        ```
+    - 如果客户端没有进行 HTTP Basic Auth ，或者进行了但不通过，则会返回 HTTP 401 Authorization Required 报文。
 
 - **proxy_pass** 语句：将收到的 HTTP 请求转发给某个服务器，实现反向代理。如下：
     ```sh

@@ -24,14 +24,14 @@
       sonarqube:
         image: sonarqube:8-community
         restart: unless-stopped
-        ports:
-          - 9000:9000
-        networks:
-          - net
         environment:
           - sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube
           - sonar.jdbc.username=sonarqube
           - sonar.jdbc.password=******  # 待填密码
+        ports:
+          - 9000:9000
+        networks:
+          - net
         volumes:
           - conf:/opt/sonarqube/conf
           - data:/opt/sonarqube/data
@@ -41,12 +41,12 @@
       postgres:
         image: postgres:12
         restart: unless-stopped
-        networks:
-          - net
         environment:
           - POSTGRES_USER=sonarqube
           - POSTGRES_PASSWORD=******    # 待填密码
           - POSTGRES_DB=sonarqube
+        networks:
+          - net
         volumes:
           - postgres:/var/lib/postgresql/data
     

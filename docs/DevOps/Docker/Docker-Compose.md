@@ -65,6 +65,9 @@ services:                     # 开始定义服务
     command: [tail, -f, /dev/null]  # 启动命令
     init: true                # 使用 init 作为 1 号进程
     restart: unless-stopped   # 容器的重启策略
+    environment:              # 定义环境变量
+      var1: 1
+      var2: hello
     ports:                    # 映射端口
       - 9000:8000             # 注意这里的每行配置是一个字符串，因此冒号 : 之后不能加空格
       - 9001:8001
@@ -75,9 +78,6 @@ services:                     # 开始定义服务
       - /root/data:/root/data # 可以直接挂载目录
       - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）
       - conf:/root/conf       # 可以挂载数据卷
-    environment:              # 定义环境变量
-      var1: 1
-      var2: hello
     
   redis:                      # 定义第二个服务
     image: redis:5.0.5

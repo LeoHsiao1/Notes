@@ -31,7 +31,6 @@
   - [Zabbix](监控告警/Zabbix.md)
   - [Prometheus](监控告警/Prometheus.md)
 - 日志处理
-  - [logrotate](日志处理/logrotate.md)
   - [ELK](日志处理/ELK.md)
 - 其它
   - [Nextcloud](其它/Nextcloud.md)

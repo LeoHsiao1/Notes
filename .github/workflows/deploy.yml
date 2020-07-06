@@ -15,6 +15,7 @@ jobs:
     - name: Test
       run: |
         curl -I http://leohsiao.com/ --connect-timeout 3
+        curl http://leohsiao.com:7700/indexes --connect-timeout 3
   
   scrap-docs:
     needs: build-vuepress

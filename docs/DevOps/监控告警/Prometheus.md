@@ -45,7 +45,7 @@
       #   monitor: 'codelab-monitor'
 
     # rule_files:                   # 导入 rule 文件
-    #   - "rules_1.yml"
+    #   - rules_1.yml
 
     scrape_configs:
       - job_name: 'prometheus'
@@ -371,6 +371,7 @@ scrape_configs:
         summary: "节点地址：{{$labels.instance}}, 协程数：{{$value}}"
   ```
   - 可以重复定义同样内容的 rule ，但最终输出时，多个重复的数据会合并为一个。
+  - Alerting Rules 会在每次抓取指标时自动检查一次，不需要设置 interval 。
   - 可以通过 labels、annotations 子句添加一些标签到告警信息中，并且这些标签的值中允许引用变量（基于 Golang 的模板语法）。
   - 上例中，最终生成的警报包含以下内容：
     ```json
@@ -598,14 +599,14 @@ route 块定义了分组处理警报的规则，如下：
 ```yaml
 route:
   receiver: 'email_to_leo'
-  group_by:                         # 根据标签的值对已匹配的警报进行分组（默认不会分组）
-    - alertname
-    - instance
   group_wait: 1m
   group_interval: 1m
   repeat_interval: 24h
   routes:
     - receiver: 'webhook_to_leo'
+      group_by:                     # 根据标签的值对已匹配的警报进行分组（默认不会分组）
+        - alertname
+        - job
       match:                        # 任意对 label:value ，符合全部条件的警报才算匹配
         job: prometheus
       match_re:                     # value 是正则表达式
@@ -664,14 +665,17 @@ route:
   process_resident_memory_bytes{instance='10.0.0.1:9090'} / 1024^3          # 占用的内存（GB）
   prometheus_tsdb_storage_blocks_bytes{instance='10.0.0.1:9090'} / 1024^3   # tsdb block 占用的磁盘空间（GB）
   
-  sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到的 HTTP 请求数
+  sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到 HTTP 请求的次数
   sum(increase(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])) # 每分钟处理 HTTP 请求的耗时（s）
-  count(up == 1)                                                                            # 在线的 targets 总数
-  sum(scrape_samples_scraped{instance='10.0.0.1:9090'})                                     # 抓取的指标总数
-  sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # 执行 scrape 的耗时（s）
-  irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])      # 执行 rule 的耗时（s）
-  sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # 每分钟执行 rule 的总次数
-  sum(increase(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)  # 每分钟执行 rule 的失败次数
+  up{instance="10.0.0.1:9090", job="prometheus"}                                            # target 是否在线（取值 1、0 分别代表在线、离线）
+  count(up == 1)                                                                            # targets 在线数
+  sum(scrape_samples_scraped{instance='10.0.0.1:9090'})                                     # scrape 的执行次数
+  sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # scrape 的执行耗时（s）
+  sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # rule 每分钟的执行次数
+  sum(increase(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)  # rule 每分钟的执行失败次数
+  irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])                         # rule 每分钟的执行耗时（s）
+
+  ALERTS{alertname="xxx", alertstate="pending|firing", ...}                                 # 警报
   ```
 
 ### Grafana
@@ -687,8 +691,8 @@ route:
   irate(process_cpu_seconds_total{instance='10.0.0.1:3000'}[1m])            # 占用的 CPU 核数
   process_resident_memory_bytes{instance='10.0.0.1:3000'} / 1024^3          # 占用的内存（GB）
 
-  sum(increase(http_request_total{instance='10.0.0.1:3000'}[1m])) by (statuscode)      # 每分钟收到的 HTTP 请求数
-  sum(increase(http_request_duration_milliseconds_sum{instance='10.0.0.1:3000'}[1m]))  # 处理 HTTP 请求的耗时（ms）
+  sum(increase(http_request_total{instance='10.0.0.1:3000'}[1m])) by (statuscode)      # 每分钟收到 HTTP 请求的次数
+  sum(increase(http_request_duration_milliseconds_sum{instance='10.0.0.1:3000'}[1m]))  # 每分钟处理 HTTP 请求的耗时（ms）
   grafana_alerting_active_alerts{instance='10.0.0.1:3000'}                             # Alert Rule 的数量
   increase(grafana_alerting_notification_sent_total{instance='10.0.0.1:3000'}[1h])     # 每小时发出的告警次数
   increase(grafana_alerting_result_total{instance='10.0.0.1:3000'}[1h])                # 每小时的 Alert Rule 状态
@@ -705,14 +709,14 @@ route:
   irate(process_cpu_seconds_total{instance='10.0.0.1:8080'}[1m])    # 占用的 CPU 核数
   process_resident_memory_bytes{instance='10.0.0.1:8080'} / 1024^3  # 占用的内存（GB）
 
-  increase(http_requests_count{instance='10.0.0.1:8080'}[1m])       # 每分钟收到的 HTTP 请求数
-  http_requests{instance='10.0.0.1:8080', quantile=~"0.5|0.99"}     # 处理 HTTP 请求的耗时（s）
+  increase(http_requests_count{instance='10.0.0.1:8080'}[1m])       # 每分钟收到 HTTP 请求的次数
+  http_requests{instance='10.0.0.1:8080', quantile=~"0.5|0.99"}     # 每分钟处理 HTTP 请求的耗时（s）
 
   jenkins_node_count_value{instance='10.0.0.1:8080'}        # node 总数
-  jenkins_node_online_value{instance='10.0.0.1:8080'}       # 在线的 node 数
+  jenkins_node_online_value{instance='10.0.0.1:8080'}       # node 在线数
   jenkins_executor_count_value{instance='10.0.0.1:8080'}    # 执行器的总数
   jenkins_executor_in_use_value{instance='10.0.0.1:8080'}   # 执行器正在使用的数量
-  jenkins_node_builds_count{instance='10.0.0.1:8080'}       # 本次 Jenkins 启动以来的构建次数
+  jenkins_node_builds_count{instance='10.0.0.1:8080'}       # Jenkins 本次启动以来的构建总次数
 
   jenkins_job_count_value{instance='10.0.0.1:8080'}         # Job 总数
   jenkins_queue_size_value{instance='10.0.0.1:8080'}        # 构建队列中的 Job 数（最好为 0 ）
@@ -790,20 +794,20 @@ route:
 - 在配置文件中定义要监控的进程：
     ```yaml
     process_names:
-      - exe:                          # 定义多行条件，每个条件可能匹配零个、一个或多个进程
+      - exe:                            # 定义多行条件，每个条件可能匹配零个、一个或多个进程
         - top
         - /bin/ping
 
       - comm:
         - bash
 
-      - name: "{{.ExeBase}}"          # 这里使用可执行文件的基本名作为 name
+      - name: "{{.ExeBase}}"            # 这里使用可执行文件的基本名作为 name
         cmdline:
         - prometheus --config.file
 
-      - name: "{{.Matches.name}}"     # 这里使用正则匹配的元素组作为 name
+      - name: "{{.Matches.name}}"       # 这里使用正则匹配的元素组作为 name
         cmdline:
-        - ping www.(?P<name>\S*).com   # 用 ?P<name> 的格式命名正则匹配的元素组
+        - ping www.(?P<name>\S*).com    # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
     - 关于匹配规则：
       - exe 是对进程的 /proc/<PID>/exe 指向的可执行文件名进行匹配。

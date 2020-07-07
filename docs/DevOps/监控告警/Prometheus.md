@@ -21,8 +21,8 @@
               --storage.tsdb.retention 15d                   # TSDB 保存数据的最长时间（默认为 15 天）
               --web.listen-address '0.0.0.0:9090'            # 监听的地址
               --web.external-url 'http://10.0.0.1:9090'      # 供外部访问的 URL
-              --web.enable-admin-api                         # 启用管理员的 HTTP API
-              --web.enable-lifecycle                         # 启用关于终止的 HTTP API 
+              --web.enable-admin-api                         # 启用管理员的 HTTP API .比如删除 tsdb 的数据
+              --web.enable-lifecycle                         # 启用 reload、quit 等 HTTP API
   ```
 
 - 或者运行 Docker 镜像：
@@ -366,14 +366,15 @@ scrape_configs:
       expr: go_goroutines > 100         # 设置告警条件（只要表达式的执行结果是矢量，就会报警）
       for: 5m                           # 连续满足条件 5 分钟之后才告警
       # labels:
-      #   severity: small
+      #   value: "{{$value}}"
+      #   severity: info
       annotations:
         summary: "节点地址：{{$labels.instance}}, 协程数：{{$value}}"
   ```
   - 可以重复定义同样内容的 rule ，但最终输出时，多个重复的数据会合并为一个。
   - Alerting Rules 会在每次抓取指标时自动检查一次，不需要设置 interval 。
-  - 可以通过 labels、annotations 子句添加一些标签到告警信息中，并且这些标签的值中允许引用变量（基于 Golang 的模板语法）。
-  - 上例中，最终生成的警报包含以下内容：
+  - 可以通过 labels、annotations 子句添加一些标签到告警信息中，并且在这些标签的值中允许引用变量（基于 Golang 的模板语法）。
+  - 上例中，最终生成的警报包含以下信息：
     ```json
     {
       "alertname":"Go协程数过多",
@@ -395,16 +396,17 @@ scrape_configs:
 
 - 管理 Prometheus 的 HTTP API ：
   ```sh
-  GET /-/healthy     # 用于健康检查
-  PUT /-/reload      # 重新加载配置文件
-  PUT /-/quit        # 终止
+  GET /-/healthy     # 用于健康检查，总是返回 Code 200
+  GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
+  POST /-/reload     # 重新加载配置文件
+  POST /-/quit       # 终止
   ```
 - 关于数据的 API ：
   ```sh
   GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600               # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
   GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589266000&step=1m  # 查询一段时间内的所有值
-  PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000    # 删除数据（不指定时间则删除所有时间的数据）
-  PUT /api/v1/admin/tsdb/clean_tombstones                                                       # 让 TSDB 立即释放被删除数据的磁盘空间
+  POST /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000   # 删除数据（不指定时间则删除所有时间的数据）
+  POST /api/v1/admin/tsdb/clean_tombstones                                                      # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
   data/wal/ 目录下缓存的数据不会被删除，因此即使删除 tsdb 中的所有数据， Prometheus 依然会自动从 data/wal/ 目录加载最近的部分数据。
 
@@ -524,15 +526,16 @@ scrape_configs:
 - Filter
   - ：通过 label=value 的形式筛选警报。
   - 它方便在 Web 页面上进行查询。
-- Silence
-  - ：不发送某个或某些警报，相当于静音。
-  - 它需要在 Web 页面上配置，且重启 Alertmanager 之后不会丢失。
 - Group
   - ：根据某个或某些 label 的值对警报进行分组。
   - 它需要在配置文件中定义，但也可以在 Web 页面上临时创建。
+- Silence
+  - ：不发送某个或某些警报，相当于静音。
+  - 它需要在 Web 页面上配置，且重启 Alertmanager 之后不会丢失。
 - Inhibit
   - ：用于设置多个警报之间的抑制关系。当发出某个警报时，使其它的某些警报静音。
   - 它需要在配置文件中定义。
+  - 被静音、抑制的警报不会在 Alertmanager 的 Alerts 页面显示。
 
 ### 示例
 
@@ -556,7 +559,7 @@ Alertmanager 的 Alerts 页面示例：
   - 点击 Source 会跳转到 Prometheus ，查询该警报对应的指标数据。
   - 点击 Silence 可以静音该警报。
 
-### 配置
+### 基本配置
 
 使用 Alertmanager 时，需要在 Prometheus 的配置文件中加入如下配置，让 Prometheus 将警报转发给它处理。
 ```yaml
@@ -570,7 +573,7 @@ alerting:
 alertmanager.yml 的配置示例：
 ```yaml
 global:                                     # 配置一些全局参数
-  # resolve_timeout: 5m                     # 每个告警持续激活的最长时间，超时之后则认为已解决
+  # resolve_timeout: 5m
   smtp_smarthost: 'smtp.exmail.qq.com:465'
   smtp_from: '123456@qq.com'
   smtp_auth_username: '123456@qq.com'
@@ -581,6 +584,7 @@ receivers:                                  # 定义告警消息的接受者
   - name: 'email_to_leo'
     email_configs:                          # 只配置少量 smtp 参数，其余的参数则继承全局配置
       - to: '123456@qq.com'
+        # send_resolved: true               # 是否在警报消失时发送 resolved 类型的警报
   - name: 'webhook_to_leo'
     webhook_configs:
       - url: 'http://localhost:80/email/'
@@ -594,6 +598,18 @@ route:
 # inhibit_rules:
 #   - ...
 ```
+- Prometheus 发来的警报是 JSON 格式，其中会包含 "startsAt" 和 "endsAt" 。
+  - 在 fring 类型的警报中，"endsAt" 是无意义的值，比如 "0001-01-01T00:00:00Z" 。在 resolved 类型的警报中，"endsAt" 才是有意义的值。
+  - 如果 Alertmanager 收到的警报中不包含 EndsAt ，则超过 resolve_timeout 时间之后就认为该警报已解决。
+
+常用的 HTTP API：
+```sh
+GET /-/healthy     # 用于健康检查，总是返回 Code 200
+GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
+POST /-/reload     # 重新加载配置文件
+```
+
+### route 配置
 
 route 块定义了分组处理警报的规则，如下：
 ```yaml
@@ -646,6 +662,32 @@ route:
     - 如果一个警报消失，也会让该 group 解除冷却，发送一次消息。
       如果 Alertmanager 没有重启，且该 group 一直存在，则它发出的告警消息中会一直包含这个 `"status": "resolved"` 的警报。
     - 如果一个消失的警报再次出现，也会让该 group 解除冷却，发送一次消息。
+
+### inhibit_rules 配置
+
+```yaml
+inhibit_rules:
+  - source_match:
+      severity: error
+    target_match:
+      severity: warn
+    equal:
+      - alertname
+      - instance
+  - source_match:
+      alertname: 监控对象离线
+      job: node_exporter
+    target_match:
+    equal:
+      - nodename
+```
+- 原理：先根据 source_match 指定的 label:value 选中一些警报，再根据 target_match 选中一些警报，当 source 警报存在时，会抑制与它 equal 标签值相同的 target 警报。
+  - 如果改为 source_match_re、target_match_re ，则是对 label 的 value 进行正则匹配。
+  - 如果 source_match、target_match 列表为空，则是选中所有警报。
+  - 如果 equal 列表为空，或者 source 警报与 target 警报都不具有 equal 标签（此时相当于它们的该标签值都为空），则抑制所有 target 警报。
+  - 如果 target 警报与 source 警报相同，并不会抑制 source 警报本身。
+- 上例中，第一条抑制规则的作用是：当出现 severity 为 error 的警报时，抑制与它同类型、但 severity 为 warn 的其它警报。
+- 上例中，第二条抑制规则的作用是：当某个主机下线时，抑制该主机的其它警报。
 
 ## exporter
 

@@ -37,6 +37,12 @@ Ctrl + Backspace/Delete ：以单词为单位删除代码。
   - Code Spell Checker：检查单词拼写错误。要忽略的单词记录在settings.json中。通常把它禁用避免干扰，要检查时再启用。
   - Beautify：格式化JS、CSS、HTML。
   - Markdown Preview Enhance：一个增强型的Markdown阅读器。
+
+- 常用命令：
+  - Fold All ：将代码块全部折叠。
+  - Unfold All ：将代码块全部展开。
+  - Trim Trailing Whitespace ：去掉每行末尾的空字符。
+
 ## 
 ## 
 ## 

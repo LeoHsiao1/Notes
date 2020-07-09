@@ -24,17 +24,17 @@ docker run -d --name nginx \
 
 另外，还需要部署 meilisearch 服务器、执行 scrape 工具，才能使用搜索栏。
 
-## 调整字符间距
+## 调整中英文间距
 
-在Linux终端中执行以下命令，处理 *.md 文件，调整英文、数字与汉字之间的间距：
-```
-file_list=`find docs -name "*.md" | grep -v index.md`
+在 Linux 终端执行以下命令，处理 *.md 文件，在中文、英文字符之间插入空格：
+```sh
+file_list=`find . -name "*.md" | grep -v index.md`
 file_list[${#file_list[*]}]=README.md
 file_list[${#file_list[*]}]=etc/README.md
 for file in $file_list
 do
-    python3 etc/replace.py --file $file --src '([\u4e00-\u9fa5])(\w)' --dst '$1 $2'
-    python3 etc/replace.py --file $file --src '(\w)([\u4e00-\u9fa5])' --dst '$1 $2'
-    python3 etc/replace.py --file $file --src '(\w)([，。：！？])' --dst '$1 $2'
+    python3 etc/replace.py --file $file --src '([\u4e00-\u9fa5])(\w|`)' --dst '$1 $2'
+    python3 etc/replace.py --file $file --src '(\w|`)([\u4e00-\u9fa5])' --dst '$1 $2'
+    python3 etc/replace.py --file $file --src '(\w|`)([，。：！？])' --dst '$1 $2'
 done
 ```

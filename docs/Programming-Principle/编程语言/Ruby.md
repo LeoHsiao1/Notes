@@ -18,7 +18,7 @@ ruby test.rb
 ## 语法特点
 
 - 用 # 声明单行注释。
-- 提供了一个交互式终端 IRb ，在 shell 中执行`irb`即可进入，如下：
+- 提供了一个交互式终端 IRb ，在 shell 中执行 `irb` 即可进入，如下：
     ```sh
     [root@Centos ~]# irb
     irb(main):001:0> puts "Hello"

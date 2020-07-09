@@ -27,7 +27,7 @@ npm install gitbook-cli -g
    - [第二章](chapter2/README.md)
    ```
 
-4. 执行`gitbook init`，初始化项目，这会创建 SUMMARY.md 中指定的所有文件。<br>
+4. 执行 `gitbook init` ，初始化项目，这会创建 SUMMARY.md 中指定的所有文件。<br>
    往这些文件中添加内容即可。
-5. 执行`gitbook serve`，启动 Web 服务器。访问<http://127.0.0.1:4000>即可查看。<br>
-   启动服务器时，会自动执行`gitbook build`，生成 HTML 网页，保存到 _book 目录下。
+5. 执行 `gitbook serve` ，启动 Web 服务器。访问<http://127.0.0.1:4000>即可查看。<br>
+   启动服务器时，会自动执行 `gitbook build` ，生成 HTML 网页，保存到 _book 目录下。

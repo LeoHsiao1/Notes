@@ -157,7 +157,7 @@ scrape_configs:
     ```
     go_goroutines{instance="10.0.0.1:9090", job="prometheus"}    80
     ```
-  - metric_name 必须匹配正则表达式`[a-zA-Z_:][a-zA-Z0-9_:]*`，一般通过 Recording Rules 定义的指标名称才包含冒号 : 。
+  - metric_name 必须匹配正则表达式 `[a-zA-Z_:][a-zA-Z0-9_:]*` ，一般通过 Recording Rules 定义的指标名称才包含冒号 : 。
   - label 是对 metric_name 的补充，方便筛选指标。
   - label_value 可以包含 Unicode 字符。
 
@@ -194,7 +194,9 @@ scrape_configs:
   {__name__="go_goroutines", job='prometheus'}    # 通过内置的 __name__ 标签，可以匹配指标名
 
   go_goroutines{job="prometheus"}                 # 查询该名称、该标签值的指标
-  go_goroutines{job!="prometheus"}                # 要求不具有该标签值
+  go_goroutines{job!="prometheus"}                # 要求具有 job 标签，且值不等于 prometheus
+  go_goroutines{job=""}                           # 要求 job 标签的值为空字符串（这等价于不具有 job 标签）
+  go_goroutines{job!=""}                          # 要求具有 job 标签且值不为空
   go_goroutines{job=~`prometheu\w`}               # 要求标签的值匹配正则表达式
   go_goroutines{job!~`prometheu\w`}               # 要求标签的值不匹配正则表达式
 
@@ -362,28 +364,31 @@ scrape_configs:
 
   - name: alerting_rules                # 规则组的名称
     rules:
-    - alert: Go协程数过多                # 定义一个告警规则
+    - alert: Go 协程数过多                # 定义一个告警规则
       expr: go_goroutines > 100         # 设置告警条件（只要表达式的执行结果是矢量，就会报警）
       for: 5m                           # 连续满足条件 5 分钟之后才告警
       # labels:
-      #   value: "{{$value}}"
       #   severity: info
+      #   value: "{{$value}}"
       annotations:
         summary: "节点地址：{{$labels.instance}}, 协程数：{{$value}}"
   ```
   - 可以重复定义同样内容的 rule ，但最终输出时，多个重复的数据会合并为一个。
   - Alerting Rules 会在每次抓取指标时自动检查一次，不需要设置 interval 。
-  - 可以通过 labels、annotations 子句添加一些标签到告警信息中，并且在这些标签的值中允许引用变量（基于 Golang 的模板语法）。
+  - 默认会将 expr 计算结果中的所有 label 添加到告警信息中。
+    - 可以通过 labels 子句添加一些标签到告警信息中，并且给这些标签赋值时允许引用变量（基于 Golang 的模板语法）。
+    - 可以通过 annotations 子句添加一些标签作为注释。
   - 上例中，最终生成的警报包含以下信息：
     ```json
     {
-      "alertname":"Go协程数过多",
+      "alertname":"Go 协程数过多",
       "status": "firing",
       "summary":"节点地址：10.0.0.1:9090, 协程数：90",
       "instance":"10.0.0.1:9090",
       "job":"prometheus",
       ...
     }
+    ```
   - 当异常开始时，Prometheus 会产生 `"status": "firing"` 的警报；当异常结束时，还会产生 `"status": "resolved"` 的警报。
 
 - 在 Web 页面上可以看到 Alerting Rules 的状态：
@@ -507,7 +512,7 @@ scrape_configs:
   ```sh
   ./alertmanager --config.file=alertmanager.yml
                 # --web.listen-address "0.0.0.0:9093"         # 监听的地址
-                # --web.external-url 'http://10.0.0.1:9093'   # 供外部访问的URL
+                # --web.external-url 'http://10.0.0.1:9093'   # 供外部访问的 URL
                 # --cluster.listen-address "0.0.0.0:9094"     # 集群监听的地址
                 # --data.retention 120h                       # 将数据保存多久
   ```
@@ -572,7 +577,7 @@ alerting:
 
 alertmanager.yml 的配置示例：
 ```yaml
-global:                                     # 配置一些全局参数
+global:                           # 配置一些全局参数
   # resolve_timeout: 5m
   smtp_smarthost: 'smtp.exmail.qq.com:465'
   smtp_from: '123456@qq.com'
@@ -580,19 +585,20 @@ global:                                     # 配置一些全局参数
   smtp_auth_password: '******'
   smtp_require_tls: false
 
-receivers:                                  # 定义告警消息的接受者
+receivers:                        # 定义告警消息的接受者
   - name: 'email_to_leo'
-    email_configs:                          # 只配置少量 smtp 参数，其余的参数则继承全局配置
+    email_configs:                # 只配置少量 smtp 参数，其余的参数则继承全局配置
       - to: '123456@qq.com'
-        # send_resolved: true               # 是否在警报消失时发送 resolved 类型的警报
+      # - to: '123456@163.com'    # 可以指定多个发送目标
+      #   send_resolved: true     # 是否在警报消失时发送 resolved 类型的警报
   - name: 'webhook_to_leo'
     webhook_configs:
-      - url: 'http://localhost:80/email/'
+      - url: 'http://localhost:80/'
 
 route:
   receiver: 'email_to_leo'
 
-# templates:                                # 从文件中导入自定义的消息模板
+# templates:                      # 从文件中导入自定义的消息模板
 #   - templates/*.tmpl
 
 # inhibit_rules:
@@ -602,7 +608,7 @@ route:
   - 在 fring 类型的警报中，"endsAt" 是无意义的值，比如 "0001-01-01T00:00:00Z" 。在 resolved 类型的警报中，"endsAt" 才是有意义的值。
   - 如果 Alertmanager 收到的警报中不包含 EndsAt ，则超过 resolve_timeout 时间之后就认为该警报已解决。
 
-常用的 HTTP API：
+常用的 HTTP API ：
 ```sh
 GET /-/healthy     # 用于健康检查，总是返回 Code 200
 GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
@@ -614,7 +620,7 @@ POST /-/reload     # 重新加载配置文件
 route 块定义了分组处理警报的规则，如下：
 ```yaml
 route:
-  receiver: 'email_to_leo'
+  receiver: 'email_to_leo'          # 只能指定一个接收方
   group_wait: 1m
   group_interval: 1m
   repeat_interval: 24h
@@ -687,7 +693,7 @@ inhibit_rules:
   - 如果 equal 列表为空，或者 source 警报与 target 警报都不具有 equal 标签（此时相当于它们的该标签值都为空），则抑制所有 target 警报。
   - 如果 target 警报与 source 警报相同，并不会抑制 source 警报本身。
 - 上例中，第一条抑制规则的作用是：当出现 severity 为 error 的警报时，抑制与它同类型、但 severity 为 warn 的其它警报。
-- 上例中，第二条抑制规则的作用是：当某个主机下线时，抑制该主机的其它警报。
+- 上例中，第二条抑制规则的作用是：当某个主机离线时，抑制该主机的其它警报。
 
 ## exporter
 
@@ -827,7 +833,7 @@ inhibit_rules:
   ```
   解压后启动：
   ```sh
-  ./process-exporter -config.path=config.yml
+  ./process-exporter -config.path=process-exporter.yml
                      -children=false             # 采集每个进程的指标时，是否包含其所有子进程的指标（默认为 true）
                      -threads=false              # 是否采集每个线程的指标（默认为 true）
   ```
@@ -882,5 +888,5 @@ inhibit_rules:
 
 ### blackbox_exporter
 
-：可以测试 DNS、ICMP、TCP、HTTP，以及 SSL 证书过期时间。
+：可以测试 DNS、ICMP、TCP、HTTP ，以及 SSL 证书过期时间。
  

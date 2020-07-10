@@ -59,8 +59,9 @@
 
 ## 架构
 
-- 用户需要在每个被监控对象的主机上运行一个特定的 HTTP 服务器作为 exporter ，当用户访问该主机的 `http://localhost:9090/metrics` 时，就会触发 exporter 采集一次指标数据，放在 HTTP 响应报文中回复给用户。
-  - exporter 一般只负责采集当前时刻的指标数据，不负责存储数据。
+- 在每个监控对象的主机上运行一个负责采集监控指标的 HTTP 服务器作为 exporter 。
+  - 向该 exporter 服务器发出 HTTP GET 请求，它就会按一种特定的文本格式输出监控指标。
+  - exporter 只负责采集当前时刻的指标数据，不负责存储数据。
 
 - Prometheus Server 会定时向各个 exporter 发出 HTTP 请求，获得指标数据，并存储到自己的时序数据库中。
   - 它属于离散采样，可能有遗漏、有延迟、有误差。
@@ -364,32 +365,38 @@ scrape_configs:
 
   - name: alerting_rules                # 规则组的名称
     rules:
-    - alert: Go 协程数过多                # 定义一个告警规则
+    - alert: 测试告警-1                  # 定义一个告警规则
       expr: go_goroutines > 100         # 设置告警条件（只要表达式的执行结果是矢量，就会报警）
       for: 5m                           # 连续满足条件 5 分钟之后才告警
       # labels:
-      #   severity: info
-      #   value: "{{$value}}"
+      #   severity: error
       annotations:
         summary: "节点地址：{{$labels.instance}}, 协程数：{{$value}}"
   ```
   - 可以重复定义同样内容的 rule ，但最终输出时，多个重复的数据会合并为一个。
-  - Alerting Rules 会在每次抓取指标时自动检查一次，不需要设置 interval 。
+  - Prometheus 会在每次抓取指标时自动检查一次 Alerting Rules ，因此不需要设置 interval 。
   - 默认会将 expr 计算结果中的所有 label 添加到告警信息中。
     - 可以通过 labels 子句添加一些标签到告警信息中，并且给这些标签赋值时允许引用变量（基于 Golang 的模板语法）。
     - 可以通过 annotations 子句添加一些标签作为注释。
   - 上例中，最终生成的警报包含以下信息：
     ```json
     {
-      "alertname":"Go 协程数过多",
-      "status": "firing",
-      "summary":"节点地址：10.0.0.1:9090, 协程数：90",
-      "instance":"10.0.0.1:9090",
-      "job":"prometheus",
-      ...
+        "status": "firing",
+        "labels": {
+            "alertname": "进程数归零",
+            "instance":"10.0.0.1:9090",
+            "job":"prometheus",
+        },
+        "annotations": {
+            "summary":"节点地址：10.0.0.1:9090, 协程数：90",
+        },
+        "startsAt": "2020-07-09T01:23:22.627587301Z",
+        "endsAt": "0001-01-01T00:00:00Z"
     }
     ```
   - 当异常开始时，Prometheus 会产生 `"status": "firing"` 的警报；当异常结束时，还会产生 `"status": "resolved"` 的警报。
+    - 在 fring 类型的警报中，"endsAt" 是无意义的值，比如 "0001-01-01T00:00:00Z" 。
+    - 在 resolved 类型的警报中，才会给 "endsAt" 设置有意义的值。
 
 - 在 Web 页面上可以看到 Alerting Rules 的状态：
   - 不满足告警条件时，属于 Inactive 状态。
@@ -578,7 +585,7 @@ alerting:
 alertmanager.yml 的配置示例：
 ```yaml
 global:                           # 配置一些全局参数
-  # resolve_timeout: 5m
+  # resolve_timeout: 5m           # 如果 Alertmanager 收到的警报 JSON 中不包含 EndsAt ，则超过该时间之后就认为该警报已解决
   smtp_smarthost: 'smtp.exmail.qq.com:465'
   smtp_from: '123456@qq.com'
   smtp_auth_username: '123456@qq.com'
@@ -604,9 +611,6 @@ route:
 # inhibit_rules:
 #   - ...
 ```
-- Prometheus 发来的警报是 JSON 格式，其中会包含 "startsAt" 和 "endsAt" 。
-  - 在 fring 类型的警报中，"endsAt" 是无意义的值，比如 "0001-01-01T00:00:00Z" 。在 resolved 类型的警报中，"endsAt" 才是有意义的值。
-  - 如果 Alertmanager 收到的警报中不包含 EndsAt ，则超过 resolve_timeout 时间之后就认为该警报已解决。
 
 常用的 HTTP API ：
 ```sh
@@ -628,7 +632,6 @@ route:
     - receiver: 'webhook_to_leo'
       group_by:                     # 根据标签的值对已匹配的警报进行分组（默认不会分组）
         - alertname
-        - job
       match:                        # 任意对 label:value ，符合全部条件的警报才算匹配
         job: prometheus
       match_re:                     # value 是正则表达式
@@ -655,7 +658,6 @@ route:
   - 警报默认匹配根节点。因此，如果所有节点都不匹配，则会交给根节点处理。
 - Alertmanager 以 group 为单位发送告警消息。
   - 每次发送一个 group 时，总是会将该 group 内现有的所有警报合并成一个告警消息，同时发送出去。
-    不过，不同 group 也可能合并成一个告警消息发送。
   - 当一个 group 中出现第一个警报时，会先等待 `group_wait` 时长再发送该 group 。
     - 延长 group_wait 时间有利于收集属于同一 group 的其它警报，一起发送。
   - 每次发送一个 group 之后，会将它冷却 `repeat_interval` 时长之后，才允许再一次发送该 group 。
@@ -681,7 +683,7 @@ inhibit_rules:
       - alertname
       - instance
   - source_match:
-      alertname: 监控对象离线
+      alertname: target 离线
       job: node_exporter
     target_match:
     equal:

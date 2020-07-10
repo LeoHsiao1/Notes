@@ -640,6 +640,10 @@ extend() 方法相当于列表相加：
 >>> list1.insert(2, "Hello")
 >>> list1
 [1, 2, 'Hello', 3]
+>>> list1.insert(100, 'Hi')   # 下标允许超过范围，此时相当于 list1.append('Hi')
+>>> list1
+[1, 2, 'Hello', 3, 'Hi']
+
 ## 查。
 - list.count(object) -> int
   - 功能：在list中查找某个元素，返回其存在的个数。如果不存在该元素则返回0。

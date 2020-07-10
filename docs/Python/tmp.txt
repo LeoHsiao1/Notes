@@ -612,6 +612,7 @@ list
 >>> list1.append("Hello")
 >>> list1
 [1, 2, 3, 'Hello']
+
 - list.extend(iterable) -> None
   - 功能：将一个可迭代对象中的每个元素逐个附加到list的末尾。
   - 相当于for i in iterable: list.append(i)。
@@ -619,9 +620,19 @@ list
 >>> list1 = [1, 2, 3]
 >>> list1.extend("Hello")
 >>> list1
-[1, 2, 3, 'Hello', 'H', 'e', 'l', 'l', 'o']
+[1, 2, 3, 'H', 'e', 'l', 'l', 'o']
 >>> list1.extend(1)
 TypeError: 'int' object is not iterable
+
+
+extend() 方法相当于列表相加：
+>>> list1 = [1, 2, 3]
+>>> list1 += "Hello" 
+>>> list1
+[1, 2, 3, 'H', 'e', 'l', 'l', 'o']
+
+
+
 - list.insert(index: int, object) -> None
   - 功能：将一个对象插入到list的指定位置。
   - 例：
@@ -3341,6 +3352,9 @@ psutil.net_connections(kind="tcp")
   - UTC时间是世界标准时间，记录从1970年1月1日开始的原子时秒长。
   - UTC时间属于0时区，与格林威治时间（GMT）相同。北京时间属于UTC+8时区。
   - 通过time.time()获取时间的延迟很小，不足1ms。
+
+> Unix时间戳(Unix timestamp)，或称Unix时间(Unix time)、POSIX时间(POSIX time)，是一种时间表示方式，定义为从格林威治时间1970年01月01日00时00分00秒起至现在的总秒数。
+
 - 获取UTC时间的struct_time元组：
 >>> time.gmtime(time.time())            # 将时间戳转换成struct_time元组
 time.struct_time(tm_year=2019, tm_mon=5, tm_mday=31, tm_hour=4, tm_min=40, tm_sec=52, tm_wday=4, tm_yday=151, tm_isdst=0)
@@ -3362,13 +3376,15 @@ time.struct_time(tm_year=2019, tm_mon=5, tm_mday=31, tm_hour=12, tm_min=46, tm_s
 0.0
 >>> time.mktime(time.gmtime()) - int(time.time())
 -28800.0
+
 - 将struct_time元组转换成指定格式的字符串：
   - struct_time元组不包含毫秒，因此生成的字符串中不包含毫秒。
->>> time.strftime("%Y%m%d-%H:%M:%S", time.localtime())
-'20181212-13:52:43'
+>>> time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
+'2018/12/12 13:52:43'
 - 将指定格式的字符串转换成struct_time元组：
->>> time.strptime("20181212-13:52:43", "%Y%m%d-%H:%M:%S")
+>>> time.strptime("2018/12/12 13:52:43", "%Y/%m/%d %H:%M:%S")
 time.struct_time(tm_year=2018, tm_mon=12, tm_mday=12, tm_hour=13, tm_min=52, tm_sec=43, tm_wday=2, tm_yday=346, tm_isdst=-1)
+
 ## time模块还可暂停当前线程、获取程序的运行时间。
 - 暂停当前线程：
 >>> time.sleep(3)
@@ -3394,49 +3410,98 @@ while 1:
 - 时区要用pytz模块选择：
 >>> import pytz
 >>> pytz.all_timezones_set        # 返回所有可用时区名的集合
-LazySet({'Europe/Tirane', 'Asia/Phnom_Penh', 'America/New_York',...
+LazySet({'Europe/Tirane', 'Asia/Shanghai', 'America/New_York',...
 >>> pytz.timezone("UTC")            # 返回某个时区名对应的时区对象
 <UTC>
 - 获取当前时间的datetime对象：
 >>> from datetime import datetime                # 从datetime模块导入datetime类
->>> datetime.utcnow()                            # 获取UTC时间，返回一个datetime对象
-datetime.datetime(2019, 5, 30, 9, 2, 2, 512089)
->>> datetime.now()                            # 获取本地时间
-datetime.datetime(2019, 5, 30, 17, 2, 3, 632104)
+>>> datetime.utcnow()                            # 获取UTC时区的当前时间，返回一个datetime对象
+datetime.datetime(2019, 5, 30, 10, 0, 0, 505080)
+>>> datetime.now()                               # 获取当前时间，时区默认为本地
+datetime.datetime(2019, 5, 30, 18, 0, 0, 505080)
+
 - 转换时区：
->>> from datetime import timezone
 >>> import pytz
->>> datetime.now(tz=pytz.timezone("UTC"))                # 获取指定时区的时间
-datetime.datetime(2019, 5, 30, 8, 58, 21, 426129, tzinfo=<UTC>)
->>> datetime.now().astimezone(pytz.timezone("UTC"))        # 将datetime对象转换到指定时区
-datetime.datetime(2019, 5, 30, 9, 46, 17, 373527, tzinfo=<UTC>)
+>>> datetime.now(tz=pytz.timezone("UTC"))                # 获取指定时区的当前时间
+datetime.datetime(2019, 5, 30, 10, 0, 0, 505080, tzinfo=<UTC>)
+>>> datetime.now().astimezone(pytz.timezone("UTC"))      # 将datetime对象从当前时区转换到指定时区
+datetime.datetime(2019, 5, 30, 10, 0, 0, 505080, tzinfo=<UTC>)
+>>> datetime.now().astimezone(pytz.timezone("Asia/Shanghai")) 
+datetime.datetime(2019, 5, 30, 18, 0, 0, 505080, tzinfo=<DstTzInfo 'Asia/Shanghai' CST+8:00:00 STD>)
+
 ## datetime对象。
+定义：
+class datetime.datetime(year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo=None, *)
+创建 datetime 对象时，至少要传入 year、month、day 三个参数。
+并且会检查传入的所有参数是否在如下合理范围内，否则抛出 ValueError 异常。
+```
+MINYEAR <= year <= MAXYEAR
+1 <= month <= 12
+1 <= day <= 指定年月的天数
+0 <= hour < 24
+0 <= minute < 60
+0 <= second < 60
+0 <= microsecond < 1000000
+```
+
 - datetime对象包含了年、月、日、时、分、秒以及时区信息。
 >>> d = datetime.now()
 >>> print(d.year, d.month, d.day)
 2019 5 30
 >>> print(d.hour, d.minute, d.second, d.microsecond)
-17 5 25 630753
+18 0 0 505080
 >>> d.replace(hour=12)            # 修改datetime对象的值
-datetime.datetime(2019, 5, 30, 12, 5, 25, 630753)
+datetime.datetime(2019, 5, 30, 12, 0, 0, 505080)
+
+- datetime 对象的 tzinfo 属性默认为 None ，即不确定时区。在涉及到时区的操作时，可能会被当作UTC时区处理，也可能会被当作本地时区处理，容易出错。所有应该主动标明时区，如下：
+>>> d.tzinfo == None
+True
+>>> d.replace(tzinfo=pytz.timezone("Asia/Shanghai"))
+datetime.datetime(2019, 5, 30, 18, 0, 0, 505080, tzinfo=<DstTzInfo 'Asia/Shanghai' LMT+8:06:00 STD>)
+
+time 模块不支持修改时间的时区，而 datetime 模块支持：
+- 可以通过 datetime.astimezone() 方法转换时区。此时显示的时间字符串会按时差变化，但底层的Unix时间戳不变。
+- 可以通过 datetime.replace() 方法强行改变时区。此时显示的时间字符串不变，但底层的Unix时间戳会按时差变化。
+
+例：将时间字符串从 UTC 时区转换到指定时区
+```py
+>>> utc_time_str = '2019/05/30 10:00:00'
+>>> utc_time = datetime.strptime(utc_time_str, "%Y/%m/%d %H:%M:%S").replace(tzinfo=pytz.timezone("UTC"))
+>>> utc_time.astimezone(pytz.timezone("Asia/Shanghai")).strftime("%Y/%m/%d %H:%M:%S")
+'2019/05/30 18:00:00'
+```
+
+- 与 timetuple 的转换：
+>>> d.timetuple()      # 直接转换成 timetuple
+time.struct_time(tm_year=2019, tm_mon=5, tm_mday=30, tm_hour=18, tm_min=0, tm_sec=0, tm_wday=3, tm_yday=150, tm_isdst=-1)
+>>> d.utctimetuple()   # 先转成成 UTC 时区，再转换成 timetuple ，不过 d.tzinfo 为 None ，得到的 timetuple 并不是正确的 UTC 时间
+time.struct_time(tm_year=2019, tm_mon=5, tm_mday=30, tm_hour=18, tm_min=0, tm_sec=0, tm_wday=3, tm_yday=150, tm_isdst=0)
+>>> d.replace(tzinfo=pytz.timezone("Asia/Shanghai")).timetuple()   
+time.struct_time(tm_year=2019, tm_mon=5, tm_mday=30, tm_hour=18, tm_min=0, tm_sec=0, tm_wday=3, tm_yday=150, tm_isdst=0)
+>>> d.replace(tzinfo=pytz.timezone("Asia/Shanghai")).utctimetuple()     # 结果为正确的 UTC 时间
+time.struct_time(tm_year=2019, tm_mon=5, tm_mday=30, tm_hour=9, tm_min=54, tm_sec=0, tm_wday=3, tm_yday=150, tm_isdst=0)
+
+
 - 与时间戳的转换：
 >>> d.timestamp()                    # 将datetime对象转换成时间戳（不会自动转换成UTC时区）
-1559207573.719928
->>> datetime.fromtimestamp(1559207573.719928, tz=pytz.timezone("UTC"))
-# 将时间戳转换成datetime对象
-datetime.datetime(2019, 5, 30, 9, 12, 53, 719928, tzinfo=<UTC>)
+1559210400.50508
+>>> datetime.fromtimestamp(1559210400.50508, tz=pytz.timezone("UTC")) # 将时间戳转换成datetime对象
+datetime.datetime(2019, 5, 30, 10, 0, 0, 505080, tzinfo=<UTC>)
+
 - 与字符串的转换：
   - 与time.strftime()相比，datetime能用 %f 输出微妙。
->>> d.strftime("%Y%m%d-%H:%M:%S.%f")            # 将datetime对象转换成指定格式的字符串
-'20190530-17:12:53.505080'
->>> datetime.strptime('20190530-17:12:53', "%Y%m%d-%H:%M:%S")
-datetime.datetime(2019, 5, 30, 17, 12, 53)        # 将指定格式的字符串转换成datetime对象
+>>> d.strftime("%Y/%m/%d %H:%M:%S.%f")            # 将datetime对象转换成指定格式的字符串
+'2019/05/30 18:00:00.505080'
+>>> datetime.strptime('2019/05/30 18:0:0.505080', "%Y/%m/%d %H:%M:%S.%f")
+datetime.datetime(2019, 5, 30, 18, 0, 0, 505080)    # 将指定格式的字符串转换成datetime对象
+
+
 - datetime对象支持加减法运算：
 >>> from datetime import timedelta                # 从datetime模块导入timedelta类
 >>> datetime.now() - datetime.utcnow()            # 两个datetime对象相加减，会生成timedelta对象
 datetime.timedelta(seconds=28800)
 >>> datetime.now() + timedelta(hours=10)        # 一个datetime对象可以与timedelta对象相加减
-datetime.datetime(2019, 5, 31, 3, 23, 20, 397415)
+datetime.datetime(2019, 5, 31, 4, 0, 0, 505080)
 >>> timedelta(milliseconds=100).total_seconds()    # 获取timedelta对象的秒值
 0.1
 ## 
@@ -4326,9 +4391,9 @@ False
   - 所有文件都是以二进制的形式存储的，因此以二进制的形式可以直接读写所有文件。
 - 字符流：以字符为单位读写文件。
   - 需要先读取文件的二进制内容，再按某种编码方式转换成字符流。
-## 序列化（serialization）：将数据转换成可传输、可存储的数据类型的过程。
-- 序列化时，一般先将数据转换成XML、JSON等通用的文本格式，再按某种编码格式转换成二进制形式。
-- 反序列化是指相反的过程。
+## 序列化（serialization）：将数据转换成便于传输、存储的格式的过程。
+- 不同程序通常采用不同的格式存储数据，为了方便在它们之间传输数据、存储数据，通常要将数据序列化成某种通用的格式，比如XML、JSON、YAML等。
+- 反序列化是指序列化的逆过程，将数据还原成原本的格式。
 ## 
 ## 
 ## 
@@ -4949,7 +5014,7 @@ ws1['A2'].Font=font1
 ## 
  
 XML
-## XML（可扩展标记语言）：一种保存结构化数据的文本格式，常用于不同编程语言之间的通信。可读性较差。
+## XML（可扩展标记语言）：一种保存结构化数据的文本格式，可读性较差。
 ## 语法。
 - 用 <!-- ... --> 声明注释。
 - 可以在第一行声明XML的版本：
@@ -5021,7 +5086,7 @@ Hello World
 JSON
 ## JSON（JavaScript Object Notation）：一种保存结构化数据的文本格式。
 - JSON原本是JavaScript的对象表示格式，后来发展成为一种独立于语言和平台的文本格式，常用于不同编程语言之间的通信。
-- JSON、XML、YAML都是纯文本格式，用于保存、传输数据，方便程序使用。而HTML是用于显示数据给用户看。
+- JSON、XML、YAML都是纯文本格式，用于将数据序列化，方便传输、存储。而HTML是用于在网页上显示数据。
 ## 语法。
 - 用 // 声明单行注释。
 - JSON中的数据采用键/值（key/value）对的格式表示，每个键值对之间用逗号隔开。

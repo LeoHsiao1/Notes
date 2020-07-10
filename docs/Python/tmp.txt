@@ -5203,18 +5203,37 @@ DEBUG: true
   - 相当于Python中的["server":["name": "www.test.com", "ip": "120.168.117.22"], "DEBUG": "true"]
 
 
-yaml模块
-pip install pyyaml
+PyYAML 模块
+pip install PyYAML
+
+- [官方文档](https://pyyaml.org/wiki/PyYAMLDocumentation)
 
 写：
+>>> import yaml
 >>> data = {"k1": "v1", "k2": "v2"}
->>> yaml.dump(data, Dumper=yaml.CDumper)       # 从dict类型转换成YAML格式的字符串
+>>> yaml.dump(data)       # 从dict类型转换成YAML格式的字符串
 'k1: v1\nk2: v2\n'
 >>> with open("test.yml", 'w') as f:
-...     yaml.dump(data, f, Dumper=yaml.CDumper)      # 转换成YAML格式并写入文件
+...     yaml.dump(data, f)      # 转换成YAML格式并写入文件
 ...
 
+在序列化数据时，会将字典按 key 升序排序，如下：
+>>> data = {"k2": "v2", "k1": "v1"} 
+>>> print(yaml.dump(data))
+k1: v1
+k2: v2
+
+在序列化数据时，会将 Unicode 字符显示编码，需要用 unicode_escape 解码，如下：
+>>> yaml.dump({"k1": "你好"})        
+'k1: "\\u4F60\\u597D"\n'
+>>> yaml.dump({"k1": "你好"}, encoding='utf-8')     # 序列化并编码
+b'k1: "\\u4F60\\u597D"\n'
+>>> yaml.dump({"k1": "你好"}, encoding='utf-8').decode("unicode_escape")
+'k1: "你好"\n'
+
 读取：
+>>> yaml.load('k1: v1\nk2: v2\n', Loader=yaml.CLoader) 
+{'k1': 'v1', 'k2': 'v2'}
 >>> with open("test.yml") as f:
 ...     yaml.load(f.read(), Loader=yaml.CLoader)
 ...

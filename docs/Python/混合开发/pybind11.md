@@ -156,7 +156,7 @@
     ```cpp
     m.def("sum", [](int x, int y) { return (x + y); });
     ```
-    - 该函数的形参是`(int x, int y)`。
+    - 该函数的形参是 `(int x, int y)` 。
     - 该函数的返回类似不必声明，因为 pybind11 会自动处理。
 
 - 可以给函数声明关键字参数：

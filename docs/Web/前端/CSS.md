@@ -14,7 +14,7 @@
     </body>
     ```
 
-- 内部样式表：在标签`<script>`之内编写 css 代码，作用于整个 HTML 。
+- 内部样式表：在标签 `<script>` 之内编写 css 代码，作用于整个 HTML 。
   - 通常定义在 HTML 的 head 部分。
   - 子元素会继承父元素的样式表。
 
@@ -28,7 +28,7 @@
     </style>
     ```
 
-- 外部样式表：用标签`<link>`导入外部的 .css 文件，作用于整个 HTML 。
+- 外部样式表：用标签 `<link>` 导入外部的 .css 文件，作用于整个 HTML 。
   - 外部样式表通常保存在 .css 文件中。
   - 使用外部样式表可以被多个 HTML 文件复用。
     ```html
@@ -340,8 +340,8 @@ a:active {text-decoration:underline;}
 
 - px ：像素点数，用于设置绝对位置。
 - em ：相对于父元素的倍数。
-  - 如果元素的 font-size 为 n em ，则等于`父元素的 font-size × n`。
-  - 如果元素的 width、height、padding、margin 为 n em ，则等于`该元素的 font-size × n`。
+  - 如果元素的 font-size 为 n em ，则等于 ` 父元素的 font-size × n` 。
+  - 如果元素的 width、height、padding、margin 为 n em ，则等于 ` 该元素的 font-size × n` 。
 - n%：相对于父元素的相应值的百分比。
 - rem ：相对于根元素 html 的倍数。
 
@@ -363,11 +363,11 @@ p {
 
 ### 显示方式
 
-- `display:block;`：显示为块级元素。
-- `display:inline;`：显示为内联元素。
-- `display:inline-block;`：显示为内联块元素。
-- `display:none;`：不显示该元素。
-- `visibility:hidden;`：不显示该元素，但依然占用布局空间。
+- `display:block;` ：显示为块级元素。
+- `display:inline;` ：显示为内联元素。
+- `display:inline-block;` ：显示为内联块元素。
+- `display:none;` ：不显示该元素。
+- `visibility:hidden;` ：不显示该元素，但依然占用布局空间。
 
 ### 框模型
 

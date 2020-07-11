@@ -40,11 +40,11 @@
   - `+` ：单层通配符，匹配该层的所有主题。
   - `#` ：多层通配符，匹配该层以及其下各层的所有主题，只能用于 topic 的末尾。
 - 例：
-  - 主题过滤器`sport/tennis/+`匹配`sport/tennis/player1`、`sport/tennis/player2`，但不匹配`sport/tennis/player1/ranking`。
-  - `sport/+`匹配`sport/`，不匹配`sport`。
-  - `/finance`匹配`+/+`和`/+`，但是不匹配`+`。
-  - `+`、`+/tennis/# `、`sport/+/player1`是有效的。
-  - `sport+`是无效的。
-  - `# `是有效的，会匹配所有 topic 。
-  - `sport/tennis/# `是有效的，而`sport/tennis# `、`sport/tennis/# /ranking`是无效的。
-- 因为`$SYS/`被广泛用作包含服务器特定信息或控制接口的主题的前缀，所以`+`和`#`都不会匹配以`$`开头的主题，需要单独订阅，比如用`$SYS/#`。
+  - 主题过滤器 `sport/tennis/+` 匹配 `sport/tennis/player1`、`sport/tennis/player2` ，但不匹配 `sport/tennis/player1/ranking` 。
+  - `sport/+` 匹配 `sport/` ，不匹配 `sport` 。
+  - `/finance` 匹配 `+/+` 和 `/+` ，但是不匹配 `+` 。
+  - `+`、`+/tennis/# `、`sport/+/player1` 是有效的。
+  - `sport+` 是无效的。
+  - `# ` 是有效的，会匹配所有 topic 。
+  - `sport/tennis/# ` 是有效的，而 `sport/tennis# `、`sport/tennis/# /ranking` 是无效的。
+- 因为 `$SYS/` 被广泛用作包含服务器特定信息或控制接口的主题的前缀，所以 `+` 和 `#` 都不会匹配以 `$` 开头的主题，需要单独订阅，比如用 `$SYS/#` 。

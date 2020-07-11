@@ -65,7 +65,7 @@ pipeline {
 
 ## 使用变量
 
-- 用 `$变量名` 的格式可以读取变量的值。
+- 用 `$变量名 ` 的格式可以读取变量的值。
 - Jenkins 在执行 Jenkinsfile 之前，会先将各个变量名替换成其值（相当于字符串替换）。如果使用的变量尚未定义，则会报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
 
 ### 构建参数
@@ -114,7 +114,7 @@ pipeline {
         }
     }
     ```
-- 以上 echo 语句、sh 语句中，`$ID`都会被视作 Jenkinsfile 的环境变量取值，如果不存在则报错。
+- 以上 echo 语句、sh 语句中，`$ID` 都会被视作 Jenkinsfile 的环境变量取值，如果不存在则报错。
 - 如果要读取 shell 中的变量，则应该执行被单引号包住的 sh 语句。例如：`sh 'ID=2; echo $ID'`
 - 在 environment{} 中可以通过以下方式读取 Jenkins 的一些内置变量：
     ```groovy
@@ -185,7 +185,7 @@ pipeline {
     }
     ```
 - 使用字符串时，要用双引号 " 或单引号 ' 包住（除非是纯数字组成的字符串），否则会被当作变量取值。
-  - 例如：`echo ID`会被当作`echo "$ID"`执行。
+  - 例如：`echo ID` 会被当作 `echo "$ID"` 执行。
   - 使用三引号 """ 或 ''' 包住时，可以输入换行的字符串。
 
 ### sh

@@ -54,7 +54,7 @@ Actions 默认运行在 GitHub 提供的运行环境中（包括 Linux、Windows
   useradd github
   su - github
   ```
-- 在流水线文件中用`self-hosted`标签即可使用自己的 Runner ，如下：
+- 在流水线文件中用 `self-hosted` 标签即可使用自己的 Runner ，如下：
   ```yaml
   runs-on: [self-hosted, linux]
   ```

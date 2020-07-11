@@ -50,12 +50,12 @@
 └─ package.json
 ```
 - 上例中，docs 目录就是 VuePress 网站的根目录。
-- VuePress 会扫描 docs 目录及其子目录，将每个目录下的 README.md 或 index.md 文件构建成 index.html 。比如上例中，访问 URL 为`/`时，是根据`docs/README.md`作出显示；访问 URL 为`/dir1/`时，是根据`docs/test/index.md`作出显示。
+- VuePress 会扫描 docs 目录及其子目录，将每个目录下的 README.md 或 index.md 文件构建成 index.html 。比如上例中，访问 URL 为 `/` 时，是根据 `docs/README.md` 作出显示；访问 URL 为 `/dir1/` 时，是根据 `docs/test/index.md` 作出显示。
 - MarkDown 文档中引用图片等资源时，建议使用相对路径，并且显示地以 ./ 开头，而且只包含英文字符，否则可能不能显示。
 
 ## 基本配置
 
-VuePress 网站的配置文件默认为`docs/..vuepress/config.js`，配置示例如下：
+VuePress 网站的配置文件默认为 `docs/..vuepress/config.js` ，配置示例如下：
 ```js
 module.exports = {
     title: 'Hello VuePress',            // 网站的标题，还会显示在导航栏的左上角
@@ -102,7 +102,7 @@ module.exports = {
 
 只要 docs 目录下存在 README.md 或 index.md 文件，就可以让 VuePress 显示出网站的首页。
 
-特别地，可以在`docs/READMD.md`文件中插入以下 YAML 格式的内容，让 VuePress 网站显示一种特殊布局的首页（Homepage）。
+特别地，可以在 `docs/READMD.md` 文件中插入以下 YAML 格式的内容，让 VuePress 网站显示一种特殊布局的首页（Homepage）。
 ```markdown
 ---
 home: true              # 开启显示 Homepage
@@ -125,7 +125,7 @@ footer: MIT Licensed | Copyright © 2018-present Evan You    # 页脚
 
 ### 显示样式
 
-- 编辑`docs/.vuepress/styles/palette.styl`文件可修改网站配色，如下：
+- 编辑 `docs/.vuepress/styles/palette.styl` 文件可修改网站配色，如下：
     ```
     $accentColor = #3eaf7c  // 链接的颜色
     $textColor = #2c3e50    // 文本的颜色
@@ -137,7 +137,7 @@ footer: MIT Licensed | Copyright © 2018-present Evan You    # 页脚
     $contentWidth = 60rem   // 文章内容的宽度
     ```
 
-- 编辑`docs/.vuepress/styles/index.styl`文件可定义一些样式，覆盖掉默认样式，如下：
+- 编辑 `docs/.vuepress/styles/index.styl` 文件可定义一些样式，覆盖掉默认样式，如下：
     ```css
     body {
         font-family: Consolas, "Microsoft YaHei", serif;

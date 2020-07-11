@@ -225,7 +225,7 @@ Supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
   mkdir cesi/
   tar -zxvf cesi-extended.tar.gz -C cesi/
   cd cesi/
-  sudo pip3 install -r requirements.txt
+  pip3 install -r requirements.txt
   python3 cesi/run.py --config-file defaults/cesi.conf.toml
   ```
   - 启动之后，访问 <http://127.0.0.1:5000> 即可查看 Web 页面。默认的账号、密码为 admin、admin 。

@@ -34,15 +34,15 @@
 </html>
 ```
 - `"X-UA-Compatible"` 是 IE8 新增的 meta ，用于选择一个浏览器引擎来渲染网页。
-  - `IE=7`：使用 IE7 引擎。
-  - `IE=edge`：使用最新版本的 IE 引擎。
-  - `chrome=1`：激活 Google Chrome Frame 。
+  - `IE=7` ：使用 IE7 引擎。
+  - `IE=edge` ：使用最新版本的 IE 引擎。
+  - `chrome=1` ：激活 Google Chrome Frame 。
 
 - `"viewport"` 是 Bootstrap3 新增的 meta ，用于控制网页在移动设备上的显示。其 content 属性的设置项包括：
-  - `width=device-width`：网页显示的宽度。
-  - `initial-scale=1.0`：初始的显示比例。
-  - `maximum-scale=1.0`：最大的显示比例。
-  - `user-scalable=no`：是否允许用户缩放网页。
+  - `width=device-width` ：网页显示的宽度。
+  - `initial-scale=1.0` ：初始的显示比例。
+  - `maximum-scale=1.0` ：最大的显示比例。
+  - `user-scalable=no` ：是否允许用户缩放网页。
 
 ## 网格系统
 
@@ -86,6 +86,6 @@ Bootstrap 通过自定的网格系统（Grid System）控制 HTML 元素的布�
 
 用法：
 - 要先在 Container 中拖入 GRID 布局，然后才能拖入具体组件。
-  - 布局`12`是指一个区块，宽度为 12 列。
-  - 布局`6 6`是指两列区块，宽度分别为 6、6 列。
+  - 布局 `12` 是指一个区块，宽度为 12 列。
+  - 布局 `6 6` 是指两列区块，宽度分别为 6、6 列。
 - 编辑之后，将 layoutit 生成的代码拷贝到 HTML 的 body 中即可。不过，用户需要自行导入相应版本的 Bootstrap 的 JS、CSS 文件。

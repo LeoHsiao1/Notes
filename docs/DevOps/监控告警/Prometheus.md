@@ -1,6 +1,6 @@
 # Prometheus
 
-：一个目前流行的监控系统，基于 Golang 开发。
+：一个流行的监控系统，基于 Golang 开发。
 - 源于 Google Borg 系统的监控系统，2016 年作为一个独立项目交给 CNCF 托管。
 - 擅长从大量节点上采集指标数据，且提供了 Web 管理页面。
 - [官方文档](https://prometheus.io/docs/introduction/overview/)
@@ -19,9 +19,10 @@
   ./prometheus
               --config.file /etc/prometheus/prometheus.yml   # 使用指定的配置文件
               --storage.tsdb.retention 15d                   # TSDB 保存数据的最长时间（默认为 15 天）
-              --web.listen-address 0.0.0.0:9090              # 设置监听的地址
-              --web.enable-admin-api                         # 启用管理员的 HTTP API
-              --web.enable-lifecycle                         # 启用关于终止的 HTTP API 
+              --web.listen-address '0.0.0.0:9090'            # 监听的地址
+              --web.external-url 'http://10.0.0.1:9090'      # 供外部访问的 URL
+              --web.enable-admin-api                         # 启用管理员的 HTTP API .比如删除 tsdb 的数据
+              --web.enable-lifecycle                         # 启用 reload、quit 等 HTTP API
   ```
 
 - 或者运行 Docker 镜像：
@@ -44,7 +45,7 @@
       #   monitor: 'codelab-monitor'
 
     # rule_files:                   # 导入 rule 文件
-    #   - "rules_1.yml"
+    #   - rules_1.yml
 
     scrape_configs:
       - job_name: 'prometheus'
@@ -58,8 +59,9 @@
 
 ## 架构
 
-- 用户需要在每个被监控对象的主机上运行一个特定的 HTTP 服务器作为 exporter ，当用户访问该主机的 `http://localhost:9090/metrics` 时，就会触发 exporter 采集一次指标数据，放在 HTTP 响应报文中回复给用户。
-  - exporter 一般只负责采集当前时刻的指标数据，不负责存储数据。
+- 在每个监控对象的主机上运行一个负责采集监控指标的 HTTP 服务器作为 exporter 。
+  - 向该 exporter 服务器发出 HTTP GET 请求，它就会按一种特定的文本格式输出监控指标。
+  - exporter 只负责采集当前时刻的指标数据，不负责存储数据。
 
 - Prometheus Server 会定时向各个 exporter 发出 HTTP 请求，获得指标数据，并存储到自己的时序数据库中。
   - 它属于离散采样，可能有遗漏、有延迟、有误差。
@@ -85,6 +87,7 @@
 
 - Prometheus 本身没有身份认证，不需要密码登录，不过可以用 Nginx 加上 HTTP Basic Auth ，或者通过防火墙只允许指定 IP 访问。
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
+- Prometheus 及其插件都采用 UTC 时间，不支持修改时区。用户可以自行将查询结果中的时间字符串改成本地时区。
 
 ## 监控对象
 
@@ -155,7 +158,7 @@ scrape_configs:
     ```
     go_goroutines{instance="10.0.0.1:9090", job="prometheus"}    80
     ```
-  - metric_name 必须匹配正则表达式`[a-zA-Z_:][a-zA-Z0-9_:]*`，一般通过 Recording Rules 定义的指标名称才包含冒号 : 。
+  - metric_name 必须匹配正则表达式 `[a-zA-Z_:][a-zA-Z0-9_:]*` ，一般通过 Recording Rules 定义的指标名称才包含冒号 : 。
   - label 是对 metric_name 的补充，方便筛选指标。
   - label_value 可以包含 Unicode 字符。
 
@@ -192,7 +195,9 @@ scrape_configs:
   {__name__="go_goroutines", job='prometheus'}    # 通过内置的 __name__ 标签，可以匹配指标名
 
   go_goroutines{job="prometheus"}                 # 查询该名称、该标签值的指标
-  go_goroutines{job!="prometheus"}                # 要求不具有该标签值
+  go_goroutines{job!="prometheus"}                # 要求具有 job 标签，且值不等于 prometheus
+  go_goroutines{job=""}                           # 要求 job 标签的值为空字符串（这等价于不具有 job 标签）
+  go_goroutines{job!=""}                          # 要求具有 job 标签且值不为空
   go_goroutines{job=~`prometheu\w`}               # 要求标签的值匹配正则表达式
   go_goroutines{job!~`prometheu\w`}               # 要求标签的值不匹配正则表达式
 
@@ -348,7 +353,7 @@ scrape_configs:
 
 - 规则分为两类：
   - Recording Rules ：用于将某个查询表达式的结果保存为新指标。这样可以避免在用户查询时才计算，减少开销。
-  - Alerting Rules ：用于在满足某个条件时进行告警。（它只是产生告警消息，需要由 Alertmanager 转发给用户）
+  - Alerting Rules ：用于在满足某个条件时进行告警。（它只是产生警报，需要由 Alertmanager 加工之后转发给用户）
 - 用户可以导入自定义的 rules.yml 文件，格式如下：
   ```yaml
   groups:
@@ -360,46 +365,60 @@ scrape_configs:
 
   - name: alerting_rules                # 规则组的名称
     rules:
-    - alert: Go协程数过多                # 定义一个告警规则
+    - alert: 测试告警-1                  # 定义一个告警规则
       expr: go_goroutines > 100         # 设置告警条件（只要表达式的执行结果是矢量，就会报警）
       for: 5m                           # 连续满足条件 5 分钟之后才告警
       # labels:
-      #   severity: small
+      #   severity: error
       annotations:
         summary: "节点地址：{{$labels.instance}}, 协程数：{{$value}}"
   ```
-  - 用户可以通过 labels、annotations 子句添加一些标签到告警信息中，并且这些标签的值中允许引用变量（基于 Golang 的模板语法）。
-  - 上例中，最终生成的告警消息包含以下内容：
+  - 可以重复定义同样内容的 rule ，但最终输出时，多个重复的数据会合并为一个。
+  - Prometheus 会在每次抓取指标时自动检查一次 Alerting Rules ，因此不需要设置 interval 。
+  - 默认会将 expr 计算结果中的所有 label 添加到告警信息中。
+    - 可以通过 labels 子句添加一些标签到告警信息中，并且给这些标签赋值时允许引用变量（基于 Golang 的模板语法）。
+    - 可以通过 annotations 子句添加一些标签作为注释。
+  - 上例中，最终生成的警报包含以下信息：
     ```json
     {
-      "alertname":"Go协程数过多",
-      "status": "firing",
-      "summary":"节点地址：192.168.2.110:9090, 协程数：100",
-      "instance":"192.168.2.110:9090",
-      "job":"prometheus",
-      ...
+        "status": "firing",
+        "labels": {
+            "alertname": "进程数归零",
+            "instance":"10.0.0.1:9090",
+            "job":"prometheus",
+        },
+        "annotations": {
+            "summary":"节点地址：10.0.0.1:9090, 协程数：90",
+        },
+        "startsAt": "2020-07-09T01:23:22.627587301Z",
+        "endsAt": "0001-01-01T00:00:00Z"
     }
-  - 当异常开始时，Prometheus 会产生状态为 "firing" 的告警消息；当异常结束时，会产生状态为 "resolved" 的告警消息。
+    ```
+  - 当异常开始时，Prometheus 会产生 `"status": "firing"` 的警报；当异常结束时，还会产生 `"status": "resolved"` 的警报。
+    - 在 fring 类型的警报中，"endsAt" 是无意义的值，比如 "0001-01-01T00:00:00Z" 。
+    - 在 resolved 类型的警报中，才会给 "endsAt" 设置有意义的值。
 
 - 在 Web 页面上可以看到 Alerting Rules 的状态：
-  - 不满足告警条件时，标为 Inactive 状态。
-  - 满足告警条件但不超过阙值时间时，标为 Pending 状态。
-  - 满足告警条件且超过阙值时间时，标为 Firing 状态。
+  - 不满足告警条件时，属于 Inactive 状态。
+  - 满足告警条件时，属于 Active 状态。
+    - 如果不超过阙值时间，则属于 Pending 状态。
+    - 如果超过阙值时间，则属于 Firing 状态。
 
 ## API
 
 - 管理 Prometheus 的 HTTP API ：
   ```sh
-  GET /-/healthy     # 用于健康检查
-  PUT /-/reload      # 重新加载配置文件
-  PUT /-/quit        # 终止
+  GET /-/healthy     # 用于健康检查，总是返回 Code 200
+  GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
+  POST /-/reload     # 重新加载配置文件
+  POST /-/quit       # 终止
   ```
 - 关于数据的 API ：
   ```sh
   GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600               # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
   GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589266000&step=1m  # 查询一段时间内的所有值
-  PUT /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000    # 删除数据（不指定时间则删除所有时间的数据）
-  PUT /api/v1/admin/tsdb/clean_tombstones                                                       # 让 TSDB 立即释放被删除数据的磁盘空间
+  POST /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000   # 删除数据（不指定时间则删除所有时间的数据）
+  POST /api/v1/admin/tsdb/clean_tombstones                                                      # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
   data/wal/ 目录下缓存的数据不会被删除，因此即使删除 tsdb 中的所有数据， Prometheus 依然会自动从 data/wal/ 目录加载最近的部分数据。
 
@@ -481,25 +500,14 @@ scrape_configs:
 
 ## Alertmanager
 
-：作为一个 HTTP 服务器运行，用于管理 Prometheus 产生的告警消息、转发给用户。
+：作为一个 HTTP 服务器运行，用于将 Prometheus 产生的警报加工之后转发给用户。
+- 优点：
+  - Prometheus 产生的警报是 JSON 格式的信息，Alertmanager 可以对它们进行分组管理，加工成某种格式的告警消息，再转发给用户。
+  - 配置比较麻烦但是很灵活。
+  - 可以在 Web 页面上搜索警报、分组管理。
+- 缺点：
+  - 只能查看当前激活的警报，不能查看警报的历史记录。
 - [GitHub 页面](https://github.com/prometheus/alertmanager)
-- 与 Grafana 的告警功能相比，Alertmanager 的配置比较麻烦但是很灵活，而且可以在 Web 页面上搜索告警消息、分组管理。
-  - 缺点是只能查看当前的告警消息，不能查看已发送的告警消息。
-- 主要概念：
-  - Filter
-    - ：通过 label=value 的形式筛选告警消息。
-    - 这项方便在 Web 页面上进行查询。
-  - Silence
-    - ：不发送某个或某些告警消息，使其静音。
-    - 这项需要在 Web 页面上配置，且重启 Alertmanager 之后不会丢失。
-  - Group
-    - ：根据某个或某些 label 的值对告警消息进行分组。
-    - 这项需要在配置文件中定义，但也可以在 Web 页面上调试。
-    - 如果 Alertmanager 同时收到多个告警消息，且它们属于同一个 group ，则会将它们放在同一个通知中发送给用户。然后该 group 被静音 repeat_interval 时间。
-    - 即使多个告警消息属于不同 group ，也可能放在同一个通知中发送给用户。
-  - Inhibit
-    - ：用于设置多个告警消息之间的抑制关系。当发出某个告警消息时，使其它的某些告警消息静音。
-    - 这项需要在配置文件中定义。
 
 ### 部署
 
@@ -510,102 +518,184 @@ scrape_configs:
   解压后启动：
   ```sh
   ./alertmanager --config.file=alertmanager.yml
-                # --web.listen-address "0.0.0.0:9093"       # 监听的端口
-                # --cluster.listen-address "0.0.0.0:9094"   # 集群监听的端口
-                # --data.retention 120h                     # 将数据保存多久
+                # --web.listen-address "0.0.0.0:9093"         # 监听的地址
+                # --web.external-url 'http://10.0.0.1:9093'   # 供外部访问的 URL
+                # --cluster.listen-address "0.0.0.0:9094"     # 集群监听的地址
+                # --data.retention 120h                       # 将数据保存多久
   ```
   默认的访问地址为 <http://localhost:9093>
 
-### 配置
+### 原理
 
-- 使用 Alertmanager 时，需要在 Prometheus 的配置文件中加入如下配置，让 Prometheus 将告警消息转发给它处理。
-  ```yaml
-  alerting:
-    alertmanagers:
-    - static_configs:
-      - targets:
-        - '10.0.0.1:9093'
-  ```
+工作流程：
+1. Prometheus 中的一条 Alerting Rule 进入 Firing 状态，产生一个或多个警报，发送给 Alertmanager 。
+2. Alertmanager 收到警报之后，
+   - 先根据 route 判断它属于哪个 group 、应该发送给哪个 receiver 。
+   - 再判断该 group 当前是否处于冷却阶段、是否被 Silence 静音、是否被 Inhibit 抑制。如果都没有，则立即发送告警消息给用户。
+3. Prometheus 中的 Alerting Rule 退出 Firing 状态，使得 Alertmanager 中相应的警报也消失（可能会延迟一分钟才消失）。
 
-- alertmanager.yml 的配置示例：
-  ```yaml
-  global:                                     # 配置一些全局参数
-    # resolve_timeout: 5m                     # 每个告警持续激活的最长时间，超时之后则认为已解决
-    smtp_smarthost: 'smtp.exmail.qq.com:465'
-    smtp_from: '123456@qq.com'
-    smtp_auth_username: '123456@qq.com'
-    smtp_auth_password: '******'
-    smtp_require_tls: false
+其它概念：
+- Filter
+  - ：通过 label=value 的形式筛选警报。
+  - 它方便在 Web 页面上进行查询。
+- Group
+  - ：根据某个或某些 label 的值对警报进行分组。
+  - 它需要在配置文件中定义，但也可以在 Web 页面上临时创建。
+- Silence
+  - ：不发送某个或某些警报，相当于静音。
+  - 它需要在 Web 页面上配置，且重启 Alertmanager 之后不会丢失。
+- Inhibit
+  - ：用于设置多个警报之间的抑制关系。当发出某个警报时，使其它的某些警报静音。
+  - 它需要在配置文件中定义。
+  - 被静音、抑制的警报不会在 Alertmanager 的 Alerts 页面显示。
 
-  receivers:                                  # 定义告警消息的接受者
-    - name: 'email_to_leo'
-      email_configs:                          # 只配置少量 smtp 参数，其余的参数则继承全局配置
-        - to: '123456@qq.com'
-    - name: 'webhook_to_leo'
-      webhook_configs:
-        - url: 'http://localhost:80/email/'
+### 示例
 
-  route:                                      # 定义分组处理告警消息的路由表
-    receiver: 'email_to_leo'
-  
-  # templates:                                # 从文件中导入自定义的消息模板
-  #   - templates/*.tmpl
-  
-  # inhibit_rules:
-  #   - ...
-  ```
+Prometheus 的 Alerts 页面示例：
+![](Prometheus_1.png)
+- 上图中，处于 Inactive、Pending、Firing 状态的 alerting_rule 分别总共有 1、0、2 个。
+- rules.yml 文件中定义了三条 alerting_rule 。
+  - 第一条 alerting_rule 名为 “测试告警-1” ，包含 1 个 active 的警报。
+    - 每个警报源自一个满足 alerting_rule 的时间序列。
+    - Active Since 表示警报从什么时候开始存在。（一直满足 alerting_rule ，没有中断）
+  - 第三条 alerting_rule 名为 “测试告警-3” ，包含 113 个 active 状态的警报。
 
-- route 块的详细配置示例：
+Alertmanager 的 Alerts 页面示例：
+![](Prometheus_2.png)
+- 上图中存在两个 group ：
+  - 第一个 group 是 job="node_exporter" ，包含 1 个警报。
+  - 第二个 group 是 job="process-exporter" ，包含 113 个警报。
+- 上图中存在一个 instance="10.0.0.1:9100" 的警报：
+  - 09:15:45 UTC 表示该警报的产生时刻，即在 Prometheus 那边变成 Firing 状态的时刻。重启 Alertmanager 也不会影响该时刻。
+  - 点击 Info 会显示该警报的详细信息。
+  - 点击 Source 会跳转到 Prometheus ，查询该警报对应的指标数据。
+  - 点击 Silence 可以静音该警报。
+
+### 基本配置
+
+使用 Alertmanager 时，需要在 Prometheus 的配置文件中加入如下配置，让 Prometheus 将警报转发给它处理。
+```yaml
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - '10.0.0.1:9093'
+```
+
+alertmanager.yml 的配置示例：
+```yaml
+global:                           # 配置一些全局参数
+  # resolve_timeout: 5m           # 如果 Alertmanager 收到的警报 JSON 中不包含 EndsAt ，则超过该时间之后就认为该警报已解决
+  smtp_smarthost: 'smtp.exmail.qq.com:465'
+  smtp_from: '123456@qq.com'
+  smtp_auth_username: '123456@qq.com'
+  smtp_auth_password: '******'
+  smtp_require_tls: false
+
+receivers:                        # 定义告警消息的接受者
+  - name: 'email_to_leo'
+    email_configs:                # 只配置少量 smtp 参数，其余的参数则继承全局配置
+      - to: '123456@qq.com'
+      # - to: '123456@163.com'    # 可以指定多个发送目标
+      #   send_resolved: true     # 是否在警报消失时发送 resolved 类型的警报
+  - name: 'webhook_to_leo'
+    webhook_configs:
+      - url: 'http://localhost:80/'
+
+route:
+  receiver: 'email_to_leo'
+
+# templates:                      # 从文件中导入自定义的消息模板
+#   - templates/*.tmpl
+
+# inhibit_rules:
+#   - ...
+```
+
+常用的 HTTP API ：
+```sh
+GET /-/healthy     # 用于健康检查，总是返回 Code 200
+GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
+POST /-/reload     # 重新加载配置文件
+```
+
+### route 配置
+
+route 块定义了分组处理警报的规则，如下：
+```yaml
+route:
+  receiver: 'email_to_leo'          # 只能指定一个接收方
+  group_wait: 1m
+  group_interval: 1m
+  repeat_interval: 24h
+  routes:
+    - receiver: 'webhook_to_leo'
+      group_by:                     # 根据标签的值对已匹配的警报进行分组（默认不会分组）
+        - alertname
+      match:                        # 任意对 label:value ，符合全部条件的警报才算匹配
+        job: prometheus
+      match_re:                     # value 是正则表达式
+        job: prometheus|grafana
+        instance: .*
+      continue: false
+    - receiver: 'xxx'
+```
+- 上例中的大部分参数都不是必填项，最简单的 route 块如下：
   ```yaml
   route:
     receiver: 'email_to_leo'
-    # group_by:                         # 根据标签的值对已匹配的告警消息进行分组（默认不会分组）
-    #   - alertname
-    #   - instance
-    # group_wait: 30s                   # group 每次发送告警消息之前，需要等待多久（延长该时间有利于收集该组的其它告警消息）
-    # group_interval: 5m                # 非新增的 group 中，出现新的告警消息，首次发送它之前要等待多久
-    # repeat_interval: 4h               # group 重复发送告警消息的最短间隔时间（即使重启 Alertmanager 也不会中断）
-    # routes:
-    #   - receiver: 'webhook_to_leo'
-    #     match:                        # 任意对 label:value ，符合全部条件的告警消息才算匹配
-    #       job: prometheus
-    #     match_re:                     # value 是正则表达式
-    #       job: prometheus|grafana
-    #       instance: .*
-    #     continue: false
-    #   - receiver: 'xxx'
   ```
-  - 行首用 # 注释的行都不是必填项。
-  - 配置文件中至少有一个 route 块，称为根 route 节点。在它之下可以定义任意个嵌套的 route 块，构成一个树形结构的路由表。
+- 配置文件中至少要定义一个 route 块，称为根 route 节点。
+  - 在根节点之下可以定义任意个嵌套的 route 块，构成一个树形结构的路由表。
   - 子 route 节点会继承父 route 节点的所有参数值，作为自己的默认值。
-  - 每次产生告警消息时，会从根 route 节点往下逐个尝试匹配。
-    - 如果当前节点匹配，
-      - 且子节点不匹配，则交给当前节点处理。
-      - 且子节点也匹配，则交给子节点处理。（相当于子节点覆盖了父节点的配置）
-      - 且配置了 `continue: false` ，则结束匹配，退出路由表。
-      - 且配置了 `continue: true` ，则还会继续尝试匹配之后的同级节点。
-    - 如果当前节点不匹配，则会继续尝试匹配之后的同级节点。
-    - 告警消息默认匹配根节点。因此，如果所有节点都不匹配，则会交给根节点处理。
+- Alertmanager 每收到一个警报时，会从根 route 节点往下逐个尝试匹配。
+  - 如果当前节点匹配，
+    - 且子节点不匹配，则交给当前节点处理。
+    - 且子节点也匹配，则交给子节点处理。（相当于子节点覆盖了父节点的配置）
+    - 且配置了 `continue: false` ，则结束匹配，退出路由表。
+    - 且配置了 `continue: true` ，则还会继续尝试匹配之后的同级节点。
+  - 如果当前节点不匹配，则会继续尝试匹配之后的同级节点。
+  - 警报默认匹配根节点。因此，如果所有节点都不匹配，则会交给根节点处理。
+- Alertmanager 以 group 为单位发送告警消息。
+  - 每次发送一个 group 时，总是会将该 group 内现有的所有警报合并成一个告警消息，同时发送出去。
+  - 当一个 group 中出现第一个警报时，会先等待 `group_wait` 时长再发送该 group 。
+    - 延长 group_wait 时间有利于收集属于同一 group 的其它警报，一起发送。
+  - 每次发送一个 group 之后，会将它冷却 `repeat_interval` 时长之后，才允许再一次发送该 group 。
+    - Alertmanager 会检查当前时刻与上一次发送时刻的差值是否足够大。
+    - 即使该 group 内的警报消失又重新出现、即使重启 Alertmanager ，也不会影响 repeat_interval 的计时。
+    - 在配置文件中修改 group_wait、repeat_interval 等参数的值时，会立即生效。
+    - 考虑到 group_wait ，实际上重复发送同一个 group 的时间间隔应该至少为 group_wait + repeat_interval 。
+  - 当一个 group 处于冷却阶段时，
+    - 如果收到一个属于该 group 的新的警报，则会等待 `group_interval` 时长之后让该 group 解除冷却，发送一次消息，并且从当前时刻开始重新计算 repeat_interval 。
+    - 如果一个警报消失，也会让该 group 解除冷却，发送一次消息。
+      如果 Alertmanager 没有重启，且该 group 一直存在，则它发出的告警消息中会一直包含这个 `"status": "resolved"` 的警报。
+    - 如果一个消失的警报再次出现，也会让该 group 解除冷却，发送一次消息。
 
+### inhibit_rules 配置
 
-TODO:
-验证 group_wait 和 group_interval 是否首次才生效
-设置externalURL
-在URL中调用变量
-整理监控指标
-Prometheus的内置指标：ALERTS{alertname="xxx"}，会不会不能查询到聚合的其它prometheus
-
-```
+```yaml
 inhibit_rules:
-- source_match:
-    severity: critical
-  target_match:
-    severity: warning
-  equal:
-  - alertname
-  - dev
-  - instance
+  - source_match:
+      severity: error
+    target_match:
+      severity: warn
+    equal:
+      - alertname
+      - instance
+  - source_match:
+      alertname: target 离线
+      job: node_exporter
+    target_match:
+    equal:
+      - nodename
 ```
+- 原理：先根据 source_match 指定的 label:value 选中一些警报，再根据 target_match 选中一些警报，当 source 警报存在时，会抑制与它 equal 标签值相同的 target 警报。
+  - 如果改为 source_match_re、target_match_re ，则是对 label 的 value 进行正则匹配。
+  - 如果 source_match、target_match 列表为空，则是选中所有警报。
+  - 如果 equal 列表为空，或者 source 警报与 target 警报都不具有 equal 标签（此时相当于它们的该标签值都为空），则抑制所有 target 警报。
+  - 如果 target 警报与 source 警报相同，并不会抑制 source 警报本身。
+- 上例中，第一条抑制规则的作用是：当出现 severity 为 error 的警报时，抑制与它同类型、但 severity 为 warn 的其它警报。
+- 上例中，第二条抑制规则的作用是：当某个主机离线时，抑制该主机的其它警报。
 
 ## exporter
 
@@ -625,14 +715,17 @@ inhibit_rules:
   process_resident_memory_bytes{instance='10.0.0.1:9090'} / 1024^3          # 占用的内存（GB）
   prometheus_tsdb_storage_blocks_bytes{instance='10.0.0.1:9090'} / 1024^3   # tsdb block 占用的磁盘空间（GB）
   
-  sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到的 HTTP 请求数
+  sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到 HTTP 请求的次数
   sum(increase(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])) # 每分钟处理 HTTP 请求的耗时（s）
-  count(up == 1)                                                                            # 在线的 targets 总数
-  sum(scrape_samples_scraped{instance='10.0.0.1:9090'})                                     # 抓取的指标总数
-  sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # 执行 scrape 的耗时（s）
-  irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])      # 执行 rule 的耗时（s）
-  sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # 每分钟执行 rule 的总次数
-  sum(increase(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)  # 每分钟执行 rule 的失败次数
+  up{instance="10.0.0.1:9090", job="prometheus"}                                            # target 是否在线（取值 1、0 分别代表在线、离线）
+  count(up == 1)                                                                            # targets 在线数
+  sum(scrape_samples_scraped{instance='10.0.0.1:9090'})                                     # scrape 的执行次数
+  sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # scrape 的执行耗时（s）
+  sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # rule 每分钟的执行次数
+  sum(increase(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)  # rule 每分钟的执行失败次数
+  irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])                         # rule 每分钟的执行耗时（s）
+
+  ALERTS{alertname="xxx", alertstate="pending|firing", ...}                                 # 警报
   ```
 
 ### Grafana
@@ -648,8 +741,8 @@ inhibit_rules:
   irate(process_cpu_seconds_total{instance='10.0.0.1:3000'}[1m])            # 占用的 CPU 核数
   process_resident_memory_bytes{instance='10.0.0.1:3000'} / 1024^3          # 占用的内存（GB）
 
-  sum(increase(http_request_total{instance='10.0.0.1:3000'}[1m])) by (statuscode)      # 每分钟收到的 HTTP 请求数
-  sum(increase(http_request_duration_milliseconds_sum{instance='10.0.0.1:3000'}[1m]))  # 处理 HTTP 请求的耗时（ms）
+  sum(increase(http_request_total{instance='10.0.0.1:3000'}[1m])) by (statuscode)      # 每分钟收到 HTTP 请求的次数
+  sum(increase(http_request_duration_milliseconds_sum{instance='10.0.0.1:3000'}[1m]))  # 每分钟处理 HTTP 请求的耗时（ms）
   grafana_alerting_active_alerts{instance='10.0.0.1:3000'}                             # Alert Rule 的数量
   increase(grafana_alerting_notification_sent_total{instance='10.0.0.1:3000'}[1h])     # 每小时发出的告警次数
   increase(grafana_alerting_result_total{instance='10.0.0.1:3000'}[1h])                # 每小时的 Alert Rule 状态
@@ -666,14 +759,14 @@ inhibit_rules:
   irate(process_cpu_seconds_total{instance='10.0.0.1:8080'}[1m])    # 占用的 CPU 核数
   process_resident_memory_bytes{instance='10.0.0.1:8080'} / 1024^3  # 占用的内存（GB）
 
-  increase(http_requests_count{instance='10.0.0.1:8080'}[1m])       # 每分钟收到的 HTTP 请求数
-  http_requests{instance='10.0.0.1:8080', quantile=~"0.5|0.99"}     # 处理 HTTP 请求的耗时（s）
+  increase(http_requests_count{instance='10.0.0.1:8080'}[1m])       # 每分钟收到 HTTP 请求的次数
+  http_requests{instance='10.0.0.1:8080', quantile=~"0.5|0.99"}     # 每分钟处理 HTTP 请求的耗时（s）
 
   jenkins_node_count_value{instance='10.0.0.1:8080'}        # node 总数
-  jenkins_node_online_value{instance='10.0.0.1:8080'}       # 在线的 node 数
+  jenkins_node_online_value{instance='10.0.0.1:8080'}       # node 在线数
   jenkins_executor_count_value{instance='10.0.0.1:8080'}    # 执行器的总数
   jenkins_executor_in_use_value{instance='10.0.0.1:8080'}   # 执行器正在使用的数量
-  jenkins_node_builds_count{instance='10.0.0.1:8080'}       # 本次 Jenkins 启动以来的构建次数
+  jenkins_node_builds_count{instance='10.0.0.1:8080'}       # Jenkins 本次启动以来的构建总次数
 
   jenkins_job_count_value{instance='10.0.0.1:8080'}         # Job 总数
   jenkins_queue_size_value{instance='10.0.0.1:8080'}        # 构建队列中的 Job 数（最好为 0 ）
@@ -742,7 +835,7 @@ inhibit_rules:
   ```
   解压后启动：
   ```sh
-  ./process-exporter -config.path=config.yml
+  ./process-exporter -config.path=process-exporter.yml
                      -children=false             # 采集每个进程的指标时，是否包含其所有子进程的指标（默认为 true）
                      -threads=false              # 是否采集每个线程的指标（默认为 true）
   ```
@@ -751,20 +844,20 @@ inhibit_rules:
 - 在配置文件中定义要监控的进程：
     ```yaml
     process_names:
-      - exe:                          # 定义多行条件，每个条件可能匹配零个、一个或多个进程
+      - exe:                            # 定义多行条件，每个条件可能匹配零个、一个或多个进程
         - top
         - /bin/ping
 
       - comm:
         - bash
 
-      - name: "{{.ExeBase}}"          # 这里使用可执行文件的基本名作为 name
+      - name: "{{.ExeBase}}"            # 这里使用可执行文件的基本名作为 name
         cmdline:
         - prometheus --config.file
 
-      - name: "{{.Matches.name}}"     # 这里使用正则匹配的元素组作为 name
+      - name: "{{.Matches.name}}"       # 这里使用正则匹配的元素组作为 name
         cmdline:
-        - ping www.(?P<name>\S*).com   # 用 ?P<name> 的格式命名正则匹配的元素组
+        - ping www.(?P<name>\S*).com    # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
     - 关于匹配规则：
       - exe 是对进程的 /proc/<PID>/exe 指向的可执行文件名进行匹配。
@@ -797,5 +890,5 @@ inhibit_rules:
 
 ### blackbox_exporter
 
-：可以测试 DNS、ICMP、TCP、HTTP，以及 SSL 证书过期时间。
+：可以测试 DNS、ICMP、TCP、HTTP ，以及 SSL 证书过期时间。
  

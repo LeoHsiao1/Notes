@@ -16,9 +16,9 @@
 
 ## 基本结构
 
-一个 HTML 文件中，HTML 的全部内容都包含在标签`<html>`中，其下又分为`<head>`、`<body>`两部分。
+一个 HTML 文件中，HTML 的全部内容都包含在标签 `<html>` 中，其下又分为 `<head>`、`<body>` 两部分。
 - 多余的空格和换行符会被忽略，只当作一个空格。
-- 用`<!--`和`-->`声明多行注释。
+- 用 `<!--` 和 `-->` 声明多行注释。
 - 例：
     ```html
     <!DOCTYPE html>          # 声明为 HTML5
@@ -41,13 +41,13 @@
 ## 元素
 
 HTML 中的一个元素由一对标签和夹在中间的内容组成。
-- 标签名用尖括号` < > `标记，通常一前一后成对出现，分别称为开始标签（opening tag）、结束标签（closing tag）。例如：`<p>段落一</p>`
+- 标签名用尖括号 ` < > ` 标记，通常一前一后成对出现，分别称为开始标签（opening tag）、结束标签（closing tag）。例如：`<p>段落一</p>`
 - 如果元素的内容为空，则可以省略结束标签，在开始标签的末尾加上斜杆 / 表示结束。例如：`<br>`
 - 标签名不区分大小写，但一般小写。
 
 ### 标题
 
-用`<h1>`~`<h6>`六种标签声明，h1 是最大标题，h6 是最小标题。
+用 `<h1>`~`<h6>` 六种标签声明，h1 是最大标题，h6 是最小标题。
 
 ```html
 <h1>标题一</h1>
@@ -56,7 +56,7 @@ HTML 中的一个元素由一对标签和夹在中间的内容组成。
 
 ### 段落
 
-用标签`<p>`声明。
+用标签 `<p>` 声明。
 
 ```html
 <p>段落一</p>
@@ -67,16 +67,16 @@ HTML 中的一个元素由一对标签和夹在中间的内容组成。
 
 HTML4 采用以下方式控制文本的显示样式：
 - 标签：
-  - `font`：给文本设置字体。
-  - `<b>`、`<strong>`：粗体（bold）
-  - `<big>`：较大的字号
-  - `<small>`：较小的字号
-  - `<i>`：斜体（italic）
-  - `<em>`：强调（emphasize），通常是显示成斜体
-  - `<sub>`：下标（subscript）
-  - `<sup>`：上标（superscript）
-  - `strike`、`s`、`<del>`：删除线
-  - `<u>`：下划线
+  - `font` ：给文本设置字体。
+  - `<b>`、`<strong>` ：粗体（bold）
+  - `<big>` ：较大的字号
+  - `<small>` ：较小的字号
+  - `<i>` ：斜体（italic）
+  - `<em>` ：强调（emphasize），通常是显示成斜体
+  - `<sub>` ：下标（subscript）
+  - `<sup>` ：上标（superscript）
+  - `strike`、`s`、`<del>` ：删除线
+  - `<u>` ：下划线
 - 属性：
   - `align` ：对齐方式。
   - `color` ：字体颜色
@@ -92,12 +92,12 @@ HTML4 采用以下方式控制文本的显示样式：
 HTML5 提倡将它们都改用 css 设置显示样式。
 
 其它标签。
-- 标签`<span>`：对文本中的某部分单独设置样式。
+- 标签 `<span>` ：对文本中的某部分单独设置样式。
 
     ```html
     <p>显示 <span class="redText">红色</span> 的例子</p>
     ```
-- 标签`<pre>`：显示预格式化的文本。保留空格、换行符，使用等宽字体。
+- 标签 `<pre>` ：显示预格式化的文本。保留空格、换行符，使用等宽字体。
 
     ```html
     <pre>
@@ -109,7 +109,7 @@ HTML5 提倡将它们都改用 css 设置显示样式。
 
 ### 链接
 
-用标签`<a>`声明。
+用标签 `<a>` 声明。
 
 ```html
 <a href="https://www.baidu.com">链接</a>
@@ -122,15 +122,15 @@ HTML5 提倡将它们都改用 css 设置显示样式。
   - href 的值是目标资源的位置，可以是本网站的 URL ，也可以是其它网站的 URL 。
   - `href="#"` 指向当前网页的顶部，`href="#tips"` 指向当前网页中一个名为“tips”的锚点。如果没有找到该锚点，则指向 `href="#"` 。
 - 属性 target 用于控制载入 href 所指资源的方式
-  - `target="_self"`：默认值，将目标资源载入到当前窗口或当前框架中。
-  - `target="_parent"`：清空当前框架，将目标资源载入到父级框架中。
-  - `target="_top"`：清空当前窗口的内容，然后载入目标资源。常用于跳出框架。
-  - `target="_blank"`：跳转到一个新窗口，然后载入目标资源。
-- 属性`rel`表示从当前链接到目的链接的关系，属性`rev`表示从目的链接到当前链接的关系.
+  - `target="_self"` ：默认值，将目标资源载入到当前窗口或当前框架中。
+  - `target="_parent"` ：清空当前框架，将目标资源载入到父级框架中。
+  - `target="_top"` ：清空当前窗口的内容，然后载入目标资源。常用于跳出框架。
+  - `target="_blank"` ：跳转到一个新窗口，然后载入目标资源。
+- 属性 `rel` 表示从当前链接到目的链接的关系，属性 `rev` 表示从目的链接到当前链接的关系.
 
 ### 图片
 
-用标签`<img>`声明。
+用标签 `<img>` 声明。
 
 ```html
 <img src="https://www.baidu.com/img/bd_logo1.png" />
@@ -149,7 +149,7 @@ HTML5 提倡将它们都改用 css 设置显示样式。
 
 ### 无序列表
 
-unordered list ，用标签`<ul>`和`<li>`声明。
+unordered list ，用标签 `<ul>` 和 `<li>` 声明。
 
 ```html
 <ul>             # 无序列表开始
@@ -160,7 +160,7 @@ unordered list ，用标签`<ul>`和`<li>`声明。
 
 ### 有序列表
 
-ordered list ，用标签`<ol>`和`<li>`声明。
+ordered list ，用标签 `<ol>` 和 `<li>` 声明。
 
 ```html
 <ol>             # 有序列表开始
@@ -171,7 +171,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 
 ### 自定义列表
 
-用标签`<dl>`、`<dt>`和`<dd>`声明。
+用标签 `<dl>`、`<dt>` 和 `<dd>` 声明。
 
 ```html
 <dl>
@@ -184,7 +184,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 
 ### 水平线
 
-用标签`<hr />`声明。
+用标签 `<hr />` 声明。
 
 ```html
 <hr />
@@ -192,7 +192,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 
 ### 表格
 
-用标签`<table>`声明。
+用标签 `<table>` 声明。
 
 ```html
 <table border="1">    # 定义表格，边框宽度为 1
@@ -205,7 +205,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 
 ### 表单
 
-用标签`<form>`声明，用于接收用户在网页上的输入。
+用标签 `<form>` 声明，用于接收用户在网页上的输入。
 
 ```html
 <form name="input" action="/login" method="POST">
@@ -215,21 +215,21 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 </form>
 ```
 
-`<input>`表示输入控件，常用的类型如下：
-- `type="text"`：输入纯文本。
-- `type="password"`：输入密文。
-- `type="submit"`：提交按钮。
+`<input>` 表示输入控件，常用的类型如下：
+- `type="text"` ：输入纯文本。
+- `type="password"` ：输入密文。
+- `type="submit"` ：提交按钮。
   - 当用户点击提交按钮时，浏览器会将表单数据放在 HTTP 请求报文中，发送到 action 指向的 URL 。
     <br>如果没有设置属性 action ，则默认指向当前网页。
   - 默认 method="GET"，浏览器会将表单数据放在请求的 URL 中发送。例如：`http://127.0.0.1/login?username=Leo&password=123456`
     <br>如果设置 method="POST"，则浏览器会将表单数据放在报文 body 中发送。例如：`username=Leo&password=123456`
 
-- `type="button"`：普通按钮。点击后会执行属性 onclick 指定的动作。
+- `type="button"` ：普通按钮。点击后会执行属性 onclick 指定的动作。
     ```html
     <input type="button" onclick="alert('Hello World!')" value="Button 1">
     ```
 
-- `type="radio"`：单选按钮
+- `type="radio"` ：单选按钮
     ```html
     <form>
         <input type="radio" name="sex" value="male">Male<br>  # 
@@ -239,7 +239,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
   - 属性 name 表示该选项显示的名字。
   - 属性 value 表示该选项在 POST body 中的值。
 
-- `type="checkbox"`：复选按钮
+- `type="checkbox"` ：复选按钮
     ```html
     <form>
         <input type="checkbox" name="sex" value="male">Male<br>
@@ -257,17 +257,17 @@ ordered list ，用标签`<ol>`和`<li>`声明。
     </form>
     ```
 
-- `type="number"`：只允许输入数字。
-- `type="color"`：输入颜色。点击该按钮会打开一个颜色选择对话框。
-- `type="file"`：上传文件。点击该按钮会打开一个文件选择对话框。
+- `type="number"` ：只允许输入数字。
+- `type="color"` ：输入颜色。点击该按钮会打开一个颜色选择对话框。
+- `type="file"` ：上传文件。点击该按钮会打开一个文件选择对话框。
 
 输入控件的常用属性：
-- `autocomplete="on"`：根据用户之前的输入值自动完成输入。
-- `pattern="[A-Za-z]{3}"`：按正则表达式检查输入是否有效。
+- `autocomplete="on"` ：根据用户之前的输入值自动完成输入。
+- `pattern="[A-Za-z]{3}"` ：按正则表达式检查输入是否有效。
   <br>当输入不合法时，用户按下键盘也不会有响应。不过浏览器并不会报错，需要用 JS 显示报错。
-- `maxlength="10"`：输入的最大长度。
-- `value="123456"`：该输入控件的初始值，或者显示的名字。
-- `placeholder="Password"`：在输入框内显示提示语，插入光标时会自动消失。
+- `maxlength="10"` ：输入的最大长度。
+- `value="123456"` ：该输入控件的初始值，或者显示的名字。
+- `placeholder="Password"` ：在输入框内显示提示语，插入光标时会自动消失。
 
 以下属性不需要赋值，只要写上属性名即可启用：
 - autofocus ：打开网页时，使该输入控件自动获得焦点。
@@ -277,7 +277,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 
 ### 元数据
 
-用标签`<meta>`声明。用于设置网页的属性，通常放在 HTML 的头部。
+用标签 `<meta>` 声明。用于设置网页的属性，通常放在 HTML 的头部。
 
 例：
 ```html
@@ -288,7 +288,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 
 ### 区块
 
-用标签`<div>`声明。用于将一些元素打包成一个区块，便于布局。
+用标签 `<div>` 声明。用于将一些元素打包成一个区块，便于布局。
 
 ```html
 <div style="color:blue">
@@ -298,7 +298,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 
 ### iframe
 
-标签`<iframe>`用于在一个方框内显示一个网页。
+标签 `<iframe>` 用于在一个方框内显示一个网页。
 
 ```html
 <iframe src="https://www.baidu.com/index.html"></iframe>
@@ -306,7 +306,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 
 ### 插入对象
 
-用标签`<object>`或`<embed>`声明，用于插入一个对象（又称为插件），比如图片、视频、音频、flash 动画等。
+用标签 `<object>` 或 `<embed>` 声明，用于插入一个对象（又称为插件），比如图片、视频、音频、flash 动画等。
 
 ```html
 <object data="horse.mp3"></object>
@@ -330,16 +330,16 @@ ordered list ，用标签`<ol>`和`<li>`声明。
     ```
 
 不同类型的元素拥有的属性不一样，但大部分元素都拥有以下属性：
-- `id`：元素在网页中的 id ，只能取唯一值。可用作元素的唯一标识符、网页中的定位锚点。
+- `id` ：元素在网页中的 id ，只能取唯一值。可用作元素的唯一标识符、网页中的定位锚点。
   - id 的值区分大小写。
   - HTML4 中，一些元素也可以用 name 定义锚点。
-- `style`：元素的显示样式。
-- `class`：使用一个 css 类。
+- `style` ：元素的显示样式。
+- `class` ：使用一个 css 类。
   - 类名区分大小写。
-- `title`：元素的提示信息，当鼠标移到该元素上方时就会显示。
-- `hidden`：使该元素不显示。
-- `contenteditable="true"`：使该元素在显示时可被编辑。
-- `draggable="true"`：使该元素可被拖动。
+- `title` ：元素的提示信息，当鼠标移到该元素上方时就会显示。
+- `hidden` ：使该元素不显示。
+- `contenteditable="true"` ：使该元素在显示时可被编辑。
+- `draggable="true"` ：使该元素可被拖动。
 
 例：
 
@@ -355,7 +355,7 @@ ordered list ，用标签`<ol>`和`<li>`声明。
 - 使用时必须在文档开头加上声明：`<!DOCTYPE html>`
 - 弃用 font 等标签，弃用 align、color、bgcolor 等属性。
 - 增加了一些功能。
-- 增加了一些语义元素，实现顾名思义的用途。例如：标签`<section>`用于划分一组内容。
+- 增加了一些语义元素，实现顾名思义的用途。例如：标签 `<section>` 用于划分一组内容。
 
 ## 表单设计器
 

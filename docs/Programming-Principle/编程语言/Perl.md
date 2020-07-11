@@ -14,7 +14,7 @@
 
 ## 解释器
 
-一般的 Linux 发行版已经安装了 Perl 的解释器，位于`/usr/bin/perl`。
+一般的 Linux 发行版已经安装了 Perl 的解释器，位于 `/usr/bin/perl` 。
 
 ## 示例
 

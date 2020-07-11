@@ -73,7 +73,7 @@ window.$docsify = {
 }
 ```
 
-侧边栏中的目录结构由 URL 所在目录下的`sidebar.md`决定，如下：
+侧边栏中的目录结构由 URL 所在目录下的 `sidebar.md` 决定，如下：
 ```markdown
 # 目录
 
@@ -102,7 +102,7 @@ window.$docsify = {
 </script>
 ```
 
-导航栏的下拉列表由 URL 所在目录下的`navbar.md`决定，如下：
+导航栏的下拉列表由 URL 所在目录下的 `navbar.md` 决定，如下：
 ```markdown
 - [第一章](Chapter1/)
   - [第一节](Chapter1/1.md)
@@ -180,7 +180,7 @@ window.$docsify = {
 
 ### 嵌入文件
 
-从 docsify 4.6 开始，在 Markdown 中引用链接时，加上`':include'`即可嵌入目标文件。
+从 docsify 4.6 开始，在 Markdown 中引用链接时，加上 `':include'` 即可嵌入目标文件。
 
 支持的文件类型|文件后缀名
 -|-

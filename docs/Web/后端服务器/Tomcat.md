@@ -26,9 +26,9 @@
 ## 启动与停止
 
 - tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
-  - startup.sh  ：用于启动 Tomcat ，实际上是调用`catalina.sh start`。
-    - 默认将 Tomcat 作为 deamon 进程运行，使用`catalina.sh run`则会在前台运行。
-  - shutdown.sh ：用于停止 Tomcat ，实际上是调用`catalina.sh stop`。
+  - startup.sh  ：用于启动 Tomcat ，实际上是调用 `catalina.sh start` 。
+    - 默认将 Tomcat 作为 deamon 进程运行，使用 `catalina.sh run` 则会在前台运行。
+  - shutdown.sh ：用于停止 Tomcat ，实际上是调用 `catalina.sh stop` 。
   - version.sh  ：用于显示版本信息。
 
 - 每次更新 Tomcat 应用或配置时，建议重启 Tomcat ，使修改立即生效。可以自定义一个重启脚本 restart.sh ：
@@ -61,14 +61,14 @@
 
 启动 Tomcat 之后，访问 `http://localhost:8080/` 即可进入 Tomcat 的初始页面，这里有 Server Status、Manager App、Host Manager 三个内置应用。相关配置如下：
 
-- 编辑`tomcat/webapps/manager/META-INF/context.xml`，将其中的`allow="127`改为`allow="\d+`，从而允许从其它 IP 地址登录初始页面。
+- 编辑 `tomcat/webapps/manager/META-INF/context.xml` ，将其中的 `allow="127` 改为 `allow="\d+` ，从而允许从其它 IP 地址登录初始页面。
   ```xml
   <Valve className="org.apache.catalina.valves.RemoteAddrValve"
       allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" />
   ```
   - Tomcat 会监控 context.xml 的状态，发现它被修改了就会自动载入。
 
-- 编辑`tomcat/conf/tomcat-users.xml`，在末尾的`</tomcat-users>`之前添加以下内容，从而创建一个管理员账号：
+- 编辑 `tomcat/conf/tomcat-users.xml` ，在末尾的 `</tomcat-users>` 之前添加以下内容，从而创建一个管理员账号：
   ```xml
   <role rolename="manager-gui"/>
   <role rolename="manager-script"/>
@@ -130,18 +130,18 @@
 </Server>
 ```
 - `<Server>` 是根元素，代表 Tomcat 所在的主机。
-  - 上例中，执行`telnet 127.0.0.1:8005`，然后输入 SHUTDOWN ，即可停止 Server 。shutdown.sh 就是通过该端口停止 Server 的。
+  - 上例中，执行 `telnet 127.0.0.1:8005` ，然后输入 SHUTDOWN ，即可停止 Server 。shutdown.sh 就是通过该端口停止 Server 的。
 
 - `<Service>` 代表一个接受 HTTP 请求的服务器（逻辑上的）。
-  - 配置文件中只能定义一个`<Server>`，而`<Server>`中可以定义多个`<Service>`。
-  - 每个`<Service>`中可以定义一个`<Engine>`和多个`<Connector>`。
-  - 每个`<Connector>`监听一个端口，它们收到的 HTTP 请求都会交给`<Engine>`处理。
-  - 每个`<Service>.<Engine>`中可以定义多个`<Host>`。`<Service>`收到的 HTTP 请求最终会交给与 name 匹配的`<Host>`处理，如果没有匹配的，则交给 defaultHost 处理。
+  - 配置文件中只能定义一个 `<Server>` ，而 `<Server>` 中可以定义多个 `<Service>` 。
+  - 每个 `<Service>` 中可以定义一个 `<Engine>` 和多个 `<Connector>` 。
+  - 每个 `<Connector>` 监听一个端口，它们收到的 HTTP 请求都会交给 `<Engine>` 处理。
+  - 每个 `<Service>.<Engine>` 中可以定义多个 `<Host>` 。`<Service>` 收到的 HTTP 请求最终会交给与 name 匹配的 `<Host>` 处理，如果没有匹配的，则交给 defaultHost 处理。
 
-- `<Host>`代表一个匹配 HTTP 请求的主机（逻辑上的）。
-  - 设置了`unpackWARs="true" autoDeploy="true"`之后，Tomcat 就能自动解压 webapps/ 目录下的 war 包并载入。
-  - `<Value>`代表一个处理 HTTP 请求的组件。上例中定义了一个记录日志的组件。
-  - `<Context>`代表一个 URL 。
+- `<Host>` 代表一个匹配 HTTP 请求的主机（逻辑上的）。
+  - 设置了 `unpackWARs="true" autoDeploy="true"` 之后，Tomcat 就能自动解压 webapps/ 目录下的 war 包并载入。
+  - `<Value>` 代表一个处理 HTTP 请求的组件。上例中定义了一个记录日志的组件。
+  - `<Context>` 代表一个 URL 。
 
 ## 日志
 

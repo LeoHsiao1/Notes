@@ -96,7 +96,7 @@ spec:
       externalIPs:
       - 123.0.0.1
     ```
-- Headless Service ：配置`clusterIP: None`。此时 Service 没有自己的 IP ，必须通过 selector 选中一个 Pod ，Service 名会被解析到 Pod IP 。
+- Headless Service ：配置 `clusterIP: None` 。此时 Service 没有自己的 IP ，必须通过 selector 选中一个 Pod ，Service 名会被解析到 Pod IP 。
 
 ## Ingress
 

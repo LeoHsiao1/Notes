@@ -5,7 +5,7 @@
 
 ## 使用方式
 
-- 在标签`<script>`之内编写 JS 代码。
+- 在标签 `<script>` 之内编写 JS 代码。
     ```html
     <script type="text/javascript">
         document.write("<p>Hello World!</p>");

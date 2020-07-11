@@ -36,7 +36,7 @@
 ### 停止
 
 停止服务器时，使用 kill 命令可能会导致服务器异常终止。
-- 建议使用`mongod -f /etc/mongod.conf --shutdown`
+- 建议使用 `mongod -f /etc/mongod.conf --shutdown`
 - 或者在客户端执行：
   ```js
   use admin
@@ -107,6 +107,6 @@ MongoDB 默认没有启用身份认证，可按以下步骤启用：
       }
     )
     ```
-    如果已启用身份认证，但是不知道管理员账号，可以先用`mongod ---noauth`重启服务器，再创建管理员账号。
+    如果已启用身份认证，但是不知道管理员账号，可以先用 `mongod ---noauth` 重启服务器，再创建管理员账号。
 
-2. 退出 MongoDB 终端，用`mongod --auth`重启 MongoDB 服务器，启用身份认证。
+2. 退出 MongoDB 终端，用 `mongod --auth` 重启 MongoDB 服务器，启用身份认证。

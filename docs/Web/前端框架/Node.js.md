@@ -58,7 +58,7 @@ npm
     run <name>            # 运行 package.json 中的一个脚本
 ```
 - 安装时有两种安装位置：
-  - 安装到 ./node_modules 目录下：此时要通过`node_modules/.bin/<name>`的方式调用。
+  - 安装到 ./node_modules 目录下：此时要通过 `node_modules/.bin/<name>` 的方式调用。
   - 安装到全局：此时会自动加入到系统 PATH 路径中，可以输入命令名直接调用。
 - 安装时可以指定版本号，如下：
     ```sh
@@ -150,7 +150,7 @@ yarn                     # 相当于 npm install
     run <name>           # 运行 package.json 中的一个脚本
 ```
 - 执行 yarn init 时会生成一个 package.json 文件，安装一个包之后会自动生成一个 yarn.lock 文件。
-- 如果一个包被 yarn 安装到 ./node_modules 目录下，则可以通过`yarn <name>`的方式调用，比 npm 更方便。
+- 如果一个包被 yarn 安装到 ./node_modules 目录下，则可以通过 `yarn <name>` 的方式调用，比 npm 更方便。
 
 ## gulp
 

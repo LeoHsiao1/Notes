@@ -290,7 +290,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```yaml
   ping:
   ```
-  - ping 模块会测试能否通过 ssh 登录 host，并检查是否有可用的 Python 解释器，如果操作成功则返回 pong 。
+  - ping 模块会测试能否通过 ssh 登录 host ，并检查是否有可用的 Python 解释器，如果操作成功则返回 pong 。
 
 - 用 command、shell、raw 模块可以在 host 上执行 shell 命令：
   
@@ -643,12 +643,12 @@ Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当�
   wget https://github.com/ansible/awx/archive/11.2.0.tar.gz    # 下载 Ansible AWX
   tar -zxvf 11.2.0.tar.gz
   cd awx-11.2.0/installer
-  ansible-playbook -i inventory install.yml                    # 用 Ansible 启动 Ansible AWX，这会花一段时间拉取 docker 镜像
+  ansible-playbook -i inventory install.yml                    # 用 Ansible 启动 Ansible AWX ，这会花一段时间拉取 docker 镜像
   ```
   默认将 docker-compose 的配置文件保存在 ~/.awx/awxcompose/docker-compose.yml 。
   默认访问地址为 <http://localhost:80> ，用户名、密码为 admin 、 password 。
 
 - 用法：
   - 可以在 Web 页面上方便地调用大量 playbook ，不过不能直接在 Web 页面上编辑 playbook 。因此只适合管理已稳定可用的 playbook 。
-  - 以 Project 为单位执行任务，可以从 Git、SVN仓库或本地目录导入 playbook 文件。
+  - 以 Project 为单位执行任务，可以从 Git、SVN 仓库或本地目录导入 playbook 文件。
   - 删除一个机构时，会自动删除其下的 Inventory 等配置。

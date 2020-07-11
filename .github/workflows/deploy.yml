@@ -11,7 +11,7 @@ jobs:
         cd /home/github/Notes
         git pull
         yarn
-        yarn vuepress build docs
+        yarn vuepress build docs || yarn vuepress build docs
     - name: Test
       run: |
         curl -I http://leohsiao.com/ --connect-timeout 3

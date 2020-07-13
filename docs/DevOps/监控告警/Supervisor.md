@@ -131,6 +131,8 @@ startretries=3              ; 启动失败之后最多尝试重启多少次
 ;exitcodes=0,2              ; 如果进程以这些退出码退出，则视作正常退出，否则视作异常退出
 ;stopsignal=TERM            ; 当 supervisord 主动终止该进程时，发送哪种信号（可以是 TERM、HUP、INT、QUIT、KILL、USR1、USR2）
 ;stopwaitsecs=10            ; 发送 stopsignal 信号之后，如果超过 stopwaitsecs 秒进程仍然没退出，则发送 SIGKILL 信号强制终止
+;stopasgroup=false          ; 发送 stopsignal 信号时，是否发送给子进程
+;killasgroup=false          ; 发送 SIGKILL 信号时，是否发送给子进程
 
 stdout_logfile=/var/log/supervisor/%(program_name)s_stdout.log   ; stdout 日志文件的保存路径（不配置的话就不会记录日志）
 stdout_logfile_maxbytes=100MB                                    ; stdout 日志文件的最大大小，超出则会循环写入，设置成 0 则不限制大小
@@ -156,7 +158,10 @@ stderr_logfile_backups=0
   ```
   如果需要动态取值，建议将 command 保存到一个 sh 脚本中，然后执行该 sh 脚本。
 - 用 supervisord 管理的进程必须保持在前台运行，否则会脱离 supervisord 的控制，不能捕捉它的 stdout、stderr ，也不能终止它。
-- 用 supervisord 启动 Python 进程时， Python 解释器默认不会自动刷新输出缓冲区，导致不能记录该进程的 stdout、stderr 。因此需要用 python -u 的方式启动，禁用输出缓冲区。
+- 用 supervisord 启动 Python 进程时， Python 解释器默认不会自动刷新输出缓冲区，导致不能记录该进程的 stdout、stderr 。因此需要用 python -u 的方式启动，禁用输出缓冲区。如下：
+  ```ini
+  command=python -u test.py
+  ```
 
 - 当 supervisord 启动一个进程时（状态为 STARTING ）：
   - 如果进程在 startsecs 秒之内退出了（包括正常退出、异常退出），则视作启动失败（状态为 BACKOFF ），最多尝试重启 startretries 次（如果依然失败则状态为 FATAL ）。

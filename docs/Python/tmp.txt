@@ -4693,16 +4693,42 @@ True
 - 定位符用于将正则表达式对齐到字符串的边界位置。
   - ^    ：匹配字符串的开始位置。
   - $    ：匹配字符串的结束位置。
-  - \b    ：匹配单词的前边界或后边界，可以是单词与空格、()、\n等特殊字符之间的位置。
+  - \b    ：匹配单词的边界。如果连续两个字符一个匹配 \w 一个不匹配 \w （或者为 ^ 、$），则认为这两个字符之间为单词边界，匹配 \b 。
   - \B    ：匹配非单词边界，即其它的任何边界。
->>> re.findall(r"\bp","--Python")
-['p']
->>> re.findall(r"\Bp","--Python")
+
+例：
+>>> import re
+>>> re.findall(r"Hi", "Hi!")
+['Hi']
+>>> re.findall(r"^Hi", "Hi!")
+['Hi']
+>>> re.findall(r"^Hi$", "Hi!")
 []
->>> re.findall(r"\bp","123Python")
+一般说一个正则表达式 pattern 与一个字符串 str 匹配时，是指完全匹配而不是部分匹配，相当于 ^pattern$ 与 str 匹配。
+
+
+
+例：
+>>> re.findall(r"\bHi\b", "Hi")
+['Hi']
+>>> re.findall(r"Hi\b", ",Hi!")
+['Hi']
+>>> re.findall(r"Hi\b!", "Hi!")
+['Hi!']
+>>> re.findall(r",\b!", ",!")       # 连续两个字符都不匹配 \w ，因此它们之间不属于单词边界
 []
->>> re.findall(r"\Bp","123Python")
-['p']
+>>> re.findall(r"Hi\b", "Hi123!")   # 字母与数字都匹配 \w ，因此它们之间不属于单词边界
+[]
+>>> re.findall(r"H\bi", ",H i!")    # \b 表示抽象的边界，不能匹配一个具体的字符
+[]
+>>> re.findall(r"H\b i", ",H i!")
+['H i']
+
+>>> re.findall(r"Hi\B", "Hi")
+[]
+>>> re.findall(r"Hi\B", "Hi123!")
+['Hi']
+
 - 不能用限定符修饰定位符，因为边界位置只能有一个。
 - 例如：
 "\bgo"        匹配"good"、"very good"中的"go"，不匹配"verygood"。

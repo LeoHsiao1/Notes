@@ -124,7 +124,7 @@
   2. 进入项目目录，开始扫描：
       ```sh
       mvn clean compile
-      mvn sonar:sonar \                             # sonar.projectKey 会自动配置
+      mvn sonar:sonar \                             # 不必配置 sonar.projectKey ，因为它会根据 pom.xml 自动配置
           -Dsonar.host.url=http://10.0.0.1:9000 \
           -Dsonar.login=31bbe4de2a8260ef2f427c6e318f05dbc8e92af6
       ```
@@ -135,11 +135,13 @@
 3. 在 Pipeline 中按如下格式调用：
     ```groovy
     stage('SonarQube analysis') {
-        withSonarQubeEnv('SonarQube') {   // 输入已配置的 SonarQube 服务器的名称
-            sh """
-                /opt/sonar-scanner/bin/sonar-scanner \
-                    -Dsonar.projectBaseDir=/root/django
-            """
+        steps{
+            withSonarQubeEnv('SonarQube') {   // 输入已配置的 SonarQube 服务器的名称
+                sh """
+                    /opt/sonar-scanner/bin/sonar-scanner \
+                        -Dsonar.projectBaseDir=/root/django
+                """
+            }
         }
     }
     ```

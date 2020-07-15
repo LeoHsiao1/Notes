@@ -141,12 +141,12 @@ pipeline {
 
 在 pipeline{} 中必须要定义 agent{} ，表示选择哪个节点来执行流水线，适用于所有 stage{} 。
 - 也可以在一个 stage{} 中单独定义该阶段的 agent{} 。
-- 常见的几种定义方式：
+- 常见的几种 agent 定义方式：
     ```groovy
-    agent none       // 不设置全局的 agent ，此时要在每个 stage{} 中单独定义 agent{}
+    agent none          // 不设置全局的 agent ，此时要在每个 stage{} 中单独定义 agent{}
     ```
     ```groovy
-    agent any       // 让 Jenkins 选择任一节点
+    agent any           // 让 Jenkins 选择任一节点
     ```
     ```groovy
     agent {
@@ -161,15 +161,25 @@ pipeline {
         }
     }
     ```
+- 可以临时创建 docker 容器作为 agent ：
     ```groovy
     agent {
-        docker {        // 运行一个容器
+        docker {
+            // label 'master'
             image 'centos:7'
-            label 'jenkins_workspace'
-            args  '-v /tmp:/tmp'
+            // args  '-v /tmp:/tmp'
         }
     }
     ```
+    - 这会在指定节点（默认是 master 节点）上创建一个 docker 容器，执行 pipeline ，然后自动删除该容器。
+    - 该容器的启动命令的格式如下：
+        ```sh
+        docker run -t -d -u 1000:1000 \
+            -w /opt/.jenkins/workspace/test_pipeline@2 \        // 因为宿主机上已存在该项目的工作目录了，所以加上后缀 @2 避免同名
+            -v /opt/.jenkins/workspace/test_pipeline@2:/opt/.jenkins/workspace/test_pipeline@2:rw,z \
+            -e ********                                         // 传入 Jenkins 的环境变量
+            centos:7 cat
+        ```
 
 ## steps{}
 
@@ -356,6 +366,7 @@ pipeline {
         echo "$A"
     }
     ```
+
 - 可以将 shell 命令执行后的 stdout 或返回码赋值给变量，如下：
     ```groovy
     script {
@@ -366,7 +377,8 @@ pipeline {
     }
     ```
     .trim() 方法用于去掉字符串末尾的空字符、换行符。
-- 使用 Groovy 的 for 循环的示例：
+
+- 可以使用 Groovy 的 for 循环：
     ```groovy
     script {
         for ( i in [0, 1, 2, 3] ) {     // 遍历数组
@@ -383,6 +395,20 @@ pipeline {
     }
     ```
     .tokenize() 方法用于将字符串分割成多个字段的数组，并忽略内容为空的字段。
+
+- 可以使用 Groovy 的 try 语句:
+    ```groovy
+    script {
+        try {
+            sh 'exit 1'
+        }catch(all){
+            echo 'catched!'
+        }
+        finally {
+            echo 'finally!'
+        }
+    }
+    ```
 
 ## options{}
 

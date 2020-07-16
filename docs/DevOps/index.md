@@ -2,13 +2,12 @@
 
 - 简介
   - [简介](简介/简介.md)
-- Dev工具
-  - [Git](Dev工具/Git.md)
-  - [GitHub Actions](Dev工具/GitHub-Actions.md)
-- Jenkins
-  - [Jenkins](Jenkins/Jenkins.md)
-  - [Jenkinsfile](Jenkins/Jenkinsfile.md)
-  - [♢ jenkinsapi](Jenkins/^jenkinsapi.md)
+- CI
+  - [Git](CI/Git.md)
+  - [GitHub Actions](CI/GitHub-Actions.md)
+  - [Jenkins](CI/Jenkins.md)
+  - [SonarQube](CI/SonarQube.md)
+  - [Artifactory](CI/Artifactory.md)
 - Docker
   - [简介](Docker/简介.md)
   - [容器](Docker/容器.md)
@@ -34,5 +33,3 @@
   - [ELK](日志处理/ELK.md)
 - 其它
   - [Nextcloud](其它/Nextcloud.md)
-  - [Artifactory](其它/Artifactory.md)
-  - [SonarQube](其它/SonarQube.md)

@@ -448,22 +448,15 @@ module.exports = {
 					]
 				},
 				{
-					title: 'Dev工具',
+					title: 'CI',
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'Dev工具/Git',
-						'Dev工具/GitHub-Actions',
-					]
-				},
-				{
-					title: 'Jenkins',
-					collapsable: true,
-					sidebarDepth: 2,
-					children: [
-						'Jenkins/Jenkins',
-						'Jenkins/Jenkinsfile',
-						'Jenkins/^jenkinsapi',
+						'CI/Git',
+						'CI/GitHub-Actions',
+						'CI/Jenkins',
+						'CI/SonarQube',
+						'CI/Artifactory',
 					]
 				},
 				{
@@ -525,8 +518,6 @@ module.exports = {
 					sidebarDepth: 2,
 					children: [
 						'其它/Nextcloud',
-						'其它/Artifactory',
-						'其它/SonarQube',
 					]
 				},
 			],

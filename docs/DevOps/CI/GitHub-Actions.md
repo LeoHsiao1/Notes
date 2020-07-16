@@ -12,10 +12,10 @@ GitHub 提供了 Actions 功能，以实现 CI/CD 。
 ```yaml
 name: Python test
 
-on: [push]  # 定义触发流水线的事件
+on: [push]                      # 定义触发流水线的事件
 
-jobs:       # 开始流水线任务
-  job1:     # 第一个任务
+jobs:                           # 开始流水线任务
+  job1:                         # 第一个任务
     runs-on: ${{ matrix.os }}   # 定义运行环境
     strategy:                   # 定义多个运行环境，每个环境都会构建一次
       matrix:

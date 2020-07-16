@@ -459,7 +459,7 @@ module.exports = {
 				{
 					title: 'Jenkins',
 					collapsable: true,
-					sidebarDepth: 2,
+					sidebarDepth: 3,
 					children: [
 						'Jenkins/Jenkins',
 						'Jenkins/Jenkinsfile',

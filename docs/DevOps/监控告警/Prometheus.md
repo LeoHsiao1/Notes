@@ -129,7 +129,17 @@ scrape_configs:
   - `honor_labels: true` ：保留原指标不变，不添加新标签。
   - `honor_labels: false` ：默认值，将原指标中的同名 label 改名为 `exported_<label_name>` ，再添加新标签。
 - 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，所以应该添加 nodename 等额外的标签便于筛选。
-- 通过 file_sd_configs 方式读取的文件格式如下：
+- 通过 file_sd_configs 方式读取的文件可以是 YAML 或 JSON 格式，如下：
+  ```yaml
+  - targets:
+    - '10.0.0.1:9090'
+    labels:
+      nodename: 'CentOS-1'
+  - targets:
+    - '10.0.0.2:9090'
+    labels:
+      nodename: 'CentOS-2'
+  ```
   ```json
   [{
       "targets": [
@@ -151,16 +161,16 @@ scrape_configs:
 ## 指标
 
 - 每条指标数据是如下格式的字符串：
-    ```
+    ```sh
     <metric_name>{<label_name>=<label_value>, ...}     metric_value
     ```
   例如：
-    ```
+    ```sh
     go_goroutines{instance="10.0.0.1:9090", job="prometheus"}    80
     ```
   - metric_name 必须匹配正则表达式 `[a-zA-Z_:][a-zA-Z0-9_:]*` ，一般通过 Recording Rules 定义的指标名称才包含冒号 : 。
-  - label 是对 metric_name 的补充，方便筛选指标。
-  - label_value 可以包含 Unicode 字符。
+  - 标签（label）的作用是便于筛选指标。
+  - label_value 可以包含任意 Unicode 字符。
 
 - 根据用途的不同对指标分类：
   - Counter ：计数器，数值单调递增。
@@ -422,7 +432,7 @@ scrape_configs:
   ```
   data/wal/ 目录下缓存的数据不会被删除，因此即使删除 tsdb 中的所有数据， Prometheus 依然会自动从 data/wal/ 目录加载最近的部分数据。
 
-## 分布式
+## 分布式部署
 
 - Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署。
 - 不过只能抓取当前时刻的数据， 就像抓取一般的 exporter 。
@@ -619,7 +629,7 @@ GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
 POST /-/reload     # 重新加载配置文件
 ```
 
-### route 配置
+### route
 
 route 块定义了分组处理警报的规则，如下：
 ```yaml
@@ -628,32 +638,34 @@ route:
   group_wait: 1m
   group_interval: 1m
   repeat_interval: 24h
+  group_by:                         # 根据标签的值对已匹配的警报进行分组（默认不会分组）
+    - alertname
   routes:
     - receiver: 'webhook_to_leo'
-      group_by:                     # 根据标签的值对已匹配的警报进行分组（默认不会分组）
-        - alertname
-      match:                        # 任意对 label:value ，符合全部条件的警报才算匹配
+      # group_by:
+      #   - alertname
+      match:                        # 符合这些 label:value 条件的警报才算匹配
         job: prometheus
-      match_re:                     # value 是正则表达式
+      match_re:                     # value 采用正则匹配
         job: prometheus|grafana
-        instance: .*
-      continue: false
+        instance: 10.0.0.*
+      # continue: false
     - receiver: 'xxx'
+      ...
 ```
 - 上例中的大部分参数都不是必填项，最简单的 route 块如下：
   ```yaml
   route:
     receiver: 'email_to_leo'
   ```
-- 配置文件中至少要定义一个 route 块，称为根 route 节点。
+- 配置文件中必须要定义 route 块，其中至少要定义一个 route 节点，称为根节点。
   - 在根节点之下可以定义任意个嵌套的 route 块，构成一个树形结构的路由表。
-  - 子 route 节点会继承父 route 节点的所有参数值，作为自己的默认值。
-- Alertmanager 每收到一个警报时，会从根 route 节点往下逐个尝试匹配。
-  - 如果当前节点匹配，
-    - 且子节点不匹配，则交给当前节点处理。
-    - 且子节点也匹配，则交给子节点处理。（相当于子节点覆盖了父节点的配置）
-    - 且配置了 `continue: false` ，则结束匹配，退出路由表。
-    - 且配置了 `continue: true` ，则还会继续尝试匹配之后的同级节点。
+  - 子节点会继承父节点的所有参数值，作为自己的默认值。
+- Alertmanager 每收到一个警报时，会从根节点往下逐个尝试匹配。
+  - 如果当前节点匹配：
+    - 如果子节点不匹配，则交给当前节点处理。
+    - 如果子节点也匹配，则交给子节点处理。（相当于子节点覆盖了父节点）
+    - 如果配置了 `continue: true` ，则还会继续尝试匹配之后的同级节点。否则结束匹配，退出路由表。
   - 如果当前节点不匹配，则会继续尝试匹配之后的同级节点。
   - 警报默认匹配根节点。因此，如果所有节点都不匹配，则会交给根节点处理。
 - Alertmanager 以 group 为单位发送告警消息。
@@ -671,8 +683,9 @@ route:
       如果 Alertmanager 没有重启，且该 group 一直存在，则它发出的告警消息中会一直包含这个 `"status": "resolved"` 的警报。
     - 如果一个消失的警报再次出现，也会让该 group 解除冷却，发送一次消息。
 
-### inhibit_rules 配置
+### inhibit_rules
 
+例：
 ```yaml
 inhibit_rules:
   - source_match:
@@ -683,13 +696,13 @@ inhibit_rules:
       - alertname
       - instance
   - source_match:
-      alertname: target 离线
+      alertname: target离线
       job: node_exporter
     target_match:
     equal:
       - nodename
 ```
-- 原理：先根据 source_match 指定的 label:value 选中一些警报，再根据 target_match 选中一些警报，当 source 警报存在时，会抑制与它 equal 标签值相同的 target 警报。
+- 工作原理： Alertmanager 会先根据 source_match 指定的 label:value 选中一些警报，再根据 target_match 选中一些警报。如果 source 警报存在，则抑制与它 equal 标签值相同的 target 警报。
   - 如果改为 source_match_re、target_match_re ，则是对 label 的 value 进行正则匹配。
   - 如果 source_match、target_match 列表为空，则是选中所有警报。
   - 如果 equal 列表为空，或者 source 警报与 target 警报都不具有 equal 标签（此时相当于它们的该标签值都为空），则抑制所有 target 警报。
@@ -891,4 +904,5 @@ inhibit_rules:
 ### blackbox_exporter
 
 ：可以测试 DNS、ICMP、TCP、HTTP ，以及 SSL 证书过期时间。
+ 
  

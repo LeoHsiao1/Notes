@@ -732,14 +732,30 @@ inhibit_rules:
   sum(increase(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])) # 每分钟处理 HTTP 请求的耗时（s）
   up{instance="10.0.0.1:9090", job="prometheus"}                                            # target 是否在线（取值 1、0 分别代表在线、离线）
   count(up == 1)                                                                            # targets 在线数
-  sum(scrape_samples_scraped{instance='10.0.0.1:9090'})                                     # scrape 的执行次数
-  sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # scrape 的执行耗时（s）
+  sum(scrape_samples_scraped{instance='10.0.0.1:9090'})                                     # scrape 的指标数
+  sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # scrape 的耗时（s）
   sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # rule 每分钟的执行次数
   sum(increase(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)  # rule 每分钟的执行失败次数
   irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])                         # rule 每分钟的执行耗时（s）
 
   ALERTS{alertname="xxx", alertstate="pending|firing", ...}                                 # 警报
   ```
+
+### Alertmanager
+
+```sh
+alertmanager_build_info{branch="HEAD", goversion="go1.13.5", instance="10.0.0.1:9093", job="alertmanager", revision="f74be0400a6243d10bb53812d6fa408ad71ff32d", version="0.20.0"}   # 版本信息
+
+time() - process_start_time_seconds       # 运行时长（s）
+irate(process_cpu_seconds_total[1m])      # 占用的 CPU 核数
+process_resident_memory_bytes / 1024^3    # 占用的内存（GB）
+sum(increase(alertmanager_http_request_duration_seconds_sum[1m]))  # 处理 HTTP 请求的耗时（s）
+
+alertmanager_alerts                       # 存在的警报数（包括激活的、被抑制的）
+alertmanager_silences{state="active"}     # Silences 数量
+alertmanager_notifications_total          # 发送的消息数
+alertmanager_notifications_failed_total   # 发送失败的消息数
+```
 
 ### Grafana
 

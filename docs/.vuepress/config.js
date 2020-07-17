@@ -517,6 +517,7 @@ module.exports = {
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
+						'其它/VSCode',
 						'其它/Nextcloud',
 					]
 				},

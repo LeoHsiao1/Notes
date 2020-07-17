@@ -32,4 +32,5 @@
 - 日志处理
   - [ELK](日志处理/ELK.md)
 - 其它
+  - [VS Code](其它/VSCode.md)
   - [Nextcloud](其它/Nextcloud.md)

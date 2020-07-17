@@ -121,7 +121,7 @@ scrape_configs:
 - Prometheus 从每个监控对象处抓取指标数据时，默认会自动加上 `job: "$job_name"`、`instance: "$target"` 两个标签。
   还会自动记录以下指标：
   ```sh
-  up{job="$job_name", instance="$target"}                       # 该监控对象是否在线（取值为 1、0 表示在线、不在线）
+  up{job="$job_name", instance="$target"}                       # 该监控对象是否在线（取值 1、0 分别代表在线、离线）
   scrape_samples_scraped{job="$job_name", instance="$target"}   # 本次抓取的指标数
   scrape_duration_seconds{job="$job_name", instance="$target"}  # 本次抓取的耗时
   ```
@@ -723,39 +723,41 @@ inhibit_rules:
   ```sh
   prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息
 
-  time() - process_start_time_seconds{instance='10.0.0.1:9090'}             # 运行时长（s）
-  irate(process_cpu_seconds_total{instance='10.0.0.1:9090'}[1m])            # 占用的 CPU 核数
-  process_resident_memory_bytes{instance='10.0.0.1:9090'} / 1024^3          # 占用的内存（GB）
-  prometheus_tsdb_storage_blocks_bytes{instance='10.0.0.1:9090'} / 1024^3   # tsdb block 占用的磁盘空间（GB）
-  
-  sum(increase(prometheus_http_requests_total{instance='10.0.0.1:9090'}[1m])) by (code)     # 每分钟收到 HTTP 请求的次数
-  sum(increase(prometheus_http_request_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])) # 每分钟处理 HTTP 请求的耗时（s）
-  up{instance="10.0.0.1:9090", job="prometheus"}                                            # target 是否在线（取值 1、0 分别代表在线、离线）
-  count(up == 1)                                                                            # targets 在线数
-  sum(scrape_samples_scraped{instance='10.0.0.1:9090'})                                     # scrape 的指标数
-  sum(scrape_duration_seconds{instance='10.0.0.1:9090'})                                    # scrape 的耗时（s）
-  sum(increase(prometheus_rule_evaluations_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)          # rule 每分钟的执行次数
-  sum(increase(prometheus_rule_evaluation_failures_total{instance='10.0.0.1:9090'}[1m])) without (rule_group)  # rule 每分钟的执行失败次数
-  irate(prometheus_rule_evaluation_duration_seconds_sum{instance='10.0.0.1:9090'}[1m])                         # rule 每分钟的执行耗时（s）
+  time() - process_start_time_seconds                             # 运行时长（s）
+  irate(process_cpu_seconds_total[1m])                            # 占用的 CPU 核数
+  process_resident_memory_bytes / 1024^3                          # 占用的内存（GB）
+  prometheus_tsdb_storage_blocks_bytes / 1024^3                   # tsdb block 占用的磁盘空间（GB）
+  sum(increase(prometheus_http_requests_total[1m])) by (code)     # 每分钟收到 HTTP 请求的次数
+  sum(increase(prometheus_http_request_duration_seconds_sum[1m])) # 每分钟处理 HTTP 请求的耗时（s）
 
-  ALERTS{alertname="xxx", alertstate="pending|firing", ...}                                 # 警报
+  count(up == 1)                                                  # target 在线数
+  sum(scrape_samples_scraped)                                     # scrape 的指标数
+  sum(scrape_duration_seconds)                                    # scrape 的耗时（s）
+  sum(increase(prometheus_rule_evaluations_total[1m])) without (rule_group)          # rule 每分钟的执行次数
+  sum(increase(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
+  irate(prometheus_rule_evaluation_duration_seconds_sum[1m])                         # rule 每分钟的执行耗时（s）
+
+  ALERTS{alertname="xxx", alertstate="pending|firing", ...}       # 警报
   ```
 
 ### Alertmanager
 
-```sh
-alertmanager_build_info{branch="HEAD", goversion="go1.13.5", instance="10.0.0.1:9093", job="alertmanager", revision="f74be0400a6243d10bb53812d6fa408ad71ff32d", version="0.20.0"}   # 版本信息
+- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 '/metrics' 。
+- 常用指标：
+  ```sh
+  alertmanager_build_info{branch="HEAD", goversion="go1.13.5", instance="10.0.0.1:9093", job="alertmanager", revision="f74be0400a6243d10bb53812d6fa408ad71ff32d", version="0.20.0"}   # 版本信息
 
-time() - process_start_time_seconds       # 运行时长（s）
-irate(process_cpu_seconds_total[1m])      # 占用的 CPU 核数
-process_resident_memory_bytes / 1024^3    # 占用的内存（GB）
-sum(increase(alertmanager_http_request_duration_seconds_sum[1m]))  # 处理 HTTP 请求的耗时（s）
+  time() - process_start_time_seconds       # 运行时长（s）
+  irate(process_cpu_seconds_total[1m])      # 占用的 CPU 核数
+  process_resident_memory_bytes / 1024^3    # 占用的内存（GB）
+  sum(increase(alertmanager_http_request_duration_seconds_sum[1m])) # 处理 HTTP 请求的耗时（s）
 
-alertmanager_alerts                       # 存在的警报数（包括激活的、被抑制的）
-alertmanager_silences{state="active"}     # Silences 数量
-alertmanager_notifications_total          # 发送的消息数
-alertmanager_notifications_failed_total   # 发送失败的消息数
-```
+  alertmanager_alerts                       # 存在的警报数（包括激活的、被抑制的）
+  alertmanager_silences{state="active"}     # Silences 数量
+  alertmanager_notifications_total          # 发送的消息数
+  alertmanager_notifications_failed_total   # 发送失败的消息数
+  ```
+  - 如果重启 Alertmanager ，则会使一些计数的指标归零。
 
 ### Grafana
 
@@ -766,15 +768,15 @@ alertmanager_notifications_failed_total   # 发送失败的消息数
   ```sh
   grafana_build_info{branch="HEAD", edition="oss", goversion="go1.14.1", instance="10.0.0.1:3000", job="grafana", revision="aee1438ff2", version="7.0.0"}  # 版本信息
 
-  time() - process_start_time_seconds{instance='10.0.0.1:3000'}             # 运行时长（s）
-  irate(process_cpu_seconds_total{instance='10.0.0.1:3000'}[1m])            # 占用的 CPU 核数
-  process_resident_memory_bytes{instance='10.0.0.1:3000'} / 1024^3          # 占用的内存（GB）
+  time() - process_start_time_seconds                        # 运行时长（s）
+  irate(process_cpu_seconds_total[1m])                       # 占用的 CPU 核数
+  process_resident_memory_bytes / 1024^3                     # 占用的内存（GB）
+  sum(increase(http_request_total[1m])) by (statuscode)      # 每分钟收到 HTTP 请求的次数
+  sum(increase(http_request_duration_milliseconds_sum[1m]))  # 每分钟处理 HTTP 请求的耗时（ms）
 
-  sum(increase(http_request_total{instance='10.0.0.1:3000'}[1m])) by (statuscode)      # 每分钟收到 HTTP 请求的次数
-  sum(increase(http_request_duration_milliseconds_sum{instance='10.0.0.1:3000'}[1m]))  # 每分钟处理 HTTP 请求的耗时（ms）
-  grafana_alerting_active_alerts{instance='10.0.0.1:3000'}                             # Alert Rule 的数量
-  increase(grafana_alerting_notification_sent_total{instance='10.0.0.1:3000'}[1h])     # 每小时发出的告警次数
-  increase(grafana_alerting_result_total{instance='10.0.0.1:3000'}[1h])                # 每小时的 Alert Rule 状态
+  grafana_alerting_active_alerts                             # Alert Rule 的数量
+  increase(grafana_alerting_result_total[1h])                # 每小时的 Alert Rule 状态
+  increase(grafana_alerting_notification_sent_total[1h])     # 每小时发出的告警次数
   ```
 
 ### Jenkins
@@ -784,31 +786,29 @@ alertmanager_notifications_failed_total   # 发送失败的消息数
   - 不能统计到安装该插件以前的 Jenkins 指标。
 - 常用指标：
   ```sh
-  time() - process_start_time_seconds{instance='10.0.0.1:8080'}     # 运行时长（s）
-  irate(process_cpu_seconds_total{instance='10.0.0.1:8080'}[1m])    # 占用的 CPU 核数
-  process_resident_memory_bytes{instance='10.0.0.1:8080'} / 1024^3  # 占用的内存（GB）
+  time() - process_start_time_seconds     # 运行时长（s）
+  irate(process_cpu_seconds_total[1m])    # 占用的 CPU 核数
+  process_resident_memory_bytes / 1024^3  # 占用的内存（GB）
+  increase(http_requests_count[1m])       # 每分钟收到 HTTP 请求的次数
+  http_requests{quantile=~"0.5|0.99"}     # 每分钟处理 HTTP 请求的耗时（s）
 
-  increase(http_requests_count{instance='10.0.0.1:8080'}[1m])       # 每分钟收到 HTTP 请求的次数
-  http_requests{instance='10.0.0.1:8080', quantile=~"0.5|0.99"}     # 每分钟处理 HTTP 请求的耗时（s）
+  jenkins_node_count_value                # node 总数
+  jenkins_node_online_value               # node 在线数
+  jenkins_executor_count_value            # 执行器的总数
+  jenkins_executor_in_use_value           # 执行器正在使用的数量
+  jenkins_node_builds_count               # Jenkins 本次启动以来的构建总次数
 
-  jenkins_node_count_value{instance='10.0.0.1:8080'}        # node 总数
-  jenkins_node_online_value{instance='10.0.0.1:8080'}       # node 在线数
-  jenkins_executor_count_value{instance='10.0.0.1:8080'}    # 执行器的总数
-  jenkins_executor_in_use_value{instance='10.0.0.1:8080'}   # 执行器正在使用的数量
-  jenkins_node_builds_count{instance='10.0.0.1:8080'}       # Jenkins 本次启动以来的构建总次数
-
-  jenkins_job_count_value{instance='10.0.0.1:8080'}         # Job 总数
-  jenkins_queue_size_value{instance='10.0.0.1:8080'}        # 构建队列中的 Job 数（最好为 0 ）
-
-  default_jenkins_builds_duration_milliseconds_summary_count{instance='10.0.0.1:8080', jenkins_job='xxx'}  # Job 的构建总次数（当构建结束时才记录）
-  default_jenkins_builds_duration_milliseconds_summary_sum{instance='10.0.0.1:8080', jenkins_job='xxx'}    # Job 的构建总耗时（包括被阻塞的时长）
-  default_jenkins_builds_success_build_count{instance='10.0.0.1:8080', jenkins_job='xxx'}                  # Job 构建成功的次数
-  default_jenkins_builds_failed_build_count{instance='10.0.0.1:8080', jenkins_job='xxx'}                   # Job 构建失败的次数
-  default_jenkins_builds_last_build_start_time_milliseconds{instance='10.0.0.1:8080', jenkins_job='xxx'}   # Job 最后一次构建的开始时间
-  default_jenkins_builds_last_build_duration_milliseconds{instance='10.0.0.1:8080', jenkins_job='xxx'}     # Job 最后一次构建的持续时长
-  default_jenkins_builds_last_build_result{instance='10.0.0.1:8080', jenkins_job='xxx'}                    # Job 最后一次构建的结果（ 1 代表 success 、0 代表其它状态）
+  jenkins_job_count_value                 # Job 总数
+  jenkins_queue_size_value                # 构建队列中的 Job 数（最好为 0 ）
+  default_jenkins_builds_duration_milliseconds_summary_count{, jenkins_job='xxx'}  # Job 的构建总次数（当构建结束时才记录）
+  default_jenkins_builds_duration_milliseconds_summary_sum{jenkins_job='xxx'}      # Job 的构建总耗时（包括被阻塞的时长）
+  default_jenkins_builds_success_build_count{jenkins_job='xxx'}                    # Job 构建成功的次数
+  default_jenkins_builds_failed_build_count{jenkins_job='xxx'}                     # Job 构建失败的次数
+  default_jenkins_builds_last_build_start_time_milliseconds{jenkins_job='xxx'}     # Job 最后一次构建的开始时间
+  default_jenkins_builds_last_build_duration_milliseconds{jenkins_job='xxx'}       # Job 最后一次构建的持续时长
+  default_jenkins_builds_last_build_result{jenkins_job='xxx'}                      # Job 最后一次构建的结果（ 1 代表 success 、0 代表其它状态）
   ```
-- 删除某个 Job 的某次构建记录时，会使总的构建次数减一。
+  - 如果删除某个 Job 的构建记录，则会使其总的构建次数减少。
 
 ### node_exporter
 
@@ -832,25 +832,25 @@ alertmanager_notifications_failed_total   # 发送失败的消息数
   node_exporter_build_info{branch="HEAD", goversion="go1.13.8", instance="10.0.0.1:9100", job="node_exporter", revision="ef7c05816adcb0e8923defe34e97f6afcce0a939", version="1.0.0-rc.0"}  # 版本信息
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
 
-  avg(irate(node_cpu_seconds_total{instance='10.0.0.1:9100'}[1m])) without (cpu) * 100                  # CPU 使用率（%）
-  node_load5{instance='10.0.0.1:9100'}                                                                  # 每 5 分钟的 CPU 平均负载
-  count(node_cpu_seconds_total{mode='idle', instance='10.0.0.1:9100'})                                  # CPU 核数
+  node_time_seconds - time()                                                  # 目标主机与本机的时间差值（在 [scrape_interval, 0] 范围内才合理）
+  node_time_seconds - node_boot_time_seconds                                  # 主机运行时长（s）
 
-  node_time_seconds{instance='10.0.0.1:9100'} - node_boot_time_seconds{instance='10.0.0.1:9100'}        # 主机运行时长（s）
-  node_time_seconds{instance='10.0.0.1:9100'} - time()          # 目标主机与监控主机的时间差值（在 [scrape_interval, 0] 范围内才合理）
+  avg(irate(node_cpu_seconds_total[1m])) without (cpu) * 100                  # CPU 使用率（%）
+  node_load5                                                                  # 每 5 分钟的 CPU 平均负载
+  count(node_cpu_seconds_total{mode='idle'})                                  # CPU 核数
 
-  node_memory_MemTotal_bytes{instance='10.0.0.1:9100'} / 1024^3                                         # 内存总容量（GB）
-  node_memory_MemAvailable_bytes{instance='10.0.0.1:9100'} / 1024^3                                     # 内存可用量（GB），CentOS7 开始才有该指标
-  node_memory_SwapCached_bytes{instance='10.0.0.1:9100'} / 1024^3                                       # swap 使用量（GB）
+  node_memory_MemTotal_bytes / 1024^3                                         # 内存总容量（GB）
+  node_memory_MemAvailable_bytes / 1024^3                                     # 内存可用量（GB），CentOS7 开始才有该指标
+  node_memory_SwapCached_bytes / 1024^3                                       # swap 使用量（GB）
 
-  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3                # 磁盘总容量（GB）
-  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4', instance='10.0.0.1:9100'}) / 1024^3               # 磁盘可用量（GB）
+  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4'}) / 1024^3                # 磁盘总容量（GB）
+  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4'}) / 1024^3               # 磁盘可用量（GB）
 
-  sum(irate(node_disk_read_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024^2                         # 磁盘读速率（MB/s）
-  sum(irate(node_disk_written_bytes_total{instance='10.0.0.1:9100'}[1m])) / 1024^2                      # 磁盘写速率（MB/s）
+  sum(irate(node_disk_read_bytes_total[1m])) / 1024^2                         # 磁盘读速率（MB/s）
+  sum(irate(node_disk_written_bytes_total[1m])) / 1024^2                      # 磁盘写速率（MB/s）
 
-  irate(node_network_receive_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2  # 网络下载速率（MB/s）
-  irate(node_network_transmit_bytes_total{device!~`lo|docker0`, instance='10.0.0.1:9100'}[1m]) / 1024^2 # 网络上传速率（MB/s）
+  irate(node_network_receive_bytes_total{device!~`lo|docker0`}[1m]) / 1024^2  # 网络下载速率（MB/s）
+  irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[1m]) / 1024^2 # 网络上传速率（MB/s）
   ```
 
 ### process-exporter
@@ -920,5 +920,4 @@ alertmanager_notifications_failed_total   # 发送失败的消息数
 ### blackbox_exporter
 
 ：可以测试 DNS、ICMP、TCP、HTTP ，以及 SSL 证书过期时间。
- 
  

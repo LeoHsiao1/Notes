@@ -68,7 +68,7 @@
 - Markdown Preview Enhance ：一个增强型的 Markdown 阅读器，支持实时预览、显示目录、导出成 HTML、PDF 等格式。
 - Settings Sync ：通过 GitHub Gist 备份 VS Code 的主题、快捷键、插件等配置信息。
 - Code Spell Checker ：检查单词拼写错误。建议将它禁用避免干扰，要检查时再启用。
-- HexEditor ：用于按十六进制查看、编辑文件内容。
+- hexdump for VSCode ：用于按十六进制查看文件内容。
 
 ## 远程开发
 

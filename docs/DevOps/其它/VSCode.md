@@ -65,15 +65,15 @@
 - vscode-icon ：给不同类型的文件加上美观的图标。
 - Align by RegEx ：用于自动添加空格以对齐多行中的某个字符，比如对齐注释符号 # 。
 - Beautify ：用于格式化 JS、CSS、HTML 代码。
-- Code Spell Checker ：检查单词拼写错误。建议将它禁用避免干扰，要检查时再启用。
 - Markdown Preview Enhance ：一个增强型的 Markdown 阅读器，支持实时预览、显示目录、导出成 HTML、PDF 等格式。
-- Settings Sync ：利用  GitHub Gist 备份 VS Code 的主题、快捷键、插件等配置信息。
-- hexdump for VSCode ：用于按十六进制查看文件内容。
+- Settings Sync ：通过 GitHub Gist 备份 VS Code 的主题、快捷键、插件等配置信息。
+- Code Spell Checker ：检查单词拼写错误。建议将它禁用避免干扰，要检查时再启用。
+- HexEditor ：用于按十六进制查看、编辑文件内容。
 
 ## 远程开发
 
 VS Code 支持远程开发模式。
-- 可以在本机的 VS Code 界面中打开其它主机上的项目目录，进行编辑、编译、调试等操作。
+- 可以在本机的 VS Code 界面中打开其它主机上的文件目录，进行编辑、编译、调试等操作。
 - 远程目录可以位于物理机、虚机，甚至 Docker 容器中。
 - [官方教程](https://code.visualstudio.com/blogs/2019/05/02/remote-development)
 

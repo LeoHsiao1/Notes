@@ -32,8 +32,9 @@
 - 如果对某个项目进行了个性化设置，则会在该项目的根目录下创建一个 .vscode 目录，用于保存设置信息。
 - 建议的设置：
   - 在输入代码时时会自动弹出补全窗口，默认可以按 Tab 或 Enter 键进行补全，也可以按 Esc 键忽略。建议在设置中关闭 "Accept Suggestion On Enter" 选项，这样按 Enter 键的作用总是换行。
-  - 设置切换行注释的快捷键为 `Ctrl + Q`，切换块注释的快捷键为`Ctrl + Shift + Q`，与 与 NotePad++ 的相应快捷键一致。
   - 启用 "Format On Type" 选项，允许在输入换行符时自动格式化代码。再设置手动格式化的快捷键为 `Alt + F`。
+  - 设置 "Run Selected Text in Active Terminal" 的快捷键为 `Shift + Enter` ，便于快速在当前激活的终端中（没有则自动创建）执行光标所在行或选中的内容。
+  - 设置切换行注释的快捷键为 `Ctrl + Q`，切换块注释的快捷键为`Ctrl + Shift + Q`，与 NotePad++ 的注释快捷键一致。
 
 ## 常用快捷键
 
@@ -57,7 +58,6 @@
 - `Ctrl + Shift + [/]` ：折叠、展开代码块。
 - `Ctrl + ←/→ `：以单词为单位左右移动光标。
 - `Ctrl + Backspace/Delete` ：以单词为单位删除代码。
-- `Shift + Enter`：在终端执行光标所在行或选中的内容，这便于调试执行 Python 等解释型语言的代码。
 
 ## 常用插件
 
@@ -68,7 +68,7 @@
 - Markdown Preview Enhance ：一个增强型的 Markdown 阅读器，支持实时预览、显示目录、导出成 HTML、PDF 等格式。
 - Settings Sync ：通过 GitHub Gist 备份 VS Code 的主题、快捷键、插件等配置信息。
 - Code Spell Checker ：检查单词拼写错误。建议将它禁用避免干扰，要检查时再启用。
-- hexdump for VSCode ：用于按十六进制查看文件内容。
+- hexdump for VSCode ：用于按十六进制查看文件内容，并且右键某个字节可进行修改。
 
 ## 远程开发
 

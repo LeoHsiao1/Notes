@@ -186,7 +186,7 @@ module.exports = {
 					collapsable: true,
 					sidebarDepth: 2,
 					children: [
-						'shell/解释器',
+						'shell/简介',
 						'shell/变量',
 						'shell/基本语法',
 					]

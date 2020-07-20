@@ -1,4 +1,4 @@
-# README
+# 管理
 
 ## 部署方法
 
@@ -23,6 +23,13 @@ docker run -d --name nginx \
 ```
 
 另外，还需要部署 meilisearch 服务器、执行 scrape 工具，才能使用搜索栏。
+
+## 生成目录
+
+根据 docs/index.md 及各书籍目录下的 index.md 文件中的目录，生成 docs/.vuepress/config.js 文件中的 nav、sidebar 目录。
+```sh
+python etc\set_catalog.py
+```
 
 ## 调整中英文间距
 

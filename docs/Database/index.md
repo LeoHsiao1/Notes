@@ -1,4 +1,4 @@
-[《数据库》](index.md)
+[《Database》](index.md)
 
 - 简介
   - [简介](简介/简介.md)

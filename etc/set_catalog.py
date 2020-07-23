@@ -95,3 +95,5 @@ text = re.sub(r"\n[^\n]*sidebar: \{.*\},\s*nextLinks: false,", sidebar, text, fl
 # 保存到 configs.js 中
 with open(configs_path, 'w', encoding='utf-8') as f:
     f.write(text)
+
+print('done')

@@ -38,20 +38,20 @@ module.exports = {
 			text: 'Notes',
             items: [
                 {
-                    text: '《Python》',
-                    link: '/Python/index'
-                },
-                {
                     text: '《Linux》',
                     link: '/Linux/index'
                 },
                 {
-                    text: '《数据库》',
-                    link: '/Database/index'
+                    text: '《Network》',
+                    link: '/Network/index'
                 },
                 {
-                    text: '《计算机网络》',
-                    link: '/Computer-Network/index'
+                    text: '《Python》',
+                    link: '/Python/index'
+                },
+                {
+                    text: '《Database》',
+                    link: '/Database/index'
                 },
                 {
                     text: '《Web》',
@@ -64,41 +64,6 @@ module.exports = {
             ]
         }],
         sidebar: {
-            '/Python/': [{
-                    title: '《Python》',
-                    path: '/Python/',
-                },
-                {
-                    title: '简介',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '简介/简介',
-                        '简介/解释器',
-                        '简介/版本差异',
-                    ]
-                },
-                {
-                    title: '文本处理',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '文本处理/jinja',
-                    ]
-                },
-                {
-                    title: '混合开发',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '混合开发/简介',
-                        '混合开发/^ctypes',
-                        '混合开发/^Cython',
-                        '混合开发/SWIG',
-                        '混合开发/pybind11',
-                    ]
-                },
-            ],
             '/Linux/': [{
                     title: '《Linux》',
                     path: '/Linux/',
@@ -217,8 +182,105 @@ module.exports = {
                     ]
                 },
             ],
+            '/Network/': [{
+                    title: '《Network》',
+                    path: '/Network/',
+                },
+                {
+                    title: '计算机网络',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '计算机网络/简介',
+                        '计算机网络/通信线路',
+                        '计算机网络/数据编码',
+                        '计算机网络/数据传输',
+                        '计算机网络/覆盖范围',
+                    ]
+                },
+                {
+                    title: '通信设备',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '通信设备/简介',
+                        '通信设备/交换机',
+                        '通信设备/路由器',
+                    ]
+                },
+                {
+                    title: 'TCP/IP协议',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        'TCP-IP协议/网络体系结构',
+                        'TCP-IP协议/IP协议',
+                        'TCP-IP协议/TCP-UDP协议',
+                    ]
+                },
+                {
+                    title: '网络通信协议',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '网络通信协议/简介',
+                        '网络通信协议/域名',
+                        '网络通信协议/Socket',
+                        '网络通信协议/邮件协议',
+                        '网络通信协议/FTP',
+                        '网络通信协议/HTTP',
+                        '网络通信协议/WebSocket',
+                        '网络通信协议/网络代理',
+                        '网络通信协议/MQTT',
+                    ]
+                },
+                {
+                    title: '计算机安全',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '计算机安全/恶意代码',
+                        '计算机安全/网络安全',
+                    ]
+                },
+            ],
+            '/Python/': [{
+                    title: '《Python》',
+                    path: '/Python/',
+                },
+                {
+                    title: '简介',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '简介/简介',
+                        '简介/解释器',
+                        '简介/版本差异',
+                    ]
+                },
+                {
+                    title: '文本处理',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '文本处理/jinja',
+                    ]
+                },
+                {
+                    title: '混合开发',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '混合开发/简介',
+                        '混合开发/^ctypes',
+                        '混合开发/^Cython',
+                        '混合开发/SWIG',
+                        '混合开发/pybind11',
+                    ]
+                },
+            ],
             '/Database/': [{
-                    title: '《数据库》',
+                    title: '《Database》',
                     path: '/Database/',
                 },
                 {
@@ -282,68 +344,6 @@ module.exports = {
                         'Redis/性能优化',
                         'Redis/部署架构',
                         'Redis/^redis',
-                    ]
-                },
-            ],
-            '/Computer-Network/': [{
-                    title: '《计算机网络》',
-                    path: '/Computer-Network/',
-                },
-                {
-                    title: '计算机网络',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '计算机网络/简介',
-                        '计算机网络/通信线路',
-                        '计算机网络/数据编码',
-                        '计算机网络/数据传输',
-                        '计算机网络/覆盖范围',
-                    ]
-                },
-                {
-                    title: '通信设备',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '通信设备/简介',
-                        '通信设备/交换机',
-                        '通信设备/路由器',
-                    ]
-                },
-                {
-                    title: 'TCP/IP协议',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        'TCP-IP协议/网络体系结构',
-                        'TCP-IP协议/IP协议',
-                        'TCP-IP协议/TCP-UDP协议',
-                    ]
-                },
-                {
-                    title: '网络通信协议',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '网络通信协议/简介',
-                        '网络通信协议/域名',
-                        '网络通信协议/Socket',
-                        '网络通信协议/邮件协议',
-                        '网络通信协议/FTP',
-                        '网络通信协议/HTTP',
-                        '网络通信协议/WebSocket',
-                        '网络通信协议/网络代理',
-                        '网络通信协议/MQTT',
-                    ]
-                },
-                {
-                    title: '计算机安全',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '计算机安全/恶意代码',
-                        '计算机安全/网络安全',
                     ]
                 },
             ],

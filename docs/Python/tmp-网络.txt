@@ -356,8 +356,23 @@ class Student(models.Model):                    # 定义一张数据表
 ## Model类支持继承。
 - 父类应该定义成抽象类。
 - 子类会继承父类的所有属性、方法。
-  - 如果父类的某些成员不适合沿用，子类应该重载它。
   - 子类应该单独定义自己的meta类。
+
+
+子类不能重载父类的字段。如下：
+```py
+class Human(models.Model):
+    name = models.CharField(verbose_name='姓名', max_length=32)
+
+class Man(Human):
+    name = models.CharField(verbose_name='姓名', max_length=32)
+```
+```
+django.core.exceptions.FieldError: Local field 'name' in class 'Man' clashes with field of the same name from base class 'Human'.
+```
+
+
+
 ## 
 ## 
 ## 
@@ -369,20 +384,26 @@ class Student(models.Model):                    # 定义一张数据表
   - 自增的int型字段。
   - 如果用户没有定义主键字段，Django会隐式地定义id = models.AutoField(primary_key=True)。
 - models.IntegerField(...)
-  - int型字段。
+  - int型字段。(注意是指 MySQL 中的 int 型）
 - models.FloatField(...)
   - float型字段。
 - models.DecimalField(max_digits=5, decimal_places=2)
   - decimal型字段。max_digits表示总位数，decimal_places表示小数位数。
 - models.CharField(verbose_name="名字", blank=True, default="", unique=True, max_length=20)
   - str型字段，用于存储较短的字符串。
+  该字段在 MySQL 中会保存为 varchar 型的值
+  
 - models.TextField(...)
   - 文本字段，用于存储较长的字符串。
+  该字段在 MySQL 中会保存为 text 型的值
+  
 - models.BooleanField(...)
-- models.DateField(auto_now_add=True)
+- models.DateField(verbose_name='更新时间', blank=True, null=True)
   - 会自动使用当前的datetime.date实例。
   - 不能设置default参数。
   - 以下两个参数可以启用一个，但启用之后该字段会变成editable=False，即不可修改。
+  - 该字段在 MySQL 中会保存为 date 型的值。
+  
 auto_now=True        ：当数据被保存时，自动将该字段设置成当前时间。常用于保存修改时间。
 auto_now_add=True    ：当数据被创建时，自动将该字段设置成当前时间。常用于保存创建时间。
 - models.DateTimeField(auto_now_add=True)
@@ -390,8 +411,11 @@ auto_now_add=True    ：当数据被创建时，自动将该字段设置成当�
 ## 定义字段时的常用参数。
 - primary_key=True        ：将该字段设置成主键。
 - verbose_name=None    ：该字段在admin页面显示的名字。
-- null=False    ：在数据库中定义数据表时，该字段不可以为null。
-- blank=False    ：新增数据项时不可以不填该字段。（在admin页面中，必填字段显示为粗体）
+- null=False    ：在数据库中定义数据表时，设置该字段不允许为null。
+  如果设置了 null=False ，则必须给该字段设置 default 值。
+- blank=False    ：在 admin 页面上新增数据项时不可以不填该字段。（在admin页面中，必填字段会显示为粗体）
+    使用 blank=False 选项时，需要该字段已经设置了默认值，否则写入数据库时会报错。
+
 - default        ：该字段的默认值。如果新增数据项时没有填该字段，则将默认值存储到数据库中。
   default参数不能设置成列表等可变类型。
   default参数可以传入一个函数名（不能用lambda函数，因为要序列化），由它动态生成默认值。
@@ -410,10 +434,22 @@ class Project(models.Model):
     name = models.CharField(default="", validators=[validate_name])
 - choices    ：显示一个下拉框，从中选取该字段的值。
   - 例：choices=(('male', '男'),('female', '女'))
+
+
+
+
+
+
+
 ## 特殊类型的字段类。
-- models.EmailField(verbose_name='邮箱地址')
-- models.GenericIPAddressField(verbose_name='IP地址')
-必须输入一个有效的 IPv4 或 IPv6 地址，且不能为空。
+- models.EmailField(verbose_name='邮箱地址')        # 要求输入一个有效的 email 地址，且不能为空
+  email = models.EmailField(verbose_name='邮箱', blank=True, default='') # 可以为空
+  该字段在 MySQL 中会保存为 varchar 型的值
+
+- models.GenericIPAddressField(verbose_name='私有IP') # 要求输入一个有效的 IPv4 或 IPv6 地址，且不能为空
+  models.GenericIPAddressField(verbose_name='公有IP', blank=True, null=True)  # 可以为空
+  该字段在 MySQL 中会保存为 char 型的值
+  
 - models.FileField(upload_to='uploads/')
   - 用于保存用户上传的文件。该文件会被保存到服务器的指定目录，然后将其保存路径（默认max_length=100）写入数据库。
   - upload_to参数表示上传到哪个目录。可以传入一个函数，由它返回保存路径，如下：
@@ -429,6 +465,8 @@ path        ：服务器上的一个绝对路径。
 match    ：一个正则表达式，用于过滤文件名。
 recursive：是否递归显示子目录中的文件。
 ## 可以定义虚拟字段函数，调用它时会返回虚拟字段的值，但不会把该字段存储到数据库中，也不允许用户修改。
+    虚拟字段可以在 list_display 中显示，但不能用作 list_filter、search_fields 等功能。
+    
     from django.utils.html import format_html
 
     def info(self):                        # 创建一个"info"字段
@@ -437,6 +475,9 @@ recursive：是否递归显示子目录中的文件。
     info.short_description = "INFO"        # 设置该字段的名称
     info.admin_order_field = "name"        # 设置该字段按self.name的值排序（否则该字段不能排序）
 
+
+定义：def format_html(format_string: str, *args: Any, **kwargs: Any)
+原理类似于 str.format() 方法，第一个参数是格式化字符串，后面的参数会被填进来。
 - 导入format_html函数，用它代替str.format()生成HTML语句，否则Django会把这些HTML语句看做字符串。
 ## 使用JSON字段：可以把该字段当作Python的字典类型，直接从数据库读写。
 1.    安装：pip install django-mysql
@@ -470,26 +511,85 @@ Student.objects.filter(detail__exact={'smelliness': 3, 'crumbliness': 10})
  
 外键
 ## 一对一的外键。
+定义：models.OneToOneField(to, on_delete, to_field=None, ...)
 last_name = models.OneToOneField(to=Name, on_delete=models.PROTECT)
+
+
 ## 多对一的外键。
+定义：models.ForeignKey(to, on_delete, related_name=None, related_query_name=None, parent_link=False, to_field=None, ...)
 school = models.ForeignKey(to=School, on_delete=models.PROTECT, default=1)
 - 这里是将当前表的school字段关联到School表中的数据项。
-  - Django会在数据库中创建school_id字段作为外键，并建立索引。
+  - Django会在该数据表中创建 school_id 字段作为外键，并建立索引。
+- 一对一、多对一外键都会在当前数据表中创建一个外键字段，如果该字段的值无效（比如为空），则会报错。
+- 运维一对一、多对一外键是指向一个对象，而不是str，所以不能直接用于 list_filter、search_fields 中，需要按以下格式指明外键的目标字段：
+    list_filter = ['student__name']
+    search_fields = ['student__name']
+
+
 - 常用参数：
   - to参数表示要关联的目标数据表。用to="self"可以关联到自身。
   - on_delete参数表示当被关联的目标数据被删除时，执行什么操作。
-on_delete=models.CASCADE表示级联删除当前的数据项。
-on_delete=models.PROTECT表示报出完整性错误。
-on_delete=models.SET_DEFAULT表示使用默认值。
+on_delete=models.CASCADE 表示级联删除当前的数据项。
+on_delete=models.PROTECT 表示报出完整性错误。
+on_delete=models.SET_DEFAULT 表示使用默认值。
   - to_field="..."表示要关联的目标字段。默认关联到主键
-  - parent_link=True表示在admin页面中，点击该字段会跳转到被关联的目标数据。
+  - 如果该表是目标表的子类，且设置了 parent_link=True ，则在admin页面中，点击该字段会跳转到被关联的目标表。
 - Django会给被关联的目标表创建一个虚机字段，默认名为"student_set"的格式，它记录了指向某个school的所有student实例，从而可以反向查询。如下：
 s = School.objects.get(pk=1)
 s.student_set.all()
   - 可以用related_name="students"设置该字段的名字。
+  - 因此两个表之间存在外键关系时，只需要在一个表中定义一个外键，在另一表中可以用 related_name 反向查询。不需要在两个表中都定义一个外键。不过这样也只能在一个表中编辑外键。
+
+
+例：
+class Author(models.Model):
+    name = models.CharField(verbose_name='姓名', max_length=32)
+
+class Book(models.Model):
+    name = models.CharField(verbose_name='书名', max_length=32)
+    author = models.ForeignKey(Author, verbose_name='作者', related_name='book_set', related_query_name='whose_book')
+
+
+- 调用外键字段的 .all() 方法会返回一个QuerySet对象，包含所有与它存在外键关系的对象。如下：
+>>> b = Book.objects.get(id=1)
+>>> list(b.author.all())
+[<Student: Leo>]
+
+
+related_name、related_query_name是两个虚拟字段，用于反向查询。
+- 通过 related_name 可以查询到该作者的所有书。如下：
+>>> a = Author.objects.get(id=1)
+>>> list(a.book_set.all())
+[<Student: Hello World>]
+
+- 通过 related_query_name 可以查询到拥有指定书的作者。如下：
+Author.objects.filter(whose_book__name='Hello World')
+
+
+
+
+- 在 admin 页面编辑外键字段时，会在一个下拉框中显示可用的外键值。
+- ManyToManyField 字段可以在详情页面显示并编辑，但不能在 admin 的表格页面直接显示，不过可以创建一个虚拟字段来显示它的值。
+
+
+
 ## 多对多的外键。
-models.ManyToManyField(to="self")
-- Django会在数据库中创建一个中间表来存储多对多关系。该中间表默认包含三个字段：id、Model A的id、Model B的id。
+
+
+定义：models.ManyToManyField(to, related_name=None, related_query_name=None, through=None, through_fields=None, ...)
+
+
+例：
+class Team(models.Model):
+    name = models.CharField(verbose_name='名称', max_length=32, unique=True)
+
+class Member(models.Model):
+    name = models.CharField(verbose_name='名称', max_length=32, unique=True)
+    team_set = models.ManyToManyField(to=Team, verbose_name= '团队')
+
+- Django会在数据库中创建一个中间表来存储多对多关系。该中间表的命名格式如同 ${appname}_member_team_set ，包含三个字段：id、member_id、team_id。
+- 多对多外键没有 on_delete 选项，删除一条数据时会自动删掉它的外键关系，即使重新创建它也不会恢复（因为 id 不同）。
+- 因为它是通过中间表存储外键关系，所以可以不填：设置 blank=True 参数（不必设置 default 参数），就允许在新增数据时不选择外键。
 - 可以自定义中间表，如下：
 class Student(models.Model):
     name = models.CharField(max_length=32, default='')
@@ -499,7 +599,7 @@ class Student(models.Model):
 class Group(models.Model):
     name = models.CharField(max_length=32, default='')
     members = models.ManyToManyField(
-        Person,
+        Student,
         through='Membership',                # 使用Membership表作为多对多关系的中间表
         through_fields=('group', 'student'),# 从Membership表的group字段到student字段建立多对多关系
     )
@@ -517,6 +617,10 @@ class Membership(models.Model):
     add_time = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return "{}-{}".format(self.group, self.student)
+
+
+
+
 ## 
 ## 
 ## 
@@ -1034,6 +1138,7 @@ server {
         root /root/django;            # 如果客户端访问 ~.com/static，Nginx就到这里查找文件
     }
 }
+
 3.    先启动uWSGI服务器，再启动Nginx服务器：
 docker run -d --name nginx -p 80:80 -v nginx.conf:/etc/nginx/nginx.conf nginx
 docker exec -it nginx nginx -s quit        # 停止
@@ -1069,6 +1174,8 @@ location /media  {
 admin页面
 ## Django自带了一个admin模块，用于显示Web形式的后台管理页面，可以管理用户组、数据库、各个数据表。
 - admin页面使用的模板文件保存在Django安装目录的django/contrib/admin/templates目录下，可以将这些模板文件拷贝到当前的app目录下，改写它们。
+- admin 系统本身会创建一些表。比如 django_admin_log 表用于记录用户在 admin 页面上进行的操作，比如对某个数据表的修改时间。
+
 ## 用法。
 1.    在一个models.py的同目录下创建一个admin.py：
 from django.contrib import admin
@@ -1108,6 +1215,7 @@ class QuestionAdmin(admin.ModelAdmin):            # 继承自admin.ModelAdmin类
     list_editable = ["text"]            # 设置list_display中的哪些字段可以编辑（会显示成文本框）
     list_filter = ["pub_date"]            # 在页面右侧显示一个过滤器，可根据指定字段筛选数据
     search_fields = ["name"]            # 在页面顶部显示一个搜索栏，可根据指定字段搜索数据
+    # filter_horizontal = ('friends',)  # 专门用于编辑 ManyToManyField 类型的字段，显示两个多选框以便于筛选
 
     # 设置每个Model实例的修改页面
     fieldsets = [                                # 设置要显示的字段

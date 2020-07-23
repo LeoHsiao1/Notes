@@ -570,7 +570,9 @@ POST /-/reload     # 重新加载配置文件
 ### 示例
 
 Prometheus 的 Alerts 页面示例：
-![](Prometheus_1.png)
+
+![](./Prometheus_1.png)
+
 - 上图中，处于 Inactive、Pending、Firing 状态的 alerting_rule 分别总共有 1、0、2 个。
 - rules.yml 文件中定义了三条 alerting_rule 。
   - 第一条 alerting_rule 名为 “测试告警-1” ，包含 1 个 active 的警报。
@@ -579,7 +581,9 @@ Prometheus 的 Alerts 页面示例：
   - 第三条 alerting_rule 名为 “测试告警-3” ，包含 113 个 active 状态的警报。
 
 Alertmanager 的 Alerts 页面示例：
-![](Prometheus_2.png)
+
+![](./Prometheus_2.png)
+
 - 上图中存在两个 group ：
   - 第一个 group 是 job="node_exporter" ，包含 1 个警报。
   - 第二个 group 是 job="process-exporter" ，包含 113 个警报。

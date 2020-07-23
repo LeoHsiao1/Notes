@@ -530,7 +530,7 @@ scrape_configs:
   ./alertmanager --config.file=alertmanager.yml
                 # --web.listen-address "0.0.0.0:9093"         # 监听的地址
                 # --web.external-url 'http://10.0.0.1:9093'   # 供外部访问的 URL
-                # --cluster.listen-address "0.0.0.0:9094"     # 集群监听的地址
+                # --cluster.listen-address "0.0.0.0:9094"     # 集群监听的地址（默认开启）
                 # --data.retention 120h                       # 将数据保存多久
   ```
   默认的访问地址为 <http://localhost:9093>
@@ -538,11 +538,12 @@ scrape_configs:
 ### 原理
 
 工作流程：
-1. Prometheus 中的一条 Alerting Rule 进入 Firing 状态，产生一个或多个警报，发送给 Alertmanager 。
-2. Alertmanager 收到警报之后，
+1. Prometheus 每隔 interval 时长执行一次 alert rule ，如果发现有 n 个指标满足告警条件，则立即产生 n 个 Alerting 状态的警报，发送给 Alertmanager 。
+2. Alertmanager 收到该警报之后，
    - 先根据 route 判断它属于哪个 group 、应该发送给哪个 receiver 。
    - 再判断该 group 当前是否处于冷却阶段、是否被 Silence 静音、是否被 Inhibit 抑制。如果都没有，则立即发送告警消息给用户。
-3. Prometheus 中的 Alerting Rule 退出 Firing 状态，使得 Alertmanager 中相应的警报也消失（可能会延迟一分钟才消失）。
+3. 如果 Prometheus 执行 alert rule 时，发现指标不再满足告警条件，则立即产生 Resolved 状态的警报，发送给  Alertmanager 。
+4. Alertmanager 收到该警报之后，立即发送给用户。
 
 其它概念：
 - Filter
@@ -558,6 +559,13 @@ scrape_configs:
   - ：用于设置多个警报之间的抑制关系。当发出某个警报时，使其它的某些警报静音。
   - 它需要在配置文件中定义。
   - 被静音、抑制的警报不会在 Alertmanager 的 Alerts 页面显示。
+
+常用的 HTTP API ：
+```sh
+GET /-/healthy     # 用于健康检查，总是返回 Code 200
+GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
+POST /-/reload     # 重新加载配置文件
+```
 
 ### 示例
 
@@ -622,13 +630,6 @@ route:
 #   - ...
 ```
 
-常用的 HTTP API ：
-```sh
-GET /-/healthy     # 用于健康检查，总是返回 Code 200
-GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
-POST /-/reload     # 重新加载配置文件
-```
-
 ### route
 
 route 块定义了分组处理警报的规则，如下：
@@ -674,14 +675,21 @@ route:
     - 延长 group_wait 时间有利于收集属于同一 group 的其它警报，一起发送。
   - 每次发送一个 group 之后，会将它冷却 `repeat_interval` 时长之后，才允许再一次发送该 group 。
     - Alertmanager 会检查当前时刻与上一次发送时刻的差值是否足够大。
-    - 即使该 group 内的警报消失又重新出现、即使重启 Alertmanager ，也不会影响 repeat_interval 的计时。
+    - 即使重启 Alertmanager ，也不会影响 repeat_interval 的计时。
     - 在配置文件中修改 group_wait、repeat_interval 等参数的值时，会立即生效。
     - 考虑到 group_wait ，实际上重复发送同一个 group 的时间间隔应该至少为 group_wait + repeat_interval 。
-  - 当一个 group 处于冷却阶段时，
+  - 当一个 group 处于冷却阶段时：
     - 如果收到一个属于该 group 的新的警报，则会等待 `group_interval` 时长之后让该 group 解除冷却，发送一次消息，并且从当前时刻开始重新计算 repeat_interval 。
-    - 如果一个警报消失，也会让该 group 解除冷却，发送一次消息。
-      如果 Alertmanager 没有重启，且该 group 一直存在，则它发出的告警消息中会一直包含这个 `"status": "resolved"` 的警报。
-    - 如果一个消失的警报再次出现，也会让该 group 解除冷却，发送一次消息。
+    - 如果一个警报被解决了，也会让该 group 解除冷却，发送一次 resolved 的消息。
+    - 如果一个被解决的警报再次出现，也会让该 group 解除冷却，发送一次消息。
+
+特殊情况：
+- 如果一个指标不再满足告警条件，或者 Prometheus 不再抓取相应的指标，或者不再执行相应的 alert rule ，则 Prometheus 都会认为该警报已解决，产生一个 Resolved 状态的警报，发送给 Alertmanager 。
+- 如果一个警报反复被解决又再次出现，则会绕过 repeat_interval 的限制，导致 Alertmanager 频繁发送警报给用户。
+- 在 Prometheus 与 Alertmanager 中已存在一些警报的情况下，
+  - 如果两者断开连接，则大概两分钟之后 Alertmanager 会自行认为所有警报已解决，发送 Resolved 状态的警报给用户。
+  - 如果两者重新连接，则 Alertmanager 会认为这些警报的 group 是新出现的，立即发送 Alerting 状态的警报给用户。
+  - 因此，如果两者反复断开连接又重新连接，则会绕过 repeat_interval 的限制，导致 Alertmanager 频繁发送警报给用户。
 
 ### inhibit_rules
 

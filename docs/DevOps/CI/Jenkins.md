@@ -465,7 +465,7 @@ pipeline {
 
 #### 创建变量
 
-- 例：
+- 可以用赋值号 = 直接创建变量。如下：
     ```groovy
     steps {
         script {
@@ -487,9 +487,30 @@ pipeline {
     ```
     .trim() 方法用于去掉字符串末尾的空字符、换行符。
 
+#### if 语句
+
+- 例：
+    ```groovy
+    script {
+        if ( 1 > 2 ) { 
+            echo 'A'
+        } else if ( 'Hello' == 'Hello' ) { 
+            echo 'B'
+        }  else { 
+            echo 'C'
+        } 
+    }
+    ```
+- 可以使用正则匹配：
+    ```groovy
+    'Hello' =~ 'He'         // 判断左侧的字符串是否包含右侧的正则表达式
+    'Hello' =~ '^He.*$'     // 判断是否完全匹配正则表达式
+    ```
+- 可以使用逻辑运算符 `&&, ||, !` 进行与或非运算。
+
 #### for 循环
 
-- 例：使用 Groovy 的 for 循环
+- 例：
     ```groovy
     script {
         for ( i in [0, 1, 2, 3] ) {     // 遍历数组
@@ -509,7 +530,7 @@ pipeline {
 
 #### try 语句
 
-- 例：使用 Groovy 的 try 语句
+- 例：
     ```groovy
     script {
         try {

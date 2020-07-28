@@ -296,6 +296,8 @@ python manage.py makemigrations            # 让Django检查Model的变化，生
 python manage.py makemigrations [app]...    # 只检查指定app的Model的变化
 python manage.py migrate                    # 让Django根据迁移文件配置数据库的结构
   - makemigrations会将Model被修改的部分保存为./migrations目录下的一个迁移文件（比如0001_initial.py），以便以后回滚数据库的配置。
+  如果删掉了迁移文件，则执行 python manage.py migrate 时就不能发现用户对数据库进行了哪些修改。
+  如果嫌迁移文件太多，可以先执行一次成功的 python manage.py migrate ，然后把 migrations 目录清空，执行 python manage.py makemigrations ，从 0001_initial.py 开始重新生成迁移文件。
   - migrate会检查每个INSTALLED_APPS定义的Model、这些Model有哪些未被应用的迁移文件，然后根据这些迁移文件来配置数据库。
   - 也可以使用指定的迁移文件来配置数据库，如下：
 python manage.py migrate app1 0001
@@ -389,7 +391,7 @@ django.core.exceptions.FieldError: Local field 'name' in class 'Man' clashes wit
   - float型字段。
 - models.DecimalField(max_digits=5, decimal_places=2)
   - decimal型字段。max_digits表示总位数，decimal_places表示小数位数。
-- models.CharField(verbose_name="名字", blank=True, default="", unique=True, max_length=20)
+- models.CharField(verbose_name="名字", default="", blank=True, unique=True, max_length=20)
   - str型字段，用于存储较短的字符串。
   该字段在 MySQL 中会保存为 varchar 型的值
   
@@ -397,8 +399,8 @@ django.core.exceptions.FieldError: Local field 'name' in class 'Man' clashes wit
   - 文本字段，用于存储较长的字符串。
   该字段在 MySQL 中会保存为 text 型的值
   
-- models.BooleanField(...)
-- models.DateField(verbose_name='更新时间', blank=True, null=True)
+- models.BooleanField(verbose_name='是否开启', default=True)
+- models.DateField(verbose_name='更新日期', null=True, blank=True)
   - 会自动使用当前的datetime.date实例。
   - 不能设置default参数。
   - 以下两个参数可以启用一个，但启用之后该字段会变成editable=False，即不可修改。
@@ -408,6 +410,8 @@ auto_now=True        ：当数据被保存时，自动将该字段设置成当�
 auto_now_add=True    ：当数据被创建时，自动将该字段设置成当前时间。常用于保存创建时间。
 - models.DateTimeField(auto_now_add=True)
   - 会自动使用当前的datetime实例。用法与models.DateField相同。
+
+
 ## 定义字段时的常用参数。
 - primary_key=True        ：将该字段设置成主键。
 - verbose_name=None    ：该字段在admin页面显示的名字。
@@ -443,11 +447,11 @@ class Project(models.Model):
 
 ## 特殊类型的字段类。
 - models.EmailField(verbose_name='邮箱地址')        # 要求输入一个有效的 email 地址，且不能为空
-  email = models.EmailField(verbose_name='邮箱', blank=True, default='') # 可以为空
+  email = models.EmailField(verbose_name='邮箱', default='', blank=True) # 可以为空
   该字段在 MySQL 中会保存为 varchar 型的值
 
 - models.GenericIPAddressField(verbose_name='私有IP') # 要求输入一个有效的 IPv4 或 IPv6 地址，且不能为空
-  models.GenericIPAddressField(verbose_name='公有IP', blank=True, null=True)  # 可以为空
+  models.GenericIPAddressField(verbose_name='公有IP', null=True, blank=True)  # 可以为空
   该字段在 MySQL 中会保存为 char 型的值
   
 - models.FileField(upload_to='uploads/')
@@ -517,13 +521,12 @@ last_name = models.OneToOneField(to=Name, on_delete=models.PROTECT)
 
 ## 多对一的外键。
 定义：models.ForeignKey(to, on_delete, related_name=None, related_query_name=None, parent_link=False, to_field=None, ...)
-school = models.ForeignKey(to=School, on_delete=models.PROTECT, default=1)
+school = models.ForeignKey(to=School, on_delete=models.PROTECT, verbose_name='学校', null=True, blank=True)
 - 这里是将当前表的school字段关联到School表中的数据项。
   - Django会在该数据表中创建 school_id 字段作为外键，并建立索引。
 - 一对一、多对一外键都会在当前数据表中创建一个外键字段，如果该字段的值无效（比如为空），则会报错。
-- 运维一对一、多对一外键是指向一个对象，而不是str，所以不能直接用于 list_filter、search_fields 中，需要按以下格式指明外键的目标字段：
-    list_filter = ['student__name']
-    search_fields = ['student__name']
+- 因为外键是指向一个对象，而不是str，所以不能直接用于 search_fields 中，需要按以下格式指明外键的目标字段：
+    search_fields = ['student__name', 'friends_set__name']
 
 
 - 常用参数：
@@ -617,6 +620,20 @@ class Membership(models.Model):
     add_time = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return "{}-{}".format(self.group, self.student)
+
+
+ManyToManyField 如果指向当前表，则默认会创建对称的多对多外键。
+
+如下：
+class Person(models.Model):
+    name = models.CharField(verbose_name='名字', max_length=32, unique=True)
+    friends = models.ManyToManyField("self")        # 默认是对称的
+    # friends = models.ManyToManyField("self", symmetrical=False)   # 取消对称
+
+如果创建两个 Person，名 A 和 B ，然后在 A 的 friends 中加入 B ，则默认会自动在 B 的 friends 中加入 A 。最终保存的中间表如下：
+id from_person_id to_person_id
+1	1	2
+2	2	1
 
 
 
@@ -1073,6 +1090,16 @@ session.clear_expired()            # 删除已失效的所有session（Django不
 ## 
  
 部署Django
+
+以 DEBUG=True 模式运行Django服务器时，
+  - 它会在用户操作出错时显示报错页面，但这个报错页面容易泄露一些重要信息，比如服务器的URL配置，比较危险。因此不能用于生产环境。
+  - 它会处理指向 STATIC_URL 的HTTP请求，到各个 app 的目录下寻找静态文件。但是性能较低。
+     以 DEBUG=False 模式运行Django服务器时，它不会处理静态文件，需要先用 python manage.py collectstatic 将静态文件收集到 STATIC_ROOT 目录下，然后使用Nginx等Web服务器，让它们收到静态文件请求时就到 STATIC_ROOT 目录下去寻找。
+
+综上，正式部署 Django 服务器时，应该与 Nginx 等HTTP代理服务器搭配使用。但是 Nginx 不能直接启动Django服务器，因此要先用 uWSGI 启动Django 服务器，再交给 Nginx 代理。
+
+
+
 ## 使用uWSGI服务器可以部署Django应用，供用户访问。
 - 通常在uWSGI之前再部署一个Nginx服务器作为代理，专门处理静态文件。
 此时让客户端向Nginx服务器发出HTTP请求。如果请求的是静态文件，则Nginx可以直接找到静态文件回复给客户端；如果请求的不是静态文件，则Nginx会将请求转发给uWSGI服务器处理。
@@ -1080,18 +1107,23 @@ session.clear_expired()            # 删除已失效的所有session（Django不
 Nginx还可以代理多台uWSGI服务器，实现负载均衡。
 - 部署的步骤是：
   - 使用python manage.py runserver，检查Django项目是否可用。
-  - 用uWSGI服务器运行Django项目，监听 127.0.0.1:79 。（只接收来自本机的、发到80端口的HTTP请求）
+  - 用uWSGI服务器运行Django项目，监听 127.0.0.1:79 。（只接收来自本机的、发到79端口的HTTP请求）
   - 让Nginx暴露在外网中，监听 *:80 。（接收来自任意IP地址的、发到80端口的HTTP请求）
 收到HTTP静态请求时，Nginx就自行解决。（搜集相应的静态文件，回复给客户端）
 收到HTTP动态请求时，Nginx就转发到127.0.0.1:79，由uWSGI服务器处理。
+
 ## 安装及配置uWSGI服务器。
 1.    安装依赖库：
-yum install gcc build-essential python3-devel
+yum install gcc python3-devel
+
+安装 mime.types 库：
+yum install mailcap
+
 2.    安装uwsgi：
 pip install uwsgi    
-3.    进入项目目录，创建一个uwsgi文件夹，再在其下创建一个uwsgi.ini，作为配置文件：
+3.    进入项目目录，创建一个 etc 文件夹，再在其下创建一个uwsgi.ini，作为配置文件：
 mkdir uwsgi
-vim uwsgi/uwsgi.ini
+vim etc/uwsgi.ini
 配置文件的内容如下：
 [uwsgi]                ; ini文件使用分号 ; 注释，使用中括号 […] 标明每个部分，使用键值对配置各项参数
 
@@ -1102,19 +1134,30 @@ wsgi-file = %(chdir)/mysite/wsgi.py        ; 指定wsgi.py文件
 
 
 ; 以下为非必填内容
-daemonize = %(chdir)/uwsgi/uwsgi.log          ; 将uwsgi作为守护进程运行，并将日志保存在该路径
-pidfile = %(chdir)/uwsgi/uwsgi.pid         ; 设置uwsgi.pid文件的保存路径
+daemonize = %(chdir)/etc/uwsgi.log          ; 将uwsgi作为守护进程运行，并将日志保存在该路径
+pidfile = %(chdir)/etc/uwsgi.pid         ; 设置uwsgi.pid文件的保存路径
 
 # stats = 127.0.0.1:9191        # 启用uWSGI的stats服务器，访问它可以获取JSON格式的统计信息
 # home = %(chdir)/.venv                       ; 指定Python解释器的安装目录（这里是virtualenv的目录）
 processes = 2                               ; 启动2个进程（称为uwsgi的worker）
 threads = 2                                ; 每个worker创建2个线程
 max-requests = 2000                         ; 每个worker最多处理多少个请求
+
+; 自定义路由
+route = ^/index.html$      rewrite:/index   ; 将 URL 与 ^/index.html$ 正则匹配的HTTP请求重定向到 /index
+route = ^/upload    http:127.0.0.1:79
+route = ^/index    static:/opt/django/index.html     ; 将路由转发到单个静态文件
+
+static-map = /images=/var/www/img       ; 映射静态文件目录
+static-map = /images=/var/www/img2      ; 可以重复映射同一个 URL
+
+
 4.    用法：
 uwsgi
---ini uwsgi/uwsgi.ini            # 使用配置文件启动uwsgi服务器（默认在后台运行）
-    --stop uwsgi/uwsgi.pid        # 停止uwsgi服务器(根据pid文件)
-    --reload uwsgi/uwsgi.pid        # 重启
+--ini etc/uwsgi.ini            # 使用配置文件启动uwsgi服务器（默认在后台运行）
+    --stop etc/uwsgi.pid        # 停止uwsgi服务器(根据pid文件)
+    --reload etc/uwsgi.pid        # 重启
+    
 ## 安装及配置Nginx服务器。
 1.    在项目目录下执行以下命令，收集静态文件：
 python manage.py collectstatic
@@ -1215,7 +1258,7 @@ class QuestionAdmin(admin.ModelAdmin):            # 继承自admin.ModelAdmin类
     list_editable = ["text"]            # 设置list_display中的哪些字段可以编辑（会显示成文本框）
     list_filter = ["pub_date"]            # 在页面右侧显示一个过滤器，可根据指定字段筛选数据
     search_fields = ["name"]            # 在页面顶部显示一个搜索栏，可根据指定字段搜索数据
-    # filter_horizontal = ('friends',)  # 专门用于编辑 ManyToManyField 类型的字段，显示两个多选框以便于筛选
+    # filter_horizontal = ('friends',)  # 专门用于编辑 ManyToManyField 类型的字段，显示两个多选框以便于筛选（否则默认只显示一个下拉框）
 
     # 设置每个Model实例的修改页面
     fieldsets = [                                # 设置要显示的字段
@@ -1358,8 +1401,8 @@ SIMPLEUI_INDEX = 'https://www.88cto.com'
 
 # 自定义simpleui 菜单
 SIMPLEUI_CONFIG = {
-    'system_keep': True,    # 在自定义菜单的基础上保留系统模块
-    'menus': [{
+    'system_keep': True,    # 显示系统默认菜单
+    'menus': [{     # 自定义菜单（系统默认显示的菜单只包含用户有权限查看的部分，但自定义的菜单总是会全部显示，但是如果用户没有查看权限，则会在点击时返回 403 页面）
         'name': 'Simpleui',
         'icon': 'fas fa-code',
         'url': 'https://gitee.com/tompeppa/simpleui'
@@ -1384,6 +1427,8 @@ SIMPLEUI_CONFIG = {
         }]
     }]
 }
+
+# 可以到 https://fa5.dashgame.com/ 挑选图标
 
 # 是否显示默认图标
 # SIMPLEUI_DEFAULT_ICON = True

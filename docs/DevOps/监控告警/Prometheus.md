@@ -824,9 +824,8 @@ inhibit_rules:
 
 ### node_exporter
 
-：用于监控主机（主要是 Linux ）的状态。
+：用于监控类 Unix 主机的状态。
 - [GitHub 页面](https://github.com/prometheus/node_exporter)
-- 监控 Docker 容器时建议使用 cAdvisor ，监控 Windows 主机时建议使用 wmi_exporter 。
 - 下载二进制版：
   ```sh
   wget https://github.com/prometheus/node_exporter/releases/download/v1.0.0-rc.0/node_exporter-1.0.0-rc.0.linux-amd64.tar.gz
@@ -867,9 +866,9 @@ inhibit_rules:
 
 ### process-exporter
 
-：用于监控进程、线程的状态。
+：用于监控 Linux 主机上的进程、线程的状态。
 - [GitHub 页面](https://github.com/ncabatoff/process-exporter)
-- 它主要通过读取 /proc/<pid>/ 目录下的信息，来收集进程指标。
+- 它主要通过读取 `/proc/<pid>/` 目录下的信息，来收集进程指标。
 - 下载二进制版：
   ```sh
   wget https://github.com/ncabatoff/process-exporter/releases/download/v0.6.0/process-exporter-0.6.0.linux-amd64.tar.gz
@@ -877,10 +876,11 @@ inhibit_rules:
   解压后启动：
   ```sh
   ./process-exporter -config.path=process-exporter.yml
+                    # -web.listen-address :9256
+                    # -web.telemetry-path /metrics
                      -children=false             # 采集每个进程的指标时，是否包含其所有子进程的指标（默认为 true）
                      -threads=false              # 是否采集每个线程的指标（默认为 true）
   ```
-  默认的访问地址为 <http://localhost:9256/metrics>
 
 - 在配置文件中定义要监控的进程：
     ```yaml
@@ -925,11 +925,16 @@ inhibit_rules:
   # 不能监控进程的网络 IO
   ```
 
-### mysqld_exporter
 
-：用于监控 MySQL 的状态。
+### cAdvisor
+
+：用于监控容器的状态。
+- [GitHub 页面](https://github.com/google/cadvisor)
 
 ### blackbox_exporter
 
 ：可以测试 DNS、ICMP、TCP、HTTP ，以及 SSL 证书过期时间。
- 
+
+### mysqld_exporter
+
+：用于监控 MySQL 的状态。

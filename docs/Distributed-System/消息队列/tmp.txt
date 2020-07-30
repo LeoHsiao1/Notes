@@ -98,23 +98,70 @@ Kafka
 ## Kafka的运行原理。
 - broker：代理服务器，负责存储、管理消息。
   - 增加broker的数量，就可以提高Kafka集群的吞吐量。（不过会引发一次rebalance）
+  
+  broker 会将消息以日志文件的形式存储，存放在 logs/<topic>-<partition>/ 目录下。
+  单个日志文件过大时，会进行日志分段（LogSegment），切分成多个小文件。
+
 - partition：broker存储消息的基本单位。
   - Kafka存储数据时会分成多个topic，每个topic又分成一个或多个partition。
   - 每个partition内的消息按顺序存储，先入先出。
-  - 每个partition有一个offset值，记录了当前被消费的偏移量。
-  - 每个partition有多个副本，存储在不同的broker上（Consumer并不需要关心其存储位置）。
-Kafka会选出其中一个副本作为leader，其它的副本称为follower。leader负责接受用户的访问，follower负责与leader的数据保持一致。
+  - 每个partition有多个副本 （replica）。
+    Kafka会选出其中一个副本作为leader replica，其它的副本称为follower replica。
+    leader可以进行读写操作，负责处理用户的访问请求。
+    follower只能进行读操作，负责与leader的数据保持一致，从而备份数据。
+    用户访问partition时访问的就是leader，看不到follower。
+
+  - 常见概念：
+    - Assigned Replicas：指一个 partition 已有的所有 replicas 。
+    - preferred replica ：指 assigned replicas中的第一个 replicas 。
+      刚创建一个topic时，preferred replica 一般就是 leader replica。但是之后可能因为broker挂掉等原因，发生leader变换。
+    - In-sync Replicas Set（IRS）：指一个 partition 中与 leader 已经同步的 replica 。leader本身也属于IRS。
+      只有IRS中的 replica 可以被选举为 leader 。
+    - Under-replicated Replicas Set：指一个 partition 中与 leader 没有同步的 replica 。
+      当一个 replica 将 leader 的最后一条消息（Log End Offset）之前的日志全部成功复制之后，则认为该 replica 已经赶上了 leader ，记录此时的时刻作为该 replica 的 lastCaughtUpTimeMs 。
+      Kafka 的 ReplicaManager 会定期检查每个 replica 的 lastCaughtUpTimeMs 与当前时刻的差值，视作 replica 对 leader 的滞后时间。
+      如果一个 replica 的滞后时间超过 replica.lag.time.max.ms ，则视作没有同步，从IRS中移除。
+      
+      如果 IO 耗时过久，导致 follower 从 leader 复制数据的速度过慢，就容易失去同步。
+      如果 replica 从 leader 复制数据的速度，比 leader 新增数据的速度慢，lastCaughtUpTimeMs 就会一直没更新，容易被视作没有同步。
+      
+      如果一个 replica 对 leader 的响应时间超过 replica.lag.time.max.ms ，则视作挂掉了。
+
+    - UnderReplicatedPartitions ：指一个 partition 中处于 under replicated 状态的 replica 数量。
+
+
+  - Kafka会尽量将同一Topic的各个partition、同一partition的各个副本存储到不同的broker，从而抵抗单点故障。（Consumer并不需要关心其存储位置）
+
 - Producer：生产者，负责将消息发布到broker（push方式）。
-  - Producer发布消息时，默认会将消息随机发布到不同的partition。可以指定partition，也可以指定均衡策略来自动选择partition。
+  - Producer向一个topic发布消息时，默认会将消息随机分配到不同的partition。可以指定partition，也可以指定均衡策略来自动选择partition。
   - 
 - Consumer：消费者，负责从broker订阅消息（push方式）、消费消息（pull方式）。
   - partition越多，Kafka的吞吐量也就越大，但是消耗的系统资源也越大。
+
+- 每个partition下可以存储多条消息，每条消息有一个唯一的 offset 值用于索引。
+  - Kafka集群中offset的管理都是由Group Coordinator中的Offset Manager完成的。
+  - Group Coordinator是运行在Kafka集群中每一个Broker内的一个进程。它主要负责Consumer Group的管理，Offset位移管理以及Consumer Rebalance。
+  - Log Start Offset ：partition 中第一个消息的偏移量。刚创建一个topic时，该值为 0 。每次清理消息日志之后，该值会增大一截。
+  - Log End Offset （LEO）：partition 中最新一个消息的偏移量。
+  - High Watemark （HW）：partition 允许被 consumer 看到的最高偏移量。
+    partition 的 leader 新增一个消息时，会更新 LEO 的值，并传给 follower 进行同步。因此 HW 的值总是小于等于 LEO ， consumer 只能看到 HW ，不知道 LEO 的值。
+  - Consumer Current Offset ：由 consumer 自己记录，用于 poll() 方法，表示 consumer 在某个 partition 中下一次希望消费的消息的序号。
+    它用于保证 consumer 重复 poll 时不会重复消费。
+  - Consumer Committed Offset ：由 broker 记录，表示 consumer 在某个 partition 中最后一次消费的消息的序号。
+    它用于保证 Consumer Rebalance 之后 consumer 不会重复消费。
+    consumer 消费了消息之后，必须主动调用 commitAsync() 方法，提交当前的 offset ，否则 Consumer Committed Offset 的值会一直为 0 。
+  - Consumer Lag ：consumer 在消费某个 partition 时 的滞后量，即还有多少个消息未消费。它的值等于 HW - Consumer Committed Offset 。
+
+  Kafka会在内置的 __consumer_offsets topic中记录每个Consumer对每个partition的offset。
+
+
 - Consumer Group：包含多个Consumer。
-  - 多个Group可以同时消费同一个topic，互相隔离。
-  - 同一个Group中的多个Consumer不能同时消费同一个partition。
-  - 当一个Group消费一个topic时，
-如果partition的数量小于Consumer的数量，就会有Consumer空闲。
-因此，最好将partition的数量设置成与Consumer的数量相同，或者为Consumer的数量的整数倍。
+  - 多个Group可以同时消费同一个topic下的同一partition，互相隔离。
+  - 同一个Group中的多个Consumer可以同时消费同一个topic下的不同partition，通过并行消费提高消费速度。
+  - 当一个Group消费一个topic时，如果partition的数量小于Consumer的数量，就会有Consumer空闲。
+    因此，最好将partition的数量设置成与Consumer的数量相同，或者为Consumer的数量的整数倍。
+  - 当 group 中有 consumer 新增或退出时，或者当前消费的 topic 的 partition 数量变化时，就会触发一次 Consumer Rebalance ，重新分配每个 consumer 消费的 partition 。
+
 ## 
 ## 
 ## 

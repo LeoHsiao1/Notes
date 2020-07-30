@@ -126,9 +126,9 @@ scrape_configs:
   scrape_duration_seconds{job="$job_name", instance="$target"}  # 本次抓取的耗时
   ```
 - 给抓取的指标添加标签时，如果原指标中已存在同名 label ，则根据 honor_labels 的值进行处理：
-  - `honor_labels: true` ：保留原指标不变，不添加新标签。
   - `honor_labels: false` ：默认值，将原指标中的同名 label 改名为 `exported_<label_name>` ，再添加新标签。
-- 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，所以应该添加 nodename 等额外的标签便于筛选。
+  - `honor_labels: true` ：保留原指标不变，不添加新标签。
+- 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，应该添加 nodename 等额外的标签便于筛选。
 - 通过 file_sd_configs 方式读取的文件可以是 YAML 或 JSON 格式，如下：
   ```yaml
   - targets:
@@ -925,7 +925,6 @@ inhibit_rules:
   # 不能监控进程的网络 IO
   ```
 
-
 ### cAdvisor
 
 ：用于监控容器的状态。
@@ -938,3 +937,36 @@ inhibit_rules:
 ### mysqld_exporter
 
 ：用于监控 MySQL 的状态。
+
+### kafka_exporter
+
+：用于监控 Kafka 的状态。
+- [GitHub 页面](https://github.com/danielqsj/kafka_exporter)
+- 下载二进制版：
+  ```sh
+  wget https://github.com/danielqsj/kafka_exporter/releases/download/v1.2.0/kafka_exporter-1.2.0.linux-amd64.tar.gz
+  ```
+  启动：
+  ```sh
+  ./kafka_exporter
+                --web.listen-address :9308
+                --web.telemetry-path /metrics
+                --kafka.server kafka:9092
+                --sasl.username xx
+                --sasl.password ******
+  ```
+- 常用指标：
+  ```sh
+  kafka_brokers                                                               # 该 Kafka 集群的 broker 数量
+  kafka_topic_partitions{topic="xx"}                                          # partition 数量
+  kafka_topic_partition_replicas{topic="xx", partition="x"}                   # partition 的副本数
+  kafka_topic_partition_in_sync_replica{topic="xx", partition="x"}            # partition 的已经同步的副本数
+  kafka_topic_partition_under_replicated_partition{topic="xx", partition="x"} # partition 是否有没有同步的副本
+
+  kafka_topic_partition_leader{topic="xx", partition="x"}                     # partition 的 leader 的 ID
+  kafka_topic_partition_leader_is_preferred{topic="xx", partition="x"}        # partition 的 leader 是否为 preferred replica
+  kafka_topic_partition_current_offset{topic="xx", partition="x"}             # partition 的当前偏移量
+  kafka_topic_partition_oldest_offset{topic="xx", partition="x"}              # partition 的最后偏移量
+  kafka_consumergroup_current_offset{consumergroup="xx", topic="xx", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
+  kafka_consumergroup_lag{consumergroup="xx", topic="xx", partition="x"}      # 某个 consumergroup 在某个 partition 的滞后量
+  ```

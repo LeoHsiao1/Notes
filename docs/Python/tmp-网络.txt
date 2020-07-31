@@ -355,6 +355,11 @@ class Student(models.Model):                    # 定义一张数据表
             models.Index(fields=['name', 'age']),            # 添加一个组合索引
         ]
 - Django会自动在数据库中创建相应的表，默认名为“项目名_类名”。比如app1_student。
+- 设置了 ordering 之后，每次查询数据时 Django 都会将返回的数据进行排序。
+    ordering 可以设置多个排序字段。
+    不能直接使用多对多外键作为排序字段，
+
+
 ## Model类支持继承。
 - 父类应该定义成抽象类。
 - 子类会继承父类的所有属性、方法。
@@ -1301,7 +1306,10 @@ delete.short_description = "delete"
 ## 
 ## 
 ## 
- 
+
+django-import-export ：一个插件，用于在 admin 表格页面增加导入、导出两个按钮。
+
+
 ♢ xadmin
 ## xadmin：Python的第三方库，是Django的插件，提供了更美观的admin页面。
 - 优点：
@@ -1363,6 +1371,8 @@ class ProjectAdmin():
  
 ♢ simpleui
 ## simpleui：Python的第三方库，是Django的插件，提供了更美观的admin页面。
+官方文档：https://simpleui.88cto.com/docs/simpleui/quick.html
+
 - 优点：
   - 显示界面比较轻巧、美观。
   - 使用时不需要修改admin.py的内容，完全兼容Django自带的admin。

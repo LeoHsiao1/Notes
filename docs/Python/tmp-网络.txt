@@ -665,8 +665,13 @@ Group.members.add(s1, s2)
 Student.objects.all()                        # 返回一个QuerySet对象
 Student.objects.all().order_by("id")        # 排序，返回一个QuerySet对象
 Student.objects.all().order_by("id")[0:2]    # 切片
+
   - QuerySet对象可以当作列表索引、迭代，也可以用filter()等方法处理。
 - 筛选：
+
+QuerySet.first()    # 如果 QuerySet 不为空，则返回第一个元素。如果为空，则返回 None
+QuerySet.last()     # 如果 QuerySet 不为空，则返回最后一个元素
+
 QuerySet.filter(name='Leo')        # 筛选符合条件的所有数据，返回一个QuerySet对象。如果没有数据则返回[]
 QuerySet.exclude(name='Leo')        # 筛选不符合条件的所有数据，返回一个QuerySet对象
   - 可以使用高级的筛选条件：
@@ -676,7 +681,7 @@ QuerySet.filter(name__contains='L')
 - 精确查询：
 s = Student.objects.get(id=1)        # 返回一个Student对象
 s = Student.objects.get(pk=1)        # pk代表主键
-  - get()方法容易引发异常，要谨慎使用。
+  - get()方法容易引发异常，要谨慎使用。不如使用 QuerySet.filter(name='Leo').first()
 如果数据表中存在多个符合条件的数据，则抛出MultipleObjectsReturned异常
 如果数据表中不存在符合条件的数据，则抛出DoesNotExist异常
 如果数据表中没有定义该字段，则抛出FieldError异常

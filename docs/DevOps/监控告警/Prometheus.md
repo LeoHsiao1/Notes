@@ -45,12 +45,12 @@
       #   monitor: 'codelab-monitor'
 
     # rule_files:                   # 导入 rule 文件
-    #   - rules_1.yml
+    # - rules_1.yml
 
     scrape_configs:
-      - job_name: 'prometheus'
-        static_configs:
-          - targets: ['10.0.0.1:9090']
+    - job_name: 'prometheus'
+      static_configs:
+      - targets: ['10.0.0.1:9090']
     ```
 
 2. 重启 Prometheus 以重新加载配置文件，然后访问其 Web 页面。
@@ -94,29 +94,29 @@
 用户必须在 Prometheus 的配置文件中配置需要监控的对象（称为 targets ），格式如下：
 ```yaml
 scrape_configs:
-  - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
-    # honor_labels: false
-    # metrics_path: '/metrics'
-    # scheme: http
-    # scrape_interval: 30s
-    # scrape_timeout: 10s
-    static_configs:
-      - targets:                      # 一组监控对象的 IP:Port
-        - '10.0.0.1:9090'
-        - '10.0.0.1:9091'
-        # labels:                     # 为这些监控对象的数据加上额外的标签
-        #   nodename: 'CentOS-1'
-      - targets: ['10.0.0.2:9090']    # 下一组监控对象
-    # basic_auth:
-    #   username: <string>
-    #   password: <string>
-    # proxy_url:
+- job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
+  # honor_labels: false
+  # metrics_path: '/metrics'
+  # scheme: http
+  # scrape_interval: 30s
+  # scrape_timeout: 10s
+  static_configs:
+  - targets:                      # 一组监控对象的 IP:Port
+    - '10.0.0.1:9090'
+    - '10.0.0.1:9091'
+    # labels:                     # 为这些监控对象的数据加上额外的标签
+    #   nodename: 'CentOS-1'
+  - targets: ['10.0.0.2:9090']    # 下一组监控对象
+  # basic_auth:
+  #   username: <string>
+  #   password: <string>
+  # proxy_url:
 
-  - job_name: 'node_exporter'
-    file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
-    - files:
-      - targets/node_exporter*.json
-      refresh_interval: 1m            # 每隔 1m 重新读取一次
+- job_name: 'node_exporter'
+  file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
+  - files:
+    - targets/node_exporter*.json
+    refresh_interval: 1m            # 每隔 1m 重新读取一次
 ```
 - Prometheus 从每个监控对象处抓取指标数据时，默认会自动加上 `job: "$job_name"`、`instance: "$target"` 两个标签。
   还会自动记录以下指标：
@@ -443,17 +443,17 @@ scrape_configs:
 - 在配置文件中按如下格式定义一个 job ，即可抓取其它 Prometheus 的数据：
     ```yaml
     scrape_configs:
-      - job_name: 'federate'
-        honor_labels: true              # 设置 true ，以保存原指标中的 job 、instance 标签
-        metrics_path: '/federate'
-        params:
-          'match[]':                    # 抓取匹配这些表达式的指标
-            - '{__name__=~"go_.*"}'
-            - 'go_goroutines'
-        static_configs:
-          - targets:                    # 目标 Prometheus 的地址
-            - '10.0.0.2:9090'
-            - '10.0.0.3:9090'
+    - job_name: 'federate'
+      honor_labels: true              # 设置 true ，以保存原指标中的 job 、instance 标签
+      metrics_path: '/federate'
+      params:
+        'match[]':                    # 抓取匹配这些表达式的指标
+          - '{__name__=~"go_.*"}'
+          - 'go_goroutines'
+      static_configs:
+        - targets:                    # 目标 Prometheus 的地址
+          - '10.0.0.2:9090'
+          - '10.0.0.3:9090'
     ```
 
 ## Push Gateway
@@ -483,11 +483,11 @@ scrape_configs:
 - 在 Prometheus 的配置文件中加入如下配置，使其抓取 Push Gateway ：
   ```yaml
   scrape_configs:
-    - job_name: 'pushgateway'
-      honor_labels: true
-      static_configs:
-        - targets:
-          - '10.0.0.1:9091'
+  - job_name: 'pushgateway'
+    honor_labels: true
+    static_configs:
+    - targets:
+      - '10.0.0.1:9091'
   ```
 - 例：推送指标到 Push Gateway
   ```sh
@@ -619,14 +619,14 @@ global:                           # 配置一些全局参数
   smtp_require_tls: false
 
 receivers:                        # 定义告警消息的接受者
-  - name: 'email_to_leo'
-    email_configs:                # 只配置少量 smtp 参数，其余的参数则继承全局配置
-      - to: '123456@qq.com'
-      # - to: '123456@163.com'    # 可以指定多个发送目标
-      #   send_resolved: true     # 是否在警报消失时发送 resolved 类型的警报
-  - name: 'webhook_to_leo'
-    webhook_configs:
-      - url: 'http://localhost:80/'
+- name: 'email_to_leo'
+  email_configs:                # 只配置少量 smtp 参数，其余的参数则继承全局配置
+  - to: '123456@qq.com'
+    send_resolved: true     # 是否在警报消失时发送 resolved 类型的警报
+  # - to: '123456@163.com'    # 可以指定多个发送目标
+- name: 'webhook_to_leo'
+  webhook_configs:
+  - url: 'http://localhost:80/'
 
 route:
   receiver: 'email_to_leo'
@@ -650,17 +650,17 @@ route:
   group_by:                         # 根据标签的值对已匹配的警报进行分组（默认不会分组）
     - alertname
   routes:
-    - receiver: 'webhook_to_leo'
-      # group_by:
-      #   - alertname
-      match:                        # 符合这些 label:value 条件的警报才算匹配
-        job: prometheus
-      match_re:                     # value 采用正则匹配
-        job: prometheus|grafana
-        instance: 10.0.0.*
-      # continue: false
-    - receiver: 'xxx'
-      ...
+  - receiver: 'webhook_to_leo'
+    # group_by:
+    #   - alertname
+    match:                        # 符合这些 label:value 条件的警报才算匹配
+      job: prometheus
+    match_re:                     # value 采用正则匹配
+      job: prometheus|grafana
+      instance: 10.0.0.*
+    # continue: false
+  - receiver: 'xxx'
+    ...
 ```
 - 上例中的大部分参数都不是必填项，最简单的 route 块如下：
   ```yaml
@@ -704,19 +704,19 @@ route:
 例：
 ```yaml
 inhibit_rules:
-  - source_match:
-      severity: error
-    target_match:
-      severity: warn
-    equal:
-      - alertname
-      - instance
-  - source_match:
-      alertname: target离线
-      job: node_exporter
-    target_match:
-    equal:
-      - nodename
+- source_match:
+    severity: error
+  target_match:
+    severity: warn
+  equal:
+  - alertname
+  - instance
+- source_match:
+    alertname: target离线
+    job: node_exporter
+  target_match:
+  equal:
+  - nodename
 ```
 - 工作原理： Alertmanager 会先根据 source_match 指定的 label:value 选中一些警报，再根据 target_match 选中一些警报。如果 source 警报存在，则抑制与它 equal 标签值相同的 target 警报。
   - 如果改为 source_match_re、target_match_re ，则是对 label 的 value 进行正则匹配。
@@ -889,25 +889,25 @@ inhibit_rules:
 - 在配置文件中定义要监控的进程：
     ```yaml
     process_names:
-      - exe:                            # 定义多行条件，每个条件可能匹配零个、一个或多个进程
-        - top
-        - /bin/ping
+    - exe:                            # 定义多行条件，每个条件可能匹配零个、一个或多个进程
+      - top
+      - /bin/ping
 
-      - comm:
-        - bash
+    - comm:
+      - bash
 
-      - name: "{{.ExeBase}}"            # 这里使用可执行文件的基本名作为 name
-        cmdline:
-        - prometheus --config.file
+    - name: "{{.ExeBase}}"            # 这里使用可执行文件的基本名作为 name
+      cmdline:
+      - prometheus --config.file
 
-      - name: "{{.Matches.name}}"       # 这里使用正则匹配的元素组作为 name
-        cmdline:
-        - ping www.(?P<name>\S*).com    # 用 ?P<name> 的格式命名正则匹配的元素组
+    - name: "{{.Matches.name}}"       # 这里使用正则匹配的元素组作为 name
+      cmdline:
+      - ping www.(?P<name>\S*).com    # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
     - 关于匹配规则：
-      - exe 是对进程的 /proc/<PID>/exe 指向的可执行文件名进行匹配。
-      - comm 是对进程的 /proc/<PID>/common 进行匹配。
-      - cmdline 是对进程的 /proc/<PID>/cmdline 进行正则匹配。
+      - exe 是对进程的 `/proc/<PID>/exe` 指向的可执行文件名进行匹配。
+      - comm 是对进程的 `/proc/<PID>/comm` 进行匹配。
+      - cmdline 是对进程的 `/proc/<PID>/cmdline` 进行正则匹配。
       - exe、comm 可以同时定义多行匹配条件，而 cmdline 同时只能定义一行条件，否则不会被执行。
       - exe、comm 会自动使用匹配条件作为被匹配的进程的名称，并用作监控指标的 groupname 。而 cmdline 需要手动设置 name 。
     - 已经被匹配的进程不会被之后的条件重复匹配。

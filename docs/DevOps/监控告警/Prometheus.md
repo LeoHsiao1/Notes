@@ -911,23 +911,70 @@ inhibit_rules:
       - exe、comm 可以同时定义多行匹配条件，而 cmdline 同时只能定义一行条件，否则不会被执行。
       - exe、comm 会自动使用匹配条件作为被匹配的进程的名称，并用作监控指标的 groupname 。而 cmdline 需要手动设置 name 。
     - 已经被匹配的进程不会被之后的条件重复匹配。
-    - 当 process-exporter 已发现进程 A 时，如果进程 A 的数量变为 0 ，process-exporter 也会一直记录。但如果重启 process-exporter ，就只会发现此时存在的进程，不会再记录进程 A 。
 
 - 常用指标：
   ```sh
-  sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程使用的 CPU 核数
-  namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程实际使用的内存
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的进程实例数量）
-  namedprocess_namegroup_num_threads                                        # 线程数
+  timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 同一个 groupname 中最老的那个进程的运行时长（ s ）
+  namedprocess_namegroup_num_threads                                        # 进程的线程数
   namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
-  timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 进程的运行时长（ s ）
+  sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程占用的 CPU 核数
+  namedprocess_namegroup_memory_bytes{memtype="resident"}  / 1024^3         # 进程占用的物理内存（GB）
   irate(namedprocess_namegroup_read_bytes_total[1m]) / 1024^2               # 磁盘读速率（MB/s）
   irate(namedprocess_namegroup_write_bytes_total[1m]) / 1024^2              # 磁盘写速率（MB/s）
   namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
   namedprocess_namegroup_major_page_faults_total
   namedprocess_namegroup_minor_page_faults_total
-  # 不能监控进程的网络 IO
   ```
+  - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 终止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。但如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
+  - 不能监控进程的网络 IO 。
+
+
+### windows_exporter
+
+：用于监控 Windows 主机的状态，也可监控其进程的状态。
+- [GitHub 页面](https://github.com/prometheus-community/windows_exporter)
+- 下载 exe 版：
+  ```sh
+  curl -O https://github.com/prometheus-community/windows_exporter/releases/download/v0.13.0/windows_exporter-0.13.0-amd64.exe
+  ```
+  启动：
+  ```sh
+  windows_exporter.exe
+                      # --telemetry.addr :9182
+                      # --telemetry.path /metrics
+                      --collectors.enabled cpu,cs,logical_disk,net,os,process,system  # 启用指定的指标采集器
+                      # --collector.process.whitelist="firefox|chrome"                # 指定要监控的进程的白名单（对进程名进行正则匹配）
+                      # --collector.process.blacklist=""                              # 指定要监控的进程的黑名单
+  ```
+- 或者下载 msi 版：
+  ```sh
+  curl -O https://github.com/prometheus-community/windows_exporter/releases/download/v0.13.0/windows_exporter-0.13.0-amd64.msi
+  ```
+  执行它会安装 windows_exporter ，并作为后台服务运行、自动开通防火墙。
+  ```sh
+  windows_exporter.msi
+                      # LISTEN_ADDR 0.0.0.0
+                      # LISTEN_PORT 9182
+                      # METRICS_PATH /metrics
+                      ENABLED_COLLECTORS=cpu,cs,logical_disk,net,os,process,system
+                      EXTRA_FLAGS="--collector.process.whitelist=firefox|chrome"
+  ```
+- 常用指标：
+  ```sh
+  windows_exporter_build_info{branch="master", goversion="go1.13.3", instance="10.0.0.1:9182", job="windows_exporter", revision="c62fe4477fb5072e569abb44144b77f1c6154016", version="0.13.0"}  # 版本信息
+  timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长
+
+  windows_process_thread_count                                    # 进程的线程数
+  sum(irate(windows_process_cpu_time_total[1m])) without (mode)   # 进程占用的 CPU 核数
+  windows_process_private_bytes / 1024^3                          # 进程独占的内存（GB），即进程总共提交的内存，包括物理内存、虚拟内存
+  windows_process_working_set / 1024^3                            # 进程可用的内存（GB），包括独占的内存、与其它进程的共享内存
+  （不包括共享内存）
+  ```
+  - 当 windows_exporter 发现进程 A 之后，就会一直记录它的指标。但是如果进程 A 终止，则不会再记录它的指标。
+  - 不能监控进程的网络 IO 。
+  - 不能通过启动命令区分相同名字的进程，只能通过 PID 区分。
+
 
 ### cAdvisor
 

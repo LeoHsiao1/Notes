@@ -91,17 +91,20 @@
   - 用于对 Jenkins 的页面进行汉化。
 - Blue Ocean
   - 提供了对于流水线的一种更美观的操作页面。
-- Jenkins Email Extension Plugin
-  - 支持 Jenkins 发送邮件给用户。
-  - Jenkins 自带的邮件通知功能比较简陋，因此放弃不用。
-- Job Configuration History
-  - 用于记录各个 Job 以及系统配置的变更历史。
-  - 原理是将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
 - Disk usage
   - 用于统计各个 Project 占用的磁盘空间（不包括 Job ）。
   - 设置 Project 或 Job 的 Discard old builds 策略，可以限制其占用的磁盘空间，比如频繁执行的任务最多保留 14 天日志。不过这会导致统计的总构建次数变少。
+- Extended Choice Parameter
+  - 提供了单选框、复选框、单选按钮、多选按钮类型的输入参数。
 - Generic Webhook Trigger
   - 支持以 webhook 的方式触发 Jenkins 的 Job ，需要在 Job 的配置页面定义。例如：`curl http://10.0.0.1:8080/generic-webhook-trigger/invoke?token=123456`
+- Jenkins Email Extension Plugin
+  - 支持 Jenkins 发送邮件给用户。
+  - Jenkins 自带的邮件通知功能比较简陋，不推荐使用。
+- Job Configuration History
+  - 用于记录各个 Job 以及系统配置的变更历史。
+  - 原理是将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
+
 
 ## Jenkinsfile
 

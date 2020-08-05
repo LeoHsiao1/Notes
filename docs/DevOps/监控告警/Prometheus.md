@@ -101,12 +101,12 @@ scrape_configs:
   # scrape_interval: 30s
   # scrape_timeout: 10s
   static_configs:
-  - targets:                      # 一组监控对象的 IP:Port
+  - targets:                        # 一组监控对象的 IP:Port
     - '10.0.0.1:9090'
     - '10.0.0.1:9091'
-    # labels:                     # 为这些监控对象的数据加上额外的标签
+    # labels:                       # 为这些监控对象的数据加上额外的标签
     #   nodename: 'CentOS-1'
-  - targets: ['10.0.0.2:9090']    # 下一组监控对象
+  - targets: ['10.0.0.2:9090']      # 下一组监控对象
   # basic_auth:
   #   username: <string>
   #   password: <string>
@@ -215,7 +215,7 @@ scrape_configs:
   go_goroutines{job="prometheus"}[30m:1m]         # 查询 30 分钟以内、1 分钟以前的数据
 
   go_goroutines{job="prometheus"} offset 1m       # 相当于在 1 分钟之前查询
-  sum(go_goroutines{job="prometheus"} offset 1m   # 使用函数时，offset 符号要放在函数括号内
+  sum(go_goroutines{job="prometheus"} offset 1m)  # 使用函数时，offset 符号要放在函数括号内
   ```
   - 用 # 声明单行注释。
   - 将字符串用反引号包住时，不会让反斜杠转义。
@@ -256,15 +256,9 @@ scrape_configs:
 
 - 矢量之间可以进行如下集合运算：
   ```sh
-  vector1 and vector2     # 交集（返回两个矢量中标签列表相同的时间序列，取第一个矢量中的值）
-  vector1 or vector2      # 并集（将两个矢量中的所有时间序列组合在一起，如果存在标签列表相同的时间序列，则取第一个矢量中的值）
-  vector1 unless vector2  # 补集（返回在第一个矢量中存在、但在第二个矢量中不存在的时间序列）
-  ```
-  如下：
-  ```sh
-  go_goroutines{instance="10.0.0.1:9100"}*0 and go_goroutines
-  go_goroutines{instance="10.0.0.1:9100"}*0 or go_goroutines{instance="10.0.0.1:9100"}
-  go_goroutines{instance="10.0.0.1:9100"}*0 unless go_goroutines{instance!~"10.0.0.1:9100"}
+  go_goroutines{job='prometheus'} and go_goroutines                       # 交集（返回两个矢量中标签列表相同的时间序列，取第一个矢量中的值）
+  go_goroutines{job='prometheus'} or go_goroutines{job='prometheus'}      # 并集（将两个矢量中的所有时间序列合并，如果存在标签列表重复的时间序列，则取第一个矢量中的值）
+  go_goroutines{job='prometheus'} unless go_goroutines{job!='prometheus'} # 补集（返回在第一个矢量中存在、但在第二个矢量中不存在的时间序列）
   ```
 
 - 矢量之间进行运算时，默认只会对两个矢量中标签列表相同的时间序列（即标签名、标签值完全相同）进行运算。如下：
@@ -597,7 +591,7 @@ Alertmanager 的 Alerts 页面示例：
   - 点击 Source 会跳转到 Prometheus ，查询该警报对应的指标数据。
   - 点击 Silence 可以静音该警报。
 
-### 基本配置
+### 配置
 
 使用 Alertmanager 时，需要在 Prometheus 的配置文件中加入如下配置，让 Prometheus 将警报转发给它处理。
 ```yaml
@@ -620,10 +614,10 @@ global:                           # 配置一些全局参数
 
 receivers:                        # 定义告警消息的接受者
 - name: 'email_to_leo'
-  email_configs:                # 只配置少量 smtp 参数，其余的参数则继承全局配置
+  email_configs:                  # 只配置少量 smtp 参数，其余的参数则继承全局配置
   - to: '123456@qq.com'
-    send_resolved: true     # 是否在警报消失时发送 resolved 类型的警报
-  # - to: '123456@163.com'    # 可以指定多个发送目标
+    send_resolved: true           # 是否在警报消失时发送 resolved 类型的警报
+  # - to: '123456@163.com'        # 可以指定多个发送目标
 - name: 'webhook_to_leo'
   webhook_configs:
   - url: 'http://localhost:80/'
@@ -643,11 +637,11 @@ route:
 route 块定义了分组处理警报的规则，如下：
 ```yaml
 route:
-  receiver: 'email_to_leo'          # 只能指定一个接收方
+  receiver: 'email_to_leo'        # 只能指定一个接收方
   group_wait: 1m
   group_interval: 1m
   repeat_interval: 24h
-  group_by:                         # 根据标签的值对已匹配的警报进行分组（默认不会分组）
+  group_by:                       # 根据标签的值对已匹配的警报进行分组（默认不会分组）
     - alertname
   routes:
   - receiver: 'webhook_to_leo'
@@ -926,7 +920,8 @@ inhibit_rules:
   namedprocess_namegroup_major_page_faults_total
   namedprocess_namegroup_minor_page_faults_total
   ```
-  - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 终止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。但如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
+  - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 停止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。
+    但是如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
   - 不能监控进程的网络 IO 。
 
 
@@ -963,15 +958,42 @@ inhibit_rules:
 - 常用指标：
   ```sh
   windows_exporter_build_info{branch="master", goversion="go1.13.3", instance="10.0.0.1:9182", job="windows_exporter", revision="c62fe4477fb5072e569abb44144b77f1c6154016", version="0.13.0"}  # 版本信息
-  timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长
 
-  windows_process_thread_count                                    # 进程的线程数
-  sum(irate(windows_process_cpu_time_total[1m])) without (mode)   # 进程占用的 CPU 核数
-  windows_process_private_bytes / 1024^3                          # 进程独占的内存（GB），即进程总共提交的内存，包括物理内存、虚拟内存
-  windows_process_working_set / 1024^3                            # 进程可用的内存（GB），包括独占的内存、与其它进程的共享内存
-  （不包括共享内存）
+  # os collector
+  windows_os_info{instance="10.0.0.1:9182", job="windows_exporter", product="Microsoft Windows Server 2016 Standard", version="10.0.14393"} # 主机信息
+  windows_os_time                                 # 当前的 UTC 时间
+  windows_os_timezone{timezone="CST"}             # 采用的时区
+  windows_os_visible_memory_bytes / 1024^3        # 物理内存的总量（GB）
+  windows_os_physical_memory_free_bytes / 1024^3  # 物理内存的可用量（GB）
+  windows_os_virtual_memory_bytes / 1024^3        # 虚拟内存的总量（GB）
+  windows_os_virtual_memory_free_bytes / 1024^3   # 虚拟内存的可用量（GB）
+
+  # cpu collector
+  sum (irate(windows_cpu_time_total{instance="10.0.0.1:9182"}[5m])) by (mode)   # 统计不同模式的 CPU 使用率
+  (1 - avg(irate(windows_cpu_time_total{mode="idle"}[1m])) without(core)) * 100 # CPU 使用率（%）
+
+  # cs collector
+  windows_cs_logical_processors                   # CPU 核数
+
+  # logical_disk collector 的指标
+  windows_logical_disk_size_bytes{volume="C:"} / 1024^3                   # 磁盘的总量（GB）
+  windows_logical_disk_free_bytes{volume="C:"} / 1024^3                   # 磁盘的可用量（GB）
+  irate(windows_logical_disk_read_bytes_total{volume="C:"}[1m]) / 1024^2  # 磁盘的读速率（MB/s）
+  irate(windows_logical_disk_write_bytes_total{volume="C:"}[1m]) / 1024^2 # 磁盘的写速率（MB/s）
+
+  # net collector
+  irate(windows_net_bytes_received_total{nic="xxx"}[1m]) / 1024^2         # 网卡的接收速率（MB/s）
+  irate(windows_net_bytes_sent_total{nic="xxx"}[1m]) / 1024^2             # 网卡的发送速率（MB/s）
+
+
+  # process collector
+  timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长
+  windows_process_thread_count                                            # 进程的线程数
+  sum(irate(windows_process_cpu_time_total[1m])) without (mode)           # 进程占用的 CPU 核数
+  windows_process_private_bytes / 1024^3                                  # 进程独占的内存（GB），即进程总共提交的内存，包括物理内存、虚拟内存
+  windows_process_working_set / 1024^3                                    # 进程可用的内存（GB），包括独占的内存、与其它进程的共享内存
   ```
-  - 当 windows_exporter 发现进程 A 之后，就会一直记录它的指标。但是如果进程 A 终止，则不会再记录它的指标。
+  - 当 windows_exporter 发现进程 A 之后，就会一直记录它的指标。但是如果进程 A 停止，则不会再记录它的指标。
   - 不能监控进程的网络 IO 。
   - 不能通过启动命令区分相同名字的进程，只能通过 PID 区分。
 

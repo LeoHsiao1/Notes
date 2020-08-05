@@ -48,6 +48,7 @@
 - 用鼠标横向拖动选中 panel 中的一块区域，可以缩小 time range ；按 Ctrl+Z 可以放大 time range 。
 
 Panel 的主要配置项：
+- General ：一般的配置项，比如 Panel 的名字。
 - Queries ：数据源。
   - 首先要在 Grafana 的 Configuration 页面添加至少一个数据源（Data Sources），然后才能给 Panel 配置数据源、查询语句。
   - 下例是从 MySQL 数据库中查询数据的配置：
@@ -65,7 +66,15 @@ Panel 的主要配置项：
 - Visualization ：显示样式。
   - 大多数情况可采用以时间为横轴的曲线图，从而方便查看数据的变化历史。
   - 每个曲线图上可以输入多个图例，从而显示多条曲线。
-- General ：一般的配置项，比如 Panel 的名字。
+- Axes ：坐标轴。
+  - 坐标轴的单位 Unit 有很多种类型，比如：
+    - none ：不显示单位。
+    - short ：当数值达到千、百万等量级时，显示 k、m 等缩写单位。
+    - percent(0-100) ：显示百分数，数值 0-100 分别对应 0%-100% 。
+    - percent(0.0-1.0)
+    - bytes(IEC) ：按二进制转换千、百万等量级，即 `1 MiB = 1024 KiB = 1024^2 Bytes` 。
+    - bytes(Metric) ：按十进制转换千、百万等量级，即 `1 MB = 1000 KB = 1000^2 Bytes` 。
+    - seconds
 - Alert ：告警规则。
 
 ## 告警

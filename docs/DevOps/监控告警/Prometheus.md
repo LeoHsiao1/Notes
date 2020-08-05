@@ -735,8 +735,8 @@ inhibit_rules:
 
   time() - process_start_time_seconds                             # 运行时长（s）
   irate(process_cpu_seconds_total[1m])                            # 占用的 CPU 核数
-  process_resident_memory_bytes                                   # 占用的内存
-  prometheus_tsdb_storage_blocks_bytes                            # tsdb block 占用的磁盘空间
+  process_resident_memory_bytes / 1024^3                          # 占用的内存（GB）
+  prometheus_tsdb_storage_blocks_bytes / 1024^3                   # tsdb block 占用的磁盘空间（GB）
   sum(increase(prometheus_http_requests_total[1m])) by (code)     # 每分钟收到 HTTP 请求的次数
   sum(increase(prometheus_http_request_duration_seconds_sum[1m])) # 每分钟处理 HTTP 请求的耗时（s）
 
@@ -759,7 +759,7 @@ inhibit_rules:
 
   time() - process_start_time_seconds       # 运行时长（s）
   irate(process_cpu_seconds_total[1m])      # 占用的 CPU 核数
-  process_resident_memory_bytes             # 占用的内存
+  process_resident_memory_bytes / 1024^3    # 占用的内存（GB）
   sum(increase(alertmanager_http_request_duration_seconds_sum[1m])) # 处理 HTTP 请求的耗时（s）
 
   alertmanager_alerts                       # 存在的警报数（包括激活的、被抑制的）
@@ -780,7 +780,7 @@ inhibit_rules:
 
   time() - process_start_time_seconds                        # 运行时长（s）
   irate(process_cpu_seconds_total[1m])                       # 占用的 CPU 核数
-  process_resident_memory_bytes                              # 占用的内存
+  process_resident_memory_bytes / 1024^3                     # 占用的内存（GB）
   sum(increase(http_request_total[1m])) by (statuscode)      # 每分钟收到 HTTP 请求的次数
   sum(increase(http_request_duration_milliseconds_sum[1m]))  # 每分钟处理 HTTP 请求的耗时（ms）
 
@@ -798,7 +798,7 @@ inhibit_rules:
   ```sh
   time() - process_start_time_seconds     # 运行时长（s）
   irate(process_cpu_seconds_total[1m])    # 占用的 CPU 核数
-  process_resident_memory_bytes           # 占用的内存
+  process_resident_memory_bytes / 1024^3  # 占用的内存（GB）
   increase(http_requests_count[1m])       # 每分钟收到 HTTP 请求的次数
   http_requests{quantile=~"0.5|0.99"}     # 每分钟处理 HTTP 请求的耗时（s）
 
@@ -848,12 +848,12 @@ inhibit_rules:
   node_load5                                                                  # 每 5 分钟的 CPU 平均负载
   count(node_cpu_seconds_total{mode='idle'})                                  # CPU 核数
 
-  node_memory_MemTotal_bytes                                                  # 内存总容量
-  node_memory_MemAvailable_bytes                                              # 内存可用量，CentOS7 开始才有该指标
-  node_memory_SwapCached_bytes                                                # swap 使用量
+  node_memory_MemTotal_bytes / 1024^3                                         # 内存总容量（GB）
+  node_memory_MemAvailable_bytes / 1024^3                                     # 内存可用量（GB），CentOS7 开始才有该指标
+  node_memory_SwapCached_bytes / 1024^3                                       # swap 使用量（GB）
 
-  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4'})                         # 磁盘总容量
-  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4'})                        # 磁盘可用量
+  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4'}) / 1024^3                # 磁盘总容量（GB）
+  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4'}) / 1024^3               # 磁盘可用量（GB）
 
   sum(irate(node_disk_read_bytes_total[1m])) / 1024^2                         # 磁盘读速率（MB/s）
   sum(irate(node_disk_written_bytes_total[1m])) / 1024^2                      # 磁盘写速率（MB/s）
@@ -913,7 +913,7 @@ inhibit_rules:
   namedprocess_namegroup_num_threads                                        # 进程的线程数
   namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
   sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程占用的 CPU 核数
-  namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程占用的物理内存
+  namedprocess_namegroup_memory_bytes{memtype="resident"}  / 1024^3         # 进程占用的物理内存（GB）
   irate(namedprocess_namegroup_read_bytes_total[1m]) / 1024^2               # 磁盘读速率（MB/s）
   irate(namedprocess_namegroup_write_bytes_total[1m]) / 1024^2              # 磁盘写速率（MB/s）
   namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
@@ -963,10 +963,10 @@ inhibit_rules:
   windows_os_info{instance="10.0.0.1:9182", job="windows_exporter", product="Microsoft Windows Server 2016 Standard", version="10.0.14393"} # 主机信息
   windows_os_time                                 # 当前的 UTC 时间
   windows_os_timezone{timezone="CST"}             # 采用的时区
-  windows_os_visible_memory_bytes                 # 物理内存的总量
-  windows_os_physical_memory_free_bytes           # 物理内存的可用量
-  windows_os_virtual_memory_bytes                 # 虚拟内存的总量
-  windows_os_virtual_memory_free_bytes            # 虚拟内存的可用量
+  windows_os_visible_memory_bytes / 1024^3        # 物理内存的总量（GB）
+  windows_os_physical_memory_free_bytes / 1024^3  # 物理内存的可用量（GB）
+  windows_os_virtual_memory_bytes / 1024^3        # 虚拟内存的总量（GB）
+  windows_os_virtual_memory_free_bytes / 1024^3   # 虚拟内存的可用量（GB）
 
   # cpu collector
   sum (irate(windows_cpu_time_total{instance="10.0.0.1:9182"}[5m])) by (mode)   # 统计不同模式的 CPU 使用率
@@ -976,8 +976,8 @@ inhibit_rules:
   windows_cs_logical_processors                   # CPU 核数
 
   # logical_disk collector 的指标
-  windows_logical_disk_size_bytes{volume="C:"}                            # 磁盘的总量（GB）
-  windows_logical_disk_free_bytes{volume="C:"}                            # 磁盘的可用量（GB）
+  windows_logical_disk_size_bytes{volume="C:"} / 1024^3                   # 磁盘的总量（GB）
+  windows_logical_disk_free_bytes{volume="C:"} / 1024^3                   # 磁盘的可用量（GB）
   irate(windows_logical_disk_read_bytes_total{volume="C:"}[1m]) / 1024^2  # 磁盘的读速率（MB/s）
   irate(windows_logical_disk_write_bytes_total{volume="C:"}[1m]) / 1024^2 # 磁盘的写速率（MB/s）
 
@@ -990,8 +990,8 @@ inhibit_rules:
   timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长
   windows_process_thread_count                                            # 进程的线程数
   sum(irate(windows_process_cpu_time_total[1m])) without (mode)           # 进程占用的 CPU 核数
-  windows_process_private_bytes                                           # 进程独占的内存，即进程总共提交的内存，包括物理内存、虚拟内存
-  windows_process_working_set                                             # 进程可用的内存，包括独占的内存、与其它进程的共享内存
+  windows_process_private_bytes / 1024^3                                  # 进程独占的内存（GB），即进程总共提交的内存，包括物理内存、虚拟内存
+  windows_process_working_set / 1024^3                                    # 进程可用的内存（GB），包括独占的内存、与其它进程的共享内存
   ```
   - 当 windows_exporter 发现进程 A 之后，就会一直记录它的指标。但是如果进程 A 停止，则不会再记录它的指标。
   - 不能监控进程的网络 IO 。

@@ -577,6 +577,11 @@ Author.objects.filter(whose_book__name='Hello World')
 
 
 - 在 admin 页面编辑外键字段时，会在一个下拉框中显示可用的外键值。
+  另外，在 admin 的类定义中加入如下配置即可让该下拉框支持搜索。
+  autocomplete_fields = ['author']
+  当用户在搜索框中输入内容时，会对 Author 表的 search_fields 进行搜索，然后在下拉框中显示匹配的 author 。
+
+
 - ManyToManyField 字段可以在详情页面显示并编辑，但不能在 admin 的表格页面直接显示，不过可以创建一个虚拟字段来显示它的值。
 
 

@@ -24,21 +24,24 @@ systemctl enable sshd
 sshd 的主配置文件是 /etc/ssh/sshd_config ，内容示例：
 ```
 Port 22                           # 监听的端口号
-ListenAddress 192.168.0.1         # 允许连接的 IP
+ListenAddress 0.0.0.0             # 允许连接的 IP
+
+AllowUsers root leo@10.0.0.1      # 只允许这些用户进行 SSH 登录。可以使用通配符 * 和 ? ，可以指定用户的 IP，可以指定多个用户（用空格分隔）
+AllowGroups *                     # 只允许这些用户组进行 SSH 登录
 
 Protocol 2                        # SSH 协议的版本
 HostKey /etc/ssh/ssh_host_rsa_key # 使用 SSH2 时，RSA 私钥的位置
 
 PermitRootLogin yes               # 允许 root 用户登录
-MaxAuthTries 6                    # 密码输错时的最多尝试次数
+MaxAuthTries 6                    # 每个 TCP 连接的最多认证次数。如果客户端输错密码的次数达到该值的一半，则断开连接
 MaxSessions 10                    # 最多连接的终端数
 
-PasswordAuthentication yes        # 允许用密码登录（否则只能用密钥登录）
-PermitEmptyPasswords no           # 不允许用空密码登录
+PasswordAuthentication yes        # 允许使用密码登录（否则只能使用密钥登录）
+PermitEmptyPasswords no           # 不允许使用空密码登录
 ```
-- 修改了配置文件之后，要重启 sshd 服务才能生效：systemctl restart sshd
-- ~/.ssh/authorized_keys 文件中保存了一些公钥，允许拿着这些公钥的主机通过 SSH、以指定的用户名登录到本机。
-- ~/.ssh/known_hosts 文件中保存了所有与本机进行过 SSH 连接的主机的公钥。下次再连接到这些主机时，如果其公钥发生变化，就怀疑是被冒充了。
+- 修改了配置文件之后，要重启 sshd 服务才会生效：systemctl restart sshd
+- 默认在 ~/.ssh/authorized_keys 文件中保存了一些公钥，允许客户端使用这些公钥进行 SSH 认证，登录到本机。
+- 默认在 ~/.ssh/known_hosts 文件中保存了所有与本机成功进行了 SSH 认证的主机的公钥。下次再连接到这些主机时，如果其公钥发生变化，则怀疑是被冒充了。
 
 ## 客户端
 

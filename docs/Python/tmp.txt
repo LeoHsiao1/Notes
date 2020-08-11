@@ -3864,6 +3864,8 @@ logger.debug("test...")                        # logger对象也有logging.debug
  
 ♢ pytest
 ## pytest：Python的第三方库，是一个开源的Python单元测试框架。
+- pytest 比 unittest 的功能更多，并且可以兼容地执行 unittest 的测试用例。
+
 - 安装：pip install pytest
 - pytest的基本用法如下：
   - 将单元测试的脚本命名为 test_*.py 或 *_test.py 。

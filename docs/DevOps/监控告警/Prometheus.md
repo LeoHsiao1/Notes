@@ -367,7 +367,7 @@ scrape_configs:
   - name: recording_rules               # 规则组的名称
     # interval: 15s                     # 每隔多久执行一次该 rules
     rules:
-    - record: sum:job:go_goroutines     # 定义一个新指标
+    - record: go_goroutines:sum_by_job  # 定义一个新指标
       expr: sum(go_goroutines) by (job) # 查询表达式
 
   - name: alerting_rules                # 规则组的名称
@@ -841,18 +841,19 @@ inhibit_rules:
   node_exporter_build_info{branch="HEAD", goversion="go1.13.8", instance="10.0.0.1:9100", job="node_exporter", revision="ef7c05816adcb0e8923defe34e97f6afcce0a939", version="1.0.0-rc.0"}  # 版本信息
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
 
-  node_time_seconds - time()                                                  # 目标主机与本机的时间差值（在 [scrape_interval, 0] 范围内才合理）
-  node_time_seconds - node_boot_time_seconds                                  # 主机运行时长（s）
+  node_boot_time_seconds                                                      # 主机的启动时刻
+  node_time_seconds - node_boot_time_seconds                                  # 主机的运行时长（s）
+  node_time_seconds - time()                                                  # 主机的时间误差（在 [scrape_interval, 0] 范围内才合理）
 
-  avg(irate(node_cpu_seconds_total[1m])) without (cpu) * 100                  # CPU 使用率（%）
-  node_load5                                                                  # 每 5 分钟的 CPU 平均负载
   count(node_cpu_seconds_total{mode='idle'})                                  # CPU 核数
+  avg(irate(node_cpu_seconds_total[1m])) without (cpu) * 100                  # 统计不同模式的 CPU 使用率（%）
+  node_load5                                                                  # 每 5 分钟的 CPU 平均负载
 
-  node_memory_MemTotal_bytes / 1024^3                                         # 内存总容量（GB）
+  node_memory_MemTotal_bytes / 1024^3                                         # 内存总量（GB）
   node_memory_MemAvailable_bytes / 1024^3                                     # 内存可用量（GB），CentOS7 开始才有该指标
   node_memory_SwapCached_bytes / 1024^3                                       # swap 使用量（GB）
 
-  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4'}) / 1024^3                # 磁盘总容量（GB）
+  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4'}) / 1024^3                # 磁盘总量（GB）
   sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4'}) / 1024^3               # 磁盘可用量（GB）
 
   sum(irate(node_disk_read_bytes_total[1m])) / 1024^2                         # 磁盘读速率（MB/s）
@@ -961,30 +962,33 @@ inhibit_rules:
 
   # os collector
   windows_os_info{instance="10.0.0.1:9182", job="windows_exporter", product="Microsoft Windows Server 2016 Standard", version="10.0.14393"} # 主机信息
-  windows_os_time                                 # 当前的 UTC 时间
+  windows_os_time                                 # 当前时间（UTC时区）
   windows_os_timezone{timezone="CST"}             # 采用的时区
-  windows_os_visible_memory_bytes / 1024^3        # 物理内存的总量（GB）
+  windows_os_visible_memory_bytes / 1024^3        # 可见的物理内存的总量（GB），可能小于实际容量
   windows_os_physical_memory_free_bytes / 1024^3  # 物理内存的可用量（GB）
   windows_os_virtual_memory_bytes / 1024^3        # 虚拟内存的总量（GB）
   windows_os_virtual_memory_free_bytes / 1024^3   # 虚拟内存的可用量（GB）
 
-  # cpu collector
-  sum (irate(windows_cpu_time_total{instance="10.0.0.1:9182"}[5m])) by (mode)   # 统计不同模式的 CPU 使用率
-  (1 - avg(irate(windows_cpu_time_total{mode="idle"}[1m])) without(core)) * 100 # CPU 使用率（%）
-
   # cs collector
   windows_cs_logical_processors                   # CPU 核数
 
+  # system collector
+  windows_system_system_up_time                   # 主机的启动时刻
+
+  # cpu collector
+  windows_cpu_core_frequency_mhz{core="0,0"}                                    # CPU 频率
+  avg(irate(windows_cpu_time_total[1m])) without(core) * 100                    # 统计不同模式的 CPU 使用率（%）
+  (1 - avg(irate(windows_cpu_time_total{mode="idle"}[1m])) without(core)) * 100 # CPU 使用率（%）
+
   # logical_disk collector 的指标
-  windows_logical_disk_size_bytes{volume="C:"} / 1024^3                   # 磁盘的总量（GB）
-  windows_logical_disk_free_bytes{volume="C:"} / 1024^3                   # 磁盘的可用量（GB）
+  sum(windows_logical_disk_size_bytes) without(volume) / 1024^3           # 磁盘的总量（GB）
+  windows_logical_disk_free_bytes{volume!~'HarddiskVolume.*'} / 1024^3    # 磁盘的可用量（GB），磁盘卷 HarddiskVolume 一般是系统保留分区
   irate(windows_logical_disk_read_bytes_total{volume="C:"}[1m]) / 1024^2  # 磁盘的读速率（MB/s）
   irate(windows_logical_disk_write_bytes_total{volume="C:"}[1m]) / 1024^2 # 磁盘的写速率（MB/s）
 
   # net collector
   irate(windows_net_bytes_received_total{nic="xxx"}[1m]) / 1024^2         # 网卡的接收速率（MB/s）
   irate(windows_net_bytes_sent_total{nic="xxx"}[1m]) / 1024^2             # 网卡的发送速率（MB/s）
-
 
   # process collector
   timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长

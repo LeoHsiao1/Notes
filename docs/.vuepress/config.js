@@ -154,7 +154,7 @@ module.exports = {
                     children: [
                         'shell/简介',
                         'shell/变量',
-                        'shell/基本语法',
+                        'shell/语法',
                     ]
                 },
                 {

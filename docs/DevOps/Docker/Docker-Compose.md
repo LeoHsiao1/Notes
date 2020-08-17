@@ -5,7 +5,7 @@
 - 只能管理当前宿主机上的容器，不能管理服务器集群。
 - 它根据 compose 文件来创建、管理 docker 容器。
   - compose 文件保存为 yaml 格式，后缀名为 .yml 或 .yaml 。
-  - 每个 compose 文件定义一种或多种服务，每种服务可以运行一个或多个容器实例。
+  - 每个 compose 文件可以定义一种或多种服务，每种服务可以运行一个或多个容器实例。
   - 单个服务运行多个容器实例时可能会因为使用相同的端口、容器名等资源，产生冲突。
 - [官方文档](https://docs.docker.com/compose/compose-file/)
 
@@ -25,7 +25,7 @@ docker-compose
             up                        # 启动服务（会重新加载 compose 文件，可能会删除容器或重新创建容器）
                 -d                    # 在后台运行（否则会阻塞当前终端）
                 --scale web=2 mysql=1 # 设置服务运行的实例数量
-                --build               # 在启动容器之前，先构建镜像
+                --build               # 强制构建镜像（如果镜像已存在，则默认不会再次构建）
             down <service>...         # 销毁服务（默认会删除用到的容器、网络）
                 -v                    # 再删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
                 --rmi all             # 再删除该服务用到的所有镜像
@@ -56,35 +56,46 @@ docker-compose
 ## compose 文件的语法
 
 ```yaml
-version: '3'                  # 声明 compose 文件的版本
+version: '3.8'                # 声明 compose 文件的版本
 
 services:                     # 开始定义服务
+
   web:                        # 第一个服务的名称
-    # container_name: web     # 指定容器名
-    image: centos             # 使用的镜像名
+    # container_name: web     # 指定生成的容器名
+    image: centos:7           # 使用的镜像名（如果该镜像不存在，且没有指定 build 选项，则尝试 pull 它）
+    # build:                  # 临时构建出镜像
+    #   context: ./etc
+    #   dockerfile: Dockerfile
+    #   network: host
+    #   args:
+    #     arg1: Hello
+    working_dir: /opt         # 工作目录  
     command: [tail, -f, /dev/null]  # 启动命令
     init: true                # 使用 init 作为 1 号进程
-    restart: unless-stopped   # 容器的重启策略
-    environment:              # 定义环境变量
+    restart: on-failure       # 重启策略
+    environment:              # 环境变量
       var1: 1
       var2: hello
     ports:                    # 映射端口
       - 9000:8000             # 注意这里的每行配置是一个字符串，因此冒号 : 之后不能加空格
-      - 9001:8001
+      - 9090-9091:8080-8081
     networks:                 # 连接到的 docker 网络
       - net
-    # network_mode: "host"    # 网络模式
+    # network_mode: host      # 网络模式
     volumes:                  # 挂载目录
       - /root/data:/root/data # 可以直接挂载目录
       - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）
       - conf:/root/conf       # 可以挂载数据卷
-    
+    depends_on:               # 依赖关系
+      - redis                 # 这表示：如果启动 web 服务，则会自动先启动 redis 服务；如果停止 redis 服务，则会自动先停止 web 服务
+
   redis:                      # 定义第二个服务
     image: redis:5.0.5
-    restart: unless-stopped
+    depends_on:
+      - web
     networks:
       - net
-    volumes:                  # 挂载目录
+    volumes:
       - db:/etc/redis
 
 networks:                     # 定义网络（默认会创建一个 compose_default 网络）
@@ -95,9 +106,9 @@ volumes:                      # 定义数据卷（服务挂载的数据卷都必
   conf:
   db:
 ```
-- compose 文件还支持写入 Dockerfile 的构件参数，在创建容器之前先构建镜像。
-- 如果用户不指定生成的容器名，则会自动按照 "当前目录名_服务名_第几个实例" 的格式命名，比如：web_web_1 。
-  - 如果用户不指定生成的 volume 的名称，则会自动按照 "当前目录名_数据卷名" 的格式命名，比如：web_conf 。
+- 如果用户指定了生成的容器名，则只能创建多个容器实例时会因为名字冲突而失败。
+  - 如果用户不指定生成的容器名，则会自动按照 "当前目录名_服务名_第几个实例" 的格式命名，比如：web_web_1 。
+  - 同理，如果用户不指定生成的 volume 的名称，则会自动按照 "当前目录名_数据卷名" 的格式命名，比如：web_conf 。
   - 如果 Service 只运行一个实例，则指定容器名、挂载指定目录比较好，这样它们的容器名、目录位置是确定不变的。
   - 如果 Service 要运行多个实例，则不指定容器名、挂载数据卷比较好，这样多个实例会自动命名，不会冲突。
 - 上例中，web 容器向宿主机映射了两个端口，而 redis 容器没有映射端口，因此不能被宿主机访问。

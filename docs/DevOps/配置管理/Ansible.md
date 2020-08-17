@@ -54,7 +54,7 @@ Ansible 的配置文件默认位于 `/etc/ansible/ansible.cfg` ，内容如下�
 [defaults]
 ; inventory = /etc/ansible/hosts    ; Inventory 文件的路径
 log_path = /var/log/ansible.log     ; 记录每次执行 ansible 的 stdout（默认不保存日志）
-; forks = 5                         ; 同时最多运行多少个 Ansible 进程
+; forks = 5                         ; 同时最多执行多少个任务
 host_key_checking = False           ; 第一次连接到远程主机时，是否提示添加 authorized_keys
 ; remote_tmp = $HOME/.ansible/tmp   ; 登录远程主机时使用的工作目录
 ```

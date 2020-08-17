@@ -322,11 +322,11 @@ scrape_configs:
   resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
   increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
   rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的每秒平均增长率（时间间隔越长，曲线越平缓）
-  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的每秒平均增长率（曲线很尖锐，接近实时图像）
+  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的每秒平均增长率（曲线比较尖锐，接近瞬时值）
   ```
   - 如果矢量包含多个时间序列，算术函数会分别对这些时间序列进行运算，而聚合函数会将它们合并成一个或多个时间序列。
   - 使用算术函数时，时间间隔 `[t]` 必须要大于矢量的采样间隔，否则计算结果为空。
-  - 例如：假设 go_goroutines 的值在 1m 之内增加了 6 ，则 delta(go_goroutines[1m]) 的计算结果为 6 ，rate(go_goroutines[1m]) 的计算结果为 0.1 。
+  - 例如：假设 go_goroutines 的值在 1m 内增加了 6 ，则 delta(go_goroutines[1m]) 的计算结果为 6 ，rate(go_goroutines[1m]) 的计算结果为 0.1 。
   - increase() 实际上是 rate() 乘以时间间隔的语法糖。
   - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同。
     但是如果时间间隔 `[t]` 不比 scrape_interval 大几倍，则 delta() 和 increase() 的计算结果会比实际值偏大。
@@ -348,7 +348,8 @@ scrape_configs:
   ```
   - 聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 _over_time 后缀的函数，如下：
     ```sh
-    sum_over_time(go_goroutines[1m])      # 返回每个时刻处，过去 1 分钟之内数据点的总和
+    sum_over_time(go_goroutines[1m])    # 返回每个时刻处，过去 1m 内数据点的总和（分别计算每个时间序列）
+    avg_over_time(go_goroutines[1m])    # 返回每个时刻处，过去 1m 内的平均值
     ```
   - 聚合函数可以与关键字 by、without 组合使用，如下：
     ```sh
@@ -846,7 +847,7 @@ inhibit_rules:
   node_time_seconds - time()                                                  # 主机的时间误差（在 [scrape_interval, 0] 范围内才合理）
 
   count(node_cpu_seconds_total{mode='idle'})                                  # CPU 核数
-  avg(irate(node_cpu_seconds_total[1m])) without (cpu) * 100                  # 统计不同模式的 CPU 使用率（%）
+  avg(irate(node_cpu_seconds_total[1m])) without (cpu) * 100                  # CPU 各模式占比（%）
   node_load5                                                                  # 每 5 分钟的 CPU 平均负载
 
   node_memory_MemTotal_bytes / 1024^3                                         # 内存总量（GB）
@@ -923,6 +924,7 @@ inhibit_rules:
   ```
   - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 停止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。
     但是如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
+    例如：如果主机重启之后，进程没有启动，则它不能发现进程没有恢复，不会发出警报。
   - 不能监控进程的网络 IO 。
 
 
@@ -977,14 +979,14 @@ inhibit_rules:
 
   # cpu collector
   windows_cpu_core_frequency_mhz{core="0,0"}                                    # CPU 频率
-  avg(irate(windows_cpu_time_total[1m])) without(core) * 100                    # 统计不同模式的 CPU 使用率（%）
+  avg(irate(windows_cpu_time_total[1m])) without(core) * 100                    # CPU 各模式占比（%）
   (1 - avg(irate(windows_cpu_time_total{mode="idle"}[1m])) without(core)) * 100 # CPU 使用率（%）
 
   # logical_disk collector 的指标
   sum(windows_logical_disk_size_bytes) without(volume) / 1024^3           # 磁盘的总量（GB）
   windows_logical_disk_free_bytes{volume!~'HarddiskVolume.*'} / 1024^3    # 磁盘的可用量（GB），磁盘卷 HarddiskVolume 一般是系统保留分区
-  irate(windows_logical_disk_read_bytes_total{volume="C:"}[1m]) / 1024^2  # 磁盘的读速率（MB/s）
-  irate(windows_logical_disk_write_bytes_total{volume="C:"}[1m]) / 1024^2 # 磁盘的写速率（MB/s）
+  irate(windows_logical_disk_read_bytes_total[1m]) / 1024^2               # 磁盘的读速率（MB/s）
+  irate(windows_logical_disk_write_bytes_total[1m]) / 1024^2              # 磁盘的写速率（MB/s）
 
   # net collector
   irate(windows_net_bytes_received_total{nic="xxx"}[1m]) / 1024^2         # 网卡的接收速率（MB/s）
@@ -992,10 +994,11 @@ inhibit_rules:
 
   # process collector
   timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长
-  windows_process_thread_count                                            # 进程的线程数
   sum(irate(windows_process_cpu_time_total[1m])) without (mode)           # 进程占用的 CPU 核数
   windows_process_private_bytes / 1024^3                                  # 进程独占的内存（GB），即进程总共提交的内存，包括物理内存、虚拟内存
   windows_process_working_set / 1024^3                                    # 进程可用的内存（GB），包括独占的内存、与其它进程的共享内存
+  windows_process_thread_count                                            # 进程的线程数
+  windows_process_io_bytes_total                                          # 进程的 handle 数量
   ```
   - 当 windows_exporter 发现进程 A 之后，就会一直记录它的指标。但是如果进程 A 停止，则不会再记录它的指标。
   - 不能监控进程的网络 IO 。

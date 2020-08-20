@@ -43,6 +43,7 @@
 ## Panel
 
 Panel 是 Grafana 的基本显示模块，每个 Panel 负责显示一张图表。
+- 当 Panel 进入浏览器的显示范围时，Grafana 才开始加载它，从而节省开销。
 - 一个 Panel 中存在多个图例（legend）的曲线时，用鼠标单击某个图例的名字，就会只显示该图例的曲线。按住 Ctrl 再单击，就可以同时选择多个图例。
 - 修改 Panel 时，是以 Dashboard 为单位进行修改，要点击"Save Dashboard"才会保存。
   - 比如调整一个 Dashboard 显示的时间范围（time range）时，会影响到该 Dashboard 中的所有 Panel 。

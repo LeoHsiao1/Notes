@@ -261,6 +261,16 @@ scrape_configs:
   go_goroutines{job='prometheus'} unless go_goroutines{job!='prometheus'} # 补集（返回在第一个矢量中存在、但在第二个矢量中不存在的时间序列）
   ```
 
+- 运算符的优先级从高到低如下，同一优先级的采用左结合性：
+  ```sh
+  ^
+  * /  %
+  + -
+  == != <= < >= >
+  and unless
+  or
+  ```
+
 - 矢量之间进行运算时，默认只会对两个矢量中标签列表相同的时间序列（即标签名、标签值完全相同）进行运算。如下：
   ```sh
   go_goroutines - go_goroutines
@@ -314,24 +324,31 @@ scrape_configs:
   absent(go_goroutines)                 # 在每个时刻处，如果矢量为空（不存在任何数据点），则返回 1 ，否则返回空值
   absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内矢量一直为空，则返回 1 ，否则返回空值
   changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内的数据点变化的次数
-  delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负）
-  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
+  delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负），适合计算变化量
+  idelta(go_goroutines[5m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负），适合计算瞬时变化量
   ```
   以下算术函数适用于计数器类型的矢量：
   ```sh
   resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
   increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
   rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的每秒平均增长率（时间间隔越长，曲线越平缓）
-  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的每秒平均增长率（曲线比较尖锐，接近瞬时值）
+  irate(go_goroutines[5m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的每秒平均增长率（曲线比较尖锐，接近瞬时值）
   ```
   - 如果矢量包含多个时间序列，算术函数会分别对这些时间序列进行运算，而聚合函数会将它们合并成一个或多个时间序列。
   - 使用算术函数时，时间间隔 `[t]` 必须要大于矢量的采样间隔，否则计算结果为空。
-  - 例如：假设 go_goroutines 的值在 1m 内增加了 6 ，则 delta(go_goroutines[1m]) 的计算结果为 6 ，rate(go_goroutines[1m]) 的计算结果为 0.1 。
+  - 例如：正常情况下 node_time_seconds 的值是每秒加 1 ，因此不论 scrape_interval 的取值为多少，
+    - delta(node_time_seconds[1m]) 计算得到的每个数据点的值都是 60 。
+    - rate(node_time_seconds[1m]) 每个点的值都是 1 。
+    - irate(node_time_seconds[1m]) 每个点的值也都是 1 。
+      因为 node_time_seconds 匀速增长，所以 irate() 与 rate() 的计算结果近似。
+    - 如果 scrape_interval 为 30s ，则 idelta(node_time_seconds[1m]) 计算得到的每个数据点的值都是 30 。
+
   - increase() 实际上是 rate() 乘以时间间隔的语法糖。
   - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同。
     但是如果时间间隔 `[t]` 不比 scrape_interval 大几倍，则 delta() 和 increase() 的计算结果会比实际值偏大。
-  - 如果矢量的单调性变化，则 delta() 的计算结果可能为负，应该只取 >= 0 部分的值。
+  - 如果矢量的单调性变化，则 delta() 的计算结果可能为负，可以只取 >= 0 部分的值。
     而 rate() 只会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，最终得到的 increase() 值比 delta() 大。
+  - idelta、irate 应该尽量使用大一些的时间间隔，因为时间间隔过大时不影响计算精度，但时间间隔过小时可能缺少数据点。
 
 - 矢量可以使用以下聚合函数：
   ```sh
@@ -353,8 +370,9 @@ scrape_configs:
     ```
   - 聚合函数可以与关键字 by、without 组合使用，如下：
     ```sh
-    sum(go_goroutines) by(job)            # 将所有曲线按 job 标签的值分组，分别执行 sum() 函数
-    sum(go_goroutines) without(job)       # 将所有曲线按除了 job 以外的标签分组，分别执行 sum() 函数
+    sum(go_goroutines) by(job)          # 将所有曲线按 job 标签的值分组，分别执行 sum() 函数
+    sum(go_goroutines) without(job)     # 将所有曲线按除了 job 以外的标签分组，分别执行 sum() 函数
+    sum(go_goroutines) by(Time)         # Time 是隐式 label ，这里相当于 sum(go_goroutines)
     ```
 
 ## Rules
@@ -515,7 +533,7 @@ scrape_configs:
   - 配置比较麻烦但是很灵活。
   - 可以在 Web 页面上搜索警报、分组管理。
 - 缺点：
-  - 只能查看当前激活的警报，不能查看警报的历史记录。
+  - 只能查看当前存在的警报，不能查看已发送的历史消息。
 - [GitHub 页面](https://github.com/prometheus/alertmanager)
 
 ### 部署
@@ -536,13 +554,16 @@ scrape_configs:
 
 ### 原理
 
-工作流程：
-1. Prometheus 每隔 interval 时长执行一次 alert rule ，如果发现有 n 个指标满足告警条件，则立即产生 n 个 Alerting 状态的警报，发送给 Alertmanager 。
-2. Alertmanager 收到该警报之后，
+一般的工作流程：
+1. Prometheus 每隔 interval 时长执行一次 alert rule 。如果执行结果包含 n 个时间序列，则认为存在 n 个警报，通过 HTTP 通信发送 alerting 状态的消息给 Alertmanager 。
+2. Alertmanager 收到之后，
    - 先根据 route 判断它属于哪个 group 、应该发送给哪个 receiver 。
    - 再判断该 group 当前是否处于冷却阶段、是否被 Silence 静音、是否被 Inhibit 抑制。如果都没有，则立即发送告警消息给用户。
-3. 如果 Prometheus 执行 alert rule 时，发现指标不再满足告警条件，则立即产生 Resolved 状态的警报，发送给  Alertmanager 。
-4. Alertmanager 收到该警报之后，立即发送给用户。
+3. 如果 Prometheus 再次执行 alert rule 时，发现执行结果为空，则认为警报已解决，立即产生 resolved 状态的消息，发送给 Alertmanager 。
+4. Alertmanager 收到之后，立即发送给用户。
+
+- 如果一个指标不再满足告警条件，或者 Prometheus 不再抓取相应的指标，或者不再执行相应的 alert rule ，都会让 Prometheus 认为该警报已解决，产生一个 resolved 状态的消息，发送给 Alertmanager 。
+- 目前在 Prometheus 端并不能控制是否产生 resolved 消息，只能在 Alertmanager 端控制是否发送 resolved 消息。
 
 其它概念：
 - Filter
@@ -617,7 +638,7 @@ receivers:                        # 定义告警消息的接受者
 - name: 'email_to_leo'
   email_configs:                  # 只配置少量 smtp 参数，其余的参数则继承全局配置
   - to: '123456@qq.com'
-    send_resolved: true           # 是否在警报消失时发送 resolved 类型的警报
+    send_resolved: true           # 是否在警报消失时发送 resolved 状态的消息
   # - to: '123456@163.com'        # 可以指定多个发送目标
 - name: 'webhook_to_leo'
   webhook_configs:
@@ -673,26 +694,28 @@ route:
   - 如果当前节点不匹配，则会继续尝试匹配之后的同级节点。
   - 警报默认匹配根节点。因此，如果所有节点都不匹配，则会交给根节点处理。
 - Alertmanager 以 group 为单位发送告警消息。
-  - 每次发送一个 group 时，总是会将该 group 内现有的所有警报合并成一个告警消息，同时发送出去。
+  - 每次发送一个 group 的消息时，总是会将该 group 内现有的所有警报合并成一个告警消息，一起发送。
   - 当一个 group 中出现第一个警报时，会先等待 `group_wait` 时长再发送该 group 。
     - 延长 group_wait 时间有利于收集属于同一 group 的其它警报，一起发送。
-  - 每次发送一个 group 之后，会将它冷却 `repeat_interval` 时长之后，才允许再一次发送该 group 。
-    - Alertmanager 会检查当前时刻与上一次发送时刻的差值是否足够大。
-    - 即使重启 Alertmanager ，也不会影响 repeat_interval 的计时。
-    - 在配置文件中修改 group_wait、repeat_interval 等参数的值时，会立即生效。
-    - 考虑到 group_wait ，实际上重复发送同一个 group 的时间间隔应该至少为 group_wait + repeat_interval 。
+  - 当一个 group 的警报一直存在时，要至少冷却 `repeat_interval` 时长才能重复发送该 group 。
+    - 实际上，是要求当前时刻与上一次发送时刻的差值大于 repeat_interval 。
+      因此，即使重启 Alertmanager ，也不会影响 repeat_interval 的计时。
+      不过，在配置文件中修改 group_wait、repeat_interval 等参数的值时，会立即生效。
   - 当一个 group 处于冷却阶段时：
-    - 如果收到一个属于该 group 的新的警报，则会等待 `group_interval` 时长之后让该 group 解除冷却，发送一次消息，并且从当前时刻开始重新计算 repeat_interval 。
-    - 如果一个警报被解决了，也会让该 group 解除冷却，发送一次 resolved 的消息。
+    - 如果收到一个属于该 group 的新警报，则会等待 `group_interval` 时长之后让该 group 解除冷却，发送一次消息，并且从当前时刻开始重新计算 repeat_interval 。
+    - 如果一个警报被解决了，也会让该 group 解除冷却，发送一次 resolved 消息。
     - 如果一个被解决的警报再次出现，也会让该 group 解除冷却，发送一次消息。
+    - 因此，如果一个警报反复被解决又再次出现，则会绕过 repeat_interval 的限制，导致 Alertmanager 频繁发送消息给用户。
 
 特殊情况：
-- 如果一个指标不再满足告警条件，或者 Prometheus 不再抓取相应的指标，或者不再执行相应的 alert rule ，则 Prometheus 都会认为该警报已解决，产生一个 Resolved 状态的警报，发送给 Alertmanager 。
-- 如果一个警报反复被解决又再次出现，则会绕过 repeat_interval 的限制，导致 Alertmanager 频繁发送警报给用户。
-- 在 Prometheus 与 Alertmanager 中已存在一些警报的情况下，
-  - 如果两者断开连接，则大概两分钟之后 Alertmanager 会自行认为所有警报已解决，发送 Resolved 状态的警报给用户。
-  - 如果两者重新连接，则 Alertmanager 会认为这些警报的 group 是新出现的，立即发送 Alerting 状态的警报给用户。
-  - 因此，如果两者反复断开连接又重新连接，则会绕过 repeat_interval 的限制，导致 Alertmanager 频繁发送警报给用户。
+- 假设 Prometheus 与 Alertmanager 正常连接，且存在一些警报：
+  - 如果两者断开连接，则大概两分钟之后 Alertmanager 会自行认为所有警报已解决，发送 resolved 状态的消息给用户。
+  - 如果两者重新连接，则 Alertmanager 会认为这些警报的 group 是新出现的，立即发送 alerting 状态的消息给用户。
+  - 因此，如果两者反复断开连接又重新连接，则会绕过 repeat_interval 的限制，导致 Alertmanager 频繁发送消息给用户。
+- 假设一个新警报出现，Alertmanager 正常地发送一次告警消息给用户。
+  - 如果此时用 Silence 隐藏该警报，则 Alertmanager 的首页上不会显示该警报，但并不会发送 resolved 消息给用户。
+  - 如果接着在 Prometheus 端解决该警报，则 Alertmanager 也不会发送 resolved 消息。
+  - 如果接着取消 Silence ，则 Alertmanager 依然不会发送 resolved 消息。
 
 ### inhibit_rules
 
@@ -735,9 +758,9 @@ inhibit_rules:
   prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息
 
   time() - process_start_time_seconds                             # 运行时长（s）
-  irate(process_cpu_seconds_total[1m])                            # 占用的 CPU 核数
-  process_resident_memory_bytes / 1024^3                          # 占用的内存（GB）
-  prometheus_tsdb_storage_blocks_bytes / 1024^3                   # tsdb block 占用的磁盘空间（GB）
+  irate(process_cpu_seconds_total[5m])                            # 占用 CPU 核数
+  process_resident_memory_bytes                                   # 占用内存
+  prometheus_tsdb_storage_blocks_bytes                            # tsdb block 占用的磁盘空间
   sum(increase(prometheus_http_requests_total[1m])) by (code)     # 每分钟收到 HTTP 请求的次数
   sum(increase(prometheus_http_request_duration_seconds_sum[1m])) # 每分钟处理 HTTP 请求的耗时（s）
 
@@ -746,7 +769,7 @@ inhibit_rules:
   sum(scrape_duration_seconds)                                    # scrape 的耗时（s）
   sum(increase(prometheus_rule_evaluations_total[1m])) without (rule_group)          # rule 每分钟的执行次数
   sum(increase(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
-  irate(prometheus_rule_evaluation_duration_seconds_sum[1m])                         # rule 每分钟的执行耗时（s）
+  irate(prometheus_rule_evaluation_duration_seconds_sum[5m])                         # rule 每分钟的执行耗时（s）
 
   ALERTS{alertname="xxx", alertstate="pending|firing", ...}       # 警报
   ```
@@ -759,8 +782,8 @@ inhibit_rules:
   alertmanager_build_info{branch="HEAD", goversion="go1.13.5", instance="10.0.0.1:9093", job="alertmanager", revision="f74be0400a6243d10bb53812d6fa408ad71ff32d", version="0.20.0"}   # 版本信息
 
   time() - process_start_time_seconds       # 运行时长（s）
-  irate(process_cpu_seconds_total[1m])      # 占用的 CPU 核数
-  process_resident_memory_bytes / 1024^3    # 占用的内存（GB）
+  irate(process_cpu_seconds_total[5m])      # 占用 CPU 核数
+  process_resident_memory_bytes             # 占用内存
   sum(increase(alertmanager_http_request_duration_seconds_sum[1m])) # 处理 HTTP 请求的耗时（s）
 
   alertmanager_alerts                       # 存在的警报数（包括激活的、被抑制的）
@@ -780,8 +803,8 @@ inhibit_rules:
   grafana_build_info{branch="HEAD", edition="oss", goversion="go1.14.1", instance="10.0.0.1:3000", job="grafana", revision="aee1438ff2", version="7.0.0"}  # 版本信息
 
   time() - process_start_time_seconds                        # 运行时长（s）
-  irate(process_cpu_seconds_total[1m])                       # 占用的 CPU 核数
-  process_resident_memory_bytes / 1024^3                     # 占用的内存（GB）
+  irate(process_cpu_seconds_total[5m])                       # 占用 CPU 核数
+  process_resident_memory_bytes                              # 占用内存
   sum(increase(http_request_total[1m])) by (statuscode)      # 每分钟收到 HTTP 请求的次数
   sum(increase(http_request_duration_milliseconds_sum[1m]))  # 每分钟处理 HTTP 请求的耗时（ms）
 
@@ -798,8 +821,8 @@ inhibit_rules:
 - 常用指标：
   ```sh
   time() - process_start_time_seconds     # 运行时长（s）
-  irate(process_cpu_seconds_total[1m])    # 占用的 CPU 核数
-  process_resident_memory_bytes / 1024^3  # 占用的内存（GB）
+  irate(process_cpu_seconds_total[5m])    # 占用 CPU 核数
+  process_resident_memory_bytes           # 占用内存
   increase(http_requests_count[1m])       # 每分钟收到 HTTP 请求的次数
   http_requests{quantile=~"0.5|0.99"}     # 每分钟处理 HTTP 请求的耗时（s）
 
@@ -843,25 +866,51 @@ inhibit_rules:
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
 
   node_boot_time_seconds                                                      # 主机的启动时刻
+  node_time_seconds                                                           # 主机的当前时间（Unix时间戳）
   node_time_seconds - node_boot_time_seconds                                  # 主机的运行时长（s）
-  node_time_seconds - time()                                                  # 主机的时间误差（在 [scrape_interval, 0] 范围内才合理）
+  node_time_seconds - time() + T                                              # 主机的时间误差，其中 T 是估计每次抓取及传输的耗时
 
+  node_load1                                                                  # 每分钟的平均负载
   count(node_cpu_seconds_total{mode='idle'})                                  # CPU 核数
-  avg(irate(node_cpu_seconds_total[1m])) without (cpu) * 100                  # CPU 各模式占比（%）
-  node_load5                                                                  # 每 5 分钟的 CPU 平均负载
+  avg(irate(node_cpu_seconds_total[5m])) without (cpu) * 100                  # CPU 各模式占比（%）
+  (1 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) without(cpu)) * 100 # CPU 使用率（%）
 
-  node_memory_MemTotal_bytes / 1024^3                                         # 内存总量（GB）
-  node_memory_MemAvailable_bytes / 1024^3                                     # 内存可用量（GB），CentOS7 开始才有该指标
-  node_memory_SwapCached_bytes / 1024^3                                       # swap 使用量（GB）
+  node_memory_MemTotal_bytes                                         # 物理内存总量
+  node_memory_MemAvailable_bytes                                     # 物理内存可用量，CentOS 7 以上版本才支持该指标
+  node_memory_SwapTotal_bytes                                        # swap 内存总量
+  node_memory_SwapFree_bytes                                         # swap 内存可用量
 
-  sum(node_filesystem_size_bytes{fstype=~'xfs|ext4'}) / 1024^3                # 磁盘总量（GB）
-  sum(node_filesystem_avail_bytes{fstype=~'xfs|ext4'}) / 1024^3               # 磁盘可用量（GB）
+  sum(node_filesystem_size_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint)  # 磁盘总量
+  sum(node_filesystem_avail_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint) # 磁盘可用量
 
-  sum(irate(node_disk_read_bytes_total[1m])) / 1024^2                         # 磁盘读速率（MB/s）
-  sum(irate(node_disk_written_bytes_total[1m])) / 1024^2                      # 磁盘写速率（MB/s）
+  sum(irate(node_disk_read_bytes_total[5m]))                         # 磁盘每秒读取量
+  sum(irate(node_disk_written_bytes_total[5m]))                      # 磁盘每秒写入量
 
-  irate(node_network_receive_bytes_total{device!~`lo|docker0`}[1m]) / 1024^2  # 网络下载速率（MB/s）
-  irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[1m]) / 1024^2 # 网络上传速率（MB/s）
+  irate(node_network_receive_bytes_total{device!~`lo|docker0`}[5m])  # 网卡每秒接收量
+  irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[5m]) # 网卡每秒发送量
+
+  node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast是广播地址，duplex是双工模式，）
+  node_network_up                               # 网卡的状态（取值 1、0 表示是否正在启用）
+  node_network_mtu_bytes                        # MTU 大小
+  node_network_receive_packets_total            # 网卡接收的数据包数
+  node_network_receive_errs_total               # 网卡接收的错误包数
+  node_network_receive_drop_total               # 网卡接收时的丢弃包数
+  node_network_receive_compressed_total         # 网卡接收的压缩包数
+  node_network_receive_multicast_total          # 网卡接收的多播包数
+
+  node_network_transmit_packets_total           # 网卡发送的数据包数
+  node_network_transmit_errs_total
+  node_network_transmit_drop_total
+  node_network_transmit_compressed_total
+
+  node_sockstat_sockets_used                    # 使用的 socket 数量
+  node_netstat_Tcp_CurrEstab                    # ESTABLISHED 加 CLOSE_WAIT 状态的TCP连接数
+  node_netstat_Tcp_InSegs                       # 接收的 TCP 报文数
+  node_netstat_Tcp_OutSegs                      # 发送的 TCP 报文数
+  node_netstat_Udp_InDatagrams                  # 接收的 UDP 报文数
+  node_netstat_Udp_OutDatagrams                 # 发送的 UDP 报文数
+  node_netstat_Icmp_InMsgs                      # 接收的 ICMP 消息数（包括出错的）
+  node_netstat_Icmp_OutMsgs                     # 发送的 ICMP 消息数
   ```
 
 ### process-exporter
@@ -912,21 +961,19 @@ inhibit_rules:
   ```sh
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的进程实例数量）
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 同一个 groupname 中最老的那个进程的运行时长（ s ）
+  sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)   # 进程占用的 CPU 核数
+  namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程占用的物理内存
+  irate(namedprocess_namegroup_read_bytes_total[5m])                        # 磁盘每秒读取量
+  irate(namedprocess_namegroup_write_bytes_total[5m])                       # 磁盘每秒写入量
+
   namedprocess_namegroup_num_threads                                        # 进程的线程数
   namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
-  sum(irate(namedprocess_namegroup_cpu_seconds_total[1m])) without (mode)   # 进程占用的 CPU 核数
-  namedprocess_namegroup_memory_bytes{memtype="resident"}  / 1024^3         # 进程占用的物理内存（GB）
-  irate(namedprocess_namegroup_read_bytes_total[1m]) / 1024^2               # 磁盘读速率（MB/s）
-  irate(namedprocess_namegroup_write_bytes_total[1m]) / 1024^2              # 磁盘写速率（MB/s）
   namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
-  namedprocess_namegroup_major_page_faults_total
-  namedprocess_namegroup_minor_page_faults_total
   ```
   - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 停止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。
     但是如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
     例如：如果主机重启之后，进程没有启动，则它不能发现进程没有恢复，不会发出警报。
   - 不能监控进程的网络 IO 。
-
 
 ### windows_exporter
 
@@ -964,39 +1011,39 @@ inhibit_rules:
 
   # os collector
   windows_os_info{instance="10.0.0.1:9182", job="windows_exporter", product="Microsoft Windows Server 2016 Standard", version="10.0.14393"} # 主机信息
-  windows_os_time                                 # 当前时间（UTC时区）
-  windows_os_timezone{timezone="CST"}             # 采用的时区
-  windows_os_visible_memory_bytes / 1024^3        # 可见的物理内存的总量（GB），可能小于实际容量
-  windows_os_physical_memory_free_bytes / 1024^3  # 物理内存的可用量（GB）
-  windows_os_virtual_memory_bytes / 1024^3        # 虚拟内存的总量（GB）
-  windows_os_virtual_memory_free_bytes / 1024^3   # 虚拟内存的可用量（GB）
+  windows_os_time                           # 主机的当前时间（Unix时间戳）
+  windows_os_timezone{timezone="CST"}       # 采用的时区
+  windows_os_visible_memory_bytes           # 可见的物理内存的总量，可能小于实际容量
+  windows_os_physical_memory_free_bytes     # 物理内存的可用量
+  windows_os_virtual_memory_bytes           # 虚拟内存的总量
+  windows_os_virtual_memory_free_bytes      # 虚拟内存的可用量
 
   # cs collector
-  windows_cs_logical_processors                   # CPU 核数
+  windows_cs_logical_processors             # CPU 核数
 
   # system collector
-  windows_system_system_up_time                   # 主机的启动时刻
+  windows_system_system_up_time             # 主机的启动时刻
 
   # cpu collector
-  windows_cpu_core_frequency_mhz{core="0,0"}                                    # CPU 频率
-  avg(irate(windows_cpu_time_total[1m])) without(core) * 100                    # CPU 各模式占比（%）
-  (1 - avg(irate(windows_cpu_time_total{mode="idle"}[1m])) without(core)) * 100 # CPU 使用率（%）
+  windows_cpu_core_frequency_mhz                                                # CPU 频率
+  avg(irate(windows_cpu_time_total[5m])) without(core) * 100                    # CPU 各模式占比（%）
+  (1 - avg(irate(windows_cpu_time_total{mode="idle"}[5m])) without(core)) * 100 # CPU 使用率（%）
 
   # logical_disk collector 的指标
-  sum(windows_logical_disk_size_bytes) without(volume) / 1024^3           # 磁盘的总量（GB）
-  windows_logical_disk_free_bytes{volume!~'HarddiskVolume.*'} / 1024^3    # 磁盘的可用量（GB），磁盘卷 HarddiskVolume 一般是系统保留分区
-  irate(windows_logical_disk_read_bytes_total[1m]) / 1024^2               # 磁盘的读速率（MB/s）
-  irate(windows_logical_disk_write_bytes_total[1m]) / 1024^2              # 磁盘的写速率（MB/s）
+  sum(windows_logical_disk_size_bytes) without(volume)                    # 磁盘的总量
+  windows_logical_disk_free_bytes{volume!~'HarddiskVolume.*'}             # 磁盘的可用量，磁盘分区 HarddiskVolume 一般是系统保留分区
+  irate(windows_logical_disk_read_bytes_total[5m])                        # 磁盘每秒读取量
+  irate(windows_logical_disk_write_bytes_total[5m])                       # 磁盘每秒写入量
 
   # net collector
-  irate(windows_net_bytes_received_total{nic="xxx"}[1m]) / 1024^2         # 网卡的接收速率（MB/s）
-  irate(windows_net_bytes_sent_total{nic="xxx"}[1m]) / 1024^2             # 网卡的发送速率（MB/s）
+  irate(windows_net_bytes_received_total{nic="xxx"}[5m])                  # 网卡每秒接收量
+  irate(windows_net_bytes_sent_total{nic="xxx"}[5m])                      # 网卡每秒发送量
 
   # process collector
   timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长
-  sum(irate(windows_process_cpu_time_total[1m])) without (mode)           # 进程占用的 CPU 核数
-  windows_process_private_bytes / 1024^3                                  # 进程独占的内存（GB），即进程总共提交的内存，包括物理内存、虚拟内存
-  windows_process_working_set / 1024^3                                    # 进程可用的内存（GB），包括独占的内存、与其它进程的共享内存
+  sum(irate(windows_process_cpu_time_total[5m])) without (mode)           # 进程占用的 CPU 核数
+  windows_process_private_bytes                                           # 进程独占的内存，即进程总共提交的内存，包括物理内存、虚拟内存
+  windows_process_working_set                                             # 进程可用的内存，包括独占的内存、与其它进程的共享内存
   windows_process_thread_count                                            # 进程的线程数
   windows_process_io_bytes_total                                          # 进程的 handle 数量
   ```

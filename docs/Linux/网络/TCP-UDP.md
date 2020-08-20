@@ -1,10 +1,9 @@
 # TCP/UDP
 
-## Socket 的状态
+## Socket 通信的状态
 
 未连接时的状态：
 - `LISTEN` ：该 Socket 已绑定到某个进程，内核正在监听该 Socket 。
-
 
 建立 TCP 连接时的状态：
 - `SYN_SENT` ：已发出 SYN=1 的 TCP 包，还没有收到 ACK=1、SYN=1 的 TCP 包。
@@ -12,7 +11,6 @@
 - `ESTABLISHED` ：已建立连接，可以通信。
 
 ![](./connect.png)
-
 
 断开 TCP 连接时的状态：
 - `FIN-WAIT-1`
@@ -27,6 +25,24 @@
 
 ![](./disconnect.png)
 
+## Socket 本身的状态
+
+在 Linux 上，执行以下命令可查看 Socket 本身的状态：
+```
+[CentOS ~]# cat /proc/net/sockstat
+sockets: used 375
+TCP: inuse 38 orphan 0 tw 34 alloc 150 mem 6
+UDP: inuse 0 mem 2
+UDPLITE: inuse 0
+RAW: inuse 0
+FRAG: inuse 0 memory 0
+```
+- `sockets: used` ：已使用的 socket 数量。
+- `TCP: inuse` ：正在使用的 TCP socket 数量。
+  - `orphan` ：无主的，不属于任何进程。
+  - `tw` ：等待关闭的。
+  - `alloc`：已分配的。
+  - `mem` ：使用的缓存大小。
 
 ## TCP 通信的常见报错
 

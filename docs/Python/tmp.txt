@@ -3054,7 +3054,10 @@ with os.popen("ipconfig") as p:
     result = p.read()
 
 
-再学习更强大的 subprocess.Popen()
+新的执行方式： subprocess.Popen
+subprocess.Popen(['bin/ping.exe', 'baidu.com']) # 输入一个参数列表，第一个参数是可执行文件的路径（可以是相对路径），其后的参数会被传给该可执行文件
+subprocess.Popen(['bin/ping'])  # 可以不指定可执行文件的后缀名，Python 会自动根据当前的操作系统进行判断
+
 
 ## 关于文件路径。
 >>> os.path.split('D:/1/2.py')        # 将一个文件路径分割成目录名和文件名

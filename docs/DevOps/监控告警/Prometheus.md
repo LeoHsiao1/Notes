@@ -570,7 +570,7 @@ scrape_configs:
   - ：通过 label=value 的形式筛选警报。
   - 它方便在 Web 页面上进行查询。
 - Group
-  - ：根据某个或某些 label 的值对警报进行分组。
+  - ：根据 label 的值对警报进行分组。
   - 它需要在配置文件中定义，但也可以在 Web 页面上临时创建。
 - Silence
   - ：不发送某个或某些警报，相当于静音。
@@ -597,7 +597,7 @@ Prometheus 的 Alerts 页面示例：
 - rules.yml 文件中定义了三条 alerting_rule 。
   - 第一条 alerting_rule 名为 “测试告警-1” ，包含 1 个 active 的警报。
     - 每个警报源自一个满足 alerting_rule 的时间序列。
-    - Active Since 表示警报从什么时候开始存在。（一直满足 alerting_rule ，没有中断）
+    - Active Since 表示警报从什么时候开始存在，即进入 pending 状态的时刻。如果警报中断，则会刷新该时刻。
   - 第三条 alerting_rule 名为 “测试告警-3” ，包含 113 个 active 状态的警报。
 
 Alertmanager 的 Alerts 页面示例：
@@ -771,7 +771,8 @@ inhibit_rules:
   sum(increase(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
   irate(prometheus_rule_evaluation_duration_seconds_sum[5m])                         # rule 每分钟的执行耗时（s）
 
-  ALERTS{alertname="xxx", alertstate="pending|firing", ...}       # 警报
+  ALERTS{alertname="xxx", alertstate="pending|firing"}            # 存在的警报
+  ALERTS_FOR_STATE{alertname="xxx"}                               # 警报开始的时间戳（这是 pending 状态的开始时间，不能区分 firing 状态）
   ```
 
 ### Alertmanager

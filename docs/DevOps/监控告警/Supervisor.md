@@ -6,8 +6,8 @@
   - 可以记录进程的 stdout、stderr 。
   - 提供了 Web 管理页面。
 - 采用 C/S 工作模式：
-  - 运行一个守护进程 supervisord 作为服务器，负责托管进程。
-  - 当用户执行 supervisorctl 命令时，就是作为客户端与 supervisord 通信，发出操作命令。
+  - 首先运行一个守护进程 supervisord ，然后由它以子进程的方式启动各个托管的进程。
+  - 用户可以执行 supervisorctl 命令，通过与 supervisord 通信，来控制托管的进程。
 - [官方文档](http://supervisord.org/index.html)
 
 ## 安装
@@ -246,7 +246,7 @@ Supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
   [[nodes]]                         # 对一个 Supervisor 节点的配置
   name = "node1"
   environment = "内网"              # 用于对 Supervisor 进行逻辑上的分组
-  host = "127.0.0.1"
+  host = "10.0.0.1"
   port = "9001"
   username = ""                     # 用于登录 Supervisor 的账号
   password = ""

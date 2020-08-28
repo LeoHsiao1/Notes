@@ -465,9 +465,6 @@ pipeline {
 ### script{}
 
 在 steps{} 中可以定义 script{} ，用于执行 Groovy 代码。
-
-#### 创建变量
-
 - 可以用赋值号 = 直接创建变量。如下：
     ```groovy
     steps {
@@ -490,62 +487,16 @@ pipeline {
     ```
     .trim() 方法用于去掉字符串末尾的空字符、换行符。
 
-#### if 语句
-
-- 例：
-    ```groovy
-    script {
-        if ( 1 > 2 ) { 
-            echo 'A'
-        } else if ( 'Hello' == 'Hello' ) { 
-            echo 'B'
-        }  else { 
-            echo 'C'
-        } 
-    }
-    ```
-- 可以使用正则匹配：
-    ```groovy
-    'Hello' =~ 'He'         // 判断左侧的字符串是否包含右侧的正则表达式
-    'Hello' =~ '^He.*$'     // 判断是否完全匹配正则表达式
-    ```
-- 可以使用逻辑运算符 `&&, ||, !` 进行与或非运算。
-
-#### for 循环
-
-- 例：
-    ```groovy
-    script {
-        for ( i in [0, 1, 2, 3] ) {     // 遍历数组
-            sh "echo $i"
-        }
-    }
-    ```
+- 例：从 shell 中获得数组并遍历它：
     ```groovy
     script {
         FILE_LIST = sh(script: "ls /", returnStdout: true)
-        for (f in FILE_LIST.tokenize("\n")){        // 遍历从 shell 中获得的数组
+        for (f in FILE_LIST.tokenize("\n")){
             sh "echo $f"
         }
     }
     ```
     .tokenize() 方法用于将字符串分割成多个字段的数组，并忽略内容为空的字段。
-
-#### try 语句
-
-- 例：
-    ```groovy
-    script {
-        try {
-            sh 'exit 1'
-        }catch(all){
-            echo 'catched!'
-        }
-        finally {
-            echo 'finally!'
-        }
-    }
-    ```
 
 ### options{}
 

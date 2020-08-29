@@ -82,6 +82,7 @@ ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需
 ; ansible_become_user=root            ; 切换到哪个用户
 ; ansible_become_method=sudo          ; 切换用户的方法
 ; ansible_become_pass='123456'        ; 用 sudo 切换用户时的密码
+; ansible_python_interpreter=/usr/bin/python ; 远程主机上的 python 路径
 ```
 - 默认有两个隐式的分组：
   - all ：包含所有 host 。
@@ -519,6 +520,8 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # zone: public
     # interface: eth2
   ```
+  - 如果 firewalld 没有启动，则该模块会无法执行而报错。
+
 
 ## include
 

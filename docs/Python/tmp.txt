@@ -1107,9 +1107,27 @@ ValueError: invalid literal for int() with base 10: 'H'
   - 例：
 >>> ord("A")
 65
-## 
-## 
-## 
+
+
+在 Python 的底层，存储字符串时是存储其 Unicode 值，因此不能用 int() 强制类型转换成 ASCII 码。
+```py
+>>> int('A')
+ValueError: invalid literal for int() with base 10: 'A'
+>>> int(b'A') 
+ValueError: invalid literal for int() with base 10: b'A'
+```
+
+但是存储 bytes 对象时是存储每个字符的 ASCII 码，因此索引单个元素时是返回其 ASCII 码，索引切片时是返回字符。
+```py
+>>> b = b'Hello' 
+>>> b[0] 
+72
+>>> b[0:1] 
+b'H'
+```
+
+
+
  
 序列
 ## 序列（sequence）：包括list、tuple、str、bytes。
@@ -3018,6 +3036,9 @@ True
 ## 
  
 常用模块
+
+[Python 的内置模块列表](https://docs.python.org/3.8/py-modindex.html)
+
 关于系统
 ♢ os
 ## os：Python的标准库，用于调用系统的API。
@@ -3036,6 +3057,18 @@ True
 6484
 >>> os.getlogin()            # 获得当前登录的用户名
 'Will'
+
+
+向进程发送终止信号：
+>>> import signal
+>>> os.kill(1106, signal.SIGKILL)
+
+在 Windows 系统上不支持 signal.SIGKILL ，要使用 signal.SIGTERM 。
+
+
+
+
+
 ## 关于执行命令。
 - os.system(cmd)：创建一个shell（属于当前进程的子进程），执行一条命令，并返回命令的返回码(int类型）。
   - 例如：
@@ -4123,7 +4156,7 @@ TypeError: fun1() got multiple values for argument 'c'
   - 当一个进程中的所有非daemon线程结束时，系统会自动终止所有daemon线程，然后结束该进程。
 ## 结束子线程的方法。（对子进程同理）
 - 由主线程控制何时停止子线程。
-  - 永远不要强制杀死子进程，应该让它自己自愿结束，清理自己占用的资源。因为子线程可能正在执行一些不宜中断的操作，比如拿到了某个资源的锁、打开了某个文件还没有关闭、创建了孙线程还没有关闭。
+  - 尽量不要强制杀死子进程，应该让它自己自愿结束，清理自己占用的资源。因为子线程可能正在执行一些不宜中断的操作，比如拿到了某个资源的锁、打开了某个文件还没有关闭、创建了孙线程还没有关闭。
   - 当主进程异常终止时（比如被kill -9），子进程就会变成没人管的孤儿进程。
 - 把子线程设置成daemon，当主进程退出时它们就会被系统自动终止。
 - 让子线程自己判断是否要结束运行。
@@ -4184,6 +4217,13 @@ RuntimeError: cannot set daemon status of active thread
 >>> threading.enumerate()                # 列出当前运行的所有线程对象
 [<_MainThread(MainThread, started 140176114464576)>, <Thread(Thread-1, started 140175977273088)>]
   - 调试运行时，会创建几个额外的线程。
+  - 用 t.ident 可以获得线程的 ID 。
+
+Python 的 threading 库没有提供杀死线程的方法，只能等线程自行退出。因此设计线程时必须让它能够自行退出。
+如果不能自行退出，则只能使用 multiprocessing 库创建子进程，可以从外部杀死。
+
+
+
 ## 第二种创建线程的方法：继承threading.Thread类，重载其run()方法。
 - 例：
 >>> class myThread(threading.Thread):

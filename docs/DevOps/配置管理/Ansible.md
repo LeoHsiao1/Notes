@@ -10,11 +10,13 @@
 
 - 用 pip 安装 Ansible ：
   ```sh
-  yum install python36 sshpass    # 安装依赖
+  yum install python36 sshpass libselinux-python    # 安装依赖
   pip3 install ansible
   ```
 
 ## 命令
+
+### ansible
 
 ```sh
 ansible 
@@ -31,7 +33,8 @@ ansible
   ansible ~10.0.0.(1|2) -m shell -a "pwd"
   ```
 
-执行 playbook ：
+### ansible-playbook
+
 ```sh
 ansible-playbook <name>.yml...       # 执行 playbook
                 -i <file>            # 指定 Inventory 文件
@@ -49,15 +52,23 @@ ansible-playbook <name>.yml...       # 执行 playbook
 
 ## 配置
 
-Ansible 的配置文件默认位于 `/etc/ansible/ansible.cfg` ，内容如下：
+执行 ansible 命令时，会按以下顺序查找配置文件：
+- `$ANSIBLE_CONFIG`
+- `./ansible.cfg`
+- `~/.ansible.cfg`
+- `/etc/ansible/ansible.cfg`
+
+配置示例：
 ```ini
 [defaults]
-; inventory = /etc/ansible/hosts    ; Inventory 文件的路径
-log_path = /var/log/ansible.log     ; 记录每次执行 ansible 的 stdout（默认不保存日志）
-; forks = 5                         ; 同时最多执行多少个任务
-host_key_checking = False           ; 第一次连接到远程主机时，是否提示添加 authorized_keys
-; remote_tmp = $HOME/.ansible/tmp   ; 登录远程主机时使用的工作目录
+; inventory = /etc/ansible/hosts        ; Inventory 文件的路径
+log_path = /var/log/ansible.log         ; 记录每次执行 ansible 的 stdout（默认不保存日志）
+; forks = 5                             ; 同时最多执行多少个任务
+host_key_checking = False               ; 进行 SSH 连接时不检查远程主机的密钥是否与 ~/.ssh/known_hosts 中记录的一致
+; remote_tmp = $HOME/.ansible/tmp       ; 登录远程主机时使用的工作目录
+; interpreter_python = auto_legacy      ; 远程主机上的 Python 解释器的路径，用于执行 Ansible 模块
 ```
+- auto_legacy 表示默认使用 /usr/bin/python ，不存在的话则查找其它 Python 路径。
 
 ## Inventory
 
@@ -65,7 +76,7 @@ Ansible 将待管理主机（称为 host）的配置信息保存在 .ini 文件�
 
 配置示例：
 ```ini
-localhost ansible_connection=local    ; 定义一个不分组的 host
+localhost ansible_connection=local    ; 定义一个不分组的 host ，连接方式为本机
 
 [webservers]                          ; 定义一个 组
 www.example.com                       ; 添加一个 host 的地址
@@ -73,7 +84,7 @@ www.example.com                       ; 添加一个 host 的地址
 node100 ansible_host=10.0.0.2         ; 添加一个 host 的名字、地址
 
 [webservers:vars]                     ; 设置组 webservers 的参数
-; ansible_connection=ssh              ; ansible 的连接方式
+; ansible_connection=ssh              ; Ansible 的连接方式
 ; ansible_ssh_port=22                 ; SSH 登录时的端口号
 ansible_ssh_user='root'               ; SSH 登录时的用户名
 ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需要安装 sshpass）
@@ -82,7 +93,7 @@ ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需
 ; ansible_become_user=root            ; 切换到哪个用户
 ; ansible_become_method=sudo          ; 切换用户的方法
 ; ansible_become_pass='123456'        ; 用 sudo 切换用户时的密码
-; ansible_python_interpreter=/usr/bin/python ; 远程主机上的 python 路径
+; ansible_python_interpreter=/usr/bin/python
 ```
 - 默认有两个隐式的分组：
   - all ：包含所有 host 。
@@ -406,6 +417,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 当 src 是目录时，如果以 / 结尾，则会拷贝其中的所有文件到 dest 目录下，否则直接拷贝 src 目录。
   - 如果 dest 目录并不存在，则会自动创建。
   - 如果 dest 目录下存在同名文件，且 md5 值相同，则不拷贝，否则会拷贝并覆盖。
+  - Ansible 默认通过 SFTP 传输文件。
 
 - 将 host 上的文件拷贝到本机：
   ```yaml

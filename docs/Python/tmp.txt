@@ -3087,9 +3087,6 @@ with os.popen("ipconfig") as p:
     result = p.read()
 
 
-新的执行方式： subprocess.Popen
-subprocess.Popen(['bin/ping.exe', 'baidu.com']) # 输入一个参数列表，第一个参数是可执行文件的路径（可以是相对路径），其后的参数会被传给该可执行文件
-subprocess.Popen(['bin/ping'])  # 可以不指定可执行文件的后缀名，Python 会自动根据当前的操作系统进行判断
 
 
 ## 关于文件路径。
@@ -5183,7 +5180,7 @@ JSON
 - JSON原本是JavaScript的对象表示格式，后来发展成为一种独立于语言和平台的文本格式，常用于不同编程语言之间的通信。
 - JSON、XML、YAML都是纯文本格式，用于将数据序列化，方便传输、存储。而HTML是用于在网页上显示数据。
 ## 语法。
-- 用 // 声明单行注释。
+- JavaScript 中可以用 // 声明单行注释，但 JSON 中不允许使用注释，否则会导致解析时出错。
 - JSON中的数据采用键/值（key/value）对的格式表示，每个键值对之间用逗号隔开。
   - 键名放在双引号中，然后通过冒号连接其value。例如，JSON中的 "name" : "菜鸟教程"相当于JavaScript 中的name = "菜鸟教程"。
 - key必须是字符串类型，而且不能重复。

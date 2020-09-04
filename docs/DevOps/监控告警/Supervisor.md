@@ -121,6 +121,7 @@ files = supervisord.d/*.ini
 command=/bin/ping 127.0.0.1 ; 该进程的启动命令
 directory=/root             ; 工作目录（执行 command 之前会切换到该目录）
 user=root                   ; 用哪个用户启动该进程
+;environment=A="1",B="2"    ; 设置环境变量
 ;numprocs=1                 ; 该进程要启动多少个副本
 ;priority=999               ; 进程启动的优先级，值越小则越优先启动
 

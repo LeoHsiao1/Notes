@@ -951,15 +951,17 @@ inhibit_rules:
       - ping www.(?P<name>\S*).com    # 用 ?P<name> 的格式命名正则匹配的元素组
     ```
     - 关于匹配规则：
-      - exe 是对进程的 `/proc/<PID>/exe` 指向的可执行文件名进行匹配。
-      - comm 是对进程的 `/proc/<PID>/comm` 进行匹配。
-      - cmdline 是对进程的 `/proc/<PID>/cmdline` 进行正则匹配。
+      - exe 是对进程的 `/proc/<PID>/exe` 指向的可执行文件名进行匹配（必须完全相同）。
+      - comm 是对进程的 `/proc/<PID>/comm` 进行匹配（必须完全相同）。
+      - cmdline 是对进程的 `/proc/<PID>/cmdline` 进行正则匹配（只要匹配部分字符串即可，与 grep 类似）。
       - exe、comm 可以同时定义多行匹配条件，而 cmdline 同时只能定义一行条件，否则不会被执行。
       - exe、comm 会自动使用匹配条件作为被匹配的进程的名称，并用作监控指标的 groupname 。而 cmdline 需要手动设置 name 。
     - 已经被匹配的进程不会被之后的条件重复匹配。
 
 - 常用指标：
   ```sh
+  namedprocess_scrape_errors                                                # 抓取时的错误数
+  
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的进程实例数量）
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 同一个 groupname 中最老的那个进程的运行时长（ s ）
   sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)   # 进程占用的 CPU 核数

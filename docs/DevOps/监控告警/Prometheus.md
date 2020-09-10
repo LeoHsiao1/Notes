@@ -299,7 +299,7 @@ scrape_configs:
 
 - 关于时间：
   ```sh
-  time()                                # 返回当前的时间戳（标量）
+  time()                                # 返回当前的时间戳（标量），单位为秒
   timestamp(vector(1))                  # 返回矢量中每个数据点的时间戳（矢量）
   ```
 
@@ -504,25 +504,30 @@ scrape_configs:
   ```
 - 例：推送指标到 Push Gateway
   ```sh
-  cat <<EOF | curl --data-binary @- http://localhost:9091/metrics/job/test_job/instance/test_instance
-  # TYPE test_metric counter
+  cat <<EOF | curl --data-binary @- http://localhost:9091/metrics/job/pushgateway/instance/10.0.0.1
+  # TYPE test_metric gauge
   # HELP test_metric Just an example.
   test_metric{name="one"} 42
   EOF
   ```
-  `# TYPE <metric_name> <type>` 行必须存在，用于声明该指标的类型。
-  `# HELP <metric_name> <comment>` 行不是必要的，用于添加该指标的注释。
-  这会让 Push Gateway 记录下三个指标：
+  - Push Gateway 会将收到的指标按 job、instance 的值进行分组。
+    - 如果 URL 中不指定 job ，则会报错 404 。
+    - 如果 URL 中不指定 instance ，则会默认设置为 instance="" 。
+  - 指标中：
+    - `# TYPE <metric_name> <type>` 行必须存在，用于声明该指标的类型。
+    - `# HELP <metric_name> <comment>` 行不是必要的，用作该指标的注释。
+
+- Push Gateway 会记录以下指标：
   ```sh
-  test_metric{instance="test_instance", job="test_job", name="one"} 42                # test_metric 最后一次推送的值
-  push_time_seconds{instance="test_instance", job="test_job"} 1.5909774528190377e+09  # 最后一次成功推送的时间戳
-  push_failure_time_seconds{instance="test_instance", job="test_job"} 0               # 最后一次失败推送的时间戳
+  test_metric{job="pushgateway", instance="10.0.0.1", name="one"}  42               # 该 metric 最后一次推送的值
+  push_failure_time_seconds{job="pushgateway", instance="10.0.0.1"}  0              # 该组 metric 最后一次失败推送的时间戳
+  push_time_seconds{job="pushgateway", instance="10.0.0.1"}  1.5909774528190377e+09 # 该组 metric 最后一次成功推送的时间戳
   ```
-  重复推送 test_metric 时，只会更新这三个指标的值，不会保留历史的值。
+  重复推送 test_metric 指标时，只会更新这三个指标的值，不会保留旧值。
 
 - 常用 API ：
   ```sh
-  curl -X DELETE http://localhost:9091/metrics/job/test_job/instance/test_instance    # 删除某个指标
+  curl -X DELETE http://localhost:9091/metrics/job/pushgateway/instance/10.0.0.1      # 删除某个指标
   ```
 
 ## Alertmanager

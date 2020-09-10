@@ -62,10 +62,10 @@ MySQL 服务器启动时，默认会使用以下位置的配置文件。如果�
 
 配置示例：
 ```ini
-[mysqld]                # 这部分配置会被 mysqld 命令读取
-bind-address=0.0.0.0    # 允许从任何 IP 地址访问
+[mysqld]                              # 这部分配置会被 mysqld 命令读取
+bind-address=0.0.0.0                  # 允许从任何 IP 地址访问
 port=3306
-datadir=/var/lib/mysql  # 存储 MySQL 数据文件的目录
+datadir=/var/lib/mysql                # 存储 MySQL 数据文件的目录
 socket=/var/lib/mysql/mysql.sock
 pid-file=/var/run/mysqld/mysqld.pid
 log-error=/var/log/mysqld.log
@@ -74,9 +74,11 @@ default_storage_engine=InnoDB         # 设置 MySQL 默认使用的引擎
 character-set-server=utf8mb4          # 默认的字符集
 init-connect='SET NAMES utf8mb4'      # 让客户端连接之后初始化字符集
 
-[client]                # 这部分配置会被 mysql、mysqldump 等客户端命令读取
-#user=root              # 设置默认用户名
-#password=******        # 设置默认密码
+# skip-grant-tables                   # 跳过权限验证，此时不需要密码就能访问所有数据库
+
+[client]                              # 这部分配置会被 mysql、mysqldump 等客户端命令读取
+#user=root                            # 设置默认用户名
+#password=******                      # 设置默认密码
 ```
 
 ## 客户端

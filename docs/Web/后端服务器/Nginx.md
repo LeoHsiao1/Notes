@@ -173,7 +173,7 @@ server {
     ```
 - Nginx 会给禁止访问的 IP 回复 HTTP 403 报文。
 
-### auth_basic 等
+### auth_basic
 
 ：用于启用 HTTP Basic Auth 。
 - 例：
@@ -191,7 +191,7 @@ server {
     ```
 - 如果客户端没有进行 HTTP Basic Auth ，或者进行了但不通过，则会返回 HTTP 401 Authorization Required 报文。
 
-### gzip 等
+### gzip
 
 ：用于 gzip 压缩响应报文 body 。
 - 该指令可以写在 http{} 、server{} 或 location{} 中。
@@ -251,7 +251,7 @@ server {
     ```
 - 当 Nginx 执行到 return 指令时会立即返回 HTTP 响应，不会执行之后的指令。
 
-### ssl_protocols 等
+### ssl_protocols
 
 ：用于启用 HTTPS 协议。
 - 例：

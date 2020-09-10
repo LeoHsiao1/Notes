@@ -110,8 +110,8 @@
     - 如果 SonarQube 服务器上不存在该项目，则会自动创建。
     - 如果该项目的扫描结果没有通过质量阀（quality gate），则 sonar-scanner 命令的返回码为非 0 。
 
-如果项目用到了 Java 语言：
-- 不能直接扫描 .java 文件，需要先编译，再用 `-Dsonar.java.binaries=target` 命令选项指明 .class 文件的位置，不过这比较麻烦。
+如果项目包含 Java 代码：
+- 不能直接扫描 .java 文件，需要先编译，再用 `-Dsonar.java.binaries=target` 命令选项指明 .class 文件的位置，不过这样手动操作很麻烦。
 - 使用 Maven 等构建工具时，可通过专用的 sonar-scanner 插件扫描，自动定位源文件和类文件。步骤如下：
   1. 安装 Maven 3.x ，并且它使用的 sonar-scanner 插件需要 JRE 11 。比如：
       ```sh

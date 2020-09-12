@@ -469,7 +469,7 @@ scrape_configs:
           - '10.0.0.3:9090'
     ```
 
-## Push Gateway
+## Pushgateway
 
 ：作为一个 HTTP 服务器运行，允许其它监控对象主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
 - [GitHub 页面](https://github.com/prometheus/pushgateway)
@@ -481,19 +481,15 @@ scrape_configs:
   - 不能控制监控对象生成指标的间隔时间。
   - 只会抓取当前时刻的数据，不会同步历史数据。并且，如果监控对象离线，依然会将最后一次抓取的数据作为当前值。
   - 不能直接判断监控对象是否在线，需要根据 push_time_seconds 进行判断。
-  - Push Gateway 挂掉时会导致其上的监控对象都丢失。
-- 下载二进制版：
-  ```sh
-  wget https://github.com/prometheus/pushgateway/releases/download/v1.2.0/pushgateway-1.2.0.linux-amd64.tar.gz
-  ```
-  解压后启动：
+  - Pushgateway 不会保存指标数据，重启后会丢失。
+- 下载后启动：
   ```sh
   ./pushgateway
                 --web.listen-address 0.0.0.0:9091    # 设置监听的地址
                 --persistence.file  metrics.bak      # 将指标数据备份到该文件中（默认不会备份，因此重启后会丢失）
   ```
   默认的访问地址为 <http://localhost:9091>
-- 在 Prometheus 的配置文件中加入如下配置，使其抓取 Push Gateway ：
+- 在 Prometheus 的配置文件中加入如下配置，使其抓取 Pushgateway ：
   ```yaml
   scrape_configs:
   - job_name: 'pushgateway'
@@ -502,7 +498,7 @@ scrape_configs:
     - targets:
       - '10.0.0.1:9091'
   ```
-- 例：推送指标到 Push Gateway
+- 例：推送指标到 Pushgateway
   ```sh
   cat <<EOF | curl --data-binary @- http://localhost:9091/metrics/job/pushgateway/instance/10.0.0.1
   # TYPE test_metric gauge
@@ -510,14 +506,15 @@ scrape_configs:
   test_metric{name="one"} 42
   EOF
   ```
-  - Push Gateway 会将收到的指标按 job、instance 的值进行分组。
+  - Pushgateway 会将收到的指标按 job、instance 的值进行分组。
     - 如果 URL 中不指定 job ，则会报错 404 。
     - 如果 URL 中不指定 instance ，则会默认设置为 instance="" 。
   - 指标中：
     - `# TYPE <metric_name> <type>` 行必须存在，用于声明该指标的类型。
     - `# HELP <metric_name> <comment>` 行不是必要的，用作该指标的注释。
+    - 每行末尾要有换行符，最后一行也需要换行。
 
-- Push Gateway 会记录以下指标：
+- Pushgateway 会记录以下指标：
   ```sh
   test_metric{job="pushgateway", instance="10.0.0.1", name="one"}  42               # 该 metric 最后一次推送的值
   push_failure_time_seconds{job="pushgateway", instance="10.0.0.1"}  0              # 该组 metric 最后一次失败推送的时间戳
@@ -543,11 +540,7 @@ scrape_configs:
 
 ### 部署
 
-- 下载二进制版：
-  ```sh
-  wget https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
-  ```
-  解压后启动：
+- 下载后启动：
   ```sh
   ./alertmanager --config.file=alertmanager.yml
                 # --web.listen-address "0.0.0.0:9093"         # 监听的地址
@@ -854,11 +847,7 @@ inhibit_rules:
 
 ：用于监控类 Unix 主机的状态。
 - [GitHub 页面](https://github.com/prometheus/node_exporter)
-- 下载二进制版：
-  ```sh
-  wget https://github.com/prometheus/node_exporter/releases/download/v1.0.0-rc.0/node_exporter-1.0.0-rc.0.linux-amd64.tar.gz
-  ```
-  解压后启动：
+- 下载后启动：
   ```sh
   ./node_exporter
                  # --web.listen-address=":9100"
@@ -924,11 +913,7 @@ inhibit_rules:
 ：用于监控 Linux 主机上的进程、线程的状态。
 - [GitHub 页面](https://github.com/ncabatoff/process-exporter)
 - 它主要通过读取 `/proc/<pid>/` 目录下的信息，来收集进程指标。
-- 下载二进制版：
-  ```sh
-  wget https://github.com/ncabatoff/process-exporter/releases/download/v0.6.0/process-exporter-0.6.0.linux-amd64.tar.gz
-  ```
-  解压后启动：
+- 下载后启动：
   ```sh
   ./process-exporter -config.path=process-exporter.yml
                     # -web.listen-address :9256
@@ -1065,9 +1050,58 @@ inhibit_rules:
 ：用于监控容器的状态。
 - [GitHub 页面](https://github.com/google/cadvisor)
 
+
 ### blackbox_exporter
 
-：可以测试 DNS、ICMP、TCP、HTTP ，以及 SSL 证书过期时间。
+：可以检测 DNS、ICMP、TCP、HTTP 状态，以及 SSL 证书过期时间。
+- 相当于探针（probe）。
+- [GitHub 页面](https://github.com/prometheus/blackbox_exporter)
+- 下载后启动：
+  ```sh
+  ./blackbox_exporter
+                # --config.file blackbox.yml
+                # --web.listen-address :9115
+  ```
+- HTTP 请求示例：
+  使用 icmp 模块，检测目标主机能否 ping 通（同时也会检测出 DNS 耗时）
+  ```sh
+  curl 'http://localhost:9115/probe?module=icmp&target=baidu.com'
+  ```
+
+  使用 tcp_connect 模块，检测目标主机的 TCP 端口能否连接
+  ```sh
+  curl 'http://localhost:9115/probe?module=tcp_connect&target=baidu.com:80'
+  ```
+
+  使用 http_2xx 模块，检测目标网站的 HTTP 响应是否为 200
+  ```sh
+  curl 'http://localhost:9115/probe?module=http_2xx&target=http://baidu.com'
+  ```
+
+- 在 Prometheus 中的配置示例：
+  ```yml
+  - job_name: blackbox_exporter
+    metrics_path: /probe
+    params:
+      module: [icmp]
+    static_configs:
+      - targets: ['10.0.0.2']
+        labels:
+          instance: '10.0.0.2'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - target_label: __address__
+        replacement: '10.0.0.1:9115'  # 填入 blackbox_exporter 的 IP 和端口
+  ```
+  Prometheus 会将 scrape_timeout 用作探测的超时时间。
+
+- 常用指标：
+  ```sh
+  probe_success                   # 是否探测成功（取值 1、0 分别表示成功、失败）
+  probe_duration_seconds          # 本次探测的耗时
+  probe_dns_lookup_time_seconds   # 查找 DNS 的耗时
+  ```
 
 ### mysqld_exporter
 
@@ -1077,11 +1111,7 @@ inhibit_rules:
 
 ：用于监控 Kafka 的状态。
 - [GitHub 页面](https://github.com/danielqsj/kafka_exporter)
-- 下载二进制版：
-  ```sh
-  wget https://github.com/danielqsj/kafka_exporter/releases/download/v1.2.0/kafka_exporter-1.2.0.linux-amd64.tar.gz
-  ```
-  启动：
+- 下载后启动：
   ```sh
   ./kafka_exporter
                 --web.listen-address :9308

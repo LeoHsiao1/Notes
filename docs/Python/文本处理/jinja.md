@@ -1,6 +1,6 @@
-# jinja
+# Jinja
 
-：一个通用的模板引擎，基于 Python 开发。
+：一种基于 Python 的模板语言。
 - 由 Flask 作者开发，最初是模仿 Django 的模板引擎，处理 HTML 文件，后来推广到处理各种类型的文本文件。
 - [官方文档](https://jinja.palletsprojects.com/en/2.10.x/)
 
@@ -60,7 +60,7 @@ All are False.
 
 继承：
 ```html
-{% extends "base.html" %}    # 继承 base.html
+{% extends "base.html" %}   # 继承 base.html
  
 {% block head %}            # 重载父文件中，名为 head 的 block
     {{ super() }}           # 插入父文件中，这部分的内容
@@ -70,11 +70,13 @@ All are False.
 # 其它部分会继承父文件的内容
 ```
 
-## ♢ jinja
+## ♢ Jinja2
 
-安装：pip install jinja2
+：Python 的第三方库，用作 Jinjia 引擎。
+- 安装：`pip install Jinja2`
 
-用法示例：
+### 用法示例
+
 ```py
 >>> from jinja2 import Template
 >>> text="""

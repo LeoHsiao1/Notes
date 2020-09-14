@@ -4,7 +4,7 @@
 - 它是一个单元测试框架，借鉴 Java 的 JUnit 。
 - [官方文档](https://docs.python.org/3/library/unittest.html#module-unittest)
 
-## 基础示例
+## 用法示例
 
 1. 先定义一个继承 `unittest.TestCase` 的测试类，在其中定义测试方法。如下：
     ```py

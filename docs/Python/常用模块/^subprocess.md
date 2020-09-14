@@ -2,6 +2,7 @@
 
 ：Python 的标准库，用于创建一个子进程去执行命令。
 - 与 `os.system()`、`os.popen()` 类似，但功能更强。
+- [官方文档](https://docs.python.org/3.8/library/subprocess.html#module-subprocess)
 
 ## Popen
 

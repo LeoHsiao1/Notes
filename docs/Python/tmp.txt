@@ -5101,79 +5101,8 @@ ws1['A2'].Font=font1
 'B'
 >>> column_index_from_string('AA')
 27
-## 
-## 
-## 
- 
-XML
-## XML（可扩展标记语言）：一种保存结构化数据的文本格式，可读性较差。
-## 语法。
-- 用 <!-- ... --> 声明注释。
-- 可以在第一行声明XML的版本：
-<?xml version='1.1' encoding='UTF-8'?>
-- XML中的空格、换行符不会被忽略。
-- 每个元素是用一对标签包住的值，格式如下：
-<tag>value</tag>
-  - tag、value都是字符串类型，但是不必加引号作为定界符。
-  - 例：
-<student>
-<id>1</id>
-<name>one</name>
-</student>
-- 标签用尖括号标记，必须成对出现。
-  - 前一个标签称为开始标签，前一个标签称为结束标签。
-  - XML的标签要区分大小写。
-  - 可以在开始标签中加上属性。属性是键值对格式，值必须要用双引号包住。如下：
-<note date="20191001" time="12:00">
-Hello World
-</note>
-- 一个元素的value可以嵌套一个或多个子元素，构成层级结构。
-  - 最外层的tag称为根元素。
-## 
-## 
-## 
 
- 
-♢ xml
-## xml：Python的标准库，用于解析XML格式的文本。
-- 例：
->>> from xml.etree import ElementTree
->>> item = ElementTree.Element("test")        # 创建一个元素
->>> item
-<Element 'test' at 0x7fe42c2d1e08>
->>> item.set("date", "20191001")            # 设置一个属性（没有该属性则添加）
->>> item.set("time", "12:00")
-  - 查看元素的信息。
->>> item.tag            # 标签名，str型
-'test'
->>> item.text        # 标签包住的文本（不是子元素），str型
-'Hello World'
->>> item.attrib        # 标签中的属性，dict型
-{'date': '20191001', 'time': '12:00'}
-  - 关于子元素。
->>> sub = ElementTree.Element("sub")
->>> sub.text = "..."
->>> item.append(sub)        # 添加一个子元素（可以添加多个）
->>> item.append(sub)
->>> list(item)            # 列出所有子元素（item是可迭代对象）
-[<Element 'sub' at 0x7efd36b9a278>, <Element 'sub' at 0x7efd36b9a278>]
->>> item.find("sub")        # 根据tag名查找一个子元素，返回第一个匹配的，没找到则返回None
-<Element 'sub' at 0x7fe4247fb278>
->>> item.findall("sub")    # 根据tag名查找所有匹配的子元素，没找到则返回[]
-[<Element 'sub' at 0x7fe4247fb278>, <Element 'sub' at 0x7fe4247fb278>]
->>> item.remove(sub)        # 删除一个子元素
->>> item.clear()            # 删除text、子元素、attrib
-  - 与字符串的转换。
->>> ElementTree.tostring(item, encoding="utf-8").decode()    # 从XML对象转换成字符串
-'<test />'                # 一个空的元素，只有tag名
->>> with open("1.xml") as f:
-...   root = ElementTree.XML(f.read())        # 从字符串中解析出XML对象
-... 
->>> root                    # 返回的是根元素
-<Element 'flow-definition' at 0x7fe42c2f1a98>
-## 
-## 
-## 
+
  
 JSON
 ## JSON（JavaScript Object Notation）：一种保存结构化数据的文本格式。

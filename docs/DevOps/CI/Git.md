@@ -81,6 +81,20 @@ git commit
 ```
 - 版本是在某个时刻对所有文件的一个快照。
 - git 会自动取每个版本的 SHA-1 值作为版本号。
+- 建议在备注信息的开头声明该 commit 的大致类型，便于分类整理。如下：
+    ```sh
+    # 宽泛的分类
+    Add       function test1()
+    Delete    ...
+    Modify    ...
+
+    # 更有意义的分类
+    Update    ...    # 少许改进、增加内容
+    Optimize  ...    # 明显优化
+    Rewrite   ...    # 重写部分内容，比如函数
+    refactor  ...    # 重构整个或部分系统
+    Fix       bug 20200101_001
+    ```
 
 撤销版本：
 ```sh

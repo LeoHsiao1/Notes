@@ -514,7 +514,7 @@ scrape_configs:
     - `# HELP <metric_name> <comment>` 行不是必要的，用作该指标的注释。
     - 每行末尾要有换行符，最后一行也需要换行。
 
-- Pushgateway 会记录以下指标：
+- 推送之后，Pushgateway 会记录以下指标：
   ```sh
   test_metric{job="pushgateway", instance="10.0.0.1", name="one"}  42               # 该 metric 最后一次推送的值
   push_failure_time_seconds{job="pushgateway", instance="10.0.0.1"}  0              # 该组 metric 最后一次失败推送的时间戳

@@ -507,7 +507,7 @@ pipeline {
         retry(3)
         timestamps()                        // 输出信息到终端时，加上时间戳
         timeout(time: 60, unit: 'SECONDS')
-        disableConcurrentBuilds()           // 不允许在同一节点上同时执行其它构建任务
+        disableConcurrentBuilds()           // 禁止同时执行该 job
     }
     ```
 

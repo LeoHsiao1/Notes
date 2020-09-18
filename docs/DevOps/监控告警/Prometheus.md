@@ -1103,10 +1103,6 @@ inhibit_rules:
   probe_dns_lookup_time_seconds   # 查找 DNS 的耗时
   ```
 
-### mysqld_exporter
-
-：用于监控 MySQL 的状态。
-
 ### kafka_exporter
 
 ：用于监控 Kafka 的状态。

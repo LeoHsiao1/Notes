@@ -32,6 +32,8 @@ del D:\1\*              :: 删除文件（不能删除目录）
 关于文本：
 ```batch
 echo hello              :: 显示一个字符串
+echo Hello > null       :: 重定向 stdout
+echo Hello >>f1 2>&1
 type 1.py               :: 显示文件的内容
 ```
 

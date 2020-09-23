@@ -26,7 +26,7 @@ sshd 的主配置文件是 /etc/ssh/sshd_config ，内容示例：
 Port 22                           # 监听的端口号
 ListenAddress 0.0.0.0             # 允许连接的 IP
 
-AllowUsers root leo@10.0.0.1      # 只允许这些用户进行 SSH 登录。可以使用通配符 * 和 ? ，可以指定用户的 IP，可以指定多个用户（用空格分隔）
+AllowUsers root leo@10.0.0.1      # 只允许这些用户进行 SSH 登录。可以使用通配符 * 和 ? ，可以指定用户的 IP ，可以指定多个用户（用空格分隔）
 AllowGroups *                     # 只允许这些用户组进行 SSH 登录
 
 Protocol 2                        # SSH 协议的版本

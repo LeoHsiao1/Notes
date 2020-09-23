@@ -49,7 +49,7 @@
 
 ## ♢ xml
 
-：Python的标准库，用于解析或导出 XML 格式的文本。
+：Python 的标准库，用于解析或导出 XML 格式的文本。
 
 ### 用法
 
@@ -59,9 +59,9 @@
   >>> root = ElementTree.Element('test')  # 创建一个元素
   >>> root
   <Element 'test' at 0x7fe42c2d1e08>
-  >>> root.tag                            # 获取元素的标签名（str类型）
+  >>> root.tag                            # 获取元素的标签名（str 类型）
   'test'
-  >>> root.text = 'Hello World'           # 设置元素的值（str类型）
+  >>> root.text = 'Hello World'           # 设置元素的值（str 类型）
   >>> root.text
   'Hello World'
   ```
@@ -71,7 +71,7 @@
   ```py
   >>> root.set('date', '20191001')        # 设置一个属性（如果该属性已存在则覆盖其值）
   >>> root.set('time', '12:00')
-  >>> root.attrib                         # 获取元素的全部属性（dict类型）
+  >>> root.attrib                         # 获取元素的全部属性（dict 类型）
   {'date': '20191001', 'time': '12:00'}
   ```
 
@@ -82,12 +82,12 @@
   >>> root.append(sub)
   >>> root[:]                 # Element 对象支持 list 的大部分操作方法
   [<Element 'sub' at 0x7efd36b9a278>, <Element 'sub' at 0x7efd36b9a278>]
-  >>> root.find('sub')        # 根据tag名查找一个子元素，返回第一个匹配的，没找到则返回None
+  >>> root.find('sub')        # 根据 tag 名查找一个子元素，返回第一个匹配的，没找到则返回 None
   <Element 'sub' at 0x7fe4247fb278>
-  >>> root.findall('sub')     # 根据tag名查找所有匹配的子元素，没找到则返回[]
+  >>> root.findall('sub')     # 根据 tag 名查找所有匹配的子元素，没找到则返回[]
   [<Element 'sub' at 0x7fe4247fb278>, <Element 'sub' at 0x7fe4247fb278>]
   >>> root.remove(sub)        # 删除一个子元素
-  >>> root.clear()            # 删除text、子元素、attrib
+  >>> root.clear()            # 删除 text、子元素、attrib
   ```
 
 - 与字符串的转换：
@@ -116,9 +116,9 @@
   >>> root = etree.Element('test')    # 创建一个元素
   >>> root
   <Element test at 0x243576e9d40>
-  >>> root.tag                        # 获取元素的标签名（str类型）
+  >>> root.tag                        # 获取元素的标签名（str 类型）
   'test'
-  >>> root.text = 'Hello World'       # 设置元素的值（str类型）
+  >>> root.text = 'Hello World'       # 设置元素的值（str 类型）
   >>> root.text
   'Hello World'
   ```
@@ -128,7 +128,7 @@
   ```py
   >>> root.set('date', '20191001')    # 设置一个属性（如果该属性已存在则覆盖其值）
   >>> root.set('time', '12:00')
-  >>> root.attrib                     # 获取元素的全部属性（dict类型）
+  >>> root.attrib                     # 获取元素的全部属性（dict 类型）
   {'date': '20191001', 'time': '12:00'}
   ```
 

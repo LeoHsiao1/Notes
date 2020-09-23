@@ -8,16 +8,16 @@
 ## 原理
 
 - 基本架构：运行一些 broker 服务器组成 Kafka 集群，而用户通过客户端连接到 broker ，作为 Producer 生产消息，或者作为 Consumer 消费消息。
-- Kafka 在逻辑上根据 topic 对消息进行分组，在存储时将每个 topic 分成多个 partition ，并且每个 partition 会存储多个 replica。
-- Kafka 会尽量将同一Topic的各个partition、同一partition的各个replica存储到不同的broker上，从而抵抗单点故障。
+- Kafka 在逻辑上根据 topic 对消息进行分组，在存储时将每个 topic 分成多个 partition ，并且每个 partition 会存储多个 replica 。
+- Kafka 会尽量将同一 Topic 的各个 partition、同一 partition 的各个 replica 存储到不同的 broker 上，从而抵抗单点故障。
   而客户端只需要连接 broker 就能生产、消费消息，不需要关心消息的实际存储位置。
 
 ### broker
 
 - `broker` ：代理服务器，负责存储、管理消息。
   - broker 会将消息以日志文件的形式存储，存放在 `logs/<topic>-<partition>/` 目录下，因此会受到文件系统的影响。
-  - 增加broker的数量，就可以提高Kafka集群的吞吐量。（不过会引发一次rebalance）
-  - `Group Coordinator` ：在每个 broker 上都运行的一个进程，主要负责管理Consumer Group、Consumer Rebalance、消息的offset。
+  - 增加 broker 的数量，就可以提高 Kafka 集群的吞吐量。（不过会引发一次 rebalance）
+  - `Group Coordinator` ：在每个 broker 上都运行的一个进程，主要负责管理 Consumer Group、Consumer Rebalance、消息的 offset 。
 
 - `topic` ：主题，用于对消息进行分组管理。
   - 不同 topic 之间的消息相互独立。
@@ -37,17 +37,17 @@
 ### replica
 
 每个 partition 会存储多个副本（replica），从而备份数据。
-- Kafka 会选出其中一个副本作为 `leader replica`，而其它副本称为 `follower replica` 。
-  - leader可以进行读写操作，负责处理用户的访问请求。
-  - follower只能进行读操作，负责与leader的数据保持一致，从而备份数据。
-  - 用户访问partition时看到的总是leader，看不到follower。
+- Kafka 会选出其中一个副本作为 `leader replica` ，而其它副本称为 `follower replica` 。
+  - leader 可以进行读写操作，负责处理用户的访问请求。
+  - follower 只能进行读操作，负责与 leader 的数据保持一致，从而备份数据。
+  - 用户访问 partition 时看到的总是 leader ，看不到 follower 。
 - `Assigned Replicas` ：指一个 partition 拥有的所有 replicas 。
 - `preferred replica` ：指 assigned replicas 中的第一个 replica 。
-  - 新建一个 partition 时，preferred replica 一般就是 leader replica ，但是之后可能发生选举，改变leader。
+  - 新建一个 partition 时，preferred replica 一般就是 leader replica ，但是之后可能发生选举，改变 leader 。
 - `In-sync Replicas Set`（IRS）：指一个 partition 中与 leader 保持同步的所有 replicas 。
-  - leader本身也属于IRS。
-  - 只有IRS中的 replica 可以被选举为 leader 。
-- `Under-replicated Replicas Set`：指一个 partition 中与 leader 没有同步的 replicas 。
+  - leader 本身也属于 IRS 。
+  - 只有 IRS 中的 replica 可以被选举为 leader 。
+- `Under-replicated Replicas Set` ：指一个 partition 中与 leader 没有同步的 replicas 。
   - 当一个 follower 将 leader 的最后一条消息（Log End Offset）之前的日志全部成功复制之后，则认为该 follower 已经赶上了 leader ，记录此时的时刻作为该 follower 的 `lastCaughtUpTimeMs` 。
   - Kafka 的 ReplicaManager 会定期计算每个 follower 的 lastCaughtUpTimeMs 与当前时刻的差值，作为该 follower 对 leader 的滞后时间。
 
@@ -63,7 +63,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   - 由 consumer 自己记录，用于 poll() 方法。
   - 它可以保证 consumer 在多次 poll 时不会重复消费。
 - `Consumer Committed Offset` ：某个 consumer 在某个 partition 中最后一次消费的消息的偏移量。
-  - 由 broker 记录在 topic：`__consumer_offsets` 中。
+  - 由 broker 记录在 topic ：`__consumer_offsets` 中。
   - 它可以用于保证 Consumer Rebalance 之后 consumer 不会重复消费。
   - consumer 每次消费消息之后，必须主动调用 commitAsync() 方法，提交当前的 offset ，否则 Consumer Committed Offset 的值会一直为 0 。
 - `Consumer Lag` ：consumer 在消费某个 partition 时的滞后量，即还有多少个消息未消费。
@@ -71,16 +71,16 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
 
 ### Consumer
 
-- `Producer`：生产者，即生产消息的客户端，负责发布消息到broker（push方式）。
-  - Producer 向某个 topic 发布消息时，默认会将消息随机分配到不同的partition。可以指定partition，也可以指定均衡策略来自动选择partition。
+- `Producer` ：生产者，即生产消息的客户端，负责发布消息到 broker（push 方式）。
+  - Producer 向某个 topic 发布消息时，默认会将消息随机分配到不同的 partition 。可以指定 partition ，也可以指定均衡策略来自动选择 partition 。
 
-- `Consumer`：消费者，即消费消息的客户端，负责从broker订阅消息（push方式）、消费消息（pull方式）。
+- `Consumer` ：消费者，即消费消息的客户端，负责从 broker 订阅消息（push 方式）、消费消息（pull 方式）。
 
-- `Consumer Group`：消费者组，包含多个Consumer。
+- `Consumer Group` ：消费者组，包含多个 Consumer 。
   - 单个 consumer 同时只能消费一个 partition ，因此一般用一组 Consumer 同时消费一个 topic 下的不同 partition ，通过并行消费来提高消费速度。
   - Consumer Group 之间是相互隔离的，可以同时消费同一个 topic 下的同一个 partition ，不会冲突。
-  - 当一个 Consumer Group 消费一个topic时，如果partition的数量小于Consumer的数量，就会有Consumer空闲。
-    因此，最好将partition的数量设置成与Consumer的数量相同，或者为Consumer的数量的整数倍。
+  - 当一个 Consumer Group 消费一个 topic 时，如果 partition 的数量小于 Consumer 的数量，就会有 Consumer 空闲。
+    因此，最好将 partition 的数量设置成与 Consumer 的数量相同，或者为 Consumer 的数量的整数倍。
   - 当 group 中有 consumer 新增或退出时，或者当前消费的 topic 的 partition 数量变化时，就会触发一次 Consumer Rebalance ，重新分配每个 consumer 消费的 partition 。
 
 ### Zookeeper
@@ -137,7 +137,7 @@ zookeeper.connection.timeout.ms=18000
 
 ## ♢ kafka-Python
 
-：Python的第三方库，提供了Kafka客户端的功能。
+：Python 的第三方库，提供了 Kafka 客户端的功能。
 - 安装：`pip install kafka-python`
 - [官方文档](https://kafka-python.readthedocs.io/en/master/index.html)
 

@@ -41,7 +41,7 @@ FRAG: inuse 0 memory 0
 - `TCP: inuse` ：正在使用的 TCP socket 数量。
   - `orphan` ：无主的，不属于任何进程。
   - `tw` ：等待关闭的。
-  - `alloc`：已分配的。
+  - `alloc` ：已分配的。
   - `mem` ：使用的缓存大小。
 
 ## TCP 通信的常见报错

@@ -20,7 +20,7 @@ class Popen(args, bufsize=-1, stdin=None, stdout=None, stderr=None, shell=False,
   - 0 ：无缓冲
   - 1 ：行缓冲
   - +int ：使用 int 大小的缓冲
-  - -int ：使用系统默认大小的缓冲（默认是8KB）
+  - -int ：使用系统默认大小的缓冲（默认是 8KB）
 
 - `stdin`、`stdout`、`stderr` ：存储子进程输入、输出的文件描述符，取值如下：
   - `None` ：重定向到当前进程

@@ -26,14 +26,14 @@ docker run -d --name nginx \
 
 ## 生成目录
 
-根据 docs/index.md 及各书籍目录下的 index.md 文件中的目录，生成 docs/.vuepress/config.js 文件中的 nav、sidebar 目录。
+根据 `docs/index.md` 及各书籍目录下的 index.md 文件中的目录，生成 `docs/.vuepress/config.js` 文件中的 nav、sidebar 目录。
 ```sh
 python etc\set_catalog.py
 ```
 
-## 调整中英文间距
+## 调整字符间距
 
-在 Linux 终端执行以下命令，处理 *.md 文件，在中文、英文字符之间插入空格：
+在 Linux 终端执行以下命令，处理 `*.md` 文件，在中文、英文字符之间插入空格：
 ```sh
 file_list=`find . -name "*.md" | grep -v index.md`
 file_list[${#file_list[*]}]=README.md

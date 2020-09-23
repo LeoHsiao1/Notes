@@ -728,7 +728,7 @@ inhibit_rules:
   - alertname
   - instance
 - source_match:
-    alertname: target离线
+    alertname: target 离线
     job: node_exporter
   target_match:
   equal:
@@ -861,7 +861,7 @@ inhibit_rules:
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
 
   node_boot_time_seconds                                                      # 主机的启动时刻
-  node_time_seconds                                                           # 主机的当前时间（Unix时间戳）
+  node_time_seconds                                                           # 主机的当前时间（Unix 时间戳）
   node_time_seconds - node_boot_time_seconds                                  # 主机的运行时长（s）
   node_time_seconds - time() + T                                              # 主机的时间误差，其中 T 是估计每次抓取及传输的耗时
 
@@ -884,7 +884,7 @@ inhibit_rules:
   irate(node_network_receive_bytes_total{device!~`lo|docker0`}[5m])  # 网卡每秒接收量
   irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[5m]) # 网卡每秒发送量
 
-  node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast是广播地址，duplex是双工模式，）
+  node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast 是广播地址，duplex 是双工模式，）
   node_network_up                               # 网卡的状态（取值 1、0 表示是否正在启用）
   node_network_mtu_bytes                        # MTU 大小
   node_network_receive_packets_total            # 网卡接收的数据包数
@@ -899,7 +899,7 @@ inhibit_rules:
   node_network_transmit_compressed_total
 
   node_sockstat_sockets_used                    # 使用的 socket 数量
-  node_netstat_Tcp_CurrEstab                    # ESTABLISHED 加 CLOSE_WAIT 状态的TCP连接数
+  node_netstat_Tcp_CurrEstab                    # ESTABLISHED 加 CLOSE_WAIT 状态的 TCP 连接数
   node_netstat_Tcp_InSegs                       # 接收的 TCP 报文数
   node_netstat_Tcp_OutSegs                      # 发送的 TCP 报文数
   node_netstat_Udp_InDatagrams                  # 接收的 UDP 报文数
@@ -1004,7 +1004,7 @@ inhibit_rules:
 
   # os collector
   windows_os_info{instance="10.0.0.1:9182", job="windows_exporter", product="Microsoft Windows Server 2016 Standard", version="10.0.14393"} # 主机信息
-  windows_os_time                           # 主机的当前时间（Unix时间戳）
+  windows_os_time                           # 主机的当前时间（Unix 时间戳）
   windows_os_timezone{timezone="CST"}       # 采用的时区
   windows_os_visible_memory_bytes           # 可见的物理内存的总量，可能小于实际容量
   windows_os_physical_memory_free_bytes     # 物理内存的可用量

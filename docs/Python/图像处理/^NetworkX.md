@@ -44,7 +44,7 @@ plt.show()
 ![](./NetworkX_1.png)
 
 
-API说明：
+API 说明：
 ```py
 def draw_networkx(G,                      # 一个 networkx 的图对象
                   pos:dict,               # 控制各节点的坐标
@@ -54,7 +54,7 @@ def draw_networkx(G,                      # 一个 networkx 的图对象
                   nodelist:list=G.nodes() # 仅绘制指定节点
                   edgelist:list=G.edges() # 仅绘制指定边
 
-                  node_size=300,          # 节点的大小（也可以传入一个list，分别设置每个节点的大小）
+                  node_size=300,          # 节点的大小（也可以传入一个 list ，分别设置每个节点的大小）
                   node_color='#1f78b4',   # 节点的颜色
                   node_shape='o',         # 节点的形状
 

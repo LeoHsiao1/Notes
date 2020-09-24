@@ -1169,7 +1169,7 @@ static-map = /images=/var/www/img2      ; 可以重复映射同一个 URL
 
 4.    用法：
 uwsgi
---ini etc/uwsgi.ini            # 使用配置文件启动uwsgi服务器（默认在后台运行）
+--ini etc/uwsgi.ini            # 使用配置文件启动uwsgi服务器（默认以 daemon 方式运行）
     --stop etc/uwsgi.pid        # 停止uwsgi服务器(根据pid文件)
     --reload etc/uwsgi.pid        # 重启
     

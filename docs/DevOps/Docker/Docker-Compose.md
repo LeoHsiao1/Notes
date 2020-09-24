@@ -23,7 +23,7 @@ docker-compose
             -f <file>                 # 指定 compose 文件（默认使用当前目录下的 docker-compose.yml）
 
             up                        # 启动服务（会重新加载 compose 文件，可能会删除容器或重新创建容器）
-                -d                    # 在后台运行（否则会阻塞当前终端）
+                -d                    # 以 daemon 方式运行（否则会阻塞当前终端）
                 --scale web=2 mysql=1 # 设置服务运行的实例数量
                 --build               # 强制构建镜像（如果镜像已存在，则默认不会再次构建）
             down <service>...         # 销毁服务（默认会删除用到的容器、网络）
@@ -49,7 +49,7 @@ docker-compose
   ```sh
   docker-compose up         # 先尝试在前台运行，看看是否正常
   Ctrl + C                  # 终止前台进程
-  docker-compose up -d      # 正式在后台运行
+  docker-compose up -d      # 以 daemon 方式运行
   docker-compose down       # 销毁服务
   ```
 

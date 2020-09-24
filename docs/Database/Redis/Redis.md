@@ -55,7 +55,7 @@
 ```ini
 bind 0.0.0.0
 port 6379
-daemonize yes                # 在后台运行（默认是在前台运行）
+daemonize yes                # 以 daemon 方式运行（默认是在前台运行）
 dir /etc/redis/              # 工作目录
 logfile /var/log/redis.log
 pidfile /var/run/redis.pid

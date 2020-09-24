@@ -5,7 +5,7 @@
 - 要求使用 HTML5 标准。
 - [官方文档](https://v4.bootcss.com/docs/getting-started/introduction/)
 
-## 入门示例
+## 基础示例
 
 如下是一个基于 Bootstrap 的 HTML 例子：
 

@@ -4,7 +4,7 @@
 - 基于 Vue ，显示美观。
 - [官方文档](https://vuepress.vuejs.org/guide/)
 
-## 入门示例
+## 基础示例
 
 1. 安装：
     ```sh

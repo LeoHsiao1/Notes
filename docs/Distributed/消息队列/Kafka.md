@@ -54,6 +54,7 @@
 ### offset
 
 partition 内存储的每个消息都有一个唯一的偏移量（offset），用于索引。
+- offset 的值采用 Long 型变量存储，容量为 64 bit 。
 - `Log Start Offset` ：partition 中第一个消息的偏移量。刚创建一个 topic 时，该值为 0 。每次 broker 清理消息日志之后，该值会增大一截。
 - `Log End Offset`（LEO）：partition 中最新一个消息的偏移量。
 - `High Watemark`（HW）：partition 允许被 consumer 看到的最高偏移量。

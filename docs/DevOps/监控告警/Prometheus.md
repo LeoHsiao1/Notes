@@ -947,6 +947,10 @@ inhibit_rules:
       - exe、comm 可以同时定义多行匹配条件，而 cmdline 同时只能定义一行条件，否则不会被执行。
       - exe、comm 会自动使用匹配条件作为被匹配的进程的名称，并用作监控指标的 groupname 。而 cmdline 需要手动设置 name 。
     - 已经被匹配的进程不会被之后的条件重复匹配。
+    - 执行以下命令可查看当前监控的进程：
+      ```sh
+      curl 127.0.0.1:9256/metrics | grep num_procs
+      ```
 
 - 常用指标：
   ```sh

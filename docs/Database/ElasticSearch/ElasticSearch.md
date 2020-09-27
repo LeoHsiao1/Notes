@@ -7,42 +7,53 @@
 
 ## 安装
 
-- 运行 ES 需要安装 JDK 。
-- 下载二进制版然后运行：
-    ```sh
-    curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.6.0-linux-x86_64.tar.gz
-    tar -zxvf elasticsearch-7.6.0-linux-x86_64.tar.gz
-    cd elasticsearch-7.6.0/bin/
-    ./elasticsearch
-    ```
+- 先安装 JDK ，然后下载 ES 的二进制版：
+  ```sh
+  curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.6.0-linux-x86_64.tar.gz
+  ```
+  解压后运行：
+  ```sh
+  bin/elasticsearch       # 在前台运行
+                    -d    # 以 daemon 方式运行
+  ```
 
 - 或者运行 Docker 镜像：
-    ```sh
-    docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.6
-    ```
+  ```sh
+  docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.6.0
+  ```
+  9200 端口供用户通过 HTTP 协议访问，9300 端口供 ES 集群的其它节点通过 TCP 协议访问。
 
 ## 配置
 
-ES 服务器的配置文件是 config/elasticsearch.yml ，内容示例如下：
-```yaml
-cluster.name: my-application
-node.name: node-1
-path.data: /path/to/data
-path.logs: /path/to/logs
-network.host: 0.0.0.0
-http.port: 9200
+ES 服务器的配置文件是 `config/elasticsearch.yml` ，内容示例如下：
+```yml
+cluster.name: cluster_1           # 该 ES 所属的集群名
+node.name: node_1                 # 该 ES 的节点名，默认为当前主机名
+path.data: /var/data/elasticsearch
+path.logs: /var/log/elasticsearch
+network.host: 0.0.0.0             # 监听的 IP
+http.port: 9200                   # 监听的端口
 ```
-- ES 服务器默认监听的是 127.0.0.1:9200 。
+
+ES 启动时会检查以下环境条件是否满足，如果不满足则会发出警告。如果此时还配置了 `network.host` 参数，则 ES 会按生产环境严格要求，将这些警告升级为异常。
+- 禁用 Swap 分区：
+  需要执行命令 `swapoff -a` ，并且将 `/etc/fstab` 文件中的 swap 分区都注释。
+- 增加进程虚拟内存的上限：
+  需要执行命令 `sysctl vm.max_map_count=262144` ，并在 `/etc/sysctl.conf` 文件中永久修改该参数。
+- 增加进程数量的上限：
+  需要执行命令 `ulimit -u 4096` ，并在 `/etc/security/limits.conf` 文件中永久修改该参数。
+- 增加文件描述符数量的上限：
+  需要执行命令 `ulimit -n 65535` ，并在 `/etc/security/limits.conf` 文件中永久修改该参数。
 
 
-## 入门示例
+## 基础示例
 
 客户端向 ES 服务器的根路径发出 GET 请求，即可查看 ES 的基本信息。如下：
 ```sh
 [root@Centos ~]# curl 127.0.0.1:9200
 {
-  "name" : "Leo",
-  "cluster_name" : "elasticsearch",
+  "name" : "node_1",
+  "cluster_name" : "cluster_1",
   "cluster_uuid" : "cDXF4mIeRqK4Dlj_YmSSoA",
   "version" : {
     "number" : "7.6.0",
@@ -91,7 +102,23 @@ http.port: 9200
 
 ## 相关概念
 
-- Lucene ：一个 Java 库，提供了全文搜索、索引等 API 。于 2000 年开源，由 Apache 基金会管理。
-- Solr ：一个基于 Lucene 的搜索引擎，基于 Java 开发。于 2006 年开源，由 Apache 基金会管理。
+- Lucene
+  - ：一个 Java 库，提供了全文搜索、索引等 API 。
+  - 于 2000 年开源，由 Apache 基金会管理。
+- Solr
+  - ：一个基于 Lucene 的搜索引擎，基于 Java 开发。
+  - 于 2006 年开源，由 Apache 基金会管理。
   - 基于 zookeeper 运行分布式系统。
   - Solr 比 ES 的功能更丰富，但 ES 的实时性更强。
+
+- 正排索引
+  - 当用户搜索一个字符串时，搜索引擎会逐个查询已有的文档，找出包含该字符串的所有文档。
+    然后建立索引：某个字符串，对应某个文档。
+  - 这样建立索引的过程简单，但搜索速度慢。
+
+- 倒排索引
+  - 事先建立索引：某个单词，对应某个文档的某个位置。
+    当用户搜索一个字符串时，先将它拆分成多个单词，然后根据索引定位文档。
+  - 这样建立索引的过程复杂，但搜索速度快。
+  - ES 等大部分搜索引擎都支持倒排索引，以大幅提高全文搜索的速度。
+

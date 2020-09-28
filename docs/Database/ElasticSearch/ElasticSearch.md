@@ -79,16 +79,17 @@ ES 启动时会检查以下环境条件是否满足，如果不满足则会发�
 >     }
 > }'
 {
-  "count" : 0,
+  "count" : 1,
   "_shards" : {
-    "total" : 0,
-    "successful" : 0,
+    "total" : 1,
+    "successful" : 1,
     "skipped" : 0,
     "failed" : 0
   }
 }
 ```
-- ES 返回的报文 body 是 JSON 格式的字符串。如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
+- ES 返回的报文 body 是 JSON 格式的字符串。
+  如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
 - 加上 `-H 'content-Type:application/json'` 之后，便可以发送 JSON 格式的查询参数。
 - 为了方便书写，下文将客户端请求简记成如下格式：
     ```

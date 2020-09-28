@@ -61,6 +61,10 @@ module.exports = {
                     text: '《DevOps》',
                     link: '/DevOps/index'
                 },
+                {
+                    text: '《分布式》',
+                    link: '/Distributed/index'
+                },
             ]
         }],
         sidebar: {
@@ -346,6 +350,17 @@ module.exports = {
                         'Redis/^redis',
                     ]
                 },
+                {
+                    title: 'ElasticSearch',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        'ElasticSearch/ElasticSearch',
+                        'ElasticSearch/管理单元',
+                        'ElasticSearch/查询',
+                        'ElasticSearch/集群',
+                    ]
+                },
             ],
             '/Web/': [{
                     title: '《Web》',
@@ -520,6 +535,40 @@ module.exports = {
                     children: [
                         '其它/VSCode',
                         '其它/Nextcloud',
+                    ]
+                },
+            ],
+            '/Distributed/': [{
+                    title: '《分布式》',
+                    path: '/Distributed/',
+                },
+                {
+                    title: '简介',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '简介/云计算',
+                        '简介/高可用',
+                        '简介/微服务',
+                        '简介/大数据',
+                    ]
+                },
+                {
+                    title: '分布式系统',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '分布式系统/简介',
+                        '分布式系统/ZooKeeper',
+                    ]
+                },
+                {
+                    title: '消息队列',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '消息队列/简介',
+                        '消息队列/Kafka',
                     ]
                 },
             ],

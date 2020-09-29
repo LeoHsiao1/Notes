@@ -15,7 +15,7 @@
 
 - 下载源代码，编译后安装：
     ```sh
-    redis_version=redis-5.0.6
+    redis_version=redis-6.0.8
     curl -O http://download.redis.io/releases/${redis_version}.tar.gz
     tar -zxvf ${redis_version}.tar.gz
     cd ${redis_version}
@@ -31,7 +31,7 @@
 
 - 或者运行 Docker 镜像：
     ```sh
-    docker run -d --name redis -p 6379:6379 redis:5.0.5
+    docker run -d --name redis -p 6379:6379 redis:6.0.8
     ```
 
 ### 配置
@@ -101,7 +101,7 @@ redis-cli               # 启动客户端（默认连接到本地 6379 端口的
 - 例：
     ```sh
     redis-cli info                                       # 查询 redis 的信息
-    redis-cli -r 100 -i 1 info | grep used_memory_human  # 轮序 Redis 占用的内存
+    redis-cli -r 100 -i 1 info | grep used_memory_human  # 轮询 Redis 占用的内存
     ```
 - Redis 支持通过 Linux 管道一次传入多条命令来执行。如下：
     ```sh

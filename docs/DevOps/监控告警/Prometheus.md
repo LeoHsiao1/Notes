@@ -1105,6 +1105,9 @@ inhibit_rules:
   probe_success                   # 是否探测成功（取值 1、0 分别表示成功、失败）
   probe_duration_seconds          # 本次探测的耗时
   probe_dns_lookup_time_seconds   # 查找 DNS 的耗时
+
+  probe_http_status_code          # HTTP 响应报文的状态码
+  probe_http_content_length       # HTTP 响应报文的长度（bytes）
   ```
 
 ### kafka_exporter

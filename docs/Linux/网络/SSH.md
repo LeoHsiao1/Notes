@@ -62,6 +62,12 @@ $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登�
   - 目标主机没有运行 sshd 服务器，或者防火墙没有开通 22 端口。
   - 目标主机的负载太大，接近卡死，不能响应 ssh 连接请求。
 
+- 通过 sshpass 命令可以传递密码给 ssh、scp 命令，如下：
+  ```sh
+  yum install sshpass
+  sshpass -p 123456 ssh root@10.0.0.1
+  ```
+
 - 采用以下格式可以发送多行命令：
     ```sh
     ssh -tt root@10.0.0.1 << EOL

@@ -8,7 +8,7 @@
   - mqtt client 与 mqtt broker 建立连接之后就构成了一个会话（Session）。
 - 采用发布/订阅（publish/subscribe）模式。
   - mqtt client 可以发布消息到 mqtt broker 的某个 topic 下（此时称为 Publisher），也可以订阅 mqtt broker 的某个 topic 下的消息（此时称为 Subscriber）。
-- [MQTT 标准文档](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html)
+- [MQTT 官方标准](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html)
 
 ## 报文
 

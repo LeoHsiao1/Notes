@@ -38,6 +38,10 @@ module.exports = {
 			text: 'Notes',
             items: [
                 {
+                    text: '《Python》',
+                    link: '/Python/index'
+                },
+                {
                     text: '《Linux》',
                     link: '/Linux/index'
                 },
@@ -46,16 +50,12 @@ module.exports = {
                     link: '/Network/index'
                 },
                 {
-                    text: '《Python》',
-                    link: '/Python/index'
+                    text: '《Web》',
+                    link: '/Web/index'
                 },
                 {
                     text: '《Database》',
                     link: '/Database/index'
-                },
-                {
-                    text: '《Web》',
-                    link: '/Web/index'
                 },
                 {
                     text: '《DevOps》',
@@ -68,6 +68,41 @@ module.exports = {
             ]
         }],
         sidebar: {
+            '/Python/': [{
+                    title: '《Python》',
+                    path: '/Python/',
+                },
+                {
+                    title: '简介',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '简介/简介',
+                        '简介/解释器',
+                        '简介/版本差异',
+                    ]
+                },
+                {
+                    title: '文本处理',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '文本处理/jinja',
+                    ]
+                },
+                {
+                    title: '混合开发',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '混合开发/简介',
+                        '混合开发/^ctypes',
+                        '混合开发/^Cython',
+                        '混合开发/SWIG',
+                        '混合开发/pybind11',
+                    ]
+                },
+            ],
             '/Linux/': [{
                     title: '《Linux》',
                     path: '/Linux/',
@@ -203,39 +238,39 @@ module.exports = {
                     ]
                 },
                 {
-                    title: '通信设备',
+                    title: '网络设备',
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        '通信设备/简介',
-                        '通信设备/交换机',
-                        '通信设备/路由器',
+                        '网络设备/简介',
+                        '网络设备/交换机',
+                        '网络设备/路由器',
                     ]
                 },
                 {
-                    title: 'TCP/IP协议',
+                    title: '底层网络协议',
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        'TCP-IP协议/网络体系结构',
-                        'TCP-IP协议/IP协议',
-                        'TCP-IP协议/TCP-UDP协议',
+                        '底层网络协议/简介',
+                        '底层网络协议/网络体系结构',
+                        '底层网络协议/IP',
+                        '底层网络协议/TCP-UDP',
+                        '底层网络协议/Socket',
                     ]
                 },
                 {
-                    title: '网络通信协议',
+                    title: '高层网络协议',
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        '网络通信协议/简介',
-                        '网络通信协议/域名',
-                        '网络通信协议/Socket',
-                        '网络通信协议/邮件协议',
-                        '网络通信协议/FTP',
-                        '网络通信协议/HTTP',
-                        '网络通信协议/WebSocket',
-                        '网络通信协议/网络代理',
-                        '网络通信协议/MQTT',
+                        '高层网络协议/Email',
+                        '高层网络协议/FTP',
+                        '高层网络协议/DNS',
+                        '高层网络协议/HTTP',
+                        '高层网络协议/WebSocket',
+                        '高层网络协议/MQTT',
+                        '高层网络协议/网络代理',
                     ]
                 },
                 {
@@ -245,120 +280,6 @@ module.exports = {
                     children: [
                         '计算机安全/恶意代码',
                         '计算机安全/网络安全',
-                    ]
-                },
-            ],
-            '/Python/': [{
-                    title: '《Python》',
-                    path: '/Python/',
-                },
-                {
-                    title: '简介',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '简介/简介',
-                        '简介/解释器',
-                        '简介/版本差异',
-                    ]
-                },
-                {
-                    title: '文本处理',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '文本处理/jinja',
-                    ]
-                },
-                {
-                    title: '混合开发',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '混合开发/简介',
-                        '混合开发/^ctypes',
-                        '混合开发/^Cython',
-                        '混合开发/SWIG',
-                        '混合开发/pybind11',
-                    ]
-                },
-            ],
-            '/Database/': [{
-                    title: '《Database》',
-                    path: '/Database/',
-                },
-                {
-                    title: '简介',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '简介/简介',
-                        '简介/事务',
-                    ]
-                },
-                {
-                    title: 'SQLite',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        'SQLite/SQLite',
-                        'SQLite/^sqlite3',
-                    ]
-                },
-                {
-                    title: 'MySQL',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        'MySQL/MySQL',
-                        'MySQL/用户权限',
-                        'MySQL/管理单元',
-                        'MySQL/数据类型',
-                        'MySQL/函数',
-                        'MySQL/数据库引擎',
-                        'MySQL/备份数据',
-                        'MySQL/性能优化',
-                        'MySQL/部署架构',
-                        'MySQL/^PyMySQL',
-                        'MySQL/^SQLAlchemy',
-                    ]
-                },
-                {
-                    title: 'MongoDB',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        'MongoDB/MongoDB',
-                        'MongoDB/管理单元',
-                        'MongoDB/其它功能',
-                        'MongoDB/性能优化',
-                        'MongoDB/部署架构',
-                        'MongoDB/^pymongo',
-                    ]
-                },
-                {
-                    title: 'Redis',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        'Redis/Redis',
-                        'Redis/管理单元',
-                        'Redis/数据类型',
-                        'Redis/其它功能',
-                        'Redis/性能优化',
-                        'Redis/部署架构',
-                        'Redis/^redis',
-                    ]
-                },
-                {
-                    title: 'ElasticSearch',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        'ElasticSearch/ElasticSearch',
-                        'ElasticSearch/管理单元',
-                        'ElasticSearch/查询',
-                        'ElasticSearch/集群',
                     ]
                 },
             ],
@@ -448,6 +369,85 @@ module.exports = {
                         'CMS/gitbook',
                         'CMS/docsify',
                         'CMS/VuePress',
+                    ]
+                },
+            ],
+            '/Database/': [{
+                    title: '《Database》',
+                    path: '/Database/',
+                },
+                {
+                    title: '简介',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '简介/简介',
+                        '简介/事务',
+                    ]
+                },
+                {
+                    title: 'SQLite',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        'SQLite/SQLite',
+                        'SQLite/^sqlite3',
+                    ]
+                },
+                {
+                    title: 'MySQL',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        'MySQL/MySQL',
+                        'MySQL/用户权限',
+                        'MySQL/管理单元',
+                        'MySQL/数据类型',
+                        'MySQL/函数',
+                        'MySQL/数据库引擎',
+                        'MySQL/备份数据',
+                        'MySQL/性能优化',
+                        'MySQL/部署架构',
+                        'MySQL/^PyMySQL',
+                        'MySQL/^SQLAlchemy',
+                    ]
+                },
+                {
+                    title: 'MongoDB',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        'MongoDB/MongoDB',
+                        'MongoDB/管理单元',
+                        'MongoDB/其它功能',
+                        'MongoDB/性能优化',
+                        'MongoDB/部署架构',
+                        'MongoDB/^pymongo',
+                    ]
+                },
+                {
+                    title: 'Redis',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        'Redis/Redis',
+                        'Redis/管理单元',
+                        'Redis/数据类型',
+                        'Redis/其它功能',
+                        'Redis/性能优化',
+                        'Redis/部署架构',
+                        'Redis/^redis',
+                    ]
+                },
+                {
+                    title: 'ElasticSearch',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        'ElasticSearch/ElasticSearch',
+                        'ElasticSearch/管理单元',
+                        'ElasticSearch/查询',
+                        'ElasticSearch/集群',
                     ]
                 },
             ],

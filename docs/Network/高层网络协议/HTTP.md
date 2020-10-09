@@ -2,7 +2,8 @@
 
 ：超文本传输协议（Hyper Text Transfer Protocol），可以传输文本或文件，是 Web 服务器的核心通信协议。
 
-特点：
+## 特点
+
 - 属于应用层协议，基于 TCP 通信。
 - 采用 C/S 工作模式。
   - 一般的工作流程：客户端发出一个 HTTP 请求报文，服务器返回一个 HTTP 响应报文。
@@ -13,7 +14,8 @@
   - 尽管如此，服务器或客户端的程序可以自己记录通信过程中的一些信息。
   - 虽然 HTTP 协议不会记录客户端的身份，但服务器可以通过 IP 地址、cookie 辨认不同的客户端。
 
-版本：
+## 版本
+
 - HTTP 1.0
   - 版本较老的浏览器可能只支持 HTTP 1.0 。
 - HTTP 1.1
@@ -185,11 +187,27 @@ HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五�
   - 405 ：Method Not Allowed ，服务器不接受这种 HTTP 请求方法。比如向 POST 接口发送 GET 请求时会报错 405 。
 - 5××：表示服务器出错。
 
+## Basic Auth
+
+：HTTP 协议定义的一种简单的认证方式。
+- 原理：HTTP 客户端将用户名、密码以明文方式发送给 HTTP 服务器，如果服务器认证通过则允许客户端访问，否则返回 HTTP 401 报文。
+  - 例如，当用户使用 Web 浏览器访问该 HTTP 服务器时，通常会显示一个对话框，要求输入用户名、密码即可。
+  - 实际上，HTTP 客户端会将 `username:password` 经过 Base64 编码之后，放在 HTTP header 中发送给 HTTP 服务器。如下：
+    ```sh
+    curl 127.0.0.1 -H "Authorization: Basic YWRtaW46MTIzNA=="
+    ```
+  - 大部分 HTTP 客户端也支持按以下格式发送用户名、密码：
+    ```sh
+    curl http://username:password@127.0.0.1:9090
+    ```
+- 优点：认证过程简单，容易实现。
+- 缺点：用户名、密码以明文方式传输，容易泄露。
+
 ## HTTPS
 
 ：安全超文本传输协议（Secure Hypertext Transfer Protocol），是基于 SSL/TLS 协议加密通信的 HTTP 协议。
 - HTTP 协议采用明文传输报文，不安全，可能被泄露、篡改。而 HTTPS 协议是在加密信道中传输 HTTP 报文，很安全。
-- Web 服务器可以直接使用 HTTP 协议，而使用 HTTPS 时需要先完成一些麻烦的准备工作。如下：
+- HTTP 服务器默认支持 HTTP 协议，而启用 HTTPS 需要先完成一些麻烦的准备工作。如下：
   1. 首先，server 用 OpenSSL 生成一个 .csr 文件（用于申请证书，包含 SSL 公钥、网站所有者等信息）和一个 .key 文件（配套的 SSL 私钥）。
   2. 然后，server 将 .csr 文件提交到一个 CA(Certificate Authority ，证书授权中心)，被 CA 的私钥加密生成数字证书（.crt 文件或.pem 文件）。
   3. 最后，server 将数字证书和 .key 文件保存到服务器上，当有客户端来访问时，就将数字证书发给它。
@@ -197,7 +215,7 @@ HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五�
 - 单向认证：client 验证 server 的数字证书，或反之。
 - 双向认证：client 和 server 互相验证对方的数字证书。
 
-### SSL
+## SSL
 
 90 年代，网景公司推出了 SSL(Secure Sockets Layer ，安全套接层)协议，用于加密 HTTP 的通信过程。
 - SSL 工作在传输层与应用层之间。工作时，先基于 TCP 建立加密的通信信道，然后在该信道中传输 HTTP 报文。

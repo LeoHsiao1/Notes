@@ -20,11 +20,11 @@ tagline: null
 > - 欢迎指正
 
 > 目录：
+> - [《Python》](Python/index.md)
 > - [《Linux》](Linux/index.md)
 > - [《Network》](Network/index.md)
-> - [《Python》](Python/index.md)
-> - [《Database》](Database/index.md)
 > - [《Web》](Web/index.md)
+> - [《Database》](Database/index.md)
 > - [《DevOps》](DevOps/index.md)
 > - [《分布式》](Distributed/index.md)
 

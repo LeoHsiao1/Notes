@@ -1,6 +1,6 @@
 # TCP/UDP
 
-## Socket 通信的状态
+## Socket 通信状态
 
 未连接时的状态：
 - `LISTEN` ：该 Socket 已绑定到某个进程，内核正在监听该 Socket 。
@@ -26,9 +26,9 @@
 
 ![](./disconnect.png)
 
-## Socket 本身的状态
+## sockstat
 
-在 Linux 上，执行以下命令可查看 Socket 本身的状态：
+在 Linux 上，执行以下命令可查看各状态的 socket 数量：
 ```
 [CentOS ~]# cat /proc/net/sockstat
 sockets: used 375
@@ -45,7 +45,7 @@ FRAG: inuse 0 memory 0
   - `alloc` ：已分配的。
   - `mem` ：使用的缓存大小。
 
-## TCP 通信的常见报错
+## TCP 常见报错
 
 - 当主机 A 向主机 B 的某个端口发送 SYN 包，请求建立 TCP 连接时：
   - 如果主机 B 的防火墙禁用了该端口，或者启用了该端口但是没有进程在监听该端口，主机 B 的内核就会回复一个 RST 包（也可能一直不回复），导致主机 A 报错：`Connection refused`
@@ -152,3 +152,54 @@ $ netstat
     [root@Centos ~]# ss -tapn | grep 8000
     LISTEN     0      128         :::8000               :::*             users:(("docker-proxy",pid=18614,fd=4))
     ```
+
+## tcpdump
+
+：一个网络抓包工具，可以抓取主机网卡上收发的所有数据包。
+- 命令：
+    ```sh
+    tcpdump
+            -i lo         # 监听指定网卡（默认是监听第一个网卡，即 eth0）
+            -n            # 将主机名、域名显示成明确的 IP 地址
+            -nn           # 将端口名显示成明确的端口号
+            -v            # 显示数据包的详细信息
+            -vv           # 显示数据包更详细的信息
+
+            # 过滤表达式
+            host 10.0.0.1       # 指定主机
+            net 10.0.0.1/24     # 某个网段
+            src 10.0.0.1        # 指定源地址
+            dst 10.0.0.1        # 指定目的地址
+            tcp                 # 指定协议
+            port 80             # 指定端口
+            tcp and dst port 80 # 过滤出目的端口为 80 的 tcp 数据包
+
+            -c 10               # 抓取指定数量的数据包之后就停止运行
+            -w dumps.pcap       # 将抓取信息保存到一个文件中
+    ```
+    - 监听 eth0 网卡时，会抓取本机与其它主机通信的数据包。监听 lo 网卡时，会抓取本机内部通信的数据包。
+    - 过滤表达式支持使用 and、or、not 运算符。
+    - 可以先用 tcpdump 抓包并保存为文件，然后在 Wireshark 的 GUI 界面中分析。
+
+- 下例是对一次 HTTP 请求的抓包：
+    ```sh
+    [root@Centos ~]# tcpdump -nn tcp and dst port 8000
+    tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+    listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
+    13:46:14.669786 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [S], seq 2920488928, win 29200, options [mss 1424,sackOK,TS val 3983484990 ecr 0,nop,wscale 7], length 0
+    13:46:14.670038 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [.], ack 174830516, win 229, options [nop,nop,TS val 3983484990 ecr 2392282894], length 0
+    13:46:14.670095 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [P.], seq 0:82, ack 1, win 229, options [nop,nop,TS val 3983484990 ecr 2392282894], length 82
+    13:46:14.672466 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [.], ack 18, win 229, options [nop,nop,TS val 3983484992 ecr 2392282896], length 0
+    13:46:14.672591 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [.], ack 378, win 237, options [nop,nop,TS val 3983484992 ecr 2392282897], length 0
+    13:46:14.672667 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [F.], seq 82, ack 378, win 237, options [nop,nop,TS val 3983484993 ecr 2392282897], length 0
+    13:46:14.672805 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [.], ack 379, win 237, options [nop,nop,TS val 3983484993 ecr 2392282897], length 0
+    ```
+    - 每行包含多个字段：时间戳 源地址 > 目的地址 Flags ... length
+    - 常见的几种 TCP 数据包标志：
+      - [S] ：SYN 数据包。
+      - [.] ：ACK 数据包。
+      - [S.] ：SYN+ACK 数据包。
+      - [P] ：PUSH 数据包。
+      - [F] ：FIN 数据包。
+      - [R] ：RST 数据包。
+

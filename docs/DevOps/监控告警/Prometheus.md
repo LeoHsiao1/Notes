@@ -1138,3 +1138,29 @@ inhibit_rules:
   kafka_consumergroup_current_offset{consumergroup="xx", topic="xx", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
   kafka_consumergroup_lag{consumergroup="xx", topic="xx", partition="x"}      # 某个 consumergroup 在某个 partition 的滞后量
   ```
+
+### elasticsearch_exporter
+
+：用于监控 ES 服务器的状态。
+- [GitHub 页面](https://github.com/justwatchcom/elasticsearch_exporter)
+- 下载后启动：
+  ```sh
+  ./elasticsearch_exporter
+                --web.listen-address :9114
+                --web.telemetry-path /metrics
+                --es.uri http://localhost:9200  # ES 的 URL
+                --es.all false                  # 是否采集 ES 集群中所有节点的信息（默认只采集当前节点）
+                --es.cluster_settings false     # 是否采集集群的设置信息
+                --es.indices false              # 是否采集 index 的信息
+                --es.indices_settings false     # 是否采集 index 的设置信息
+                --es.shards false               # 是否采集 shard 的信息
+                --es.snapshots false            # 是否采集 snapshot 的信息
+                --es.timeout 5s                 # 从 ES 采集信息的超时时间
+  ```
+- 常用指标：
+  ```sh
+  elasticsearch_exporter_build_info{branch="master", goversion="go1.12.3", instance="10.0.0.1:9114", job="elasticsearch_exporter", revision="fe20e499ffdd6053e6153bac15eae494e08931df", version="1.1.0"}  # 版本信息
+
+  elasticsearch_cluster_health_status{color="green"}        # 集群状态是否为 green
+  # 详见 Github 页面上的说明
+  ```

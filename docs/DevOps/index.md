@@ -4,7 +4,7 @@
   - [简介](简介/简介.md)
 - CI
   - [Git](CI/Git.md)
-  - [GitHub Actions](CI/GitHub-Actions.md)
+  - [GitHub](CI/GitHub.md)
   - [Jenkins](CI/Jenkins.md)
   - [SonarQube](CI/SonarQube.md)
   - [Artifactory](CI/Artifactory.md)

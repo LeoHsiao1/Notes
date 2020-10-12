@@ -1,15 +1,17 @@
-# GitHub Actions
+# GitHub
 
-GitHub 提供了 Actions 功能，以实现 CI/CD 。
-- [官方文档](https://help.github.com/en/actions)
+：一个代码托管网站。
+- 可以托管 Git 类型的代码仓库，提供了 Web 管理页面，以及项目管理、Issue 讨论等功能。
+- 2018 年，被微软收购。
 
 ## Actions
 
-：类似 Jenkins 的流水线，用 YAML 的语法描述，保存为 .github/workflows/xx.yml 文件。
+：GitHub 提供的一种 CI 功能。
+- 它类似 Jenkins 的流水线，用 YAML 文件描述，保存为 .github/workflows/xx.yml 文件。
+- [官方文档](https://help.github.com/en/actions)
 
 例：
-
-```yaml
+```yml
 name: Python test
 
 on: [push]                      # 定义触发流水线的事件
@@ -35,7 +37,7 @@ jobs:                           # 开始流水线任务
       run: |
         python -m pip install pytest psutil
         echo $VAR1 $VAR2
-      env:    # 定义环境变量
+      env:            # 定义环境变量
         VAR1: Hello
         VAR2: World
     - name: Test
@@ -55,7 +57,7 @@ Actions 默认运行在 GitHub 提供的运行环境中（包括 Linux、Windows
   su - github
   ```
 - 在流水线文件中用 `self-hosted` 标签即可使用自己的 Runner ，如下：
-  ```yaml
+  ```yml
   runs-on: [self-hosted, linux]
   ```
 - 使用自己的 Runner 构建项目时，要小心仓库中有恶意代码被执行。

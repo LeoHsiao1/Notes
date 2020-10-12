@@ -468,7 +468,7 @@ module.exports = {
                     sidebarDepth: 2,
                     children: [
                         'CI/Git',
-                        'CI/GitHub-Actions',
+                        'CI/GitHub',
                         'CI/Jenkins',
                         'CI/SonarQube',
                         'CI/Artifactory',

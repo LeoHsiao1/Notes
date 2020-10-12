@@ -29,5 +29,5 @@ jobs:
         docker run -t --rm \
           -e MEILISEARCH_HOST_URL='http://leohsiao.com:7700' \
           -e MEILISEARCH_API_KEY=$API_KEY \
-          -v /home/github/Notes/etc/docs-scraper.json:/docs-scraper/config.json \
+          -v $PWD/etc/docs-scraper.json:/docs-scraper/config.json \
           getmeili/docs-scraper:v0.10.2 pipenv run ./docs_scraper config.json

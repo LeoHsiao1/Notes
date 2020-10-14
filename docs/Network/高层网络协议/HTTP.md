@@ -229,12 +229,3 @@ HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五�
     - 这四次握手的通信过程是明文传输的，不怕泄露。
 - OpenSSL ：一个开源的 SSL 库，提供了一些 SSL 签名算法。
 
-## ♢ http
-
-可以用 Python 自带的 http 模块启动一个简单的 HTTP 服务器：
-```sh
-python -m http.server
-        80                 # 监听的端口（默认是 8000）
-        --bind 127.0.0.1   # 绑定 IP（默认是 0.0.0.0）
-        --directory /root  # 指定网站的根目录（默认是当前目录）
-```

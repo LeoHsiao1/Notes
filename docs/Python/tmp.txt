@@ -2531,6 +2531,13 @@ test
 ## 
  
 第三方库
+
+Python 官方提供了一些标准库，可以通过 pip 命令下载。
+- Windows 版的 Python 安装包自带了大量标准库。
+- [Python 标准库列表](https://docs.python.org/3/library/index.html)
+
+
+
 ## 安装Python解释器时通常会同时安装一些Python的标准库，除此之外，还可以使用其他人开发的第三方库。
 - 第三方库一般安装在Python解释器的安装目录的site-packages目录下，比如/usr/lib/Python3.6/site-packages/。
 ## 
@@ -5339,26 +5346,7 @@ H~2~O            # 下标
 
  
 数学分析
-♢ decimal
-## decimal：Python的标准库，用于进行极其精确的小数运算。
-- 将float对象直接转换成Decimal对象会有误差，应该先将float对象转换成字符串，再转换成Decimal对象。
->>> from decimal import Decimal
->>> Decimal(0.1)
-Decimal('0.1000000000000000055511151231257827021181583404541015625')
->>> Decimal("0.1") + Decimal("0.2")
-Decimal('0.3')
-- Decimal对象可以直接转换成字符串。
->>> str(Decimal("0.1"))
-'0.1'
-- Decimal对象的有效位数默认为28。
->>> from decimal import Decimal, getcontext
->>> getcontext().prec
-28
->>> getcontext().prec = 4            # 设置有效位数
->>> Decimal("0.1") / 3
-Decimal('0.03333')
->>> Decimal("0.1234567") / 1        # 超出有效位数时，会自动四舍五入
-Decimal('0.1235')
+
 ## 
 ## 
 ## 

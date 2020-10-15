@@ -106,7 +106,7 @@ Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如
   bin/kafka-server-start.sh config/server.properties        # 启动 broker 服务器
   ```
 
-- 部署 Kafka 集群时，需要先部署 Zookeeper 集群，然后让每个 broker 服务器连接到 Zookeeper 。
+- 部署 Kafka 集群时，需要先部署 Zookeeper 集群，然后让每个 broker 服务器连接到 Zookeeper ，即可相互发现，组成集群。
 
 ## 配置
 

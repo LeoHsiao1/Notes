@@ -4,7 +4,7 @@
 
 ## 用法
 
-- Python 的 int 对象在底层是以二进制形式存储数值，存储浮点数时可能存在微小的误差。
+- Python 的 float 对象在底层是以二进制形式存储浮点数，可能存在微小的误差。
   ```py
   >>> 0.1 + 0.2
   0.30000000000000004
@@ -18,17 +18,17 @@
   Decimal('-10')
   >>> Decimal('3.14')       # 输入可以是 int 或 str 类型的数值
   Decimal('3.14')
-  >>> Decimal(3.14)         # 将浮点数直接转换成 Decimal 会有误差，这里应该改为 Decimal(str(3.14))
+  >>> Decimal(3.14)         # 将 float 对象直接转换成 Decimal 会有误差，这里应该改为 Decimal(str(3.14))
   Decimal('3.140000000000000124344978758017532527446746826171875')
   >>> str(Decimal('3.14'))  # Decimal 对象可以直接转换成字符串
   '3.14'
   ```
 
-- Decimal、非浮点数 int 对象之间可以直接进行运算，结果会返回一个 Decimal 对象。
+- Decimal、int 对象之间可以直接进行运算，结果会返回一个 Decimal 对象。
   ```py
   >>> Decimal('0.1') + Decimal('0.2')
   Decimal('0.3')
-  >>> Decimal('0.1') + 0.2
+  >>> Decimal('0.1') + 0.2        # Decimal、float 对象之间不能进行运算
   TypeError: unsupported operand type(s) for +: 'decimal.Decimal' and 'float'
   >>> Decimal('0.1') + 2
   Decimal('2.1')

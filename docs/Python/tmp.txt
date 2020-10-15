@@ -423,6 +423,20 @@ TypeError: 'str' object does not support item assignment
 3
 >>> float(3)
 3.0
+
+>>> type(1)   
+<class 'int'>
+>>> type(1.0)
+<class 'float'>
+
+特殊的 float 常量：
+>>> float('+inf')   # 正无穷大
+inf
+>>> float('-inf')   # 负无穷大
+-inf
+>>> float('nan')    # 非数字
+nan
+
 - 数据类型名可以被继承、重载。
 ## None：空值。属于NoneType类型。
 >>> type(None)
@@ -2954,6 +2968,14 @@ range(0, 5)
 ## 
  
 关于计算
+
+幂运算
+def pow(base, exp)    # 近似于 base**exp
+>>> pow(2, 3)
+8
+>>> pow(2, -3)
+0.125
+
 ## def len(object) -> int
 - 功能：返回对象包含的元素个数，由对象的内置方法__len__()决定。
 - 例：
@@ -3653,20 +3675,7 @@ cel.conf.beat_schedule = {
 ## 
  
 关于数据
-♢ random
-## random：Python的标准库，用于生成随机数。
-- random模块生成的随机数不适合用作安全加密，想生成密码时，使用os.urandom()更安全。
-- 例：
->>> import random
->>> print(random.randint(1, 10))        # 生成一个指定范围的int型随机数（这里是闭区间[1,10]）
-3
->>> print(random.randrange(1, 100, 2))    # 生成一个从1到100、步进值为2的随机整数
-5
->>> print(random.uniform(1.1, 5.4))    # 生成一个指定范围的float型随机数（上下限可以是浮点数）
-5.254084551261407
->>> random.shuffle([0, 1, 2, 3])        # 将列表中元素的顺序打乱
->>> random.choice("01")                # 从序列中随机选取一项元素
-0
+
 ## 
 ## 
 ## 
@@ -5345,51 +5354,7 @@ H~2~O            # 下标
 `` Hi` ``
 
  
-数学分析
 
-## 
-## 
-## 
- 
-♢ math
-## math：Python的标准库，提供了开方、正弦、阶乘等基本的数学函数。
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
- 
-♢ NumPy
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
- 
-♢ sympy
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
- 
 ♢ matplotlib
 ## Matplotlib：Python的第三方库，仿制了许多matlab的绘图函数。
 - 安装：pip install Matplotlib

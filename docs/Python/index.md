@@ -6,6 +6,10 @@
   - [版本差异](简介/版本差异.md)
 - 文本处理
   - [jinja](文本处理/jinja.md)
+- 数学运算
+  - [♢ random](数学运算/^random.md)
+  - [♢ decimal](数学运算/^decimal.md)
+  - [♢ math](数学运算/^math.md)
 - 混合开发
   - [简介](混合开发/简介.md)
   - [♢ ctypes](混合开发/^ctypes.md)

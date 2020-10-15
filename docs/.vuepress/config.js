@@ -91,6 +91,16 @@ module.exports = {
                     ]
                 },
                 {
+                    title: '数学运算',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '数学运算/^random',
+                        '数学运算/^decimal',
+                        '数学运算/^math',
+                    ]
+                },
+                {
                     title: '混合开发',
                     collapsable: true,
                     sidebarDepth: 2,
@@ -567,6 +577,7 @@ module.exports = {
                     sidebarDepth: 2,
                     children: [
                         '消息队列/简介',
+                        '消息队列/ActiveMQ',
                         '消息队列/Kafka',
                     ]
                 },

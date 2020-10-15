@@ -980,7 +980,7 @@ inhibit_rules:
 - [GitHub 页面](https://github.com/prometheus-community/windows_exporter)
 - 下载 exe 版：
   ```sh
-  curl -O https://github.com/prometheus-community/windows_exporter/releases/download/v0.13.0/windows_exporter-0.13.0-amd64.exe
+  wget https://github.com/prometheus-community/windows_exporter/releases/download/v0.13.0/windows_exporter-0.13.0-amd64.exe
   ```
   启动：
   ```sh
@@ -993,7 +993,7 @@ inhibit_rules:
   ```
 - 或者下载 msi 版：
   ```sh
-  curl -O https://github.com/prometheus-community/windows_exporter/releases/download/v0.13.0/windows_exporter-0.13.0-amd64.msi
+  wget https://github.com/prometheus-community/windows_exporter/releases/download/v0.13.0/windows_exporter-0.13.0-amd64.msi
   ```
   执行它会安装 windows_exporter ，并作为后台服务运行、自动开通防火墙。
   ```sh

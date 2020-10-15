@@ -16,7 +16,7 @@
 - 下载源代码，编译后安装：
     ```sh
     redis_version=redis-6.0.8
-    curl -O http://download.redis.io/releases/${redis_version}.tar.gz
+    wget http://download.redis.io/releases/${redis_version}.tar.gz
     tar -zxvf ${redis_version}.tar.gz
     cd ${redis_version}
     yum install -y make gcc

@@ -9,7 +9,7 @@
 - 下载源代码包并启动：
     ```sh
     yum install java-1.8.0-openjdk-devel  # 安装 jdk
-    curl -O https://mirrors.tuna.tsinghua.edu.cn/apache/tomcat/tomcat-9/v9.0.33/bin/apache-tomcat-9.0.33.tar.gz
+    wget https://mirrors.tuna.tsinghua.edu.cn/apache/tomcat/tomcat-9/v9.0.33/bin/apache-tomcat-9.0.33.tar.gz
     tar -zxvf apache-tomcat-9.0.33.tar.gz
     cd apache-tomcat-9.0.33/bin/
     ./startup.sh

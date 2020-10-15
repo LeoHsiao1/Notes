@@ -14,13 +14,11 @@ MySQL 存在多个分支：
 运行 mysqld 进程的主机即可担任 MySQL 服务器。
 - 通常作为守护进程运行，监听 3306 端口，供 MySQL 客户端连接。
 
-### 安装
-
-这里安装的是 Percona 。
+### 安装 Percona
 
 - 用 yum 安装：
     ```sh
-    curl -O https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.28-31/binary/redhat/7/x86_64/Percona-Server-5.7.28-31-rd14ef86-el7-x86_64-bundle.tar
+    wget https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.28-31/binary/redhat/7/x86_64/Percona-Server-5.7.28-31-rd14ef86-el7-x86_64-bundle.tar
     tar -xvf Percona-Server-5.7.26-29-r11ad961-el7-x86_64-bundle.tar
     yum install -y Percona-Server*.rpm
     rm -f Percona-Server*

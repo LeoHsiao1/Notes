@@ -27,5 +27,5 @@ curl -X PUT -u admin:password http://10.0.0.1:8082/artifactory/generic-local/tes
 
 下载文件：
 ```sh
-curl -O -u admin:password http://10.0.0.1:8082/artifactory/generic-local/test/1.zip
+wget -u admin:password http://10.0.0.1:8082/artifactory/generic-local/test/1.zip
 ```

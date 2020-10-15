@@ -7,15 +7,16 @@
 
 ## 安装
 
-- 先安装 JDK ，然后下载 ES 的二进制版：
+- 下载二进制版：
   ```sh
-  curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.6.0-linux-x86_64.tar.gz
+  wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.6.0-linux-x86_64.tar.gz
   ```
   解压后运行：
   ```sh
   bin/elasticsearch       # 在前台运行
                     -d    # 以 daemon 方式运行
   ```
+  运行 ES 需要 JRE 环境，不过 ES 的 `jdk` 目录下自带了。
 
 - 或者运行 Docker 镜像：
   ```sh

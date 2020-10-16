@@ -44,10 +44,10 @@ FastDFS 的服务器分为两部分：
 
 2. 执行 `docker exec -it storage bash` 进入容器，再执行 `vi /etc/fdfs/storage.conf` ，修改配置文件：
     ```ini
-    base_path=/var/fdfs        # 存储数据和日志的基础目录
-    store_path0=/var/fdfs        # 存储目录，可以设置多个，从 0 开始编号
-    tracker_server=172.17.0.1:22122  # tracker_server 的位置
-    http.server_port=80        # storage server 的 HTTP 端口号
+    base_path=/var/fdfs               # 存储数据和日志的基础目录
+    store_path0=/var/fdfs             # 存储目录，可以设置多个，从 0 开始编号
+    tracker_server=172.17.0.1:22122   # tracker_server 的位置
+    http.server_port=80               # storage server 的 HTTP 端口号
     ```
 
 3. 重启 storage server ：

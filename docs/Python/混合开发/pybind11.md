@@ -1,13 +1,13 @@
 # pybind11
 
-：一个 C++库，可以将 C++ 代码封装成 Python 模块，或者在 C++ 中导入 Python 模块。
+：一个 C++ 库，可以将 C++ 代码封装成 Python 模块，或者在 C++ 中导入 Python 模块。
 - 用 pybind11 编译出 Python 模块之后，用户不需要安装 pybind11 也可以导入该模块，但是必须使用与编译时版本一致的 Python 解释器。
 - 需要使用支持 C++11 的编译器。
 - [官方文档](https://pybind11.readthedocs.io/en/master/index.html)
 
 ## 基本示例
 
-1. 编写 C++源文件 api.cpp ，如下：
+1. 编写 C++ 源文件 api.cpp ，如下：
     ```cpp
     #include <pybind11/pybind11.h>
     namespace py = pybind11;
@@ -24,8 +24,8 @@
     PYBIND11_MODULE(api, m)                   // 创建一个 Python 模块，名为 api ，用变量 m 表示
     {
         m.doc() = "pybind11 example module";  // 给模块 m 添加说明文档
-        m.def("sum", &sum);                   // 给模块 m 定义一个函数，名为 sum ，绑定到 C++代码中的 sum 函数
-        m.attr("p1") = p1;                    // 给模块 m 定义一个变量 p1 ，绑定到 C++代码中的指针 p1
+        m.def("sum", &sum);                   // 给模块 m 定义一个函数，名为 sum ，绑定到 C++ 代码中的 sum 函数
+        m.attr("p1") = p1;                    // 给模块 m 定义一个变量 p1 ，绑定到 C++ 代码中的指针 p1
         m.attr("p2") = 42;                    // 给模块 m 定义一个变量 p2 ，用常量直接赋值
     }
     ```
@@ -105,12 +105,12 @@
         setup_requires=['pybind11>=2.4'],
     )
     ```
-2. 执行 `python setup.py build` 编译 C++代码，这会生成 `build/lib.xx/*.pyd` 文件。
+2. 执行 `python setup.py build` 编译 C++ 代码，这会生成 `build/lib.xx/*.pyd` 文件。
 
 ## 绑定 C++ 的变量和函数
 
 例：
-- 编写 C++代码：
+- 编写 C++ 代码：
     ```cpp
     #include <pybind11/pybind11.h>
     #include <iostream>
@@ -168,7 +168,7 @@
 ## 绑定 C++ 的类
 
 例：
-- 编写 C++代码：
+- 编写 C++ 代码：
     ```cpp
     #include <pybind11/pybind11.h>
     #include <iostream>
@@ -247,12 +247,12 @@
 ## 传递字符串
 
 将 Python 中的字符串传给 C++ 时：
-- C++函数接收字符串的形参可以为 std::string 或 char * 类型。
+- C++ 函数接收字符串的形参可以为 std::string 或 char * 类型。
 - 如果 Python 输出的字符串为 bytes 类型，则会被 pybind11 直接传递。
 - 如果 Python 输出的字符串为 str 类型，则会被 pybind11 自动经过 str.encode('utf-8') 之后再传递。
   - 如果编码失败，则会抛出 UnicodeDecodeError 异常。
 - 例：
-    编写 C++代码：
+    编写 C++ 代码：
     ```cpp
     #include <pybind11/pybind11.h>
     #include <iostream>
@@ -407,7 +407,7 @@ py::object test_dict()
 
 ## 映射对象
 
-将 C++对象映射到 Python 中：
+将 C++ 对象映射到 Python 中：
 ```cpp
 MyClass *p = ...;
 py::object obj = py::cast(p);
@@ -445,7 +445,7 @@ py::object obj = py::cast(p);
 	AttributeError: type object 'api.Pet' has no attribute 'name'
 	```
 
-将 Python 对象映射到 C++中：
+将 Python 对象映射到 C++ 中：
 ```cpp
 py::object obj = ...;
 MyClass *p = obj.cast<MyClass *>();

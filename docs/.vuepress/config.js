@@ -480,8 +480,6 @@ module.exports = {
                         'CI/Git',
                         'CI/GitHub',
                         'CI/Jenkins',
-                        'CI/SonarQube',
-                        'CI/Artifactory',
                     ]
                 },
                 {
@@ -538,12 +536,21 @@ module.exports = {
                     ]
                 },
                 {
+                    title: '存储',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '存储/Nextcloud',
+                        '存储/Artifactory',
+                    ]
+                },
+                {
                     title: '其它',
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
                         '其它/VSCode',
-                        '其它/Nextcloud',
+                        '其它/SonarQube',
                     ]
                 },
             ],

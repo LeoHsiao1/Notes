@@ -6,8 +6,6 @@
   - [Git](CI/Git.md)
   - [GitHub](CI/GitHub.md)
   - [Jenkins](CI/Jenkins.md)
-  - [SonarQube](CI/SonarQube.md)
-  - [Artifactory](CI/Artifactory.md)
 - Docker
   - [简介](Docker/简介.md)
   - [容器](Docker/容器.md)
@@ -31,6 +29,9 @@
   - [Prometheus](监控告警/Prometheus.md)
 - 日志处理
   - [ELK](日志处理/ELK.md)
+- 存储
+  - [Nextcloud](存储/Nextcloud.md)
+  - [Artifactory](存储/Artifactory.md)
 - 其它
   - [VS Code](其它/VSCode.md)
-  - [Nextcloud](其它/Nextcloud.md)
+  - [SonarQube](其它/SonarQube.md)

@@ -1,6 +1,7 @@
 # Artifactory
 
 ：一个制品仓库，由 Jfrog 公司推出。
+- 提供了 Web 操作页面，也提供了上传、下载文件的 HTTP API 。
 - 社区版可以免费试用，但只能创建 Maven 、Generic 等少数几种仓库。
 - 同类产品 Nexus 主要用作 Maven 仓库，用途较窄。
 

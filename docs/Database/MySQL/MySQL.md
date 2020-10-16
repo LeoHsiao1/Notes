@@ -17,34 +17,32 @@ MySQL 存在多个分支：
 ### 安装 Percona
 
 - 用 yum 安装：
-    ```sh
-    wget https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.28-31/binary/redhat/7/x86_64/Percona-Server-5.7.28-31-rd14ef86-el7-x86_64-bundle.tar
-    tar -xvf Percona-Server-5.7.26-29-r11ad961-el7-x86_64-bundle.tar
-    yum install -y Percona-Server*.rpm
-    rm -f Percona-Server*
-    systemctl start mysqld                    # 启动服务器
-    ```
+  ```sh
+  wget https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.28-31/binary/redhat/7/x86_64/Percona-Server-5.7.28-31-rd14ef86-el7-x86_64-bundle.tar
+  tar -xvf Percona-Server-5.7.26-29-r11ad961-el7-x86_64-bundle.tar
+  yum install -y Percona-Server*.rpm
+  rm -f Percona-Server*
+  systemctl start mysqld                    # 启动服务器
+  ```
   启动之后要修改密码：
-    ```sh
-    cat /var/log/mysqld.log | grep password   # 查看初始密码
-    mysql -u root -p                          # 登录，输入初始密码
-    set password for 'root'@'localhost' = password('******');  # 设置新密码
-    ```
+  ```sh
+  cat /var/log/mysqld.log | grep password   # 查看初始密码
+  mysql -u root -p                          # 登录，输入初始密码
+  set password for 'root'@'localhost' = password('******');  # 设置新密码
+  ```
 
 - 或者运行 Docker 镜像：
-    ```sh
-    docker run -d --name percona -p 3306:3306 \
-            -e MYSQL_ROOT_PASSWORD=123456 \
-            -v mysql_data:/var/lib/mysql \
-            percona:5.7.26-centos
-    ```
-  启动之后要修改密码：
-    ```
-    docker exec -it percona bash
-    mysql -u root -p
-    123456
-    set password for 'root'@'localhost' = password('******');
-    ```
+  ```sh
+  docker run -d --name percona -p 3306:3306 \
+          -e MYSQL_ROOT_PASSWORD=****** \   # root 密码（必须设置该环境变量）
+          # -e MYSQL_ROOT_HOST=%        \   # root 的登录地址
+          # -e MYSQL_DATABASE=db1       \   # 创建一个数据库
+          # -e MYSQL_USER=leo           \   # 创建一个用户（会自动授予该用户对上面数据库的全部权限）
+          # -e MYSQL_PASSWORD=******    \
+          -v mysql_data:/var/lib/mysql  \   # 挂载数据卷
+          percona:5.7.26-centos
+  ```
+  如果挂载指定目录 `-v /opt/mysql:/var/lib/mysql` ，则需要先分配权限 `chmod -R 777 /opt/mysql` 。
 
 ### 配置
 

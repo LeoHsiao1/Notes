@@ -1,6 +1,6 @@
 # FastDFS
 
-：一个轻量级的分布式文件系统。
+：一个轻量级的分布式文件服务器。
 - 提供文件存储、上传、下载等功能，适合管理海量的中小文件（4KB~500MB）。
 - 通常将 FastDFS 与 Nginx 搭配使用。
 
@@ -22,7 +22,7 @@ FastDFS 的服务器分为两部分：
 
 ## 部署
 
-### 启动 tracker server
+### tracker server
 
 1. 运行 Docker 镜像：
     ```sh
@@ -35,7 +35,7 @@ FastDFS 的服务器分为两部分：
     port=22122    # tracker server 监听的端口
     ```
 
-### 启动 storage server
+### storage server
 
 1. 运行 Docker 镜像：
     ```sh
@@ -74,7 +74,7 @@ FastDFS 的服务器分为两部分：
     /usr/local/nginx/sbin/nginx -s reload
     ```
 
-### 试用 client
+### client
 
 1. 进入 storage 容器，执行 `vi /etc/fdfs/client.conf` ，修改配置文件：
     ```ini

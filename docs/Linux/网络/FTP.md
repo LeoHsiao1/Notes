@@ -5,6 +5,15 @@
 - 默认使用 TCP 20 端口传输文件，使用 TCP 21 端口传输客户端发出的 FTP 指令。
 - 采用明文传输数据，容易被监听。
 
+## ftp
+
+：一个 FTP 客户端软件。
+- 安装：yum install ftp
+- 用法：
+  ```sh
+  $ ftp <ip>    # 登录到一个 FTP 服务器（这会进入 FTP 客户端的终端）
+  ```
+
 ## vsftpd
 
 ：very secure ftp daemon ，一个加密型 FTP 服务器软件。
@@ -16,7 +25,7 @@
 - 安装：
     ```sh
     yum install vsftpd
-    systemctl enable vsftpd
+    systemctl start vsftpd
     ```
 - 修改配置文件 /etc/vsftpd/vsftpd.conf ：
     ```sh
@@ -34,12 +43,3 @@
     guest_enable=NO             # 虚拟用户模式
     ```
     - 修改配置文件之后，要重启服务才能生效：systemctl restart vsftpd
-
-## ftp
-
-：一个 FTP 客户端软件。
-- 安装：yum install ftp
-- 用法：
-  ```sh
-  $ ftp <ip>    # 登录到一个 FTP 服务器（这会进入 FTP 客户端的终端）
-  ```

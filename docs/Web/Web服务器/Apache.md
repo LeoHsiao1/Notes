@@ -1,5 +1,4 @@
 # Apache
 
 Apache HTTP Server 是世界上使用量最大的 Web 服务器软件。
-
-> TODO:待补充
+- 一般用作静态服务器。

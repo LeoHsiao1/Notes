@@ -297,21 +297,15 @@ module.exports = {
                     path: '/Web/',
                 },
                 {
-                    title: '简介',
+                    title: 'Web服务器',
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        '简介/简介',
-                    ]
-                },
-                {
-                    title: 'Web爬虫',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        'Web爬虫/简介',
-                        'Web爬虫/^urllib',
-                        'Web爬虫/^requests',
+                        'Web服务器/简介',
+                        'Web服务器/Apache',
+                        'Web服务器/Tomcat',
+                        'Web服务器/Nginx',
+                        'Web服务器/FastDFS',
                     ]
                 },
                 {
@@ -347,14 +341,13 @@ module.exports = {
                     ]
                 },
                 {
-                    title: '后端服务器',
+                    title: 'Web爬虫',
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        '后端服务器/Apache',
-                        '后端服务器/Tomcat',
-                        '后端服务器/Nginx',
-                        '后端服务器/FastDFS',
+                        'Web爬虫/简介',
+                        'Web爬虫/^urllib',
+                        'Web爬虫/^requests',
                     ]
                 },
                 {

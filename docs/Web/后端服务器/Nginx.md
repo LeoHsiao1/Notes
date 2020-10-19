@@ -38,7 +38,7 @@
 Nginx 默认使用 `/etc/nginx/nginx.conf` 作为主配置文件（用于保存全局配置），还会导入 `/etc/nginx/conf.d/` 目录下的其它配置文件（通常用于保存一些 server{} 的配置）。
 - 这些配置文件的后缀名为 .conf ，采用 Nginx 自定的语法，用 # 声明单行注释。
 
-### nginx.conf 的配置示例
+### nginx.conf
 
 `/etc/nginx/nginx.conf` 的默认内容：
 ```sh
@@ -80,7 +80,7 @@ http {
   - tcp_nodelay 模式：一有数据就立即发送。这样能减少通信延迟。
 - keepalive_timeout 表示客户端 TCP 连接的最大时长（单位为秒），超过该时间之后，Nginx 会关闭连接。
 
-### server{} 的配置示例
+### default.conf
 
 `/etc/nginx/conf.d/` 目录下默认存在一个 `default.conf` ，配置了 Nginx 的初始 Web 页面，如下：
 ```sh
@@ -100,12 +100,36 @@ server {
 }
 ```
 - http{} 模块中可以定义多个 server{} 模块，每个 server{} 模块代表一个 HTTP 服务器。
-- listen 指令的例子：
+- server{} 中的其它配置项：
+    ```sh
+    charset  utf-8;       # 配置 HTTP 响应报文的 Content-Type
+    root  /www/;          # 配置网站的根目录，当没有 HTTP 请求没有找到匹配的 location 时就到该目录下寻找文件
+    access_log off;       # 在 server{} 之外配置的日志是全局日志，在 server{} 之内配置的日志是局部日志
+    ```
+
+## 指令
+
+- Nginx 的配置文件中可以写入多种指令（directives）。
+- 有的指令允许重复配置。
+  - 在配置文件中，写在在局部作用域的指令，比起外部作用域的指令，优先级更高。
+  - 在同一个作用域内，写在前面的指令，比起写在后面的指令，优先级更高。（因为 Nginx 一读取到前面的指令就开始应用了）
+
+### listen
+
+：用于声明 server 监听的 IP:Port 。
+- 可用上下文：server{}
+- 它是硬性要求，server 只会接收满足 listen 条件的 HTTP 请求。
+- 例：
     ```sh
     listen      80;              # 相当于 listen *:80
     listen      127.0.0.1:80;
     listen      unix:/var/run/nginx.sock;
     ```
+
+### server_name
+
+：用于声明 server{} 监听的域名（但并不是硬性要求）。
+- 可用上下文：server{}
 - 当 Nginx 在某个 TCP 端口收到一个 HTTP 请求时，会交给监听该端口的 server 处理。
   - 如果监听该端口的 server 有多个，则考虑 Request Header 中的 Host 与哪个 server 监听的 server_name 匹配。
   - 如果没有匹配的 server_name ，或者 Request Header 中的 Host 是 IP 地址，则交给监听该端口的默认 server 处理。
@@ -121,49 +145,40 @@ server {
     server_name  ~^(?<www>.+)\.test\.com$;  # 正则表达式
     server_name  "";                        # 空字符串，相当于不填 server_name ，不会匹配任何域名
     ```
-  - 如果两个 server 监听的端口和域名都相同，则启动 Nginx 时会报错：conflicting server name
+  - 如果有两个 server 监听的端口、域名都相同，则启动 Nginx 时会报错：`conflicting server name`
 
-- server{} 中可以定义多个 location{} ，表示 URL 路由规则。如下：
-  - location 以 = 开头表示精确匹配，以 ~ 开头表示区分大小写（默认是这种），以 ~* 开头表示不区分大小写。
-  - location 以 / 结尾则会转发相对路径，不以 / 结尾则会转发绝对路径。
-  - 例：
+### location{}
+
+：用于定义 URI 路由规则。
+- 可用上下文：server{}、location{}
+- 语法为 `location <type> <URI> {...}` ，可以定义多个，可以嵌套。
+- 匹配类型 type 有以下几种，排在前面的优先匹配：
+  - `=`  ：字符串精确匹配，即匹配与该字符串完全相同的 URI 。
+  - `^~` ：字符串前缀匹配，即匹配以该字符串开头的 URI 。
+  - `~`  ：正则匹配。如果某个 URI 同时匹配多个正则 location ，则采用正则表达式最长的那个。
+  - `~*` ：不区分大小写的正则匹配。
+  - 不指定 type 时，匹配规则相当于 `^~` ，但优先级最低。
+
+- URI 以 `/` 结尾则会转发相对路径，不以 `/` 结尾则会转发绝对路径。如下：
     ```sh
-    location = / {       # 匹配以 / 开头的 URL
-        root /www/;
-        # proxy_pass http://127.0.0.1:79/;    # 把请求转发到另一个服务器（前提是不匹配其它规则）
-    }
-    ```
-    ```sh
-    location /img {      # 匹配以 /img 开头的 URL
-        root /www/;
-    }
-    ```
-    - 比如访问 http://127.0.0.1/img/1.html 时，会转发绝对路径 img/1.html ，转发到 http://127.0.0.1:80/www/img/1.html
-    ```sh
-    location /img/ {     # 匹配以 /img 开头的 URL
+    location /img {
         root /www/;
     }
     ```
-    - 比如访问 http://127.0.0.1/img/1.html 时，会转发相对路径 1.html ，转发到 http://127.0.0.1:80/www/1.html
-
-- server{} 中的其它配置项：
     ```sh
-    charset  utf-8;       # 配置 HTTP 响应报文的 Content-Type
-    root  /www/;          # 配置网站的根目录，当没有 HTTP 请求没有找到匹配的 location 时就到该目录下寻找文件
-    access_log off;       # 在 server{} 之外配置的日志是全局日志，在 server{} 之内配置的日志是局部日志
+    location /img/ {
+        root /www/;
+    }
     ```
+    - 访问 `http://127.0.0.1/img/1.html` 时，会转发绝对路径 `img/1.html` ，转发到 `http://127.0.0.1:80/www/img/1.html` 。
+    - 访问 `http://127.0.0.1/img/1.html` 时，会转发相对路径 `1.html` ，转发到 `http://127.0.0.1:80/www/1.html` 。
 
-## 指令
-
-- Nginx 的配置文件中可以写入多种指令（directives）。
-- 有的指令允许重复配置。
-  - 在配置文件中，写在在局部作用域的指令，比起外部作用域的指令，优先级更高。
-  - 在同一个作用域内，写在前面的指令，比起写在后面的指令，优先级更高。（因为 Nginx 一读取到前面的指令就开始应用了）
+- 如果有两个 location 的 type、URI 都相同，则启动 Nginx 时会报错：`duplicate location` 。
 
 ### allow 、deny
 
 ：用于允许或禁止某些 IP 地址的访问。
-- 这两个指令可以写在 http{} 、server{} 或 location{} 中。
+- 可用上下文：http{}、server{}、location{}
 - 例：
     ```sh
     deny    192.168.1.1;
@@ -176,12 +191,12 @@ server {
 ### auth_basic
 
 ：用于启用 HTTP Basic Auth 。
+- 可用上下文：http{}、server{}、location{}
 - 例：
     ```sh
     auth_basic              "";                 # 只要不设置成 auth_basic off; 就会启用认证
     auth_basic_user_file    /etc/nginx/passwd;  # 使用哪个密码文件
     ```
-- 这两个指令可以写在 http{} 、server{} 或 location{} 中，并且可以分开使用，比如给某个 server 使用专门的密码文件。
 - 密码文件中保存了可用的用户名、密码，在运行时修改也会自动刷新。可用以下命令生成：
     ```sh
     yum install httpd-tools
@@ -189,12 +204,11 @@ server {
     htpasswd -b passwd leo 1234      # 往密码文件 passwd 中添加一个用户 leo 。如果该用户名已存在，则会覆盖其密码
     htpasswd -D passwd leo           # 删除一个用户
     ```
-- 如果客户端没有进行 HTTP Basic Auth ，或者进行了但不通过，则会返回 HTTP 401 Authorization Required 报文。
 
 ### gzip
 
 ：用于 gzip 压缩响应报文 body 。
-- 该指令可以写在 http{} 、server{} 或 location{} 中。
+- 可用上下文：http{}、server{}、location{}
 - 例：
     ```sh
     location ~ .*\.(jpg|gif|png|bmp)$ {
@@ -212,7 +226,7 @@ server {
 ### proxy_pass
 
 ：将收到的 HTTP 请求转发给某个服务器，实现反向代理。
-- 该指令只能写在 location{} 中。
+- 可用上下文：location{}
 - 例：
     ```sh
     location / {
@@ -228,7 +242,7 @@ server {
 ### rewrite
 
 ：将收到的 HTTP 请求重定向到某个 URL 。
-- 可以写在 server{} 或 location{} 中。
+- 可用上下文：server{}、location{}
 - 例：
     ```sh
     rewrite  /1.html  /2.html ;         # 访问 1.html 时重定向到 2.html
@@ -239,7 +253,7 @@ server {
 ### return
 
 ：直接返回 HTTP 响应报文给客户端。
-- 可以写在 server{} 或 location{} 中。
+- 可用上下文：server{}、location{}
 - 例：
     ```sh
     server{
@@ -254,6 +268,7 @@ server {
 ### ssl_protocols
 
 ：用于启用 HTTPS 协议。
+- 可用上下文：http{}、server{}
 - 例：
     ```sh
     server {
@@ -277,7 +292,7 @@ server {
 ### stream
 
 ：用于实现 TCP 代理。
-- 可以在与 http{} 模块同级的位置定义。
+- 可用上下文：与 http{} 同级
 - 例：
     ```sh
     stream {
@@ -298,9 +313,9 @@ server {
 ### upstream
 
 ：用于定义任意个可用的 server（即后端服务器），从而可以将收到的 HTTP 请求按某种策略转发给 server 处理，实现负载均衡。
-- 只能在 http{} 模块中定义。
+- 可用上下文：http{}
 
-常见的分配策略如下：
+常见的分配策略：
 - 按轮询分配：将 HTTP 请求按时间顺序依次分配给各个 server ，实现简单的平均分配。配置如下：
     1. 在 http{} 之内、server{} 之外定义 upstream 。
     ```sh

@@ -1,10 +1,13 @@
 # Nextcloud
 
-：一个开源的网盘服务器。
+：一个开源的网盘服务器软件。
 - 提供了 Web 操作页面，但没有提供上传、下载文件的 HTTP API 。
 - 提供了 Linux、MacOS、Windows、Android、IOS 版的客户端。
-- 功能丰富，接近商业级网盘。
+- 提供了插件市场，功能丰富，接近商业级网盘。
 - [官方文档](https://docs.nextcloud.com/server/10/user_manual/contents.html)
+- 同类产品：
+  - Seafile  ：国产开源网盘，功能很少。
+  - ownCloud ：可以给文件创建公开的下载链接。提供了插件市场，功能比 Nextcloud 略少。
 
 ## 部署
 

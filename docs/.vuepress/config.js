@@ -476,14 +476,13 @@ module.exports = {
                     ]
                 },
                 {
-                    title: 'Docker',
+                    title: '容器',
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        'Docker/简介',
-                        'Docker/容器',
-                        'Docker/镜像',
-                        'Docker/Docker-Compose',
+                        '容器/简介',
+                        '容器/Docker',
+                        '容器/Docker-Compose',
                     ]
                 },
                 {

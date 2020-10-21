@@ -6,11 +6,10 @@
   - [Git](CI/Git.md)
   - [GitHub](CI/GitHub.md)
   - [Jenkins](CI/Jenkins.md)
-- Docker
-  - [简介](Docker/简介.md)
-  - [容器](Docker/容器.md)
-  - [镜像](Docker/镜像.md)
-  - [Docker Compose](Docker/Docker-Compose.md)
+- 容器
+  - [简介](容器/简介.md)
+  - [Docker](容器/Docker.md)
+  - [Docker Compose](容器/Docker-Compose.md)
 - k8s
   - [简介](k8s/简介.md)
   - [安装](k8s/安装.md)

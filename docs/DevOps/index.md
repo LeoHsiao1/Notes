@@ -4,6 +4,7 @@
   - [简介](简介/简介.md)
 - CI
   - [Git](CI/Git.md)
+  - [GitLab](CI/GitLab.md)
   - [GitHub](CI/GitHub.md)
   - [Jenkins](CI/Jenkins.md)
 - 容器

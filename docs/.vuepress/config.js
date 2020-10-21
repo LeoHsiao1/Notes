@@ -471,6 +471,7 @@ module.exports = {
                     sidebarDepth: 2,
                     children: [
                         'CI/Git',
+                        'CI/GitLab',
                         'CI/GitHub',
                         'CI/Jenkins',
                     ]

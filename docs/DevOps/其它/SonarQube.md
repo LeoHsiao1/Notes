@@ -17,52 +17,43 @@
     ```
 
 2. 用 docker-compose 部署：
-    ```yaml
+    ```yml
     version: "3"
-    
+
     services:
       sonarqube:
         image: sonarqube:8-community
-        restart: unless-stopped
-        environment:
-          - sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube
-          - sonar.jdbc.username=sonarqube
-          - sonar.jdbc.password=******  # 待填密码
+        restart: on-failure
         ports:
           - 9000:9000
         networks:
           - net
+        environment:
+          - sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube
+          - sonar.jdbc.username=sonarqube
+          - sonar.jdbc.password=******    # 密码
         volumes:
-          - conf:/opt/sonarqube/conf
-          - data:/opt/sonarqube/data
-          - extensions:/opt/sonarqube/extensions
-          - logs:/opt/sonarqube/logs
-    
+          - ./sonarqube/conf:/opt/sonarqube/conf
+          - ./sonarqube/data:/opt/sonarqube/data
+          - ./sonarqube/extensions:/opt/sonarqube/extensions
+          - ./sonarqube/logs:/opt/sonarqube/logs
+
       postgres:
         image: postgres:12
-        restart: unless-stopped
-        environment:
-          - POSTGRES_USER=sonarqube
-          - POSTGRES_PASSWORD=******    # 待填密码
-          - POSTGRES_DB=sonarqube
+        restart: on-failure
         networks:
           - net
+        environment:
+          - POSTGRES_USER=sonarqube
+          - POSTGRES_PASSWORD=******    # 密码
+          - POSTGRES_DB=sonarqube
         volumes:
-          - postgres:/var/lib/postgresql/data
-    
+          - ./postgres:/var/lib/postgresql/data
+
     networks:
       net:
-        driver: bridge
-    
-    volumes:
-      conf:
-      data:
-      extensions:
-      logs:
-      postgres:
     ```
     - 默认用户名、密码为 admin、admin 。
-    - SonarQube 容器需要挂载数据卷，而不是直接挂载目录，否则不能安装默认插件。
     - SonarQube 支持的外部数据库包括：Oracle、PostgreSQL、SQL Server 。如果不配置外部数据库，则默认会使用内置数据库，但不方便迁移数据、不支持版本更新。
 
 ## 用法

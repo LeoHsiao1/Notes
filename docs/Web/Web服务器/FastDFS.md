@@ -43,9 +43,9 @@ FastDFS 的服务器分为两种角色：
 
 2. 执行 `docker exec -it storage bash` 进入容器，再执行 `vi /etc/fdfs/storage.conf` ，修改配置文件：
     ```ini
-    base_path=/opt/fdfs             # 工作目录，用于存储数据和日志
-    store_path0=/opt/fdfs/store0    # 存储文件的目录，可以重复设置多个，从 0 开始编号
-    # store_path1=/opt/fdfs/store1
+    base_path=/var/fdfs             # 工作目录，用于存储数据和日志
+    store_path0=/var/fdfs           # 存储文件的目录，可以重复设置多个，从 0 开始编号
+    #store_path1=/var/fdfs2
     tracker_server=10.0.0.1:22122   # tracker server 的地址，可以重复设置多个
     http.server_port=80             # 该 storage server 监听的端口
     ```
@@ -77,17 +77,25 @@ FastDFS 的服务器分为两种角色：
 
 ### client
 
-1. 进入 storage 容器，执行 `vi /etc/fdfs/client.conf` ，修改配置文件：
+1. 进入 fastdfs 容器，执行 `vi /etc/fdfs/client.conf` ，修改配置文件：
     ```ini
     tracker_server=10.0.0.1:22122
     ```
 
 2. 上传文件：
     ```sh
-    /usr/bin/fdfs_upload_file /etc/fdfs/client.conf f1
+    [root@Centos ~]# /usr/bin/fdfs_upload_file /etc/fdfs/client.conf test.txt
+    group1/M00/00/00/lRyeml-QA76AWkC1AAAAAAAAAAA357.txt
     ```
-
-3. 上传成功之后会返回文件的路径，可通过 HTTP 请求访问它：
+    上传成功之后会返回该文件的 URI ，其格式为：
+    - `group1` ：storage server 所属组。
+    - `M00`    ：对应 store_path 。
+    - `00/00/` ： store_path 之下的子目录，总共有两级，取值为十六进制的 00~FF 。
+    - `lRyeml-QA76AWkC1AAAAAAAAAAA357.txt` ：按特定规则生成的文件名。
+    
+    storage server 不支持文件去重，重复上传同一个文件时，会生成不同的 URI 。
+    
+3. 使用 URI 就可以下载文件：
     ```sh
-    curl http://10.0.0.1:80/<path>
+    wget http://10.0.0.1:80/<uri> -O text.txt
     ```

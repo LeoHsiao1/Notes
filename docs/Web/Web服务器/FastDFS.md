@@ -75,7 +75,9 @@ FastDFS 的服务器分为两种角色：
     /usr/local/nginx/sbin/nginx -s reload
     ```
 
-### client
+## 用法
+
+### 上传、下载文件
 
 1. 进入 fastdfs 容器，执行 `vi /etc/fdfs/client.conf` ，修改配置文件：
     ```ini
@@ -87,15 +89,27 @@ FastDFS 的服务器分为两种角色：
     [root@Centos ~]# /usr/bin/fdfs_upload_file /etc/fdfs/client.conf test.txt
     group1/M00/00/00/lRyeml-QA76AWkC1AAAAAAAAAAA357.txt
     ```
-    上传成功之后会返回该文件的 URI ，其格式为：
+    上传成功之后会返回该文件的存储路径 path ，其格式为：
     - `group1` ：storage server 所属组。
     - `M00`    ：对应 store_path 。
     - `00/00/` ： store_path 之下的子目录，总共有两级，取值为十六进制的 00~FF 。
     - `lRyeml-QA76AWkC1AAAAAAAAAAA357.txt` ：按特定规则生成的文件名。
     
-    storage server 不支持文件去重，重复上传同一个文件时，会生成不同的 URI 。
-    
-3. 使用 URI 就可以下载文件：
+    storage server 不支持文件去重，重复上传同一个文件时，会存储到不同的 path 。
+
+3. 下载文件： 
     ```sh
-    wget http://10.0.0.1:80/<uri> -O text.txt
+    /usr/bin/fdfs_download_file /etc/fdfs/client.conf <path>
     ```
+    或者自己拼凑出下载 URL ：
+    ```sh
+    wget http://10.0.0.1:80/<path> -O test.txt
+    ```
+
+### 其它命令
+
+```sh
+/usr/bin/fdfs_monitor /etc/fdfs/client.conf                         # 显示服务器的状态信息
+/usr/bin/fdfs_append_file /etc/fdfs/client.conf <path> test.txt     # 追加上传文件
+/usr/bin/fdfs_delete_file /etc/fdfs/client.conf <path>              # 删除文件
+```

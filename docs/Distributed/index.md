@@ -16,3 +16,4 @@
   - [Nextcloud](存储/Nextcloud.md)
   - [Artifactory](存储/Artifactory.md)
   - [FastDFS](存储/FastDFS.md)
+  - [MinIO](存储/MinIO.md)

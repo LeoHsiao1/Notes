@@ -580,6 +580,7 @@ module.exports = {
                         '存储/Nextcloud',
                         '存储/Artifactory',
                         '存储/FastDFS',
+                        '存储/MinIO',
                     ]
                 },
             ],

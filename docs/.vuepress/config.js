@@ -577,6 +577,7 @@ module.exports = {
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
+                        '存储/简介',
                         '存储/Nextcloud',
                         '存储/Artifactory',
                         '存储/FastDFS',

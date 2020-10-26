@@ -13,6 +13,7 @@
   - [ActiveMQ](消息队列/ActiveMQ.md)
   - [Kafka](消息队列/Kafka.md)
 - 存储
+  - [简介](存储/简介.md)
   - [Nextcloud](存储/Nextcloud.md)
   - [Artifactory](存储/Artifactory.md)
   - [FastDFS](存储/FastDFS.md)

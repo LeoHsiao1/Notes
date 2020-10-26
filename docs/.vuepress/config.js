@@ -506,6 +506,7 @@ module.exports = {
                     sidebarDepth: 2,
                     children: [
                         '配置管理/Ansible',
+                        '配置管理/Nacos',
                     ]
                 },
                 {

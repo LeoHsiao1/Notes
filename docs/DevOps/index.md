@@ -21,6 +21,7 @@
   - [Rancher](k8s/Rancher.md)
 - 配置管理
   - [Ansible](配置管理/Ansible.md)
+  - [Nacos](配置管理/Nacos.md)
 - 监控告警
   - [简介](监控告警/简介.md)
   - [Supervisor](监控告警/Supervisor.md)

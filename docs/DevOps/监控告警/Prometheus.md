@@ -451,23 +451,23 @@ scrape_configs:
 
 ## 分布式部署
 
-- Prometheus 支持抓取其它 Prometheus 的数据，因此可以分布式部署。
-- 不过只能抓取当前时刻的数据， 就像抓取一般的 exporter 。
+- Prometheus 支持抓取其它 Prometheus 的数据，因此支持分布式部署。
 - 在配置文件中按如下格式定义一个 job ，即可抓取其它 Prometheus 的数据：
     ```yaml
     scrape_configs:
     - job_name: 'federate'
-      honor_labels: true              # 设置 true ，以保存原指标中的 job 、instance 标签
+      honor_labels: true            # 设置 true ，以保存原指标中的 job 、instance 标签
       metrics_path: '/federate'
       params:
-        'match[]':                    # 抓取匹配这些表达式的指标
+        'match[]':                  # 抓取匹配这些表达式的指标
           - '{__name__=~"go_.*"}'
           - 'go_goroutines'
       static_configs:
-        - targets:                    # 目标 Prometheus 的地址
+        - targets:                  # 目标 Prometheus 的地址
           - '10.0.0.2:9090'
           - '10.0.0.3:9090'
     ```
+- 只能抓取目标 Prometheus 最新时刻的指标，就像抓取一般的 exporter 。如果目标 Prometheus 掉线一段时间，则重新连接之后并不会同步掉线期间的指标。
 
 ## Pushgateway
 

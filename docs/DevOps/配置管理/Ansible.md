@@ -1,7 +1,7 @@
 # Ansible
 
 ：一个配置管理工具，基于 Python 开发，可以自动化地管理大量主机、批量执行脚本。
-- Ansible 采用主从架构，而不是 C/S 工作模式。
+- Ansible 采用主从架构，而不是 C/S 架构。
   - 选取一个或多个主机运行 Ansible ，称为控制节点（Control node），负责控制其它远程主机。
   - 远程主机上不需要运行 Ansible 客户端，只要能通过 SSH 登录，Ansible 便可以连接到远程主机并执行命令。
 - [官方文档](https://docs.ansible.com/ansible/latest/user_guide/index.html)

@@ -3,7 +3,7 @@
 ：消息队列遥测传输协议（Message Queuing Telemetry Transport），常用于物联网通信。
 - 属于应用层协议，基于 TCP 通信。
 - 适用于低带宽、不可靠网络中的通信。
-- 采用 C/S 工作模式。
+- 采用 C/S 架构。
   - mqtt server 又称为 mqtt broker ，常见的服务器软件有 ActiveMQ、mosquitto、EMQ 等。
   - mqtt client 与 mqtt broker 建立连接之后就构成了一个会话（Session）。
 - 采用发布/订阅（publish/subscribe）模式。

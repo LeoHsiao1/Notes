@@ -5,7 +5,7 @@
   - 可以通过简单的命令来启动、停止进程，并且当进程异常退出时会自动重启它，类似于 systemd 。
   - 可以记录进程的 stdout、stderr 。
   - 提供了 Web 管理页面。
-- 采用 C/S 工作模式：
+- 采用 C/S 架构：
   - 首先运行一个守护进程 supervisord ，然后由它以子进程的方式启动各个托管的进程。
   - 用户可以执行 supervisorctl 命令，通过与 supervisord 通信，来控制托管的进程。
 - [官方文档](http://supervisord.org/index.html)

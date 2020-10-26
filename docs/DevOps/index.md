@@ -32,6 +32,4 @@
   - [ELK](日志处理/ELK.md)
 - 其它
   - [VS Code](其它/VSCode.md)
-  - [Nextcloud](其它/Nextcloud.md)
-  - [Artifactory](其它/Artifactory.md)
   - [SonarQube](其它/SonarQube.md)

@@ -305,7 +305,6 @@ module.exports = {
                         'Web服务器/Apache',
                         'Web服务器/Tomcat',
                         'Web服务器/Nginx',
-                        'Web服务器/FastDFS',
                     ]
                 },
                 {
@@ -535,8 +534,6 @@ module.exports = {
                     sidebarDepth: 2,
                     children: [
                         '其它/VSCode',
-                        '其它/Nextcloud',
-                        '其它/Artifactory',
                         '其它/SonarQube',
                     ]
                 },
@@ -573,6 +570,16 @@ module.exports = {
                         '消息队列/简介',
                         '消息队列/ActiveMQ',
                         '消息队列/Kafka',
+                    ]
+                },
+                {
+                    title: '存储',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        '存储/Nextcloud',
+                        '存储/Artifactory',
+                        '存储/FastDFS',
                     ]
                 },
             ],

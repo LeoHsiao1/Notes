@@ -68,13 +68,26 @@ link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 
 ## ip
 
-：用于查看和管理 ip 地址、路由表，功能更强大。
+：可替代 ifconfig、route 命令，且功能更强。
 
 用法：
 ```sh
 $ ip
-    addr        # 显示所有网卡的信息（相当于 ifconfig -a）
-    route       # 显示路由表（相当于 route 命令）
+    link                  # 显示所有网卡的信息
+    -s link               # 增加显示网卡接收、发送的字节数
+    -s -s link            # 增加显示网卡接收、发送的错误包数
+    link set eth0 up      # 启用网卡
+                  down    # 停用网卡
+    link del eth0         # 删除网卡
+
+    addr                              # 显示所有网卡的信息，及其 IP 地址
+        add 192.168.0.1/24 dev eth0   # 给网卡增加一个 IP 及掩码
+        del 192.168.0.1/24 dev eth0   # 删除
+
+    neighbour                         # 显示当前网段的其它主机
+
+    route                             # 显示路由表
+        add default via 10.0.0.1      # 增加一个默认网关
 ```
 
 ## DNS 配置
@@ -83,7 +96,7 @@ $ ip
 - `/etc/hosts` 文件中配置了静态 DNS 路由：
   ```
   127.0.0.1   localhost localhost4
-  ::1         localhost localhost6 
+  ::1         localhost localhost6
   ```
 - `/etc/sysconfig/network-scripts/ifcfg-eth0` 文件中配置了网卡 eth0 采用的 DNS 服务器：
   ```

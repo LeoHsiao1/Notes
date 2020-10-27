@@ -457,14 +457,6 @@ module.exports = {
                     path: '/DevOps/',
                 },
                 {
-                    title: '简介',
-                    collapsable: true,
-                    sidebarDepth: 2,
-                    children: [
-                        '简介/简介',
-                    ]
-                },
-                {
                     title: 'CI',
                     collapsable: true,
                     sidebarDepth: 2,
@@ -504,6 +496,7 @@ module.exports = {
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
+                        '配置管理/简介',
                         '配置管理/Ansible',
                         '配置管理/Nacos',
                     ]

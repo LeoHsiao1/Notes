@@ -1,7 +1,5 @@
 [《DevOps》](index.md)
 
-- 简介
-  - [简介](简介/简介.md)
 - CI
   - [Git](CI/Git.md)
   - [GitLab](CI/GitLab.md)
@@ -20,6 +18,7 @@
   - [插件](k8s/插件.md)
   - [Rancher](k8s/Rancher.md)
 - 配置管理
+  - [简介](配置管理/简介.md)
   - [Ansible](配置管理/Ansible.md)
   - [Nacos](配置管理/Nacos.md)
 - 监控告警

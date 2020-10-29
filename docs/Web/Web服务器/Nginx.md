@@ -45,7 +45,7 @@ Nginx 默认使用 `/etc/nginx/nginx.conf` 作为主配置文件（用于保存�
 user  nginx;          # 启动 Nginx 进程的用户名，可能需要给该用户分配权限
 worker_processes  1;  # 启动的 Nginx 进程数，与 CPU 核数相等时性能最高
 #daemon off;          # 默认以 daemon 方式运行
-error_log  /var/log/nginx/error.log warn;   # 全局的报错日志，及其日志等级
+error_log  /var/log/nginx/error.log warn;   # 设置 error_log 的路径、日志格式
 pid        /var/run/nginx.pid;
 
 events {
@@ -56,11 +56,11 @@ http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
 
-    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '   # 定义日志格式
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '   # 定义一种名为 main 的日志格式
                       '$status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
-    access_log  /var/log/nginx/access.log  main;    # 全局的访问日志，及其日志等级
+    access_log  /var/log/nginx/access.log  main;    # 设置 access_log 的路径、日志格式
 
     sendfile        on;
     #tcp_nopush     on;
@@ -245,8 +245,8 @@ server {
 - 可用上下文：server{}、location{}
 - 例：
     ```sh
-    rewrite  /1.html  /2.html ;         # 访问 1.html 时重定向到 2.html
-    rewrite  ^(.*)$  https://$host$1;   # 重定向到 https 的 URL
+    rewrite  /1.html  /2.html ;         # 将访问 1.html 的请求重定向到 2.html
+    rewrite  ^(.*)$  https://$host$1;   # 可以使用正则匹配、正则替换
     ```
 - 如果目标 URL 以 http:// 或 https:// 开头，则返回 301 永久重定向，否则返回 302 临时重定向。
 
@@ -259,8 +259,10 @@ server {
     server{
         listen  80;
         return  403;                                # 只返回状态码
-        return  200 "hello";                        # 返回状态码和一个字符串
+        return  200 OK\n;                           # 返回状态码和一个字符串（字符串可以不加定界符）
         return  200 '{"name":"test","id":"001"}';   # 返回状态码和 JSON 格式的字符串
+        return  200 'uri: $uri';                    # 可以使用变量
+
     }
     ```
 - 当 Nginx 执行到 return 指令时会立即返回 HTTP 响应，不会执行之后的指令。
@@ -365,3 +367,108 @@ server {
         server 127.0.0.1:8086;
     }
     ```
+
+## 变量
+
+Nginx 提供了以下内置变量。可以通过 `$` 取值，变量名不区分大小写，如果变量名或变量值不存在则取值为空。
+
+用法示例：
+```
+location /name/ {
+    proxy_pass http://127.0.0.1$request_uri;
+}
+```
+
+- 关于 HTTP 请求报文：
+```sh
+remote_addr     # 客户端的地址
+remote_port     # 客户端的端口
+request         # 请求报文的第一行，比如 GET /static/index.html HTTP/1.1
+request_body    # 请求 body 。只有当 Nginx 执行了 proxy_pass,fastcgi_pass,uwsgi_pass,scgi_pass 时才会将请求 body 载入内存，使得该变量取值不为空
+request_length  # 请求报文的长度
+request_method  # 请求的方法名，采用大写，比如 GET
+request_uri     # 请求 URI
+uri             # 请求 URI 中的路径部分，比如原始 URI 为 /static/index.html?id=1 时，路径部分为 /static/index.html
+args            # 请求 URL 中的 Query String
+is_args         # 如果存在 Query String 则取值为 ? （即使格式不正确），否则取值为空
+args_NAME       # Query String 中指定参数的值，不区分大小写
+http_NAME       # headers 中指定参数的值，不区分大小写
+cookie_NAME     # cookie 中指定参数的值，不区分大小写
+
+scheme    # 请求采用的协议，取值为 http 或 https
+https     # 如果采用了 HTTPS 协议则取值为 on ，否则取值为空
+
+request_filename # 请求 URI 指向的服务器文件，比如 /www/static/index.html
+document_root   # request_filename 文件在服务器上所处的根目录，比如 Nginx 配置的 root /www/;
+host #优先级：HTTP请求行的主机名>"HOST"请求头字段>符合请求的服务器名.请求中的主机头字段，如果请求中的主机头不可用，则为服务器处理请求的服务器名称
+
+
+
+
+
+server_addr     # 服务器的 IP ，由 HTTP 请求指向的 IP 决定，比如 127.0.0.1
+server_name     # 服务器的名称，由 Nginx 中 server{} 模块配置的 server_name 参数决定，采用小写
+server_port     # 服务器的端口号
+server_protocol   # 服务器的 HTTP 协议版本，比如HTTP/1.0" 或 "HTTP/1.1"
+
+```
+
+
+
+- 关于 HTTP 响应报文：
+```
+status      # 响应报文的状态码
+request_completion
+request_time
+
+```
+
+
+- 其它：
+```sh
+hostname        # 服务器的主机名，由服务器所在主机决定
+msec            # Unix 时间戳格式的服务器时间，比如 1603792024.820
+time_iso8601    # ISO 格式的服务器时间，比如 2020-10-28T10:27:14+08:00
+time_local      # 日志格式的服务器时间，比如 28/Oct/2020:10:27:14 +0800
+
+nginx_version   # Nginx 的版本号
+pid             # Nginx 当前 worker process 的 PID
+
+
+```
+
+自定义变量：
+```
+if ($request_uri ~ /wap/(\d+)/(.+)){
+    set $bucketid $1;
+    set $params $2;
+}
+```
+
+可以主动赋值的变量：
+```
+$sent_http_content_length 4096
+```
+
+
+```
+location / {
+    root /data/front/emcd/;
+    index index.html index.htm;
+    try_files $uri $uri/ /index.html =404;
+    add_header Cache-Control "no-cache, no-store";
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1";
+}
+```
+
+```
+location ^~/test/play {
+    proxy_pass_request_body on;
+    proxy_pass_request_headers on;
+    proxy_pass http://xyz.com/play;
+    proxy_redirect off;
+    proxy_cookie_path / /;
+}
+```

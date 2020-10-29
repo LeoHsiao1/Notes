@@ -55,12 +55,13 @@
 ```ini
 bind 0.0.0.0
 port 6379
+requirepass ******           # Redis 的密码
+protected-mode yes           # 保护模式，此时如果没设置 requirepass ，则会强制设置 bind 127.0.0.1
 daemonize yes                # 以 daemon 方式运行（默认是在前台运行）
 dir /etc/redis/              # 工作目录
 logfile /var/log/redis.log
 pidfile /var/run/redis.pid
 dbfilename dump.rdb          # 保存备份数据的文件名
-requirepass ******           # Redis 服务器的密码
 
 maxmemory 4G                 # 限制 Redis 使用的最大内存
 maxmemory-policy allkeys-lru # 接近 maxmemory 时的删 key 策略

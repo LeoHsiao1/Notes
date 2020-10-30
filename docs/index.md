@@ -22,7 +22,7 @@ tagline: null
 > 目录：
 > - [《Python》](Python/index.md)
 > - [《Linux》](Linux/index.md)
-> - [《Network》](Network/index.md)
+> - [《计算机网络》](Network/index.md)
 > - [《Web》](Web/index.md)
 > - [《Database》](Database/index.md)
 > - [《DevOps》](DevOps/index.md)

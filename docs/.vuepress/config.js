@@ -46,7 +46,7 @@ module.exports = {
                     link: '/Linux/index'
                 },
                 {
-                    text: '《Network》',
+                    text: '《计算机网络》',
                     link: '/Network/index'
                 },
                 {
@@ -231,7 +231,7 @@ module.exports = {
                 },
             ],
             '/Network/': [{
-                    title: '《Network》',
+                    title: '《计算机网络》',
                     path: '/Network/',
                 },
                 {

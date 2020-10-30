@@ -31,13 +31,14 @@
 ## URI
 
 ：统一资源标识符（Uniform Resource Identifier)，用于表示网络中某个资源的名称或位置。
-- HTTP 通信中，客户端常常通过 URI 定位服务器上的资源，比如图片、文件。
+- HTTP 通信中，客户端常常通过 URI 定位服务器上的资源。
+- 资源可以是实际存在的图片、文本文件，也可以是提供某种服务的 API 。
 
 URI 分为两种形式：
 - 统一资源名称（Uniform Resource Name ，URN）：用于表示资源的名称。
 - 统一资源定位符（Uniform Resource Locator ，URL）：用于表示资源的位置。
 
-URL 的一般格式为：`protocol://hostname:port/path/?querystring# fragment`
+URL 的一般格式为：`protocol://hostname:port/path/?querystring#fragment`
 - protocol ：采用的通信协议，比如 HTTP、HTTPS、FTP 。
 - hostname ：服务器的主机名、域名或 IP 地址，用于定位服务器。
   - protocol、hostname 不区分大小写，但一般小写。
@@ -46,10 +47,38 @@ URL 的一般格式为：`protocol://hostname:port/path/?querystring# fragment`
   - 如果省略不填，则使用当前通信协议的默认端口，比如 HTTP 的默认端口为 80 。
 - path ：服务器上某个资源的路径。
   - 如果省略不填，则会访问根目录 / 。比如 www.baidu.com 相当于 www.baidu.com/ 。
-  - **path 是否区分大小写取决于服务器所在的文件系统。比如 Linux 的文件系统区分大小写，Windows 的 NTFS 文件系统不区分大小写。**
+  - path 是否区分大小写取决于服务器所在的文件系统。比如 Linux 的文件系统区分大小写，Windows 的 NTFS 文件系统不区分大小写。
 - querystring ：查询字符串，传递一些键值对参数。
 - fragment ：片段，以 # 开头。用于定位到资源中的某一片段。
   - querystring、fragment 都区分大小写。
+
+## 请求方法
+
+HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五种请求方法。
+
+- GET ：用于请求获得（根据 URL 指定的）资源。
+  - 客户端发送 GET 请求报文时，报文的第一行包含了请求的 URL 。服务器一般会将回复的内容放在响应报文的 body 中，发给客户端。
+  - GET 请求报文还可以在 URL 的尾部加上一些键值对参数，称为查询字符串（Query String）。做法如下：
+    1. 将每个键值对的内部用 = 连接，外部用 & 分隔，合并成一个字符串。
+    2. 将该字符串经过 URLencode 编码，放到 URL 的 ? 之后。
+       <br>例如：`HTTPS://www.baidu.com/s?ie=UTF-8&wd=hello%20world`
+
+- POST ：用于向（根据 URL 指定的）资源提交数据。比如上传 HTML 表单数据、上传文件。
+  - 客户端发送 POST 请求报文时，通常将要提交的数据放在报文 body 中，发给服务器。服务器一般会回复一个状态码为 200 的报文，表示已成功收到。
+
+- HEAD ：与 GET 相似，但要求服务器不返回报文 body 。
+- PUT ：与 POST 相似，但常用于更新数据。
+  - 常用于具有幂等性的操作。
+- DELETE
+- CONNECT
+- TRACE
+- OPTIONS
+
+比较 GET 方法与 POST 方法：
+- GET 方法通常用于只读操作，而写操作、读写操作都要用 POST 方法。
+- 需要传递数据给服务器时，用 POST 方法比 GET 方法更好。因为：
+  - GET 方法只能传递键值对格式的数据。
+  - 某些浏览器限制了 URL 的最大长度（比如 1M），因此不能用 GET 方法传递较多的数据。
 
 ## 报文
 
@@ -75,7 +104,7 @@ ie=UTF-8&wd=1
 ```
 - 请求行：由请求方法名、请求的 URL 路径（域名之后的部分）、协议版本组成。
 - 更多的请求头示例：
-  ```
+  ```sh
   Content-Encoding: gzip                     # 该报文 body 的编码
   Content-Length: 348                        # 该报文 body 的长度
   Content-Type: text/html; charset=utf-8     # 该报文 body 的类型
@@ -105,7 +134,7 @@ Server: Apache/2.4.7 (Ubuntu)
 ```
 - 状态行：由协议版本、状态码、状态码的简单描述组成。
 - 更多的响应头示例：
-  ```
+  ```sh
   Status Code: 200 OK                    # 返回的状态码
   Allow: GET, HEAD                       # 服务器允许的 HTTP 请求方法
   Server: Tengine                        # 服务器的名字
@@ -137,34 +166,6 @@ text/javascript                              | js 代码
 image/jpeg、image/png、image/gif 等           | 图片
 multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 boundary 的值作为分隔符
 
-## 请求方法
-
-HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五种请求方法。
-
-- GET ：用于请求获得（根据 URL 指定的）资源。
-  - 客户端发送 GET 请求报文时，报文的第一行包含了请求的 URL 。服务器一般会将回复的内容放在响应报文的 body 中，发给客户端。
-  - GET 请求报文还可以在 URL 的尾部加上一些键值对参数，称为查询字符串（Query String）。做法如下：
-    1. 将每个键值对的内部用 = 连接，外部用 & 分隔，合并成一个字符串。
-    2. 将该字符串经过 URLencode 编码，放到 URL 的 ? 之后。
-       <br>例如：`HTTPS://www.baidu.com/s?ie=UTF-8&wd=hello%20world`
-
-- POST ：用于向（根据 URL 指定的）资源提交数据。比如上传 HTML 表单数据、上传文件。
-  - 客户端发送 POST 请求报文时，通常将要提交的数据放在报文 body 中，发给服务器。服务器一般会回复一个状态码为 200 的报文，表示已成功收到。
-
-- HEAD ：与 GET 相似，但要求服务器不返回报文 body 。
-- PUT ：与 POST 相似，但常用于更新数据。
-  - 常用于具有幂等性的操作。
-- DELETE
-- CONNECT
-- TRACE
-- OPTIONS
-
-比较 GET 方法与 POST 方法：
-- GET 方法通常用于只读操作，而写操作、读写操作都要用 POST 方法。
-- 需要传递数据给服务器时，用 POST 方法比 GET 方法更好。因为：
-  - GET 方法只能传递键值对格式的数据。
-  - 某些浏览器限制了 URL 的最大长度（比如 1M），因此不能用 GET 方法传递较多的数据。
-
 ## 状态码
 
 服务器返回响应报文时，报文的第一行包含了一个状态码（Status Code），表示对请求报文的处理结果。
@@ -181,11 +182,17 @@ HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五�
   - 302 ：Moved Temporarily ，资源被临时移动了。
   - 304 ：Not Modified ，资源并没有改变。比如当客户端刷新网页时，一些静态文件通常使用 304 ，可以从客户端的缓存中载入。
 - 4××：表示客户端出错。
-  - 400 ：Bad Request ，客户端请求报文的语法错误。
-  - 403 ：Forbidden ，服务器理解了该请求，但是禁止执行它。
+  - 400 ：Bad Request ，请求报文的语法错误。
+  - 401 ：Unauthorized ，拒绝客户端访问该资源，因为没有通过身份认证。
+  - 403 ：Forbidden ，禁止客户端访问该资源，且不说明理由。
   - 404 ：Not Found ，服务器找不到该资源。
-  - 405 ：Method Not Allowed ，服务器不接受这种 HTTP 请求方法。比如向 POST 接口发送 GET 请求时会报错 405 。
+  - 405 ：Method Not Allowed ，服务器不支持这种 HTTP 请求方法。比如向 POST 接口发送 GET 请求时会报错 405 。
 - 5××：表示服务器出错。
+  - 500 ：Internal Server Error ，通常是因为服务器执行内部代码时出错。
+  - 502 ：Bad Gateway ，通常是因为作为网关或代理的服务器，从上游服务器收到的 HTTP 响应报文出错。
+  - 503 ：Service Unavailable ，请求的服务不可用。比如服务器过载时不能提供服务。
+  - 504 ：Gateway Timeout ，通常是因为作为网关或代理的服务器，没有及时从上游服务器收到 HTTP 响应报文。
+  - 505 ：HTTP Version Not Supported ，服务器不支持该请求报文采用的 HTTP 版本。
 
 ## Basic Auth
 
@@ -198,7 +205,7 @@ HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五�
     ```
   - 大部分 HTTP 客户端也支持按以下格式发送用户名、密码：
     ```sh
-    curl http://username:password@127.0.0.1:9090
+    curl http://username:password@127.0.0.1:80
     ```
   - Basic Auth 没有通过 Cookie 记录用户登录状态，因此浏览器重启之后，用户需要重新登录。
 - 优点：认证过程简单，容易实现。

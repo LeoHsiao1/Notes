@@ -75,7 +75,7 @@
     - 建议将不同类型的 Job 采用不同的前缀命名，方便通过正则表达式分别匹配。
 3. 进入“Manage Jenkins”页面，点击“Assign Roles”，给各个用户分配角色。
 
-管理权限的策略：
+推荐做法：
 - 给每个或每组 Job 创建两种项目角色，按需要分配给各个用户。
   - *_user ：只是使用该 Job ，拥有 Job 的 Build、Cancel、Read 权限。
   - *_admin ：负责管理该 Job ，拥有大部分权限。
@@ -97,7 +97,7 @@
 - Extended Choice Parameter
   - 提供了单选框、复选框、单选按钮、多选按钮类型的输入参数。
 - Generic Webhook Trigger
-  - 支持以 webhook 的方式触发 Jenkins 的 Job ，需要在 Job 的配置页面定义。例如：`curl http://10.0.0.1:8080/generic-webhook-trigger/invoke?token=123456`
+  - 支持以 webhook 的方式触发 Jenkins 的 Job ，需要在 Job 的配置页面定义。通过 token 指定 Job ，可以通过请求字符串或 POST body 输入参数，例如：`curl http://10.0.0.1:8080/generic-webhook-trigger/invoke?token=Sqeuu90VF0TE&action=start`
 - Jenkins Email Extension Plugin
   - 支持 Jenkins 发送邮件给用户。
   - Jenkins 自带的邮件通知功能比较简陋，不推荐使用。

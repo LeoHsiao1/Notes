@@ -510,7 +510,7 @@ scrape_configs:
     - 如果 URL 中不指定 job ，则会报错 404 。
     - 如果 URL 中不指定 instance ，则会默认设置为 instance="" 。
   - 指标中：
-    - `# TYPE <metric_name> <type>` 行必须存在，用于声明该指标的类型。
+    - `# TYPE <metric_name> <type>` 行必须存在，用于声明该指标的类型，否则指标会被视作无类型的。
     - `# HELP <metric_name> <comment>` 行不是必要的，用作该指标的注释。
     - 标签的值只能用双引号 " 作为定界符，不能用单引号 ' 。
     - 每行末尾不能存在空格，否则会被当作最后一个字段。

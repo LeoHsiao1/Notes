@@ -14,25 +14,25 @@
 ### 安装
 
 - 下载源代码，编译后安装：
-    ```sh
-    redis_version=redis-6.0.8
-    wget http://download.redis.io/releases/${redis_version}.tar.gz
-    tar -zxvf ${redis_version}.tar.gz
-    cd ${redis_version}
-    yum install -y make gcc
-    make install MALLOC=libc
-    ```
+  ```sh
+  redis_version=redis-6.0.8
+  wget http://download.redis.io/releases/${redis_version}.tar.gz
+  tar -zxvf ${redis_version}.tar.gz
+  cd ${redis_version}
+  yum install -y make gcc
+  make install MALLOC=libc
+  ```
   然后启动：
-    ```sh
-    redis-server                       # 启动 Redis 服务器
-                /etc/redis/redis.conf  # 使用指定的配置文件
-    ```
-    - 以 daemon 方式启动时，出现报错也不会在终端显示。
+  ```sh
+  redis-server                       # 启动 Redis 服务器
+              /opt/redis/redis.conf  # 使用指定的配置文件
+  ```
+  - 以 daemon 方式启动时，出现报错也不会在终端显示。
 
 - 或者运行 Docker 镜像：
-    ```sh
-    docker run -d --name redis -p 6379:6379 redis:6.0.8
-    ```
+  ```sh
+  docker run -d --name redis -p 6379:6379 redis:6.0.8
+  ```
 
 ### 配置
 
@@ -41,7 +41,7 @@
   - 每次修改配置文件之后，要重启 Redis 才会生效。
 - Redis 服务器启动之后，可以修改运行时的配置项。
   - 在客户端中，执行 `config get/set <name>` 可以查看、修改一个配置项。如下：
-      ```
+      ```sh
       127.0.0.1:6379> config get requirepass         # 查看密码
       1) "requirepass"
       2) ""                                          # 默认没有密码
@@ -51,14 +51,14 @@
   - 执行 `config get *` 会显示所有配置项。
   - 执行 `config rewrite` 会将运行时的配置项保存到配置文件中，否则当 Redis 服务器终止时就会丢失被修改的配置。
 
-配置文件示例：
+redis.conf 的配置示例：
 ```ini
 bind 0.0.0.0
 port 6379
 requirepass ******           # Redis 的密码
-protected-mode yes           # 保护模式，此时如果没设置 requirepass ，则会强制设置 bind 127.0.0.1
-daemonize yes                # 以 daemon 方式运行（默认是在前台运行）
-dir /etc/redis/              # 工作目录
+# protected-mode yes         # 保护模式，此时如果没设置 requirepass ，则会强制设置 bind 127.0.0.1
+# daemonize yes              # 以 daemon 方式运行（默认是在前台运行）
+dir /opt/redis/              # 工作目录
 logfile /var/log/redis.log
 pidfile /var/run/redis.pid
 dbfilename dump.rdb          # 保存备份数据的文件名
@@ -66,7 +66,7 @@ dbfilename dump.rdb          # 保存备份数据的文件名
 maxmemory 4G                 # 限制 Redis 使用的最大内存
 maxmemory-policy allkeys-lru # 接近 maxmemory 时的删 key 策略
 
-# 生产环境要禁用掉一些危险的命令
+# 禁用掉一些不安全的命令
 rename-command FLUSHDB ""
 rename-command FLUSHALL ""
 rename-command KEYS ""

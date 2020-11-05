@@ -124,9 +124,9 @@ spec:
         image: redis:5.0.6
         volumeMounts:
         - name: volume1
-          mountPath: /etc/redis/volume1     # 将名为 volume1 的存储卷挂载到该目录
+          mountPath: /opt/redis/volume1     # 将名为 volume1 的存储卷挂载到该目录
         - name: volume2
-          mountPath: /etc/redis/volume2
+          mountPath: /opt/redis/volume2
       volumes:
         - name: volume1             # 创建一个名为 volume1 的 Volume
           configMap:
@@ -174,7 +174,7 @@ spec:
               key: username
         volumeMounts:
         - name: volume1
-          mountPath: /etc/redis/secret
+          mountPath: /opt/redis/secret
       volumes:
         - name: volume1
           secret:

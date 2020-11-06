@@ -47,7 +47,7 @@ client 提供了与 Redis 大部分命令同名的方法，例如：
 ```py
 >>> from redis.sentinel import Sentinel
 >>> sentinels = [('10.0.0.1', 26379), ('10.0.0.2', 26379), ('10.0.0.3', 26379)]
->>> sentinel = Sentinel(sentinels, socket_timeout=1)
+>>> sentinel = Sentinel(sentinels, sentinel_kwargs={'password': '******'})
 ```
 
 连接到 master ：
@@ -76,7 +76,7 @@ b'Hello'
 >>> sentinel.discover_master('master1')
 ('10.0.0.3', 6379)
 >>> sentinel.discover_slaves('master1')
-[('10.244.79.33', 6379), ('10.0.0.1', 6379), ('10.0.0.2', 6379)]
+[('10.0.0.1', 6379), ('10.0.0.2', 6379)]
 ```
 
 客户端与 Redis 实例建立连接之后，会保持并复用该连接。

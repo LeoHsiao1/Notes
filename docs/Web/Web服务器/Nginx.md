@@ -3,7 +3,7 @@
 # Nginx
 
 ：一个轻量级的 Web 服务器软件。
-- 发音相当于 engine + x 。
+- 读音相当于 engine x 。
 - 特点：
   - 支持反向代理、负载均衡。
   - 不仅支持 HTTP、HTTPS 协议，也支持 IMAP、POP3、SMTP 协议。
@@ -35,15 +35,37 @@
         nginx
   ```
 
-## 配置文件
+## 原理
 
 - Nginx 主进程启动之后，会运行多个 worker 进程负责处理 HTTP 请求。
-- Nginx 默认使用 `/etc/nginx/nginx.conf` 作为主配置文件（用于保存全局配置），还会导入 `/etc/nginx/conf.d/` 目录下的其它配置文件。
-  - 这些配置文件的后缀名为 .conf ，采用 Nginx 自定的语法，用 # 声明单行注释。
-- 配置文件分为多个层级，最外层称为 main ，其下可以包含 events、http 等模块。
+- Nginx 处理每个 HTTP 请求的过程分为 11 个阶段（phase）：
+  ```sh
+  post-read       # 在读取了 HTTP 请求之后开始执行
+  server-rewrite  # 执行在 server 内、location 外配置的 rewrite 指令
+  find-config     # 选择一个 location 来处理 HTTP 请求
+  rewrite         # 执行在 location 内配置的 rewrite 指令
+  post-rewrite    # 如果请求的 URI 被 rewrite 了，则将请求回退到 find-config 阶段重新处理
+  preaccess       # 执行 limit_rate 等指令，限制访问效率
+  access          # 执行 allow、deny、auth 等指令，控制访问权限
+  post-access     # 执行 satisfy any 指令
+  try-files       # 检查 URI 指向的本机文件是否存在
+  content         # 生成 HTTP 响应报文
+  log             # 记录日志
+  ```
+
+- Nginx 官方提供了多种模块，每种模块包含多种可执行的指令（directives）。
+  - Nginx 会按阶段依次执行配置文件中的指令。
+  - 用户可以自定义模块，注册到某个阶段。
+  - find-config、post-rewrite、post-access 三个阶段不支持注册模块。
+
+
+## 配置文件
+
+- Nginx 默认使用 `/etc/nginx/nginx.conf` 作为主配置文件，还会导入 `/etc/nginx/conf.d/` 目录下的其它配置文件。
+- 配置文件的后缀名为 .conf ，采用 Nginx 自定的语法，用 # 声明单行注释。
+  - 配置文件分为多个层级，最外层称为 main ，其下可以包含 events、http 等区块。
   - 每个层级的缩进距离为 4 格，但并不影响语法。
-- Nginx 读取配置文件之后，会按照从上到下的顺序执行各个指令（directives）。
-  - 每个指令大多独占一行，以 ; 结尾。
+  - 每条指令大多独占一行，以 ; 结尾。
 - 有的指令可以重复使用。
   - 写在局部作用域的指令，比起外部作用域的指令，优先级更高。
   - 在同一个作用域内，写在前面的指令，比写在后面的指令，优先级更高。因为 Nginx 一读取到前面的指令就开始应用了。
@@ -102,14 +124,15 @@ server {
     }
 }
 ```
-- http{} 模块中可以定义多个 server{} 模块，每个 server{} 模块代表一个 HTTP 服务器。
+- http{} 区块中至少要定义一个 server{} ，才能监听 TCP 端口，接收 HTTP 请求。
+- server{} 区块中至少要定义一个 location{} ，才能对 HTTP 请求进行路由处理。
 - server{} 中的其它配置项：
   ```sh
   charset  utf-8;
   
   ```
 
-## 关于访问控制
+## 关于访问权限
 
 ### allow 、deny
 
@@ -178,6 +201,19 @@ server {
   ```
 - 可以与 auth_basic 等认证措施搭配使用，避免暴力破解，不过客户端依然会保持 TCP 连接，占用资源。
 
+### satisfy
+
+：如果 ngx_http_access_module、ngx_http_auth_basic_module、ngx_http_auth_request_module、ngx_http_auth_jwt_module 模块都允许访问（或任一允许），则最终允许访问。
+- 可用范围：http、server、location
+- 语法：
+  ```sh	
+  satisfy all | any;
+  ```
+- 默认值：
+  ```sh	
+  satisfy all;
+  ```
+
 ## 关于路由
 
 ### listen
@@ -213,11 +249,16 @@ server {
     ```
   - 如果有两个 server 监听的端口、域名都相同，则启动 Nginx 时会报错：`conflicting server name`
 
-### location{}
+### location
 
 ：用于定义 URI 路由规则。
 - 可用范围：server、location
-- 语法为 `location <type> <URI> {...}` ，可以定义多个，可以嵌套。
+- 语法：
+  ```sh
+  location [type] URI {
+      [Directives]...
+  }
+  ```
 - 匹配类型 type 有以下几种，排在前面的优先匹配：
   - `=`  ：字符串精确匹配，即匹配与该字符串完全相同的 URI 。
   - `^~` ：字符串前缀匹配，即匹配以该字符串开头的 URI 。
@@ -250,32 +291,15 @@ server {
   root html;
   ```
 
-### return
-
-：直接返回 HTTP 响应报文给客户端。
-- 可用范围：server、location
-- 例：
-  ```sh
-  server{
-      listen  80;
-      return  403;                                # 只返回状态码
-      return  200 OK\n;                           # 返回状态码和一个字符串（字符串可以不加定界符）
-      return  200 '{"name":"test","id":"001"}';   # 返回状态码和 JSON 格式的字符串
-      return  200 'uri: $uri';                    # 可以使用变量
-
-  }
-  ```
-- 当 Nginx 执行到 return 指令时会立即返回 HTTP 响应，不会执行之后的指令。
-
-
 ### alias
 
 ：对请求报文的 URI 进行字符串替换。
 - 可用范围：server
 - 例：
   ```sh
+  root   /usr/share/nginx/html;
   location /www/ {
-      alias /static/img/;             # 比如请求 /www/1.jpg 时，URI 会变成 /static/img/1.jpg
+      alias /static/img/;         # 比如请求 /www/1.jpg 时，URI 会变成 /static/img/1.jpg
   }
   ```
   ```sh
@@ -284,23 +308,110 @@ server {
   }
   ```
 
-### rewrite
+## ngx_http_rewrite_module
 
-：将收到的 HTTP 请求重定向到某个 URL 。
+### if
+
+：如果条件为真，则执行括号内的指令。
 - 可用范围：server、location
 - 例：
   ```sh
-  rewrite  /1.html  /2.html ;         # 将访问 1.html 的请求重定向到 2.html
-  rewrite  ^(.*)$  https://$host$1;   # 可以使用正则匹配、正则替换
+  if ($request_method = POST) {
+      return 405;
+  }
   ```
-- rewrite 与 alias 不同，它会直接返回重定向响应报文，不会继续执行后续指令。
-- 如果目标 URL 以 http:// 或 https:// 开头，则返回 301 永久重定向，否则返回 302 临时重定向。
+- 条件表达式有多种类型：
+  - 取值为空字符串 `''` 或 `0` 则为假，否则为真
+  - 使用 `=`、`!=` 进行比较运算
+  - 使用 `~`、`~*` 进行正则匹配
+  - 使用 ` -f`、`!-f` 判断文件是否存在
+  - 使用 `!-d`、`!-d` 判断目录是否存在
 
+### break
 
-location ~ ^/dms1/logout {
-    rewrite  ^/dms1/(.*)$ /;            # 如果请求 URI 匹配正则表达式，则返回重定向响应报文，否则继续执行后续指令
-    proxy_pass http://127.0.0.1:79;
-}
+：跳过执行 ngx_http_rewrite_module 模块的指令。
+- 可用范围：server、location
+- 例：
+  ```sh
+  if ($slow) {
+      limit_rate 10k;
+      break;
+  }
+  ```
+
+### return
+
+：直接返回 HTTP 响应报文给客户端。（不会执行后续指令）
+- 可用范围：server、location
+- 例：
+  ```sh
+  server{
+      listen  80;
+      return  403;                                # 只返回状态码
+      return  200 OK\n;                           # 返回状态码和一个字符串（字符串可以不加定界符）
+      return  200 '{"name":"test","id":"001"}';   # 返回状态码和 JSON 格式的字符串
+      return  200 '$request_uri\n';               # 使用变量
+  }
+  ```
+
+### rewrite
+
+- 如果请求报文的 URI 中的部分字符串与正则表达式匹配，则重写 URI 。
+- 可用范围：server、location
+- 语法：
+  ```sh
+  rewrite regex replacement [flag];
+  ```
+  flag 有多种取值：
+  - 不填 ：从上到下执行完 ngx_http_rewrite_module 模块的指令，然后：
+    - 如果 replacement 以 http:// 或 https:// 开头，则返回 302 临时重定向报文，指向 replacement 。
+    - 如果 replacement 不以它们开头，则将请求回退到 find-config 阶段重新处理。
+  - permanent ：立即返回 301 永久重定向报文。
+  - redirect ：立即返回 302 临时重定向报文。
+  - break ：跳过执行 ngx_http_rewrite_module 模块的指令，继续执行后续指令。
+  - last ：跳过执行 ngx_http_rewrite_module 模块的指令，将请求回退到 find-config 阶段重新处理。
+    - 此时总是会内部重定向，不会返回重定向报文。
+
+- 每个 HTTP 请求最多被内部重定向 10 次，超过该次数则返回响应报文：`500 Internal Server Error`
+- 下例中，请求 /www/1.html 时会重写成 /index.html ，然后被第二个 rewrite 重定向到 `http://$host:80/index.html` 。
+  ```sh
+  location  /www/ {
+      rewrite   /www/1.html  /index.html;        # 只要 URI 包含 /www/1.html ，就重写成 /index.html
+      rewrite   ^(.*)$       http://$host:80$1;  # 可以使用正则替换
+      root      /usr/share/nginx/html;
+  }
+  ```
+- 下例中，请求 /www/1.html 时会返回 /index.html 文件。请求 /www/2.html 时会交给第二个 location 处理，返回字符串 /www/2.html 。
+  ```sh
+  location  /www/ {
+      rewrite   1.html  /index.html     break;
+      rewrite   2.html  /debug/2.html   last;
+      root      /usr/share/nginx/html;
+  }
+  location  /debug/ {
+      return    200   '$request_uri\n';
+  }
+  ```
+
+### set
+
+：为一个变量赋值。如果该变量不存在则自动创建它。
+- 可用范围：server
+- 语法：
+  ```sh
+  set $variable value;
+  ```
+- 例：
+  ```sh	
+  server {
+      listen  80;
+      set     $port_type 8x;
+  }
+  ```
+- 注意被赋值的变量名之前要加前缀 $ 。
+- 不能给 Nginx 的内置变量赋值，否则会报错：`duplicate variable`
+- 变量的值可以是数字或字符串类型。
+
 
 ## 关于代理
 
@@ -731,24 +842,6 @@ client_max_body_size 20m;
 
 
 
-### set
-
-：为一个变量赋值。如果该变量不存在则自动创建它。
-- 可用范围：server
-- 语法：
-  ```sh
-  set $variable value;
-  ```
-- 例：
-  ```sh	
-  server {
-      listen  80;
-      set     $port_type 8x;
-  }
-  ```
-- 注意被赋值的变量名之前要加前缀 $ 。
-- 不能给 Nginx 的内置变量赋值，否则会报错：`duplicate variable`
-- 变量的值可以是数字或字符串类型。
 
 ### map
 

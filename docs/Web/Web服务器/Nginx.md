@@ -148,32 +148,6 @@ server {
 - 收到客户端的 HTTP 请求时，Nginx 会从上到下检查访问规则，采用第一条与客户端 IP 匹配的规则。
 - 如果客户端被禁止访问，则返回响应报文：`403 Forbidden`
 
-### limit_except
-
-：只允许接收指定的 HTTP 请求方法，对其它方法做出限制（通过 deny 限制）。
-- 可用范围：location
-- 例：
-  ```sh
-  location / {
-      limit_except GET POST {
-          deny    all;
-      }
-  }
-  ```
-- 允许 GET 方法时也会允许 HEAD 方法。
-
-### limit_rate
-
-：限制响应报文的传输速率，单位为 Bytes/s 。
-- 可用范围：http、server、location
-- 例：
-  ```sh
-  location /www/ {
-      limit_rate  10k;
-  }
-  ```
-- 默认值为 0 ，代表不限制。
-
 ### auth_basic
 
 ：用于启用 HTTP Basic Auth 。
@@ -200,6 +174,32 @@ server {
   auth_delay 0s;
   ```
 - 可以与 auth_basic 等认证措施搭配使用，避免暴力破解，不过客户端依然会保持 TCP 连接，占用资源。
+
+### limit_except
+
+：只允许接收指定的 HTTP 请求方法，对其它方法做出限制（通过 deny 限制）。
+- 可用范围：location
+- 例：
+  ```sh
+  location / {
+      limit_except GET POST {
+          deny    all;
+      }
+  }
+  ```
+- 允许 GET 方法时也会允许 HEAD 方法。
+
+### limit_rate
+
+：限制响应报文的传输速率，单位为 Bytes/s 。
+- 可用范围：http、server、location
+- 例：
+  ```sh
+  location /www/ {
+      limit_rate  10k;
+  }
+  ```
+- 默认值为 0 ，代表不限制。
 
 ### satisfy
 
@@ -235,19 +235,19 @@ server {
 - 当 Nginx 在某个 TCP 端口收到一个 HTTP 请求时，会交给监听该端口的 server 处理。
   - 如果监听该端口的 server 有多个，则考虑 Request Headers 中的 Host 与哪个 server 监听的 server_name 匹配。
   - 如果没有匹配的 server_name ，或者 Request Headers 中的 Host 是 IP 地址，则交给监听该端口的默认 server 处理。
-  - 监听一个端口的默认 server 是 nginx.conf 中最先定义的那个，也可以手动指定。如下：
-    ```sh
-    listen       80  default_server;
-    ```
-  - server_name 有以下几种格式，排在前面的优先匹配：
-    ```sh
-    server_name  www.test.com localhost;    # 匹配明确的域名（可以填多个，Nginx 不会去验证 DNS）
-    server_name  *.test.com;                # 以 *. 开头，模糊匹配
-    server_name  www.test.*;                # 以 .* 结尾
-    server_name  ~^(?<www>.+)\.test\.com$;  # 正则表达式
-    server_name  "";                        # 空字符串，相当于不填 server_name ，不会匹配任何域名
-    ```
-  - 如果有两个 server 监听的端口、域名都相同，则启动 Nginx 时会报错：`conflicting server name`
+- 监听一个端口的默认 server 是 nginx.conf 中最先定义的那个，也可以手动指定。如下：
+  ```sh
+  listen       80  default_server;
+  ```
+- server_name 有以下几种格式，排在前面的优先匹配：
+  ```sh
+  server_name  www.test.com localhost;    # 匹配明确的域名（可以填多个，Nginx 不会去验证 DNS）
+  server_name  *.test.com;                # 以 *. 开头，模糊匹配
+  server_name  www.test.*;                # 以 .* 结尾
+  server_name  ~^(?<www>.+)\.test\.com$;  # 正则表达式
+  server_name  "";                        # 空字符串，相当于不填 server_name ，不会匹配任何域名
+  ```
+- 如果有两个 server 监听的端口、域名都相同，则启动 Nginx 时会报错：`conflicting server name`
 
 ### location
 
@@ -307,6 +307,18 @@ server {
       alias /static/img/$1;       # 可以使用正则替换
   }
   ```
+
+### internal
+
+：限制指定 location 只能被内部重定向的请求访问到。
+- 可用范围：location
+- 例：
+  ```sh
+  location /index.html {
+      internal;
+  }
+  ```
+- 如果被外部请求直接访问，则返回响应报文：`404 Not Found`
 
 ## ngx_http_rewrite_module
 
@@ -504,7 +516,7 @@ location ~ ^/dms1/(logout) {
 
 ### stream
 
-：用于实现 TCP 代理。
+：用于定义 TCP 代理。
 - 可用范围：main
 - 例：
     ```sh
@@ -577,19 +589,7 @@ location ~ ^/dms1/(logout) {
   access_log  /var/log/nginx/access.log  debug;    # 设置 access_log 的路径、日志格式
   ```
 
-## 关于通信过程
-
-### internal
-
-：限制指定 location 只能被内部重定向的请求访问到。
-- 可用范围：location
-- 例：
-  ```sh
-  location /index.html {
-      internal;
-  }
-  ```
-- 如果被外部请求直接访问，则返回响应报文：`404 Not Found`
+## 关于 TCP 通信
 
 ### keepalive_requests
 
@@ -613,50 +613,16 @@ location ~ ^/dms1/(logout) {
 - 如果该参数设置得过大，则容易遗留大量无用的 HTTP 连接占用资源。
 - 如果需要延长持续时间，比如传输大文件，则建议划分出多个 location 分别设置 keepalive_timeout 。
 
-### gzip
+### send_timeout
 
-：用于以 gzip 方式压缩响应报文 body 。
+：限制发送响应报文时，连续两次写操作之间的超时时间。
 - 可用范围：http、server、location
-- 例：
-    ```sh
-    location ~ .*\.(jpg|gif|png|bmp)$ {
-        gzip on;                    # 启用 gzip
-        gzip_vary on;               # 在响应头中加入 Vary: Accept-Encoding ，告诉浏览器这是 gzip 报文
-        gzip_min_length 1k;         # 启用压缩的文件的最小体积（低于该值则不会压缩）
-        gzip_comp_level 1;          # 压缩率（取值为 1~9 ，1 的压缩率最低，CPU 负载也最小）
-        gzip_http_version 1.0;      # 基于哪个版本的 HTTP 协议来传输 gzip 报文（默认为 HTTP 1.1）
-        gzip_types text/plain application/json application/x-javascript application/css application/xml application/xml+rss text/javascript application/x-httpd-php image/jpeg image/gif image/png image/x-ms-bmp;  # 压缩哪些类型的响应报文 body
-    }
-    ```
-- 这样能降低通信耗时，但是会增加 Nginx 的 CPU 负载。
-- 版本较老的浏览器可能只支持 HTTP 1.0 协议，甚至不能解析 gzip 报文。
-
-
-### ssl_protocols
-
-：用于启用 HTTPS 协议。
-- 可用范围：http、server
-- 例：
-    ```sh
-    server {
-        listen    443  ssl;                     # 监听时采用 ssl 协议
-        server_name localhost;
-
-        ssl_certificate /etc/nginx/conf.d/cert.pem;       # 指明.crt 文件的路径
-        ssl_certificate_key /etc/nginx/conf.d/cert.key;   # 指明.key 文件的路径
-
-        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;  # 设置 ssl 加密套件
-        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;    # 设置可用的 ssl 协议版本
-        ssl_prefer_server_ciphers on;           # 在 ssl 握手时使用 server 的密码
-
-        # 在一段时间内复用一个 ssl 会话，以节省 ssl 握手的时间
-        ssl_session_cache   shared:SSL:10m;     # 设置 ssl 缓存的大小，10M 大概可以存储 40000 个 ssl 会话
-        ssl_session_timeout 10m;                # 设置缓存的失效时间
-        ...
-    }
-    ```
-
-
+- 默认值：
+  ```sh	
+  send_timeout 60s;
+  ```
+- 如果超过该值，关闭 TCP 连接。
+- timeout 之类的参数取值过大时容易遭受 DDOS 攻击，取值过小时对网速较慢的客户端不友好。
 
 ### sendfile
 
@@ -689,6 +655,27 @@ location ~ ^/dms1/(logout) {
   ```
 - 仅在 sendfile 模式中有效。这样能降低网络 I/O 量，不容易阻塞网络。
 - 如果同时启用 tcp_nodelay，tcp_nopush ，则最后一个 TCP 包采用 tcp_nodelay ，其它 TCP 包采用 tcp_nopush 。
+
+## 关于 HTTP 通信
+
+### gzip
+
+：以 gzip 方式压缩响应报文 body 。
+- 可用范围：http、server、location
+- 例：
+    ```sh
+    location ~ .*\.(jpg|gif|png|bmp)$ {
+        gzip on;                    # 启用 gzip
+        gzip_vary on;               # 在响应头中加入 Vary: Accept-Encoding ，告诉浏览器这是 gzip 报文
+        gzip_min_length 1k;         # 启用压缩的文件的最小体积（低于该值则不会压缩）
+        gzip_comp_level 1;          # 压缩率（取值为 1~9 ，1 的压缩率最低，CPU 负载也最小）
+        gzip_http_version 1.0;      # 基于哪个版本的 HTTP 协议来传输 gzip 报文（默认为 HTTP 1.1）
+        gzip_types text/plain application/json application/x-javascript application/css application/xml application/xml+rss text/javascript application/x-httpd-php image/jpeg image/gif image/png image/x-ms-bmp;  # 压缩哪些类型的响应报文 body
+    }
+    ```
+- 这样能降低通信耗时，但是会增加 Nginx 的 CPU 负载。
+- 版本较老的浏览器可能只支持 HTTP 1.0 协议，甚至不能解析 gzip 报文。
+
 
 ### types
 
@@ -754,16 +741,29 @@ location ~ ^/dms1/(logout) {
   ```
 - 如果超过该值，则返回响应报文：`408 Request Time-out`
 
-### send_timeout
+### ssl_protocols
 
-：限制发送响应报文时，连续两次写操作之间的超时时间。
-- 可用范围：http、server、location
-- 默认值：
-  ```sh	
-  send_timeout 60s;
+：用于启用 HTTPS 协议。
+- 可用范围：http、server
+- 例：
+  ```sh
+  server {
+      listen    443  ssl;                     # 监听时采用 ssl 协议
+      server_name localhost;
+
+      ssl_certificate /etc/nginx/conf.d/cert.pem;       # 指明.crt 文件的路径
+      ssl_certificate_key /etc/nginx/conf.d/cert.key;   # 指明.key 文件的路径
+
+      ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;  # 设置 ssl 加密套件
+      ssl_protocols TLSv1 TLSv1.1 TLSv1.2;    # 设置可用的 ssl 协议版本
+      ssl_prefer_server_ciphers on;           # 在 ssl 握手时使用 server 的密码
+
+      # 在一段时间内复用一个 ssl 会话，以节省 ssl 握手的时间
+      ssl_session_cache   shared:SSL:10m;     # 设置 ssl 缓存的大小，10M 大概可以存储 40000 个 ssl 会话
+      ssl_session_timeout 10m;                # 设置缓存的失效时间
+      ...
+  }
   ```
-- 如果超过该值，关闭 TCP 连接。
-- timeout 之类的参数取值过大时容易遭受 DDOS 攻击，取值过小时对网速较慢的客户端不友好。
 
 
 

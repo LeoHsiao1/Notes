@@ -365,14 +365,17 @@ server {
   flag 有多种取值：
   - 不填 ：从上到下执行完 ngx_http_rewrite_module 模块的指令，然后：
     - 如果 replacement 以 http:// 或 https:// 开头，则返回 302 临时重定向报文，指向 replacement 。
-    - 如果 replacement 不以它们开头，则将请求回退到 find-config 阶段重新处理。
+    - 如果 replacement 不以它们开头，则将请求回退到 find-config 阶段重新处理（属于内部重定向）。
   - permanent ：立即返回 301 永久重定向报文。
   - redirect ：立即返回 302 临时重定向报文。
   - break ：跳过执行 ngx_http_rewrite_module 模块的指令，继续执行后续指令。
   - last ：跳过执行 ngx_http_rewrite_module 模块的指令，将请求回退到 find-config 阶段重新处理。
     - 此时总是会内部重定向，不会返回重定向报文。
 
-- 每个 HTTP 请求最多被内部重定向 10 次，超过该次数则返回响应报文：`500 Internal Server Error`
+- rewrite 指令的执行结果要么是将请求内部重定向，要么是返回一个外部重定向报文。
+  - 每个 HTTP 请求最多被内部重定向 10 次，超过该次数则返回响应报文：`500 Internal Server Error`
+  - 当 server 接收一个 HTTP 请求时，会首先解析出 request_uri 等变量的值，即使发生内部重定向也不会改变，除非转发到其它 server 。
+
 - 下例中，请求 /www/1.html 时会重写成 /index.html ，然后被第二个 rewrite 重定向到 `http://$host:80/index.html` 。
   ```sh
   location  /www/ {
@@ -575,6 +578,40 @@ location ~ ^/dms1/(logout) {
   ```
 
 ## 关于通信过程
+
+### internal
+
+：限制指定 location 只能被内部重定向的请求访问到。
+- 可用范围：location
+- 例：
+  ```sh
+  location /index.html {
+      internal;
+  }
+  ```
+- 如果被外部请求直接访问，则返回响应报文：`404 Not Found`
+
+### keepalive_requests
+
+：限制每个 TCP 长连接最多可以发送的请求数。（从而限制每个连接占用的最大内存）
+- 可用范围：http、server、location
+- 默认值：
+  ```sh
+  keepalive_requests 100;
+  ```
+- 如果超过该数量，Nginx 会关闭该 TCP 连接。
+
+### keepalive_timeout
+
+：限制每个 TCP 长连接的最长持续时间。
+- 可用范围：http、server、location
+- 默认值：
+  ```sh
+  keepalive_timeout 75s;
+  ```
+- 如果超过该时间，Nginx 会关闭该 TCP 连接。
+- 如果该参数设置得过大，则容易遗留大量无用的 HTTP 连接占用资源。
+- 如果需要延长持续时间，比如传输大文件，则建议划分出多个 location 分别设置 keepalive_timeout 。
 
 ### gzip
 

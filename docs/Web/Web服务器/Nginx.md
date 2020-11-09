@@ -266,6 +266,13 @@ server {
   - `~*` ：不区分大小写的正则匹配。（其它匹配类型都区分大小写）
   - 不指定 type 时，匹配规则相当于 `^~` ，但优先级最低。
 
+- 例：
+  ```sh
+  location ~ ^/www/(.+\.(gif|jpe?g|png))$ {   # 正则匹配时可以使用正则替换
+      alias /static/img/$1;
+  }
+  ```
+
 - URI 以 `/` 结尾则会转发相对路径，不以 `/` 结尾则会转发绝对路径。如下：
   ```sh
   location /img {
@@ -302,11 +309,6 @@ server {
       alias /static/img/;         # 比如请求 /www/1.jpg 时，URI 会变成 /static/img/1.jpg
   }
   ```
-  ```sh
-  location ~ ^/www/(.+\.(gif|jpe?g|png))$ {
-      alias /static/img/$1;       # 可以使用正则替换
-  }
-  ```
 
 ### internal
 
@@ -328,8 +330,10 @@ server {
 - 可用范围：server、location
 - 例：
   ```sh
-  if ($request_method = POST) {
-      return 405;
+  if ($request_uri ~ /www/(\d+)/(.+)) {
+      set $param1 $1;
+      set $param2 $2;
+      return  200 '$param1, $param2\n';
   }
   ```
 - 条件表达式有多种类型：
@@ -362,7 +366,6 @@ server {
       return  403;                                # 只返回状态码
       return  200 OK\n;                           # 返回状态码和一个字符串（字符串可以不加定界符）
       return  200 '{"name":"test","id":"001"}';   # 返回状态码和 JSON 格式的字符串
-      return  200 '$request_uri\n';               # 使用变量
   }
   ```
 
@@ -375,7 +378,7 @@ server {
   rewrite regex replacement [flag];
   ```
   flag 有多种取值：
-  - 不填 ：从上到下执行完 ngx_http_rewrite_module 模块的指令，然后：
+  - 不填 ：先执行完 ngx_http_rewrite_module 模块的指令（不会执行其它指令），然后：
     - 如果 replacement 以 http:// 或 https:// 开头，则返回 302 临时重定向报文，指向 replacement 。
     - 如果 replacement 不以它们开头，则将请求回退到 find-config 阶段重新处理（属于内部重定向）。
   - permanent ：立即返回 301 永久重定向报文。
@@ -408,55 +411,165 @@ server {
   }
   ```
 
-### set
-
-：为一个变量赋值。如果该变量不存在则自动创建它。
-- 可用范围：server
-- 语法：
-  ```sh
-  set $variable value;
-  ```
-- 例：
-  ```sh	
-  server {
-      listen  80;
-      set     $port_type 8x;
-  }
-  ```
-- 注意被赋值的变量名之前要加前缀 $ 。
-- 不能给 Nginx 的内置变量赋值，否则会报错：`duplicate variable`
-- 变量的值可以是数字或字符串类型。
-
-
 ## 关于代理
 
 ### proxy_pass
 
-：将收到的 HTTP 请求转发给某个服务器，实现反向代理。
+：将请求转发给指定的服务器，实现反向代理。
 - 可用范围：location
 - 例：
+  ```sh
+  server {
+      listen 80;
+      location / {
+          proxy_pass  http://127.0.0.1:79;
+          # proxy_pass http://unix:/tmp/backend.socket:/uri/;   # 可以转发给 Unix 套接字
+          # proxy_connect_timeout 60s;    # 与上游服务器建立连接的超时时间
+
+          # proxy_set_header  Host       $host;           # 加入转发过去的请求头
+          # proxy_set_header  X-Real-IP  $remote_addr;
+          # proxy_set_body    $request_body;              # 设置转发过去的请求 body
+      }
+  }
+
+  server {
+      listen 79;
+      location / {
+          return 200 '$request_uri\n';
+      }
+  }
+  ```
+
+- 判断转发结果的 URI 的取值：
+  - 如果 proxy_pass 目标地址中包含 URI ，则将原 URI 被 location 匹配之后剩下的部分附加到目标地址之后（即转发相对路径）。否则直接将原 URI 附加到目标地址之后（即转发绝对路径）。如下，测试发送指向 `127.0.0.1:80/www/1.html` 的请求
     ```sh
-    location / {
-        proxy_pass    http://127.0.0.1:79;
-        # proxy_cache cache;                # 使用缓存
-        # inactive 3;                       # 将缓存文件保存 3 分钟
-        # proxy_cache_valid 200 304 2m;     # 客户端 2 分钟之内发出状态码为 200、304 的 HTTP 请求都会使用缓存
+    location /www {
+        proxy_pass  http://127.0.0.1:79;  # 转发结果为 /www/1.html
     }
     ```
-- 如果 proxy_pass 的 URL 以 / 结尾，则转发相对路径，否则转发绝对路径。
-- 使用 proxy_cache 时，Nginx 会将 proxy_pass 服务器响应的静态文件缓存一段时间，如果客户端发来的请求 URL 与缓存的某个 URL 的 hash 值相同，则直接从缓存中取出静态文件回复给客户端（响应头中包含 Nginx-Cache: HIT），否则将 HTTP 请求转发给 proxy_pass 服务器处理（响应头中包含 Nginx-Cache: MISS）。
+    ```sh
+    location /www {
+        proxy_pass  http://127.0.0.1:79/; # 转发结果为 //1.html
+    }
+    ```
+    ```sh
+    location /www/ {
+        proxy_pass  http://127.0.0.1:79/; # 转发结果为 /1.html
+    }
+    ```
+  - 如果 proxy_pass 目标地址中包含 URI 且调用了变量，则将它的值作为转发结果。
+    ```sh
+    location /www/ {
+        proxy_pass  http://127.0.0.1:79$request_uri; # 转发结果为 /www/1.html
+    }
+    ```
+  - 如果将 proxy_pass 与正则表达式、if 模块一起使用，则目标地址不能包含 URI ，否则启动 Nginx 时会报错。
+    ```sh
+    location ~ ^/www/\d*.html {
+        proxy_pass  http://127.0.0.1:79/;     # 不可行
+    }
+    ```
+    ```sh
+    location ~ ^/www/(\d*.html) {
+        proxy_pass  http://127.0.0.1:79/$1;   # 可行，转发结果为 /1.html
+    }
+    ```
+  - 如果在 `rewrite ... ... break;` 之后使用 proxy_pass ，则将被 rewrite 重写之后的 URI 作为转发结果。
+    ```sh
+    location /www/ {
+        rewrite     1.html  /index.html     break;
+        proxy_pass  http://127.0.0.1:79/test/;      # 转发结果为 /index.html
+    }
+    ```
+
+### proxy_buffering
+
+：是否启用缓冲。
+- 可用范围：http、server、location
+- 例：
+  ```sh
+  proxy_buffering on;               # 启用缓冲（默认启用）	
+  proxy_buffers 8 8k;       # 缓冲区的最大数量和大小（默认等于一个内存页大小）
+  proxy_buffer_size 8k;     # 读取响应头的缓冲区大小（默认等于一个内存页大小）
+  proxy_busy_buffers_size 16k;    # busy 状态的缓冲区的最大大小（一般为 2 个缓冲区）
+
+  proxy_temp_path /tmp/nginx/proxy_temp 1 2;    # 指定一个磁盘目录用于缓冲，划分 2 层子目录（缓冲时会创建一些临时文件）
+  proxy_temp_file_write_size  16k;    # 每次写入临时文件的最大数据量
+  proxy_max_temp_file_size 1024m;     # 所有临时文件的总大小
+
+  ```
+
+- 当 Nginx 将客户端的请求转发给 proxy_pass 上游服务器时，默认会启用缓冲，但不会启用缓存。
+  - 缓冲（buffer）
+    - ：Nginx 将上游服务器的响应报文保存几秒钟，等整个接收之后，再发送给客户端。
+    - 会作用于所有响应报文。
+    - 可以尽早与上游服务器断开连接，减少其负载，但是会增加客户端等待响应的时间。
+    - 如果不启用缓冲，则 Nginx 收到上游服务器的一部分响应就会立即发送给客户端，通信延迟低。
+  - 缓存（cache）
+    - ：Nginx 将上游服务器的响应报文保存几分钟，当客户端再次请求同一个响应报文时就直接回复，不必请求上游服务器。
+    - 只作用于部分响应报文。
+    - 可以避免重复向上游服务器请求一些固定不变的响应报文，减少上游服务器的负载，减少客户端等待响应的时间。
+
+
+- 优先使用内存中的缓冲区，如果满了就缓冲到磁盘的 proxy_temp_path 目录下。
+- 当 Nginx 第一次读取某个响应报文时，一般会等全部读取完之后再发送给客户端。
+  - 如果该响应报文大于 proxy_busy_buffers_size ，则会一边读取响应报文，一边将缓冲的数据发送给客户端（这部分缓冲称为 busy 状态）。
 
 
 
-当 proxy_pass 与正则表达式、if 等模块组合使用时，转发的目标服务器不能包含 URI 。
+- 启用缓存之后，Nginx 会将上游服务器的响应报文缓存一段时间。
+  - 如果客户端发来的请求 URL 与缓存的某个 URL 的 hash 值相同，则直接从缓存中取出数据回复给客户端，此时响应头中包含 `Nginx-Cache: HIT` 。
+  - 否则，将请求转发给上游服务器处理，此时响应头中包含 `Nginx-Cache: MISS`。
+  - 如果响应头中的 Cache-Control 取值为 Private、No-Cache、No-Store 或 Set-Cookie ，则不缓存。
 
-location ~ ^/dms1/logout {
-    proxy_pass http://127.0.0.1:79/;        # 不可行，会报错
-}
+### proxy_cache
 
-location ~ ^/dms1/(logout) {
-    proxy_pass http://127.0.0.1:79/$1;      # 可行
-}
+：是否启用缓存。
+- 可用范围：http、server、location
+- 例：
+  ```sh
+  proxy_cache  my_cache;  # 定义一个名为 my_cache 的共享内存空间，用于记录缓存项的索引，可以被多个地方使用（默认为 off ）
+  proxy_cache_path  /tmp/nginx/proxy_cache    # 指定一个磁盘目录用于缓存数据
+                    levels=1:2                # 划分 2 层子目录
+                    keys_zone=my_cache:10m    # 在缓存空间 my_cache 中占用 10 MB 的内存
+                    max_size=10g              # 最多缓存 10 GB 的数据（缓存空间满了时会自动删掉较少访问的缓存项）
+                    inactive=60m              # 如果一个缓存项一直没有被访问，则超过 60 min 之后就删除
+                    use_temp_path=off;        # 待缓存数据会先写入临时文件，再重命名为缓存文件。该参数是指是否在其它目录写入临时文件
+
+  proxy_cache_revalidate on;  # 刷新过期的缓存项时，向上游服务器发出的请求头中包含 If-Modified-Since、If-None-Match
+  proxy_cache_min_uses 3;     # 当同一个响应被客户端请求至少 3 次之后，才缓存它（调大该参数可以只缓存频繁请求的响应）
+  proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504; # 刷新过期的缓存项时，如果上游服务器报出这些错误而不能响应，则将已过期的缓存项发送给客户端
+  
+  # proxy_cache_key $scheme$proxy_host$request_uri; # 定义每个缓存项的唯一标识符
+  proxy_cache_lock on;    # 多个请求指向同一个缓存项且没有命中缓存时，只将一个请求转发给上游服务器，其它请求则被阻塞直到从缓存区获得响应
+  # proxy_cache_lock_age 5s;  # 一组请求每被阻塞 5 s  ，就解锁一个请求，转发给上游服务器
+  # proxy_cache_lock_timeout 5s;  # 一组请求最多被阻塞 5 s 。超过该时间则全部解锁，但不会缓存响应报文
+
+
+  proxy_no_cache $cookie_nocache $arg_nocache $arg_comment;  # 定义不使用缓存的条件（只要任一变量值为真）
+
+  # proxy_cache_background_update off;    # 是否允许更新过期的缓存项
+
+  proxy_cache_valid 200 302 10m;    # 限制不同状态码的响应的缓存时间
+  proxy_cache_valid 404      1m;
+  proxy_cache_valid any      5m;           # 限制所有响应报文的缓存时间
+  ```
+
+
+- 可以给客户端加上一个响应头，表示缓存的使用情况。
+  ```sh
+  add_header X-Cache-Status $upstream_cache_status;
+  ```
+  可能的取值如下：
+  - BYPASS ：该响应不应该使用缓存，这是 proxy_no_cache 参数在起作用。
+  - MISS ：该响应存在缓存。
+  - HIT ：该响应不存在缓存。
+  - EXPIRED ：该响应存在缓存，但是过期了。
+  - UPDATING ：该响应的缓存已过期，这是刚刚请求的新响应。
+  - STALE ：这是 proxy_cache_use_stale 参数在起作用。
+  - REVALIDATED ：这是 proxy_cache_revalidate 参数在起作用。
+
+
 
 ### upstream
 
@@ -660,7 +773,7 @@ location ~ ^/dms1/(logout) {
 
 ### gzip
 
-：以 gzip 方式压缩响应报文 body 。
+：以 gzip 方式压缩响应报文 body 。这样能减少通信耗时，但是会增加 Nginx 的 CPU 负载。
 - 可用范围：http、server、location
 - 例：
     ```sh
@@ -673,9 +786,7 @@ location ~ ^/dms1/(logout) {
         gzip_types text/plain application/json application/x-javascript application/css application/xml application/xml+rss text/javascript application/x-httpd-php image/jpeg image/gif image/png image/x-ms-bmp;  # 压缩哪些类型的响应报文 body
     }
     ```
-- 这样能降低通信耗时，但是会增加 Nginx 的 CPU 负载。
 - 版本较老的浏览器可能只支持 HTTP 1.0 协议，甚至不能解析 gzip 报文。
-
 
 ### types
 
@@ -766,19 +877,54 @@ location ~ ^/dms1/(logout) {
   ```
 
 
-
 ## 关于变量
 
-Nginx 提供了以下内置变量。可以通过 `$` 取值，变量名不区分大小写，如果变量名或变量值不存在则取值为空。
-- 如果变量不存在，则报错：`unknown variable`
-- 内置变量的默认值为 - 。
+- Nginx 提供了一些内置变量，用户也可以自定义变量。
+- 变量可以通过 `$var` 的格式取值。
+  - 变量名不区分大小写。
+  - 如果变量不存在，则报错：`unknown variable`
+  - 内置变量的默认值为 - 。
+- 例：
+  ```sh
+  location / {
+      return  200 '$request_uri\n';
+  }
+  ```
 
-用法示例：
-```
-location /name/ {
-    proxy_pass http://127.0.0.1$request_uri;
-}
-```
+### set
+
+：为一个变量赋值。如果该变量不存在则自动创建它。
+- 可用范围：server
+- 语法：
+  ```sh
+  set $variable value;
+  ```
+- 例：
+  ```sh	
+  server {
+      listen  80;
+      set     $port_type 8x;
+  }
+  ```
+- 注意被赋值的变量名之前要加前缀 $ 。
+- 不能给 Nginx 的内置变量赋值，否则会报错：`duplicate variable`
+- 变量的值可以是数字或字符串类型。
+
+### map
+
+：用于将源变量输入字典取值，并赋值给目标变量。
+- 可用范围：http
+- 例：
+  ```sh	
+  map $server_port $port_type{
+      # default   '';   # 如果字典中没有匹配的 key ，则取默认值
+      80        8x;     # 将源变量与 key 进行字符串匹配
+    ~ 9\d       9x;     # 正则匹配
+    ~*9\d       9x;     # 不区分大小写的正则匹配
+  }
+  ```
+
+### 内置变量
 
 - 关于 HTTP 请求报文：
 ```sh
@@ -839,17 +985,8 @@ pid             # Nginx 当前 worker process 的 PID
 ```
 自定义变量：
 
-```
-if ($request_uri ~ /wap/(\d+)/(.+)){
-    set $bucketid $1;
-    set $params $2;
-}
-```
 
-可以主动赋值的变量：
-```
-$sent_http_content_length 4096
-```
+
 
 
 ```
@@ -875,21 +1012,3 @@ location ^~/test/play {
 ```
 
 
-client_max_body_size 20m;
-
-
-
-
-### map
-
-：用于将源变量输入字典取值，并赋值给目标变量。
-- 可用范围：http
-- 例：
-  ```sh	
-  map $server_port $port_type{
-      # default   '';   # 如果字典中没有匹配的 key ，则取默认值
-      80        8x;     # 将源变量与 key 进行字符串匹配
-    ~ 9\d       9x;     # 正则匹配
-    ~*9\d       9x;     # 不区分大小写的正则匹配
-  }
-  ```

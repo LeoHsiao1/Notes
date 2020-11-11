@@ -11,9 +11,9 @@
 ## 安装
 
 - 用 pip 安装：
-    ```sh
-    pip3 install docker-compose
-    ```
+  ```sh
+  pip3 install docker-compose
+  ```
 
 ## 命令
 
@@ -72,6 +72,8 @@ services:                     # 开始定义服务
     command: [tail, -f, /dev/null]  # 启动命令
     init: true                # 使用 init 作为 1 号进程
     restart: on-failure       # 重启策略
+    depends_on:               # 依赖关系
+      - redis                 # 这表示：如果启动 web 服务，则会自动先启动 redis 服务；如果停止 redis 服务，则会自动先停止 web 服务
     environment:              # 环境变量
       var1: 1
       var2: hello
@@ -85,8 +87,11 @@ services:                     # 开始定义服务
       - /root/data:/root/data # 可以直接挂载目录
       - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）
       - conf:/root/conf       # 可以挂载数据卷
-    depends_on:               # 依赖关系
-      - redis                 # 这表示：如果启动 web 服务，则会自动先启动 redis 服务；如果停止 redis 服务，则会自动先停止 web 服务
+    ulimits:                  # 设置 ulimit 参数
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
 
   redis:                      # 定义第二个服务
     image: redis:5.0.5
@@ -106,9 +111,9 @@ volumes:                      # 定义数据卷（服务挂载的数据卷都必
   db:
 ```
 - 如果用户指定了生成的容器名，则只能创建多个容器实例时会因为名字冲突而失败。
-  - 如果用户不指定生成的容器名，则会自动按照 "当前目录名 _ 服务名 _ 第几个实例" 的格式命名，比如：web_web_1 。
-  - 同理，如果用户不指定生成的 volume 的名称，则会自动按照 "当前目录名 _ 数据卷名" 的格式命名，比如：web_conf 。
+  - 如果用户不指定生成的容器名，则会自动按照 `当前目录名 _ 服务名 _ 第几个实例` 的格式命名，比如：web_web_1 。
+  - 同理，如果用户不指定生成的 volume 的名称，则会自动按照 `当前目录名 _ 数据卷名` 的格式命名，比如：web_conf 。
   - 如果 Service 只运行一个实例，则指定容器名、挂载指定目录比较好，这样它们的容器名、目录位置是确定不变的。
   - 如果 Service 要运行多个实例，则不指定容器名、挂载数据卷比较好，这样多个实例会自动命名，不会冲突。
 - 上例中，web 容器向宿主机映射了两个端口，而 redis 容器没有映射端口，因此不能被宿主机访问。
-  两个容器都连接到了 net_1 网络，因此可以相互访问。比如 web 容器可以通过 `127.0.0.1:6379` 或 `redis:6379` 访问到 redis 容器。
+  - 两个容器都连接到了 net_1 网络，因此可以相互访问。比如 web 容器可以通过 `127.0.0.1:6379` 或 `redis:6379` 访问到 redis 容器。

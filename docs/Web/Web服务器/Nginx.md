@@ -703,62 +703,56 @@ server {
 ### 内置变量
 
 - 关于 HTTP 请求报文：
-```sh
-remote_addr     # 客户端的地址
-remote_port     # 客户端的端口
-request         # 请求报文的第一行，比如 GET /static/1.html HTTP/1.1
-request_body    # 请求 body 。只有当 Nginx 执行了 proxy_pass,fastcgi_pass,uwsgi_pass,scgi_pass 时才会将请求 body 载入内存，使得该变量取值不为空
-request_length  # 请求报文的长度
-request_method  # 请求的方法名，采用大写，比如 GET
-request_uri     # 请求 URI （不受 rewrite、alias 影响）
-uri             # 请求 URI 中的路径部分，比如原始 URI 为 /static/1.html?id=1 时，路径部分为 /static/1.html
-args            # 请求 URL 中的 Query String
-is_args         # 如果存在 Query String 则取值为 ? （即使格式不正确），否则取值为空
-args_NAME       # Query String 中指定参数的值，不区分大小写
-http_NAME       # headers 中指定参数的值，不区分大小写
-cookie_NAME     # cookie 中指定参数的值，不区分大小写
+  ```sh
+  request           # 请求报文的第一行，比如 GET /static/1.html HTTP/1.1
+  request_method    # 请求的方法名，采用大写，比如 GET
+  request_uri       # 请求 URI （不受 rewrite、alias 影响）
+  uri               # 请求 URI 中的路径部分，比如原始 URI 为 /static/1.html?id=1 时，路径部分为 /static/1.html
+  args              # 请求 URL 中的 Query String
+  is_args           # 如果存在 Query String 则取值为 ? （即使格式不正确），否则取值为空
+  args_NAME         # Query String 中指定参数的值，不区分大小写
 
-scheme    # 请求采用的协议，取值为 http 或 https
-https     # 如果采用了 HTTPS 协议则取值为 on ，否则取值为空
+  host              # 请求指向的主机名，取值来自：请求行中的主机名、请求头中的 Host 字段、处理该请求的 server_name
+  request_filename  # 请求 URI 指向的服务器文件，比如 /www/static/1.html
+  document_root     # request_filename 文件在服务器上所处的根目录，通常由 root 指令决定
 
-request_filename # 请求 URI 指向的服务器文件，比如 /www/static/1.html
-document_root   # request_filename 文件在服务器上所处的根目录，比如 Nginx 配置的 root /www/;
-host #优先级：HTTP请求行的主机名>"HOST"请求头字段>符合请求的服务器名.请求中的主机头字段，如果请求中的主机头不可用，则为服务器处理请求的服务器名称
+  request_length    # 请求报文的长度
+  scheme            # 请求采用的协议，取值为 http 或 https
+  https             # 如果采用了 HTTPS 协议则取值为 on ，否则取值为空
 
+  http_NAME         # headers 中指定参数的值，不区分大小写
+  cookie_NAME       # cookie 中指定参数的值，不区分大小写
 
-
-
-
-server_addr     # 服务器的 IP ，由 HTTP 请求指向的 IP 决定，比如 127.0.0.1
-server_name     # 服务器的名称，由 Nginx 中 server{} 模块配置的 server_name 参数决定，采用小写
-server_port     # 服务器的端口号
-server_protocol   # 服务器的 HTTP 协议版本，比如HTTP/1.0" 或 "HTTP/1.1"
-
-```
-
-
+  request_body      # 请求 body 。只有当 Nginx 执行了 proxy_pass、fastcgi_pass、uwsgi_pass 或 scgi_pass 时才会将请求 body 载入内存，否则该变量取值为空
+  ```
 
 - 关于 HTTP 响应报文：
-```
-status      # 响应报文的状态码
-request_completion
-request_time
+  ```sh
+  status            # 响应报文的状态码
+  request_time      # 请求的处理时长，单位 ms
+  ```
 
-```
+- 关于客户端：
+  ```sh
+  remote_addr       # 客户端的地址
+  remote_port       # 客户端的端口
+  ```
 
+- 关于服务器：
+  ```sh
+  server_addr       # 服务器的 IP ，由请求指向的 IP 决定，比如 127.0.0.1
+  server_name       # 服务器的名称，由 Nginx 中 server{} 模块配置的 server_name 参数决定，采用小写
+  server_port       # 服务器监听的端口号
+  server_protocol   # 服务器采用的 HTTP 协议版本，通常为 HTTP/1.0 或 HTTP/1.1
 
-- 其它：
-```sh
-hostname        # 服务器的主机名，由服务器所在主机决定
-msec            # Unix 时间戳格式的服务器时间，比如 1603792024.820
-time_iso8601    # ISO 格式的服务器时间，比如 2020-10-28T10:27:14+08:00
-time_local      # 日志格式的服务器时间，比如 28/Oct/2020:10:27:14 +0800
+  hostname          # 服务器的主机名，由服务器所在主机决定
+  pid               # Nginx 当前 worker process 的 PID
+  nginx_version     # Nginx 的版本号
 
-nginx_version   # Nginx 的版本号
-pid             # Nginx 当前 worker process 的 PID
-
-
-```
+  msec              # Unix 时间戳格式的服务器时间，比如 1603792024.820
+  time_iso8601      # ISO 格式的服务器时间，比如 2020-10-28T10:27:14+08:00
+  time_local        # 日志格式的服务器时间，比如 28/Oct/2020:10:27:14 +0800
+  ```
 
 ## 关于访问权限
 

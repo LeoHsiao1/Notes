@@ -1,8 +1,8 @@
-# Nextcloud
+# MinIO
 
 ：一个开源的对象存储服务器软件，基于 Go 开发。
 - 很轻量级，读写速度快，云原生架构。
-- 提供了 Web 页面，支持创建分享链接。
+- 可以生成文件的下载链接。
 - 提供了命令行客户端 `mc` ，支持 ls、cp、rm、find 等多种 Unix 风格的命令。
 - 提供了 Python、Go、Java 等语言的 SDK 。
 - 兼容 Amazon S3 的 API 。

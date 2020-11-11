@@ -132,88 +132,6 @@ server {
   
   ```
 
-## 关于访问权限
-
-### allow 、deny
-
-：允许、禁止某些 IP 地址的访问。
-- 可用范围：http、server、location、limit_except
-- 例：
-  ```sh
-  deny    192.168.1.1;       # 禁止一个 IP
-  allow   192.168.1.0/24;    # 允许一个网段
-  deny    all;               # 禁止所有 IP
-  allow   all;
-  ```
-- 收到客户端的 HTTP 请求时，Nginx 会从上到下检查访问规则，采用第一条与客户端 IP 匹配的规则。
-- 如果客户端被禁止访问，则返回响应报文：`403 Forbidden`
-
-### auth_basic
-
-：用于启用 HTTP Basic Auth 。
-- 可用范围：http、server、location
-- 例：
-  ```sh
-  auth_basic              "";                 # 只要不设置成 auth_basic off; 就会启用认证
-  auth_basic_user_file    /etc/nginx/passwd;  # 使用哪个密码文件
-  ```
-- 密码文件中保存了可用的用户名、密码，在运行时修改也会自动刷新。可用以下命令生成：
-  ```sh
-  yum install httpd-tools
-  htpasswd -cb passwd leo 123456   # 往密码文件 passwd 中添加一个用户 leo ，并保存其密码的 MD5 值。加上 -c 选项会创建该文件，如果该文件已存在则会被覆盖
-  htpasswd -b passwd leo 1234      # 往密码文件 passwd 中添加一个用户 leo 。如果该用户名已存在，则会覆盖其密码
-  htpasswd -D passwd leo           # 删除一个用户
-  ```
-
-### auth_delay
-
-：当客户端认证失败时，延迟一段时间再作出响应。
-- 可用范围：http、server、location
-- 默认值：
-  ```sh	
-  auth_delay 0s;
-  ```
-- 可以与 auth_basic 等认证措施搭配使用，避免暴力破解，不过客户端依然会保持 TCP 连接，占用资源。
-
-### limit_except
-
-：只允许接收指定的 HTTP 请求方法，对其它方法做出限制（通过 deny 限制）。
-- 可用范围：location
-- 例：
-  ```sh
-  location / {
-      limit_except GET POST {
-          deny    all;
-      }
-  }
-  ```
-- 允许 GET 方法时也会允许 HEAD 方法。
-
-### limit_rate
-
-：限制响应报文的传输速率，单位为 Bytes/s 。
-- 可用范围：http、server、location
-- 例：
-  ```sh
-  location /www/ {
-      limit_rate  10k;
-  }
-  ```
-- 默认值为 0 ，代表不限制。
-
-### satisfy
-
-：如果 ngx_http_access_module、ngx_http_auth_basic_module、ngx_http_auth_request_module、ngx_http_auth_jwt_module 模块都允许访问（或任一允许），则最终允许访问。
-- 可用范围：http、server、location
-- 语法：
-  ```sh	
-  satisfy all | any;
-  ```
-- 默认值：
-  ```sh	
-  satisfy all;
-  ```
-
 ## 关于路由
 
 - 当 Nginx 在某个 TCP 端口收到一个 HTTP 请求时，会交给监听该端口的 server 处理。
@@ -444,11 +362,16 @@ server {
       location / {
           proxy_pass  http://127.0.0.1:79;
           # proxy_pass http://unix:/tmp/backend.socket:/uri/;   # 可以转发给 Unix 套接字
-          # proxy_connect_timeout 60s;    # 与上游服务器建立连接的超时时间
 
-          # proxy_set_header  Host       $host;           # 加入转发过去的请求头
+          # proxy_set_header  Host       $host;           # 转发时加入请求头
           # proxy_set_header  X-Real-IP  $remote_addr;
+          # proxy_pass_request_body on;                   # 转发请求 body
           # proxy_set_body    $request_body;              # 设置转发过去的请求 body
+
+          # proxy_request_buffering on;   # 接收客户端的 请求时，缓冲之后再转发给上游服务器
+          # proxy_connect_timeout 60s;    # 与上游服务器建立连接的超时时间
+          # proxy_send_timeout 60s;       # 限制发送请求给上游服务器时，写操作中断的超时时间
+          # proxy_read_timeout 60s;       # 限制从上游服务器读取响应时，读操作中断的超时时间
       }
   }
 
@@ -460,47 +383,66 @@ server {
   }
   ```
 
-- 判断转发结果的 URI 的取值：
-  - 如果 proxy_pass 目标地址中包含 URI ，则将原 URI 被 location 匹配之后剩下的部分附加到目标地址之后（即转发相对路径）。否则直接将原 URI 附加到目标地址之后（即转发绝对路径）。如下，测试发送指向 `127.0.0.1:80/www/1.html` 的请求
-    ```sh
-    location /www {
-        proxy_pass  http://127.0.0.1:79;  # 转发结果为 /www/1.html
-    }
-    ```
-    ```sh
-    location /www {
-        proxy_pass  http://127.0.0.1:79/; # 转发结果为 //1.html
-    }
-    ```
-    ```sh
-    location /www/ {
-        proxy_pass  http://127.0.0.1:79/; # 转发结果为 /1.html
-    }
-    ```
-  - 如果 proxy_pass 目标地址中包含 URI 且调用了变量，则将它的值作为转发结果。
-    ```sh
-    location /www/ {
-        proxy_pass  http://127.0.0.1:79$request_uri; # 转发结果为 /www/1.html
-    }
-    ```
-  - 如果将 proxy_pass 与正则表达式、if 模块一起使用，则目标地址不能包含 URI ，否则启动 Nginx 时会报错。
-    ```sh
-    location ~ ^/www/\d*.html {
-        proxy_pass  http://127.0.0.1:79/;     # 不可行
-    }
-    ```
-    ```sh
-    location ~ ^/www/(\d*.html) {
-        proxy_pass  http://127.0.0.1:79/$1;   # 可行，转发结果为 /1.html
-    }
-    ```
-  - 如果在 `rewrite ... ... break;` 之后使用 proxy_pass ，则将被 rewrite 重写之后的 URI 作为转发结果。
-    ```sh
-    location /www/ {
-        rewrite     1.html  /index.html     break;
-        proxy_pass  http://127.0.0.1:79/test/;      # 转发结果为 /index.html
-    }
-    ```
+判断转发结果的 URI 的取值：
+- 如果 proxy_pass 目标地址中包含 URI ，则将原 URI 被 location 匹配之后剩下的部分附加到目标地址之后（即转发相对路径）。否则直接将原 URI 附加到目标地址之后（即转发绝对路径）。如下，测试发送指向 `127.0.0.1:80/www/1.html` 的请求
+  ```sh
+  location /www {
+      proxy_pass  http://127.0.0.1:79;  # 转发结果为 /www/1.html
+  }
+  ```
+  ```sh
+  location /www {
+      proxy_pass  http://127.0.0.1:79/; # 转发结果为 //1.html
+  }
+  ```
+  ```sh
+  location /www/ {
+      proxy_pass  http://127.0.0.1:79/; # 转发结果为 /1.html
+  }
+  ```
+- 如果 proxy_pass 目标地址中包含 URI 且调用了变量，则将它的值作为转发结果。
+  ```sh
+  location /www/ {
+      proxy_pass  http://127.0.0.1:79$request_uri; # 转发结果为 /www/1.html
+  }
+  ```
+- 如果将 proxy_pass 与正则表达式、if 模块一起使用，则目标地址不能包含 URI ，否则启动 Nginx 时会报错。
+  ```sh
+  location ~ ^/www/\d*.html {
+      proxy_pass  http://127.0.0.1:79/;     # 不可行
+  }
+  ```
+  ```sh
+  location ~ ^/www/(\d*.html) {
+      proxy_pass  http://127.0.0.1:79/$1;   # 可行，转发结果为 /1.html
+  }
+  ```
+- 如果在 `rewrite ... ... break;` 之后使用 proxy_pass ，则将被 rewrite 重写之后的 URI 作为转发结果。
+  ```sh
+  location /www/ {
+      rewrite     1.html  /index.html     break;
+      proxy_pass  http://127.0.0.1:79/test/;      # 转发结果为 /index.html
+  }
+  ```
+
+### proxy_redirect
+
+：对上游服务器发出的响应头中的 Location、Refresh 字段进行字符串替换。
+- 可用范围：http、server、location
+- 例：
+  ```sh
+  location /www/ {
+      proxy_pass      http://127.0.0.1:79/;
+      proxy_redirect  default;
+      proxy_redirect  http://localhost:80/      http://$host:$server_port/;
+      proxy_redirect  http://localhost:(\d*)/   http://$host:$1/;
+      proxy_redirect  /   /;
+      # proxy_redirect off;
+  }
+  ```
+  - 默认会启用 `proxy_redirect default;` ，其规则为 `proxy_redirect <proxy_pass_url> <location_url>;`。
+    - 在上例中相当于 `proxy_redirect http://127.0.0.1:79/ /www/;` 。
+    - 如果 proxy_pass 中调用了变量，则默认规则会失效。
 
 ### proxy_buffering
 
@@ -711,6 +653,195 @@ server {
   access_log  /var/log/nginx/access.log  debug;    # 设置 access_log 的路径、日志格式
   ```
 
+## 关于变量
+
+- Nginx 提供了一些内置变量，用户也可以自定义变量。
+- 变量可以通过 `$var` 的格式取值。
+  - 变量名不区分大小写。
+  - 如果变量不存在，则报错：`unknown variable`
+  - 内置变量的默认值为 - 。
+- 例：
+  ```sh
+  location / {
+      return  200 '$request_uri\n';
+  }
+  ```
+
+### set
+
+：为一个变量赋值。如果该变量不存在则自动创建它。
+- 可用范围：server
+- 语法：
+  ```sh
+  set $variable value;
+  ```
+- 例：
+  ```sh	
+  server {
+      listen  80;
+      set     $port_type 8x;
+  }
+  ```
+- 注意被赋值的变量名之前要加前缀 $ 。
+- 不能给 Nginx 的内置变量赋值，否则会报错：`duplicate variable`
+- 变量的值可以是数字或字符串类型。
+
+### map
+
+：用于将源变量输入字典取值，并赋值给目标变量。
+- 可用范围：http
+- 例：
+  ```sh	
+  map $server_port $port_type{
+      # default   '';   # 如果字典中没有匹配的 key ，则取默认值
+      80        8x;     # 将源变量与 key 进行字符串匹配
+    ~ 9\d       9x;     # 正则匹配
+    ~*9\d       9x;     # 不区分大小写的正则匹配
+  }
+  ```
+
+### 内置变量
+
+- 关于 HTTP 请求报文：
+```sh
+remote_addr     # 客户端的地址
+remote_port     # 客户端的端口
+request         # 请求报文的第一行，比如 GET /static/1.html HTTP/1.1
+request_body    # 请求 body 。只有当 Nginx 执行了 proxy_pass,fastcgi_pass,uwsgi_pass,scgi_pass 时才会将请求 body 载入内存，使得该变量取值不为空
+request_length  # 请求报文的长度
+request_method  # 请求的方法名，采用大写，比如 GET
+request_uri     # 请求 URI （不受 rewrite、alias 影响）
+uri             # 请求 URI 中的路径部分，比如原始 URI 为 /static/1.html?id=1 时，路径部分为 /static/1.html
+args            # 请求 URL 中的 Query String
+is_args         # 如果存在 Query String 则取值为 ? （即使格式不正确），否则取值为空
+args_NAME       # Query String 中指定参数的值，不区分大小写
+http_NAME       # headers 中指定参数的值，不区分大小写
+cookie_NAME     # cookie 中指定参数的值，不区分大小写
+
+scheme    # 请求采用的协议，取值为 http 或 https
+https     # 如果采用了 HTTPS 协议则取值为 on ，否则取值为空
+
+request_filename # 请求 URI 指向的服务器文件，比如 /www/static/1.html
+document_root   # request_filename 文件在服务器上所处的根目录，比如 Nginx 配置的 root /www/;
+host #优先级：HTTP请求行的主机名>"HOST"请求头字段>符合请求的服务器名.请求中的主机头字段，如果请求中的主机头不可用，则为服务器处理请求的服务器名称
+
+
+
+
+
+server_addr     # 服务器的 IP ，由 HTTP 请求指向的 IP 决定，比如 127.0.0.1
+server_name     # 服务器的名称，由 Nginx 中 server{} 模块配置的 server_name 参数决定，采用小写
+server_port     # 服务器的端口号
+server_protocol   # 服务器的 HTTP 协议版本，比如HTTP/1.0" 或 "HTTP/1.1"
+
+```
+
+
+
+- 关于 HTTP 响应报文：
+```
+status      # 响应报文的状态码
+request_completion
+request_time
+
+```
+
+
+- 其它：
+```sh
+hostname        # 服务器的主机名，由服务器所在主机决定
+msec            # Unix 时间戳格式的服务器时间，比如 1603792024.820
+time_iso8601    # ISO 格式的服务器时间，比如 2020-10-28T10:27:14+08:00
+time_local      # 日志格式的服务器时间，比如 28/Oct/2020:10:27:14 +0800
+
+nginx_version   # Nginx 的版本号
+pid             # Nginx 当前 worker process 的 PID
+
+
+```
+
+## 关于访问权限
+
+### allow 、deny
+
+：允许、禁止某些 IP 地址的访问。
+- 可用范围：http、server、location、limit_except
+- 例：
+  ```sh
+  deny    192.168.1.1;       # 禁止一个 IP
+  allow   192.168.1.0/24;    # 允许一个网段
+  deny    all;               # 禁止所有 IP
+  allow   all;
+  ```
+- 收到客户端的 HTTP 请求时，Nginx 会从上到下检查访问规则，采用第一条与客户端 IP 匹配的规则。
+- 如果客户端被禁止访问，则返回响应报文：`403 Forbidden`
+
+### auth_basic
+
+：用于启用 HTTP Basic Auth 。
+- 可用范围：http、server、location
+- 例：
+  ```sh
+  auth_basic              "";                 # 只要不设置成 auth_basic off; 就会启用认证
+  auth_basic_user_file    /etc/nginx/passwd;  # 使用哪个密码文件
+  ```
+- 密码文件中保存了可用的用户名、密码，在运行时修改也会自动刷新。可用以下命令生成：
+  ```sh
+  yum install httpd-tools
+  htpasswd -cb passwd leo 123456   # 往密码文件 passwd 中添加一个用户 leo ，并保存其密码的 MD5 值。加上 -c 选项会创建该文件，如果该文件已存在则会被覆盖
+  htpasswd -b passwd leo 1234      # 往密码文件 passwd 中添加一个用户 leo 。如果该用户名已存在，则会覆盖其密码
+  htpasswd -D passwd leo           # 删除一个用户
+  ```
+
+### auth_delay
+
+：当客户端认证失败时，延迟一段时间再作出响应。
+- 可用范围：http、server、location
+- 默认值：
+  ```sh	
+  auth_delay 0s;
+  ```
+- 可以与 auth_basic 等认证措施搭配使用，避免暴力破解，不过客户端依然会保持 TCP 连接，占用资源。
+
+### limit_except
+
+：只允许接收指定的 HTTP 请求方法，对其它方法做出限制（通过 deny 限制）。
+- 可用范围：location
+- 例：
+  ```sh
+  location / {
+      limit_except GET POST {
+          deny    all;
+      }
+  }
+  ```
+- 允许 GET 方法时也会允许 HEAD 方法。
+
+### limit_rate
+
+：限制响应报文的传输速率，单位为 Bytes/s 。
+- 可用范围：http、server、location
+- 例：
+  ```sh
+  location /www/ {
+      limit_rate  10k;
+  }
+  ```
+- 默认值为 0 ，代表不限制。
+
+### satisfy
+
+：如果 ngx_http_access_module、ngx_http_auth_basic_module、ngx_http_auth_request_module、ngx_http_auth_jwt_module 模块都允许访问（或任一允许），则最终允许访问。
+- 可用范围：http、server、location
+- 语法：
+  ```sh	
+  satisfy all | any;
+  ```
+- 默认值：
+  ```sh	
+  satisfy all;
+  ```
+
 ## 关于 TCP 通信
 
 ### keepalive_requests
@@ -737,7 +868,7 @@ server {
 
 ### send_timeout
 
-：限制发送响应报文时，连续两次写操作之间的超时时间。
+：限制发送响应报文时，写操作中断的超时时间。
 - 可用范围：http、server、location
 - 默认值：
   ```sh	
@@ -853,7 +984,7 @@ server {
 
 ### client_body_timeout
 
-：限制读取请求报文 body 时，连续两次读操作之间的超时时间。
+：限制读取请求报文 body 时，读操作中断的超时时间。
 - 可用范围：http、server、location
 - 默认值：
   ```sh	
@@ -884,140 +1015,3 @@ server {
       ...
   }
   ```
-
-
-## 关于变量
-
-- Nginx 提供了一些内置变量，用户也可以自定义变量。
-- 变量可以通过 `$var` 的格式取值。
-  - 变量名不区分大小写。
-  - 如果变量不存在，则报错：`unknown variable`
-  - 内置变量的默认值为 - 。
-- 例：
-  ```sh
-  location / {
-      return  200 '$request_uri\n';
-  }
-  ```
-
-### set
-
-：为一个变量赋值。如果该变量不存在则自动创建它。
-- 可用范围：server
-- 语法：
-  ```sh
-  set $variable value;
-  ```
-- 例：
-  ```sh	
-  server {
-      listen  80;
-      set     $port_type 8x;
-  }
-  ```
-- 注意被赋值的变量名之前要加前缀 $ 。
-- 不能给 Nginx 的内置变量赋值，否则会报错：`duplicate variable`
-- 变量的值可以是数字或字符串类型。
-
-### map
-
-：用于将源变量输入字典取值，并赋值给目标变量。
-- 可用范围：http
-- 例：
-  ```sh	
-  map $server_port $port_type{
-      # default   '';   # 如果字典中没有匹配的 key ，则取默认值
-      80        8x;     # 将源变量与 key 进行字符串匹配
-    ~ 9\d       9x;     # 正则匹配
-    ~*9\d       9x;     # 不区分大小写的正则匹配
-  }
-  ```
-
-### 内置变量
-
-- 关于 HTTP 请求报文：
-```sh
-remote_addr     # 客户端的地址
-remote_port     # 客户端的端口
-request         # 请求报文的第一行，比如 GET /static/1.html HTTP/1.1
-request_body    # 请求 body 。只有当 Nginx 执行了 proxy_pass,fastcgi_pass,uwsgi_pass,scgi_pass 时才会将请求 body 载入内存，使得该变量取值不为空
-request_length  # 请求报文的长度
-request_method  # 请求的方法名，采用大写，比如 GET
-request_uri     # 请求 URI （不受 rewrite、alias 影响）
-uri             # 请求 URI 中的路径部分，比如原始 URI 为 /static/1.html?id=1 时，路径部分为 /static/1.html
-args            # 请求 URL 中的 Query String
-is_args         # 如果存在 Query String 则取值为 ? （即使格式不正确），否则取值为空
-args_NAME       # Query String 中指定参数的值，不区分大小写
-http_NAME       # headers 中指定参数的值，不区分大小写
-cookie_NAME     # cookie 中指定参数的值，不区分大小写
-
-scheme    # 请求采用的协议，取值为 http 或 https
-https     # 如果采用了 HTTPS 协议则取值为 on ，否则取值为空
-
-request_filename # 请求 URI 指向的服务器文件，比如 /www/static/1.html
-document_root   # request_filename 文件在服务器上所处的根目录，比如 Nginx 配置的 root /www/;
-host #优先级：HTTP请求行的主机名>"HOST"请求头字段>符合请求的服务器名.请求中的主机头字段，如果请求中的主机头不可用，则为服务器处理请求的服务器名称
-
-
-
-
-
-server_addr     # 服务器的 IP ，由 HTTP 请求指向的 IP 决定，比如 127.0.0.1
-server_name     # 服务器的名称，由 Nginx 中 server{} 模块配置的 server_name 参数决定，采用小写
-server_port     # 服务器的端口号
-server_protocol   # 服务器的 HTTP 协议版本，比如HTTP/1.0" 或 "HTTP/1.1"
-
-```
-
-
-
-- 关于 HTTP 响应报文：
-```
-status      # 响应报文的状态码
-request_completion
-request_time
-
-```
-
-
-- 其它：
-```sh
-hostname        # 服务器的主机名，由服务器所在主机决定
-msec            # Unix 时间戳格式的服务器时间，比如 1603792024.820
-time_iso8601    # ISO 格式的服务器时间，比如 2020-10-28T10:27:14+08:00
-time_local      # 日志格式的服务器时间，比如 28/Oct/2020:10:27:14 +0800
-
-nginx_version   # Nginx 的版本号
-pid             # Nginx 当前 worker process 的 PID
-
-
-```
-自定义变量：
-
-
-
-
-
-```
-location / {
-    root /data/front/emcd/;
-    index index.html index.htm;
-    try_files $uri $uri/ /index.html =404;
-    add_header Cache-Control "no-cache, no-store";
-    add_header X-Frame-Options SAMEORIGIN;
-    add_header X-Content-Type-Options "nosniff";
-    add_header X-XSS-Protection "1";
-}
-```
-
-```
-location ^~/test/play {
-    proxy_pass_request_body on;
-    proxy_pass_request_headers on;
-    proxy_pass http://xyz.com/play;
-    proxy_redirect off;
-    proxy_cookie_path / /;
-}
-```
-
-

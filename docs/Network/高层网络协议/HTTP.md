@@ -138,16 +138,20 @@ Server: Apache/2.4.7 (Ubuntu)
 - 状态行：由协议版本、状态码、状态码的简单描述组成。
 - 多种响应头示例：
   ```sh
-  Status Code: 200 OK                    # 返回的状态码
-  Allow: GET, HEAD                       # 服务器允许的 HTTP 请求方法
-  Server: Tengine                        # 服务器的名字
+  Status Code: 200 OK   # 返回的状态码
+  Allow: GET, HEAD      # 服务器允许的 HTTP 请求方法
+  Server: Tengine       # 服务器的名字
 
-  Date: Wed, 17 Jul 2019 00:59:49 GMT    # 服务器生成该响应报文的时刻（代理服务器不会改变该值）
-  Age: 2183                              # 表示该响应报文来自代理服务器的缓存，这是该缓存的存在时长
+  Location: http://127.0.0.1/index.html         # 常用于重定向的响应报文，声明一个 URL 让客户端去访问
+  Refresh: 5                                    # 让客户端 5 秒之后重新请求本页面
+  Refresh: 5; url=http://127.0.0.1/index.html   # 让客户端 5 秒之后重定向到该 URL
 
-  Cache-Control: max-age=0               # 缓存类型
-  Expires: Wed, 17 Jul 2019 01:59:49 GMT # 该响应的过期时刻，过期之前客户端应该使用本地缓存，过期之后再重新请求
-  ETag: 5edd15a5-e42                     # 响应 body 的标签值（用于判断内容是否变化，比 Last-Modified 更准确）
+  Date: Wed, 17 Jul 2019 00:59:49 GMT           # 服务器生成该响应报文的时刻（代理服务器不会改变该值）
+  Age: 2183                                     # 表示该响应报文来自代理服务器的缓存，这是该缓存的存在时长
+
+  Cache-Control: max-age=0                      # 缓存类型
+  Expires: Wed, 17 Jul 2019 01:59:49 GMT        # 该响应的过期时刻，过期之前客户端应该使用本地缓存，过期之后再重新请求
+  ETag: 5edd15a5-e42                            # 响应 body 的标签值（用于判断内容是否变化，比 Last-Modified 更准确）
   Last-Modified: Fri, 5 Jun 22019 12:01:20 GMT  # 该响应报文 body 最后一次修改的时刻（用于判断内容是否变化）
   ```
 

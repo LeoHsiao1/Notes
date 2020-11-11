@@ -103,11 +103,17 @@ cookie: gid=1311812194.1563255462; t=1
 ie=UTF-8&wd=1
 ```
 - 请求行：由请求方法名、请求的 URL 路径（域名之后的部分）、协议版本组成。
-- 更多的请求头示例：
+- 多种请求头示例：
   ```sh
   Content-Encoding: gzip                     # 该报文 body 的编码
   Content-Length: 348                        # 该报文 body 的长度
   Content-Type: text/html; charset=utf-8     # 该报文 body 的类型
+
+  Host: www.baidu.com                        # 请求的服务器域名
+  Connection: keep-alive                     # 申请保持 TCP 长连接
+  X-Requested-With: XMLHTTPRequest           # 说明该请求是 AJAX 异步请求
+  Referer: HTTPS://www.cnblogs.com/          # 说明客户端从哪个 URL 跳转到当前 URL
+  Cookie: gid=1311812194.1563255462; t=1
 
   User-Agent: Chrome/75.0.3770.100           # 客户端的信息
   Accept: text/html,application/xml;q=0.8    # 客户端能接受的响应 body 类型
@@ -115,11 +121,8 @@ ie=UTF-8&wd=1
   Accept-Language: zh-CN,zh;q=0.9            # 客户端能接受的响应 body 语言，q 表示选择这种情况的优先级，默认为 1
   Accept-Encoding: gzip, deflate             # 客户端能接受的响应 body 压缩格式
 
-  Host: www.baidu.com                        # 请求的服务器域名
-  Connection: keep-alive                     # 该请求是长连接
-  X-Requested-With: XMLHTTPRequest           # 该请求是 AJAX 异步请求
-  Referer: HTTPS://www.cnblogs.com/          # 客户端从哪个 URL 跳转到当前 URL
-  Cookie: gid=1311812194.1563255462; t=1
+  If-None-Match: 5edd15a5-e42               # 如果响应报文 body 的标签值依然为 ETag ，则请服务器返回 304 报文，让客户端使用本地缓存
+  If-Modified-Since: Fri, 5 Jun 22019 12:01:20 GMT  # 如果响应报文 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
   ```
 
 ### 响应报文
@@ -133,28 +136,35 @@ Server: Apache/2.4.7 (Ubuntu)
 <html><head><title>Index</html></head><body><h1>Hello world!</h1></body></html>
 ```
 - 状态行：由协议版本、状态码、状态码的简单描述组成。
-- 更多的响应头示例：
+- 多种响应头示例：
   ```sh
   Status Code: 200 OK                    # 返回的状态码
   Allow: GET, HEAD                       # 服务器允许的 HTTP 请求方法
   Server: Tengine                        # 服务器的名字
-  Date: Wed, 17 Jul 2019 00:59:49 GMT
-  Expires: Wed, 17 Jul 2019 01:59:49 GMT # 该响应的过期时刻，在此之后不能再使用其缓存，需要重新请求
+
+  Date: Wed, 17 Jul 2019 00:59:49 GMT    # 服务器生成该响应报文的时刻（代理服务器不会改变该值）
+  Age: 2183                              # 表示该响应报文来自代理服务器的缓存，这是该缓存的存在时长
+
   Cache-Control: max-age=0               # 缓存类型
+  Expires: Wed, 17 Jul 2019 01:59:49 GMT # 该响应的过期时刻，过期之前客户端应该使用本地缓存，过期之后再重新请求
+  ETag: 5edd15a5-e42                     # 响应 body 的标签值（用于判断内容是否变化，比 Last-Modified 更准确）
+  Last-Modified: Fri, 5 Jun 22019 12:01:20 GMT  # 该响应报文 body 最后一次修改的时刻（用于判断内容是否变化）
   ```
 
-浏览器可以将服务器的返回的 HTML 文件缓存在本地，下次再请求该资源时就直接从本地缓存中读取数据。Cache-Control 的常见取值如下：
-- max-age=0 ：该缓存在 0 秒后过期，相当于 no-cache 。
-- no-cache  ：不能直接使用缓存，要先向服务器重新请求该资源，如果服务器返回 304 才可以使用缓存。
-- no-store  ：不进行缓存。
-- private   ：允许客户端缓存。
-- public    ：客户端和代理服务器都可以缓存。
+- 浏览器可以将服务器的返回的 HTML 文件缓存在本地，下次再请求该资源时就直接从本地缓存中读取数据。Cache-Control 的常见取值如下：
+  ```sh
+  max-age=0   # 该缓存在 0 秒后过期，相当于 no-cache
+  no-cache    # 不能直接使用缓存，要先向服务器重新请求该资源，如果服务器返回 304 才可以使用缓存
+  no-store    # 不进行缓存
+  private     # 允许客户端缓存
+  public      # 客户端和代理服务器都可以缓存
+  ```
 
 ### 报文 body
 
-报文 body 可以存储多种类型的数据。根据 MIME 协议进行分类，需要在 headers 中声明其 Content-Type 。如下：
+报文 body 可以存储多种 MIME 类型的数据，但需要在报文头部声明其 Content-Type 。如下：
 
-Content-Type|说明
+Content-Type|含义
 -|-
 application/x-www-form-urlencoded            | 默认格式，与 Query String 格式相同，通常用于传输 form 表单
 application/json                             | JSON 格式的文本

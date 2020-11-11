@@ -216,38 +216,64 @@ server {
 
 ## 关于路由
 
+- 当 Nginx 在某个 TCP 端口收到一个 HTTP 请求时，会交给监听该端口的 server 处理。
+  - 如果监听该端口的 server 有多个，则考虑请求头中的 Host 参数与哪个 server 监听的 server_name 匹配。
+  - 如果没有匹配的 server_name ，则交给监听该端口的默认 server 处理。
+
+- 当 server 收到请求时，会从多个地方查找与请求 URI 匹配的资源，作出响应报文。包括：
+  ```sh
+  location
+  proxy_pass
+  index
+  autoindex
+  ```
+  如果前一个资源不存在，则查找后一个资源。如果都没找到匹配 URI 的资源，则返回响应报文：`404 Not Found`
+
 ### listen
 
 ：声明 server 监听的 IP:Port 。
 - 可用范围：server
-- 它是硬性要求，server 只会接收满足 listen 条件的 HTTP 请求。
 - 例：
   ```sh
   listen      80;              # 相当于 listen *:80
   listen      127.0.0.1:80;
   listen      unix:/var/run/nginx.sock;
   ```
-
-### server_name
-
-：声明 server{} 监听的域名（但并不是硬性要求）。
-- 可用范围：server
-- 当 Nginx 在某个 TCP 端口收到一个 HTTP 请求时，会交给监听该端口的 server 处理。
-  - 如果监听该端口的 server 有多个，则考虑 Request Headers 中的 Host 与哪个 server 监听的 server_name 匹配。
-  - 如果没有匹配的 server_name ，或者 Request Headers 中的 Host 是 IP 地址，则交给监听该端口的默认 server 处理。
-- 监听一个端口的默认 server 是 nginx.conf 中最先定义的那个，也可以手动指定。如下：
+- 如果有多个 server 监听同一个端口，则第一个定义的 server 是默认 server 。也可以手动指定，如下：
   ```sh
   listen       80  default_server;
   ```
+
+### server_name
+
+：声明 server{} 监听的域名。
+- 可用范围：server
 - server_name 有以下几种格式，排在前面的优先匹配：
   ```sh
-  server_name  www.test.com localhost;    # 匹配明确的域名（可以填多个，Nginx 不会去验证 DNS）
+  server_name  www.test.com localhost;    # 匹配明确的域名（可以声明多个，Nginx 不会去验证 DNS）
   server_name  *.test.com;                # 以 *. 开头，模糊匹配
   server_name  www.test.*;                # 以 .* 结尾
   server_name  ~^(?<www>.+)\.test\.com$;  # 正则表达式
   server_name  "";                        # 空字符串，相当于不填 server_name ，不会匹配任何域名
   ```
 - 如果有两个 server 监听的端口、域名都相同，则启动 Nginx 时会报错：`conflicting server name`
+
+### alias
+
+：修改请求的 URI 。
+- 可用范围：server
+- 例：
+  ```sh
+  root   /usr/share/nginx/html;
+  location /www/ {
+      alias /static/img/;     # 比如请求 /www/1.jpg 时，URI 会变成 /static/img/1.jpg
+  }
+  ```
+  ```sh
+  location ~ ^/www/(.+\.(gif|jpe?g|png))$ {
+      alias /static/img/$1;   # 正则匹配时可以使用正则替换
+  }
+  ```
 
 ### location
 
@@ -259,55 +285,49 @@ server {
       [Directives]...
   }
   ```
-- 匹配类型 type 有以下几种，排在前面的优先匹配：
-  - `=`  ：字符串精确匹配，即匹配与该字符串完全相同的 URI 。
-  - `^~` ：字符串前缀匹配，即匹配以该字符串开头的 URI 。
-  - `~`  ：正则匹配。如果某个 URI 同时匹配多个正则 location ，则采用正则表达式最长的那个。
-  - `~*` ：不区分大小写的正则匹配。（其它匹配类型都区分大小写）
-  - 不指定 type 时，匹配规则相当于 `^~` ，但优先级最低。
+  - 匹配类型 type 有以下几种，排在前面的优先匹配：
+    - `=`  ：字符串精确匹配，即匹配与该字符串完全相同的 URI 。
+    - `^~` ：字符串前缀匹配，即匹配以该字符串开头的 URI 。
+    - `~`  ：正则匹配。如果某个 URI 同时匹配多个正则 location ，则采用正则表达式最长的那个。
+    - `~*` ：不区分大小写的正则匹配。（其它匹配类型都区分大小写）
+    - 不指定 type 时，匹配类型相当于 `^~` ，但优先级最低。
+  - 如果有两个 location 的 type、URI 都相同，则启动 Nginx 时会报错：`duplicate location` 。
 
 - 例：
-  ```sh
-  location ~ ^/www/(.+\.(gif|jpe?g|png))$ {   # 正则匹配时可以使用正则替换
-      alias /static/img/$1;
-  }
-  ```
-
-- URI 以 `/` 结尾则会转发相对路径，不以 `/` 结尾则会转发绝对路径。如下：
-  ```sh
-  location /img {
-      root /www/;
-  }
-  ```
   ```sh
   location /img/ {
       root /www/;
   }
   ```
-  - 访问 `http://127.0.0.1/img/1.html` 时，会转发绝对路径 `img/1.html` ，转发到 `http://127.0.0.1:80/www/img/1.html` 。
-  - 访问 `http://127.0.0.1/img/1.html` 时，会转发相对路径 `1.html` ，转发到 `http://127.0.0.1:80/www/1.html` 。
-
-- 如果有两个 location 的 type、URI 都相同，则启动 Nginx 时会报错：`duplicate location` 。
+  - 服务器收到指向 `http://127.0.0.1/img/1.html` 的请求时，会获取文件 /www/img/1.html ，返回 200 响应报文。如果不存在该文件则返回 404 响应报文。
+  - 服务器收到指向 `http://127.0.0.1/img` 的请求时，会返回一个 301 永久重定向报文，指向 `http://127.0.0.1/img/` 。
 
 ### root
 
-- 设置静态文件的根目录。当 HTTP 请求的 URI 没有匹配 location 等具体的路由规则时，就到该目录下寻找文件作出 HTTP 响应。
+- 到 root 目录下寻找与 URI 匹配的文件作出响应报文。
 - 可用范围：http、server、location
 - 默认值：
   ```sh
   root html;
   ```
 
-### alias
+### index
 
-：对请求报文的 URI 进行字符串替换。
-- 可用范围：server
+- 如果请求的 URI 以 / 结尾，则通过内部重定向将请求指向 `URI/index` 。
+- 可用范围：http、server、location
 - 例：
   ```sh
-  root   /usr/share/nginx/html;
-  location /www/ {
-      alias /static/img/;         # 比如请求 /www/1.jpg 时，URI 会变成 /static/img/1.jpg
-  }
+  index index.html index.htm;
+  ```
+  - 可以定义多个文件，如果前一个文件不存在，则查找后一个文件。
+
+### autoindex
+
+- 如果请求的 URI 以 / 结尾，则返回一个 HTML 页面，显示该磁盘目录的文件列表。
+- 可用范围：http、server、location
+- 默认值：
+  ```sh
+  autoindex off;
   ```
 
 ### internal
@@ -320,7 +340,7 @@ server {
       internal;
   }
   ```
-- 如果被外部请求直接访问，则返回响应报文：`404 Not Found`
+- 如果被外部请求直接访问，则返回 404 响应报文。
 
 ## ngx_http_rewrite_module
 
@@ -488,17 +508,15 @@ server {
 - 可用范围：http、server、location
 - 例：
   ```sh
-  proxy_buffering on;               # 启用缓冲（默认启用）	
-  proxy_buffers 8 8k;       # 缓冲区的最大数量和大小（默认等于一个内存页大小）
-  proxy_buffer_size 8k;     # 读取响应头的缓冲区大小（默认等于一个内存页大小）
+  proxy_buffering on;             # 启用缓冲（默认启用）	
+  proxy_buffers 8 8k;             # 缓冲区的最大数量和大小（默认等于一个内存页大小）
+  proxy_buffer_size 8k;           # 读取响应头的缓冲区大小（默认等于一个内存页大小）
   proxy_busy_buffers_size 16k;    # busy 状态的缓冲区的最大大小（一般为 2 个缓冲区）
 
-  proxy_temp_path /tmp/nginx/proxy_temp 1 2;    # 指定一个磁盘目录用于缓冲，划分 2 层子目录（缓冲时会创建一些临时文件）
-  proxy_temp_file_write_size  16k;    # 每次写入临时文件的最大数据量
-  proxy_max_temp_file_size 1024m;     # 所有临时文件的总大小
-
+  proxy_temp_path /tmp/nginx/proxy_temp 1 2;  # 在一个磁盘目录下创建临时文件来缓冲数据，划分 2 层子目录
+  proxy_temp_file_write_size  16k;            # 每次写入临时文件的最大数据量
+  proxy_max_temp_file_size 1024m;             # 所有临时文件的总大小
   ```
-
 - 当 Nginx 将客户端的请求转发给 proxy_pass 上游服务器时，默认会启用缓冲，但不会启用缓存。
   - 缓冲（buffer）
     - ：Nginx 将上游服务器的响应报文保存几秒钟，等整个接收之后，再发送给客户端。
@@ -509,18 +527,9 @@ server {
     - ：Nginx 将上游服务器的响应报文保存几分钟，当客户端再次请求同一个响应报文时就直接回复，不必请求上游服务器。
     - 只作用于部分响应报文。
     - 可以避免重复向上游服务器请求一些固定不变的响应报文，减少上游服务器的负载，减少客户端等待响应的时间。
-
-
 - 优先使用内存中的缓冲区，如果满了就缓冲到磁盘的 proxy_temp_path 目录下。
-- 当 Nginx 第一次读取某个响应报文时，一般会等全部读取完之后再发送给客户端。
+- 当 Nginx 读取一个响应报文时，一般会等全部读取完之后再发送给客户端。
   - 如果该响应报文大于 proxy_busy_buffers_size ，则会一边读取响应报文，一边将缓冲的数据发送给客户端（这部分缓冲称为 busy 状态）。
-
-
-
-- 启用缓存之后，Nginx 会将上游服务器的响应报文缓存一段时间。
-  - 如果客户端发来的请求 URL 与缓存的某个 URL 的 hash 值相同，则直接从缓存中取出数据回复给客户端，此时响应头中包含 `Nginx-Cache: HIT` 。
-  - 否则，将请求转发给上游服务器处理，此时响应头中包含 `Nginx-Cache: MISS`。
-  - 如果响应头中的 Cache-Control 取值为 Private、No-Cache、No-Store 或 Set-Cookie ，则不缓存。
 
 ### proxy_cache
 
@@ -528,48 +537,48 @@ server {
 - 可用范围：http、server、location
 - 例：
   ```sh
-  proxy_cache  my_cache;  # 定义一个名为 my_cache 的共享内存空间，用于记录缓存项的索引，可以被多个地方使用（默认为 off ）
-  proxy_cache_path  /tmp/nginx/proxy_cache    # 指定一个磁盘目录用于缓存数据
+  proxy_cache  cache1;                        # 定义一个名为 cache1 的共享内存空间，用于记录缓存项的索引，可以被多个地方使用（默认为 off ）
+  proxy_cache_path  /tmp/nginx/proxy_cache    # 在一个磁盘目录下创建临时文件来缓存数据
                     levels=1:2                # 划分 2 层子目录
-                    keys_zone=my_cache:10m    # 在缓存空间 my_cache 中占用 10 MB 的内存
+                    keys_zone=cache1:10m      # 在缓存空间 cache1 中占用 10 MB 的内存
                     max_size=10g              # 最多缓存 10 GB 的数据（缓存空间满了时会自动删掉较少访问的缓存项）
                     inactive=60m              # 如果一个缓存项一直没有被访问，则超过 60 min 之后就删除
                     use_temp_path=off;        # 待缓存数据会先写入临时文件，再重命名为缓存文件。该参数是指是否在其它目录写入临时文件
 
-  proxy_cache_revalidate on;  # 刷新过期的缓存项时，向上游服务器发出的请求头中包含 If-Modified-Since、If-None-Match
-  proxy_cache_min_uses 3;     # 当同一个响应被客户端请求至少 3 次之后，才缓存它（调大该参数可以只缓存频繁请求的响应）
+  proxy_no_cache $cookie_nocache $arg_nocache $arg_comment;  # 定义不使用缓存的条件（只要任一变量值为真）
+  # proxy_cache_background_update off;        # 是否允许更新过期的缓存项
+  proxy_cache_valid 200 302 10m;              # 限制不同状态码的响应的缓存时间
+  proxy_cache_valid 404      1m;
+  proxy_cache_valid any      5m;              # 限制所有响应报文的缓存时间
+
+  proxy_cache_revalidate on;                  # 刷新过期的缓存项时，向上游服务器发出的请求头中包含 If-Modified-Since、If-None-Match
+  proxy_cache_min_uses 3;                     # 当同一个响应被客户端请求至少 3 次之后，才缓存它（调大该参数可以只缓存频繁请求的响应）
   proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504; # 刷新过期的缓存项时，如果上游服务器报出这些错误而不能响应，则将已过期的缓存项发送给客户端
   
-  # proxy_cache_key $scheme$proxy_host$request_uri; # 定义每个缓存项的唯一标识符
-  proxy_cache_lock on;    # 多个请求指向同一个缓存项且没有命中缓存时，只将一个请求转发给上游服务器，其它请求则被阻塞直到从缓存区获得响应
-  # proxy_cache_lock_age 5s;  # 一组请求每被阻塞 5 s  ，就解锁一个请求，转发给上游服务器
-  # proxy_cache_lock_timeout 5s;  # 一组请求最多被阻塞 5 s 。超过该时间则全部解锁，但不会缓存响应报文
-
-
-  proxy_no_cache $cookie_nocache $arg_nocache $arg_comment;  # 定义不使用缓存的条件（只要任一变量值为真）
-
-  # proxy_cache_background_update off;    # 是否允许更新过期的缓存项
-
-  proxy_cache_valid 200 302 10m;    # 限制不同状态码的响应的缓存时间
-  proxy_cache_valid 404      1m;
-  proxy_cache_valid any      5m;           # 限制所有响应报文的缓存时间
+  # proxy_cache_key $scheme$proxy_host$request_uri;   # 定义每个缓存项的标签值（用于判断内容是否变化）
+  proxy_cache_lock on;                        # 多个请求指向同一个缓存项且没有命中缓存时，只将一个请求转发给上游服务器，其它请求则被阻塞直到从缓存区获得响应
+  # proxy_cache_lock_age 5s;                  # 一组请求每被阻塞 5 s  ，就解锁一个请求，转发给上游服务器
+  # proxy_cache_lock_timeout 5s;              # 一组请求最多被阻塞 5 s 。超过该时间则全部解锁，但不会缓存响应报文
   ```
 
+- 如果客户端发来的请求 URL 与缓存的某个 URL 的 hash 值相同，则直接从缓存中取出数据回复给客户端，此时响应头中包含 `Nginx-Cache: HIT` 。
+  - 否则，将请求转发给上游服务器处理，此时响应头中包含 `Nginx-Cache: MISS`。
+  - 如果响应头中的 Cache-Control 取值为 Private、No-Cache、No-Store 或 Set-Cookie ，则不缓存。
 
 - 可以给客户端加上一个响应头，表示缓存的使用情况。
   ```sh
   add_header X-Cache-Status $upstream_cache_status;
   ```
-  可能的取值如下：
-  - BYPASS ：该响应不应该使用缓存，这是 proxy_no_cache 参数在起作用。
-  - MISS ：该响应存在缓存。
-  - HIT ：该响应不存在缓存。
-  - EXPIRED ：该响应存在缓存，但是过期了。
-  - UPDATING ：该响应的缓存已过期，这是刚刚请求的新响应。
-  - STALE ：这是 proxy_cache_use_stale 参数在起作用。
-  - REVALIDATED ：这是 proxy_cache_revalidate 参数在起作用。
-
-
+  其可能的取值如下：
+  ```sh
+  BYPASS       # 该响应不应该使用缓存，这是 proxy_no_cache 参数在起作用
+  MISS         # 该响应存在缓存
+  HIT          # 该响应不存在缓存
+  EXPIRED      # 该响应存在缓存，但是过期了
+  UPDATING     # 该响应的缓存已过期，这是刚刚请求的新响应
+  STALE        # 这是 proxy_cache_use_stale 参数在起作用
+  REVALIDATED  # 这是 proxy_cache_revalidate 参数在起作用
+  ```
 
 ### upstream
 

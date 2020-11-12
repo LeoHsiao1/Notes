@@ -36,12 +36,15 @@ PermitRootLogin yes               # 允许 root 用户登录
 MaxAuthTries 6                    # 每个 TCP 连接的最多认证次数。如果客户端输错密码的次数达到该值的一半，则断开连接
 MaxSessions 10                    # 最多连接的终端数
 
-PasswordAuthentication yes        # 允许使用密码登录（否则只能使用密钥登录）
+PasswordAuthentication yes        # 允许使用密码登录（否则只能使用 SSH 私钥登录）
 PermitEmptyPasswords no           # 不允许使用空密码登录
+
+StrictModes yes                   # 在 SSH 认证时检查用户的家目录、authorized_keys 等文件是否只被用户拥有写权限
 ```
-- 修改了配置文件之后，要重启 sshd 服务才会生效：systemctl restart sshd
-- `~/.ssh/authorized_keys` 文件中保存了一些公钥，允许客户端使用这些公钥进行 SSH 认证，登录到本机。
+- 修改了配置文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
+- `~/.ssh/authorized_keys` 文件中保存了一些公钥，允许客户端使用对应的私钥进行 SSH 认证，登录到本机。
 - `~/.ssh/known_hosts` 文件中保存了所有与本机成功进行了 SSH 认证的主机的公钥。下次再连接到这些主机时，如果其公钥发生变化，则怀疑是被冒充了。
+- 如果 StrictModes 检查不通过，会拒绝 SSH 认证，并在 /var/log/secure 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys`，此时建议执行 `chmod 700 -R ~` 。
 
 ## 客户端
 
@@ -103,7 +106,7 @@ $ ssh-copy-id root@10.0.0.1         # 将本机的 SSH 公钥拷贝给目标主�
               -i ~/.ssh/id_rsa.pub  # 指定要拷贝的 SSH 公钥
 ``` 
 - 执行该命令时，需要先通过目标主机的身份验证，才拥有拷贝 SSH 公钥的权限。
-- 该 SSH 公钥会被拷贝到目标主机的指定用户的 ~/.ssh/authorized_keys 文件中，允许以后本机以该用户的身份 SSH 免密登录到目标主机。
+- 该 SSH 公钥会被拷贝到目标主机的指定用户的 ~/.ssh/authorized_keys 文件中，允许以后本机以该用户的 SSH 私钥登录到目标主机。
 
 ### 配置白名单和黑名单
 

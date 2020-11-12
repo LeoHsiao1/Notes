@@ -522,59 +522,97 @@ server {
 
 ### upstream
 
-：用于定义任意个 server ，从而可以将收到的 HTTP 请求按某种策略转发给 server 处理，实现负载均衡。
+：用于定义一组上游服务器，按某种策略将请求转发给这些 server 处理，实现负载均衡，高可用。
 - 可用范围：http
+- 例：
+  1. 定义 upstream 。
+      ```sh
+      upstream my_cluster {           # 定义一个 upstream ，名为 my_cluster
+          server 127.0.0.1:81;        # 添加一个 server
+          server 127.0.0.1:82   down;
+          server test.backend.com;
+          server unix:/tmp/backend;
+      }
+      ```
+  2. 将请求转发给 my_cluster 。
+      ```sh
+      location / {
+          proxy_pass    http://my_cluster;
+      }
+      ```
+- server 的可用参数：
+  ```sh
+  weight=1          # 权重，默认为 1
+  max_conns=0       # 限制该 server 同时处理的 TCP 连接数。默认为 0 即没有限制
+  max_fails=1       # 默认值为 1 ，取值为 0 则不限制
+  fail_timeout=10s  # 如果在一个 fail_timeout 周期内，与该 server 通信失败 max_fails 次，则在该周期内认为它不可用
+  backup            # 将该 server 标记为备份服务器，当所有非 backup 服务器不可用时才使用它
+  down              # 将该 server 标记为不可用
+  ```
+
+- 可以配置 Nginx 与上游服务器之间的 TCP 长连接：
+  ```sh
+  upstream my_cluster {
+      server 127.0.0.1:81;
+      server 127.0.0.1:82;
+
+      keepalive 0;              # 限制 Nginx 的每个 worker 进程可以与 upstream 保持的长连接数，默认为 0
+      keepalive_timeout 60s;    # 限制每个长连接的持续时间
+      keepalive_requests 100;   # 限制每个长连接可以传递的请求数，超过该数量时会关闭连接
+  }
+  ```
+  - 默认采用短连接。上游发出响应报文之后，就会主动关闭连接，让 Socket 变成 TIME_WAIT 状态。
+  - 如果启用 keepalive 参数，则实际长连接数超过该值时，Nginx 会关闭最少使用的连接。但由于是 Nginx 主动关闭，会让 Nginx 上的 Socket 变成 TIME_WAIT 状态。
 
 常见的分配策略：
-- 按轮询分配：将 HTTP 请求按时间顺序依次分配给各个 server ，实现简单的平均分配。配置如下：
-    1. 定义 upstream 。
-    ```sh
-    upstream my_cluster {         # 定义一个 upstream ，名为 my_cluster
-        server 127.0.0.1:8085;    # 添加一个 server
-        server 127.0.0.1:8086;
-    }
-    ```
-    2. 通过 proxy_pass 指令将 HTTP 请求转发到 my_cluster 。
-    ```sh
-    location / {
-        proxy_pass    http://my_cluster;    # 这个域名会在 Nginx 每次启动时解析
-    }
-    ```
+- 轮询分配：将 HTTP 请求按时间顺序依次分配给各个 server ，实现简单的平均分配。
+  ```sh
+  upstream my_cluster {
+      server 127.0.0.1:81;
+      server 127.0.0.1:82;
+      server test.backend.com;
+  }
+  ```
+  - Nginx 在启动时会解析域名。如果一个域名解析到多个 IP ，则对这些 IP 采用轮询分配。
+  - 如果一个 server 不可用，则分配给下一个 server 处理。如果所有 server 都不可用，则将最后一个 server 的报错返回给客户端。
 
-- 按轮询加权重分配：权重较大的 server 优先被分配。适合处理几台 server 性能不均的情况。
-    ```sh
-    upstream my_cluster {
-        server 127.0.0.1:8085 weight=5;     # weight 默认为 1
-        server 127.0.0.1:8086 weight=10;
-    }
-    ```
+- 加权轮询分配：权重越大的 server 被分配的概率越大。适合处理几台 server 性能不均的情况。
+  ```sh
+  upstream my_cluster {
+      server 127.0.0.1:81 weight=5;
+      server 127.0.0.1:82 weight=10;
+  }
+  ```
+  - 默认采用加权轮询分配。
 
-- 按响应时间分配：响应时间短的 server 优先被分配。
-    ```sh
-    upstream my_cluster {
-        fair;
-        server 127.0.0.1:8085;
-        server 127.0.0.1:8086;
-    }
-    ```
+- 按响应时间分配：响应时间越短的 server 被分配的概率越大。
+  ```sh
+  upstream my_cluster {
+      fair;
+      server 127.0.0.1:81;
+      server 127.0.0.1:82;
+  }
+  ```
+  - 需要安装第三方模块 nginx-upstream-fair 。
 
-- 按 ip_hash 分配：将客户端 ip 的 hash 值相同的 HTTP 请求分配给同一个 server 。适合保持 session 。
-    ```sh
-    upstream my_cluster {
-        ip_hash;
-        server 127.0.0.1:8085;
-        server 127.0.0.1:8086;
-    }
-    ```
+- 按 ip 的哈希分配：保证将客户端 ip 的 hash 值相同的 HTTP 请求分配给同一个 server 。适合保持 session 、利用缓存。
+  ```sh
+  upstream my_cluster {
+      ip_hash;
+      server 127.0.0.1:81;
+      server 127.0.0.1:82;
+  }
+  ```
 
-- 按 url_hash 分配：将目标 url 的 hash 值相同的 HTTP 请求分配给同一个 server 。适合利用缓存。
-    ```sh
-    upstream my_cluster {
-        url_hash;
-        server 127.0.0.1:8085;
-        server 127.0.0.1:8086;
-    }
-    ```
+- 自定义的哈希分配：
+  ```sh
+  upstream my_cluster {
+      hash $remote_addr consistent;
+      server 127.0.0.1:81;
+      server 127.0.0.1:82;
+  }
+  ```
+  - 启用 consistent 参数则会采用 ketama 一致性哈希算法，使得改变 upstream 中的 server 数量时，绝大部分哈希值依然映射到原来的 server 。
 
 ### stream
 
@@ -584,7 +622,6 @@ server {
     ```sh
     stream {
         upstream mysql {
-            hash $remote_addr consistent;
             server 10.0.0.1:3306 weight=5;
             server 10.0.0.2:3306 weight=10;
         }

@@ -210,40 +210,40 @@ pipeline {
 在 environment{} 中可以定义环境变量，它们会被 Jenkind 加入到 shell 的环境变量中。
 - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
 - 例：
-    ```groovy
-    stage('测试') {
-        environment {
-            ID = 1
-            NAME = 'hello'
-        }
-        steps {
-            echo '$ID'
-            sh "ID=2; echo $ID"
-        }
-    }
-    ```
+  ```groovy
+  stage('测试') {
+      environment {
+          ID = 1
+          NAME = 'hello'
+      }
+      steps {
+          echo '$ID'
+          sh "ID=2; echo $ID"
+      }
+  }
+  ```
 - 以上 echo 语句、sh 语句中，`$ID` 都会被视作 Jenkinsfile 的环境变量取值，如果不存在则报错。
 - 如果要读取 shell 中的变量，则应该执行被单引号包住的 sh 语句。例如：`sh 'ID=2; echo $ID'`
 - 在 environment{} 中可以通过以下方式读取 Jenkins 的一些内置变量：
-    ```groovy
-    echo "分支名：${env.BRANCH_NAME} ，提交者：${env.CHANGE_AUTHOR} ，版本链接：${env.CHANGE_URL}"
-    echo "节点名：${env.NODE_NAME} ，Jenkins 主目录：${env.JENKINS_HOME} ，工作目录：${env.WORKSPACE}"
-    echo "任务名：${env.JOB_NAME} ，任务链接：${env.JOB_URL} ，构建编号：${env.BUILD_NUMBER} ，构建链接：${env.BUILD_URL}"
-    ```
+  ```groovy
+  echo "分支名：${env.BRANCH_NAME} ，提交者：${env.CHANGE_AUTHOR} ，版本链接：${env.CHANGE_URL}"
+  echo "节点名：${env.NODE_NAME} ，Jenkins 主目录：${env.JENKINS_HOME} ，工作目录：${env.WORKSPACE}"
+  echo "任务名：${env.JOB_NAME} ，任务链接：${env.JOB_URL} ，构建编号：${env.BUILD_NUMBER} ，构建链接：${env.BUILD_URL}"
+  ```
 - 在 environment{} 中可以通过以下方式读取 Jenkins 的凭据：
-    ```groovy
-    environment {
-        ACCOUNT1 = credentials('account1')
-    }
-    ```
-    假设该凭据是 Username With Password 类型，值为“admin:123456”，则 Jenkins 会在 shell 中加入三个环境变量：
-    ```sh
-    ACCOUNT1=admin:123456
-    ACCOUNT1_USR=admin
-    ACCOUNT1_PSW=123456
-    ```
-    读取其它类型的凭据时，建议打印出 shell 的所有环境变量，从而发现 Jenkins 加入的环境变量的名字。
-    为了保密，如果直接将上述变量打印到 stdout 上，Jenkins 会将它们的值显示成 `****` 。
+  ```groovy
+  environment {
+      ACCOUNT1 = credentials('account1')
+  }
+  ```
+  假设该凭据是 Username With Password 类型，值为“admin:123456”，则 Jenkins 会在 shell 中加入三个环境变量：
+  ```sh
+  ACCOUNT1=admin:123456
+  ACCOUNT1_USR=admin
+  ACCOUNT1_PSW=123456
+  ```
+  读取其它类型的凭据时，建议打印出 shell 的所有环境变量，从而发现 Jenkins 加入的环境变量的名字。
+  为了保密，如果直接将上述变量打印到 stdout 上，Jenkins 会将它们的值显示成 `****` 。
 
 ### agent{}
 
@@ -310,21 +310,35 @@ pipeline {
 
 ：用于执行 shell 命令。
 - 例：
+  ```groovy
+  steps {
+      sh "echo Hello"
+      sh 'echo World'
+      sh """
+          A=1
+          echo $A     // 这会读取 Groovy 解释器中的变量 A
+      """
+      sh '''
+          A=1
+          echo $A     // 这会读取 shell 中的变量 A
+      '''
+  }
+  ```
+- 每个 sh 语句会被 Jenkins 保存为一个临时的 x.sh 文件，用 `/bin/bash -ex x.sh` 的方式执行，且切换到该 Job 的工作目录。
+  - 因此各个 sh 语句之间比较独立、解耦。
+  - 因此会记录下执行的每条 shell 命令及其输出。例如执行以下 sh 语句：
     ```groovy
-    steps {
-        sh "echo Hello"
-        sh 'echo World'
-        sh """
-            A=1
-            echo $A     // 这会读取 Groovy 解释器中的变量 A
-        """
-        sh '''
-            A=1
-            echo $A     // 这会读取 shell 中的变量 A
-        '''
-    }
+    sh """
+        echo hello 你好         # 建议不要在 sh 语句中通过 echo 命令添加注释，因为会该注释会被记录两次，而且命令中包含中文时还会转码
+        comment=( 测试开始 )    # 建议通过这种方式加入注释
+    """
     ```
-- 每个 sh 语句会被 Jenkins 保存为一个临时的 x.sh 文件，用 `/bin/bash -ex x.sh` 的方式执行，且切换到该 Job 的工作目录。因此各个 sh 语句之间比较独立、解耦。
+    执行后记录的 Console Output 为：
+    ```sh
+    +echo hello $'\344\275\240\345\245\275'
+    hello 你好
+    +comment=( 测试开始： )                       
+    ```
 
 #### bat
 
@@ -417,50 +431,48 @@ pipeline {
 
 ：用于调用 Jenkins 的凭据。
 - 例：
-    ```groovy
-    withCredentials([
-        usernamePassword(
-            credentialsId: 'credential_1',
-            usernameVariable: 'USERNAME',   // 将凭据的值存到变量中
-            passwordVariable: 'PASSWORD'
-        )]) {
-        sh """
-            set -eu
-            set +x      # 避免密码被打印到终端上
-            docker login -u ${USERNAME} -p ${PASSWORD} ${image_hub}
-        """
-    }
-    ```
+  ```groovy
+  withCredentials([
+      usernamePassword(
+          credentialsId: 'credential_1',
+          usernameVariable: 'USERNAME',   // 将凭据的值存到变量中（如果在终端显示该变量的值，Jenkins 会自动隐藏）
+          passwordVariable: 'PASSWORD'
+      )]) {
+      sh """
+          docker login -u ${USERNAME} -p ${PASSWORD} ${image_hub}
+      """
+  }
+  ```
 
 #### 拉取代码
 
 - 例：从 Git 仓库拉取代码
-    ```groovy
-    git(
-        branch: 'master',
-        credentialsId: 'credential_1',
-        url : 'git@github.com/${repository}.git'
-    )
-    ```
+  ```groovy
+  git(
+      branch: 'master',
+      credentialsId: 'credential_1',
+      url : 'git@github.com/${repository}.git'
+  )
+  ```
 
 - 例：从 SVN 仓库拉取代码
-    ```groovy
-    script {
-        checkout([
-            $class: 'SubversionSCM',
-            locations: [[
-                remote: 'https://svnserver/svn/${repository}'
-                credentialsId: 'credential_2',
-                local: '.',
-                depthOption: 'infinity',
-                ignoreExternalsOption: true,
-                cancelProcessOnExternalsFail: true,
-            ]],
-            quietOperation: true,
-            workspaceUpdater: [$class: 'UpdateUpdater']
-        ])
-    }
-    ```
+  ```groovy
+  script {
+      checkout([
+          $class: 'SubversionSCM',
+          locations: [[
+              remote: 'https://svnserver/svn/${repository}'
+              credentialsId: 'credential_2',
+              local: '.',
+              depthOption: 'infinity',
+              ignoreExternalsOption: true,
+              cancelProcessOnExternalsFail: true,
+          ]],
+          quietOperation: true,
+          workspaceUpdater: [$class: 'UpdateUpdater']
+      ])
+  }
+  ```
 
 ### script{}
 

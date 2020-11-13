@@ -563,6 +563,7 @@ server {
   ```
   - 默认采用短连接。上游发出响应报文之后，就会主动关闭连接，让 Socket 变成 TIME_WAIT 状态。
   - 如果启用 keepalive 参数，则实际长连接数超过该值时，Nginx 会关闭最少使用的连接。但由于是 Nginx 主动关闭，会让 Nginx 上的 Socket 变成 TIME_WAIT 状态。
+- 安装第三方模块 lua-nginx-module 之后，可以通过 lua 脚本动态生成 upstream 配置，实现动态路由。
 
 常见的分配策略：
 - 轮询分配：将 HTTP 请求按时间顺序依次分配给各个 server ，实现简单的平均分配。

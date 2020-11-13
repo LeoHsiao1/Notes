@@ -3,6 +3,7 @@
 ：Python 的第三方库，用于绘制无向图、有向图等图结构。
 - 安装：`pip install networkx`
 - [官方文档](https://networkx.github.io/documentation/stable/)
+- [图像效果示例](https://networkx.org/documentation/stable/auto_examples/index.html)
 
 ## 原理
 
@@ -15,7 +16,8 @@
 
 ## 用法
 
-基础示例：
+### 定义图像
+
 ```py
 >>> import networkx as nx
 >>> g = nx.Graph()              # 创建一个空的无向图
@@ -72,17 +74,3 @@ def draw_networkx(G,                      # 一个 networkx 的图对象
                   font_family='sans-serif',
                   )
 ```
-- 节点的形状有以下几种：
-  - `s` ：正方形
-  - `o` ：圆形
-  - `^` `>` `v` `<` ：正三角形（四种朝向）
-  - `d` ：正菱形
-  - `p` ：正五边形
-  - `h` ：正六边形
-  - `8` ：正八边形
-
-- 线型有以下几种：
-  - `solid`   ：实线
-  - `dashed`  ：虚线
-  - `dotted`  ：点线
-  - `dashdot` ：点划线

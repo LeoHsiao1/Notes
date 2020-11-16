@@ -13,21 +13,16 @@
 
 ### 安装
 
-- 下载源代码，编译后安装：
+- yum 默认源的 Redis 版本很老，建议这样安装：
   ```sh
-  redis_version=redis-6.0.8
-  wget http://download.redis.io/releases/${redis_version}.tar.gz
-  tar -zxvf ${redis_version}.tar.gz
-  cd ${redis_version}
-  yum install -y make gcc
-  make install MALLOC=libc
+  yum install -y http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+  yum --enablerepo=remi install redis
   ```
   然后启动：
   ```sh
   redis-server                       # 启动 Redis 服务器
               /opt/redis/redis.conf  # 使用指定的配置文件
   ```
-  - 以 daemon 方式启动时，出现报错也不会在终端显示。
 
 - 或者运行 Docker 镜像：
   ```sh
@@ -71,6 +66,7 @@ rename-command FLUSHDB ""
 rename-command FLUSHALL ""
 rename-command KEYS ""
 ```
+- 以 daemon 方式启动时，出现报错也不会在终端显示。
 - Redis 服务器默认没有设置密码，不安全。
   - Redis 只存在 root 权限，没有细致的权限划分。用户要么无法进行任何操作，要么可以进行任何操作。因此，如果要让多个用户使用的 Redis 相互隔离，应该给它们分别启动一个 Redis 实例。
 - 如果不设置 maxmemory 或设置成 0 ，当 Redis 占用的内存过多时会降低服务器的运行速度，甚至被 OOM 杀死。

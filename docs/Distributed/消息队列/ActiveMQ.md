@@ -17,6 +17,7 @@
               start     # 启动（以 daemon 方式运行）
               stop
               restart
+              status    # 显示运行状态
   ```
 
 ## 配置

@@ -16,13 +16,13 @@ MySQL 存在多个分支：
 
 ### 安装 Percona
 
-- 用 yum 安装：
+- yum 默认源的 MySQL 版本很老，建议这样安装：
   ```sh
   wget https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.28-31/binary/redhat/7/x86_64/Percona-Server-5.7.28-31-rd14ef86-el7-x86_64-bundle.tar
   tar -xvf Percona-Server-5.7.26-29-r11ad961-el7-x86_64-bundle.tar
   yum install -y Percona-Server*.rpm
   rm -f Percona-Server*
-  systemctl start mysqld                    # 启动服务器
+  systemctl start mysqld
   ```
   启动之后要修改密码：
   ```sh
@@ -81,7 +81,7 @@ init-connect='SET NAMES utf8mb4'      # 让客户端连接之后初始化字符�
 
 ### 安装
 
-- 安装的 MySQL 服务器会自带客户端，也可 yum 单独安装 MySQL 客户端：
+- 安装的 MySQL 服务器会自带客户端，也可单独安装 MySQL 客户端：
   ```sh
   yum install mysql
   ```
@@ -100,6 +100,7 @@ mysql                    # 启动 MySQL 客户端
       -u <user>          # 连接的用户名（默认为 root）
       -p                 # 以带密码的方式连接（接下来会提示输入密码）
       --password=******  # 以带密码的方式连接（直接传入密码）
+      -D <db>            # 打开一个 database
 ```
 - 执行 mysql 命令时，如果不能成功连接并登录 MySQL 服务器，就不会进入 MySQL 客户端的终端。
 - 刚安装 mysql 服务器时，执行 `mysql -u root -p` 即可登录。

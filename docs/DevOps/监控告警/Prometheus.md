@@ -962,12 +962,17 @@ inhibit_rules:
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 同一个 groupname 中最老的那个进程的运行时长（ s ）
   sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)   # 进程占用的 CPU 核数
   namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程占用的物理内存
-  irate(namedprocess_namegroup_read_bytes_total[5m])                        # 磁盘每秒读取量
-  irate(namedprocess_namegroup_write_bytes_total[5m])                       # 磁盘每秒写入量
+  irate(namedprocess_namegroup_read_bytes_total[5m])                        # 进程的磁盘每秒读取量
+  irate(namedprocess_namegroup_write_bytes_total[5m])                       # 进程的磁盘每秒写入量
 
-  namedprocess_namegroup_num_threads                                        # 进程的线程数
+  namedprocess_namegroup_num_threads                                        # 进程包含的线程数
   namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
   namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
+
+  namedprocess_namegroup_thread_count{groupname="python", threadname="thread-1"}  # 指定进程包含的，同一名称的线程数
+  sum(irate(namedprocess_namegroup_thread_cpu_seconds_total[5m])) without (mode)  # 线程占用的 CPU 核数
+  irate(namedprocess_namegroup_thread_io_bytes_total{iomode="read"}[5m])          # 线程的磁盘每秒读取量
+  irate(namedprocess_namegroup_thread_io_bytes_total{iomode="write"}[5m])         # 线程的磁盘每秒写入量
   ```
   - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 停止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。
     但是如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
@@ -1124,6 +1129,8 @@ inhibit_rules:
                 --kafka.server kafka:9092
                 --sasl.username xx
                 --sasl.password ******
+                --topic.filter  .*    # 通过正则表达式筛选要监控的 topic
+                --group.filter  .*
   ```
 - 常用指标：
   ```sh

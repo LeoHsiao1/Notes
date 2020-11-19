@@ -75,7 +75,8 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器（
             -e PATH=$PATH:/root       # 设置环境变量（可重复使用该命令选项）
 
             -v /root:/root            # 将宿主机的 /root 目录挂载到容器的 /root 目录（可重复使用该命令选项）
-            -v volume_1:/root         # 将宿主机的 volume_1 数据卷挂载到容器的 /root 目录（可重复使用该命令选项）
+            -v volume_1:/root         # 将宿主机的 volume_1 数据卷挂载到容器的 /root 目录
+            -v /etc/localtime:/etc/localtime:ro   # 限制容器对挂载目录只有读取权限
 
             # 设置容器的重启策略
             --restart no              # 总是不会自动重启
@@ -98,6 +99,8 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器（
   - 此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
 - 容器内不能再创建嵌套的容器，甚至不能联系到 docker daemon ，因此不能使用 docker ps 等命令。
   - 将 /var/run/docker.sock 文件挂载到容器内之后，可以在容器内与 docker daemon 通信。
+- 将宿主机的 /etc/localtime 文件挂载到容器中，就会使用相同的时区。
+
 
 ### 管理
 
@@ -227,20 +230,20 @@ docker
 
 ```sh
 docker
-      pull <ImageName>:<tag>  # 从镜像仓库拉取镜像
-      push <ImageName>:<tag>  # 推送镜像到镜像仓库
-      search <ImageName>      # 在镜像仓库中搜索某个镜像
-      login -u will tencentyun.com    # 使用一个用户名登录一个镜像仓库（然后会提示输入密码）
+      pull <ImageName>:<tag>        # 从镜像仓库拉取镜像
+      push <ImageName>:<tag>        # 推送镜像到镜像仓库
+      search <ImageName>            # 在镜像仓库中搜索某个镜像
+      login -u will tencentyun.com  # 使用一个用户名登录一个镜像仓库（然后会提示输入密码）
 ```
 - 如果不注明镜像的 tag ，则默认拉取 latest 版本。
 - 尽量不要拉取 latest 版本，而使用具体的版本名，比如 v1.0 ，否则在不同时间拉取的 latest 版本会不一样。
 
 - 镜像在宿主机上会存储成一些零散的文件，使用以下命令可以导出成文件包：
-    ```sh
-    docker save -o images.tar <image>...           # 将镜像打包成 tar 文件
-    docker save <image>... | gzip > images.tar.gz  # 打包成 tar.gz 文件
-    docker load -i images.tar                      # 导入镜像
-    ```
+  ```sh
+  docker save -o images.tar <image>...           # 将镜像打包成 tar 文件
+  docker save <image>... | gzip > images.tar.gz  # 打包成 tar.gz 文件
+  docker load -i images.tar                      # 导入镜像
+  ```
 
 ### 制作
 

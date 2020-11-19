@@ -62,13 +62,14 @@ services:                     # 开始定义服务
   web:                        # 第一个服务的名称
     # container_name: web     # 指定生成的容器名
     image: centos:7           # 使用的镜像名（如果该镜像不存在，且没有指定 build 选项，则尝试 pull 它）
-    # build:                  # 临时构建出镜像
+    # build:                  # 使用构建出的镜像
     #   context: ./etc
     #   dockerfile: Dockerfile
     #   network: host
     #   args:
     #     arg1: Hello
-    working_dir: /opt         # 工作目录  
+    working_dir: /opt         # 工作目录
+    hostname: CentOS          # 主机名
     command: [tail, -f, /dev/null]  # 启动命令
     init: true                # 使用 init 作为 1 号进程
     restart: on-failure       # 重启策略

@@ -2,31 +2,30 @@
 
 ## Socket 通信状态
 
-未连接时的状态：
-- `LISTEN` ：该 Socket 已绑定到某个进程，内核正在监听该 Socket 。
+建立 TCP 连接时：
+![](./connect.png)
 
-建立 TCP 连接时的状态：
 - `SYN_SENT` ：已发出 SYN=1 的 TCP 包，还没有收到 ACK=1、SYN=1 的 TCP 包。
 - `SYN_RECEIVED`
 - `ESTABLISHED` ：已建立连接，可以通信。
+- `LISTEN` ：该 Socket 已绑定到某个进程，内核正在监听该 Socket 。
 
-![](./connect.png)
 
-断开 TCP 连接时的状态：
+断开 TCP 连接时：
+![](./disconnect.png)
+
 - `FIN-WAIT-1`
 - `FIN-WAIT-2`
 - `TIME_WAIT`
   - 主动关闭方在关闭连接之后，还要等待 2*MSL 时间之后才能变成 CLOSED 状态，避免对方来不及关闭连接。此时该端口占用的资源不会被内核释放。
   - MSL（Maximum Segment Lifetime）：TCP 段在网络传输中的最大生存时间，超过该时间就会被丢弃。它的默认值为 2 分钟。
   - 一般 HTTP 通信时，服务器发出响应报文之后就会主动关闭连接（除非是长连接），使端口变成 TIME_WAIT 状态。
-    - 如果服务器处理大部分 HTTP 请求的时长，都远低于 TIME_WAIT 时长，就容易产生大量 TIME_WAIT 状态的端口，影响并发性能。
-
+  - 如果服务器处理大部分 HTTP 请求的时长，都远低于 TIME_WAIT 时长，就容易产生大量 TIME_WAIT 状态的端口，影响并发性能。
 - `CLOSE_WAIT`
   - 例如：HTTP 客户端发送 FIN 包来主动关闭连接时，HTTP 服务器没有马上调用 close() 关闭端口，就会长时间处于 CLOSE_WAIT 状态。
 - `LAST_ACK`
 - `CLOSED` ：已关闭连接。
 
-![](./disconnect.png)
 
 ## sockstat
 

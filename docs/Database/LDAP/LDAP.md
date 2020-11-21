@@ -23,9 +23,13 @@
   - 添加一个条目时，首先要设置其属性，然后要设置其 RDN 。
   - LDAP 服务器上有一个 RootDSE 条目，DN 为空，用于记录服务器的信息。
 
+- LDAP 的存储结构示例：
+  ![](./LDAP_1.png)
+
+
 ### 属性
 
-每个条目要设置至少一个属性（Attribute），用于描述该条目多种方面的信息。
+- 每个条目要设置至少一个属性（Attribute），用于描述该条目多种方面的信息。
 - 每个属性有一个属性类型（AttributeType），用于定义属性值（Value）的格式、语法。如下：
 
   属性                      | 别名   | 语法              | 描述            | 取值举例
@@ -47,14 +51,14 @@
 - 将一个条目在目录树的保存路径上的各个节点的 RDN 组合成一个字符串（用逗号分隔），作为该条目的唯一标识名，称为 DN （Distinguished Name）。
   - Unix 文件路径采用从左到右的组合顺序，而 DN 采用从右到左的组合顺序。
   - 实际上，添加一个条目时，由用户定义其 DN ，而 DN 的左侧第一个字段会被视作 RDN 。
-    - 例如：如果一个条目的 DN 为 `uid=leo, ou=ops` ，则其 RDN 为 `uid=leo` ，父节点的 DN 为 `ou=ops` 。
+    - 例如：如果一个条目的 DN 为 `uid=leo, ou=ops, o=example` ，则其 RDN 为 `uid=leo` ，父节点的 DN 为 `ou=ops, o=example` 。
   - 目录树的根节点称为 Root DN ，其 RDN 可以为空字符串。
 
 
 ### 对象类
 
-每个条目可以继承任意个对象类（ObjectClass），从而继承它们的属性。
-- 比如继承 person 类之后，就可以使用其预先定义的姓（sn）、名（cn）、电话(telephoneNumber)、密码(userPassword)等属性。
+- 每个条目可以继承任意个对象类（ObjectClass），从而继承它们的属性。
+  - 比如继承 person 类之后，就可以使用其预先定义的姓（sn）、名（cn）、电话(telephoneNumber)、密码(userPassword)等属性。
 - 对象类分为三大类：
   - 结构类型（Structural）：最基本的父类，每个条目必须继承且只能继承一个。
   - 抽象类型(Abstract)：不能被直接继承。

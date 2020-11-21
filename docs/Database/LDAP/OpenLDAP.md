@@ -8,17 +8,17 @@
 
 - OpenLDAP 支持创建多种数据库，常见的后端类型如下：
   ```sh
-  config      # 用于存储 Slapd 的配置
-  bdb         # 将数据存储到 Berkeley DB 文件数据库，已弃用
-  hdb         # 另一种 bdb ，已弃用
-  ldap	      # 将数据存储到另一个 LDAP 服务器
-  ldif	      # 将数据存储以 LDIF 格式存储在文件中
-  mdb         # 将数据存储到 LMDB 数据库中
-  meta	      # 元数据目录
-  monitor	    # 用于监控 slapd ，只能创建一个数据库实例
-  passwd      # 用于以只读权限访问 /etc/passwd 文件
-  shell	      # 基于 Shell
-  sql	        # 基于 SQL
+  config    # 用于存储 Slapd 的配置
+  bdb       # 将数据存储到 Berkeley DB 文件数据库，已弃用
+  hdb       # 另一种 bdb ，已弃用
+  ldap      # 将数据存储到另一个 LDAP 服务器
+  ldif      # 将数据存储以 LDIF 格式存储在文件中
+  mdb       # 将数据存储到 LMDB 数据库中
+  meta      # 元数据目录
+  monitor   # 用于监控 slapd ，只能创建一个数据库实例
+  passwd    # 用于以只读权限访问 /etc/passwd 文件
+  shell     # 基于 Shell
+  sql       # 基于 SQL
   ```
   - 一般的数据库推荐采用 mdb 。
 
@@ -104,7 +104,7 @@
   - 用户不应该直接修改这些 .ldif 文件，而应该通过 ldapadd、ldapmodify 等命令进行在线配置。
 
 - `olcDatabase={0}config.ldif` 的内容示例如下：
-  ```ini
+  ```sh
   dn: olcDatabase={0}config
   objectClass: olcDatabaseConfig
   olcDatabase: {0}config
@@ -151,9 +151,9 @@
       ```
     - who 的取值示例：
       ```sh
-      *	          # 所有用户，包括匿名用户
+      *           # 所有用户，包括匿名用户
       anonymous   # 匿名用户
-      users	      # 通过身份认证的用户
+      users       # 通过身份认证的用户
       self        # 目标条目自身的用户
       dn=<regex>  # 与正则表达式匹配的用户
       ```
@@ -169,7 +169,7 @@
     ```
 
 2. 创建一个 .ldif 文件：
-    ```ini
+    ```sh
     # 替换 {0}config 数据库的 Root 密码
     dn: olcDatabase={0}config, cn=config                # 指定一个要操作的条目
     changetype: modify                                  # 指定操作类型为 modify
@@ -195,7 +195,7 @@
 ### 配置数据库
 
 1. 创建一个 .ldif 文件：
-    ```ini
+    ```sh
     # 设置 {1}mdb 数据库的 olcSuffix
     dn: olcDatabase={1}mdb,cn=config
     changetype: modify
@@ -252,7 +252,7 @@
 ### 导入条目
 
 1. 创建一个 .ldif 文件：
-    ```ini
+    ```sh
     dn: ou=dev,dc=example,dc=org
     objectClass: organizationalUnit
     ou: dev

@@ -4761,8 +4761,7 @@ True
 ['Hi']
 >>> re.findall(r"^Hi$", "Hi!")
 []
-一般说一个正则表达式 pattern 与一个字符串 str 匹配时，是指完全匹配而不是部分匹配，相当于 ^pattern$ 与 str 匹配。
-
+一般说一个正则表达式 pattern 与一个字符串 str 匹配时，是指 pattern 与 str 中的部分字符串匹配，而不是完全匹配。
 
 
 例：

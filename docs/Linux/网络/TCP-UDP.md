@@ -3,6 +3,7 @@
 ## Socket 通信状态
 
 建立 TCP 连接时：
+
 ![](./connect.png)
 
 - `SYN_SENT` ：已发出 SYN=1 的 TCP 包，还没有收到 ACK=1、SYN=1 的 TCP 包。
@@ -12,6 +13,7 @@
 
 
 断开 TCP 连接时：
+
 ![](./disconnect.png)
 
 - `FIN-WAIT-1`

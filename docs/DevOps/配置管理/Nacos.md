@@ -27,6 +27,7 @@
 
 - 访问 `http://127.0.0.1:8848/nacos/` 即可登录 Nacos 的 Web 页面，默认账号、密码为 nacos、nacos 。
 - Web 页面示例：
+
   ![](./Nacos.png)
 
 

@@ -8,6 +8,7 @@
 ## Figure
 
 - Matplotlib 提供了显示图像的 GUI 窗口（Figure）。其结构如下：
+
   ![](./Matplotlib_1.jpg)
 
 - 每个 Figure 上可以显示一个或多个坐标区（Axes）。

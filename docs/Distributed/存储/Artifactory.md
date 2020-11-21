@@ -35,6 +35,7 @@
   - 可以在 Security -> Settings 页面中允许 “Allow Anonymous Access” 。
 
 Web 页面如下：
+
 ![](./Artifactory_1.png)
 
 - 在 Web 页面左侧，可选择一个仓库。点击右上角的 "Deploy" 就会弹出一个上传文件的窗口。

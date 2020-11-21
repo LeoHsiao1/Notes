@@ -13,8 +13,9 @@ jobs:
         yarn
         yarn vuepress build docs
         cd docs/.vuepress/
-        rm -rf stable_dist
-        cp -r dist stable_dist
+        rm -rf stable_dist/*
+        cp -r dist/* stable_dist/
+
     - name: Test
       run: |
         curl -I http://leohsiao.com/ --connect-timeout 3

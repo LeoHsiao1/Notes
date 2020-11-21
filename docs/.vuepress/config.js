@@ -451,6 +451,16 @@ module.exports = {
                         'ElasticSearch/集群',
                     ]
                 },
+                {
+                    title: 'LDAP',
+                    collapsable: true,
+                    sidebarDepth: 2,
+                    children: [
+                        'LDAP/LDAP',
+                        'LDAP/OpenLDAP',
+                        'LDAP/LdapAdmin',
+                    ]
+                },
             ],
             '/DevOps/': [{
                     title: '《DevOps》',

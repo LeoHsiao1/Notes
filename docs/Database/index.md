@@ -38,3 +38,7 @@
   - [管理单元](ElasticSearch/管理单元.md)
   - [查询](ElasticSearch/查询.md)
   - [集群](ElasticSearch/集群.md)
+- LDAP
+  - [LDAP](LDAP/LDAP.md)
+  - [OpenLDAP](LDAP/OpenLDAP.md)
+  - [LdapAdmin](LDAP/LdapAdmin.md)

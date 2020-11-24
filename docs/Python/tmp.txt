@@ -1727,20 +1727,26 @@ def fun1():
 class Test():
     pass
 
-## 作用于类方法的装饰器：需要在外层输入一个obj参数，在内层多输入一个self参数。
+## 作用于类方法的装饰器：需要在内层多输入一个self参数。
 - 例：
-def outer(obj):
-    def inner(self, *args, **kwargs):
-        print("Hello")
-    return inner
+def catch_exception(method):
+    def wrapper(self, *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except Exception as e:
+            print(str(e))
+    return wrapper
 
 class Test:
-    @outer
-    def fun1(self):
-        pass
+    @catch_exception
+    def fun1(self, x):
+        return 1 + x
 
->>> Test().fun1()
-Hello
+>>> Test().fun1(1)
+2
+>>> Test().fun1('a') 
+unsupported operand type(s) for +: 'int' and 'str'
+
 ## 用类实现的装饰器：需要定义类的__call__()方法。
 ## 
 ## 
@@ -2440,12 +2446,17 @@ AssertionError: not equal
   - ValueError    ：参数的值错误（数据类型正确）。
   - Warning        ：Base class for warning categories.
 ## 下例是自定义一个异常类：
->>> class MyExcept(Exception):
-...     def __init__(self, msg=''):
-...         self.message = msg
-...     def __str__(self):
-...         return self.message
-... 
+
+class MyException(Exception):
+    def __init__(self, msg=''):
+        self.msg = msg
+
+    def __repr__(self):
+        return 'MyException({})'.format(repr(self.msg))
+
+    def __str__(self):
+        return self.__repr__()
+
 >>> raise MyExcept
 __main__.MyExcept
 >>> raise MyExcept('test...')

@@ -889,49 +889,6 @@ with open(file_path, 'rb') as f:
 
 
 
-## 
-## 
- 
-view模板
-## Django提供了一些抽象的View类作为视图模板，通过继承它们可以快速定义View类。
-- ListView类：用于显示某个Model的实例列表。
-  - 使用该视图模板时，在path()中调用其as_view()方法即可。如下：
-path('', views.IndexView.as_view(), name='index')
-  - 它的template_name属性默认为"<app name>/<model name>_list.html"。
-  - 它内置了get_queryset()方法，会自动显示该Model所有实例的列表，相当于Model.objects.all()。用户也可以重载该方法。
-  - 它会自动设置要传给模板文件的context字典中各个参数的名称。比如当Model名为Question时，会自动生成question参数、question_list参数，以及其属性question.id、question.question_text。
-  - 用户也可以重载get_context_data ()方法，往context字典加入一些参数。
-- DetailView类：用于显示某个Model实例的全部属性。
-  - 它的template_name属性默认为"<app name>/<model name>_detail.html"。
-  - 它默认从URL中接收一个名为"pk"的参数，并调用get_object()获取Model列表中id为"pk"的实例，自动显示其全部属性。
-- 例：
-from django.views.generic import Listview, DetailView
-
-class IndexView(ListView):                            # 自定义一个View类，继承视图模板类
-model = Question                                    # 设置该视图模板类采用的Model
-    template_name = 'app1/index.html'                    # 设置要使用的模板文件
-    context_object_name = 'latest_question_list'
-        # get_queryset()方法的返回值默认赋值给context字典中名为"<model name>_list"的参数，
-        # 这里修改它的名字
-
-    def get_queryset(self):                    # 重载该方法
-        return model.objects.order_by('-pub_date')[:5]
-
-def get_context_data(self, **kwargs):
-    kwargs['category_list'] = Question.objects.all().order_by('name')
-    return super(IndexView, self).get_context_data(**kwargs)
-
-class DetailView(DetailView):                    # 重载该方法
-    model = Question
-    template_name = 'detail.html'
-    
-def get_object(self, queryset=None):        # 重载该方法
-    obj = super(DetailView, self).get_object()
-    return obj
-## 
-## 
-## 
- 
 HTML模板
 ## Django中，可以将HTML文件抽象为HTML模板，以便于复用、动态调整。
 - HTML模板要使用Django自带的DTL（Django Template Language ）语言编写。

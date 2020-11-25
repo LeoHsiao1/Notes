@@ -1226,7 +1226,7 @@ class ChoiceInline(admin.TabularInline):        # 继承admin.TabularInline类
 class QuestionAdmin(admin.ModelAdmin):            # 继承自admin.ModelAdmin类
     # 设置该Model的管理页面（是一个列表）
     list_display = ["name", "text"]    # 设置要显示的字段（默认只显示__str__()）
-    list_display_links = ["name"]        # 点击list_display中的哪些字段可以链接到实例的修改页面
+    list_display_links = ["name"]        # 点击list_display中的哪些字段显示成链接，可以跳转到实例的修改页面，这些字段必须包含于 list_display 列表，取值为 None 则不会显示链接
     list_editable = ["text"]            # 设置list_display中的哪些字段可以编辑（会显示成文本框）
     list_filter = ["pub_date"]            # 在页面右侧显示一个过滤器，可根据指定字段筛选数据
     search_fields = ["name"]            # 在页面顶部显示一个搜索栏，可根据指定字段搜索数据
@@ -1258,18 +1258,29 @@ list_max_show_all = 200        # 当总数低于多少时显示"show all"按钮�
 
 view_on_site = True            # 在admin页面的右上角显示一个跳转到前台网站的链接
 
+# 关于实例的修改页面
+save_as = True        # 是显示 “保存为新的” 按钮，还是 “保存并增加另一个” 按钮
+save_on_top = True    # 是否在页面顶部重复显示按钮（默认只在页面底部显示）
+
+
 - 添加Action。
-actions_on_top = True        # 是否在列表上方显示actions的下拉框，默认为True
-actions = ["delete"]        # 一个列表，包含自定义的actions
 
 # 定义action函数，它接收三个参数，其中queryset表示被选中的数据项的集合
 def delete(self, request, queryset):
     queryset.update(text="")
     self.message_user(request, "action done")     # 在admin页面上方显示一行提示
 
-# 设置action的名字
+# 设置action显示的名字
 delete.short_description = "delete"
+
+# actions_selection_counter = True  # 是否显示当前勾选的实例数量
+# actions_on_top = True             # 是否在列表上方显示按钮
+# actions_on_bottom = False         # 是否在列表下方显示按钮
+actions = ["delete"]                # 一个列表，记录所有 actions 的方法名
+
+
   - 调用完action函数之后，Django默认会返回之前的修改页面。可以自定义return的结果。比如：return redirect(...)
+
 ## 
 ## 
 ## 

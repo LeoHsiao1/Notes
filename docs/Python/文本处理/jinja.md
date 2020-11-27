@@ -7,17 +7,23 @@
 ## 语法
 
 三种定界符：
-```
+```sh
 {{ }}    # 声明变量
 {% %}    # 插入控制语句
-{# #}    # 声明注释
+{# #}    # 声明单行注释
 ```
 - 渲染模板文件时会删除所有注释。
+- 声明多行注释：
+  ```sh
+  {% comment %}
+  ...
+  {% endcomment %}
+  ```
 
 ### 变量
 
 例：
-```
+```sh
 传入变量：{{ name }}
 调用属性：{{ name.encode }}
 调用方法：{{ name.encode() }}
@@ -29,7 +35,7 @@
 ### 控制结构
 
 if 语句：
-```
+```sh
 {% if a %}
 a is True.
 {% elif b %}
@@ -40,7 +46,7 @@ All are False.
 ```
 
 迭代列表：
-```
+```sh
 <ul>
   {% for i in list1 %}
   <li>{{ i }}</li>
@@ -49,7 +55,7 @@ All are False.
 ```
 
 迭代字典：
-```
+```sh
 <dl>
   {% for k, v in dict1.items() %}
   <dt>{{ k }}</dt>
@@ -59,7 +65,7 @@ All are False.
 ```
 
 继承：
-```html
+```sh
 {% extends "base.html" %}   # 继承 base.html
  
 {% block head %}            # 重载父文件中，名为 head 的 block

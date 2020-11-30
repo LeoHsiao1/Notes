@@ -29,11 +29,11 @@ if __name__ == '__main__':
 - 全局变量request指向当前的HTTP请求，可通过它获得以下信息：
   - request.query_string            # 获取HTTP请求的Query String（bytes类型）
   - request.args.get("id")        # 从Query String中获取参数
-  - 
+  -
   - request.form.get("username")    # 从x-www-form-urlencoded格式的body中获取参数
   - request.json                    # 获取application/json格式的body数据（dict类型）
   - request.data                    # 获取application/json格式或text/xml格式的body数据（bytes类型）
-  - 
+  -
   - request.url                    # 客户端请求的URL
   - request.method                # 客户端请求的方法名
   - request.headers                # 客户端请求的headers（dict类型）
@@ -70,9 +70,9 @@ app.permanent_session_lifetime = timedelta(hours=1)        # 设置session 的�
 def index():
     session.permanent = True        # 对当前会话启用session 的过期时间
     ...
-## 
-## 
-## 
+##
+##
+##
  
 ♢ django
 ## django：Python的第三方库，是一个开源的Web应用框架，采用MVC设计模式。用pip install django即可安装。
@@ -110,9 +110,9 @@ migrate                # 让Django根据迁移文件配置数据库的结构
 flush                # 清空数据库的数据，只保留数据表的结构
 
 test app1            # 执行app1目录下所有tests*.py文件中的测试用例
-## 
-## 
-## 
+##
+##
+##
  
 setting.py
 ## setting.py文件位于Django项目的第一个app的目录下，保存了当前项目的设置信息。
@@ -174,9 +174,9 @@ LANGUAGE_CODE = 'zh-hans'        # 设置Web页面显示的语言
 TIME_ZONE = 'Asia/Shanghai'    # 设置时区
 USE_TZ = True                # 使用时区（内部采用UTC时区，只有通过模板显示时才自动切换成TIME_ZONE时区）
 
-## 
-## 
-## 
+##
+##
+##
  
 urls.py
 ## urls.py文件中声明了app监听的所有URL以及相应的view函数，每条规则就是一个urlpattern。
@@ -271,9 +271,9 @@ def hello2(request):
 <a href="/'hello/{{ id }}/">hello</a>                # 使用实际URL，给id变量赋值
 <a href="{% url 'hello' id %}">hello</a>            # 根据名字使用URL
 <a href="{% url 'app1:hello' id %}">hello</a>        # 指定app_name
-## 
-## 
-## 
+##
+##
+##
  
 Models
 ## Django中，用Model类表示数据表结构，通过内置的ORM方法来操作数据库。
@@ -329,9 +329,9 @@ DATABASES = {
     }
 }
 - Django会自动在数据库中创建数据表，但需要先手动创建database。
-## 
-## 
-## 
+##
+##
+##
  
 Model类
 ## 例：
@@ -380,9 +380,9 @@ django.core.exceptions.FieldError: Local field 'name' in class 'Man' clashes wit
 
 
 
-## 
-## 
-## 
+##
+##
+##
  
 字段类
 ## 每个模型类都是django.db.models.Model类的子类，每个字段类都是django.db.fields.Field类的子类。
@@ -399,18 +399,18 @@ django.core.exceptions.FieldError: Local field 'name' in class 'Man' clashes wit
 - models.CharField(verbose_name="名字", default="", blank=True, unique=True, max_length=20)
   - str型字段，用于存储较短的字符串。
   该字段在 MySQL 中会保存为 varchar 型的值
-  
+
 - models.TextField(...)
   - 文本字段，用于存储较长的字符串。
   该字段在 MySQL 中会保存为 text 型的值
-  
+
 - models.BooleanField(verbose_name='是否开启', default=True)
 - models.DateField(verbose_name='更新日期', null=True, blank=True)
   - 会自动使用当前的datetime.date实例。
   - 不能设置default参数。
   - 以下两个参数可以启用一个，但启用之后该字段会变成editable=False，即不可修改。
   - 该字段在 MySQL 中会保存为 date 型的值。
-  
+
 auto_now=True        ：当数据被保存时，自动将该字段设置成当前时间。常用于保存修改时间。
 auto_now_add=True    ：当数据被创建时，自动将该字段设置成当前时间。常用于保存创建时间。
 - models.DateTimeField(auto_now_add=True)
@@ -458,7 +458,7 @@ class Project(models.Model):
 - models.GenericIPAddressField(verbose_name='私有IP') # 要求输入一个有效的 IPv4 或 IPv6 地址，且不能为空
   models.GenericIPAddressField(verbose_name='公有IP', null=True, blank=True)  # 可以为空
   该字段在 MySQL 中会保存为 char 型的值
-  
+
 - models.FileField(upload_to='uploads/')
   - 用于保存用户上传的文件。该文件会被保存到服务器的指定目录，然后将其保存路径（默认max_length=100）写入数据库。
   - upload_to参数表示上传到哪个目录。可以传入一个函数，由它返回保存路径，如下：
@@ -475,12 +475,12 @@ match    ：一个正则表达式，用于过滤文件名。
 recursive：是否递归显示子目录中的文件。
 ## 可以定义虚拟字段函数，调用它时会返回虚拟字段的值，但不会把该字段存储到数据库中，也不允许用户修改。
     虚拟字段可以在 list_display 中显示，但不能用作 list_filter、search_fields 等功能。
-    
+
     from django.utils.html import format_html
 
     def info(self):                        # 创建一个"info"字段
         return format_html('<span style="color: #{};">{}</span>', "FF0000", self.name)
-    
+
     info.short_description = "INFO"        # 设置该字段的名称
     info.admin_order_field = "name"        # 设置该字段按self.name的值排序（否则该字段不能排序）
 
@@ -514,9 +514,9 @@ class Student(models.Model):
 Student.objects.create(name='Feta', detail={'smelliness': 3, 'crumbliness': 10})
 Student.objects.filter(detail={'smelliness': 5})
 Student.objects.filter(detail__exact={'smelliness': 3, 'crumbliness': 10})
-## 
-## 
-## 
+##
+##
+##
  
 外键
 ## 一对一的外键。
@@ -648,9 +648,9 @@ id from_person_id to_person_id
 
 
 
-## 
-## 
-## 
+##
+##
+##
 
  
 增查改删
@@ -668,7 +668,8 @@ Group.members.add(s1, s2)
 ## 查
 - 获取所有数据：
 Student.objects.all()                        # 返回一个QuerySet对象
-Student.objects.all().order_by("id")        # 排序，返回一个QuerySet对象
+Student.objects.all().order_by("id")         # 排序（从小到大），返回一个QuerySet对象
+Student.objects.all().order_by("-id")        # 倒序排序（从大到小）
 Student.objects.all().order_by("id")[0:2]    # 切片
 
   - QuerySet对象可以当作列表索引、迭代，也可以用filter()等方法处理。
@@ -677,7 +678,23 @@ Student.objects.all().order_by("id")[0:2]    # 切片
 QuerySet.first()    # 如果 QuerySet 不为空，则返回第一个元素。如果为空，则返回 None
 QuerySet.last()     # 如果 QuerySet 不为空，则返回最后一个元素
 
+
+当 QuerySet 为空时，使用索引会报错，使用 first() 会返回 None ，如下：
+```py
+>>> Student.objects.filter(id=10)
+<QuerySet []>
+>>> Student.objects.filter(id=10)[0]
+IndexError: list index out of range
+>>> Student.objects.filter(id=10).first()
+```
+
+
+
+
 QuerySet.filter(name='Leo')        # 筛选符合条件的所有数据，返回一个QuerySet对象。如果没有数据则返回[]
+QuerySet.filter(name='Leo', id=1) # 可以同时查询多个字段
+
+
 QuerySet.exclude(name='Leo')        # 筛选不符合条件的所有数据，返回一个QuerySet对象
   - 可以使用高级的筛选条件：
 QuerySet.filter(name__startswith='L')    # 用__istartswith、__iendswith、__icontains则是不区分大小写
@@ -713,9 +730,9 @@ except Exception as e:
 - 数据库锁：
 Student.objects.select_for_update().filter(name__contains='L')
     # 这会锁住匹配的每行数据，直到事务结束
-## 
-## 
-## 
+##
+##
+##
  
 Views
 ## Django中，视图函数负责接收HTTP请求、返回HTTP响应。
@@ -740,9 +757,9 @@ urlpatterns = [
     path('hello/', views.hello)
 ]
 5.    运行server，访问127.0.0.1:8000/hello/试试。
-## 
-## 
-## 
+##
+##
+##
  
 HTTP请求
 ## Django会将HTTP请求用HttpRequest对象表示，作为第一个参数传入视图函数。
@@ -790,9 +807,9 @@ False
 >>> request.META.get('REMOTE_ADDR')        # 获取客户端的 IP 地址
 ‘127.0.0.1’
 
-## 
-## 
-## 
+##
+##
+##
  
 HTTP响应
 ## 视图函数的返回值可以是重定向、仅状态码、纯文本、HTML网页、文件。
@@ -946,9 +963,9 @@ HTML模板
 {% endfor %}
 <input type="submit" value="Vote">
 </form>
-## 
-## 
-## 
+##
+##
+##
  
 表单类
 ## Django内置了一些表单类，便于在HTML中插入表单。
@@ -1008,11 +1025,11 @@ class StudentForm(ModelForm):
     class Meta:
         model = Student
         fields = ['name', 'school']
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
  
 session
 ## Django默认导入了django.contrib.sessions模块，封装好了session功能。
@@ -1057,9 +1074,9 @@ session.exist(session_key)        # 判断session_key是否存在
 session.flush()                    # 删除当前的session，连session_key都会删除
 session.delete(session_key=None)    # 删除某个session的数据（默认是当前session）
 session.clear_expired()            # 删除已失效的所有session（Django不会自动删除它们）
-## 
-## 
-## 
+##
+##
+##
  
 部署Django
 
@@ -1092,7 +1109,7 @@ yum install gcc python3-devel
 yum install mailcap
 
 2.    安装uwsgi：
-pip install uwsgi    
+pip install uwsgi
 3.    进入项目目录，创建一个 etc 文件夹，再在其下创建一个uwsgi.ini，作为配置文件：
 mkdir uwsgi
 vim etc/uwsgi.ini
@@ -1129,7 +1146,7 @@ uwsgi
 --ini etc/uwsgi.ini            # 使用配置文件启动uwsgi服务器（默认以 daemon 方式运行）
     --stop etc/uwsgi.pid        # 停止uwsgi服务器(根据pid文件)
     --reload etc/uwsgi.pid        # 重启
-    
+
 ## 安装及配置Nginx服务器。
 1.    在项目目录下执行以下命令，收集静态文件：
 python manage.py collectstatic
@@ -1182,9 +1199,9 @@ location /media  {
 
 当 DEBUG = False 时，Django 只提供后端服务器的功能，不会寻找静态文件回复给客户端。
 
-## 
-## 
-## 
+##
+##
+##
  
 admin页面
 ## Django自带了一个admin模块，用于显示Web形式的后台管理页面，可以管理用户组、数据库、各个数据表。
@@ -1226,9 +1243,12 @@ class ChoiceInline(admin.TabularInline):        # 继承admin.TabularInline类
 class QuestionAdmin(admin.ModelAdmin):            # 继承自admin.ModelAdmin类
     # 设置该Model的管理页面（是一个列表）
     list_display = ["name", "text"]    # 设置要显示的字段（默认只显示__str__()）
-    list_display_links = ["name"]        # 点击list_display中的哪些字段显示成链接，可以跳转到实例的修改页面，这些字段必须包含于 list_display 列表，取值为 None 则不会显示链接
+    list_display_links = ["name"]        # 点击list_display中的哪些字段显示成链接，可以跳转到实例的修改页面
+    # 这些字段必须在 list_display 列表中存在
+    # list_display_links = None 表示不会显示链接
+
     list_editable = ["text"]            # 设置list_display中的哪些字段可以编辑（会显示成文本框）
-    list_filter = ["pub_date"]            # 在页面右侧显示一个过滤器，可根据指定字段筛选数据
+    list_filter = ["pub_date"]          # 在页面右侧显示一个过滤器，可根据指定字段筛选数据。这些字段不能是虚拟字段，但不必在 list_display 列表中存在
     search_fields = ["name"]            # 在页面顶部显示一个搜索栏，可根据指定字段搜索数据
     # filter_horizontal = ('friends',)  # 专门用于编辑 ManyToManyField 类型的字段，显示两个多选框以便于筛选（否则默认只显示一个下拉框）
 
@@ -1281,9 +1301,9 @@ actions = ["delete"]                # 一个列表，记录所有 actions 的方
 
   - 调用完action函数之后，Django默认会返回之前的修改页面。可以自定义return的结果。比如：return redirect(...)
 
-## 
-## 
-## 
+##
+##
+##
 
 django-import-export ：一个插件，用于在 admin 表格页面增加导入、导出两个按钮。
 
@@ -1343,9 +1363,9 @@ class ProjectAdmin():
     search_fields = ["project_name"]
     fieldsets = [(None, {"fields": ["project_name"]})]
     actions = [MyAction]
-## 
-## 
-## 
+##
+##
+##
  
 ♢ simpleui
 ## simpleui：Python的第三方库，是Django的插件，提供了更美观的admin页面。
@@ -1432,8 +1452,8 @@ SIMPLEUI_ICON = {
 SIMPLEUI_STATIC_OFFLINE = False
 
 
-## 
-## 
+##
+##
  
 ♢ restframework
 ## restframework：Python的第三方库，是Django的插件，用于更好地实现Django的Restful API。
@@ -1536,9 +1556,9 @@ urlpatterns = [
 REST_FRAMEWORK = {
     ...
 }
-## 
-## 
-## 
+##
+##
+##
  
 tests
 ## Django提供了django.test.TestCase类，通过继承它可以定义测试类，测试方法的名字要以test开头。如下：
@@ -1549,11 +1569,11 @@ class QuestionModelTests(TestCase):
         self.assertIs(Question.was_published(), False)        # 断言某个值应该为False，否则报错
 - 也可以安装pytest-django模块，用pytest执行Django项目目录下的测试用例。
 - 原则上，应该对每个Model、视图都分别编写测试用例。
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
  
 示例
 ## 登录模块。
@@ -1615,10 +1635,10 @@ if not self.has_permission(request, obj):
 - 监控系统：记录日志、自动告警
 - 自动运维：比如自动执行一些脚本
 - 统计报表
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
 :::

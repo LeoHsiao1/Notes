@@ -1,7 +1,7 @@
 C++
-## 
-## 
-## 
+##
+##
+##
 ## 输入输出流。
 #include <iostream>
 
@@ -37,7 +37,7 @@ std::cout << str2->length() << std::endl;
 
 delete str2;
 
-## 
+##
 ## string：字符串类型。基于string类。
 #include <string>
 
@@ -64,7 +64,7 @@ buffer = NULL;
     strcpy(buffer, str.c_str());
     return buffer;
 }
-## 
+##
 
 
 用 std::string 存储字符串时，会自动在字符串末尾加上空字符串 \0 ，但并不会计入字符串的总长度。如下：
@@ -125,7 +125,7 @@ http://c.biancheng.net/view/215.html
     ```cpp
     class A;
     class B: public A;
-    
+
     B b;
     A &a = b;
     ```

@@ -3,6 +3,7 @@
 ：一个 C++ 库，可以将 C++ 代码封装成 Python 模块，或者在 C++ 中导入 Python 模块。
 - 用 pybind11 编译出 Python 模块之后，用户不需要安装 pybind11 也可以导入该模块，但是必须使用与编译时版本一致的 Python 解释器。
 - 需要使用支持 C++11 的编译器。
+- 安装：`pip install pybind11`
 - [官方文档](https://pybind11.readthedocs.io/en/master/index.html)
 
 ## 基本示例
@@ -42,8 +43,7 @@
 
 ## 编译
 
-首先要安装：pip install pybind11
-然后才可以开始编译。
+安装 pybind11 之后，就可以调用它的动态库，将 C++ 代码编译成 Python 模块。
 
 ### 手动编译
 
@@ -75,7 +75,7 @@
     del api.exp api.obj api.lib
     ```
 
-### 通过 setuptools 编译
+### 用 setuptools 自动编译
 
 1. 编写一个 setup.py 文件：
     ```py
@@ -246,7 +246,8 @@
 
 ## 传递字符串
 
-将 Python 中的字符串传给 C++ 时：
+### 从 Python 到 C++
+
 - C++ 函数接收字符串的形参可以为 std::string 或 char * 类型。
 - 如果 Python 输出的字符串为 bytes 类型，则会被 pybind11 直接传递。
 - 如果 Python 输出的字符串为 str 类型，则会被 pybind11 自动经过 str.encode('utf-8') 之后再传递。
@@ -279,7 +280,8 @@
     浣犲ソ
     ```
 
-将 C++ 中的字符串传给 Python 时：
+### 从 C++ 到 Python
+
 - 如果 C++ 输出的字符串为 std::string 或 char * 类型，则会被 pybind11 自动经过 bytes.decode('utf-8') 之后再传递。如下：
     ```cpp
     m.def("return_str",
@@ -327,7 +329,7 @@
           });
     ```
 
-## 在 C++ 中使用 Python 的数据类型
+## 移植 Python 的数据类型
 
 可以在 C++ 中转换 py::str 与 py::bytes 类型，如下：
 ```cpp
@@ -403,9 +405,40 @@ py::object test_dict()
 
 其它示例：<https://github.com/pybind/pybind11/blob/master/tests/test_pytypes.cpp>
 
-不能将 C++ 的全局变量声明为 Python 的数据类型，否则其占用的内存不会被自动释放，从而引发内存错误。
+> 不能将 C++ 的全局变量声明为 Python 的数据类型，否则其占用的内存不会被自动释放，从而引发内存错误。
+
+## 移植 Python 的模块
+
+pybind11 支持在 C++ 中调用 Python 模块中的变量、函数、方法。如下：
+```cpp
+m.def("test_import",
+    []()
+    {
+        // 调用变量
+        py::object os = py::module::import("os");
+        py::object sep = os.attr("path").attr("sep");   // 可以重复用 .attr() 提取成员
+        std::cout << std::string(py::str(sep)) << std::endl;
+
+        // 调用函数
+        py::object listdir = os.attr("listdir");
+        py::str ret = listdir("/root");
+        std::cout << std::string(ret) << std::endl;
+
+        // 调用 Python 的内建函数
+        py::print("listdir:", listdir("/root"));
+
+        // 调用方法
+        py::str str = py::str("hello world");
+        py::object split = str.attr("split");
+        py::str ret = split(" ");       // 可以合并为 str.attr("split")(" ");
+        std::cout << std::string(ret) << std::endl;
+    }
+);
+```
 
 ## 映射对象
+
+### 从 C++ 到 Python
 
 将 C++ 对象映射到 Python 中：
 ```cpp
@@ -445,39 +478,12 @@ py::object obj = py::cast(p);
 	AttributeError: type object 'api.Pet' has no attribute 'name'
 	```
 
+### 从 Python 到 C++
+
 将 Python 对象映射到 C++ 中：
 ```cpp
 py::object obj = ...;
 MyClass *p = obj.cast<MyClass *>();
-```
-
-## 在 C++ 中调用 Python 模块
-
-pybind11 支持在 C++ 中调用 Python 模块中的变量、函数、方法，如下：
-```cpp
-m.def("test_import",
-    []()
-    {
-        // 调用变量
-        py::object os = py::module::import("os");
-        py::object sep = os.attr("path").attr("sep");   // 可以重复用 .attr() 提取成员
-        std::cout << std::string(py::str(sep)) << std::endl;
-
-        // 调用函数
-        py::object listdir = os.attr("listdir");
-        py::str ret = listdir("/root");
-        std::cout << std::string(ret) << std::endl;
-
-        // 调用 Python 的内建函数
-        py::print("listdir:", listdir("/root"));
-
-        // 调用方法
-        py::str str = py::str("hello world");
-        py::object split = str.attr("split");
-        py::str ret = split(" ");       // 可以合并为 str.attr("split")(" ");
-        std::cout << std::string(ret) << std::endl;
-    }
-);
 ```
 
 ## 处理异常
@@ -485,3 +491,4 @@ m.def("test_import",
 - 当 Python 调用的 C++ 代码抛出异常时，会被 pybind11 自动转换成 Python 的异常。
 - 当 C++ 调用的 Python 代码抛出异常时，会被 pybind11 自动转换成 C++ 的异常。
 - [相关文档](https://pybind11.readthedocs.io/en/master/advanced/exceptions.html#built-in-exception-translation)
+

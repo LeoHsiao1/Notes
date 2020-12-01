@@ -1039,6 +1039,10 @@ TypeError: sequence item 0: expected str instance, int found
 >>> "{:.4}".format(12.3456789)    # 总共最多输出4位（会进行四舍五入）
 '12.35'
 ## 其它格式化方法。
+
+
+>>> "Hi".center(4,"-")
+'-Hi-'
 - str.ljust(width: int, fillchar: str=...) -> str
   - 功能：返回str的一个副本，将它左对齐，至少输出width位，不足的位用fillchar填补。
   - fillchar只能是单个字符，默认是空格。
@@ -1053,26 +1057,30 @@ TypeError: sequence item 0: expected str instance, int found
 - str.center(width: int, fillchar: str=...) -> str
   - 功能：返回str的一个副本，将它居中对齐，至少输出width位，不足的位用fillchar填补。
   - 例：
->>> "Hi".center(4,"-")
-'-Hi-'
-- str.lstrip(chars: str=...) -> str
-  - 功能：返回str的一个副本，将它左侧的chars字符去掉。
-  - chars是一个字符串，默认匹配所有空白字符（即string.whitespace）。
-  - 例：
->>> '  Hi\n\r'.lstrip()
-'Hi\n\r'
-- str.rstrip(chars: str=...) -> str
-  - 功能：返回str的一个副本，将它右侧的chars字符去掉。
-  - 例：
->>> '  Hi\n\r'.rstrip()
-'  Hi'
+
+
 - str.strip(chars: str=...) -> str
-  - 功能：返回str的一个副本，将它左右两侧的chars字符去掉。
+  - 功能：返回str的一个副本，将它左右两侧每个匹配 chars 的字符去掉。
+  - chars 是一个字符串，默认匹配所有空白字符（即string.whitespace）。
   - 例：
 >>> '  Hi\n\r'.strip()
 'Hi'
 >>> '--Hi--'.strip('--')
 'Hi'
+>>> 'Hello'.strip('lo')  # 只要该字符存在于 chars 中，就去掉它
+'He'
+
+- str.lstrip(chars: str=...) -> str
+  - 功能：返回str的一个副本，将它左侧匹配 chars 的字符去掉。
+  - 例：
+>>> '  Hi\n\r'.lstrip()
+'Hi\n\r'
+- str.rstrip(chars: str=...) -> str
+  - 功能：返回str的一个副本，将它右侧匹配 chars 的字符去掉。
+  - 例：
+>>> '  Hi\n\r'.rstrip()
+'  Hi'
+
 ##
 ##
 ##
@@ -1395,6 +1403,12 @@ KeyError: 'time'
 ...     print(d["time"])
 ...
 >>> d.get("time")            # 用get()方法判断key是否存在
+
+
+如果在字典中添加多个相同的 key ，则取最后一次的 value 。
+>>> {1: 'A', 1: 'B', 1: 'C'} 
+{1: 'C'}
+
 
 ##
 ##

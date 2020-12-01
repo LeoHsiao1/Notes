@@ -1381,7 +1381,17 @@ class ProjectAdmin():
 ## 用法。
 1.    先启用Django自带的admin页面。
 2.    安装：pip install django-simpleui
-3.    在settings.py的INSTALLED_APPS[]中加入'simpleui'，放在第一行。
+3.    在 settings.py 中 INSTALLED_APPS[] 中加入 simpleui ：
+```py
+INSTALLED_APPS = [
+    'simpleui',       # 在原 admin 之前导入 simpleui
+    'django.contrib.admin',
+    'django.contrib.auth',
+    ...
+]
+```
+
+
 ## 在settings.py中增加simpleui的配置：
 # 设置首页
 # SIMPLEUI_HOME_PAGE = 'https://www.baidu.com'

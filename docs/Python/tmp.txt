@@ -1,8 +1,10 @@
 ::: v-pre
 
+待看：
+- https://python3-cookbook.readthedocs.io/zh_CN/latest/
 
-## 
-## 
+##
+##
  
 基本语法
 代码规范
@@ -41,8 +43,8 @@ This module collects some functions and classes as follows:
 - Python3默认采用utf-8编码来读取Python脚本文件，而Python2没有，因此要在脚本开头声明：
 # -*- coding: utf-8 -*-
 ## 使用Python的一些高级语法虽然能使代码更优雅、简洁，但是也可能导致代码的阅读门槛变高。
-## 
-## 
+##
+##
  
 输入输出
 ## print(value, ..., sep=' ', end='\n', file=sys.stdout, flush=False)
@@ -68,9 +70,9 @@ Progress: ▇▇▇▇▇▇▇▇▇▇  100%
 - 例：
 >>> x=input("x=")
 x=
-## 
-## 
-## 
+##
+##
+##
  
 运算符
 ## 算术运算符。
@@ -120,11 +122,11 @@ True
 True
 >>> 1 < 'a'                 # 不能混合比较一个int型对象与一个str型对象
 TypeError: '<' not supported between instances of 'int' and 'str'
->>> 'a' < 'b' < 'c' 
+>>> 'a' < 'b' < 'c'
 True
 >>> 'ac' < 'b'                 # 用于str型对象之间时，是比较首字母的大小
 True
->>> 'ca' < 'b' 
+>>> 'ca' < 'b'
 False
 ## 逻辑运算符：与C语言不同，与、或、非运算符分别写作and、or、not。
 - x and y    相当于：
@@ -137,7 +139,7 @@ if x:
     return x
 else:
     return y
-- not x    相当于 !bool(x) 
+- not x    相当于 !bool(x)
   - Python可以使用 ! 、not两种逻辑非运算符，! 通常用于表达式中，not通常与关键字if、in、is搭配使用。
 - 例：
 >>> 0 and 1
@@ -183,9 +185,9 @@ True
 >>> 0 is 0.0
 False
 - is not：相当于id(...)!=id(...)。
-## 
-## 
-## 
+##
+##
+##
  
 选择结构
 ## Python的选择结构只有if语句。
@@ -196,9 +198,9 @@ elif condition:
 statement_block
 else:
 statement_block
-## 
-## 
-## 
+##
+##
+##
  
 循环结构
 ## Python的循环结构只有for语句和while语句。
@@ -219,10 +221,10 @@ statement_block
 >>> def fun1():
 ...     print("fun1")
 ...     return [1, 2, 3]
-... 
+...
 >>> for i in fun1():            # Python解释器会调用fun1()，获得一个可迭代对象，然后暂存它
 ...     print(i)
-... 
+...
 fun1                            # fun1()只会被执行一次
 1
 2
@@ -239,9 +241,9 @@ while condition:
     statement_block
 else:
 statement_block
-## 
-## 
-## 
+##
+##
+##
 
 Python的for、while循环支持与else连用，如下：
 ```py
@@ -274,9 +276,9 @@ NameError: name 'a' is not defined
 - Python中没有关键字const，不能把变量声明成符号常量。通常把一些变量大写所有字母，当作符号常量使用。
 - int、float、complex、tuple、str、bytes等数据类型是只读的，也相当于常量。
   - 例如，12345是int类型的常量对象，"Hello World!"是str类型的常量对象。
-## 
-## 
-## 
+##
+##
+##
  
 变量与对象
 ## Python是纯面向对象的语言，所有标识符、常量都是以对象（某个类的实例）的形式保存，都可以赋值给变量。
@@ -344,9 +346,9 @@ False                # 指向不同的内存地址
 False
 >>> list2[0] is list1[0]        # 新list中的元素就是原list中的元素
 True
-## 
-## 
-## 
+##
+##
+##
  
 变量的作用域
 ## Python中，变量的作用域分为四种级别。
@@ -393,9 +395,9 @@ b = 2
 def inner():
 nonlocal b
 b = 3
-## 
-## 
-## 
+##
+##
+##
  
 基本数据类型
 ## Python的基本数据类型。
@@ -424,7 +426,7 @@ TypeError: 'str' object does not support item assignment
 >>> float(3)
 3.0
 
->>> type(1)   
+>>> type(1)
 <class 'int'>
 >>> type(1.0)
 <class 'float'>
@@ -443,9 +445,9 @@ nan
 <class 'NoneType'>
 >>> None == 0            # 空值并不等于0
 False
-## 
-## 
-## 
+##
+##
+##
  
 bool
 ## bool：布尔型。取值为True或Flase（首字母大写）。
@@ -469,9 +471,9 @@ False
 (False, False, False, False, False)
 >>> bool(1 > 2)                                            # 结果为假的逻辑表达式
 False
-## 
-## 
-## 
+##
+##
+##
  
 数字
 ## int：整数。
@@ -517,9 +519,9 @@ SyntaxError: invalid token
 (1+2j)
 >>> complex(1)        # 没有虚部时，默认为0j
 (1+0j)
-## 
-## 
-## 
+##
+##
+##
  
 数制的转换
 ## 将其它进制的字符串转换成int型数字。
@@ -551,9 +553,9 @@ ValueError: invalid literal for int() with base 2: '0bb100'
   - 例：
 >>> hex(16)
 '0x10'
-## 
-## 
-## 
+##
+##
+##
  
 list
 ## list：列表类型，按顺序存储一组元素。
@@ -570,9 +572,9 @@ list
 []
 >>> list("Hello")                # 输入一个可迭代对象时，其中的各个元素会被拆开
 ['H', 'e', 'l', 'l', 'o']
-## 
-## 
-## 
+##
+##
+##
  
 增查
 ## 增。
@@ -598,7 +600,7 @@ TypeError: 'int' object is not iterable
 
 extend() 方法相当于列表相加：
 >>> list1 = [1, 2, 3]
->>> list1 += "Hello" 
+>>> list1 += "Hello"
 >>> list1
 [1, 2, 3, 'H', 'e', 'l', 'l', 'o']
 
@@ -636,9 +638,9 @@ ValueError: 3 is not in list
 2
 - list.copy() -> list
   - 功能：返回list的一个浅拷贝。
-## 
-## 
-## 
+##
+##
+##
  
 改删
 ## 改。
@@ -693,9 +695,9 @@ ValueError: list.remove(x): x not in list
 IndexError: pop from empty list
   - list.pop()的效率很高，可以与list.append()搭配使用，把list用作先入后出的栈。
   - list.pop(index)的效果较低，因为每取出一个前面的元素，都要移动后面所有元素的位置。
-## 
-## 
-## 
+##
+##
+##
  
 列表生成式
 ## 列表生成式：通过遍历某个序列来生成列表。
@@ -716,9 +718,9 @@ IndexError: pop from empty list
 ## 集合生成式：通过遍历某个序列来生成集合。
 >>> {i for i in range(5)}
 {0, 1, 2, 3, 4}
-## 
-## 
-## 
+##
+##
+##
  
 tuple
 ## tuple：元组类型，相当于只读的list。
@@ -750,9 +752,9 @@ TypeError: 'tuple' object does not support item assignment
 ## tuple的常用方法较少，只是兼容两个list的查询方法。
 - tuple.count(object) -> int
 - tuple.index(object, start: int=..., stop: int=...) -> int
-## 
-## 
-## 
+##
+##
+##
  
 str、bytes
 ## Python中没有字符类型，只有字符串类型。一个字符就是一个长度为1的字符串。
@@ -832,9 +834,9 @@ b'www.\\u4f60\\u597d.com'                        # 该字符串的内容被改�
   - 例：
 >>> b'www.\xe4\xbd\xa0\xe5\xa5\xbd.com'.decode()
 'www.你好.com'
-## 
-## 
-## 
+##
+##
+##
  
 查
 ## 查。
@@ -851,10 +853,10 @@ b'www.\\u4f60\\u597d.com'                        # 该字符串的内容被改�
 >>> "Hello".find("o", 0, 5)
 4
 因此截取字符串时可能出错，如下：
->>> s = 'cmd.exe'  
+>>> s = 'cmd.exe'
 >>> s[:s.rfind('.')]
 'cmd'                   # 成功截取文件名
->>> s = 'cmd'        
+>>> s = 'cmd'
 >>> s[:s.rfind('.')]
 'cm'                    # 出错
 
@@ -926,9 +928,9 @@ False
   - 例：
 >>> "Hello World! 123".istitle()
 True
-## 
-## 
-## 
+##
+##
+##
  
 改
 ## 改。
@@ -978,9 +980,9 @@ True
 TypeError: sequence item 0: expected str instance, int found
 >>> ",".join(["1", "2", "3"])
 '1,2,3'
-## 
-## 
-## 
+##
+##
+##
  
 格式化字符串
 ## str.format(*args: Any, **kwargs: Any) -> str
@@ -1037,6 +1039,10 @@ TypeError: sequence item 0: expected str instance, int found
 >>> "{:.4}".format(12.3456789)    # 总共最多输出4位（会进行四舍五入）
 '12.35'
 ## 其它格式化方法。
+
+
+>>> "Hi".center(4,"-")
+'-Hi-'
 - str.ljust(width: int, fillchar: str=...) -> str
   - 功能：返回str的一个副本，将它左对齐，至少输出width位，不足的位用fillchar填补。
   - fillchar只能是单个字符，默认是空格。
@@ -1051,29 +1057,33 @@ TypeError: sequence item 0: expected str instance, int found
 - str.center(width: int, fillchar: str=...) -> str
   - 功能：返回str的一个副本，将它居中对齐，至少输出width位，不足的位用fillchar填补。
   - 例：
->>> "Hi".center(4,"-")
-'-Hi-'
-- str.lstrip(chars: str=...) -> str
-  - 功能：返回str的一个副本，将它左侧的chars字符去掉。
-  - chars是一个字符串，默认匹配所有空白字符（即string.whitespace）。
-  - 例：
->>> '  Hi\n\r'.lstrip()
-'Hi\n\r'
-- str.rstrip(chars: str=...) -> str
-  - 功能：返回str的一个副本，将它右侧的chars字符去掉。
-  - 例：
->>> '  Hi\n\r'.rstrip()
-'  Hi'
+
+
 - str.strip(chars: str=...) -> str
-  - 功能：返回str的一个副本，将它左右两侧的chars字符去掉。
+  - 功能：返回str的一个副本，将它左右两侧每个匹配 chars 的字符去掉。
+  - chars 是一个字符串，默认匹配所有空白字符（即string.whitespace）。
   - 例：
 >>> '  Hi\n\r'.strip()
 'Hi'
 >>> '--Hi--'.strip('--')
 'Hi'
-## 
-## 
-## 
+>>> 'Hello'.strip('lo')  # 只要该字符存在于 chars 中，就去掉它
+'He'
+
+- str.lstrip(chars: str=...) -> str
+  - 功能：返回str的一个副本，将它左侧匹配 chars 的字符去掉。
+  - 例：
+>>> '  Hi\n\r'.lstrip()
+'Hi\n\r'
+- str.rstrip(chars: str=...) -> str
+  - 功能：返回str的一个副本，将它右侧匹配 chars 的字符去掉。
+  - 例：
+>>> '  Hi\n\r'.rstrip()
+'  Hi'
+
+##
+##
+##
  
 字符串的转换
 ## 字符串的转换。
@@ -1103,7 +1113,7 @@ ValueError: invalid literal for int() with base 10: 'H'
 >>> list2 = []
 >>> for i in list1:
 ...     list2.append(str(i))
-... 
+...
 >>> ",".join(list2)
 '1,2,3'
 ## 单个字符的转换。
@@ -1127,16 +1137,16 @@ ValueError: invalid literal for int() with base 10: 'H'
 ```py
 >>> int('A')
 ValueError: invalid literal for int() with base 10: 'A'
->>> int(b'A') 
+>>> int(b'A')
 ValueError: invalid literal for int() with base 10: b'A'
 ```
 
 但是存储 bytes 对象时是存储每个字符的 ASCII 码，因此索引单个元素时是返回其 ASCII 码，索引切片时是返回字符。
 ```py
->>> b = b'Hello' 
->>> b[0] 
+>>> b = b'Hello'
+>>> b[0]
 72
->>> b[0:1] 
+>>> b[0:1]
 b'H'
 ```
 
@@ -1158,9 +1168,9 @@ TypeError: unsupported operand type(s) for +: 'set' and 'set'
 >>> {1:1} + {2:2}            # 不支持
 TypeError: unsupported operand type(s) for +: 'dict' and 'dict'
 - 序列支持用乘号 * 复制。
-## 
-## 
-## 
+##
+##
+##
  
 索引
 ## 索引：用 [下标] 选取一个元素。
@@ -1196,9 +1206,9 @@ True
 >>> a[:] = []            # 可以通过该引用修改元素
 >>> list2
 [[]]
-## 
-## 
-## 
+##
+##
+##
  
 切片
 ## 切片：用 [头下标:尾下标] 选取一部分元素，区间为 [头下标, 尾下标) 。
@@ -1212,7 +1222,7 @@ True
 - 切片中的下标可以不填。
 >>> list1[:3]        # 头下标的默认值为0
 [1, 2, 3]
->>> list1[0:]        # 尾下标的默认值为 len(list1) 
+>>> list1[0:]        # 尾下标的默认值为 len(list1)
 [1, 2, 3]
 >>> list1[:]
 [1, 2, 3]
@@ -1260,9 +1270,9 @@ False
 >>> list1[:] = []
 >>> list2
 [1, 2, 3]
-## 
-## 
-## 
+##
+##
+##
  
 set
 ## set：集合类型，无序地存储一些元素，并且会自动去重。
@@ -1289,9 +1299,9 @@ set()
 {'YY', 'XY'}
 >>> a ^ b                # 并集-交集（两个集合不共同拥有的元素）
 {'XY', 'YY', 'X', 'Y'}
-## 
-## 
-## 
+##
+##
+##
  
 增查改删
 ## 增。
@@ -1360,9 +1370,9 @@ KeyError: 0
 3
 >>> a.pop()
 KeyError: 'pop from an empty set'
-## 
-## 
-## 
+##
+##
+##
  
 dict
 ## dict：字典类型，存储一些键值对形式的元素。
@@ -1394,9 +1404,15 @@ KeyError: 'time'
 ...
 >>> d.get("time")            # 用get()方法判断key是否存在
 
-## 
-## 
-## 
+
+如果在字典中添加多个相同的 key ，则取最后一次的 value 。
+>>> {1: 'A', 1: 'B', 1: 'C'} 
+{1: 'C'}
+
+
+##
+##
+##
  
 查改删
 ## 查。
@@ -1420,7 +1436,7 @@ dict_values(['Leo', 10])
 dict_items([('name', 'Leo'), ('age', 10)])
 >>> for k,v in d.items():
 ...     print(k, v)
-... 
+...
 name Leo
 age 10
 - dict.get(key, default=None) -> object
@@ -1491,17 +1507,17 @@ RuntimeError: dictionary changed size during iteration
 因此应该先迭代完毕，再增减字典的 key ：
 ```py
 >>> d = {'name': 'Leo', 'age': 10}
->>> for k in list(d.keys()): 
+>>> for k in list(d.keys()):
 ...   d.pop(k)
-... 
+...
 'Leo'
 10
 ```
 
 
-## 
-## 
-## 
+##
+##
+##
  
 函数
 ## 函数。
@@ -1512,7 +1528,7 @@ return
 - Python的return语句可以返回多个值，它们以元组的形式返回。
 >>> def fun1(a, b):
 ...     return a, b
-... 
+...
 >>> fun1(1, 2)
 (1, 2)
 
@@ -1522,7 +1538,7 @@ return
 - 比如如果函数内使用了一些标识符，当Python解释器执行到该函数时，才能发现这些标识符是否有效。
 >>> def fun1():
 ...     print(os.name)
-... 
+...
 >>> fun1()
 NameError: name 'os' is not defined
 - 比如如果函数内使用了一个外部变量，当Python解释器执行到该函数时，才会尝试读取该变量的值。如下：
@@ -1564,9 +1580,9 @@ return fun2
 - Python中使用装饰器时，就会把被装饰的函数变成闭包函数。
 
 闭包就是可以使用参数的代码片段，在闭包内创建的变量在闭包被调用的范围内同样可以被引用。
-## 
-## 
-## 
+##
+##
+##
  
 函数参数
 ## 在C语言中，调用函数时如果实参列表与形参列表不一致就会报错。但是在Python中，函数的参数比较灵活。
@@ -1590,7 +1606,7 @@ SyntaxError: positional argument follows keyword argument
 1 2
 >>> def fun2(x=1, y):
 ...     print(x,y)
-... 
+...
 SyntaxError: non-default argument follows default argument
 - 元组参数：用一个星号 * 声明，只能声明一个。调用函数时会将额外传入的key型实参打包成一个元组。
 >>> def fun3(x, y, *args):
@@ -1615,7 +1631,7 @@ TypeError: fun4() takes 2 positional arguments but 4 were given
 - 万能参数：把函数的形参定义成一个元组参数加一个字典参数，就可以给函数传入任何实参而不会报错。
 >>> def fun5(*args, **kwargs):
 ...     print(args, kwargs)
-... 
+...
 >>> fun5(1, 2, a=3, b=4)
 (1, 2) {'a': 3, 'b': 4}
 - 在实参列表中，可以用 * 把一个序列拆散成多个key型参数，可以用  ** 把一个字典拆散成多个key=value型参数。
@@ -1629,7 +1645,7 @@ H e l l o
 >>> print(*())
 
 
-迭代拆包运算符 * 、字典拆包运算符 ** 
+迭代拆包运算符 * 、字典拆包运算符 **
 
 ## 给函数传参时，要小心实参被函数改变。
 - 如果实参是不可变的数据类型，无论如何也不会被改变。
@@ -1643,9 +1659,9 @@ H e l l o
 >>> fun1(x, y)
 >>> print(x, y)
 [3, 4] [3, 4]
-## 
-## 
-## 
+##
+##
+##
  
 装饰器
 ## 装饰函数：体现装饰模式的函数，用于向某个函数附加功能而不改变其原本内容。
@@ -1727,31 +1743,37 @@ def fun1():
 class Test():
     pass
 
-## 作用于类方法的装饰器：需要在外层输入一个obj参数，在内层多输入一个self参数。
+## 作用于类方法的装饰器：需要在内层多输入一个self参数。
 - 例：
-def outer(obj):
-    def inner(self, *args, **kwargs):
-        print("Hello")
-    return inner
+def catch_exception(method):
+    def wrapper(self, *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except Exception as e:
+            print(str(e))
+    return wrapper
 
 class Test:
-    @outer
-    def fun1(self):
-        pass
+    @catch_exception
+    def fun1(self, x):
+        return 1 + x
 
->>> Test().fun1()
-Hello
+>>> Test().fun1(1)
+2
+>>> Test().fun1('a')
+unsupported operand type(s) for +: 'int' and 'str'
+
 ## 用类实现的装饰器：需要定义类的__call__()方法。
-## 
-## 
-## 
+##
+##
+##
  
 类
 ## 使用class关键字可以定义类。
 - 例如：
 >>> class Test:                        # 如果没有继承就不需要在类名后加括号
 ...     def __init__(self, x, y):
-...         self.a = x    
+...         self.a = x
 ...         self.b = y
 ...         print(self)
 ...         print("init...")
@@ -1777,9 +1799,9 @@ init...
 >>> b = a()
 >>> b
 <__main__.Test object at 0x010C0DF0>
-## 
-## 
-## 
+##
+##
+##
  
 类的成员
 ## 类中定义的变量称为类的“属性”，类中定义的函数称为类的“方法”，它们都属于类的“成员”。
@@ -1811,9 +1833,9 @@ init...
 AttributeError: 'Test' object has no attribute '__c'
 >>> Test().__c
 AttributeError: 'Test' object has no attribute '__c'
-## 
-## 
-## 
+##
+##
+##
  
 类的属性
 ## 类的属性。
@@ -1825,7 +1847,7 @@ AttributeError: 'Test' object has no attribute '__c'
 ...         self.num = n
 ...     def getNum(self):
 ...         return self.num
-... 
+...
 >>> Test.num
 AttributeError: type object 'Test' has no attribute 'num'
 >>> Test(1).num
@@ -1844,7 +1866,7 @@ AttributeError: type object 'Test' has no attribute 'num'
 ...         return self.num    # 在方法内通过self指针访问类变量
 ...     def setNum(self, n):
 ...         self.num = n
-... 
+...
 >>> Test.num
 0
 >>> Test().num
@@ -1879,9 +1901,9 @@ AttributeError: type object 'Test' has no attribute '__id'
 >>> Test.__id = 1            # 私有成员显然不能在类外被访问，但这里还是赋值成功了
 >>> Test.__id
 1
-## 
-## 
-## 
+##
+##
+##
  
 类的方法
 ## 类的方法。
@@ -1903,7 +1925,7 @@ TypeError: getNum() missing 1 required positional argument: 'self'
 ...     @staticmethod                # 定义静态方法
 ...     def static_getNum():
 ...         return Test.class_getNum()
-... 
+...
 >>> Test.class_getNum()
 0
 >>> Test().class_getNum()
@@ -1918,7 +1940,7 @@ TypeError: getNum() missing 1 required positional argument: 'self'
 >>> class Test:
 ...     def static_getNum():
 ...         return 0
-... 
+...
 >>> Test.static_getNum()
 0
 >>> Test().static_getNum()
@@ -1933,9 +1955,9 @@ TypeError: static_getNum() takes 0 positional arguments but 1 was given
 0
 >>> Test().sum()
 TypeError: 'int' object is not callable
-## 
-## 
-## 
+##
+##
+##
  
 类的内置方法
 ## 类的内置方法：以两个下划线 __ 开头、两个下划线 __ 结尾，可以被重载。
@@ -1949,7 +1971,7 @@ TypeError: 'int' object is not callable
 ...         if not hasattr(cls, 'instance'):
 ...             cls.instance = super().__new__(cls)
 ...         return cls.instance
-... 
+...
 >>> Test()
 <__main__.Test object at 0x7f96450d45c0>
 >>> Test()
@@ -2053,10 +2075,10 @@ TypeError: 'Test' object is not callable    # 如果重载了__call__()，此时
   - 例：
 >>> "".__sizeof__()
 51
-## 
-## 
-## 
- 
+##
+##
+##
+
 对象的内置属性
 ## 函数的内置属性。
 - __name__：一个str，存储函数名。
@@ -2139,9 +2161,9 @@ True
 <bound method Test.fun2 of <class '__main__.Test'>>
 >>> Test(1).fun3                        # 静态方法本身不会绑定
 <function Test.fun3 at 0x000001AD6E0CA2F0>
-## 
-## 
-## 
+##
+##
+##
  
 类的继承
 ## 在定义类名时，在类名后加上括号并填入某个类名，就可以让当前类继承某个类的成员。
@@ -2173,7 +2195,7 @@ True
 ...
 >>> Man.name                        # 子类不会继承新父类的成员
 AttributeError: type object 'Man' has no attribute 'name'
-## 
+##
 
 C++等语言中支持定义多个名称相同、形参列表不同的方法，实现更丰富的多态性。如下，当调用 Test.get(x=1) 时，根据输入的实参与哪个形参列表匹配，从而判断调用哪个方法。
 但在Python中不支持这样的多态性，只有同名的方法中只有最后一个定义的方法会生效。
@@ -2189,7 +2211,7 @@ class Test:
     def get(self, x, y):
         pass
 
-## 
+##
  
 多继承
 ## Python的类支持多继承。如下：
@@ -2244,9 +2266,9 @@ A end
 [<class '__main__.D'>, <class '__main__.B'>, <class '__main__.C'>, <class '__main__.A'>, <class 'object'>]
   - 如果子类调用父类的成员时没有指定路径，解释器会在各个父类中查找该成员。查找顺序按照C3算法，有些类似于广度优先：先从左往右在各个父类中查找，没有找到再进入父类的父类中查找。
 
-## 
-## 
-## 
+##
+##
+##
  
 元类
 ## 一般的类实际上是type类的实例。当Python解释器执行到class定义语句时，实际上是调用type()创建该类。
@@ -2272,15 +2294,15 @@ class Test(int):
 ...     def  __new__(cls, name, bases, attrs):
 ...         attrs["fun1"] = lambda self: print("hello")
 ...         return super().__new__(cls, name, bases, attrs)
-... 
+...
 >>> class Test(metaclass=Mymeta):
 ...     pass
-... 
+...
 >>> Test().fun1()
 hello
-## 
-## 
-## 
+##
+##
+##
  
 迭代器
 ## 迭代：遍历某个对象中的所有元素。
@@ -2311,7 +2333,7 @@ hello
 ...             return self.a
 ...         else:
 ...             raise StopIteration
-... 
+...
 >>> n = Number()
 >>> next(n)
 1
@@ -2334,9 +2356,9 @@ hello
 'H'
 >>> next(i)
 'e'
-## 
-## 
-## 
+##
+##
+##
  
 生成器
 ## 生成器（generator）：Python特有的一种迭代器。
@@ -2350,7 +2372,7 @@ hello
 ...     print("step 2")
 ...     yield 1, 2
 ...     print("step 3")
-... 
+...
 >>> g = fun1()
 >>> g
 <generator object fun1 at 0x7fa011114678>
@@ -2371,9 +2393,9 @@ StopIteration
 0
 >>> next(g)
 1
-## 
-## 
-## 
+##
+##
+##
  
 异常处理
 ## Python程序的错误分为两种。
@@ -2440,19 +2462,24 @@ AssertionError: not equal
   - ValueError    ：参数的值错误（数据类型正确）。
   - Warning        ：Base class for warning categories.
 ## 下例是自定义一个异常类：
->>> class MyExcept(Exception):
-...     def __init__(self, msg=''):
-...         self.message = msg
-...     def __str__(self):
-...         return self.message
-... 
+
+class MyException(Exception):
+    def __init__(self, msg=''):
+        self.msg = msg
+
+    def __repr__(self):
+        return 'MyException({})'.format(repr(self.msg))
+
+    def __str__(self):
+        return self.__repr__()
+
 >>> raise MyExcept
 __main__.MyExcept
 >>> raise MyExcept('test...')
 __main__.MyExcept: test...
-## 
-## 
-## 
+##
+##
+##
  
 模块和包
 ## .py脚本文件不但可以被Python解释器直接运行，还可以被其它脚本文件当做模块（module）调用。
@@ -2465,7 +2492,7 @@ from sys import *            # 导入该模块的全部内容
 print("path：", path)        # 导入path之后，使用时就不需要再指定路径sys.path了
   - 可以用 as 将导入的内容重命名。如下：
 import os as _os
-from sys import argv as _argv 
+from sys import argv as _argv
   - 在没有被直接执行的模块中，可以使用相对地址进行导入。如下：
 from .utils import *             # 从当前目录导入（需要当前目录是一个包）
 from .. import *                # 从上层目录导入（需要上层目录是一个包
@@ -2497,16 +2524,16 @@ fun1
   - pyinstaller在打包Python脚本时也会收集局部导入的模块，即使它可能不会被导入。
 ## 用importlib模块的import_module()函数可以根据模块名导入模块：
 >>> from importlib import import_module
->>> m = import_module('os')      
+>>> m = import_module('os')
 >>> m
 <module 'os' from 'C:\\Users\\Leo\\AppData\\Local\\Programs\\Python\\Python36\\lib\\os.py'>
->>> m = import_module('os.path') 
+>>> m = import_module('os.path')
 >>> m
 <module 'ntpath' from 'C:\\Users\\Leo\\AppData\\Local\\Programs\\Python\\Python36\\lib\\ntpath.py'>
 >>> m = import_module('sys', package='os')        # 相当于from os import sys
 >>> m
 <module 'sys' (built-in)>
-## 
+##
 ## 在模块所在文件夹中加入一个__init__.py，就可以使该文件夹变成包（package）。
 - 包中必须包含__init__.py才能被识别，它定义了包的属性和方法（相当于把整个包当作一个模块），它可以为空。
 - 可以在__init__.py中定义属性__all__，控制使用import * 时会导入该包的哪些部分。如下：
@@ -2540,9 +2567,9 @@ __main__
 >>> import test
 D:\1\test_Python\test.py
 test
-## 
-## 
-## 
+##
+##
+##
  
 第三方库
 
@@ -2554,7 +2581,7 @@ Python 官方提供了一些标准库，可以通过 pip 命令下载。
 
 ## 安装Python解释器时通常会同时安装一些Python的标准库，除此之外，还可以使用其他人开发的第三方库。
 - 第三方库一般安装在Python解释器的安装目录的site-packages目录下，比如/usr/lib/Python3.6/site-packages/。
-## 
+##
 ## 制作第三方库。
 distutils：Python的标准库，可用于打包、安装Python库，但功能简单。
 setuptools：Python的第三方库，相当于改进版的distutils。
@@ -2583,8 +2610,8 @@ python setup.py build
 python setup.py install
 - 使用easy_install安装。它是一个较老的命令行工具，会调用setup.py进行安装。
 - 使用pip安装。pip相当于改进版的easy_install。
-## 
-## 
+##
+##
  
 ♢ pip
 ## pip：一个命令行工具，用于安装、管理Python的第三方库。
@@ -2622,10 +2649,10 @@ pip install -r requirements.txt        # 根据requirements.txt安装Python库�
 ## 一些第三方库。
 - autopep8：用于将Python代码自动排版成PEP8风格。
 - pylint：用于检查Python代码的语法、代码风格。
-- 
-## 
-## 
-## 
+-
+##
+##
+##
  
 ♢ virtualenv
 ## virtualenv：Python的第三方库，用于创建Python的虚拟环境。
@@ -2640,9 +2667,9 @@ virtualenv .venv
 .venv\Scripts\activate.bat
   - 输入以下命令退出该虚拟环境的终端。
 deactivate
-## 
-## 
-## 
+##
+##
+##
  
 其它知识
 pass 和 ...
@@ -2683,15 +2710,15 @@ SyntaxError: invalid syntax
 >>> list1 = [1, 2, 3, list1]
 >>> list1
 [1, 2, 3, [1, 2, 3]]
-## 
-## 
-## 
+##
+##
+##
  
 内置函数
 ## Python解释器启动时会自动导入builtins模块，它提供了一些内置函数。
-## 
-## 
-## 
+##
+##
+##
  
 关于底层
 ## def id(object) -> int
@@ -2727,10 +2754,10 @@ True
 >>> def fun1():
 ...     x = 1
 ...     print(locals())
-... 
+...
 >>> fun1()
 {'x': 1}
-## 
+##
 ## def repr(obj) -> str
 - 功能：返回对象的__repr__()方法的返回值。
 - 当对象A在终端被打印时，显示的值就是 print(A.__repr__())
@@ -2743,8 +2770,8 @@ True
 "'Hello'"
 >>> repr(b'Hello')
 "b'Hello'"
-## 
-## 
+##
+##
  
 关于执行代码
 ## def exec(src, globals=..., locals=...) -> None
@@ -2788,9 +2815,9 @@ SyntaxError: invalid syntax
 >>> code = compile("print(1+2)", '<string>', "eval")
 >>> eval(code)
 3
-## 
-## 
-## 
+##
+##
+##
  
 关于类
 ## class type(object) -> className
@@ -2816,7 +2843,7 @@ True
 - 例：
 >>> class Test(int):
 ...     pass
-... 
+...
 >>> issubclass(Test, int)
 True
 >>> issubclass(Test, Test)
@@ -2836,9 +2863,9 @@ False
 ...
 >>> Test()
 0
-## 
-## 
-## 
+##
+##
+##
  
 关于类的成员
 ## 反射：根据类的成员的名称字符串，获得它的引用。
@@ -2872,10 +2899,10 @@ False
 >>> class Test:
 ...     def fun1(self):
 ...         print("this is fun1")
-... 
+...
 >>> def fun2():
 ...     print("this is fun2")
-... 
+...
 >>> t = Test()
 >>> setattr(t, "fun1", fun2)        # 相当于t.fun1 = fun2
 >>> t.fun1()
@@ -2885,9 +2912,9 @@ this is fun2
 - 例：
 >>> delattr(str(), "encode")
 AttributeError: 'str' object attribute 'encode' is read-only
-## 
-## 
-## 
+##
+##
+##
  
 关于迭代
 ## class range(stop: int) -> iterable
@@ -2963,9 +2990,9 @@ range(0, 5)
 [(1, 5), (2, 6), (3, 7)]
 >>> list(map(lambda x, y: (x, y), [1, 2, 3, 4], [5, 6, 7]))
 [(1, 5), (2, 6), (3, 7)]
-## 
-## 
-## 
+##
+##
+##
  
 关于计算
 
@@ -3060,9 +3087,9 @@ False
 False
 >>> any([0, 1, 2])
 True
-## 
-## 
-## 
+##
+##
+##
  
 常用模块
 
@@ -3196,9 +3223,9 @@ True
 >>> os.makedirs("1/2/3")                    # 递归创建多层目录，若该目录已存在则报错
 >>> os.makedirs("1/2/3", exist_ok=True)    # 若该目录已存在则不报错
 - 给上述函数输入的path既可以是绝对路径，也可以是相对路径。
-## 
-## 
-## 
+##
+##
+##
  
 ♢ sys
 ## sys：Python的标准库，提供了一些与Python解释器进行交互的方法。
@@ -3226,10 +3253,10 @@ hello5
 >>> raise RuntimeError("testing...")
   - 如果想恢复原本的stdout、stderr，需要先备份：
 >>> __stdout__, __stderr__ = sys.stdout, sys.stderr
-## 
-## 
-## 
- 
+##
+##
+##
+
 ♢ shutil
 ## shutil：Python的标准库，提供了一些拷贝文件的方法。
 - 例：
@@ -3249,9 +3276,9 @@ hello5
 'D:/2'
 >>> shutil.move("D:/1", "D:/2")                # 移动文件或目录
 'D:/2'
-## 
-## 
-## 
+##
+##
+##
  
 ♢ psutil
 ## psutil：Python的第三方库，用于查看系统的硬件信息、运行状态。
@@ -3345,10 +3372,10 @@ psutil.net_connections(kind="tcp")
 >>> psutil.net_connections(kind="tcp")            # 只查看TCP类型的网络连接的信息
 [sconn(fd=-1, family=<AddressFamily.AF_INET: 2>, type=1, laddr=addr(ip='10.135.149.134', port=57878), raddr=addr(ip='211.97.82.37', port=443), status='CLOSE_WAIT', pid=1524), sconn(……]
 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
  
 ♢ platform
 ## platform：Python的标准库，用于获取当前运行平台的信息。
@@ -3370,9 +3397,9 @@ psutil.net_connections(kind="tcp")
 >>> platform.node()                # 返回该主机在网络中的名字
 'Leo'
 - 以上函数的返回值大多为str类型。如果没有确定的答案，则返回空字符串。
-## 
-## 
-## 
+##
+##
+##
  
 关于时间
 
@@ -3390,7 +3417,7 @@ psutil.net_connections(kind="tcp")
   - 澳大利亚中部时间：Central Standard Time (Australia) UTC+9:30
   - 中国标准时间：China Standard Time UTC+8:00
   - 古巴标准时间：Cuba Standard Time UTC-4:00
-  
+
 - Unix 时间戳（Unix timestamp）
   - 又称为 Unix time、POSIX time 。
   - 是按 UTC 时区计算从 `1970-1-1 00:00:00` 开始到现在经过的秒数，不考虑闰秒。
@@ -3407,7 +3434,7 @@ psutil.net_connections(kind="tcp")
   - 用字母 T 分隔日期与时间。
   - 各个时间字段的位数固定，缺位则用 0 补齐。
   - 各个时间字段按范围大小降序排列，依次是：年、月、日、时、分、秒。
-  
+
 
 
 
@@ -3467,9 +3494,9 @@ while 1:
 0.078125
 >>> time.thread_time()
 0.078125
-## 
-## 
-## 
+##
+##
+##
  
 ♢ datetime
 ## datetime：Python的标准库，基于time模块封装了一些API，适合处理日期、切换时区、计算两个日期的差或和。
@@ -3492,7 +3519,7 @@ datetime.datetime(2019, 5, 30, 18, 0, 0, 505080)
 datetime.datetime(2019, 5, 30, 10, 0, 0, 505080, tzinfo=<UTC>)
 >>> datetime.now().astimezone(pytz.timezone("UTC"))      # 将datetime对象从当前时区转换到指定时区
 datetime.datetime(2019, 5, 30, 10, 0, 0, 505080, tzinfo=<UTC>)
->>> datetime.now().astimezone(pytz.timezone("Asia/Shanghai")) 
+>>> datetime.now().astimezone(pytz.timezone("Asia/Shanghai"))
 datetime.datetime(2019, 5, 30, 18, 0, 0, 505080, tzinfo=<DstTzInfo 'Asia/Shanghai' CST+8:00:00 STD>)
 
 ## datetime对象。
@@ -3542,7 +3569,7 @@ time 模块不支持修改时间的时区，而 datetime 模块支持：
 time.struct_time(tm_year=2019, tm_mon=5, tm_mday=30, tm_hour=18, tm_min=0, tm_sec=0, tm_wday=3, tm_yday=150, tm_isdst=-1)
 >>> d.utctimetuple()   # 先转成成 UTC 时区，再转换成 timetuple ，不过 d.tzinfo 为 None ，得到的 timetuple 并不是正确的 UTC 时间
 time.struct_time(tm_year=2019, tm_mon=5, tm_mday=30, tm_hour=18, tm_min=0, tm_sec=0, tm_wday=3, tm_yday=150, tm_isdst=0)
->>> d.replace(tzinfo=pytz.timezone("Asia/Shanghai")).timetuple()   
+>>> d.replace(tzinfo=pytz.timezone("Asia/Shanghai")).timetuple()
 time.struct_time(tm_year=2019, tm_mon=5, tm_mday=30, tm_hour=18, tm_min=0, tm_sec=0, tm_wday=3, tm_yday=150, tm_isdst=0)
 >>> d.replace(tzinfo=pytz.timezone("Asia/Shanghai")).utctimetuple()     # 结果为正确的 UTC 时间
 time.struct_time(tm_year=2019, tm_mon=5, tm_mday=30, tm_hour=9, tm_min=54, tm_sec=0, tm_wday=3, tm_yday=150, tm_isdst=0)
@@ -3570,9 +3597,9 @@ datetime.timedelta(seconds=28800)
 datetime.datetime(2019, 5, 31, 4, 0, 0, 505080)
 >>> timedelta(milliseconds=100).total_seconds()    # 获取timedelta对象的秒值
 0.1
-## 
-## 
-## 
+##
+##
+##
  
 ♢ apscheduler
 ## apscheduler：Python的第三方库，用于执行定时任务。
@@ -3613,9 +3640,9 @@ year、month、week、day_of_week（取值为0~6）、hour、minute、second、s
 - 删除任务：
 job = scheduler.add_job(func=print, args=('hello',), trigger='interval', seconds=3)
 job.remove()
-## 
-## 
-## 
+##
+##
+##
  
 ♢ celery
 ## celery：Python的第三方库，是一个分布式的任务队列，常用于执行大量的异步任务、定时任务。
@@ -3638,7 +3665,7 @@ job.remove()
 >>> @cel.task            # 使用装饰器添加任务
 ... def fun1(*args):        # 函数在第一次添加到celery时就固定了，不能再重新定义
 ...     print(b)
-... 
+...
 >>> fun1('hello')                    # 正常调用该函数
 hello
 >>> task = fun1.delay('hello')    # 异步执行该函数（这会将任务发送到broker），用delay()方法传入参数
@@ -3670,15 +3697,15 @@ cel.conf.beat_schedule = {
         ...
     },
 }
-## 
-## 
-## 
+##
+##
+##
  
 关于数据
 
-## 
-## 
-## 
+##
+##
+##
  
 ♢ string
 ## string：Python的标准库，提供了一些常用的字符集合。
@@ -3704,9 +3731,9 @@ cel.conf.beat_schedule = {
 '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
 >>> string.printable            # 所有可打印字符（等于digits + letters + whitespace + punctuation）
 '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\x0b\x0c'
-## 
-## 
-## 
+##
+##
+##
  
 ♢ collections
 ## collections：Python的标准库，提供了一些容器类。
@@ -3716,8 +3743,8 @@ cel.conf.beat_schedule = {
 True
 >>> isinstance(iter("Hello"), Iterator)
 True
-## 
-## 
+##
+##
  
 关于调试
 ♢ traceback
@@ -3729,13 +3756,13 @@ try:
 except :                                # 使用时不需要实例化异常类
     traceback.print_exc()                # 打印出完整的异常信息
     list1 = traceback.format_exc()        # 保存异常信息
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
  
 ♢ inspect
 ## inspect：Python的标准库，提供了一些查询对象属性、查看堆栈的方法，常用于调试。
@@ -3831,96 +3858,11 @@ OrderedDict([('a', 1), ('b', 2)])
 TypeError: missing a required argument: 'b'
 >>> sign.bind_partial(1).arguments            # 只传入部分参数
 OrderedDict([('a', 1)])
-## 
-## 
-## 
+##
+##
+##
  
-♢ logging
-## logging：Python的标准库，用于记录日志。
-- logging模块定义了以下几种日志级别：
-  - DEBUG    ：最详细的日志信息，比如记录程序的执行进度。
-  - INFO        ：用户需要关注的关键信息。
-  - WARNING    ：一些警告。
-  - ERROR    ：严重的错误，导致某些功能无法实现。
-  - CRITICAL    ：致命的错误，导致程序不能运行。
-- 这几种级别的日志的重要性依次递增。
-  - 通常用配置文件为程序指定一个日志级别，程序会记录下不低于该级别的所有事件。
-  - 在程序开发阶段时，通常使用DEBUG或INFO级别，获取最详细的日志。在程序发布阶段时，通常使用WARNING、ERROR或CRITICAL级别，从而简化日志数量、降低IO压力。
-- 日志（log）用于记录程序运行时发生的某些事件。
-  - 日志中的一条事件通常包含重要级别、发生时间、发生位置、具体描述等信息。
-  - 通常根据重要性的不同将事件分为几种级别（level），方便整理和筛选。
 
-将每行日志保存成JSON格式（不加换行、缩进）可以方便后期解析日志。如下：
-{"date":"2018-01-01 01:01:01", "level": "WARNING", "message": "There is something wrong."}
-
-
-## 使用简单的函数记录日志（只能使用默认的日志器root logger）：
-- logging.basicConfig(**kwargs)：对root logger进行基本配置（该函数只在第一次调用时有效）。
-  - root logger默认日志级别为WARNING，将日志输出到sys.stderr。
-- logging.debug(msg)：记录一条DEBUG级别的事件到root logger。
-  - 同理，还有logging.info()、logging.warning()、logging.error()、logging.critical()
-- 例如：
-import logging
-import time
-time_str = time.strftime("_%Y%m%d", time.localtime())
-fileName = "test"+time_str+".log"
-logging.basicConfig(filename=fileName, filemode='a', level=logging.DEBUG,
-                    format="%(asctime)s %(levelname)s %(threadName)s: %(message)s",
-                    datefmt="%Y-%m-%d %H:%M:%S")
-# 这里设置了将日志输出到指定文件、日志级别、事件字符串的格式、asctime的格式
-logging.debug("test...")
-# 输出的日志内容为：2019-02-19 17:22:02 - DEBUG - MainThread: test...
-- logging.log(level, msg, *args, **kwargs)        # 记录一条level级别的日志
-- logging模块提供了一些可嵌入到事件字符串中的字段，包括：
-  - %(asctime)s        ：当前的格式化时间。
-  - %(name)s            ：当前日志器的名称。
-  - %(levelname)s    ：当前日志器的日志级别的名称。
-  - %(message)s        ：事件字符串的内容。
-  - %(pathname)s        ：当前程序文件的绝对地址。
-  - %(filename)s        ：pathname的文件名部分，包含后缀名。
-  - %(module)s        ：pathname的文件名部分，不包含后缀名。
-  - %(lineno)d        ：当前代码所在行号。
-  - %(funcName)s        ：当前代码所在函数名。
-  - %(process)d        ：当前的进程ID。
-  - processName        ：当前的进程名称。
-  - %(thread)d        ：当前的线程ID。
-  - %(thread)s        ：当前的线程名称。
-## 使用基本的日志类记录日志：
-- logger类        ：日志器。
-  - 程序将事件传给日志器，日志器会将日志交给处理器，处理器会将日志内容格式化后再输出到某个地方。
-  - 日志器的名称可以用 . 分隔成多个层级，每个 . 之后的logger是之前的logger的子级。例如：A.B.C，当C收到一条日志时，会将它传递给A和B。
-- handler类    ：处理器，将日志输出到某个地方。
-  - 一个日志器可以连接多个处理器。
-- filter类        ：过滤器，过滤日志。
-  - 例如：logger.addFilter()、logger.removeFilter()
-- formatter类    ：格式器，控制输出的每行日志格式。
-- 例如：
-import logging
-import time
-
-filename = "test" + time.strftime("_%Y%m%d", time.localtime()) + ".log"
-handler = logging.FileHandler(filename)        # 创建一个处理器
-handler.setLevel(logging.INFO)                # 设置处理器的日志级别
-formatter = logging.Formatter(
-    fmt="{asctime} {levelname:5} {threadName:15} --> {message}",
-    datefmt="%Y-%m-%d %H:%M:%S", style='{')
-handler.setFormatter(formatter)                 # 设置该handler的格式器
-
-console_handler = logging.StreamHandler()      # 创建一个StreamHandler
-console_handler.setFormatter(formatter)
-console_handler.setLevel(logging.INFO)
-
-logger = logging.getLogger(name=__file__)        # 创建一个日志器
-logger.setLevel(logging.DEBUG)                # 设置日志器的级别
-logger.addHandler(handler)                      # 为该日志器添加一个处理器
-logger.addHandler(console_handler)
-
-logger.debug("test...")                        # logger对象也有logging.debug()等方法
-  - 调用logging.getLogger()时，如果不设置name，就返回默认的root logger。如果设置的name与已有的logger相同，则返回那个logger的引用。
-## 
-## 
-## 
- 
 ♢ pytest
 ## pytest：Python的第三方库，是一个开源的Python单元测试框架。
 - pytest 比 unittest 的功能更多，并且可以兼容地执行 unittest 的测试用例。
@@ -3952,7 +3894,7 @@ D:\1\test_Python>pytest
 ======================== test session starts ========================
 platform win32 -- python 3.7.2, pytest-4.3.1, py-1.8.0, pluggy-0.9.0
 rootdir: D:\1\test_Python, inifile:
-collected 2 items                                                                                   
+collected 2 items
 
 test_.py .F                                                          [100%]
 
@@ -4030,9 +3972,9 @@ def test_1(fun1):
 ## pytest的可用插件。
 - pytest-cov：用于统计测试覆盖率，即每个py文件中的源代码被测试用例执行到的百分比。
 - pytest-django：用于执行Django项目目录下的测试用例。
-## 
-## 
-## 
+##
+##
+##
  
 关于运行
 ♢ argparse
@@ -4082,9 +4024,9 @@ test.py: error: argument --level/-l: expected one argument
 D:\1\test_Python>python test.py --level 1
 False
 1
-## 
-## 
-## 
+##
+##
+##
  
 ♢ pyinstaller
 ## pyinstaller：Python的第三方库，用于将Python脚本打包成可执行文件。
@@ -4101,22 +4043,22 @@ pyinstaller  D:\1\1.py     # 打包成一个文件夹，包含一堆运行库
 - 打包之后，会在当前目录下生成两个文件夹。
   - build：保存打包过程中的一些信息。
   - dist：保存打包结果。
-- 
-## 
-## 
-## 
+-
+##
+##
+##
  
 其它模块
 ♢ functools
 ## functools：Python的标准库，提供了一些功能函数、装饰器。
-## 
+##
 ## class partial(func, *args, **keywords)
 - 功能：给函数传入一些参数，装饰成一个新函数。又称为偏函数。
 - 例：
 >>> import functools
 >>> def fun1(a, b, c=0, d=0):
 ...     print(a, b, c, d)
-... 
+...
 >>> fun1_new = functools.partial(fun1, 1, 2, c=3)
 >>> fun1_new
 functools.partial(<function fun1 at 0x7f58aa51aa60>, 1, 2, c=3)
@@ -4126,9 +4068,9 @@ functools.partial(<function fun1 at 0x7f58aa51aa60>, 1, 2, c=3)
 TypeError: fun1() got multiple values for argument 'c'
 >>> fun1_new(c='c')        # 以关键字的形式传入参数，就不会报错重复赋值
 1 2 c 0
-## 
-## 
-## 
+##
+##
+##
  
 进程和线程
 ## 进程：程序运行时的最小单位。
@@ -4158,7 +4100,7 @@ TypeError: fun1() got multiple values for argument 'c'
   - 异步IO：在执行IO操作时程序转去执行其它操作，即异步运行。
 - 线程之间的通信媒介。
   - 全局变量
-  - 
+  -
 - 线程之间的通信方式。
   - 轮询（poll）：主线程循环去检查子线程的状态，这会浪费一些主线程的时间，
   - 回调（callback）：子线程执行结束后调用主线程的一个函数或方法。
@@ -4184,9 +4126,9 @@ TypeError: fun1() got multiple values for argument 'c'
 ## CPython早先引入了GIL（Global Interpreter Lock，全局解释锁）机制。
 - 为了保证多线程之间不冲突，同一时间只有一个线程拿到GIL运行，当该线程暂时不用执行字节码时（比如等待IO响应时）就会把GIL传递给其它线程，或者隔一小段时间后解释器会抢走这个GIL给其它线程（这可能中断正在执行的某个任务，所以以防万一，还是要加锁来保证线程安全）。
 - 由于GIL机制，CPython程序同时只能使用CPU的一个核。因此，处理IO密集型任务时，用多线程能提高效率；处理CPU密集型任务时，用多进程或协程才能提高效率。
-## 
-## 
-## 
+##
+##
+##
  
 ♢ threading
 ## threading：Python的标准库，用于创建多线程。
@@ -4280,9 +4222,9 @@ RuntimeError: cannot release un-acquired lock
 >>> hello
 
 >>> t.cancel()        # 取消该进程
-## 
-## 
-## 
+##
+##
+##
  
 ♢ queue
 ## queue：Python的标准库，用于创建线程间通信的队列。
@@ -4333,7 +4275,7 @@ class Item:
     def __init__(self, priority, data):
         self.priority = priority
         self.data = data
-    
+
     def __lt__(self, other):
         return self.priority < other.priority
 
@@ -4348,9 +4290,9 @@ class Item:
 'two'
 >>> q.get().data
 'three'
-## 
-## 
-## 
+##
+##
+##
  
 ♢ multiprocessing
 ## multiprocessing：Python的标准库，用于创建多进程。
@@ -4383,7 +4325,7 @@ False
 >>> pool = multiprocessing.Pool(2)            # 创建一个大小为2的进程池（默认等于CPU核数）
 >>> for i in range(5):
 ...     pool.apply_async(fun1, (i,))        # 往进程池中添加进程
-... 
+...
 0
 1
 2
@@ -4400,9 +4342,9 @@ False
 >>> q.put("hello")
 >>> q.get()
 'hello'
-## 
-## 
-## 
+##
+##
+##
  
 ♢ asyncio
 ## 协程：即协同程序，又称为异步函数。是指系统在执行某个函数时中断，转去运行另一个函数。
@@ -4418,7 +4360,7 @@ False
 ...     for i in range(n):
 ...         await asyncio.sleep(1)        # 表示这里要等待1秒的IO，让解释器去执行event_loop中的其它协程
 ...         print(i)
-... 
+...
 >>> loop = asyncio.get_event_loop()    # 创建事件循环
 >>> loop.run_until_complete(fun1(5))    # 开始事件循环
 0
@@ -4441,9 +4383,9 @@ False
 2
 2
 ({<Task finished coro=<fun1() done, defined at <stdin>:1> result=None>, <Task finished coro=<fun1() done, defined at <stdin>:1> result=None>, <Task finished coro=<fun1() done, defined at <stdin>:1> result=None>}, set())
-## 
-## 
-## 
+##
+##
+##
  
 访问文件
 ## 类Unix平台、Web使用正斜杠 / 作为路径分隔符，而Windows使用反斜杠 \ 作为路径分隔符（在字符串中出现时要转义或者加上前缀r）。
@@ -4456,9 +4398,9 @@ False
 ## 序列化（serialization）：将数据转换成便于传输、存储的格式的过程。
 - 不同程序通常采用不同的格式存储数据，为了方便在它们之间传输数据、存储数据，通常要将数据序列化成某种通用的格式，比如XML、JSON、YAML等。
 - 反序列化是指序列化的逆过程，将数据还原成原本的格式。
-## 
-## 
-## 
+##
+##
+##
  
 打开文件
 ## 访问文件时，首先要用open()打开文件创建一个指向文件的变量f，然后就能调用f的各个方法。
@@ -4517,9 +4459,9 @@ finally:
 - f.seek(offset: int, whence: int = 0)        # 设置文件指针的位置
   - offset表示开始的偏移量，即第几个字符（如果汉字采用同一编码，一个汉字也只占一个字符大小）。
   - whence是可选参数，值为0表示从文件开头开始偏移，值为1表示从当前位置开始偏移，值为2表示从文件末尾开始偏移。
-## 
-## 
-## 
+##
+##
+##
  
 编码格式
 ## 以下编码格式是代表某种字符集，规定了一个字符在存储时的二进制值是什么。
@@ -4552,9 +4494,9 @@ finally:
 open(path, 'r', encoding="utf-8")
 - 编程时，源文件一般采用utf-8编码，于是Python自动按utf-8格式打开源文件。但是源文件中可能包含中文注释，当Python读取到这一行时就会出错。
 - 如果只需要拷贝文件的数据，以二进制形式打开文件最简单，这样就不用考虑编码格式的问题。
-## 
-## 
-## 
+##
+##
+##
  
 ♢ chardet
 ## chardet：Python的第三方库，用于检测bytes对象采用的字符集编码格式。
@@ -4575,9 +4517,9 @@ open(path, 'r', encoding="utf-8")
 >>> f=open(path, 'rb')
 >>> chardet.detect(f.read())["encoding"]
 'GB2312'
-## 
-## 
-## 
+##
+##
+##
  
 ♢ base64
 ## base64：Python的标准库，提供了Base64格式的编码、解码方法。
@@ -4588,9 +4530,9 @@ open(path, 'r', encoding="utf-8")
 b'aGVsbG8='
 >>> base64.b64decode(b)
 b'hello'
-## 
-## 
-## 
+##
+##
+##
  
 ♢ quopri
 ## quopri：Python的标准库，提供了Quoted-printable格式的编码、解码方法。
@@ -4600,9 +4542,9 @@ b'hello'
 b'hello world!=3D=3D\r\n'
 >>> quopri.decodestring(b"hello world!=3D=3D\r\n")
 b'hello world!==\r\n'
-## 
-## 
-## 
+##
+##
+##
  
 ♢ pickle
 ## pickle：Python的标准库，可以将Python中任意类型的对象序列化成二进制形式。
@@ -4612,25 +4554,25 @@ b'hello world!==\r\n'
 >>> class Test:
 ...     a = 1
 ...     b = 2
-... 
+...
 >>> data = pickle.dumps(Test())        # 序列化
 >>> data
 b'\x80\x03c__main__\nTest\nq\x00)\x81q\x01.'
 >>> with open('dumps', 'wb') as f:
 ...     f.write(data)
-... 
+...
 24
 - 反序列化：
 >>> with open('dumps', 'rb') as f:
 ...     data = f.read()
-... 
+...
 >>> data
 b'\x80\x03c__main__\nTest\nq\x00)\x81q\x01.'
 >>> pickle.loads(data)                # 反序列化
 <__main__.Test object at 0x7f82d2495710>
-## 
-## 
-## 
+##
+##
+##
  
 文本处理
 ♢ fnmatch
@@ -4650,9 +4592,9 @@ True
 - ?    ：匹配单个字符。
 - [abc]：匹配abc中的任意一个字符。
 - [a-z]：匹配a~z范围内的任意一个字符。
-## 
-## 
-## 
+##
+##
+##
  
 正则表达式
 ## 正则表达式（regular expression）是由普通字符和特殊字符（称为元字符）组成的文字模式（pattern），用于匹配字符串中符合描述的片段。
@@ -4682,11 +4624,11 @@ True
       \W        匹配一个非字母、数字、下划线、汉字的字符，相当于[^A-Za-z0-9_]。
 
 例：
->>> re.findall(r'\d', 'ab你好12$》') 
+>>> re.findall(r'\d', 'ab你好12$》')
 ['1', '2']
->>> re.findall(r'\D', 'ab你好12$》') 
+>>> re.findall(r'\D', 'ab你好12$》')
 ['a', 'b', '你', '好', '$', '》']
->>> re.findall(r'\w', 'ab你好12$》') 
+>>> re.findall(r'\w', 'ab你好12$》')
 ['a', 'b', '你', '好', '1', '2']
 >>> re.findall(r'\W', 'ab你好12$》')    # 中文的标点符号不算汉字字符
 ['$', '》']
@@ -4792,8 +4734,8 @@ True
 "\Bgo"        匹配"verygood"中的"go"，不匹配"very good"。
 "\bgo.*\b"    匹配"good girl"中的"good girl"。可看做匹配go之后再匹配*个任意字符，匹配*个后才截止。
             （实际上不会截止，不会考虑到\b）
-## 
-## 
+##
+##
 ## 例子。
 - ^[A-Za-z]\w{7,19}$
 检验一个密码，必须以字母开头，可包含字母、数字和下划线，长度为8~20位。
@@ -4808,8 +4750,8 @@ True
 - 收集时间数据，当数值超过时分秒的正常范围时也提取，当缺少数值时才不提取。
 >>> re.findall(r"(\d{1,2})h:(\d{1,2})m:(\d{1,2})s","12/14/18    h:18m:16s")
 []                # 因为没有用到 | ，所以只要有一个地方不匹配，结果就为空
-## 
-## 
+##
+##
  
 ♢ re
 ## re：Python的标准库，用于按正则表达式检索字符串。
@@ -4834,7 +4776,7 @@ re.compile('.*', re.I|re.S)
 
 >>> re.findall(r'\w', 'Hello你好')
 ['H', 'e', 'l', 'l', 'o', '你', '好']
->>> re.findall(r'\w', 'Hello你好', re.A) 
+>>> re.findall(r'\w', 'Hello你好', re.A)
 ['H', 'e', 'l', 'l', 'o']
 
 ## re.findall(pattern, string, flags=0)
@@ -4906,9 +4848,9 @@ IndexError: no such group
 ## 例子。
 - re.sub(r"# .*$",'', line)            # 删除某行的注释
 
-## 
-## 
-## 
+##
+##
+##
  
 表格
 ♢ csv
@@ -4992,9 +4934,9 @@ register_dialect("excel", excel)
 ...
 >>> csv.unregister_dialect("myDialect")                    # 删除自定义的dialect
 ## csv模块还可专门读写字典格式的数据。
-## 
-## 
-## 
+##
+##
+##
  
 ♢ openpyxl
 ## openpyxl：Python的第三方库，用于读写xlsx/xlsm文件。
@@ -5012,7 +4954,7 @@ register_dialect("excel", excel)
 >>> wb.close()                        # 关闭对该文件的占用，但该文件的内容仍然保留在内存中可以读取
 - 保存工作簿时，如果存在同名文件，会直接覆盖而不会提醒。如果其它程序正在使用该文件就无法保存。
 ## 打开一个现有的Excel表格。例如，在工作表"Sheet1"中有如下数据。
- 
+
 >>> from openpyxl import load_workbook        # 从openpyxl模块导入load_workbook类
 >>> wb=load_workbook("1.xlsx")
 >>> wb.sheetnames
@@ -5152,13 +5094,13 @@ JSON
 "id":1,
 "enabled":true,
 "payload": [
-{ "name":"菜鸟教程" , "url":"m.runoob.com" }, 
-{ "name":"google" , "url":"www.google.com" }, 
+{ "name":"菜鸟教程" , "url":"m.runoob.com" },
+{ "name":"google" , "url":"www.google.com" },
 ]
 }
-## 
-## 
-## 
+##
+##
+##
  
 ♢ json
 ## json：Python的标准库，用于解析JSON格式的文本。
@@ -5209,12 +5151,12 @@ False —> false
 None  —> null
 
 例：
->>> json.dumps({'list1':[1,2,3], '': 3.14, None: True}) 
+>>> json.dumps({'list1':[1,2,3], '': 3.14, None: True})
 '{"list1": [1, 2, 3], "": 3.14, "null": true}'
 
-## 
-## 
-## 
+##
+##
+##
 
 YAML
 ## YAML（/ˈjæməl/）：一种保存结构化数据的文本格式，比JSON更简单。
@@ -5271,13 +5213,13 @@ pip install PyYAML
 ...
 
 在序列化数据时，会将字典按 key 升序排序，如下：
->>> data = {"k2": "v2", "k1": "v1"} 
+>>> data = {"k2": "v2", "k1": "v1"}
 >>> print(yaml.dump(data))
 k1: v1
 k2: v2
 
 在序列化数据时，会将 Unicode 字符显示编码，需要用 unicode_escape 解码，如下：
->>> yaml.dump({"k1": "你好"})        
+>>> yaml.dump({"k1": "你好"})
 'k1: "\\u4F60\\u597D"\n'
 >>> yaml.dump({"k1": "你好"}, encoding='utf-8')     # 序列化并编码
 b'k1: "\\u4F60\\u597D"\n'
@@ -5285,15 +5227,15 @@ b'k1: "\\u4F60\\u597D"\n'
 'k1: "你好"\n'
 
 读取：
->>> yaml.load('k1: v1\nk2: v2\n', Loader=yaml.CLoader) 
+>>> yaml.load('k1: v1\nk2: v2\n', Loader=yaml.CLoader)
 {'k1': 'v1', 'k2': 'v2'}
 >>> with open("test.yml") as f:
 ...     yaml.load(f.read(), Loader=yaml.CLoader)
 ...
 {'k1': 'v1', 'k2': 'v2'}
 
-## 
-## 
+##
+##
  
 Markdown
 ## Markdown是一种对纯文本进行简单排版的标记语言，可以被对应的Markdown编辑器识别并渲染显示。
@@ -5357,7 +5299,7 @@ c|3
 x^2^                # 上标
 H~2~O            # 下标
 ==Notice==        # 高亮显示
-## 
+##
 ## 如果要显示MarkDown语法中的保留字符，则需要用反斜杠转义，如下：
 \<  \*  \#
 
@@ -5395,9 +5337,9 @@ w1.attributes("-topmost", True,     # 使该窗口置顶
   - 设置窗口全屏时不会显示窗口的边框，因此不能点击标题栏上的关闭按钮来关闭它。
   - 设置窗口disable之后，按alt+F4也关闭不了它。
   - 尝试了同时设置窗口topmost、fullscreen、disable，结果发现关闭不了它，连任务管理器都不能调出来。最后，新建了一个win10桌面，打开DOS窗口，用taskkill命令才关闭了该窗口。
-## 
-## 
-## 
+##
+##
+##
  
 控件
 ## 显示控件（widget）。
@@ -5472,7 +5414,7 @@ T1.delete("1.2","end")        # 删除从第一行第2个字符到文本末尾�
 T1.config(state="disabled")    # 使文本框不可编辑（用户和程序都不可以对它编辑）
 T1.config(state="normal")        # 使文本框可编辑
 
-B1 = tkinter.Button(w1, text="UP") 
+B1 = tkinter.Button(w1, text="UP")
 T1.window_create("end", window=B1)        # 插入按钮
 
 img = tkinter.PhotoImage(file=r"C:\Users\Will\Desktop\scene.png")
@@ -5495,9 +5437,9 @@ messagebox.askyesnocancel("ask","是or否or取消")
 
 # 显示一个询问框，有“是”、“否”两个按钮
 messagebox.askyesno("ask","是or否")
-## 
-## 
-## 
+##
+##
+##
  
 绑定事件
 ## 每个控件都可以用方法bind()在某个事件上绑定一个函数，一旦该事件发生就调用该函数，并将一个event对象传给函数。例如：
@@ -5560,9 +5502,9 @@ E1.event_generate("<Key-Return>", when="tail")        # when="tail"是为了让�
 >>> print(E1.bind())
 ()
   - 对窗口进行绑定，例如w1.bind()，会绑定其中的所有子控件。
-## 
-## 
-## 
+##
+##
+##
  
 ♢ PyQt5
 ## PyQt5：Python的第三方库，使得Python可以调用Qt5的大部分API。
@@ -5584,16 +5526,16 @@ sys.exit(app.exec())            # 进入app的主循环，一旦app结束就终�
   - 通常先创建一个顶级窗口，再以它为父控件，创建其它控件。
   - 当父控件被销毁时，它的所有子控件都会被自动销毁。
   - 多个控件可以叠加显示在同一位置，后显示的控件会显示在上层。
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
  
 Qtcore模块
-## 
-## 
-## 
+##
+##
+##
 ## QTimer类：定时器。
 - QTimer(parent: QObject = None)
 - 例：
@@ -5613,14 +5555,14 @@ Qtcore模块
 - 下例是设置定时任务，定时器触发一次timeout信号之后就自动停止。
 >>> QTimer.singleShot(1000, lambda:print(1))
 1
-## 
-## 
+##
+##
 ## QThread类：多线程。
 - 用法：自定义一个类，继承QThread类，并重载run()方法。
 - 与Python自带的Threading模块相比，QThread创建的线程可以方便地使用信号进行通信。但依然受到GIL的限制。
-## 
-## 
-## 
+##
+##
+##
  
 处理事件
 ## 为了让Qt程序处理用户触发的事件，可以设置信号与槽函数，也可以重载控件的某种事件的处理函数。
@@ -5654,11 +5596,11 @@ class MyWindow(QWidget):
 
 ## 常见的信号对象。
 - clicked
-- 
-- 
-- 
-- 
-- 
+-
+-
+-
+-
+-
 ## 重载控件的某种事件的处理函数。
 - 例：
 class Example(QWidget):
@@ -5667,7 +5609,7 @@ class Example(QWidget):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:        # 如果用户按下Esc键，则关闭窗口
             self.close()
-- 
+-
 ## 常见的事件处理函数。
 - def keyPressEvent(self, event):
     print(event.key())        # 获取用户按下的按键键值，比如按键A的键值是65（不受大小写的影响）
@@ -5675,9 +5617,9 @@ class Example(QWidget):
     print(event.pos())        # 获取鼠标在窗口内的相对坐标
     print(event.globalPos())    # 获取鼠标在窗口内的全局坐标
   - 默认当用户按住鼠标并移动时才会触发mouseMoveEvent事件。如果设置self.setMouseTracking(True)，则只要用户在窗口范围内移动鼠标，就会触发mouseMoveEvent事件。
-- 
-## 
-## 
+-
+##
+##
 
  
 QTime类
@@ -5730,9 +5672,9 @@ PyQt5.QtCore.QDateTime(2019, 10, 9, 14, 19, 14, 330, PyQt5.QtCore.Qt.TimeSpec(1)
 PyQt5.QtCore.QDateTime(2019, 10, 9, 22, 19, 14, 330)
 >>> datetime_UTC.toLocalTime().toLocalTime()            # 重复转换也不会出错，该操作有幂等性
 PyQt5.QtCore.QDateTime(2019, 10, 9, 22, 19, 14, 330)
-## 
-## 
-## 
+##
+##
+##
  
 QtWidgets模块
 QApplication类
@@ -5743,20 +5685,20 @@ QApplication类
   - 功能：关闭所有窗口。
 - app.quit() -> None
   - 功能：终止Qt应用。
-- 
+-
   - 功能：
-- 
+-
   - 功能：
-- 
+-
   - 功能：
-- 
+-
   - 功能：
 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
  
 QWidget类
 ## QWidget类：用于创建普通窗口。需要导入：from PyQt5.QtWidgets import QWidget
@@ -5770,8 +5712,8 @@ QWidget类
 - w.close() -> bool
   - 功能：关闭控件的显示（但并没有销毁）。
   - 如果成功关闭显示，或者该控件本来就没有显示，则返回True。
-- 
-- 
+-
+-
 ## 窗口的特有方法。
 - w.setWindowTitle(str) -> None
   - 功能：设置窗口的标题。
@@ -5805,17 +5747,17 @@ from PyQt5.QtWidgets import QToolTip
 from PyQt5.QtGui import QFont
 QToolTip.setFont(QFont("微软雅黑", 12))
 w.setToolTip('This is a <font color="red">tip</font>.')
-- 
+-
   - 功能：
-- 
+-
   - 功能：
-- 
+-
   - 功能：
-- 
-## 
-## 
-## 
-## 
+-
+##
+##
+##
+##
  
 QMainWindow类
 ## QMainWindow类：用于创建包含菜单栏、工具栏、状态栏的经典风格的窗口。
@@ -5882,9 +5824,9 @@ w.exit_tool.addAction(exit_action)
   - 功能：第一次调用将创建状态栏，重复调用将返回状态栏这个单例对象的引用。
 - statuebar.showMessage(str, msecs: int = 0)
   - 功能：在状态栏中显示一行字符串。默认永久显示，输入msecs参数可设置最大显示时长。
-## 
-## 
-## 
+##
+##
+##
  
 坐标、尺寸
 ## 坐标。
@@ -5979,8 +5921,8 @@ PyQt5.QtCore.QSize(1920, 1080)
 - 它的特有方法：
 >>> desktop.availableGeometry()                # 查看桌面的可用显示范围（略小于屏幕尺寸，因为要减去边框）
 PyQt5.QtCore.QRect(0, 0, 1920, 1030)
-## 
-## 
+##
+##
  
 布局
 ## 设置控件的位置时，使用布局方法比使用绝对坐标更好，因为使用布局方法可以适应窗口的伸缩变化，而且在不同平台上的显示效果都一致。
@@ -6039,9 +5981,9 @@ for position, name in zip(positions, names):
         continue
     button = QPushButton(name)
     grid.addWidget(button, *position)
-## 
-## 
-## 
+##
+##
+##
  
 控件
 按钮
@@ -6082,19 +6024,19 @@ True
 >>> checkBox.setChecked(True)                        # 设置状态
 >>> checkBox.toggle()                                # 切换状态
 ## QRadioButton类：单选按钮。
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
  
 关于输入
 ## QLineEdit类：单行输入框，用于输入一行字符串。
@@ -6152,7 +6094,7 @@ class MyWindow(QWidget):
         self.log_view = QTextEdit(self)
 
         # 重定向stdout、stderr，让它们触发output信号，并把信号绑定到logger槽函数
-        sys.stdout = EmittingStream(output=self.logger)    
+        sys.stdout = EmittingStream(output=self.logger)
         # sys.stderr = sys.stdout        # 重定向stderr的话，程序就不能捕捉异常，容易崩溃
 
     def logger(self, text):
@@ -6202,15 +6144,15 @@ def getDate(date):    # 传入的date参数是QDate对象
 calendar = QCalendarWidget(w)
 calendar.show()
 calendar.clicked[QDate].connect(getDate)
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
+##
+##
  
 关于输出
 ## QLabel类：标签，用于显示一个只读的字符串。
@@ -6230,20 +6172,20 @@ QLabel(str, parent: QWidget = None)
 >>> progressBar.setValue(99.99)    # 小数部分的值会被舍去
 >>> progressBar.value()
 99
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
  
 关于布局
 ## QFrame类：框架，用于将多个控件组合在一起。
@@ -6274,8 +6216,8 @@ splitter2.addWidget(splitter1)
 splitter2.addWidget(frame3)
 
 hbox.addWidget(splitter2)
-## 
-## 
+##
+##
 ## QTableView
 ## QListView
 ## QTreeView
@@ -6284,11 +6226,11 @@ hbox.addWidget(splitter2)
 ## QTabWidget
 ## QStackedWidget
 ## QDockWidget
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
  
 对话框
 ## QDialog类：所有对话框窗口的基类。
@@ -6344,13 +6286,13 @@ True
 >>> reply = QMessageBox.critical(w, "标题...", "内容...")
 >>> reply == QMessageBox.Ok
 True
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
  
 QtGui模块
 ## QFont类：用于选择字体。
@@ -6385,7 +6327,7 @@ True
 >>> label.show()
 >>> w.adjustSize()
 ## QPainter类：用于绘画。
-## 
+##
 ## stylesheet：样式表。
 - 子控件会自动继承父控件的stylesheet，为了避免这种情况，应该注明stylesheet的作用对象，如下：
 QMainWindow{                            # 作用于QMainWindow类对象
@@ -6396,23 +6338,23 @@ QMainWindow:mainwindow{                # 只作用于mainwindow对象
 background-color: rgb(255, 255, 0);
 color: rgb(255, 85, 0);
 }
-- 
-## 
-## 
+-
+##
+##
  
 ♢ pyqt5-tools
 ## pyqt5-tools：Python的第三方库，提供了Qt的一些工具。
 - 安装：pip install PyQt5-tools==5.10.1.1.3
   - 这些工具安装在Python/Scripts目录下，并且注册在环境变量PATH中，可以输入工具名直接调用。
-- 
-- 
+-
+-
 ## designer：用于设计Qt的GUI界面，生成.ui文件。
 - 用法：用designer.exe启动，或在命令行输入designer启动。
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
 ## pyuic5：用于将.ui文件转换成.py文件。
 - 用法：
 pyuic5 mainwindow.ui -o mainwindow_ui.py
@@ -6445,7 +6387,7 @@ pyrcc5 resource.qrc -o resource.py
   - 把资源文件记录到.qrc文件中（使用designer的资源窗口），再转换成.py文件，然后在主脚本中导入。如下：
 import resource
 QIcon(r":resource/img/logo.ico")    # 使用冒号:加文件路径导入图片，该路径必须与.qrc文件中的一致
-## 
+##
 ## 用pyinstaller打包PyQt程序。
 1.    写好程序，能用Python解释器成功启动。
 2.    将.qrc文件转换成.py文件，然后在主脚本中导入。
@@ -6453,42 +6395,42 @@ QIcon(r":resource/img/logo.ico")    # 使用冒号:加文件路径导入图片�
 pyinstaller mainwindow.py -w -i resource/img/logo.ico
   - 如果启动失败，就先不用-w选项，在终端启动，可以看到报错信息。
 4.    将源代码目录下的.ui文件、resource目录都拷贝到dist目录下，因为程序打包时没有集成它们，还需要按相对路径导入。
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
+##
  
 designer
-## 
-## 
+##
+##
 ## 按F4进入信号-槽的设置模式
 可以自定义signal或slot，等导入该ui文件时再定义相应的方法。
 
 ## 在designer中导入图片等资源时，要先点击Resource菜单，创建一个.qrc文件，用于记录导入的所有资源。
 - 也可以直接导入文件路径。
-## 
+##
 ## 自定义widget，做成插件后便可以显示在designer左侧的widget列表中，也可以通过“promoted widget”功能导入。
 https://www.xdbcb8.com/archives/1675.html
 https://ilmvfx.wordpress.com/2016/02/16/use-promoted-widgets-in-qt-designer/
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
  
 软件原理
 设计模式
 ## 设计模式的根本目的是解耦、提高效率。
 ## Python作为动态语言，其设计模式的实现方法与Java等静态语言不同。有些设计模式Python用自身的语法就可以实现。
-## 
+##
 ## 面向对象编程（Object Oriented Programming，OOP）
-## 
-## 
+##
+##
 - 模块化设计：把可以独立实现的功能分离成一个个模块。
   - 高内聚：将每个功能需要用到的代码都封装到模块中，使模块内部尽量不依赖外部。
   - 低耦合）：让模块与外部的各种联系尽可能地少。
@@ -6499,21 +6441,21 @@ https://ilmvfx.wordpress.com/2016/02/16/use-promoted-widgets-in-qt-designer/
   - 组合和继承都能实现对象的多态性、提高代码的复用性，但组合能避免类之间的耦合。
   - 继承会加深父类与子类的耦合，破坏子类和父类的封装（导致它们的成员混合在一起）。
 ## 测试驱动的开发：先规划开发需求、编写测试用例，再开始开发代码。
-## 
+##
 - 发布/订阅（publish/subscribe）模式：消息的发布者（Publisher）会把消息发送到代理（Broker），由代理接受订阅者（Subscriber）的订阅请求并发布消息。
   - Publisher可以同时是Subscriber。
   - 代理可以是一台设备或一个应用程序。
   - 从客户端/服务器模式来看，Publisher和Subscriber都是客户端（Client），Broker则是服务器（Server）。
 - 观察者模式与发布/订阅模式很像，但是观察者模式中被观察对象会直接将消息发送给各个观察者，不存在代理。
-## 
-## 
+##
+##
 ## MVC模式：
 Model（模型）：负责读写数据库
 View（视图）：负责从Model读取数据，显示给用户
 Controller（控制器）：从View读取用户的输入信息，向Model发送数据。
-## 
-## 
-## 
+##
+##
+##
 
  
 软件开发
@@ -6573,10 +6515,10 @@ Controller（控制器）：从View读取用户的输入信息，向Model发送�
 - 持续部署（Continuous Deployment，CD）：快速完成从编程到部署的周期。
   - 目前流行的CD方案：从Harbor仓库拉取镜像，用Rancher部署到k8s集群。
 - 持续交付（Continuous Delivery，CD）：快速完成从编程到交付的周期。
-## 
-## 
-## 
-## 
+##
+##
+##
+##
  
 软件测试
 ## 测试步骤。
@@ -6651,10 +6593,10 @@ Controller（控制器）：从View读取用户的输入信息，向Model发送�
 - 测试覆盖率：表示测试用例的有效性。
   - 可分为：覆盖了多少条语句（即执行了它们）、覆盖了多少种可能的输入、覆盖了多少种可能的运行情况。
   - 一味地追求测试覆盖率会增加测试成本，可以适当地关注没被测试覆盖的地方。
-- 
-## 
-## 
-## 
+-
+##
+##
+##
  
 软件运维
 ## 运维方式。
@@ -6663,8 +6605,8 @@ Controller（控制器）：从View读取用户的输入信息，向Model发送�
 - DevOps：即Development（开发）+ Operations（运维），鼓励开发部门和运维、测试等部门紧密联系合作，提高运维、测试的效率（比如使用自动化测试工具、自动化运维工具）。
 - AIOps：智能运维，通过人工智能达到比自动化运维更好的效果。
   - 智能运维与自动化运维相比，在处理问题时，不依赖于专家系统的已知规则，而是能通过机器学习，从海量运维数据中自动总结规则。
-- 
-- 
+-
+-
 ## 发布新版本的方式。
 - 直接发布：将所有服务器都停掉，部署了新版本之后再启动服务。
   - 过程简单，但是服务会中断一段时间。
@@ -6676,19 +6618,19 @@ Controller（控制器）：从View读取用户的输入信息，向Model发送�
   - 如果测试耗时太久，可以先进行粗略测试，然后灰度发布，在生产环境中进行详细测试。
 - 滚动发布：逐步更新服务，比如每次更新10%的服务器。
   - 如果发现异常，可以回滚到上一阶段，但不能直接回滚到旧版本。
-## 
-## 
+##
+##
 ## 其它概念。
 - 可扩展性：系统的性能可以提高。
   - 垂直扩展：通过增强单个系统的能力来提高性能。
   - 水平扩展：通过增加系统实例的数量来提高性能。
-- 
-## 
-## 
-## 
-## 
-## 
-## 
+-
+##
+##
+##
+##
+##
+##
  
 算法
 ## 算法是指解决问题的方法，是编程的核心。
@@ -6712,8 +6654,8 @@ s += b;            // 复合赋值运算符也只算一次简单操作
 return s;
 }
   - 一般只考虑算法时间复杂度的数量级（order），但不是以十进制作为一个数量级，而是当两个数相除的极限值不是无穷小0或无穷大∞时就属于同一级。例如上述算法的数量级可简记为O(n)，其它常见的数量级还有O(2n)、O(n2)、O(n!)等。特别地，O(1)表示时间复杂度为常数，即与问题规模n无关。
-- 
-## 
+-
+##
 ## 基本算法。
 - 递归：定义函数时，在函数体中调用该函数本身。
   - 递归通常是让函数一次只处理一个步骤或一个层级的事务，然后调用函数自己，传入本次的处理结果，去处理下一个事务。
@@ -6724,12 +6666,12 @@ return s;
 - 遍历：逐个访问集合中的所有元素。
 - 迭代：反复执行某一段代码，以逐渐达到某个目的。
   - 编程时有两种方法可实现迭代：使用循环、使用递归。
-## 
-## 
-## 
+##
+##
+##
 ## 把一些算法做成自己的库
-## 
-## 
+##
+##
 ## 待做的算法
 
 
@@ -6751,22 +6693,22 @@ int sum(int start,float rate,int n)
 n个有序的元素应有n!个不同的排列，如若一个排列使得所有的元素不在原来的位置上，则称这个排列为错排
 找出规律，用递归求
 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
  
 数据结构
 ## 数据：对客观事物的符号表示，。
@@ -6809,54 +6751,54 @@ n->next = NULL;                    // 初始化
 - 树：除了根节点（有且仅有一个）以外的其它节点都有且仅有一个前件即父节点，除了叶子节点以外的其它节点都有一个或多个后件即子节点。一个节点的子节点的个数称为该节点的度，叶子节点的度为0。所有节点中最大的一个度记作树的度。树中某个节点的深度是指从根节点（深度为1）往下到该点的层数，高度是指从叶子节点（高度为1）往上到该点的层数。
 - 二叉树：每个节点最多有两个子节点，称为左子树和右子树。二叉树中度为0的节点总是比度为2的节点多一个。满二叉树中除了叶子节点以外的其它节点都有两个子节点，完全二叉树中除了最底下两层以外的其它节点都有两个节点、且叶子节点都集中在最底层的左侧。故满二叉树一定是完全二叉树，而完全二叉树不一定是满二叉树。完全二叉树实际上是使按层遍历的结果与满二叉树相同。
 - 图：如果两个节点相邻，就画上一条连接的线段，称为边。
-- 
-## 
-## 
+-
+##
+##
 ## 字节序：存储多个字节时的顺序。分为大端和小端两种。
 - 大端模式（Big Endian）：先存储数据的高字节（即大端）。这样内存的起始地址存储着最高的字节，看起来像字符串从左往右的阅读顺序，更常用。
 - 小端模式（Little Endian）：先存储数据的低字节（即小端）。
-## 
-## 
-## 
+##
+##
+##
  
 查找算法
-## 
+##
 ## 相关概念。
 - 遍历：依次访问一个集合中的每个元素。
-- 
-## 
+-
+##
 ## 二叉树的遍历方法有四种：
 - 按层遍历：按从上到下、每一层从左到右的顺序遍历。图中的结果是abcdfeg。
 - 前序遍历：先访问父结点，再访问左子树，最后访问右子树。图中的结果是abdefgc。
 - 中序遍历：先访问左子树，再访问父结点，最后访问右子树。图中的结果是debgfac。
 - 后序遍历：先访问左子树，再访问右子树，最后访问父结点。图中的结果是edgfbca。分析时，a为父结点，往左子树看，b、d也是父结点，e是右子树，是这一层优先级最高的了。往上一层看d是左子树，b还是父结点，所以d的优先级最高。b右下方的f也是父结点，再往下看g是左子树。回来往上看f是右子树，b是左子树，c是右子树。
- 
+
 ## 顺序查找是从线性表的第一个元素开始逐个与特定元素比较，若相等则查找成功。采用链式存储结构的线性表或无序的线性表都只能使用顺序查找。
 ## 二分法查找是先将线性表的中间元素与特定元素比较，若相等则查找成功，若中间元素较小则在线性表的后半部分重复该操作，若中间元素较大则在线性表的前半部分重复该操作。二分法仅适用于采用顺序存储结构的、非递减排列的有序线性表。设线性表长度为n，最坏的情况下要比较log2n次。
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
  
 排序算法
-## 
-## 
-## 
+##
+##
+##
 ## 冒泡排序法是从表头开始，逐个比较相邻元素的大小，若前者大于后者，则互换位置，最终使得最大项在线性表的末尾，循环该操作，每次循环都使当前的最大项移到表末，而下一次循环就少比较一次。最坏的情况下要比较n(n-1)/2次。"冒泡"一词是形容最大的元素会像水泡一样慢慢浮到线性表的顶端。
 ## 快速排序法一般取线性表的第一个元素与其它元素比较排序，使得左边的元素都小于等于它，右边的元素都大于它，然后对两边元素不停重复该操作。
 ## 冒泡排序法和快速排序法都属于交换类排序法。
-## 
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
+##
 :::

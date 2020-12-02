@@ -38,6 +38,8 @@ URI 分为两种形式：
 - 统一资源名称（Uniform Resource Name ，URN）：用于表示资源的名称。
 - 统一资源定位符（Uniform Resource Locator ，URL）：用于表示资源的位置。
 
+### URL
+
 URL 的一般格式为：`protocol://hostname:port/path/?querystring#fragment`
 - protocol ：采用的通信协议，比如 HTTP、HTTPS、FTP 。
 - hostname ：服务器的主机名、域名或 IP 地址，用于定位服务器。
@@ -48,7 +50,9 @@ URL 的一般格式为：`protocol://hostname:port/path/?querystring#fragment`
 - path ：服务器上某个资源的路径。
   - 如果省略不填，则会访问根目录 / 。比如 www.baidu.com 相当于 www.baidu.com/ 。
   - path 是否区分大小写取决于服务器所在的文件系统。比如 Linux 的文件系统区分大小写，Windows 的 NTFS 文件系统不区分大小写。
-- querystring ：查询字符串，传递一些键值对参数。
+- querystring ：查询字符串，用于传递一些键值对形式的参数（称为 Query Param）。其语法格式如下：
+  1. 将每个键值对的内部用 = 连接，外部用 & 分隔，拼接成一个字符串。
+  2. 将该字符串经过 URLencode 编码，放到 URL 的 ? 之后。例如：`HTTPS://www.baidu.com/s?ie=UTF-8&wd=hello%20world`
 - fragment ：片段，以 # 开头。用于定位到资源中的某一片段。
   - querystring、fragment 都区分大小写。
 
@@ -58,10 +62,6 @@ HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五�
 
 - GET ：用于请求获得（根据 URL 指定的）资源。
   - 客户端发送 GET 请求报文时，报文的第一行包含了请求的 URL 。服务器一般会将回复的内容放在响应报文的 body 中，发给客户端。
-  - GET 请求报文还可以在 URL 的尾部加上一些键值对参数，称为查询字符串（Query String）。做法如下：
-    1. 将每个键值对的内部用 = 连接，外部用 & 分隔，合并成一个字符串。
-    2. 将该字符串经过 URLencode 编码，放到 URL 的 ? 之后。
-       <br>例如：`HTTPS://www.baidu.com/s?ie=UTF-8&wd=hello%20world`
 
 - POST ：用于向（根据 URL 指定的）资源提交数据。比如上传 HTML 表单数据、上传文件。
   - 客户端发送 POST 请求报文时，通常将要提交的数据放在报文 body 中，发给服务器。服务器一般会回复一个状态码为 200 的报文，表示已成功收到。
@@ -86,11 +86,13 @@ HTTP 协议以报文为单位传输消息，分为两种：
 - 请求报文：Request message ，由客户端发出。
 - 响应报文：Response message ，由服务器发出。
 
-每个 HTTP 报文由以下内容组成：
-- 请求行/状态行  ：请求报文/响应报文的第一行内容。
+一个 HTTP 报文的结构类似于一个文本文件，分为以下几部分：
+- 请求行 / 状态行 ：报文的第一行内容，用于简单介绍该报文。
 - 头部（headers）：每行声明一个 `key: value` 格式的参数。key 不区分大小写。
-- 一个空行      ：表示头部的结束。
-- 主体（body）：可以存放一段任意内容的数据，可以为空。
+- 一个空行 ：标志头部的结束。
+- 主体（body）：可以为空，也可以存放一段任意内容的数据。
+  - 通常通过 body 传递消息的实际内容。而 body 之前的信息大多用于描述报文的属性，不能装载消息的有效内容。
+  - 请求报文还可以通过 querystring 传递消息。
 
 ### 请求报文
 
@@ -121,7 +123,7 @@ ie=UTF-8&wd=1
   Accept-Language: zh-CN,zh;q=0.9            # 客户端能接受的响应 body 语言，q 表示选择这种情况的优先级，默认为 1
   Accept-Encoding: gzip, deflate             # 客户端能接受的响应 body 压缩格式
 
-  If-None-Match: 5edd15a5-e42               # 如果响应报文 body 的标签值依然为 ETag ，则请服务器返回 304 报文，让客户端使用本地缓存
+  If-None-Match: 5edd15a5-e42                # 如果响应报文 body 的标签值依然为 ETag ，则请服务器返回 304 报文，让客户端使用本地缓存
   If-Modified-Since: Fri, 5 Jun 22019 12:01:20 GMT  # 如果响应报文 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
   ```
 
@@ -177,7 +179,7 @@ application/octet-stream                     | 二进制数据，通常用于传
 text/plain                                   | 纯文本
 text/html                                    | HTML 格式的文本
 text/javascript                              | js 代码
-image/jpeg、image/png、image/gif 等           | 图片
+image/jpeg, image/png, image/gif             | 图片
 multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 boundary 的值作为分隔符
 
 ## 状态码
@@ -196,7 +198,7 @@ multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 bound
   - 302 ：Moved Temporarily ，资源被临时移动了。
   - 304 ：Not Modified ，资源并没有改变。比如当客户端刷新网页时，一些静态文件通常使用 304 ，可以从客户端的缓存中载入。
 - 4××：表示客户端出错。
-  - 400 ：Bad Request ，请求报文的语法错误。
+  - 400 ：Bad Request ，请求报文有错误。
   - 401 ：Unauthorized ，拒绝客户端访问该资源，因为没有通过身份认证。
   - 403 ：Forbidden ，禁止客户端访问该资源，且不说明理由。
   - 404 ：Not Found ，服务器找不到该资源。

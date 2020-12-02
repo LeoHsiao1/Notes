@@ -1,16 +1,22 @@
 # ♢ Cython
 
 ：Python 的第三方库，用于 Python 与 C/C++ 的混合开发。
-- 安装：pip install Cython
+- 安装：`pip install Cython`
 - Cython 本身是一种混编语言，可以将 C 代码封装成 Python 模块，或者将 Python 代码编译成 C 代码。
-- Cython 是 Python 的超集。不仅支持所有的 Python 语法，还可以使用 C/C++ 的数据类型。将 Python 代码改写为 Cython 风格，会更接近 C 语言，有利于提高运行效率。
+- Cython 是 Python 的超集。不仅支持所有的 Python 语法，还可以使用 C/C++ 的数据类型。
+  - 将 Python 代码改写为 Cython 风格，会更接近 C 语言，有利于提高运行效率。
 
-Cython 主要使用的文件：
-- .pyx 文件：包含了主要的程序代码。
+## 原理
+
+Cython 主要使用以下几种文件：
+- .pyx 文件
+  - ：包含了主要的程序代码。
   - 通常可以把.py 文件直接改名为.pyx 。
-- .pyd 文件：声明一些通用的函数、类，类似于 C 语言的头文件。
+- .pyd 文件
+  - ：声明一些通用的函数、类，类似于 C 语言的头文件。
   - 当 Cython 编译一个.pyx 文件时，会寻找是否存在同名的.pyd 文件。
-- .pyi 文件：可使用 include 语句导入其它文件。
+- .pyi 文件
+  - ：可通过 include 语句导入其它文件。
 
 ## 用法示例
 
@@ -33,13 +39,13 @@ Cython 主要使用的文件：
     ```
 
 3.  在当前目录下执行编译命令：
-    ```
+    ```sh
     python setup.py build_ext --inplace
     ```
     默认会编译生成一个 C 语言文件，再链接生成一个当前平台的库文件（在 Windows 上是.pyd 文件，在 Linux 上是.so 文件）。
 
     在 .pyx 文件的第一行加入以下声明，就会让 Cython 把它编译成 C++ 代码。
-    ```
+    ```py
     # distutils: language=c++
     ```
 

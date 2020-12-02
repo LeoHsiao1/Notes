@@ -22,7 +22,8 @@ server.login("1234567@163.com", "******")               # 登录
 # 创建邮件
 email = MIMEMultipart()
 email["From"] = Header("python smtplib", "utf-8")       # 发送者
-email["To"] = Header("Leo", "utf-8")                    # 接收者
+email["To"] = Header("Leo", "utf-8")                    # 设置邮件显示的接收者，不过实际的接收者取决于给 server.sendmail() 输入的 to_addrs 参数
+# email["To"] = Header("Leo", "utf-8")                  # 可以多次执行该语句，在邮件中附加多个接收者
 email["Subject"] = Header("这是一封测试邮件", "utf-8")   # 标题
 content = "Python 邮件发送测试..."
 email.attach(MIMEText(content, "plain", "utf-8"))       # 添加一段邮件内容（可以添加多段）
@@ -66,6 +67,8 @@ asyncore.loop()                                       # 异步循环运行
 ## ♢ poplib
 
 ：Python 的标准库，提供了 POP 客户端的功能。
+- 下载邮件之后，通常还要通过 email 模块解析邮件的内容。
+- 邮件可能有多种 Content-Type ，比如附件、嵌套的回复邮件，需要分别解析，比较麻烦。
 
 例：
 ```py
@@ -79,5 +82,3 @@ server.dele(n)                          # 删除服务器上的第 n 条邮件
 server.quit()                           # 断开连接
 ```
 
-下载邮件之后，通常还要通过 email 模块解析邮件的内容。
-- 邮件可能有多种 Content-Type ，比如附件、嵌套的回复邮件，需要分别解析，比较麻烦。

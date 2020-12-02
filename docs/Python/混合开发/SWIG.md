@@ -2,25 +2,27 @@
 
 ：一个编译器，可以将 C/C++ 代码编译成供 C#、Java、Python 等多种语言调用的文件。
 - SWIG 本身是一种混编语言。
-- 兼容性很好。
-  - 支持的操作系统：Unix、Linux、Windows、MacOS 等。
+- 兼容性很好：
+  - 支持的操作系统包括 Unix、Linux、Windows、MacOS 。
   - 支持 C/C++ 的几乎所有版本，包括 C99、C++17 。
-  - 支持的目标语言：C#、Java、JS、Perl、PHP、Python、Ruby、Go 等。
+  - 支持的目标语言包括 C#、Java、JS、Perl、PHP、Python、Ruby、Go 。
 - [官方文档](http://www.swig.org/Doc4.0/Contents.html)
-- 安装：
-  - 在 Linux 上，SWIG 发布的是源代码，要执行以下命令编译、安装：
-      ```sh
-      cd swig-4.0.1/
-      ./configure
-      make
-      make install
-      ```
-  - 在 Windows 上，SWIG 会发布一个可执行文件，可以直接使用它。
+
+## 安装
+
+- 在 Linux 上，SWIG 发布的是源代码，要执行以下命令编译、安装：
+    ```sh
+    cd swig-4.0.1/
+    ./configure
+    make
+    make install
+    ```
+- 在 Windows 上，SWIG 会发布一个可执行文件，可以直接使用它。
 
 ## 用法示例
 
 1. 创建一个 api.c ，内容如下：
-    ```C
+    ```cpp
     int sum(int x, int y)
     {
         return (x + y);
@@ -29,14 +31,13 @@
     ```
 
 2. 创建相应的头文件 api.h ，内容如下：
-    ```C
+    ```cpp
     int sum(int x, int y);
     char *p;
     ```
 
 3. 再创建一个相应的接口文件 api.i ，声明要暴露的接口。如下：
-
-    ```
+    ```cpp
     %module api                  // 设置最后要生成的 Python 模块名
 
     %{
@@ -54,9 +55,8 @@
     这会生成一个 api_wrap.c 文件。
 
 5. 编译生成动态链接库。
-    <br>原本是使用 gcc 等命令手动编译，但是用 Python 的 distutils 模块可以自动编译，更方便。
-    <br>先创建一个 setup.py 文件，内容如下：
 
+    原本是使用 gcc 等命令手动编译，但是用 Python 的 distutils 模块可以自动编译，更方便。先创建一个 setup.py 文件，内容如下：
     ```py
     from distutils.core import setup, Extension
 
@@ -67,14 +67,12 @@
         py_modules=["api"],
         )
     ```
-
     然后在 Linux 或 Windows 上执行以下命令，生成动态链接库。
     ```sh
     python setup.py build_ext --inplace
     ```
-    --inplace 选项是用于将编译结果保存在当前目录。
-
-    编译之后，会生成一个 _api.so（或 _api.pyd）和一个 api.py 文件
+    - --inplace 选项是用于将编译结果保存在当前目录。
+    - 编译之后，会生成一个 _api.so（或 _api.pyd）和一个 api.py 文件
 
 
 6.  在 Python 中调用：
@@ -93,7 +91,7 @@
 ## 其它
 
 暴露 C++ 的类：
-```
+```cpp
 % module api
 
 %{

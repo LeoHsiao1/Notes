@@ -9,7 +9,7 @@ ClassView 类视图
 FileView 文件视图
 Build 组建
 
-Binary File 二进制文件 
+Binary File 二进制文件
 Header File 头文件
 Console Application 控制台应用程序
 
@@ -52,9 +52,9 @@ C语言简介
 - 结构化：支持分支、顺序、循环的流程控制结构，因此属于结构化语言。（早期的编程语言是非结构化语言）
 - 模块化：可以将代码模块化，组合使用。
 - 移植性好：C语言的编译器比较简单，容易移植。
-## 
-## 
-## 
+##
+##
+##
  
 C语言的版本
 ## C语言的发展过程。
@@ -97,9 +97,9 @@ C语言的版本
 - 删除了函数gets()，取而代之的是函数gets_s()。
 - 增加了fopen()模式。
 - 增加了匿名结构体。
-## 
-## 
-## 
+##
+##
+##
  
 基本语法
 基础示例
@@ -126,9 +126,9 @@ C:\Users\Will>D:\1.exe a b 3 4
   - argc用于存储从命令行输入的参数的个数。（在上例中为5）
   - argv[]用于存储argc个参数，其中argv[0]存储的是程序名。（在上例中为D:\1.exe）
   - 需要注意的是，argv[]是char *型指针数组，其中存储的参数都是字符串的形式。
-## 
-## 
-## 
+##
+##
+##
  
 输入输出
 ## printf是格式化输出函数，语法为：printf("格式控制字符串", 输出项);
@@ -175,15 +175,15 @@ printf("%#X\n", i);
 ## 定界符：用于标明数据值的界限。例如字符的定界符是单引号 ' ，字符串的定界符是双引号 " 。
 - scanf()中，%s默认的定界符是空格，即出现空格就表示这次输入结束。scanf()会从第一个非空格字符开始读取数据，所以有效字符之前的空格都无效。
   - 例如，若输入"Hello C!"，用 scanf("%s", &x); 只会得到空格前的Hello，而用 gets(x); 则会得到回车前的全部内容。
-## 
-## 
-## 
+##
+##
+##
  
 运算符
 ## 表达式由运算符（又称为操作符）和操作数组成。
 - 运算符表示运算的类型，主要分为：
   - 算术运算符：加、减、乘、除、取模
-  - 关系运算符：>  <  >=  <=  ==  != 
+  - 关系运算符：>  <  >=  <=  ==  !=
   - 逻辑运算符：&& 与、|| 或、! 非
   - 条件运算符：… ? … : …
   - 位运算符
@@ -221,15 +221,15 @@ if(!x||y--)等价于if((!x)||(y--))
   - 由逗号运算符连接起来的多个表达式称为逗号表达式，程序会从左往右计算各个表达式，逗号表达式的值是取最后一个表达式。比如a=(2,3,6);的结果是a=6。
 ## 位运算符：对操作数（只能是整型）进行二进制位运算。
 - a & b    ：按位与运算符，只有当两个操作数的对应位都是1时，结果位才为1，否则为0。如下图：
- 
+
 - a | b    ：按位或运算符，只要两个操作数的对应位有一个为1，结果位就为1。
 - a ^ b    ：按位异或运算符，只有当两个操作数的对应位不相同时，结果位才为1。
 - a << 3    ：按位左移运算符，将操作数的二进制值左移n位，并在右边空位补上0。
 - a >> 3    ：按位右移运算符。
 - ~a        ：按位取反运算符，将操作数的每一位的值取反。
-## 
-## 
-## 
+##
+##
+##
  
 选择结构
 ## if语句：又称为条件语句，根据条件表达式的真假来选择执行语句1或语句2。
@@ -264,9 +264,9 @@ break;
 default:
 语句块3
 }
-## 
-## 
-## 
+##
+##
+##
  
 循环结构
 ## for语句：
@@ -284,13 +284,13 @@ default:
 - do
 循环体;
 while(条件表达式);      //注意do-while语句的结尾有分号
-## 
+##
 ## goto语句：可以跳转到标签所在处，不过容易将程序变得复杂。
 - one: printf();
 goto one;
-## 
-## 
-## 
+##
+##
+##
  
 变量
 ## 各种对象的名称统称为标识符。
@@ -324,9 +324,9 @@ x = y = 1;            // 相当于 x = 1
 x = (y=1) +1;            // 相当于 x = 1 + 1
   - 不能在创建变量的同时多重赋值：
 int x = y = 1;    // 该语句被从左向右执行，用y给x赋值时，变量y还没有被创建
-## 
-## 
-## 
+##
+##
+##
  
 变量的作用域
 ## 一般对象（比如变量、函数）的作用域都是从其定义语句或声明语句开始，到其所在的代码块末尾结束。
@@ -372,9 +372,9 @@ static int x;
 - register：寄存器类型。存储在寄存器中，使得CPU的读写速度更快。
   - 用关键字static声明：
 register int x;
-## 
-## 
-## 
+##
+##
+##
  
 数据类型
 ## C语言中，变量的数据类型分为四大类：空类型（void）、基本类型、指针类型、构造类型。
@@ -414,9 +414,9 @@ u16 i;
 typedef char * String;
 String p;                    // 相当于char *p;
 typedef struct{...} Horse;    // 相当于定义一个类
-## 
-## 
-## 
+##
+##
+##
  
 基本数据类型
 ## 整型：用于存储整数。
@@ -461,9 +461,9 @@ typedef char bool;
 bool flag;
 flag=1;            // bool实际上是char型，所以可以拿各种数字赋值，使用时就判断是否为0
 flag=false；        // 如果拿除了false、true以外的其它字符串赋值就会报错说未定义（大小写也必须一致）
-## 
-## 
-## 
+##
+##
+##
  
 常量
 ## 常量：取值不能改变的对象。分为以下几类：
@@ -490,9 +490,9 @@ flag=false；        // 如果拿除了false、true以外的其它字符串赋�
 float x = 3.14;        // 正确，此时3.14会从double型转化成float型再赋值
 float x = 3.14f;       // 正确，此时3.14直接赋值给float型的变量x
 float x = 3f;             // 错误，3是整数，不能声明为float型
-## 
-## 
-## 
+##
+##
+##
  
 数组
 ## 数组：一组数量固定、类型相同的数据项（又称为元素）。
@@ -537,9 +537,9 @@ for (i = 0; i < len1; i++)
 system("pause");
 return 0;
 }
-## 
-## 
-## 
+##
+##
+##
  
 结构体
 ## 结构体：由多个变量组成的数据结构，相当于一种用户自定义的数据类型。
@@ -579,9 +579,9 @@ printf("The age is %d\n", phorse->age);    // -> 等价于 (* ).
 - 结构体只是把一些变量封装在一起，而类是一种抽象描述，最大的优点就是可以被继承。
 - 结构体是一种值类型，存储的是实际的数据。而类是引用类型，存储的是对象的地址。
 - 结构体不能在定义时初始化结构成员，而类可以。
-## 
-## 
-## 
+##
+##
+##
  
 指针变量
 ## 指针变量（pointer）：用于存储某个对象的内存地址（又称为指针）的变量。通常可简称为指针。
@@ -614,9 +614,9 @@ unsigned int addr = 34926608;
 int *p = (int *)addr;            // 将普通类型转换成指针类型
 void *p2 = (void *)p;            // 强制转换指针类型
 printf("%d\n", p);            // 显示地址
-## 
-## 
-## 
+##
+##
+##
  
 指针的类型
 ## 特殊类型的指针。
@@ -666,12 +666,12 @@ int main(){
     char str[]="Hello";
     printf("%p\n", str);
     // 显示为：0x7fffbc9e0630
-    
+
     // 将任意类型的指针转换成long型变量
     long addr = (long)str;
     printf("%lx\n", addr);
     // 显示为：7fffbc9e0630
-    
+
     // 将long型变量转换成任意类型的指针
     char *p = (char *)addr;
     printf("%s\n", p);
@@ -682,18 +682,18 @@ int main(){
     sprintf(buffer, "%lx", addr);
     printf("%s\n", buffer);
     // 显示为：7fffbc9e0630
-    
+
     // 从字符串中读取long型变量
     long addr2 = 0;
     sscanf(buffer, "%lx", &addr2);
     printf("%lx\n", addr2);
     // 显示为：7fffbc9e0630
-    
+
     return 0;
 }
-## 
-## 
-## 
+##
+##
+##
  
 <stdlib.h>
 ## 动态分配内存。
@@ -732,9 +732,9 @@ if(rc == NULL)
     return -1;
 - void free(void *);            // 释放动态分配的内存空间
   - 应该及时释放不用的内存，以免程序占用越来越多的内存，导致内存泄露（memory leaks），使得系统变得卡顿甚至使程序奔溃。
-## 
-## 
-## 
+##
+##
+##
  
 内存问题
 ## C语言编译器将内存区间分成四部分：
@@ -783,16 +783,16 @@ if(p){
     free(p);
     p = NULL;
 }
-## 
-## 
-## 
+##
+##
+##
  
 字符串
 字符串的存储
 ## 存储单个字符串的方法：
 - 创建char型一维数组，存储字符串。
 char str[] = "Hello World!";
-printf("%s\n", str);    
+printf("%s\n", str);
 // 显示：Hello World!
 printf("len = %d\n",sizeof(str));
 // 显示：len = 13
@@ -839,9 +839,9 @@ char **ppstr = malloc(sizeof(char *) * n);        // 分配n个char *型指针�
 for (i = 0; i < n; i++){
     printf("%s\n", *(ppstr + i));
 }
-## 
-## 
-## 
+##
+##
+##
  
 字符串的类型转换
 ## 将十六进制数字转换成字符串。
@@ -873,9 +873,9 @@ int x = atoi("3.14");            //x的值为 3
 - double atof(const char *);        //将字符串转换成double型（ascii to float），默认返回值为0.000000
   - 例如：
 double d = atof("3.14");        //d的值为3.140000
-## 
-## 
-## 
+##
+##
+##
  
 <string.h>
 ## string.h提供了一些处理字符串的函数。
@@ -935,9 +935,9 @@ char str[10];
 memset(str, NULL, sizeof(str));
   - 函数memcpy()、memset()不止可以处理字符串，还可以处理其它类型的内存空间。
 用strcpy()拷贝时，遇到空字符就会停止。而用memcpy()拷贝时，即使数据中包含空字符，也会固定拷贝n个字节。
-## 
-## 
-## 
+##
+##
+##
  
 ASCII码
 ## C语言按照ASCII码表处理每个字符的编码，总共有128种字符。
@@ -974,9 +974,9 @@ ASCII码
 ## 转义字符：一些以反斜杠 \ 开头的特殊字符。
 - \' 表示单引号、\" 表示双引号、\n 表示换行符、\b表示退格、\t 表示输出八个空格、\\ 表示反斜杠。
 - 特别地，百分号的转义字符是 %% 。
-## 
-## 
-## 
+##
+##
+##
  
 共用体
 ## 共用体：一种与结构体类似的数据类型。
@@ -1002,9 +1002,9 @@ union Horse {            // 定义格式与结构体类似
     int age;
 } h1;
 
-## 
-## 
-## 
+##
+##
+##
  
 枚举
 ## 枚举：列举出变量可能的各种取值。
@@ -1029,9 +1029,9 @@ Sunday = 7;    // 错误
 - 其它例子：
 enum Bool{false=0,true=1};
 enum Bool b1 = true;
-## 
-## 
-## 
+##
+##
+##
  
 函数
 ## 函数：被封装的一个语句块，可以被调用。
@@ -1086,9 +1086,9 @@ int print_int(int argc, ...)                // 定义函数时，形参只有一
 }
 
 print_int(3, 10, 20, 30);                    // 调用函数
-## 
-## 
-## 
+##
+##
+##
  
 预处理指令
 ## 预处理指令：在源代码的开头用井号 # 声明的命令，会在编译之前被执行。
@@ -1106,9 +1106,9 @@ print_int(3, 10, 20, 30);                    // 调用函数
 #define value(x,y) x*y       // 定义一个宏
 result = value(m, n+1);      // 这行代码在编译之前会被替换成result = m*n + 1;
 - 通常把宏名看作常量，全部大写。
-## 
-## 
-## 
+##
+##
+##
  
 宏定义
 ## 宏定义也可以使用类似if语句的条件编译。如下：
@@ -1151,9 +1151,9 @@ printf("max = %d\n", MAX(x++, y++));
     //显示为：at 15:20:16, Jan 19 2019
   - __FILE__、__LINE__代表源文件的文件名（字符串型数据）、编译时所在行（int型数据）。
   - __TIME__、__DATE__代表编译时的时刻、日期。
-## 
-## 
-## 
+##
+##
+##
  
 头文件
 ## 头文件：后缀名为 .h ，用于保存一些预处理指令、变量或函数的声明语句。
@@ -1167,9 +1167,9 @@ printf("max = %d\n", MAX(x++, y++));
 ...
 #endif
 - 宏名_MYHEADER_H_由头文件myheader.h转换而来。转换时将每个字母大写，将小数点转换成下划线，再在前、后加上一个下划线
-## 
-## 
-## 
+##
+##
+##
  
 C语言的标准库
 ## C语言的标准库里定义了一些基本的函数、常量、宏定义等，通过包含对应的头文件来调用。
@@ -1178,10 +1178,10 @@ C语言的标准库
 - 宏定义了一种数据类型size_t。
   - 在32位机上，size_t被定义为long unsigned int，占4个字节。
 size_t t = 4;
-printf("%d, %d\n", t, sizeof(t));        //显示为 4, 4 
-## 
-## 
-## 
+printf("%d, %d\n", t, sizeof(t));        //显示为 4, 4
+##
+##
+##
  
 <stdio.h>
 ## stdio.h是标准输入输出库（standard input and output）。
@@ -1189,7 +1189,7 @@ printf("%d, %d\n", t, sizeof(t));        //显示为 4, 4
 ## 格式化输入/输出函数。
 - int scanf(const char *, args...);
 // 从stdin读取一个字符串，提取输入参数
-- int printf(const char *, args...);    
+- int printf(const char *, args...);
 // 生成一个字符串，输出到stdout
 - int sscanf(const char *buffer, const char *format, args...);
 // 从buffer读取一个字符串，提取输入参数
@@ -1214,9 +1214,9 @@ len = snprintf(buffer, 10, "x=%d.0123456789\n", x);        // 结果len为15
 ## 错误处理。
 - void perror(const char *str);        //输出一个字符串到标准错误stderr
   - 例如运行语句 perror("Error"); 会显示 Error: No error 。会自动在后面加上一个冒号和空格。
-## 
-## 
-## 
+##
+##
+##
  
 <stdlib.h>
 ## stdlib.h是标准函数库（standard library）。
@@ -1243,9 +1243,9 @@ system("cd D:\1");        //进入指定目录（cd代表change directory），c
 system("exit");            //退出DOS窗口
 - void abort(void);                //使进程非正常终止
 - void exit(int status);        //使进程正常终止，并向父进程返回一个状态值
-## 
-## 
-## 
+##
+##
+##
  
 <stdint.h>
 ## math.h提供了一些宏定义的整型，在32位、64位的CPU上都是同样的容量，便于移植程序。
@@ -1261,10 +1261,10 @@ system("exit");            //退出DOS窗口
   - uint64_t：对应的格式控制符为 %llu 。
 - 整型指针。
 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
  
 <time.h>
 ## time.h提供了获取时间、日期的函数。如下：
@@ -1281,9 +1281,9 @@ printf("Hour:  %d\n", ptime->tm_hour);
 printf("Minute:  %d\n", ptime->tm_min);
 printf("Second:  %d\n", ptime->tm_sec);
 printf("Weekday:  %d\n", ptime->tm_wday);
-## 
-## 
-## 
+##
+##
+##
  
 <assert.h>
 ## assert.h提供了断言函数assert()，适用于打印调试信息。
@@ -1297,7 +1297,7 @@ printf("Weekday:  %d\n", ptime->tm_wday);
   - 当assert()的输入为假时，它会向stderr打印错误信息，并调用函数abort()来终止程序。当assert()的输入为真时，它不会起作用。
   - void _assert(const char *, const char *, int)会显示错误信息并调用abort()终止程序。
   - 在生产环境，可以宏定义NDEBUG，使assert()失效。（要保证该宏定义在头文件assert.h之前被编译）
-- 例如，在以下语句中插入断言， 
+- 例如，在以下语句中插入断言，
     int x = 0;
     while(1)
     {
@@ -1305,9 +1305,9 @@ printf("Weekday:  %d\n", ptime->tm_wday);
         assert(0 < x && x < 10);
     }
 // 显示为：0123456789Assertion failed: 0 < x && x < 10, file d:\1\test_C\1.c, line 21
-## 
-## 
-## 
+##
+##
+##
  
 <math.h>
 ## math.h提供了一些数学函数。
@@ -1323,29 +1323,29 @@ printf("Weekday:  %d\n", ptime->tm_wday);
 - double fabs(double);        // 返回x的绝对值
 - double floor(double);        // 返回不大于x的最大整数
 - double ceil(double);        // 返回不小于x的最小整数
-## 
-## 
-## 
+##
+##
+##
  
 第三方库
 ## windows.h：导入了很多Windows系统的头文件，提供了很多Windows系统的API。
 - void Sleep(DWORD);        // 使进程暂停一定毫秒
-- 
-## 
+-
+##
 ## curl/curl.h：提供一些通过URL通信的函数。它来自libcurl库，支持http、https、ftp、telnet等协议。
 ## cJSON.h：提供一些用于构建、解析JSON格式的字符串的函数。
 - JSON原本是JavaScript的对象表示格式，后来发展成为一种独立的、用于数据交换的文本格式，可用于多种编程语言。
 ## mosquitto.h：提供一些实现mqtt协议的函数。
 - mosquitto是一款实现了mqtt协议的开源消息代理服务软件。
 ## hmac_sha256.h：提供一些实现哈希算法sha-256的函数。
-## 
+##
 ## stdafx.h：VS2010中把stdio.h、stdlib.h、windows.h等头文件都包含到了stdafx.h（标准应用程序框架的扩展）中，所以编程时要调用stdafx.h，而且要用双引号的格式调用。stdafx.h属于预编译头文件，把一些经常调用的代码预先编译好了。
-## 
-## 
-## 
-## 
-## 
-## 
+##
+##
+##
+##
+##
+##
  
 访问文件
 ## 访问文件的原理。
@@ -1393,9 +1393,9 @@ fclose(f);                //关闭文件再换成读取模式打开，直接切�
 f = fopen(filename, "r");
 fscanf(f, "%d%d", &x, &y);
 fclose(f);
-## 
-## 
-## 
+##
+##
+##
  
 <stdlib.h>
 ## 打开、关闭文件。
@@ -1443,9 +1443,9 @@ if(site == -1L)
 ## 管理文件。
 - int remove(const char *filename);
 - int rename(const char *old_filename, const char *new_filename);
-## 
-## 
-## 
+##
+##
+##
  
 读写二进制文件
 ## 以下例子是以二进制形式读写文件，而且是直接读写结构体类型的数据。
@@ -1576,9 +1576,9 @@ int get_device_config(char* pid, char* did, char* secret, char* url)
   return -1;
 }
 
-## 
-## 
-## 
+##
+##
+##
  
 多线程
 ## C语言的线程库。
@@ -1587,9 +1587,9 @@ int get_device_config(char* pid, char* did, char* secret, char* url)
   - 编译时要链接pthread库，比如：gcc test.c -o test -l pthread
 - 在Windows系统上，可使用windows.h的API创建线程。比如CreateProcess()。
 - C11制定了一个标准的线程库threads.h，但部分编译器不支持它。
-## 
-## 
-## 
+##
+##
+##
  
 <pthread.h>
 ## pthread.h的常用函数。（API列表：https://www.sourceware.org/pthreads-win32/manual/index.html）
@@ -1610,7 +1610,7 @@ void *arg);        // 传入要运行的函数的参数（没有参数则填NULL
   - 目标线程可能立即终止，也可能稍后终止，也可能忽略取消请求。
 - int pthread_join(pthread_t id, void **retval);
   - 功能：暂停当前线程的运行，等待id所指的线程终止。当它终止之后，其返回值会存储在retval变量中。
-- 
+-
 ## 例：
 #include <stdio.h>
 #include <pthread.h>
@@ -1652,8 +1652,8 @@ int main(){
     puts("main() end.");
     return 0;
 }
-## 
-## 
-## 
+##
+##
+##
  
 :::

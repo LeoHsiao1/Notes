@@ -157,8 +157,8 @@ pipeline {
         }
     }
     post {
-        always {
-            deleteDir()     // 任务结束时总是清空工作目录
+        always {            // 任务结束时总是执行以下操作
+            deleteDir()     // 清空全局 agent 的 ${env.WORKSPACE} 目录，但不考虑局部的 agent
         }
     }
 }
@@ -173,13 +173,83 @@ pipeline {
 
 ### 使用变量
 
-- 用 `$变量名 ` 的格式可以读取变量的值。
-- Jenkins 在执行 Jenkinsfile 之前，会先将各个变量名替换成其值（相当于字符串替换）。如果使用的变量尚未定义，则会报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
+- Jenkinsfile 中可以按 `$变量名` 的格式读取变量的值。如下：
+    ```groovy
+    script {
+        ID = "1"            // 执行 Groovy 代码，创建变量
+        NAME = "man" + ID
+        echo NAME
+        echo "$ID"          // 普通的 Groovy 语句，以双引号作为定界符时，会读取 Groovy 变量
+        echo '$ID'          // 普通的 Groovy 语句，以单引号作为定界符时，关于直接打印字符串 '$ID'
+        sh "echo $ID"       // sh 语句，以双引号作为定界符时，会先读取 Groovy 变量，再作为 Shell 命令执行
+        sh 'echo $ID'       // sh 语句，以单引号作为定界符时，会直接作为 Shell 命令执行，因此会读取 Shell 变量
+    }
+    ```
+  - 实际上，Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
+  - 如果使用的 Groovy 变量不存在，则报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
+  - 以单引号作为定界符的字符串不会渲染，而是直接使用。
+
+#### 环境变量
+
+- 在 environment{} 中可以定义环境变量，它们会保存为 Groovy 变量和 Shell 变量。如下：
+  ```groovy
+  stage('测试') {
+      environment {
+          ID = 1
+      }
+      steps {
+          sh "echo $ID"
+          sh 'echo $ID'
+      }
+  }
+  ```
+  - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
+
+- Jenkins 还提供了一些内置的环境变量，如下：
+    ```sh
+    NODE_NAME       # 节点名
+    JENKINS_HOME    # Jenkins 主目录
+    WORKSPACE       # 该 Job 的工作目录
+
+    JOB_NAME        # 任务名
+    JOB_URL         # 任务链接
+    BUILD_NUMBER    # 构建编号
+    BUILD_URL       # 构建链接
+
+    BRANCH_NAME     # 分支名
+    CHANGE_AUTHOR   # 版本的提交者
+    CHANGE_URL      # 版本的链接
+    ```
+    这些变量可以按以下格式读取：
+    ```groovy
+    script {
+        echo env.NODE_NAME
+        echo "${env.NODE_NAME}"
+        sh "echo ${env.NODE_NAME}"
+        sh 'echo $NODE_NAME'
+    }
+    ```
+
+- 在 environment{} 中可以导入 Jenkins 的凭据作为环境变量：
+  ```groovy
+  environment {
+      ACCOUNT1 = credentials('account1')
+  }
+  ```
+  假设该凭据是 Username With Password 类型，值为 `admin:123456` ，则 Jenkins 会在 Shell 中加入三个环境变量：
+  ```sh
+  ACCOUNT1=admin:123456
+  ACCOUNT1_USR=admin
+  ACCOUNT1_PSW=123456
+  ```
+  - 读取其它类型的凭据时，建议打印出 Shell 的所有环境变量，从而发现 Jenkins 加入的环境变量的名字。
+  - 为了保密，如果直接将上述变量打印到 stdout 上，Jenkins 会将它们的值显示成 `****` 。
 
 #### 构建参数
 
-可以给 Job 声明构建参数，需要用户在启动 Job 时传入它们（像函数形参）。
-- 其它类型的 Job 只能在 Jenkins Web 页面中定义构建参数，而 Pipeline Job 可以在 pipeline.parameters{} 中以代码的形式定义构建参数。如下：
+- 可以给 Job 声明构建参数，它们会保存为 Groovy 变量和 Shell 变量。
+  - 用户在启动 Job 时，必须传入构建参数，除非它们有默认值。
+- Pipeline Job 可以在 pipeline.parameters{} 中以代码的形式定义构建参数，而其它类型的 Job 只能在 Jenkins Web 页面中定义构建参数。如下：
     ```groovy
     pipeline {
         agent any
@@ -200,56 +270,16 @@ pipeline {
         }
     }
     ```
-- 如果定义了 parameters{} ，则会移除在 Jenkins Web 页面中定义的、在上游 Job 中定义的构建参数。
-- 每次修改了 parameters{} 之后，要执行一次 Job 才会在 Jenkins Web 页面上生效。
-- password 参数虽然在输入时显示成密文，但打印到终端上时会显示成明文，不如 credentials 安全。
-- 对于文件参数，上传的文件会存储到 ${workspace}/${job_name}/f1 路径处，而用 $f1 可获得上传的文件名。
-
-#### 环境变量
-
-在 environment{} 中可以定义环境变量，它们会被 Jenkind 加入到 shell 的环境变量中。
-- 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
-- 例：
-  ```groovy
-  stage('测试') {
-      environment {
-          ID = 1
-          NAME = 'hello'
-      }
-      steps {
-          echo '$ID'
-          sh "ID=2; echo $ID"
-      }
-  }
-  ```
-- 以上 echo 语句、sh 语句中，`$ID` 都会被视作 Jenkinsfile 的环境变量取值，如果不存在则报错。
-- 如果要读取 shell 中的变量，则应该执行被单引号包住的 sh 语句。例如：`sh 'ID=2; echo $ID'`
-- 在 environment{} 中可以通过以下方式读取 Jenkins 的一些内置变量：
-  ```groovy
-  echo "分支名：${env.BRANCH_NAME} ，提交者：${env.CHANGE_AUTHOR} ，版本链接：${env.CHANGE_URL}"
-  echo "节点名：${env.NODE_NAME} ，Jenkins 主目录：${env.JENKINS_HOME} ，工作目录：${env.WORKSPACE}"
-  echo "任务名：${env.JOB_NAME} ，任务链接：${env.JOB_URL} ，构建编号：${env.BUILD_NUMBER} ，构建链接：${env.BUILD_URL}"
-  ```
-- 在 environment{} 中可以通过以下方式读取 Jenkins 的凭据：
-  ```groovy
-  environment {
-      ACCOUNT1 = credentials('account1')
-  }
-  ```
-  假设该凭据是 Username With Password 类型，值为“admin:123456”，则 Jenkins 会在 shell 中加入三个环境变量：
-  ```sh
-  ACCOUNT1=admin:123456
-  ACCOUNT1_USR=admin
-  ACCOUNT1_PSW=123456
-  ```
-  读取其它类型的凭据时，建议打印出 shell 的所有环境变量，从而发现 Jenkins 加入的环境变量的名字。
-  为了保密，如果直接将上述变量打印到 stdout 上，Jenkins 会将它们的值显示成 `****` 。
+  - 如果定义了 parameters{} ，则会移除在 Jenkins Web 页面中定义的、在上游 Job 中定义的构建参数。
+  - 每次修改了 parameters{} 之后，要执行一次 Job 才会在 Jenkins Web 页面上生效。
+  - password 参数虽然在输入时显示成密文，但打印到终端上时会显示成明文，不如 credentials 安全。
+  - 对于文件参数，上传的文件会存储到 `${workspace}/${job_name}/f1` 路径处，而用 $f1 可获得上传的文件名。
 
 ### agent{}
 
-在 pipeline{} 中必须要定义 agent{} ，表示选择哪个节点来执行流水线，适用于所有 stage{} 。
-- 也可以在一个 stage{} 中单独定义该阶段的 agent{} 。
-- 常见的几种 agent 定义方式：
+- 在 pipeline{} 中必须要定义 agent{} ，表示选择哪个节点来执行流水线，适用于所有 stage{} 。
+  - 也可以在一个 stage{} 中单独定义该阶段的 agent{} 。
+- agent 常见的几种定义方式：
     ```groovy
     agent none          // 不设置全局的 agent ，此时要在每个 stage{} 中单独定义 agent{}
     ```

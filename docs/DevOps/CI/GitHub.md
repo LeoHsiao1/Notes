@@ -14,30 +14,33 @@
 ```yml
 name: Python test
 
-on: [push]                      # 定义触发流水线的事件
+on: [push]                            # 定义触发流水线的事件
 
-jobs:                           # 开始流水线任务
-  job1:                         # 第一个任务
-    runs-on: ${{ matrix.os }}   # 定义运行环境
-    strategy:                   # 定义多个运行环境，每个环境都会构建一次
+jobs:                                 # 开始流水线任务
+  job1:                               # 第一个任务
+    runs-on: ${{ matrix.os }}         # 定义运行环境
+    strategy:                         # 定义多个运行环境，每个环境都会构建一次
+      # fail-fast: true               # 默认只要有一个运行环境构建失败，就会立即放弃执行整个流水线
       matrix:
         os: [ubuntu-18.04, windows-2019]
         python-version: [3.5, 3.6, 3.7, 3.8]
 
-    steps:                      # 开始流水线步骤
-    - name: checkout            # 一个流水线步骤的名字
-      uses: actions/checkout@v2 # 调用一个内置动作，其版本为 v1
+    steps:                            # 开始流水线步骤
+    - name: checkout                  # 一个流水线步骤的名字
+      uses: actions/checkout@v2       # 调用一个内置动作，其版本为 v1
       with:
         ref: master
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1  # 安装 Python
+      uses: actions/setup-python@v1   # 安装 Python
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
+      # continue-on-error: false      # 该步骤失败时，是否继续执行后续步骤
+      # timeout-minutes: 360          # 该步骤的超时时间
       run: |
         python -m pip install pytest psutil
         echo $VAR1 $VAR2
-      env:            # 定义环境变量
+      env:                            # 定义环境变量
         VAR1: Hello
         VAR2: World
     - name: Test
@@ -45,7 +48,7 @@ jobs:                           # 开始流水线任务
         pytest -v
 ```
 
-- 执行每个 step 之前，都会切换到一个临时工作目录，例如：/root/actions-runner/_work/Notes/Notes
+- 执行每个 step 之前，都会重新切换到一个临时的工作目录，比如 `/root/actions-runner/_work/myjob/` 。
 
 ## Runner
 

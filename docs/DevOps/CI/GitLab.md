@@ -23,3 +23,22 @@
         - ./gitlab/logs:/var/log/gitlab
         - ./gitlab/data:/var/opt/gitlab
     ```
+
+## API
+
+- GitLab 提供了丰富的 Restful API 。
+- 客户端使用 API 时可通过以下几种方式进行身份认证：
+  - 个人 token
+  - 项目 token
+  - OAuth2 token
+  - session cookie
+
+- 例：通过 curl 命令下载文件
+  ```sh
+  gitlab_url=10.0.0.1
+  project_id=5
+  branch=master
+  file_path=README.md
+  token=KqKuksUwwcuyvnc8tEw1
+  curl "http://${gitlab_url}/api/v4/projects/${project_id}/repository/files/${file_path}/raw?ref=${branch}&private_token=${token}"
+  ```

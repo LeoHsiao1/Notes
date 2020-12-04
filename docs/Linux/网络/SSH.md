@@ -56,12 +56,13 @@ StrictModes yes                   # 在 SSH 认证时检查用户的家目录、
 ```sh
 $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登录指定主机
                   -p 22      # 指定端口号
-                  [command]  # 执行一条命令就退出登录（不会打开新 shell ）
+                  [command]  # 执行一条命令，然后就退出登录，不会打开远程主机的 shell
 ```
 - 例：
   ```sh
-  ssh root@10.0.0.1 "echo $HOSTNAME"  # 用双引号时，会先在本机读取变量的值，然后将命令发送到远端
-  ssh root@10.0.0.1 'echo $HOSTNAME'  # 用单引号时，会先将命令发送到远端，然后在远端读取变量的值
+  ssh root@10.0.0.1  ls -lh
+  ssh root@10.0.0.1  "hostname | xargs echo"  # 用引号将待执行的命令标明为一个字符串，以免被特殊字符截断
+  ssh root@10.0.0.1 'echo $HOSTNAME'          # 用单引号时，不会在本机读取变量的值，而是直接先将命令发送到远端去执行
   ```
 - ssh 登录成功之后，会在目标主机上打开一个 shell 终端，并将 stdin、stdout 绑定到当前终端。
 - ssh 连接 timeout 的可能原因：

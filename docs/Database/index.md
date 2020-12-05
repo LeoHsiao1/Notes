@@ -1,7 +1,7 @@
 [《Database》](index.md)
 
 - 简介
-  - [简介](简介/简介.md)
+  - [数据库](简介/数据库.md)
   - [事务](简介/事务.md)
 - SQLite
   - [SQLite](SQLite/SQLite.md)

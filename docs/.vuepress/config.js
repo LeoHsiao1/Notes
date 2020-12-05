@@ -122,7 +122,7 @@ module.exports = {
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        '简介/简介',
+                        '简介/Linux',
                         '简介/相关概念',
                     ]
                 },
@@ -382,7 +382,7 @@ module.exports = {
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        '简介/简介',
+                        '简介/数据库',
                         '简介/事务',
                     ]
                 },

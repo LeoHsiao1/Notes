@@ -28,7 +28,7 @@ docker run -d --name nginx \
 
 根据 `docs/index.md` 及各书籍目录下的 index.md 文件中的目录，生成 `docs/.vuepress/config.js` 文件中的 nav、sidebar 目录。
 ```sh
-python etc\set_catalog.py
+python3 etc/set_catalog.py
 ```
 
 ## 调整字符间距

@@ -1,7 +1,7 @@
 # Batch
 
-：批处理。
-- 它是微软的磁盘操作系统（Mircro Software Disk Operating System ，MS-DOS）自带的一种脚本语言，用 cmd.exe 解释执行。
+：批处理，一种脚本语言。
+- 它主要用于微软的磁盘操作系统（Mircro Software Disk Operating System ，MS-DOS），用 cmd.exe 解释执行。
 
 ## 语法特点
 

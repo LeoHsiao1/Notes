@@ -7,11 +7,11 @@
 - Linux 在设计上借鉴了 Unix ，属于类 Unix 系统。
 - Linux 诞生之后，社区在自由氛围下很快发展壮大，使 Linux 超越了 Unix 。
 
-## 发行版本
+## 版本
 
-Linux 内核（kernel）的版本编号规则为 `主版本.次版本.发布版本-修订版本` ，例如 '2.6.18-92' 。
+Linux 内核（kernel）的版本号规则为 `主版本.次版本.发布版本-修订版本` ，例如 `2.6.18-92` 。
 
-Linux 发行版（distribution）是把 Linux 内核和一些软件整合在一起的产品，常见的几种如下：
+Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一起的产品，常见的几种如下：
 - Fedora ：由红帽公司开发。
 - RHEL ：红帽企业版 Linux（Red Hat Enterprise Linux），提供了付费的技术支持、更新服务。
 - CentOS ：社区企业操作系统（Community Enterprise Operating System）。

@@ -109,7 +109,7 @@ http {
 ```sh
 server {
     listen       80;            # 定义该 server 监听的 TCP 端口（必填）
-    server_name  localhost;     # 监听的域名（不必填）
+    server_name  localhost;     # 监听的域名（可以不配置）
 
     location / {
         root   /usr/share/nginx/html;
@@ -127,7 +127,6 @@ server {
 - server{} 中的其它配置项：
   ```sh
   charset  utf-8;
-  
   ```
 
 ## 关于路由
@@ -215,8 +214,9 @@ server {
       root /www/;
   }
   ```
-  - 服务器收到指向 `http://127.0.0.1/img/1.html` 的请求时，会获取文件 /www/img/1.html ，返回 200 响应报文。如果不存在该文件则返回 404 响应报文。
-  - 服务器收到指向 `http://127.0.0.1/img` 的请求时，会返回一个 301 永久重定向报文，指向 `http://127.0.0.1/img/` 。
+  - 服务器收到指向 `http://127.0.0.1/img/1.html` 的请求时，会匹配该 location 。于是尝试获取文件 /www/img/1.html ，返回 200 响应报文。如果不存在该文件，则返回 404 响应报文。
+  - 服务器收到指向 `http://127.0.0.1/img` 的请求时，不会匹配该 location ，可能返回 404 响应报文。
+    - 特别地，如果 location 区块内包含了 proxy_pass、fastcgi_pass、uwsgi_pass 等代理指令之一（即使没有被执行），则此时会匹配该 location ，返回一个 301 重定向报文，指向 /img/ 。
 
 ### root
 
@@ -227,9 +227,11 @@ server {
   root html;
   ```
 
+## 关于重定向
+
 ### index
 
-- 如果请求的 URI 以 / 结尾，则通过内部重定向将请求指向 `URI/index` 。
+- 如果请求的 URI 以 / 结尾，则通过内部重定向将请求转发到 `$uri/index` 。
 - 可用范围：http、server、location
 - 例：
   ```sh
@@ -239,7 +241,7 @@ server {
 
 ### autoindex
 
-- 如果请求的 URI 以 / 结尾，则返回一个 HTML 页面，显示该磁盘目录的文件列表。
+- 如果请求的 URI 以 / 结尾，则返回一个 HTML 页面，显示 URI 对应的磁盘目录的文件列表。
 - 可用范围：http、server、location
 - 默认值：
   ```sh
@@ -257,53 +259,6 @@ server {
   }
   ```
 - 如果被外部请求直接访问，则返回 404 响应报文。
-
-## ngx_http_rewrite_module
-
-### if
-
-：如果条件为真，则执行括号内的指令。
-- 可用范围：server、location
-- 例：
-  ```sh
-  if ($request_uri ~ /www/(\d+)/(.+)) {
-      set $param1 $1;
-      set $param2 $2;
-      return  200 '$param1, $param2\n';
-  }
-  ```
-- 条件表达式有多种类型：
-  - 取值为空字符串 `''` 或 `0` 则为假，否则为真
-  - 使用 `=`、`!=` 进行比较运算
-  - 使用 `~`、`~*` 进行正则匹配
-  - 使用 ` -f`、`!-f` 判断文件是否存在
-  - 使用 `!-d`、`!-d` 判断目录是否存在
-
-### break
-
-：跳过执行 ngx_http_rewrite_module 模块的指令。
-- 可用范围：server、location
-- 例：
-  ```sh
-  if ($slow) {
-      limit_rate 10k;
-      break;
-  }
-  ```
-
-### return
-
-：直接返回 HTTP 响应报文给客户端。（不会执行后续指令）
-- 可用范围：server、location
-- 例：
-  ```sh
-  server{
-      listen  80;
-      return  403;                                # 只返回状态码
-      return  200 OK\n;                           # 返回状态码和一个字符串（字符串可以不加定界符）
-      return  200 '{"name":"test","id":"001"}';   # 返回状态码和 JSON 格式的字符串
-  }
-  ```
 
 ### rewrite
 
@@ -347,6 +302,84 @@ server {
   }
   ```
 
+### absolute_redirect
+
+：服务器返回重定向的响应报文时，重定向之后的地址是完整的 URL （即绝对路径，从 http 协议开始），还是 URI （即相对路径）。
+- 可用范围：http、server、location
+- 默认值：
+  ```sh
+  absolute_redirect on;
+  ```
+- 例如：如果启用该参数时，重定向报文的 Headers 中声明了 `Location: http://localhost/index.html` ，则禁用该参数时就会变成 `Location: /index.html` 。
+
+### server_name_in_redirect
+
+：启用 absolute_redirect 时，重定向之后的 URL 中，服务器地址是否采用 Nginx 配置的 server_name 参数。
+- 可用范围：http、server、location
+- 默认值：
+  ```sh
+  server_name_in_redirect on;
+  ```
+- 如果禁用该参数，则采用请求头中的 Host 字段，或者服务器的 IP 地址。
+
+### port_in_redirect
+
+：启用 absolute_redirect 时，重定向之后的 URL 中，服务器的端口是否采用 Nginx 配置的 listen 参数。
+- 可用范围：http、server、location
+- 默认值：
+  ```sh
+  port_in_redirect on;
+  ```
+- 如果禁用该参数，则不注明端口号，即采用默认的 80 端口。
+
+## 关于流程控制
+
+### if
+
+：如果条件为真，则执行括号内的指令。
+- 可用范围：server、location
+- 例：
+  ```sh
+  if ($request_uri ~ /www/(\d+)/(.+)) {
+      set $param1 $1;
+      set $param2 $2;
+      return  200 '$param1, $param2\n';
+  }
+  ```
+- 条件表达式有多种类型：
+  - 取值为空字符串 `''` 或 `0` 则为假，否则为真
+  - 使用 `=`、`!=` 进行比较运算
+  - 使用 `~`、`~*` 进行正则匹配
+  - 使用 ` -f`、`!-f` 判断文件是否存在
+  - 使用 `!-d`、`!-d` 判断目录是否存在
+
+### break
+
+：跳过执行 ngx_http_rewrite_module 模块的指令。
+- 可用范围：server、location
+- 例：
+  ```sh
+  if ($slow) {
+      limit_rate 10k;
+      break;
+  }
+  ```
+- ngx_http_rewrite_module 模块的指令包括 if、break、return、rewrite、set 等
+
+### return
+
+：直接返回 HTTP 响应报文给客户端。（不会执行后续指令）
+- 可用范围：server、location
+- 例：
+  ```sh
+  server{
+      listen  80;
+      return  403;                                # 只返回状态码
+      return  200 OK\n;                           # 返回状态码和一个字符串（字符串可以不加定界符）
+      return  200 '{"name":"test","id":"001"}';   # 返回状态码和 JSON 格式的字符串
+  }
+  ```
+
 ## 关于代理
 
 ### proxy_pass
@@ -381,45 +414,45 @@ server {
   }
   ```
 
-判断转发结果的 URI 的取值：
+判断转发之后 URI 的取值：
 - 如果 proxy_pass 目标地址中包含 URI ，则将原 URI 被 location 匹配之后剩下的部分附加到目标地址之后（即转发相对路径）。否则直接将原 URI 附加到目标地址之后（即转发绝对路径）。如下，测试发送指向 `127.0.0.1:80/www/1.html` 的请求
   ```sh
   location /www {
-      proxy_pass  http://127.0.0.1:79;  # 转发结果为 /www/1.html
+      proxy_pass  http://127.0.0.1:79;    # 转发到 /www/1.html
   }
   ```
   ```sh
   location /www {
-      proxy_pass  http://127.0.0.1:79/; # 转发结果为 //1.html
+      proxy_pass  http://127.0.0.1:79/;   # 转发到 //1.html
   }
   ```
   ```sh
   location /www/ {
-      proxy_pass  http://127.0.0.1:79/; # 转发结果为 /1.html
+      proxy_pass  http://127.0.0.1:79/;   # 转发到 /1.html
   }
   ```
 - 如果 proxy_pass 目标地址中包含 URI 且调用了变量，则将它的值作为转发结果。
   ```sh
   location /www/ {
-      proxy_pass  http://127.0.0.1:79$request_uri; # 转发结果为 /www/1.html
+      proxy_pass  http://127.0.0.1:79$request_uri; # 转发到 /www/1.html
   }
   ```
 - 如果将 proxy_pass 与正则表达式、if 模块一起使用，则目标地址不能包含 URI ，否则启动 Nginx 时会报错。
   ```sh
   location ~ ^/www/\d*.html {
-      proxy_pass  http://127.0.0.1:79/;     # 不可行
+      proxy_pass  http://127.0.0.1:79/;         # 不可行
   }
   ```
   ```sh
   location ~ ^/www/(\d*.html) {
-      proxy_pass  http://127.0.0.1:79/$1;   # 可行，转发结果为 /1.html
+      proxy_pass  http://127.0.0.1:79/$1;       # 可行，转发到 /1.html
   }
   ```
 - 如果在 `rewrite ... ... break;` 之后使用 proxy_pass ，则将被 rewrite 重写之后的 URI 作为转发结果。
   ```sh
   location /www/ {
       rewrite     1.html  /index.html     break;
-      proxy_pass  http://127.0.0.1:79/test/;      # 转发结果为 /index.html
+      proxy_pass  http://127.0.0.1:79/test/;    # 转发到 /index.html
   }
   ```
 
@@ -742,7 +775,7 @@ server {
   ```sh
   request           # 请求报文的第一行，比如 GET /static/1.html HTTP/1.1
   request_method    # 请求的方法名，采用大写，比如 GET
-  request_uri       # 请求 URI （不受 rewrite、alias 影响）
+  request_uri       # 请求 URI （取值不会因为 rewrite、alias 而改变）
   uri               # 请求 URI 中的路径部分，比如原始 URI 为 /static/1.html?id=1 时，路径部分为 /static/1.html
   args              # 请求 URL 中的 Query String
   is_args           # 如果存在 Query String 则取值为 ? （即使格式不正确），否则取值为空

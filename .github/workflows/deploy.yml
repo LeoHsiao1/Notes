@@ -11,7 +11,7 @@ jobs:
         cd /home/github/Notes
         git pull
         yarn
-        yarn vuepress build docs
+        yarn vuepress build docs || yarn vuepress build docs  # 构建时可能因为占用内存不足而被杀死，因此尝试执行两次
         cd docs/.vuepress/
         rm -rf stable_dist/*
         cp -r dist/* stable_dist/

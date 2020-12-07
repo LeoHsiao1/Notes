@@ -49,6 +49,7 @@ jobs:                                 # 开始流水线任务
 ```
 
 - 执行每个 step 之前，都会重新切换到一个临时的工作目录，比如 `/root/actions-runner/_work/myjob/` 。
+- 在 GitHub 账号的个人设置页面的 Notifications 分栏中，可以设置在 GitHub Actions 执行失败时发送邮件通知。
 
 ## Runner
 

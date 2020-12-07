@@ -188,7 +188,7 @@ LOGGING = {
             'when': 'D',                        # 指定计时的单位，可以是 S、M、H、D 等
             'interval': 1,                      # 从午夜开始计算，每隔 interval x when 时长就创建一个日志文件
             'backupCount': 7,                   # 最多保留多少个日志文件
-            # 创建的第一个日志文件总是名为 filename ，之后的日志文件会在 filename 之后加上时间字符串，比如 main.log.2020-01-12
+            # 这会先创建一个与 filename 一致的日志文件，如果当前时间需要翻转日志，则将原日志文件重命名，比如改成 main.log.2020-01-12
         },
     },
     'loggers': {

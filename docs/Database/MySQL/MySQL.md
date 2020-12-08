@@ -1,7 +1,11 @@
 # MySQL
 
-：一个流行的关系型数据库，基于 C++ 开发。
+：一个流行的关系型数据库。
 - [官方文档](https://dev.mysql.com/doc/refman/5.7/en/)
+- 基于 C++ 开发。
+- 采用 C/S 架构、TCP 通信。
+
+## 版本
 
 MySQL 存在多个分支：
 - MySQL ：最初由 MySQL 公司开发，后来被 Sun 公司收购，再后来与 Sun 公司一起被 Oracle 公司收购。

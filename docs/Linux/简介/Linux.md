@@ -21,6 +21,36 @@
 - Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一起的产品。
 - 按照 GPL 协议，任何人都可以自定义 Linux 发行版，但是给别人使用时必须开源。不过有些 Linux 发行版中加入了一些收费软件，或者采用使用免费、服务收费的策略。
 
+### Debian
+
+- [官网](https://www.debian.org/)
+- 发音为 /dɛbiːjən/ 。
+- 由 Debian 社区开发，于 1993 年开始发行。
+- 采用 apt-get 作为包管理工具。
+
+版本变更：
+- Debian 8 ：代号为 jessie ，于 2015 年发布。
+- Debian 9 ：代号为 stretch ，于 2017 年发布。
+- Debian 10 ：代号为 buster ，于 2019 年发布。
+- Debian 11 ：代号为 bullseye 。
+
+### Ubuntu
+
+- [官网](https://ubuntu.com/)
+- 中文名为 “乌班图” 。
+- 基于 Debian 发行，于 2004 年开始发行。
+- 由 Ubuntu 社区 开发，由 Canonical 公司赞助。
+- 默认采用 GNOME 桌面系统，因为美观、易用而受桌面版用户欢迎。
+- 版本号格式为 `年份尾号.月份` ，比如 2020 年 4 月发布了 20.04 LTS 版本。
+  - 大概每隔半年发布一个版本。
+  - 大概每隔 2 年发布一个 LTS（Long Term Support，长期支持）版本。
+
+### Mint
+
+- [官网](https://www.linuxmint.com/)
+- 基于 Ubuntu 发行，于 2006 年开始发行。
+- 专为桌面用户设计，GUI 界面更人性化。
+
 ### Fedora
 
 - [官网](https://getfedora.org/)
@@ -68,36 +98,6 @@
   - 用 dnf 代替 yum 作为包管理工具。
   - 集成了 Python 3.6 ，对应命令为 python3 。
 
-### Debian
-
-- [官网](https://www.debian.org/)
-- 发音为 /dɛbiːjən/ 。
-- 由 Debian 社区开发，于 1993 年开始发行。
-- 采用 apt-get 作为包管理工具。
-
-版本变更：
-- Debian 8 ：代号为 jessie ，于 2015 年发布。
-- Debian 9 ：代号为 stretch ，于 2017 年发布。
-- Debian 10 ：代号为 buster ，于 2019 年发布。
-- Debian 11 ：代号为 bullseye 。
-
-### Ubuntu
-
-- [官网](https://ubuntu.com/)
-- 中文名为 “乌班图” 。
-- 基于 Debian 发行，于 2004 年开始发行。
-- 由 Ubuntu 社区 开发，由 Canonical 公司赞助。
-- 默认采用 GNOME 桌面系统，因为美观、易用而受桌面版用户欢迎。
-- 版本号格式为 `年份尾号.月份` ，比如 2020 年 4 月发布了 20.04 LTS 版本。
-  - 大概每隔半年发布一个版本。
-  - 大概每隔 2 年发布一个 LTS（Long Term Support，长期支持）版本。
-
-### Mint
-
-- [官网](https://www.linuxmint.com/)
-- 基于 Ubuntu 发行，于 2006 年开始发行。
-- 专为桌面用户设计，GUI 界面更人性化。
-
 ### openSUSE
 
 - [官网](https://www.opensuse.org/)
@@ -139,6 +139,5 @@
 - [官网](https://www.gentoo.org/)
 - 由 Gentoo 社区开发，于 2002 年开始发行。
 - 以 Portage 软件分发系统为核心，管理所有软件。
-  - 更新方式：先执行 `emerge --sync` 命令更新本机的 Portage 树，然后执行 `emerge <name>` 命令安装指定软件的最新版本。
   - 支持滚动更新。
 - 支持高度的定制化。用户可以配置大部分软件，甚至可以自行从源代码编译软件。这方面与 LFS 类似。

@@ -1,15 +1,25 @@
 # Linux
 
-1991 年，Linus Torvalds 开发了 Linux 内核，将其授权为自由软件。
-- Linux 内核与诸多 GNU 软件组合在一起，构成了一个操作系统，称为 GNU/Linux 。
-- Linux 在设计上借鉴了 Unix ，属于类 Unix 系统。
-- Linux 诞生之后，社区在自由氛围下很快发展壮大，使 Linux 超越了 Unix 。
+- 发音为 /ˈlɪnəks/ 。
+- 历史：
+  - 1991 年，芬兰的程序员 Linus Torvalds 开发了 Linux 内核，将它按 GPL 协议授权为自由软件。
+  - Linux 内核与诸多 GNU 软件组合在一起，构成了一个操作系统，称为 GNU/Linux 。
+  - 2007 年，开源发展实验室（Open Source Development Labs，OSDL）与自由标准组织（Free Standards Group，FSG）合并，成立 Linux 基金会，负责管理 Linux 社区。
+- Linux 在设计上借鉴了 Unix ，属于类 Unix 系统。但在社区的推动下，很快超越了 Unix 。
 
-## 版本
+## 内核
 
-Linux 内核（kernel）的版本号规则为 `主版本.次版本.发布版本-修订版本` ，例如 `2.6.18-92` 。
+- [官网](https://www.kernel.org/)
+- 目前 Linus Torvalds 依然在主管开发 Linux 内核，源代码托管在 [GitHUb](https://github.com/torvalds/linux) 上。
+- Linux 内核（kernel）的版本号命名规则为 `主版本.次版本.发布版本-修订版本` ，例如 `3.10.0-11` 。
+  - 2011 年发布 v3.0 版本。
+  - 2015 年发布 v4.0 版本。
+  - 2019 年发布 v5.0 版本。
 
-Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一起的产品，常见的几种如下：
+## 发行版
+
+- Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一起的产品。
+- 按照 GPL 协议，任何人都可以自定义 Linux 发行版，但是给别人使用时必须开源。不过有些 Linux 发行版中加入了一些收费软件，或者采用使用免费、服务收费的策略。
 
 ### Fedora
 
@@ -17,13 +27,15 @@ Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一�
 - 由 Fedora 社区开发，由红帽公司赞助。
   - Fedora 社区最初是为 Red Hat Linux 系统开发软件。2004 年该系统停止更新，Fedora 社区便在红帽公司的赞助下开始开发整个系统。
 - 采用 yum 作为包管理工具，后来升级为 dnf 。
-- 大概每隔半年发布一个新版本。
-  - 红帽公司通常将一些新功能先添加到 Fedora 中，稳定之后再由 RHEL 继承。
+- 大概每隔半年发布一个版本。
+  - 红帽公司会将一些新功能先添加到 Fedora 中，稳定之后再由 RHEL 继承。
 
 ### RHEL
 
 ：红帽企业版 Linux（Red Hat Enterprise Linux）
+- [官网](https://access.redhat.com/products/red-hat-enterprise-linux/)
 - 基于 Fedora 发行，于 2007 年开始发行。
+- 由红帽公司开发。
 - 可免费试用一段时间，付费之后才能正式使用，享受技术支持、版本升级。
 - 大概每隔三年更新一个主版本，维护，比其它 Linux 发行版更加稳定、可靠，因此适用于服务器、工作站。
 
@@ -37,7 +49,7 @@ Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一�
   - 2014 年，红帽公司雇佣了该社区的开发人员。
   - 2020 年底，宣布在 CentOS 8 之后停止发布新版本，转为开发滚动更新的 CentOS Stream 。
 
-版本差异：
+版本变更：
 - CentOS 6
   - 于 2011 年发布。
   - 内核版本为 2.6.x 。
@@ -63,7 +75,7 @@ Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一�
 - 由 Debian 社区开发，于 1993 年开始发行。
 - 采用 apt-get 作为包管理工具。
 
-版本差异：
+版本变更：
 - Debian 8 ：代号为 jessie ，于 2015 年发布。
 - Debian 9 ：代号为 stretch ，于 2017 年发布。
 - Debian 10 ：代号为 buster ，于 2019 年发布。
@@ -94,13 +106,14 @@ Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一�
   - 2004 年，德国的 Novell 公司收购了 SUSE Linux 公司，将它改名为 openSUSE 并以开源形式发布。
   - 2010 年，Attachmate 集团收购了 Novell 公司，拆分成 Novell、SUSE 两个部门。
 - 默认采用 KDE 桌面系统。
-- 分为两种发行版：
+- 分为两种版本：
   - Leap ：常规版本
   - Tumbleweed ：滚动更新
 
 ### SLES
 
 ：SUSE 企业版（SUSE Linux Enterprise Server）
+- [官网](https://www.suse.com/products/server/)
 - 基于 openSUSE 发行。
 
 ### LFS
@@ -115,7 +128,7 @@ Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一�
 ：一个轻量级的 Linux 发行版。
 - [官网](https://www.archlinux.org/)
 - 由 Arch 社区开发，于 2002 年开始发行。
-- 默认安装的是最简系统，只提供了命令行环境。需要用户自行添加软件、进行配置，因此使用门槛较高。
+- 默认安装的是最简系统，只提供了命令行环境，需要用户自行添加软件、进行配置。因此使用门槛较高。
 - 采用 pacman 作为包管理工具。
 - 大部分软件采用滚动更新的方式，因此 Arch 没有划分版本号。
   - 更新时，先从旧版本更新到下一个版本。如果下一个版本兼容，则更新到再下一个版本。如果不兼容，则回滚到旧版本。
@@ -128,4 +141,4 @@ Linux 发行版（distribution）是将 Linux 内核和一些软件整合在一�
 - 以 Portage 软件分发系统为核心，管理所有软件。
   - 更新方式：先执行 `emerge --sync` 命令更新本机的 Portage 树，然后执行 `emerge <name>` 命令安装指定软件的最新版本。
   - 支持滚动更新。
-- 支持高度的定制化。用户可以配置大部分软件，甚至可以自行编译源代码。这方面与 LFS 类似。
+- 支持高度的定制化。用户可以配置大部分软件，甚至可以自行从源代码编译软件。这方面与 LFS 类似。

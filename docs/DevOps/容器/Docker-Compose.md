@@ -1,12 +1,13 @@
 # Docker Compose
 
-：一个 Docker 容器的编排工具，由 Docker 公司推出，基于 Python 开发。
+：一个 Docker 容器的编排工具。
+- [官方文档](https://docs.docker.com/compose/compose-file/)
+- 由 Docker 公司发布，基于 Python 开发。
 - 只能管理当前宿主机上的容器，不能管理服务器集群。
 - 它根据 compose 文件来创建、管理 docker 容器。
   - compose 文件保存为 yaml 格式，后缀名为 .yaml 或 .yml 。
   - 每个 compose 文件可以定义一种或多种服务，每种服务可以运行一个或多个容器实例。
   - 单个服务运行多个容器实例时可能会因为使用相同的端口、容器名等资源，产生冲突。
-- [官方文档](https://docs.docker.com/compose/compose-file/)
 
 ## 安装
 

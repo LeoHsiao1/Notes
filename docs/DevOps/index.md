@@ -10,7 +10,7 @@
   - [Docker](容器/Docker.md)
   - [Docker Compose](容器/Docker-Compose.md)
 - k8s
-  - [简介](k8s/简介.md)
+  - [Kubernetes](k8s/Kubernetes.md)
   - [安装](k8s/安装.md)
   - [Pod](k8s/Pod.md)
   - [Network](k8s/Network.md)

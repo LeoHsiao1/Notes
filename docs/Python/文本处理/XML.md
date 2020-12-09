@@ -104,9 +104,9 @@
 ## ♢ lxml
 
 ：Python 的第三方库，用于解析或导出 XML、HTML 格式的文本。
-- 兼容标准库 xml 的大部分操作方法，且功能更强，比如支持显示缩进。
-- 安装：`pip install lxml`
 - [官方文档](https://lxml.de/)
+- 安装：`pip install lxml`
+- 兼容标准库 xml 的大部分操作方法，且功能更强，比如支持自动缩进。
 
 ## 用法
 

@@ -1,12 +1,12 @@
 # SWIG
 
 ：一个编译器，可以将 C/C++ 代码编译成供 C#、Java、Python 等多种语言调用的文件。
+- [官方文档](http://www.swig.org/Doc4.0/Contents.html)
 - SWIG 本身是一种混编语言。
 - 兼容性很好：
   - 支持的操作系统包括 Unix、Linux、Windows、MacOS 。
   - 支持 C/C++ 的几乎所有版本，包括 C99、C++17 。
   - 支持的目标语言包括 C#、Java、JS、Perl、PHP、Python、Ruby、Go 。
-- [官方文档](http://www.swig.org/Doc4.0/Contents.html)
 
 ## 安装
 

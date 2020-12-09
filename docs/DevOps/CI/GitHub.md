@@ -1,14 +1,14 @@
 # GitHub
 
 ：一个流行的代码托管网站。
-- 2018 年，被微软收购。
 - [官方文档](https://docs.github.com/en)
+- 2018 年被微软收购。
 
 ## Actions
 
 ：GitHub 提供的一种 CI 功能。
-- 它类似 Jenkins 的流水线，用 YAML 文件描述，保存为 .github/workflows/xx.yml 文件。
 - [官方文档](https://help.github.com/en/actions)
+- 它类似 Jenkins 的流水线，用 YAML 文件描述，保存为 .github/workflows/xx.yml 文件。
 
 例：
 ```yml

@@ -1,13 +1,13 @@
 ## ZooKeeper
 
 ：一个分布式服务框架。
+- [官方文档](https://zookeeper.apache.org/doc/r3.6.2/index.html)
 - 原本是 Hadoop 的子项目，现在已成为一个独立的顶级项目。
   - 取名为 ZooKeeper 是因为 Yahoo 公司的 Pig 等项目都是以动物命名，ZooKeeper 可以协调它们。
 - 主要功能：
   - 作为注册中心，登记分布式系统中的各个客户端、服务。
   - 协调各节点之间的通信，维护分布式系统的一致性。
-  - 存储少量数据。
-- [官方文档](https://zookeeper.apache.org/doc/r3.6.2/index.html)
+  - 可以存储少量数据。
 
 ## 原理
 

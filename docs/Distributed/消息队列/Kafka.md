@@ -1,9 +1,10 @@
 # Kafka
 
-：一个消息队列，基于 Scala 开发。
+：一个消息队列。
+- [官方文档](http://kafka.apache.org/documentation/)
+- 基于 Scala 开发。
 - 由 LinkedIn 公司开源，捐献给了 Apache 基金会。
 - 容易横向扩展，吞吐量的上限很高。
-- [官方文档](http://kafka.apache.org/documentation/)
 
 ## 原理
 
@@ -139,8 +140,8 @@ zookeeper.connection.timeout.ms=18000
 ## ♢ kafka-Python
 
 ：Python 的第三方库，提供了 Kafka 客户端的功能。
-- 安装：`pip install kafka-python`
 - [官方文档](https://kafka-python.readthedocs.io/en/master/index.html)
+- 安装：`pip install kafka-python`
 
 
 生产消息的示例代码：

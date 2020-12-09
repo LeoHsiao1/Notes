@@ -1,8 +1,8 @@
 # ♢ Matplotlib
 
 ：Python 的第三方库，提供了一些 MATLAB 的绘图函数。
-- 安装：`pip install matplotlib`
 - [官方文档](https://matplotlib.org/users/index.html)
+- 安装：`pip install matplotlib`
 - [图像效果示例](https://matplotlib.org/tutorials/introductory/sample_plots.html)
 
 ## Figure

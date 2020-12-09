@@ -1,8 +1,9 @@
 # ActiveMQ
 
-：一个消息队列，基于 Java 开发，由 Apache 基金会管理。
-- 功能丰富，支持 JMS、AMQP、STOMP、MQTT 等多种协议。
+：一个消息队列。
 - [官方文档](http://activemq.apache.org/components/classic/documentation)
+- 基于 Java 开发，由 Apache 基金会管理。
+- 功能丰富，支持 JMS、AMQP、STOMP、MQTT 等多种协议。
 
 ## 单点部署
 

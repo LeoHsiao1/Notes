@@ -1,9 +1,9 @@
 # Artifactory
 
 ：一个用于存储构建产物的文件服务器软件，由 Jfrog 公司推出。
+- [官方文档](https://www.jfrog.com/confluence/display/RTF6X)
 - 可以通过浏览器访问，也可以生成文件的下载链接，通过 curl 命令上传、下载文件。
 - 社区版可以免费使用，但功能较少。
-- [官方文档](https://www.jfrog.com/confluence/display/RTF6X)
 - 同类产品：
   - FTP 服务器：采用 FTP 协议传输数据，比 HTTP 协议的通用性低，且没有 Web 操作页面。
   - Nextcloud ：网盘，访问时需要使用浏览器或专用客户端。

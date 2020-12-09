@@ -1,8 +1,9 @@
 # VuePress
 
-：与 docsify 相似，也是 SPA 网站，但每个页面会事先构建出 HTML 文件，有利于 SEO 。
-- 基于 Vue ，显示美观。
+：一个制作静态网站的工具。
 - [官方文档](https://vuepress.vuejs.org/guide/)
+- 基于 Vue ，显示美观。
+- 与 docsify 相似，也是 SPA 网站，但每个页面会事先构建出 HTML 文件，有利于 SEO 。
 
 ## 基础示例
 

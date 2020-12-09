@@ -1,8 +1,8 @@
 # Vue.js
 
 ：一个前端开发框架。
-- 发音与 view 相同。
 - [官方文档](https://vuejs.org/v2/guide/index.html)
+- 发音与 view 相同。
 
 用法：
 - 开发简单的网页时，通常导入 Vue 的独立 js 文件即可。

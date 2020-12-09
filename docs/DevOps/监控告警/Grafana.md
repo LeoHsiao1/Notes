@@ -1,8 +1,9 @@
 # Grafana
 
-：一个 HTTP 服务器，基于 Golang 开发，可以在 Web 页面上显示丰富、美观的数据图表。
-- 常用作监控系统、数据分析的前端。
+：一个 Web 网站，可以显示丰富、美观的数据图表。
 - [官方文档](https://grafana.com/docs/grafana/latest/)
+- 基于 Golang 开发。
+- 常用作监控系统、数据分析的前端。
 
 ## 安装
 
@@ -157,16 +158,15 @@ Panel 的主要配置：
 
 ## 插件
 
+- [官方的插件市场](https://grafana.com/grafana/plugins)
 - 安装插件时，需要到 Grafana 工作目录下执行以下命令，然后重启 Grafana ：
   ```sh
   bin/grafana-cli plugins install <plugin_name>
                   --pluginsDir $PWD/data/plugins      # 指定插件的安装目录
   ```
-- [官方的 Plugins 市场](https://grafana.com/grafana/plugins)
 - 常用插件：
   - Zabbix 插件：用于分析 Zabbix 的监控数据，包含 Dashboard 模板。
   - Pie Chart 插件：允许绘制饼状图。
-
 
 ## 配置
 

@@ -1,34 +1,36 @@
 # Supervisor
 
-：一个进程管理工具，基于 Python 开发。
+：一个进程管理工具，类似于 systemd 。，
+- [官方文档](http://supervisord.org/index.html)
+- 基于 Python 开发。
 - 功能：
-  - 可以通过简单的命令来启动、停止进程，并且当进程异常退出时会自动重启它，类似于 systemd 。
+  - 支持运行在 Linux、MacOS 等系统上，不支持 Windows 系统。
+  - 可以通过简单的命令来启动、停止进程，并且当进程异常退出时会自动重启它。
   - 可以记录进程的 stdout、stderr 。
   - 提供了 Web 管理页面。
 - 采用 C/S 架构：
   - 首先运行一个守护进程 supervisord ，然后由它以子进程的方式启动各个托管的进程。
   - 用户可以执行 supervisorctl 命令，通过与 supervisord 通信，来控制托管的进程。
-- [官方文档](http://supervisord.org/index.html)
 
 ## 安装
 
 - 用 yum 安装：
-    ```sh
-    yum install supervisor
-    ```
+  ```sh
+  yum install supervisor
+  ```
   然后启动：
-    ```sh
-    supervisord                           # 启动服务器
-                -c /etc/supervisord.conf  # 使用指定的配置文件
-    ```
+  ```sh
+  supervisord                           # 启动服务器
+              -c /etc/supervisord.conf  # 使用指定的配置文件
+  ```
 
 - 或者下载 Python 库然后安装：
-    ```sh
-    wget https://github.com/Supervisor/supervisor/archive/4.1.0.tar.gz
-    tar -zxvf supervisor-4.1.0.tar.gz
-    cd supervisor-4.1.0
-    python setup.py install
-    ```
+  ```sh
+  wget https://github.com/Supervisor/supervisor/archive/4.1.0.tar.gz
+  tar -zxvf supervisor-4.1.0.tar.gz
+  cd supervisor-4.1.0
+  python setup.py install
+  ```
 
 ### 开机自启
 

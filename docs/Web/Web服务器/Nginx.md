@@ -1,13 +1,13 @@
 # Nginx
 
 ：一个轻量级的 Web 服务器软件。
+- [官方文档](http://nginx.org/en/docs/)
 - 读音相当于 engine x 。
 - 特点：
   - 支持反向代理、负载均衡。
   - 不仅支持 HTTP、HTTPS 协议，也支持 IMAP、POP3、SMTP 协议。
   - 支持第四层的 TCP 代理、第七层的 HTTP 代理。
   - 一般用作静态服务器，处理静态文件的效率高。
-- [官方文档](http://nginx.org/en/docs/)
 
 ## 部署
 

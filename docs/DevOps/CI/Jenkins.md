@@ -1,9 +1,9 @@
 # Jenkins
 
-：一个流行的 CI/CD 平台，常用于项目构建、测试、部署。
+：一个流行的 CI/CD 网站，常用于项目构建、测试、部署。
+- [官方文档](https://jenkins.io/zh/doc/)
 - 基于 Java 开发，提供了 Web 操作页面。
 - 老版本名为 Hudson 。
-- [官方文档](https://jenkins.io/zh/doc/)
 
 ## 安装
 

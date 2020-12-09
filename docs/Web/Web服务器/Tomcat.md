@@ -1,8 +1,8 @@
 # Tomcat
 
 ：一个 Web 服务器软件，由 Apache 基金会管理。
-- 一般用作动态服务器，支持 Servlet、JSP ，常用于运行 Java Web 项目。
 - [官方文档](http://tomcat.apache.org/tomcat-9.0-doc/index.html)
+- 一般用作动态服务器，支持 Servlet、JSP ，常用于运行 Java Web 项目。
 
 ## 安装
 

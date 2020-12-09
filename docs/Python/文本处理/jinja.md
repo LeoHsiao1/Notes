@@ -1,8 +1,8 @@
 # Jinja
 
 ：一种基于 Python 的模板语言。
-- 由 Flask 作者开发，最初是模仿 Django 的模板引擎，处理 HTML 文件，后来推广到处理各种类型的文本文件。
 - [官方文档](https://jinja.palletsprojects.com/en/2.10.x/)
+- 由 Flask 作者开发，最初是模仿 Django 的模板引擎，处理 HTML 文件，后来推广到处理各种类型的文本文件。
 
 ## 语法
 

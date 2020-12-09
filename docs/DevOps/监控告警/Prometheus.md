@@ -1,12 +1,13 @@
 # Prometheus
 
-：一个流行的监控系统，基于 Golang 开发。
+：一个流行的监控系统。
+- [官方文档](https://prometheus.io/docs/introduction/overview/)
+- 基于 Golang 开发。
 - 源于 Google Borg 系统的监控系统，2016 年作为一个独立项目交给 CNCF 托管。
 - 擅长从大量节点上采集指标数据，且提供了 Web 管理页面。
-- [官方文档](https://prometheus.io/docs/introduction/overview/)
-- 对比：
-  - Zabbix 只擅长监控主机，而且配置比较繁琐。
-  - Prometheus 可监控主机、进程、容器等多种对象，可扩展性高，而且自带查询语言，配置比较灵活。
+- 可监控主机、进程、容器等多种对象，可扩展性高，而且自带查询语言，配置比较灵活。
+- 同类产品：
+  - Zabbix ：一个传统的监控系统，于 2001 年发布。只擅长监控主机，而且配置比较繁琐。
 
 ## 安装
 
@@ -746,7 +747,7 @@ inhibit_rules:
 
 ## exporter
 
-- [官方的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/) 
+- [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/) 
 - 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就提供了 exporter 风格的 HTTP API 。
 
 ### Prometheus

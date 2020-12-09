@@ -1,12 +1,12 @@
 # Jekyll
 
 ：一个制作静态网站的工具，基于 Ruby 开发，主要用于制作博客。
+- [官方文档](https://jekyllrb.com/docs/)
 - 它可以读取 XML、HTML、MarkDown 等格式的文件，按照模板生成静态网站。
 - 有很多主题模板，显示样式丰富。
 - 可以灵活地定制网页模板，但也比较麻烦，要学习模板语言 Liquid 。
 - 博客文章默认按时间顺序排列，没有目录，关联性低。
-- [官方文档](https://jekyllrb.com/docs/)
-- [浏览主题](http://jekyllthemes.org/)
+- [社区分享的网页主题](http://jekyllthemes.org/)
 
 ## 安装
 

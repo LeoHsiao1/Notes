@@ -1,9 +1,10 @@
 # Docker
 
-：目前最流行的容器引擎，基于 Golang 开发。
-- 于 2013 年被 Docker 公司推出，掀起了容器技术的潮流。
-- 运行在 Linux 平台上。也有 Docker for Windows 版本，但只能运行 windows 上的应用程序。
+：目前最流行的容器引擎。
 - [官方文档](https://docs.docker.com/engine/docker-overview/)
+- 基于 Golang 开发。
+- 于 2013 年被 Docker 公司发布，掀起了容器技术的潮流。
+- 运行在 Linux 平台上。也有 Docker for Windows 版本，但只能运行 windows 上的应用程序。
 
 ## 安装
 

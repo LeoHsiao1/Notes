@@ -82,19 +82,19 @@
 ## 远程开发
 
 VS Code 支持远程开发模式。
+- [官方教程](https://code.visualstudio.com/blogs/2019/05/02/remote-development)
 - 可以在本机的 VS Code 界面中打开其它主机上的文件目录，进行编辑、编译、调试等操作。
 - 远程目录可以位于物理机、虚机，甚至 Docker 容器中。
-- [官方教程](https://code.visualstudio.com/blogs/2019/05/02/remote-development)
 
 ## WSL
 
-：Windows 的 Linux 子系统（Windows Subsystem for Linux）
-- Windows 10 提供了 WSL 功能，用于在 Windows 中启动一个虚拟的 Linux 子系统。
+：Windows 的 Linux 子系统（Windows Subsystem for Linux，WSL），是 Windows 10 提供的一种虚拟机服务。
+- [官方文档](https://docs.microsoft.com/zh-cn/windows/wsl/)
+- 开启 WSL 服务之后，可以在 Windows 中启动一个虚拟的 Linux 子系统。
   - 例如安装 Ubuntu 类型的 WSL 之后，在 CMD 命令行中执行 ubuntu 命令即可进入 shell 终端。
   - 启动只需要几秒，并且比虚拟机的开销小很多。
   - 兼容大部分的 Linux 接口，因此可以安装、运行大部分 Linux 程序。
   - 将 Windows 磁盘文件挂载在 /mnt/ 目录下，可以直接访问。
-- WSL 2 比 WSL 1 的功能更强：
+- WSL 2 版本比 WSL 1 版本的功能更强：
   - 具有完整的 Linux 内核，可以运行 Docker 容器。
   - 可以调用 Windows 程序。
-- [官方文档](https://docs.microsoft.com/zh-cn/windows/wsl/)

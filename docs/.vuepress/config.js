@@ -492,7 +492,7 @@ module.exports = {
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        'k8s/简介',
+                        'k8s/Kubernetes',
                         'k8s/安装',
                         'k8s/Pod',
                         'k8s/Network',

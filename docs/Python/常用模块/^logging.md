@@ -157,6 +157,7 @@ logging 模块的主要功能分别由四个类实现：
 ```py
 import logging
 import logging.config
+from datetime import datetime
 
 
 LOGGING = {
@@ -182,13 +183,13 @@ LOGGING = {
             'formatter': 'verbose',
             # 'class': 'logging.FileHandler',   # 将日志输出到文件
             'class': 'logging.handlers.TimedRotatingFileHandler',  # 将日志输出到文件，并按时间自动翻转文件
-            'filename': 'main.log',
+            'filename': 'main.log.' + datetime.now().strftime('%Y-%m-%d'),
             'encoding': 'utf-8',
             'utc': False,                       # 是否采用 UTC 时间
             'when': 'D',                        # 指定计时的单位，可以是 S、M、H、D 等
             'interval': 1,                      # 从午夜开始计算，每隔 interval x when 时长就创建一个日志文件
             'backupCount': 7,                   # 最多保留多少个日志文件
-            # 这会先创建一个与 filename 一致的日志文件，如果当前时间需要翻转日志，则将原日志文件重命名，比如改成 main.log.2020-01-12
+            # 这会先创建一个以 filename 命名的日志文件，如果当前时间需要翻转日志，则将原日志文件重命名，比如改成 main.log.2020-01-12
         },
     },
     'loggers': {

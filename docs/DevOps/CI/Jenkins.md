@@ -496,8 +496,8 @@ pipeline {
   ```groovy
   git(
       branch: 'master',
-      credentialsId: 'credential_1',
-      url : 'git@github.com/${repository}.git'
+      credentialsId: 'credential_for_git',
+      url : 'git@g${repository_url}.git'
   )
   ```
 
@@ -507,15 +507,13 @@ pipeline {
       checkout([
           $class: 'SubversionSCM',
           locations: [[
-              remote: 'https://svnserver/svn/${repository}'
-              credentialsId: 'credential_2',
-              local: '.',
-              depthOption: 'infinity',
-              ignoreExternalsOption: true,
-              cancelProcessOnExternalsFail: true,
+              remote: 'https://svnserver/svn/${repository_url}'
+              credentialsId: 'credential_for_svn',
+              local: '.',                               // 保存目录，默认是创建一个与 SVN 最后一段路径同名的子目录
+              // depthOption: 'infinity',               // 拉取的目录深度，默认是无限深
           ]],
-          quietOperation: true,
-          workspaceUpdater: [$class: 'UpdateUpdater']
+          quietOperation: true,                         // 不显示拉取代码的过程
+          workspaceUpdater: [$class: 'UpdateUpdater']   // 使本地目录更新到最新版本
       ])
   }
   ```

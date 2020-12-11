@@ -848,12 +848,12 @@ server {
   auth_basic              "";                 # 只要不设置成 auth_basic off; 就会启用认证
   auth_basic_user_file    /etc/nginx/passwd;  # 使用哪个密码文件
   ```
-- 密码文件中保存了可用的用户名、密码，在运行时修改也会自动刷新。可用以下命令生成：
+- 密码文件中保存了可用的用户名、密码，可用以下命令生成：
   ```sh
   yum install httpd-tools
-  htpasswd -cb passwd leo 123456   # 往密码文件 passwd 中添加一个用户 leo ，并保存其密码的 MD5 值。加上 -c 选项会创建该文件，如果该文件已存在则会被覆盖
-  htpasswd -b passwd leo 1234      # 往密码文件 passwd 中添加一个用户 leo 。如果该用户名已存在，则会覆盖其密码
-  htpasswd -D passwd leo           # 删除一个用户
+  htpasswd -cb /etc/nginx/passwd leo 123456   # 往密码文件中添加一个用户 leo ，并保存其密码的 MD5 值。加上 -c 选项会创建该文件，如果该文件已存在则会被覆盖
+  htpasswd -b /etc/nginx/passwd leo 1234      # 往密码文件中添加一个用户 leo 。如果该用户名已存在，则会覆盖其密码
+  htpasswd -D /etc/nginx/passwd leo           # 删除一个用户
   ```
 
 ### auth_delay

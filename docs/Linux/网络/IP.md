@@ -98,6 +98,8 @@ $ ip
   127.0.0.1   localhost localhost4
   ::1         localhost localhost6
   ```
+  如果一个域名同时匹配多条 DNS 路由，则采用第一条匹配的。
+
 - `/etc/sysconfig/network-scripts/ifcfg-eth0` 文件中配置了网卡 eth0 采用的 DNS 服务器：
   ```
   DNS1=202.96.134.133
@@ -105,6 +107,7 @@ $ ip
   DNS3=202.96.128.86
   DNS4=114.114.114.114
   ```
+
 - `/etc/resolv.conf` 文件中配置了 Linux 系统采用的 DNS 服务器：
   ```
   nameserver 114.114.114.114
@@ -157,8 +160,8 @@ PING google.com (93.46.8.90) 56(84) bytes of data.
 ^C
 ```
 - 可见它一直尝试连接目标主机，但并没有成功。原因可能是：
-  - 与目标主机的物理网络没有连通
-  - 与目标主机的物理网络连通，但是目标主机没有开启 ICMP 协议
+  - 与目标主机的物理网络没有连通。
+  - 与目标主机的物理网络连通，但是目标主机没有开启 ICMP 协议。
 
 ## traceroute
 

@@ -214,9 +214,9 @@ git push origin --force --all --tags    # 强制推送，覆盖远端仓库
 ## 配置
 
 git 的配置文件有三种，局部的配置会覆盖全局的配置：
-- 系统的配置文件：保存在 /etc/gitconfig 。
-- 当前用户的配置文件：保存在 ~/.gitconfig 。
-- 当前 git 仓库的配置文件：保存在 .git/config 。
+- 系统的配置文件：保存在 `/etc/gitconfig` 。
+- 当前用户的配置文件：保存在 `~/.gitconfig` 。
+- 当前 git 仓库的配置文件：保存在 `.git/config` 。
 
 可以在文本编辑器中修改配置文件，也可以使用以下命令进行修改：
 ```sh

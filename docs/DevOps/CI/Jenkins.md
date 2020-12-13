@@ -189,7 +189,7 @@ pipeline {
 
 ### 使用变量
 
-- Jenkinsfile 中可以按 `$变量名` 的格式读取变量的值。如下：
+- Jenkinsfile 中可以按 `$变量名 ` 的格式读取变量的值。如下：
     ```groovy
     script {
         ID = "1"            // 执行 Groovy 代码，创建变量

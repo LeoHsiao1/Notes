@@ -16,7 +16,7 @@
   - follower ：负责处理 client 的读请求，参与 leader 选举。
   - observer ：负责处理 client 的读请求，扩展系统的读取速度。
 
-- 采用 Zab （Zookeeper atomic broadcast protocol，与 Raft 类似）协议实现一致性：
+- 采用 Zab （Zookeeper atomic broadcast protocol ，与 Raft 类似）协议实现一致性：
   - 如果多数 server 写入数据成功，则数据为真。
   - server 数为 3 时，最多允许 1 个 server 挂掉。server 数为 4 时，也是最多允许 1 个 server 挂掉。
     因此， server 数最好为奇数，为偶数时可靠性并不会提升。部署 3 个 server 就可以组成一个最小的 Zookeeper 集群。

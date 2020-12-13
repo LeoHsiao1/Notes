@@ -471,7 +471,7 @@ server {
       # proxy_redirect off;
   }
   ```
-  - 默认会启用 `proxy_redirect default;` ，其规则为 `proxy_redirect <proxy_pass_url> <location_url>;`。
+  - 默认会启用 `proxy_redirect default;` ，其规则为 `proxy_redirect <proxy_pass_url> <location_url>;` 。
     - 在上例中相当于 `proxy_redirect http://127.0.0.1:79/ /www/;` 。
     - 如果 proxy_pass 中调用了变量，则默认规则会失效。
 
@@ -535,7 +535,7 @@ server {
   ```
 
 - 如果客户端发来的请求 URL 与缓存的某个 URL 的 hash 值相同，则直接从缓存中取出数据回复给客户端，此时响应头中包含 `Nginx-Cache: HIT` 。
-  - 否则，将请求转发给上游服务器处理，此时响应头中包含 `Nginx-Cache: MISS`。
+  - 否则，将请求转发给上游服务器处理，此时响应头中包含 `Nginx-Cache: MISS` 。
   - 如果响应头中的 Cache-Control 取值为 Private、No-Cache、No-Store 或 Set-Cookie ，则不缓存。
 
 - 可以给客户端加上一个响应头，表示缓存的使用情况。
@@ -673,7 +673,7 @@ server {
 ### error_log
 
 - 配置 Nginx 的错误日志，它会记录 Nginx 的内部运行信息。
-- 可用范围：main，http，mail，stream，server，location
+- 可用范围：main ，http ，mail ，stream ，server ，location
 - 语法：
   ```sh
   error_log path [level];
@@ -963,14 +963,14 @@ server {
 
 ### tcp_nopush
 
-- 有数据时先不发送，而是等满足 TCP 包最大段大小（Maximum Segment Size，MSS）时才发送。
+- 有数据时先不发送，而是等满足 TCP 包最大段大小（Maximum Segment Size ，MSS）时才发送。
 - 可用范围：http、server、location
 - 默认值：
   ```sh	
   tcp_nopush    off;
   ```
 - 仅在 sendfile 模式中有效。这样能降低网络 I/O 量，不容易阻塞网络。
-- 如果同时启用 tcp_nodelay，tcp_nopush ，则最后一个 TCP 包采用 tcp_nodelay ，其它 TCP 包采用 tcp_nopush 。
+- 如果同时启用 tcp_nodelay ，tcp_nopush ，则最后一个 TCP 包采用 tcp_nodelay ，其它 TCP 包采用 tcp_nopush 。
 
 ## 关于 HTTP 通信
 

@@ -41,7 +41,7 @@
         - ./data:/var/lib/ldap        # 挂载存储目录
         - ./conf:/etc/ldap/slapd.d    # 挂载配置目录
   ```
-  - 该 Docker 镜像的 [Github页面](https://github.com/osixia/docker-openldap)
+  - 该 Docker 镜像的 [Github 页面](https://github.com/osixia/docker-openldap)
   - 默认监听两个端口：
     - 389 ：用于非加密通信。
     - 636 ：用于 SSL/TLS 加密通信。
@@ -120,22 +120,22 @@
   modifiersName: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth    # 这一个长 dn 是默认用户
   modifyTimestamp: 20201119072303Z
   ```
-  - `olcDatabase：[{<index>}] <type>`
+  - `olcDatabase ：[{<index>}] <type>`
     - 用于创建一个数据库实例。
     - index ：该数据库实例在同类数据库中的索引。不指定时会根据创建顺序自动生成。
     - type ：该数据库的后端类型。
   - `olcSuffix: <dn suffix>`
     - 指定一个 dn 后缀。所有包含该 dn 后缀的查询请求会被转发到该数据库，通常与该数据库的 Root DN 相同。
     - 查询目标指向 olcDatabase 的 dn 时，会返回该该数据库的配置信息。而查询目标指向 olcSuffix 时，会返回该数据库中存储的条目。
-  - `olcRootDN：<dn>`
+  - `olcRootDN ：<dn>`
     - 创建一个对该数据库有完全权限的 root 用户（这会保存为指定 dn 的条目）。
     - dn ：root 用户的名称，不一定指向实际存在的条目。可以引用 SASL 用户。
-  - `olcRootPW：<password>`
+  - `olcRootPW ：<password>`
     - 为 root 用户指定密码。可以指定多个密码。
     - password ：可以是明文密码，也可以是密码的哈希值。
   - `olcAccess: to <what> [ by <who> [<accesslevel>] [<control>] ]+`
     - 允许 what 被 who 访问，分配 accesslevel 级别的权限。
-    - 如果不配置 olcAccess ，则默认为 `* by * read`。
+    - 如果不配置 olcAccess ，则默认为 `* by * read` 。
     - 如果用户访问一个对象时没有读取权限，会报错该对象不存在。
     - 在存在多个 olcAccess 规则时，最先匹配的那个会生效。如下，匿名用户会应用第二个 by 规则。
       ```
@@ -228,7 +228,7 @@
       by dn="cn=root,dc=example,dc=org" write
       by * none
     ```
-    TODO：
+    TODO ：
     - 这里使用默认创建的 `olcDatabase={1}mdb,cn=config` 数据库，不知道如何创建新的数据库。
     - 上述配置中可以修改 olcRootDN 的名称，但改变默认的 olcSuffix 就会导致查询不到。
 

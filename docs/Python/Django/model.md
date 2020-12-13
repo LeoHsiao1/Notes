@@ -70,7 +70,7 @@ class QuerySet:
   >>> book = Book.objects.get(pk=1)   # 此时会执行 SQL ，查询 book 实例的所有字段，并缓存
   [Execute SQL] SELECT "app1_book"."id", "app1_book"."name", "app1_book"."abstract", "app1_book"."author_id", "app1_book"."datetime" FROM "app1_book" WHERE "app1_book"."id" = ? LIMIT 21
   >>> book.name                       # 此时不会再执行 SQL ，而是使用缓存的数据
-  '测试1'
+  '故事会'
   >>> book.author                     # 此时会查询外键实例的所有字段，并缓存
   [Execute SQL] SELECT "app1_person"."id", "app1_person"."name" FROM "app1_person" WHERE "app1_person"."id" = ? LIMIT 21
   <Person: Leo>

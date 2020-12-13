@@ -40,8 +40,8 @@ file_list[${#file_list[*]}]=README.md
 file_list[${#file_list[*]}]=etc/README.md
 for file in $file_list
 do
-    python3 etc/replace.py --file $file --src '([\u4e00-\u9fa5])(\w|`)' --dst '$1 $2'
-    python3 etc/replace.py --file $file --src '(\w|`)([\u4e00-\u9fa5])' --dst '$1 $2'
-    python3 etc/replace.py --file $file --src '(\w|`)([，。：！？])' --dst '$1 $2'
+    python3 etc/replace.py --file $file --src '([\u4e00-\u9fa5])(\w|`|C\+\+|g\+\+)' --dst '$1 $2'
+    python3 etc/replace.py --file $file --src '(\w|`|C\+\+|g\+\+)([\u4e00-\u9fa5])' --dst '$1 $2'
+    python3 etc/replace.py --file $file --src '(\w|`|C\+\+|g\+\+)([，。：！？])'     --dst '$1 $2'
 done
 ```

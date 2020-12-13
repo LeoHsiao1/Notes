@@ -10,7 +10,7 @@
 - 2014 年，Google 开源了 k8s 项目，它源于 Google 内部的大规模集群管理系统 Borg 。
 - 2015 年，Google 将 k8s 项目捐赠给 Linux 基金会下属的云原生计算基金会（CNCF）托管。
 - 2020 年底，发布 v1.2 版本。
-  - 弃用 Docker 作为容器运行时（Container Runtime Interface， CRI），建议改用 containerd 或 CRI-O 。
+  - 弃用 Docker 作为容器运行时（Container Runtime Interface ， CRI），建议改用 containerd 或 CRI-O 。
     - 如果用户继续使用 Docker 运行镜像，则启动 kubelet 时会显示一条警告。
     - 原本 Docker 没有直接支持 CRI 接口，k8s 只能通过 Dockershim 模块间接与 Docker 通信，但维护该模块比较麻烦，现在停止维护该模块。
     - 使用 Docker 构建出的镜像符合 OCI 标准（Open Container Initiative），因此依然可以被 containerd 或 CRI-O 运行。

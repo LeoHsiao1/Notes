@@ -14,9 +14,9 @@
 
 ### 条目
 
-- LDAP 服务器上可以创建多个目录信息树（Directory Information Tree，DIT），在其中按树形结构存储数据。
+- LDAP 服务器上可以创建多个目录信息树（Directory Information Tree ，DIT），在其中按树形结构存储数据。
   - 与 SQL 型数据相比，树形结构的查询速度很快，但写入速度较慢。
-  - 目录服务器代理（Directory Server Agent，DSA）：指可以被 LDAP 客户端获取目录数据的服务器。
+  - 目录服务器代理（Directory Server Agent ，DSA）：指可以被 LDAP 客户端获取目录数据的服务器。
 
 - LDAP 存储的每条数据称为条目（Entry）。
   - 添加一个条目时，首先要设置其属性，然后要设置其 RDN 。
@@ -34,7 +34,7 @@
 
   属性                      | 别名   | 语法              | 描述            | 取值举例
   -|-|-|-|-
-  user id                   | uid   | Directory String  | 用户ID          | LeoHsiao
+  user id                   | uid   | Directory String  | 用户 ID          | LeoHsiao
   commonName                | cn    | Directory String  | 姓名            | LeoHsiao
   surname                   | sn    | Directory String  | 姓              | Leo
   domain component          | dc    | Directory String  | 域名中的一个字段 | com

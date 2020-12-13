@@ -71,19 +71,19 @@ plt.legend()  # 创建图例（这会自动提取每个折线的 label 名作为
 
 
 plt.title("Simple Plot")        # 设置图像窗口的标题名
-plt.xlabel("X", fontsize=16)    # 设置x轴的名字及其字体大小
+plt.xlabel("X", fontsize=16)    # 设置 x 轴的名字及其字体大小
 plt.ylabel("Y")
 
 
 # plt.grid(True)        # 显示网格线
-# plt.axis([0, 10, 0, 1])        # 设置x轴和y轴的长度（如果设置了，显示时窗口比例会固定，否则会自动调整）
+# plt.axis([0, 10, 0, 1])        # 设置 x 轴和 y 轴的长度（如果设置了，显示时窗口比例会固定，否则会自动调整）
 # plt.tick_params(axis="both", labelsize=10)  # 选择显示两条坐标轴，并设置坐标轴数字的大小
 
 plt.savefig("test1.png")    # 保存图像
 
 
-plt.cla()                # 对当前figure中的所有坐标轴执行axes.cla()，清除其中的图像
-plt.clf()                 # 清除当前figure中的所有坐标轴
+plt.cla()                # 对当前 figure 中的所有坐标轴执行 axes.cla()，清除其中的图像
+plt.clf()                 # 清除当前 figure 中的所有坐标轴
 ```
 
 
@@ -213,10 +213,10 @@ array([[[ 72, 164, 201],
 
 ## 绘图函数
 
-所有绘图功能均预期numpy.array或numpy.ma.masked_array作为输入。
+所有绘图功能均预期 numpy.array 或 numpy.ma.masked_array 作为输入。
 
 
 
 绘制动态图：https://blog.csdn.net/rumswell/article/details/11731003
-mpl_toolkits库用于绘制三维图，参考：https://blog.csdn.net/chi_wawa/article/details/68062506
+mpl_toolkits 库用于绘制三维图，参考：https://blog.csdn.net/chi_wawa/article/details/68062506
 

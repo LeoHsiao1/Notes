@@ -3,7 +3,7 @@
 ：GNU 编译器的一部分。
 - GNU 编译器套件（GNU Compiler Collection）是类 Unix 系统上的标准编译器。
 - gcc 最初只支持 C 语言，后来还支持 C++、Objective-C、Fortran、Java 等语言，并且被移植到多个平台。
-- gcc 是 C 语言的编译器，g++是 C++的编译器。
+- gcc 是 C 语言的编译器，g++ 是 C++ 的编译器。
 
 ## 编译过程
 

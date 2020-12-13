@@ -160,7 +160,7 @@ systemctl start vsftpd
     anon_other_write_enable=YES # 允许匿名用户修改目录名、删除目录
 
     # download_enable=YES       # 允许用户下载文件
-    write_enable=YES            # 允许用户使用 DELE，RNFR、STOR 等命令修改文件
+    write_enable=YES            # 允许用户使用 DELE ，RNFR、STOR 等命令修改文件
 
     chroot_local_user=YES                       # 限制用户只能访问主目录
     # chroot_list_file=/etc/vsftpd.chroot_list

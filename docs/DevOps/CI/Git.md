@@ -6,7 +6,7 @@
 - 2005 年由 Linus Torvalds 开发。
 - 可以记录文件每次修改时的状态，供用户将文件回滚到任意历史时刻。
 - 可以创建多个版本分支，进行分支合并，供多人合作开发同一个项目。
-- 属于软件配置管理（Software Configuration Management，SCM）工具，同类产品包括：
+- 属于软件配置管理（Software Configuration Management ，SCM）工具，同类产品包括：
   - Subversion ：简称为 svn ，一个集中式的版本控制工具。用户需要通过客户端连接服务器，才能拉取代码或更新代码。
   - Mercurial ：基于 Python 开发。
 

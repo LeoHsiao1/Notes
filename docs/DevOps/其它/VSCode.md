@@ -88,7 +88,7 @@ VS Code 支持远程开发模式。
 
 ## WSL
 
-：Windows 的 Linux 子系统（Windows Subsystem for Linux，WSL），是 Windows 10 提供的一种虚拟机服务。
+：Windows 的 Linux 子系统（Windows Subsystem for Linux ，WSL），是 Windows 10 提供的一种虚拟机服务。
 - [官方文档](https://docs.microsoft.com/zh-cn/windows/wsl/)
 - 开启 WSL 服务之后，可以在 Windows 中启动一个虚拟的 Linux 子系统。
   - 例如安装 Ubuntu 类型的 WSL 之后，在 CMD 命令行中执行 ubuntu 命令即可进入 shell 终端。

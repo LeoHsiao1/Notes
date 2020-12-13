@@ -44,7 +44,7 @@ StrictModes yes                   # 在 SSH 认证时检查用户的家目录、
 - 修改了配置文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
 - `~/.ssh/authorized_keys` 文件中保存了一些公钥，允许客户端使用对应的私钥进行 SSH 认证，登录到本机。
 - `~/.ssh/known_hosts` 文件中保存了所有与本机成功进行了 SSH 认证的主机的公钥。下次再连接到这些主机时，如果其公钥发生变化，则怀疑是被冒充了。
-- 如果 StrictModes 检查不通过，会拒绝 SSH 认证，并在 /var/log/secure 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys`，此时建议执行：
+- 如果 StrictModes 检查不通过，会拒绝 SSH 认证，并在 /var/log/secure 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` ，此时建议执行：
   ```sh
   chmod 700 ~ ~/.ssh
   chmod 600 ~/.ssh/authorized_keys

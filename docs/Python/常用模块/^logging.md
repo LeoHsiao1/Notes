@@ -89,7 +89,7 @@ logging 模块的主要功能分别由四个类实现：
     ```
   
 - name 可以声明多个层级，用 . 作为分隔符。
-  - 例如 `logger1.logger2.logger3` ， 当最低层的 logger3 收到一条日志时，会将日志传递给更高层的 logger1.logger2。
+  - 例如 `logger1.logger2.logger3` ， 当最低层的 logger3 收到一条日志时，会将日志传递给更高层的 logger1.logger2 。
     - 传递时不受 filter 限制。
     - 此时应该只对最高层的 logger3 分配 handle ，以免重复输出日志。
   - 执行 `logging.getLogger(__name__)` 时，就是使用 Python 的模块路径作为 name 。
@@ -145,9 +145,9 @@ logging 模块的主要功能分别由四个类实现：
   funcName    # 当前代码所在函数名
   lineno      # 当前代码所在行号
 
-  process     # 当前的进程ID
+  process     # 当前的进程 ID
   processName # 当前的进程名称
-  thread      # 当前的线程ID
+  thread      # 当前的线程 ID
   threadName  # 当前的线程名称
   ```
 

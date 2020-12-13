@@ -58,8 +58,8 @@ Cython 主要使用以下几种文件：
 
 ## 其它
 
-例：[Python 调用 C/C++的 API](http://docs.cython.org/en/latest/src/tutorial/clibraries.html)
+例：[Python 调用 C/C++ 的 API](http://docs.cython.org/en/latest/src/tutorial/clibraries.html)
 
-例：[C/C++调用 Python 的 API](http://docs.cython.org/en/latest/src/userguide/external_C_code.html)
+例：[C/C++ 调用 Python 的 API](http://docs.cython.org/en/latest/src/userguide/external_C_code.html)
 
 教程：<http://docs.cython.org/en/latest/src/tutorial/index.html>

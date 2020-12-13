@@ -1,14 +1,12 @@
 # HTML
 
-超文本标记语言（Hyper Text Markup Language），用于描述 Web 网页的内容。
-
+：超文本标记语言（Hyper Text Markup Language），用于描述 Web 网页的内容。
 - HTML 是一种文本格式，编辑的内容一般保存为文本文件，后缀名为 .html 或 .htm 。
 - Web 浏览器读取了 HTML 格式的文本之后就能显示出对应的 Web 网页，显示效果比纯文本丰富很多。
 - [HTML 参考手册](https://www.w3school.com.cn/tags/index.asp)
 
 ## 版本
 
-- 1990 年，欧洲粒子物理研究所的 Tim Berners Lee 在发明 Web 技术的过程中创造了 HTML 语言。
 - 1993 年，HTML1 标准发布。
 - 经历了 HTML2 和 HTML3 之后，W3C 在 1997 年发布了 HTML4 标准，此后稳定使用多年。
 - 1998 年，W3C 停止更新 HTML4 ，开始研究将 HTML4 改为严格的 XML 格式，称为 XHTML 。

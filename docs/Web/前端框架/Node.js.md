@@ -1,7 +1,9 @@
 # Node.js
 
-：一个 JavaScript 运行环境，基于 Chrome V8 引擎。
+：一个 JavaScript 运行环境。
 - [官方文档](https://nodejs.org/en/docs/guides/)
+- 基于 Chrome 浏览器的 V8 引擎。
+  - V8 引擎基于 C++ 开发，它将 JS 代码直接编译成机器码（而不是字节码），从而将 JS 代码的执行速度提高到接近二进制程序。
 
 ## 用途
 - 构建前端文件。

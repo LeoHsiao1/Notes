@@ -1,12 +1,30 @@
 # PHP
 
-：超文本预处理器（Hypertext Preprocessor），一种用于 Web 后端的脚本语言。
-- PHP5.6 版本于 2014 年发布，PHP6 版本被跳过，PHP7 版本于 2015 年发布，优化了很多性能。
-- 常见的 PHP 运行环境：
-  - LAMP（Linux+Apache+MySql+PHP）框架
-  - LNMP（Linux+Nginx+MySql+PHP）框架
-  - WAMP（Windows+Apache+MySql+PHP）框架
-  - WNMP（Windows+Nginx+MySql+PHP）框架
+：超文本预处理器（Hypertext Preprocessor），一种脚本语言，常用于 Web 开发。
+- [官网](https://www.php.net/)
+- 1994 年，加拿大的 Rasmus Lerdorf 为了维护个人网页而用 Perl 语言编写了一些程序，后来改进成一种新语言 PHP 。
+
+## 版本
+
+- PHP 5.6 ：于 2014 年发布。
+- PHP 6 ：被跳过。
+- PHP 7 ：于 2015 年底发布，优化了很多性能。
+- PHP 8 ：于 2020 年底发布。
+
+## 安装
+
+- 安装 PHP 解释器：
+  ```sh
+  yum install epel-release
+  yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+  yum install php72
+  ```
+
+- 通常将 PHP 与一些常用软件打包成一个运行环境，比如：
+  - LAMP ：Linux + Apache + MySql + PHP
+  - LNMP ：Linux + Nginx + MySql + PHP
+  - WAMP ：Windows + Apache + MySql + PHP
+  - WNMP ：Windows + Nginx + MySql + PHP
   - WampServer ：一款 WAMP 软件。
   - phpStudy ：一款兼容 WAMP 和 WNMP 的软件。
 
@@ -15,41 +33,41 @@
 - 每行语句要以分号 ; 结尾。
 - 用 // 声明单行注释，用 /* 和 */ 声明多行注释。
 - PHP 代码可以通过标签 `<?php` 和 `?>` 嵌入到 HTML 文件中，但此时要将文件后缀名改为 .php 。如下：
-    ```php
-    <!DOCTYPE html>
-    <html>
-    <body>
+  ```php
+  <!DOCTYPE html>
+  <html>
+  <body>
 
-    <?php
-    echo "Hello World!";
-    ?>
+  <?php
+  echo "Hello World!";
+  ?>
 
-    </body> 
-    </html>
-    ```
+  </body> 
+  </html>
+  ```
 
 ## 输入输出
 
 - 可以用关键字 echo 显示字符串，如下：
-    ```php
-    echo $x,"\nhello";
-    echo PHP_EOL;        // 显示换行符
-    ```
+  ```php
+  echo $x,"\nhello";
+  echo PHP_EOL;        // 显示换行符
+  ```
   - 也可以换成关键字 print ，但它同时只能显示一个字符串。
 - 可以用函数 print_r() 或 var_dump() 按适当的排版显示变量的值，并且 var_dump() 还会显示变量的类型、长度。
 
 ## 变量
 
-### 变量的定义
+### 定义变量
 
 - 变量的命名规范与 C 语言相同，只不过变量名要加上 $ 前缀。
 - 变量会在第一次赋值时被自动创建，不需要声明变量的类型，因此 PHP 是一种弱类型语言。如下：
-    ```php
-    $x = 1;
-    echo $x;
-    ```
+  ```php
+  $x = 1;
+  echo $x;
+  ```
 
-### 变量的数据类型
+### 数据类型
 
 - null ：空值。
 - int
@@ -110,8 +128,8 @@
 ### 超全局变量
 
 ：一些关联数组，由 PHP 解释器提供，不需要声明就可以在所有 PHP 脚本中使用。
-- $GLOBALS ：存储了所有全局变量。
-- $_SERVER ：存储了一些服务器的信息。
+- `$GLOBALS` ：存储了所有全局变量。
+- `$_SERVER` ：存储了一些服务器的信息。
   - 执行 `print_r($_SERVER);` 即可查看其具体内容，如下：
     ```php
     $_SERVER["SERVER_ADDR"] = 127.0.0.1   // 服务器的 IP 地址
@@ -124,25 +142,22 @@
     $_SERVER["SCRIPT_FILENAME"] => "/php/WWW/index.php"  // 该脚本在主机上的绝对路径
     $_SERVER["SCRIPT_NAME"] = "/index.php"               // 该脚本在网站中的相对路径
     ```
-- $_REQUEST ：存储了 HTTP 请求的表单数据。
-  - 例：
+- `$_REQUEST` ：存储了 HTTP 请求的表单数据。如下：
     ```php
     echo $_REQUEST["username"];
     ```
-- $_POST ：存储了 HTTP 请求的表单数据。
-  - 例：
+- `$_POST` ：存储了 HTTP 请求的表单数据。如下：
     ```php
     echo $_POST["username"];
     ```
-- $_GET ：存储了 HTTP 请求的 query string 中的参数。
-  - 例：
+- `$_GET` ：存储了 HTTP 请求的 query string 中的参数。如下：
     ```php
     echo $_REQUEST["kw"];
     ```
-- $_COOKIE
-- $_SESSION
-- $_ENV ：存储了 PHP 脚本的所有环境变量。
-- $_FILES ：存储了 Web 客户端上传的文件。
+- `$_COOKIE`
+- `$_SESSION`
+- `$_ENV` ：存储了 PHP 脚本的所有环境变量。
+- `$_FILES` ：存储了 Web 客户端上传的文件。
 
 ## 运算符
 

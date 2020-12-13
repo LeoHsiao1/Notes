@@ -1,20 +1,21 @@
 # Ruby
 
 ：一种脚本语言。
-- 于 1995 年被日本的松本行弘发布。
+- [官网](http://www.ruby-lang.org/zh_cn/)
+- 1995 年由日本的松本行弘发布，借鉴了 Lisp、Perl 等语言的特性。
 - 属于纯面向对象、无类型、动态语言。
 
-## 解释器
+## 安装
 
-安装 Ruby 解释器：
-```sh
-yum install ruby
-```
+- 安装 Ruby 解释器：
+  ```sh
+  yum install ruby
+  ```
 
-执行 Ruby 脚本：
-```sh
-ruby test.rb
-```
+- 执行 Ruby 脚本：
+  ```sh
+  ruby test.rb
+  ```
 
 ## 语法特点
 

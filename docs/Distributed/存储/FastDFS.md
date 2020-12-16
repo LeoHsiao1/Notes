@@ -122,12 +122,13 @@ FastDFS 的服务器分为两种角色：
 ### 常用命令
 
 ```sh
+fdfs_trackerd       <config_file>                           # 启动 tracker server
+fdfs_storaged       <config_file> [start|stop|restart]      # 启动或停止 storage server
+fdfs_monitor        <config_file>                           # 查询服务器的状态信息
+
 fdfs_upload_file    <config_file> <filename> [storage_ip:port] [store_path_index]           # 上传文件
 fdfs_append_file    <config_file> <path> <filename>                                         # 追加上传文件
 fdfs_download_file  <config_file> <path> [filename] [<download_offset> <download_bytes>]    # 下载文件
 fdfs_delete_file    <config_file> <path>                    # 删除文件
 fdfs_file_info      <config_file> <path>                    # 查询文件的信息
-
-fdfs_storaged       <config_file> [start|stop|restart]      # 启动或停止 storage
-fdfs_monitor        <config_file>                           # 查询服务器的状态信息
 ```

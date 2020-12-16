@@ -1,0 +1,236 @@
+# ♢ pathlib
+
+：Python 的标准库，以面向对象的方式处理文件路径。
+- [官方文档](https://docs.python.org/3/library/pathlib.html)
+- 比 os.path 模块使用起来更简洁些，但功能较少。
+
+## 原理
+
+- 关于文件路径的风格：
+  - 类 Unix 系统采用 POSIX 标准，因此文件路径区分大小写，使用正斜杠 `/` 作为路径分隔符，以根目录 `/` 作为目录树的起点。
+  - Windows 系统的文件路径不区分大小写，使用反斜杠 `\` 作为路径分隔符，以盘符（比如 `C:` ）作为目录树的起点。
+  - Python 的大部分原生模块都能自动处理路径分隔符，可以用正斜杠也可以用反斜杠。如下：
+    ```py
+    >>> os.path.exists('D:/1')
+    True
+    >>> os.path.exists('D://1')   # 多余的正斜杠会被忽略
+    True
+    >>> os.path.exists('D:\\1')   # 在字符串中使用反斜杠时要转义为 \\ 或者加上前缀 r
+    True
+    >>> os.path.exists(r'D:\1')
+    True
+    ```
+
+## 创建实例
+
+- pathlib 提供了以下几个类，用于创建路径对象：
+  ```py
+  class PurePath(object)
+  class PurePosixPath(PurePath)
+  class PureWindowsPath(PurePath)
+
+  class Path(PurePath)
+  class PosixPath(Path, PurePosixPath)
+  class WindowsPath(Path, PureWindowsPath)
+  ```
+  - `PurePath` 类表示纯路径。实例化该类时，会根据当前操作系统自动返回一个 `PurePosixPath` 或 `PureWindowsPath` 对象。如下：
+    ```py
+    >>> from pathlib import PurePath
+    >>> PurePath()
+    PureWindowsPath('.')
+    ```
+    也可以直接创建指定风格的路径对象：
+    ```py
+    >>> from pathlib import PurePosixPath, PureWindowsPath
+    >>> PurePosixPath()
+    PurePosixPath('.')
+    >>> PureWindowsPath()
+    PureWindowsPath('.')
+    ```
+  - `PurePath` 类表示具体路径。实例化该类时，会根据当前操作系统自动返回一个 `PosixPath` 或 `WindowsPath` 对象。如下：
+    ```py
+    >>> from pathlib import Path
+    >>> Path()
+    WindowsPath('.')
+    ```
+    也可以直接创建指定风格的路径对象：
+    ```py
+    >>> from pathlib import PosixPath, WindowsPath
+    >>> WindowsPath()
+    WindowsPath('.')
+    >>> PosixPath()       # 不能创建与当前操作系统的路径风格不同的、具体路径的对象
+    NotImplementedError: cannot instantiate 'PosixPath' on your system
+    ```
+
+- 传入一个表示路径的字符串，即可创建路径对象：
+  ```py
+  >>> Path('test/f1/')
+  WindowsPath('test/f1')
+  ```
+  参数为空时，默认为当前目录：
+  ```py
+  >>> Path()
+  WindowsPath('.')
+  ```
+  可以输入多个字符串，它们会自动拼接成一个路径：
+  ```py
+  >>> Path('D:/', 'test', 'f1')
+  WindowsPath('D:/test/f1')
+  >>> Path('D:/', '/test', 'C:f1')  # 拼接时，如果出现多个根路径，则只会保留从最后一个根路径开始的路径
+  WindowsPath('C:f1')
+  ```
+
+- 创建路径对象时，会自动简化文件路径：
+  ```py
+  >>> Path('D:\\test\\f1')    # 会将路径分隔符统一转换成正斜杠 / ，不管路径风格
+  WindowsPath('D:/test/f1')
+  >>> Path('test//f1/')       # 会删除多余的路径分隔符
+  WindowsPath('test/f1')
+  >>> Path('./test/f1')       # 会删除开头的 ./
+  WindowsPath('test/f1')
+  ```
+
+- 用 str() 函数可以获取路径对象对应的实际文件路径：
+  ```py
+  >>> str(Path('D:/test/f1'))
+  'D:\\test\\f1'
+  ```
+
+- Python 的大部分原生模块都支持传入路径对象作为参数，代替字符串形式的文件路径：
+  ```py
+  >>> os.path.exists(Path('D:/test/f1'))
+  True
+  >>> f = open(Path('D:/test/f1'))
+  >>> f.close()
+  ```
+
+## PurePath 类
+
+### 运算符
+
+- 可以通过正斜杠运算符 `/` 拼接多个路径：
+  ```py
+  >>> 'test' / PurePath('./f1')
+  PureWindowsPath('test/f1')
+  >>> 'test' / PurePath('./f1') / PurePosixPath('test')
+  PureWindowsPath('test/f1/test')
+  ```
+
+- 可以用等于运算符 `==` 判断两个路径对象是否相等：
+  ```py
+  >>> PurePosixPath('test') == PurePosixPath('test')      # 两个路径对象的风格相同、路径相同，则相等
+  True
+  >>> PurePosixPath('test') == PureWindowsPath('test')
+  False
+  >>> PurePosixPath('test') is PurePosixPath('test')      # 两个路径对象的风格相同、路径相同，依然不是同一个实例
+  False
+  ```
+  ```py
+  >>> PurePosixPath('test') == PurePosixPath('Test')      # POSIX 风格区分大小写
+  False
+  >>> PureWindowsPath('test') == PureWindowsPath('Test')  # Windows 风格不区分大小写
+  True
+  ```
+
+## 属性
+
+- 常用属性：
+  ```py
+  >>> p = PurePath('D:/test/1.txt')
+  >>> p.name      # 返回路径的最后一个字段
+  '1.txt'
+  >>> p.suffix    # 返回文件的扩展名
+  '.txt'
+  >>> PurePath('1.tar.gz').suffix   # 只会截取最后一个点 . 之后的部分作为扩展名
+  '.gz'
+  >>> p.stem      # 返回文件的扩展名之前的部分
+  '1'
+  ```
+
+- 分割路径：
+  ```py
+  >>> p.parts                                   # 返回一个元组，包含路径中的各个字段
+  ('D:\\', 'test', '1.txt')
+  >>> PurePosixPath('/usr/bin/python3').parts   # 注意根路径也算一个字段
+  ('/', 'usr', 'bin', 'python3')
+  ```
+
+- 父目录：
+  ```py
+  >>> p.parent                                  # 返回上一级父目录
+  PureWindowsPath('D:/test')
+  >>> PurePath('D:/').parent                    # 根路径的父目录是它本身
+  PureWindowsPath('D:/')
+  >>> PurePosixPath('/').parent
+  PurePosixPath('/')
+  >>> PurePath('.').parent                      # . 和 .. 的父目录都是 .
+  PureWindowsPath('.')
+  >>> PurePath('..').parent
+  PureWindowsPath('.')
+  ```
+  ```py
+  >>> p.parents                                 # 返回一个序列，包含每一级父目录
+  <PureWindowsPath.parents>
+  >>> list(p.parents)
+  [PureWindowsPath('D:/test'), PureWindowsPath('D:/')]
+  ```
+  - 对于 `C:/` `/` `.` `..` 等特殊路径， pathlib 的处理过程可能难以预料。
+
+## 方法
+
+- 常用方法：
+  ```py
+  >>> p.as_posix()        # 将路径转换成 Posix 风格
+  'D:/test/1.txt'
+  >>> p.is_absolute()     # 判断该路径是否为绝对路径
+  True
+  ```
+
+- 模糊匹配：
+  ```py
+  >>> p.match('D:/test/*.txt')  # 判断路径是否与指定的 pattern 匹配
+  True
+  >>> p.match('D:/*.txt')       # 该 pattern 是匹配 D:/ 目录下的 *.txt 文件
+  False
+  ```
+
+## Path 类
+
+## 方法
+
+- 常用方法：
+  ```py
+  >>> p = Path('D:/test/1.txt')
+  >>> p.exists()
+  True
+  >>> p.is_dir()
+  False
+  >>> p.is_file()
+  True
+  >>> p.is_symlink()
+  False
+  ```
+
+- 绝对路径：
+  ```py
+  >>> Path('./test/1.txt').resolve()    # 转换绝对路径时可能因为该路径不存在而失败，没有 os.path.abspath() 可靠
+  WindowsPath('test/1.txt')
+  >>> Path('../test/1.txt').resolve()
+  WindowsPath('D:/test/1.txt')
+  ```
+
+- 查看目录：
+  ```py
+  >>> p.parent.iterdir()        # iterdir() 方法会返回一个生成器，包含指定目录下的所有文件
+  <generator object Path.iterdir at 0x000001EE3346E900>
+  >>> list(p.parent.iterdir())
+  [WindowsPath('D:/test/1.txt')]
+  ```
+
+- 模糊匹配：
+  ```py
+  >>> p.parent.glob('*.txt')    # glob() 方法会返回一个生成器，包含与指定 pattern 匹配的所有文件
+  <generator object Path.glob at 0x000001EE3346EB30>
+  >>> list(p.parent.glob('*.txt'))
+  [WindowsPath('D:/test/1.txt')]
+  ```

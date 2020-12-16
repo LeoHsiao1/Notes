@@ -1,8 +1,10 @@
 # ♢ random
 
 ：Python 的标准库，用于生成随机数。
+- [官方文档](https://docs.python.org/3/library/random.html)
 - 基于 Mersenne Twister 算法生成为伪随机数。
-  <br>它生成速度快，但是生成的数值可预测，因此不适合用作加密。想生成密码时，使用 `os.urandom()` 更安全。
+  - 它生成速度快，但是生成的数值可预测，因此不适合用作加密。
+  - 想生成密码时，使用 `os.urandom()` 更安全。
 
 ## 用法
 

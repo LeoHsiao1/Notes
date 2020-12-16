@@ -1,6 +1,7 @@
 # ♢ ctypes
 
 ：Python 的标准库。
+- [官方文档](https://docs.python.org/3/library/ctypes.html)
 - 允许 Python 加载 C 的动态链接库，直接调用其中的函数，或者将 Python 函数作为回调函数传给 C 函数。
 
 ## 用法示例

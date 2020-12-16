@@ -3,6 +3,7 @@
 ## ♢ smtplib
 
 ：Python 的标准库，提供了 SMTP 客户端的功能。
+- [官方文档](https://docs.python.org/3/library/smtplib.html)
 
 例：
 ```py
@@ -47,7 +48,9 @@ finally:
 ## ♢ smtpd
 
 ：Python 的标准库，可用于运行一个简单的 SMTP 服务器。
+- [官方文档](https://docs.python.org/3/library/smtpd.html)
 
+例：
 ```py
 import asyncore
 import smtpd
@@ -67,6 +70,7 @@ asyncore.loop()                                       # 异步循环运行
 ## ♢ poplib
 
 ：Python 的标准库，提供了 POP 客户端的功能。
+- [官方文档](https://docs.python.org/3/library/poplib.html)
 - 下载邮件之后，通常还要通过 email 模块解析邮件的内容。
 - 邮件可能有多种 Content-Type ，比如附件、嵌套的回复邮件，需要分别解析，比较麻烦。
 

@@ -50,6 +50,7 @@
 ## ♢ xml
 
 ：Python 的标准库，用于解析或导出 XML 格式的文本。
+- [官方文档](https://docs.python.org/3/library/xml.html)
 
 ### 用法
 

@@ -19,6 +19,7 @@
 3. 启动开发环境的服务器：
     ```sh
     vuepress dev docs
+                      --debug   # 显示调试信息
     ```
     - 当项目文件被修改之后，该服务器会自动刷新网页内容，不需要手动按 F5 。
 4. 构建出静态文件：
@@ -262,12 +263,20 @@ module.exports = {
 
 ## 插件
 
-- [官方插件列表](https://v1.vuepress.vuejs.org/zh/plugin/)
-- [vssue 评论](https://vssue.js.org/)
+- [官方插件列表](https://vuepress.vuejs.org/zh/plugin/)
+- [社区插件列表](https://github.com/vuepress/awesome-vuepress)
+- [vuepress-plugin-vssue](https://vssue.js.org/guide/vuepress.html) ：用于在网页底部显示评论栏。
+- [vuepress-plugin-right-anchor](https://github.com/xuekai-china/vuepress-plugin-right-anchor/blob/master/zh-README.md) ：用于在网页右侧显示当前文档的目录。
+
+### google-analytics
+
+该插件用于让 Vuepress 对接到 Google 提供的的 Google analytics 平台，从而分析网站访问流量。使用步骤如下：
+1. 访问 <https://analytics.google.com/> ，登录 Google 账号，创建一个 Google Analytics 的跟踪 ID 。
+2. 添加[ Google analytics 插件](https://vuepress.vuejs.org/plugin/official/plugin-google-analytics.html)
 
 ### vuepress-plugin-sitemap
 
-该插件用于为 Vuepress 网站自动生成 sitemap.xml 文件。使用步骤如下：
+该插件用于为 Vuepress 网站自动生成 sitemap.xml 文件，便于搜索引擎抓取本站内容。使用步骤如下：
 1. 安装：`yarn add vuepress-plugin-sitemap`
 2. 在 config.js 中添加如下配置：
     ```js
@@ -283,7 +292,7 @@ module.exports = {
 
 ### vuepress-plugin-meilisearch
 
-- 该插件用于让 Vuepress 对接到 meilisearch 服务器，并显示一个全文搜索的搜索栏。
+该插件用于让 Vuepress 的搜索栏支持全文搜索。
 - 当用户在搜索栏中输入字符串时，该插件会实时地向 meilisearch 服务器发出 AJAX 形式的查询请求，然后将查询结果显示在搜索栏下方。
 
 meilisearch 是一个开源的搜索引擎，基于 Rust 语言开发，借鉴了 Algolia 引擎，适合用于实现个人网站的搜索栏。
@@ -294,7 +303,8 @@ meilisearch 是一个开源的搜索引擎，基于 Rust 语言开发，借鉴�
       每当目标网站的内容更新时，就应该抓取一次。
   3. 向 meilisearch 服务器发出 HTTP 查询请求，搜索某一字符串在目标网站上的位置。
 
-该插件的使用步骤如下：
+#### 使用步骤
+
 1. 启动 meilisearch 服务器：
     ```sh
     docker run -d --name meilisearch \
@@ -369,8 +379,3 @@ meilisearch 是一个开源的搜索引擎，基于 Rust 语言开发，借鉴�
 
 5. 重新编译 Vuepress 网站。
 
-### google-analytics
-
-该插件用于让 Vuepress 对接到 Google 提供的的 Google analytics 平台，从而分析网站访问流量。使用步骤如下：
-1. 访问 <https://analytics.google.com/> ，登录 Google 账号，创建一个 Google Analytics 的跟踪 ID 。
-2. 添加[ Google analytics 插件](https://v1.vuepress.vuejs.org/plugin/official/plugin-google-analytics.html)

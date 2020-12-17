@@ -296,44 +296,44 @@ pipeline {
 - 在 pipeline{} 中必须要定义 agent{} ，表示选择哪个节点来执行流水线，适用于所有 stage{} 。
   - 也可以在一个 stage{} 中单独定义该阶段的 agent{} 。
 - agent 常见的几种定义方式：
-    ```groovy
-    agent none          // 不设置全局的 agent ，此时要在每个 stage{} 中单独定义 agent{}
-    ```
-    ```groovy
-    agent any           // 让 Jenkins 选择任一节点
-    ```
-    ```groovy
-    agent {
-        label 'master'  // 选择指定名字的节点
-    }
-    ```
-    ```groovy
-    agent {
-        node {          // 选择指定名字的节点，并指定工作目录
-            label 'master'
-            customWorkspace '/opt/jenkins_home/workspace/test1'
-        }
-    }
-    ```
+  ```groovy
+  agent none          // 不设置全局的 agent ，此时要在每个 stage{} 中单独定义 agent{}
+  ```
+  ```groovy
+  agent any           // 让 Jenkins 选择任一节点
+  ```
+  ```groovy
+  agent {
+      label 'master'  // 选择指定名字的节点
+  }
+  ```
+  ```groovy
+  agent {
+      node {          // 选择指定名字的节点，并指定工作目录
+          label 'master'
+          customWorkspace '/opt/jenkins_home/workspace/test1'
+      }
+  }
+  ```
 - 可以临时创建 docker 容器作为 agent ：
-    ```groovy
-    agent {
-        docker {
-            // label 'master'
-            image 'centos:7'
-            // args  '-v /tmp:/tmp'
-        }
-    }
+  ```groovy
+  agent {
+      docker {
+          // label 'master'
+          image 'centos:7'
+          // args  '-v /tmp:/tmp'
+      }
+  }
+  ```
+  - 这会在指定节点（默认是 master 节点）上创建一个 docker 容器，执行 pipeline ，然后自动删除该容器。
+  - 该容器的启动命令的格式如下：
+    ```sh
+    docker run -t -d -u 1000:1000 \
+        -w /opt/.jenkins/workspace/test_pipeline@2 \    # 因为宿主机上已存在该项目的工作目录了，所以加上后缀 @2 避免同名
+        -v /opt/.jenkins/workspace/test_pipeline@2:/opt/.jenkins/workspace/test_pipeline@2:rw,z \
+        -e ********                                     # 传入 Jenkins 的环境变量
+        centos:7 cat
     ```
-    - 这会在指定节点（默认是 master 节点）上创建一个 docker 容器，执行 pipeline ，然后自动删除该容器。
-    - 该容器的启动命令的格式如下：
-        ```sh
-        docker run -t -d -u 1000:1000 \
-            -w /opt/.jenkins/workspace/test_pipeline@2 \        // 因为宿主机上已存在该项目的工作目录了，所以加上后缀 @2 避免同名
-            -v /opt/.jenkins/workspace/test_pipeline@2:/opt/.jenkins/workspace/test_pipeline@2:rw,z \
-            -e ********                                         // 传入 Jenkins 的环境变量
-            centos:7 cat
-        ```
 
 ### steps{}
 

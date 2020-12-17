@@ -1,10 +1,13 @@
 # Bootstrap
 
-：一个 CSS/HTML 开发框架，适用于设计网页组件、布局。
+：一个 CSS/HTML 开发框架，适用于设计简单的网页组件、布局。
 - [官方文档](https://v4.bootcss.com/docs/getting-started/introduction/)
 - 由 Twitter 公司发布。
 - 要求使用 HTML5 标准。
 - 一般用法：在 HTML 中导入 Bootstrap 的 css、js 文件，然后便可以调用 Bootstrap 的样式、组件。
+- 版本：
+  - Bootstrap 3 ：于 2013 年发布。
+  - Bootstrap 4 ：于 2018 年发布。
 
 ## 基础示例
 

@@ -268,12 +268,9 @@ module.exports = {
                     path: '/Web/',
                 },
                 {
-                    title: 'Web服务器',
+                    title: '简介',
                     children: [
-                        'Web服务器/简介',
-                        'Web服务器/Apache',
-                        'Web服务器/Tomcat',
-                        'Web服务器/Nginx',
+                        '简介/Web',
                     ]
                 },
                 {
@@ -300,6 +297,15 @@ module.exports = {
                         '后端/简介',
                         '后端/cookie',
                         '后端/登录',
+                    ]
+                },
+                {
+                    title: 'Web服务器',
+                    children: [
+                        'Web服务器/简介',
+                        'Web服务器/Apache',
+                        'Web服务器/Tomcat',
+                        'Web服务器/Nginx',
                     ]
                 },
                 {

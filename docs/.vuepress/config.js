@@ -24,6 +24,14 @@ module.exports = {
                 cropLength: 50,
             },
         ],
+        ['vuepress-plugin-right-anchor',
+            {
+                expand: {
+                    default: true,
+                    trigger: 'click',
+                },
+            }
+        ],
     ],
     themeConfig: {
         repo: 'https://github.com/LeoHsiao1/Notes',

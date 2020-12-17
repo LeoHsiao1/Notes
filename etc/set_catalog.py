@@ -72,8 +72,6 @@ sidebar_title_template = '''
 sidebar_chapter_template = '''
                 {{
                     title: '{}',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
 '''.lstrip('\n')
 for book_info in books_info:

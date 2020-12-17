@@ -75,6 +75,7 @@ module.exports = {
                 },
             ]
         }],
+        sidebarDepth: 0,
         sidebar: {
             '/Python/': [{
                     title: '《Python》',
@@ -82,8 +83,6 @@ module.exports = {
                 },
                 {
                     title: '简介',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '简介/Python',
                         '简介/解释器',
@@ -92,16 +91,12 @@ module.exports = {
                 },
                 {
                     title: '文本处理',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '文本处理/jinja',
                     ]
                 },
                 {
                     title: '数学运算',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '数学运算/^random',
                         '数学运算/^decimal',
@@ -110,8 +105,6 @@ module.exports = {
                 },
                 {
                     title: '混合开发',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '混合开发/简介',
                         '混合开发/^ctypes',
@@ -127,8 +120,6 @@ module.exports = {
                 },
                 {
                     title: '简介',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '简介/Linux',
                         '简介/相关概念',
@@ -136,8 +127,6 @@ module.exports = {
                 },
                 {
                     title: '终端',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '终端/终端',
                         '终端/命令',
@@ -148,8 +137,6 @@ module.exports = {
                 },
                 {
                     title: '进程',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '进程/进程',
                         '进程/管理进程',
@@ -157,8 +144,6 @@ module.exports = {
                 },
                 {
                     title: '文件',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '文件/文件',
                         '文件/管理文件',
@@ -170,8 +155,6 @@ module.exports = {
                 },
                 {
                     title: '设备',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '设备/设备',
                         '设备/外存',
@@ -181,8 +164,6 @@ module.exports = {
                 },
                 {
                     title: '网络',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '网络/IP',
                         '网络/TCP-UDP',
@@ -194,8 +175,6 @@ module.exports = {
                 },
                 {
                     title: '测试',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '测试/简介',
                         '测试/进程测试',
@@ -206,8 +185,6 @@ module.exports = {
                 },
                 {
                     title: 'shell',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'shell/简介',
                         'shell/变量',
@@ -216,8 +193,6 @@ module.exports = {
                 },
                 {
                     title: '内核',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '内核/简介',
                         '内核/内核参数',
@@ -225,8 +200,6 @@ module.exports = {
                 },
                 {
                     title: '其它',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '其它/系统信息',
                         '其它/安装软件',
@@ -244,8 +217,6 @@ module.exports = {
                 },
                 {
                     title: '计算机网络',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '计算机网络/简介',
                         '计算机网络/通信线路',
@@ -256,8 +227,6 @@ module.exports = {
                 },
                 {
                     title: '网络设备',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '网络设备/简介',
                         '网络设备/交换机',
@@ -266,8 +235,6 @@ module.exports = {
                 },
                 {
                     title: '底层网络协议',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '底层网络协议/简介',
                         '底层网络协议/网络体系结构',
@@ -278,8 +245,6 @@ module.exports = {
                 },
                 {
                     title: '高层网络协议',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '高层网络协议/Email',
                         '高层网络协议/FTP',
@@ -292,8 +257,6 @@ module.exports = {
                 },
                 {
                     title: '计算机安全',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '计算机安全/恶意代码',
                         '计算机安全/网络安全',
@@ -306,8 +269,6 @@ module.exports = {
                 },
                 {
                     title: 'Web服务器',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'Web服务器/简介',
                         'Web服务器/Apache',
@@ -317,8 +278,6 @@ module.exports = {
                 },
                 {
                     title: '前端',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '前端/简介',
                         '前端/HTML',
@@ -329,8 +288,6 @@ module.exports = {
                 },
                 {
                     title: '前端框架',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '前端框架/Bootstrap',
                         '前端框架/Node.js',
@@ -339,8 +296,6 @@ module.exports = {
                 },
                 {
                     title: '后端',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '后端/简介',
                         '后端/cookie',
@@ -349,8 +304,6 @@ module.exports = {
                 },
                 {
                     title: 'Web爬虫',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'Web爬虫/简介',
                         'Web爬虫/^urllib',
@@ -359,8 +312,6 @@ module.exports = {
                 },
                 {
                     title: 'Web安全',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'Web安全/前端安全',
                         'Web安全/后端安全',
@@ -369,8 +320,6 @@ module.exports = {
                 },
                 {
                     title: 'CMS',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'CMS/简介',
                         'CMS/Jekyll',
@@ -387,8 +336,6 @@ module.exports = {
                 },
                 {
                     title: '简介',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '简介/数据库',
                         '简介/事务',
@@ -396,8 +343,6 @@ module.exports = {
                 },
                 {
                     title: 'SQLite',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'SQLite/SQLite',
                         'SQLite/^sqlite3',
@@ -405,8 +350,6 @@ module.exports = {
                 },
                 {
                     title: 'MySQL',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'MySQL/MySQL',
                         'MySQL/用户权限',
@@ -423,8 +366,6 @@ module.exports = {
                 },
                 {
                     title: 'MongoDB',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'MongoDB/MongoDB',
                         'MongoDB/管理单元',
@@ -436,8 +377,6 @@ module.exports = {
                 },
                 {
                     title: 'Redis',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'Redis/Redis',
                         'Redis/管理单元',
@@ -450,8 +389,6 @@ module.exports = {
                 },
                 {
                     title: 'ElasticSearch',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'ElasticSearch/ElasticSearch',
                         'ElasticSearch/管理单元',
@@ -461,8 +398,6 @@ module.exports = {
                 },
                 {
                     title: 'LDAP',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'LDAP/LDAP',
                         'LDAP/OpenLDAP',
@@ -476,8 +411,6 @@ module.exports = {
                 },
                 {
                     title: 'CI',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'CI/Git',
                         'CI/GitLab',
@@ -487,8 +420,6 @@ module.exports = {
                 },
                 {
                     title: '容器',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '容器/简介',
                         '容器/Docker',
@@ -497,8 +428,6 @@ module.exports = {
                 },
                 {
                     title: 'k8s',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         'k8s/Kubernetes',
                         'k8s/安装',
@@ -511,8 +440,6 @@ module.exports = {
                 },
                 {
                     title: '配置管理',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '配置管理/简介',
                         '配置管理/Ansible',
@@ -521,8 +448,6 @@ module.exports = {
                 },
                 {
                     title: '监控告警',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '监控告警/简介',
                         '监控告警/Supervisor',
@@ -533,16 +458,12 @@ module.exports = {
                 },
                 {
                     title: '日志处理',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '日志处理/ELK',
                     ]
                 },
                 {
                     title: '其它',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '其它/VSCode',
                         '其它/SonarQube',
@@ -555,8 +476,6 @@ module.exports = {
                 },
                 {
                     title: '简介',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '简介/云计算',
                         '简介/高可用',
@@ -566,8 +485,6 @@ module.exports = {
                 },
                 {
                     title: '分布式系统',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '分布式系统/简介',
                         '分布式系统/ZooKeeper',
@@ -575,8 +492,6 @@ module.exports = {
                 },
                 {
                     title: '消息队列',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '消息队列/简介',
                         '消息队列/ActiveMQ',
@@ -585,8 +500,6 @@ module.exports = {
                 },
                 {
                     title: '存储',
-                    collapsable: true,
-                    sidebarDepth: 2,
                     children: [
                         '存储/简介',
                         '存储/Nextcloud',

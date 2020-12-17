@@ -355,6 +355,3 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
 - 增加了一些功能。
 - 增加了一些语义元素，实现顾名思义的用途。例如：标签 `<section>` 用于划分一组内容。
 
-## 表单设计器
-
-<http://formbuild.leipi.org/>

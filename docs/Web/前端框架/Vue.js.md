@@ -3,8 +3,13 @@
 ：一个前端开发框架。
 - [官方文档](https://vuejs.org/v2/guide/index.html)
 - 发音与 view 相同。
+- 版本：
+  - Vue 1 ：于 2015 年发布。
+  - Vue 2 ：于 2016 年发布。
+  - Vue 3 ：于 2020 年发布。
 
-用法：
+## 用法
+
 - 开发简单的网页时，通常导入 Vue 的独立 js 文件即可。
 - 构建大型项目时，通常用 npm 安装 Vue ：`npm install vue`
 - Vue 提供了一个 cli 工具，用于快速为复杂的单页面应用 (SPA) 搭建脚手架。
@@ -37,6 +42,10 @@
 
 > TODO:待补充
 
-## form-create
 
-一个表单生成器，支持所有 Vue 组件。
+## 相关工具
+
+- [form-create](http://www.form-create.com/v2/guide/) ：用于生成 Vue 表单。
+- [element-ui](https://element.eleme.cn/) ：一个 UI 组件库，基于 Vue 2 ，提供了图标、按钮、表单、标签页等丰富的 UI 组件，由饿了么公司开源。
+- [element-plus](element-plus) ：基于 Vue 3 ，基于 TypeScript 开发。
+

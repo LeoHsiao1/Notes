@@ -30,6 +30,7 @@ module.exports = {
                     default: true,
                     trigger: 'click',
                 },
+                customClass: 'right-anchor',
             }
         ],
     ],

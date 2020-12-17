@@ -4,11 +4,10 @@
 - [官方文档](https://nodejs.org/en/docs/guides/)
 - 基于 Chrome 浏览器的 V8 引擎。
   - V8 引擎基于 C++ 开发，它将 JS 代码直接编译成机器码（而不是字节码），从而将 JS 代码的执行速度提高到接近二进制程序。
-
-## 用途
-- 构建前端文件。
-- 运行基于 JavaScript 开发的后端程序。
-  - 一般作为中间层，接收前端的访问请求，然后转发给真正的后端服务器。
+- 用途：
+  - 构建前端文件。
+  - 运行基于 JavaScript 开发的后端程序。
+    - 一般作为中间层，接收前端的访问请求，然后转发给真正的后端服务器。
 
 ## 安装
 
@@ -127,14 +126,16 @@ npm
   - 安装时会检查包文件的哈希值是否一致，更安全。
   - 用一个 yarn.lock 文件记录已安装的所有包的版本、哈希值、依赖包，从而严格地管理依赖。
 
-安装：
+### 安装
+
 ```sh
 # 需要已安装 Node.js
 curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
 yum install yarn
 ```
 
-命令：
+### 命令
+
 ```sh
 yarn                     # 相当于 npm install
     init                 # 相当于 npm init

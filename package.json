@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@vuepress/plugin-back-to-top": "^1.2.0",
     "@vuepress/plugin-google-analytics": "^1.2.0",
     "vuepress": "^1.2.0",
     "vuepress-plugin-meilisearch": "^0.10.1",

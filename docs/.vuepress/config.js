@@ -7,7 +7,6 @@ module.exports = {
     dest: 'docs/.vuepress/dist',
     lang: 'zh-CN',
     plugins: [
-        ['@vuepress/back-to-top', true],
         ['@vuepress/google-analytics', {
             'ga': 'UA-155748502-1'
         }],

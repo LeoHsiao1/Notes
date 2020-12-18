@@ -34,6 +34,11 @@ module.exports = {
             }
         ],
     ],
+    markdown: {
+        extractHeaders: [ 'h1', 'h2', 'h3'],
+    },
+    nextLinks: false,
+    prevLinks: false,
     themeConfig: {
         repo: 'https://github.com/LeoHsiao1/Notes',
         repoLabel: 'GitHub',
@@ -517,7 +522,5 @@ module.exports = {
                 },
             ],
         },
-        nextLinks: false,
-        prevLinks: false,
     }
 }

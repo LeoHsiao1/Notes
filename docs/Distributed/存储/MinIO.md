@@ -1,12 +1,13 @@
 # MinIO
 
-：一个开源的对象存储服务器软件，基于 Go 开发。
-- 很轻量级，读写速度快，云原生架构。
-- 可以生成文件的下载链接。
-- 提供了命令行客户端 `mc` ，支持 ls、cp、rm、find 等多种 Unix 风格的命令。
-- 提供了 Python、Go、Java 等语言的 SDK 。
-- 兼容 Amazon S3 的 API 。
+：一个对象存储服务器，基于 TCP 通信，基于 Go 开发。
 - [官方文档](https://docs.min.io/docs/)
+- 功能：
+  - 很轻量级，读写速度快，云原生架构。
+  - 支持生成文件的下载链接。
+  - 提供了命令行客户端 `mc` ，支持 ls、cp、rm、find 等多种 Unix 风格的命令。
+  - 提供了 Python、Go、Java 等语言的 SDK 。
+  - 兼容 Amazon S3 的 API 。
 
 ## 部署
 
@@ -20,7 +21,7 @@
           minio/minio server /data
   ```
 
-## 原理
+## 用法
 
 - Web 页面示例：
 

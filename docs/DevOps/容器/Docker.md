@@ -58,7 +58,7 @@
 ### 启动
 
 ```sh
-docker run <Image>            # 运行一个镜像，这会创建一个容器（如果本机不存在该镜像，则会自动从镜像仓库下载该镜像）
+docker run <image>            # 运行一个镜像，这会创建一个容器（如果本机不存在该镜像，则会自动从镜像仓库下载该镜像）
             -i                # 启用容器的 stdin
             -t                # 创建一个伪终端绑定到容器的 stdin 上，供用户操作
             -d                # 以 daemon 方式运行
@@ -100,36 +100,36 @@ docker run <Image>            # 运行一个镜像，这会创建一个容器（
   - 此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
 - 容器内不能再创建嵌套的容器，甚至不能联系到 docker daemon ，因此不能使用 docker ps 等命令。
   - 将 /var/run/docker.sock 文件挂载到容器内之后，可以在容器内与 docker daemon 通信。
-- 将宿主机的 /etc/localtime 文件挂载到容器中，就会使用相同的时区。
+- 将宿主机的 /etc/localtime 文件挂载到容器中，就会让容器采用宿主机的时区。
 
 
 ### 管理
 
 ```sh
 docker 
-        ps                  # 显示所有处于运行状态的容器
-            -a              # 显示所有状态的容器
-            -n <int>        # 显示最后创建的几个容器（包括所有状态的）
-            --no-trunc      # 不截断过长的显示内容
-        stop <容器>...      # 停止容器（相当于暂停，容器会变成 stopped 状态）
-        start <容器>...     # 启动 stopped 状态的容器
-        restart <容器>...   # 重启容器（相当于先 stop 再 start）
-        rm <容器>...        # 删除容器（只能删除 stopped 状态的）
-            -f              # 强制删除（可以删除 running 状态的）
-        container prune     # 删除所有 stopped 状态的容器
+      ps                  # 显示所有处于运行状态的容器
+          -a              # 显示所有状态的容器
+          -n <int>        # 显示最后创建的几个容器（包括所有状态的）
+          --no-trunc      # 不截断过长的显示内容
+      stop <容器>...      # 停止容器（相当于暂停，容器会变成 stopped 状态）
+      start <容器>...     # 启动 stopped 状态的容器
+      restart <容器>...   # 重启容器（相当于先 stop 再 start）
+      rm <容器>...        # 删除容器（只能删除 stopped 状态的）
+          -f              # 强制删除（可以删除 running 状态的）
+      container prune     # 删除所有 stopped 状态的容器
 
-        rename <容器名> <新容器名>  # 重命名容器
-        update <容器>...    # 更改容器的配置
-            --restart no
-            --cpus 2
-            -m 256m
+      rename <容器名> <新容器名>  # 重命名容器
+      update <容器>...    # 更改容器的配置
+          --restart no
+          --cpus 2
+          -m 256m
 
-        inspect <name>      # 显示一个容器或镜像的详细信息
-        logs <容器>         # 显示一个容器的日志（来自终端输出）
-            --tail 10       # 显示最后几行
-            -f              # 保持显示
-            -t              # 显示时间戳
-        stats               # 显示所有容器的资源使用情况
+      inspect <name>      # 显示一个容器或镜像的详细信息
+      logs <容器>         # 显示一个容器的日志（来自终端输出）
+          --tail 10       # 显示最后几行
+          -f              # 保持显示
+          -t              # 显示时间戳
+      stats               # 显示所有容器的资源使用情况
 ```
 
 ### 执行命令
@@ -164,7 +164,8 @@ docker volume
 ```
 - 如果将宿主机的某个目录或数据卷，挂载到容器内的某个目录，则容器被删除之后该目录也会一直保存在宿主机上，从而持久保存数据。
 - 启动容器时，如果挂载的宿主机目录或数据卷不存在，则会自动创建再挂载。
-  <br>但如果挂载的是一个文件，且该文件路径不存在，比如 `-v /root/f1:/root` ，则会在宿主机上创建一个路径为 `/root/f1` 的目录再挂载，可能导致容器启动失败。
+  - 但如果挂载的是一个文件，且该文件路径不存在，比如 `-v /root/f1:/root` ，则会在宿主机上创建一个路径为 `/root/f1` 的目录再挂载，可能导致容器启动失败。
+  - 容器内的应用以非 root 用户运行时，可能无权访问挂载的目录，此时需要手动修改该目录的权限或所有者。
 - 一个数据卷可以被多个容器共用，一个容器也可以挂载多个数据卷。
 - 各个数据卷的实际内容存储在宿主机的 `/var/lib/docker/volumes/<name>/_data` 目录下。
 
@@ -172,14 +173,14 @@ docker volume
 
 ```sh
 docker network
-            ls                       # 显示所有的 docker 网络
-            inspect <name>           # 查看一个网络的详细信息
-            create <name>            # 创建一个网络（bridge 类型）
-            rm <name>                # 删除一个网络
-            prune                    # 删除所有没有使用的网络
+              ls                       # 显示所有的 docker 网络
+              inspect <name>           # 查看一个网络的详细信息
+              create <name>            # 创建一个网络（bridge 类型）
+              rm <name>                # 删除一个网络
+              prune                    # 删除所有没有使用的网络
 
-            connect <name> <容器>     # 将一个网络连接到指定容器
-            disconnect <name> <容器>  # 取消连接
+              connect <name> <容器>     # 将一个网络连接到指定容器
+              disconnect <name> <容器>  # 取消连接
 ```
 
 - docker 安装之后会创建三个 docker 网络：
@@ -212,8 +213,8 @@ docker network
 
 ## 镜像
 
-- 每个镜像都会被 docker daemon 分配一串随机编号作为 ImageID ，用户也可以自定义镜像名和 tag（表示镜像的版本）。
-  - 通过 ImageID 或 ImageName:tag 可以指定一个唯一的 Image 。
+- 每个镜像都会被 docker daemon 分配一串随机编号作为 image ID ，用户也可以自定义镜像名和 tag（表示镜像的版本）。
+  - 通过 image ID 或 imageName:tag 可以指定一个唯一的 Image 。
 - docker daemon 使用的镜像都存储在宿主机上，也可以将镜像存储到镜像仓库服务器中。
   - 默认使用的是官方的镜像仓库 hub.docker.com ，也可以使用自己部署的仓库。
 
@@ -222,8 +223,8 @@ docker network
 ```sh
 docker
       images                 # 列出本机的所有镜像
-      image rm <Image>...    # 删除镜像
-      tag <Image> <ImageName>:<tag>  # 给镜像加上 ImageName 和 tag
+      image rm <image>...    # 删除镜像
+      tag <image> <imageName>:<tag>  # 给镜像加上 imageName 和 tag
 ```
 - 例：删除所有 none 镜像
     ```sh
@@ -234,9 +235,9 @@ docker
 
 ```sh
 docker
-      pull <ImageName>:<tag>        # 从镜像仓库拉取镜像
-      push <ImageName>:<tag>        # 推送镜像到镜像仓库
-      search <ImageName>            # 在镜像仓库中搜索某个镜像
+      pull <imageName>:<tag>        # 从镜像仓库拉取镜像
+      push <imageName>:<tag>        # 推送镜像到镜像仓库
+      search <imageName>            # 在镜像仓库中搜索某个镜像
       login -u will tencentyun.com  # 使用一个用户名登录一个镜像仓库（然后会提示输入密码）
 ```
 - 如果不注明镜像的 tag ，则默认拉取 latest 版本。
@@ -253,7 +254,7 @@ docker
 制作 Docker 镜像的方法有两种：
 - 将一个容器提交为镜像：
     ```sh
-    docker commit <容器 ID> <ImageName>:<tag>
+    docker commit <containerID> <imageName>:<tag>
     ```
   - 每次 commit 时，会在原镜像外部加上一层新的文件系统（file system layer）。因此 commit 次数越多，镜像的体积越大。
 
@@ -271,7 +272,7 @@ docker
   - docker build 命令会将 Dockerfile 所在目录作为上下文目录，将该目录及其子目录下的所有文件都拷贝给 docker daemon 。
   - 可以在 .dockerignore 文件中声明不想被拷贝的文件。
   - 执行 docker build 命令时，docker daemon 会创建临时容器来构建镜像，构建完成之后会自动删除临时容器。
-  - 如果镜像构建失败，则生成 ImageID 为 none 。
+  - 如果镜像构建失败，则生成 image ID 为 none 。
 
 ## Dockerfile
 

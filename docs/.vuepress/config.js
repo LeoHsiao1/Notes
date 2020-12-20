@@ -36,8 +36,6 @@ module.exports = {
     markdown: {
         extractHeaders: [ 'h1', 'h2', 'h3'],
     },
-    nextLinks: false,
-    prevLinks: false,
     themeConfig: {
         repo: 'https://github.com/LeoHsiao1/Notes',
         repoLabel: 'GitHub',
@@ -513,6 +511,7 @@ module.exports = {
                     title: '存储',
                     children: [
                         '存储/简介',
+                        '存储/h5ai',
                         '存储/Nextcloud',
                         '存储/Artifactory',
                         '存储/FastDFS',
@@ -521,5 +520,7 @@ module.exports = {
                 },
             ],
         },
+        nextLinks: false,
+        prevLinks: false,
     }
 }

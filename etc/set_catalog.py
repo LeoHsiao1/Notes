@@ -86,7 +86,7 @@ for book_info in books_info:
 sidebar += '''
         },
         nextLinks: false,
-'''.strip('\n')
+'''.strip('\n')         # 在 sidebar 配置之后放置 nextLinks 配置，便于定位
 # print(sidebar)
 text = re.sub(r"\n[^\n]*sidebar: \{.*\},\s*nextLinks: false,", sidebar, text, flags=re.S)
 

@@ -60,7 +60,7 @@ selector { [property: value;]... }
   ```
 - 选择多种 HTML 元素
   ```css
-  h1,h2,h3{color: red;}
+  h1,h2,h3 {color: red;}
   ```
 - id 选择器
   ```css
@@ -110,8 +110,8 @@ selector { [property: value;]... }
   - after ：在元素之后加入内容。
   - 例：
     ```css
-    p:first-letter{color: #FF0000;}
-    h1:before{content: url(logo.gif);}
+    p:first-letter {color: #FF0000;}
+    h1:before {content: url(logo.gif);}
     ```
 
 ## 常用样式
@@ -337,11 +337,12 @@ a:active {text-decoration:underline;}
 
 ### 尺寸单位
 
+CSS 有多种尺寸单位：
 - px ：像素点数，用于设置绝对位置。
 - em ：相对于父元素的倍数。
   - 如果元素的 font-size 为 n em ，则等于 ` 父元素的 font-size × n` 。
   - 如果元素的 width、height、padding、margin 为 n em ，则等于 ` 该元素的 font-size × n` 。
-- n%：相对于父元素的相应值的百分比。
+- n% ：相对于父元素的相应值的百分比。
 - rem ：相对于根元素 html 的倍数。
 
 例：
@@ -362,11 +363,14 @@ p {
 
 ### 显示方式
 
-- `display:block;` ：显示为块级元素。
-- `display:inline;` ：显示为内联元素。
-- `display:inline-block;` ：显示为内联块元素。
-- `display:none;` ：不显示该元素。
-- `visibility:hidden;` ：不显示该元素，但依然占用布局空间。
+```css
+display: block;         /* 显示为块级元素 */
+display: inline;        /* 显示为内联元素 */
+display: inline-block;  /* 显示为内联块元素 */
+display: none;          /* 不显示该元素 */
+visibility: hidden;     /* 不显示该元素，但依然占用布局空间 */
+opacity: 0.5;           /* 显示时的不透明度，默认为 1 */
+```
 
 ### 框模型
 
@@ -384,8 +388,8 @@ CSS 根据框模型显示元素，如下图：
 - margin ：外边距，边框与外部的距离。
   - 外边距可以为负值。
 - 一个块级元素有一个大的“块框”，其中的每行有一个“行框”，每行中的每个内联元素有一个“行内框”。
-  - 块级元素：在一行内只能显示一个，比如 div、h1、p 等。
-  - 内联元素：在一行内可以显示多个，比如 strong、span 等。不能设置 width、height、margin-top、margin-bottom 属性。
+  - 块级元素：在一行内只能显示一个。比如 div、h1、p 等。
+  - 内联元素：在一行内可以显示多个，且不能设置 width、height、margin-top、margin-bottom 属性。比如 strong、span 等。
   - 内联块元素：在一行内可以显示多个，且可以设置 width、height、margin-top、margin-bottom 属性。
 
 例：
@@ -436,7 +440,7 @@ border-style 的可用取值：
 
 ### 定位
 
-这里研究的元素定位，是指 元素外边距的边界 相当于 其外部块的边界 的位置。
+这里研究的元素定位，是指 “元素外边距的边界” 相对于 “其外部块的边界” 的位置。
 
 用 position 属性可设置元素的定位方式，分为四种：
 - static ：默认方式。所有元素按 HTML 中的顺序从上到下显示。
@@ -505,10 +509,3 @@ clear ：禁止浮动
       clear: both;
   }
   ```
-
-### 其它样式
-
-```css
-opacity:0.5;    /* 显示时的不透明度，默认为 1 */
-```
-

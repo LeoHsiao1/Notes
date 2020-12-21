@@ -1,16 +1,13 @@
 # SSH
 
-：Secure Shell ，一个工作在应用层的安全网络协议，常用于远程登录、身份验证。
+：Secure Shell ，一个工作在应用层的安全网络协议，常用于远程登录、身份认证。
 - 采用 C/S 架构，基于 TCP 协议通信。
-- FTP、POP、Telnet 等网络协议采用明文传输数据，容易被监听。而 SSH 将数据经过非对称加密之后再传输，很安全。
 - 最初是 Unix 系统上的一个程序，后来扩展到其他类 Unix 平台。
   - 主要有两个版本，SSH2 修复了 SSH1 的一些漏洞。
 - 采用 C/S 架构工作。
   - SSH 服务器要运行一个守护进程 sshd ，监听发到某个端口（默认是 TCP 22 端口）的 SSH 请求。
   - SSH 客户端可采用 SecureCRT、Putty 等软件，向服务器发起 SSH 请求。
-- 使用 SSH 客户端登录 SSH 服务器时，有两种认证方式：
-  - 采用账号和密码认证：这容易被暴力破解密码，还可能受到“中间人攻击”（连接到一个冒充的 SSH 服务器）。
-  - 采用密钥认证：先将 SSH 客户端的公钥放在 SSH 服务器上，当 SSH 客户端要登录时会发出该公钥的指纹，而 SSH 服务器会根据指纹检查 authorized_keys 中是否有匹配的公钥，有的话就允许该客户端登录。然后 SSH 服务器会用该公钥加密一个消息回复给 SSH 客户端，该消息只能被 SSH 客户端的私钥解密，这样就完成了双向认证。
+- FTP、POP、Telnet 等网络协议采用明文传输数据，容易被监听。而 SSH 将数据经过非对称加密之后再传输，很安全，但速度较慢。
 
 ## 服务器
 
@@ -49,6 +46,31 @@ StrictModes yes                   # 在 SSH 认证时检查用户的家目录、
   chmod 700 ~ ~/.ssh
   chmod 600 ~/.ssh/authorized_keys
   ```
+- 使用 SSH 客户端登录 SSH 服务器时，有两种认证方式：
+  - 账号和密码认证：容易被暴力破解密码，还可能受到“中间人攻击”（连接到一个冒充的 SSH 服务器）。
+  - 密钥认证：先将 SSH 客户端的公钥放在 SSH 服务器上，当 SSH 客户端要登录时会发出该公钥的指纹，而 SSH 服务器会根据指纹检查 authorized_keys 中是否有匹配的公钥，有的话就允许该客户端登录。然后 SSH 服务器会用该公钥加密一个消息回复给 SSH 客户端，该消息只能被 SSH 客户端的私钥解密，这样就完成了双向认证。
+
+### 白名单和黑名单
+
+当 Linux 收到一个 ssh 或 telnet 的连接请求时，会先查看 /etc/hosts.allow 文件：
+- 如果包含该 IP ，则建立 TCP 连接，开始身份认证。
+- 如果不包含该 IP ，则查看 /etc/hosts.deny 文件：
+  - 如果包含该 IP ，则拒绝连接。
+  - 如果不包含该 IP ，则允许连接。
+
+/etc/hosts.allow 的内容示例：
+```sh
+sshd:192.168.0.1
+sshd:192.168.220.    # 允许一个网段
+in.telnetd:192.168.0.1
+```
+
+/etc/hosts.deny 的内容示例：
+```sh
+sshd:ALL              # 禁止所有 IP
+in.telnetd:ALL
+```
+- 修改了配置文件之后，要重启 sshd、telnet 服务才会生效。
 
 ## 客户端
 
@@ -69,13 +91,6 @@ $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登�
   - 与目标主机的网络不通。
   - 目标主机没有运行 sshd 服务器，或者防火墙没有开通 22 端口。
   - 目标主机的负载太大，接近卡死，不能响应 ssh 连接请求。
-
-- 通过 sshpass 命令可以传递密码给 ssh、scp 命令，如下：
-  ```sh
-  yum install sshpass
-  sshpass -p 123456 ssh root@10.0.0.1
-  ```
-
 - 采用以下格式可以发送多行命令：
   ```sh
   ssh -tt root@10.0.0.1 << EOL
@@ -88,14 +103,20 @@ $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登�
   - 这里将 EOF 声明为定界符，将两个定界符之间的所有内容当作 sh 脚本发送到远程终端执行。
     甚至两个定界符之间的缩进空格，也会被一起发送。
   - 最后一条命令应该是 exit ，用于主动退出远程终端。
+- 通过 sshpass 命令可以传递密码给 ssh、scp 命令，如下：
+  ```sh
+  yum install sshpass
+  sshpass -p 123456 ssh root@10.0.0.1
+  ```
+  但尽量不要这样做，会将明文密码泄露到终端。
 
 ## 相关命令
 
 ### ssh-keygen
 
 ```sh
-$ ssh-keygen          # 生成一对 SSH 密钥（默认采用 RSA 加密算法）
-            -r rsa    # 指定加密算法（默认是 rsa）
+$ ssh-keygen                        # 生成一对 SSH 密钥（默认采用 RSA 加密算法）
+            -r rsa                  # 指定加密算法（默认是 rsa）
             -C "123456@email.com"   # 添加备注信息
 ```
 - 默认会将私钥文件 id_rsa 、公钥文件 id_rsa.pub 保存到 ~/.ssh/ 目录下。
@@ -110,27 +131,38 @@ $ ssh-keygen          # 生成一对 SSH 密钥（默认采用 RSA 加密算法�
 $ ssh-copy-id root@10.0.0.1         # 将本机的 SSH 公钥拷贝给目标主机上的指定用户
               -i ~/.ssh/id_rsa.pub  # 指定要拷贝的 SSH 公钥
 ``` 
-- 执行该命令时，需要先通过目标主机的身份验证，才拥有拷贝 SSH 公钥的权限。
+- 执行该命令时，需要先通过目标主机的 SSH 认证，才有拷贝 SSH 公钥的权限。
 - 该 SSH 公钥会被拷贝到目标主机的指定用户的 ~/.ssh/authorized_keys 文件中，允许以后本机以该用户的 SSH 私钥登录到目标主机。
 
-### 配置白名单和黑名单
+### scp
 
-当 Linux 收到一个 ssh 或 telnet 的连接请求时，会先查看 /etc/hosts.allow 文件：
-- 如果包含该 IP ，则建立 TCP 连接，开始身份验证。
-- 如果不包含该 IP ，则查看 /etc/hosts.deny 文件：
-  - 如果包含该 IP ，则拒绝连接。
-  - 如果不包含该 IP ，则允许连接。
+：安全拷贝协议（Secure copy protocol），基于 SSH 协议加密通信，用于在主机之间拷贝文件。
 
-/etc/hosts.allow 的内容示例：
+用法：
 ```sh
-sshd:192.168.0.1
-sshd:192.168.220.    # 允许一个网段
-in.telnetd:192.168.0.1
+$ scp
+      <file>... root@10.10.0.1:/root  # 将本机的文件拷贝到其它主机（需要通过 SSH 认证）
+      root@10.10.0.1:/root/f1 /root   # 将其它主机的文件拷贝到本机的指定目录
+      -r                              # 递归操作（用于拷贝目录）
+      -P 22                           # 指定 SSH 的端口
 ```
 
-/etc/hosts.deny 的内容示例：
+### sftp
+
+：安全文件传输协议（Secure File Transfer Protocol），基于 SSH 协议加密通信，兼容 FTP 的大部分指令，比 scp 的功能更多。
+
+例：
 ```sh
-sshd:ALL              # 禁止所有 IP
-in.telnetd:ALL
+[root@CentOS ~]# sftp root@10.0.0.1
+Connecting to 10.0.0.1...
+sftp> pwd
+Remote working directory: /root
+sftp> ls
+sftp> ls -l
+drwxr-xr-x    2 root root     4096 Dec  7  2016 backup
+-rw-r--r--    1 root root     6821 Dec 19  2019 test.py
+-rwxrwxr-x    1 root root      115 Dec 21  2018 test.sh
+sftp> get test.sh
+Fetching /root/test.sh to test.sh
+/root/test.sh                                                100%   6821  6.7KB/s   00:00
 ```
-- 修改了配置文件之后，要重启 sshd、telnet 服务才会生效。

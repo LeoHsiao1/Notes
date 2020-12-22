@@ -2,7 +2,6 @@
 
 ：文件传输协议（File Transfer Protocol）
 - 采用 C/S 架构。
-- 默认使用 TCP 20 端口传输文件，使用 TCP 21 端口传输客户端发出的 FTP 指令。
 - 采用明文传输数据，容易被监听。
 
 ## ftp
@@ -18,15 +17,17 @@
     1. 客户端发送 PASV 命令给服务器。
     2. 服务器随机监听一个端口。
     3. 客户端连接到服务器的该端口，进行通信。
-    - 客户端的防火墙不需要开通端口，但服务器的防火墙需要开通 21 端口和一组可能监听的端口，比如 51000~52000 。
+    - 客户端的防火墙不需要开通端口，但服务器的防火墙需要开通 21 端口和一组可能监听的端口，比如 21000~21100 。
+    - 客户端通常采用被动模式。
+- 客户端不会保持 TCP 连接，每次执行指令都会根据通信模式重新建立连接。
 
 ### 用法
 
 - 打开客户端：
   ```sh
-  ftp [host]    # 连接一个 FTP 服务器（这会进入 FTP 客户端的终端）
-      -A        # 使用主动模式
-      -p        # 使用被动模式（默认）
+  ftp [host] [port]   # 连接一个 FTP 服务器（这会进入 FTP 客户端的终端）
+      -A              # 采用主动模式
+      -p              # 采用被动模式（默认）
   ```
 
 - 进入 FTP 客户端之后可以执行以下命令：
@@ -74,7 +75,7 @@
   Remote system type is UNIX.
   Using binary mode to transfer files.
   ftp> ls -al
-  227 Entering Passive Mode (10,0,0,1,208,236).
+  227 Entering Passive Mode (10,0,0,1,208,236).   # 可见服务器的 IP 是 10.0.0.1 ，端口号是 208*256+236 ，因为每个字段采用 256 进制
   150 Here comes the directory listing.
   drwx------    3 1001     1001          112 Dec 11 10:50 .
   drwx------    3 1001     1001          112 Dec 11 10:50 ..
@@ -134,43 +135,51 @@ yum install vsftpd
 systemctl start vsftpd
 ```
 
+### 配置
+
+vsftpd 的配置文件是 `/etc/vsftpd/vsftpd.conf` ，内容如下：
+```ini
+# listen=YES                # 是否以 stand-alone 模式运行
+# listen_address=0.0.0.0
+# listen_port=21
+# ftp_data_port=20
+# connect_from_port_20=NO
+# max_clients=0             # 允许连接的客户端数，设置为 0 则不限制
+# accept_timeout=60         # 使用被动模式连接的客户端的超时时间，单位为秒
+# connect_timeout=60        # 使用主动模式连接的客户端的超时时间
+
+# port_enable=YES           # 允许客户端采用主动模式通信
+# pasv_enable=YES           # 允许客户端采用被动模式通信
+pasv_min_port=0             # 被动模式下，服务器监听的最小端口号，设置为 0 则不限制
+pasv_max_port=0             # 被动模式下，服务器监听的最大端口号
+pasv_address=10.0.0.1       # 被动模式下，服务器的 IP 地址，会让客户端连接到该 IP
+
+# download_enable=YES       # 允许用户下载文件
+write_enable=YES            # 允许用户写文件
+
+chroot_local_user=YES                       # 限制用户只能访问主目录
+allow_writeable_chroot=YES                  # 允许用户写主目录
+# chroot_list_file=/etc/vsftpd.chroot_list
+# chroot_list_enable=YES                    # 限制 chroot_list_file 中的用户只能访问主目录
+# userlist_file=/etc/vsftpd/user_list       # 黑名单文件，每行记录一个用户名
+# userlist_enable=YES                       # 拒绝 userlist_file 名单中的用户登录
+
+use_localtime=YES                           # 是否显示本地时间（默认为 UTC 时间）
+xferlog_enable=YES                          # 开启日志
+xferlog_file=/var/log/vsftpd.log            # 日志文件的路径
+```
+
 ### 匿名用户模式
 
-1. 修改配置文件 `/etc/vsftpd/vsftpd.conf` ，开启匿名用户模式：
-    ```sh
-    # listen=YES                # 是否以 stand-alone 模式运行
-    listen_address=127.0.0.1    # 只允许本地 IP 访问，否则匿名用户模式很危险
-    # listen_port=21
-    # ftp_data_port=20
-    # connect_from_port_20=NO   # 是否启用 ftp_data_port 端口，这样可获得更高权限
-    # max_clients=0             # 允许连接的客户端数，设置为 0 则不限制
-    # accept_timeout=60         # 使用被动模式连接的客户端的超时时间，单位为秒
-    # connect_timeout=60        # 使用主动模式连接的客户端的超时时间
-
-    # port_enable=YES           # 允许客户端采用主动模式通信
-    # pasv_enable=YES           # 允许客户端采用被动模式通信
-    # pasv_min_port=0           # 被动模式监听的最小端口号，设置为 0 则不限制
-    # pasv_max_port=0           # 被动模式监听的最大端口号
-
-    anonymous_enable=YES        # 是否启用匿名用户模式（默认启用）
-    anon-upload_enable=YES      # 允许匿名用户上传文件
-    anon-umask=022              # 匿名用户上传的文件的 umask 值
-    anon_root=/var/ftp          # 匿名用户的主目录
-    anon_mkdir_write_enable=YES # 允许匿名用户创建目录
-    anon_other_write_enable=YES # 允许匿名用户修改目录名、删除目录
-
-    # download_enable=YES       # 允许用户下载文件
-    write_enable=YES            # 允许用户使用 DELE ，RNFR、STOR 等命令修改文件
-
-    chroot_local_user=YES                       # 限制用户只能访问主目录
-    # chroot_list_file=/etc/vsftpd.chroot_list
-    # chroot_list_enable=YES                    # 限制 chroot_list_file 中的用户只能访问主目录
-    # userlist_file=/etc/vsftpd/user_list       # 黑名单文件，每行记录一个用户名
-    # userlist_enable=YES                       # 拒绝 userlist_file 名单中的用户登录
-
-    use_localtime=YES                           # 是否显示本地时间（默认为 UTC 时间）
-    xferlog_enable=YES                          # 开启日志
-    xferlog_file=/var/log/vsftpd.log            # 日志文件的路径
+1. 在配置文件中加入以下配置：
+    ```ini
+    listen_address=127.0.0.1      # 只允许本地 IP 访问，否则匿名用户模式很危险
+    anonymous_enable=YES          # 是否启用匿名用户模式（默认启用）
+    anon-upload_enable=YES        # 允许匿名用户上传文件
+    anon-umask=022                # 匿名用户上传的文件的 umask 值
+    anon_root=/var/ftp            # 匿名用户的主目录
+    anon_mkdir_write_enable=YES   # 允许匿名用户创建目录
+    anon_other_write_enable=YES   # 允许匿名用户修改目录名、删除目录
     ```
     - 配置文件语法：
       - 等号 = 前后不能有空格。
@@ -181,22 +190,15 @@ systemctl start vsftpd
 
 这里是同时启用本地用户模式、虚拟用户模式，通过本地 SSH 用户的 PAM 模块完成虚拟用户的身份认证。
 
-1. 修改配置文件 `/etc/vsftpd/vsftpd.conf` ：
-    ```sh
+1. 在配置文件中加入以下配置：
+    ```ini
     anonymous_enable=NO
-    local_enable=YES        # 启用本地用户模式
-    guest_enable=YES        # 启用虚拟用户模式
+    local_enable=YES                        # 启用本地用户模式
+    guest_enable=YES                        # 启用虚拟用户模式
 
-    write_enable=YES
-    chroot_local_user=YES
-
-    virtual_use_local_privs=YES               # 让虚拟用户拥有与本地用户相同的权限（默认只拥有匿名用户的权限）
-    pam_service_name=vsftpd.vu                # 采用指定的 PAM 配置文件进行身份认证
-    user_config_dir=/etc/vsftpd/users_conf    # 读取用户配置的目录
-
-    use_localtime=YES
-    xferlog_enable=YES
-    xferlog_file=/var/log/vsftpd.log
+    virtual_use_local_privs=YES             # 让虚拟用户拥有与本地用户相同的权限（默认只拥有匿名用户的权限）
+    pam_service_name=vsftpd.vu              # 采用指定的 PAM 配置文件进行身份认证
+    user_config_dir=/etc/vsftpd/users_conf  # 读取用户配置的目录
     ```
 
 2. 为每个虚拟用户单独创建配置文件：
@@ -204,7 +206,7 @@ systemctl start vsftpd
     mkdir /etc/vsftpd/users_conf/
     vim /etc/vsftpd/users_conf/ftpuser
     ```
-    ```sh
+    ```ini
     guest_username=ftpuser
     local_root=/home/ftpuser    # 本地用户登录之后进入的目录
     # local_umask=077
@@ -214,7 +216,7 @@ systemctl start vsftpd
     ```sh
     useradd ftpuser -s /sbin/nologin
     ```
-   创建一个临时的 ./users 文件，配置虚拟用户名和密码：
+   创建一个临时的 users 文件，配置虚拟用户名和密码：
     ```sh
     ftpuser
     FnwKhwCWBo90
@@ -224,9 +226,9 @@ systemctl start vsftpd
    然后将密码文件转换成加密数据库：
     ```sh
     yum install -y libdb-utils
-    db_load -T -t hash -f ./users /etc/vsftpd/users.db
+    db_load -T -t hash -f users /etc/vsftpd/users.db
     chmod 600 /etc/vsftpd/users.db
-    rm -f ./users
+    rm -f users
     ```
    创建一个 PAM 的配置文件 /etc/pam.d/vsftpd.vu ，根据加密数据库验证用户身份：
     ```sh

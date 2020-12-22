@@ -83,13 +83,14 @@
 ### 管理权限
 
 安装 Role-based Authorization Strategy 插件之后便可以实现基于角色的用户权限控制。用法：
-1. 进入“Manage Jenkins”页面，点击“Manage Users”，创建一个用户账号。
-2. 进入“Manage Jenkins”页面，点击“Manage and Assign Roles”->“Manage Roles”，创建角色。
-    - 建议创建一个全局角色 visitor ，给予 Overall 的 Read 权限 —— 可以查看 Jenkins 主页，但不能看不见任何 Job 。
+1. 进入 `Manage Jenkins -> Manage Users` 页面，创建一个用户账号。
+2. 进入 `Manage Jenkins -> Manage and Assign Roles -> Manage Roles` 页面，创建角色。
+    - 比如创建一个全局角色 visitor ，给予 Overall 的 Read 权限 —— 可以查看 Jenkins 主页，但不能看不见任何 Job 。
     - 创建几个项目角色，分别拥有对不同项目的权限。
     - 项目角色的 pattern 用于通过正则表达式选中多个项目，供他操作。
-    - 建议将不同类型的 Job 采用不同的前缀命名，方便通过正则表达式分别匹配。
-3. 进入“Manage Jenkins”页面，点击“Assign Roles”，给各个用户分配角色。
+    - 建议将不同类型的 Job 采用不同的前缀命名，便于通过正则表达式分别匹配。
+3. 进入 `Manage Jenkins -> Assign Roles` 页面，给各个用户分配角色。
+    - 默认只能对 Jenkins 内置数据库中存储的用户进行操作，用户较多时配置很麻烦。建议使用 LDAP 服务器中存储的用户、用户组。
 
 推荐做法：
 - 给每个或每组 Job 创建两种项目角色，按需要分配给各个用户。

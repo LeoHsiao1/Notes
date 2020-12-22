@@ -453,6 +453,7 @@ module.exports = {
                         '配置管理/简介',
                         '配置管理/Ansible',
                         '配置管理/Nacos',
+                        '配置管理/Jumpserver',
                     ]
                 },
                 {

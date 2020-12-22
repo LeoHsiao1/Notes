@@ -1,8 +1,8 @@
 # Batch
 
 ：一种脚本语言，中文名为 “批处理” 。
-- 它主要用于微软的磁盘操作系统（Mircro Software Disk Operating System ，MS-DOS），用 cmd.exe 解释执行。
-- 与 shell 语言相比，功能很少，也不灵活。
+- 主要用于微软的磁盘操作系统（Mircro Software Disk Operating System ，MS-DOS），用 cmd.exe 解释执行。
+- 与 shell 语言相比，功能很少，也不灵活，且语法习惯差异很大。
 
 ## 语法特点
 
@@ -12,9 +12,9 @@
   命令名 [选项] [参数]
   ```
   - 命令名和选项不区分大小写。
-  - 选项以 / 开头，比如：`dir /?` 。
-  - 如果参数中包含空格，需要用双引号作为定界符包住。比如：`dir "C:/Program Files"`
-  - 如果参数中包含双引号，需要写作两个双引号进行转义。比如：`echo "Hello ""World"" "`
+  - 选项以正斜杠 / 开头，比如：`dir /?` 。
+  - 如果参数中包含空格，则可能会被忽略，建议用双引号作为定界符包住。例如：`dir "C:/Program Files"`
+  - 如果参数中包含双引号，需要写作两个双引号进行转义。例如：`echo "Hello ""World"" "`
   - 参数中可以使用通配符，`*` 表示匹配任意个字符，`?` 表示匹配一个字符或空格。
 
 ## 变量
@@ -22,18 +22,58 @@
 ### 定义变量
 
 ```batch
-D:\>set x=Hello       :: 用 set 定义变量
+D:\>set x=1           :: 定义变量
 
 D:\>echo %x%          :: 用百分号作为变量的定界符，进行取值
-Hello
+1
 
 D:\>echo %y%          :: 如果变量不存在，则取值符号不会生效
 %y%
 ```
 
+### set 命令
+
+```batch
+D:\>set x=1           :: 定义变量
+
+D:\>set               :: 查询所有环境变量
+ALLUSERSPROFILE=C:\ProgramData
+APPDATA=C:\Users\Leo\AppData\Roaming
+CommonProgramFiles=C:\Program Files\Common Files
+...
+
+D:\>set x             :: 查询以 x 开头的所有环境变量
+x=1
+
+D:\>set x=            :: 给变量赋值为空，会删除该变量
+
+D:\>set x  
+环境变量 x 没有定义
+```
+
+```batch
+D:\>set /a x=1*2%3              :: 使用 /a 选项时，会将赋值表达式当做算术表达式处理，并在赋值的同时打印出算术值
+2
+
+D:\>set /a x = 1 * 2 % 3 + 4    :: 赋值表达式可以包含任意个空格，会被忽略
+6
+
+D:\>set /a x=Hello              :: 如果赋值表达式为字符串，则算术值为 0
+0
+
+D:\>echo %x%
+0
+```
+```batch
+D:\>set /p x=请输入变量的值：     :: 使用 /p 选项时，会以交互模式赋值，先显示一行提示词，再将用户输入的内容赋值给变量
+请输入变量的值：
+```
+
 ### 字符串
 
 ```batch
+D:\>set x=Hello
+
 D:\>echo %x:~0,1%     :: 获取字符串的切片
 H
 
@@ -47,7 +87,7 @@ D:\>echo %x:He=he%    :: 字符串替换
 hello
 ```
 
-### 内置变量
+### 系统环境变量
 
 关于时间：
 ```batch
@@ -58,9 +98,18 @@ D:\>echo %time%       :: 当前时刻
 20:36:38.00
 ```
 
+关于随机数：
+```batch
+D:\>echo %random%                 :: 返回一个随机数，取值为 0~32767
+19181
+
+D:\>set /a a=%RANDOM% % 100 + 1   :: 返回一个随机数，取值为 1~100
+77
+```
+
 关于目录：
 ```batch
-D:\>echo %cd%         :: 当前目录
+D:\>echo %CD%         :: 当前目录
 D:\
 
 D:\>echo %PATH%       :: 寻找可执行文件的目录

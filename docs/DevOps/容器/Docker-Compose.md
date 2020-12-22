@@ -4,10 +4,6 @@
 - [官方文档](https://docs.docker.com/compose/compose-file/)
 - 由 Docker 公司发布，基于 Python 开发。
 - 只能管理当前宿主机上的容器，不能管理服务器集群。
-- 它根据 compose 文件来创建、管理 docker 容器。
-  - compose 文件保存为 yaml 格式，后缀名为 .yaml 或 .yml 。
-  - 每个 compose 文件可以定义一种或多种服务，每种服务可以运行一个或多个容器实例。
-  - 单个服务运行多个容器实例时可能会因为使用相同的端口、容器名等资源，产生冲突。
 
 ## 安装
 
@@ -53,22 +49,34 @@ docker-compose
   docker-compose down       # 销毁服务
   ```
 
-## compose 文件的语法
+## compose 文件
+
+docker-compose 根据 compose 文件来创建、管理 docker 容器。
+- compose 文件保存为 yaml 格式，后缀名为 .yaml 或 .yml 。
+- 每个 compose 文件可以定义一种或多种服务，每种服务可以运行一个或多个容器实例。
+- 单个服务运行多个容器实例时可能会因为使用相同的端口、容器名等资源，产生冲突。
+
+例：
 
 ```yml
 version: '3.8'                # 声明 compose 文件的版本
 
 services:                     # 开始定义服务
 
-  web:                        # 第一个服务的名称
-    # container_name: web     # 指定生成的容器名
-    image: centos:7           # 使用的镜像名（如果该镜像不存在，且没有指定 build 选项，则尝试 pull 它）
-    # build:                  # 使用构建出的镜像
-    #   context: ./etc
-    #   dockerfile: Dockerfile
-    #   network: host
-    #   args:
-    #     arg1: Hello
+  redis:                      # 定义第一个服务
+    image: redis:5.0.5        # 使用的镜像名（如果该镜像不存在，且没有指定 build 选项，则尝试 pull 它）
+    networks:
+      - net
+
+  web:                        # 定义第二个服务
+    container_name: web       # 指定生成的容器名
+    # image: centos:7
+    build:                    # 使用构建出的镜像
+      context: ./etc
+      dockerfile: Dockerfile
+      network: host
+      args:
+        arg1: Hello
     working_dir: /opt         # 工作目录
     hostname: CentOS          # 主机名
     command: [tail, -f, /dev/null]  # 启动命令
@@ -94,15 +102,12 @@ services:                     # 开始定义服务
       nofile:
         soft: 20000
         hard: 40000
-
-  redis:                      # 定义第二个服务
-    image: redis:5.0.5
-    depends_on:
-      - web
-    networks:
-      - net
-    volumes:
-      - db:/etc/redis
+    healthcheck:              # 监控检查
+      test: curl -f https://localhost || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:                     # 定义网络（默认会创建一个 compose_default 网络）
   net:

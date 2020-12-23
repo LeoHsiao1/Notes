@@ -37,10 +37,10 @@
   - [CPU测试](测试/CPU测试.md)
   - [网络测试](测试/网络测试.md)
   - [综合测试](测试/综合测试.md)
-- shell
-  - [简介](shell/简介.md)
-  - [变量](shell/变量.md)
-  - [语法](shell/语法.md)
+- Shell
+  - [Shell](Shell/Shell.md)
+  - [变量](Shell/变量.md)
+  - [流程控制](Shell/流程控制.md)
 - 内核
   - [简介](内核/简介.md)
   - [内核参数](内核/内核参数.md)

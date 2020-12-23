@@ -1,11 +1,35 @@
-# 简介
+# Shell
 
+：一种脚本语言，主要用于类 Unix 系统的终端。
 - 广义的 shell 属于 CLI 界面，泛指位于用户与操作系统内核之间的壳程序，使得用户可以与操作系统内核进行交互。
 - 狭义的 shell 是指提供终端界面的程序，也是 shell 命令的解释器。
-  - 比如用户登录 Linux 系统后，会创建一个 shell 进程，显示终端界面供用户操作。
-  - shell 解释器会将用户输入的命令解释成可以被内核执行的代码，然后传给内核去执行。
+  - 用户登录 Linux 系统后，会创建一个 shell 进程，显示终端界面供用户操作。
+  - 用户可以在 shell 终端中直接执行命令，也可以将多条 shell 命令保存为 shell 脚本（shell scrpts），然后交给 shell 解释器运行。
+  - shell 解释器会将 shell 命令解释成可以被内核执行的代码，然后传给内核去执行。
 
-## shell 解释器
+## 语法特点
+
+- 脚本文件的后缀名为 .sh 。
+- 每个语句的末尾以换行符或分号 ; 作为分隔符。
+- 用 # 声明单行注释。
+- 支持定义函数，不支持面向对象编程。
+
+- shell 脚本的示例：
+  ```sh
+  #!/bin/bash
+  
+  # this is for test
+  
+  if [ $# -ge 2 ];then
+      echo "The input are:"$*
+  else
+      echo "The input should be at least 2 args."
+      exit 1
+  fi
+  ```
+  - 脚本的第一行注释用 #! 声明一个 shell 解释器，使用 ./1.sh 的方式运行该脚本时，系统就会采用该路径的 shell 解释器。
+
+## 解释器
 
 - 起初，Ken Thompson 在开发 Unix 系统时设计了一个 shell 解释器，名为 sh 。
 - 后来，Unix 系统上出现了多种 shell 解释器，其中名为 bash 的 shell 解释器最流行，成为了大部分 Linux 发行版默认的 shell ，它兼容 sh 。
@@ -29,32 +53,7 @@
     sh: e: command not found
     ```
 
-## shell 编程
-
-- Linux 的 shell 命令属于解释型语言。
-  - 用户可以在 shell 终端中直接执行命令，也可以将多条 shell 命令保存为 shell 脚本（shell scrpts），然后交给 shell 解释器运行。
-  - shell 脚本通常采用 .sh 作为文件后缀名。
-- shell 的语法特点：
-  - 属于解释型语言，可以被 shell 解释器直接解释运行，不需要编译。
-  - 属于面向过程的语言，可以定义函数。
-  - 用 # 声明单行注释。
-
-- shell 脚本的示例：
-  ```sh
-  #!/bin/bash
-  
-  # this is for test
-  
-  if [ $# -ge 2 ];then
-      echo "The input are:"$*
-  else
-      echo "The input should be at least 2 args."
-      exit 1
-  fi
-  ```
-  - 脚本的第一行注释用 #! 声明一个 shell 解释器，使用 ./1.sh 的方式运行该脚本时，系统就会采用该路径的 shell 解释器。
-
-## shell 脚本的运行方式
+## 运行脚本
 
 - 可以在终端输入 shell 脚本的文件路径，直接运行它：
     ```sh

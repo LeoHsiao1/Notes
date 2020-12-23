@@ -187,11 +187,11 @@ module.exports = {
                     ]
                 },
                 {
-                    title: 'shell',
+                    title: 'Shell',
                     children: [
-                        'shell/简介',
-                        'shell/变量',
-                        'shell/语法',
+                        'Shell/Shell',
+                        'Shell/变量',
+                        'Shell/流程控制',
                     ]
                 },
                 {

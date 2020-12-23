@@ -4,14 +4,33 @@
 - [官网](https://www.php.net/)
 - 1994 年，加拿大的 Rasmus Lerdorf 为了维护个人网页而用 Perl 语言编写了一些程序，后来改进成一种新语言 PHP 。
 
-## 版本
+## 语法特点
 
-- PHP 5.6 ：于 2014 年发布。
-- PHP 6 ：被跳过。
-- PHP 7 ：于 2015 年底发布，优化了很多性能。
-- PHP 8 ：于 2020 年底发布。
+- 脚本文件的后缀名为 .php 。
+- 每个语句的末尾以分号 ; 作为分隔符。
+- 用 // 声明单行注释，用 /* 和 */ 声明多行注释。
+- 支持定义函数，支持面向对象编程。
+- PHP 代码可以通过标签 `<?php` 和 `?>` 嵌入到 HTML 文件中，但此时要将文件后缀名改为 .php 。如下：
+  ```php
+  <!DOCTYPE html>
+  <html>
+  <body>
 
-## 安装
+  <?php
+  echo "Hello World!";
+  ?>
+
+  </body> 
+  </html>
+  ```
+
+## 解释器
+
+- 版本：
+  - PHP 5.6 ：于 2014 年发布。
+  - PHP 6 ：被跳过。
+  - PHP 7 ：于 2015 年底发布，优化了很多性能。
+  - PHP 8 ：于 2020 年底发布。
 
 - 安装 PHP 解释器：
   ```sh
@@ -28,24 +47,6 @@
   - WampServer ：一款 WAMP 软件。
   - phpStudy ：一款兼容 WAMP 和 WNMP 的软件。
 
-## 语法特点
-
-- 每行语句要以分号 ; 结尾。
-- 用 // 声明单行注释，用 /* 和 */ 声明多行注释。
-- PHP 代码可以通过标签 `<?php` 和 `?>` 嵌入到 HTML 文件中，但此时要将文件后缀名改为 .php 。如下：
-  ```php
-  <!DOCTYPE html>
-  <html>
-  <body>
-
-  <?php
-  echo "Hello World!";
-  ?>
-
-  </body> 
-  </html>
-  ```
-
 ## 输入输出
 
 - 可以用关键字 echo 显示字符串，如下：
@@ -54,60 +55,16 @@
   echo PHP_EOL;        // 显示换行符
   ```
   - 也可以换成关键字 print ，但它同时只能显示一个字符串。
-- 可以用函数 print_r() 或 var_dump() 按适当的排版显示变量的值，并且 var_dump() 还会显示变量的类型、长度。
+- 可以用函数 `print_r()` 或 `var_dump()` 按适当的排版显示变量的值，并且 `var_dump()` 还会显示变量的类型、长度。
 
 ## 变量
 
-### 定义变量
-
-- 变量的命名规范与 C 语言相同，只不过变量名要加上 $ 前缀。
+- 变量的命名规范与 C 语言相同，但是变量名要加上 $ 前缀。
 - 变量会在第一次赋值时被自动创建，不需要声明变量的类型，因此 PHP 是一种弱类型语言。如下：
   ```php
   $x = 1;
   echo $x;
   ```
-
-### 数据类型
-
-- null ：空值。
-- int
-- float
-- bool ：布尔型，取值为 true 或 false 。
-- string
-  - 用单引号 ' 或双引号 " 作为定界符。
-  - 用 `<<<EOF` 和 `EOF;` 作为定界符时，会使字符串中的转义字符无效，但可以直接嵌入 PHP 的变量。如下：
-    ```php
-    str1 = <<<EOF
-        <h1>标题一</h1>
-        <p>x 的值是：$x</p>
-    EOF;
-    echo strlen($str1);    // 获取字符串的长度
-    ```
-  - 标识符的值不一定要是 EOL ，只需保证开始标识符与结束标识符相同。
-
-- array ：数组。用 array() 函数定义，支持嵌套。
-  - 数值数组：访问时使用数字作为下标，像 C 语言的普通数组。如下：
-    ```php
-    $text = array("hello","world","!");
-    $text[0] = "hi";
-    echo count($text);  // 获取数组的长度
-    sort($text);        // 升序排列
-    rsort($text);       // 降序排列
-    ```
-  - 关联数组：访问时使用键名作为下标，像 Python 的字典。每个键值对用 => 连接。
-    ```php
-    $text = array("line1" => "hello", "line2" => "world","line3"=>"!");
-    $text["line1"] = "hi";
-    ksort($text);       // 根据键名升序排列
-    krsort($text);      // 根据键名降序排列
-    ```
-- 常量：用 define() 函数定义，常量名不需要加 $ 前缀。如下：
-  ```php
-  define("URL", "www.baidu.com");
-  echo URL;
-  ```
-  - 常量的值不能修改。
-  - 常量都是全局变量，而且可以在函数内直接访问，不需要用 global 关键字。
 
 ### 变量的作用域
 
@@ -159,6 +116,48 @@
 - `$_ENV` ：存储了 PHP 脚本的所有环境变量。
 - `$_FILES` ：存储了 Web 客户端上传的文件。
 
+## 数据类型
+
+- null ：空值。
+- int
+- float
+- bool ：布尔型，取值为 true 或 false 。
+- string
+  - 用单引号 ' 或双引号 " 作为定界符。
+  - 用 `<<<EOF` 和 `EOF;` 作为定界符时，会使字符串中的转义字符无效，但可以直接嵌入 PHP 的变量。如下：
+    ```php
+    str1 = <<<EOF
+        <h1>标题一</h1>
+        <p>x 的值是：$x</p>
+    EOF;
+    echo strlen($str1);    // 获取字符串的长度
+    ```
+  - 标识符的值不一定要是 EOL ，只需保证开始标识符与结束标识符相同。
+
+- array ：数组。用 array() 函数定义，支持嵌套。
+  - 数值数组：访问时使用数字作为下标，像 C 语言的普通数组。如下：
+    ```php
+    $text = array("hello","world","!");
+    $text[0] = "hi";
+    echo count($text);  // 获取数组的长度
+    sort($text);        // 升序排列
+    rsort($text);       // 降序排列
+    ```
+  - 关联数组：访问时使用键名作为下标，像 Python 的字典。每个键值对用 => 连接。
+    ```php
+    $text = array("line1" => "hello", "line2" => "world","line3"=>"!");
+    $text["line1"] = "hi";
+    ksort($text);       // 根据键名升序排列
+    krsort($text);      // 根据键名降序排列
+    ```
+- 常量：用 define() 函数定义，常量名不需要加 $ 前缀。如下：
+  ```php
+  define("URL", "www.baidu.com");
+  echo URL;
+  ```
+  - 常量的值不能修改。
+  - 常量都是全局变量，而且可以在函数内直接访问，不需要用 global 关键字。
+
 ## 运算符
 
 - 支持 C 语言的算术运算符、赋值符号、自加和自减、比较运算符、逻辑运算符。
@@ -178,11 +177,11 @@
 
 ## 函数
 
-- 可以用关键字 function 定义函数：
-    ```php
-    function fun1($x)
-    {
-        echo $x;
-    }
-    fun1("hello");
-    ```
+- 用关键字 function 定义函数：
+  ```php
+  function fun1($x)
+  {
+      echo $x;
+  }
+  fun1("hello");
+  ```

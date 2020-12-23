@@ -1,22 +1,17 @@
 # Groovy
 
-：一种基于 Java 的脚本语言。
+：一种脚本语言，基于 Java 实现。
 - [官网](https://groovy-lang.org/)
 - 于 2007 年发布。
-- 兼容大部分 Java 的语法。
-- 在 JVM 上运行，可以转换成 Java 字节码。
 
 ## 语法特点
 
-- 每行语句以分号 ; 结尾，但可以省略。
+- 兼容大部分 Java 的语法。
+  - 在 JVM 上运行，可以转换成 Java 字节码。
+- 脚本文件的后缀名为 .groovy 。
+- 每个语句的末尾以换行符或分号 ; 作为分隔符。
 - 用 // 声明单行注释，用 /* 和 */ 声明多行注释。
-- 用 `print()` 显示一个值，用 `println()` 显示一个值并换行。
-- 调用函数时，可以省略最外层的括号。如下：
-  ```groovy
-  println("Hello")
-  println "Hello"
-  ```
-- 支持定义函数，也支持定义类、方法。
+- 支持定义函数，支持面向对象编程。
 
 ## 变量
 
@@ -46,11 +41,11 @@
     ```
 
 - 用关键字或类名的方式定义变量时，不能定义重名的变量。如下：
-    ```groovy
-    int a = 1
-    def a = 2
-    // 运行时会报错：The current scope already contains a variable of the name a
-    ```
+  ```groovy
+  int a = 1
+  def a = 2
+  // 运行时会报错：The current scope already contains a variable of the name a
+  ```
 
 ### 字符串
 
@@ -196,10 +191,16 @@
   }
   ```
 
-
 ## 函数
 
-- 可以用 `def` 关键字定义函数。如下：
+- 用 `print()` 显示一个值，用 `println()` 显示一个值并换行。
+- 调用函数时，可以省略最外层的括号。如下：
+  ```groovy
+  println("Hello")
+  println "Hello"
+  ```
+
+- 用 `def` 关键字定义函数：
   ```groovy
   def fun1(a, b = 0) {
       return a+b
@@ -207,7 +208,6 @@
 
   println fun1(2)
   ```
-
 - 可以给函数形参设置默认值。
 - 函数中最后一个执行的表达式的值会被用作 return 返回值。如下：
   ```groovy

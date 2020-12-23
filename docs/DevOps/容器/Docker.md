@@ -175,7 +175,7 @@ docker volume
 docker network
               ls                       # 显示所有的 docker 网络
               inspect <name>           # 查看一个网络的详细信息
-              create <name>            # 创建一个网络（bridge 类型）
+              create <name>            # 创建一个网络（bridge 类型），这会创建一个对应的虚拟网卡
               rm <name>                # 删除一个网络
               prune                    # 删除所有没有使用的网络
 
@@ -184,12 +184,11 @@ docker network
 ```
 
 - docker 安装之后会创建三个 docker 网络：
-  - bridge ：一个虚拟网络，使用 docker0 网卡。
-    - docker 默认会在宿主机上创建一个名为 docker0 的虚拟网卡。
+  - bridge ：一个虚拟网络，使用一个名为 docker0 的虚拟网卡。
   - host ：使用宿主机的 eth 网卡。
   - none ：一个被隔离的网络，只能使用 lo 网卡。
 - 创建一个容器时，默认会创建一个名字以 veth 开头的虚拟网卡，专门给该容器使用。
-  - 创建容器的默认配置是 `docker run --network bridge` ，因此会将容器的虚拟网卡连接到 bridge 网络。
+  - 创建容器的默认配置是 `docker run --network bridge` ，因此会将容器的虚拟网卡连接到 bridge 网络的 docker0 网卡。
   - 从容器内不能访问到 eth 网卡，因为缺乏 DNS ，比如尝试 ping 会报错 `No route to host` 。
   - 当容器内的服务监听端口时，是使用虚拟网卡的 Socket ，因此不能被容器外的 eth 网卡或其它网卡访问到。
 - 让容器内端口可以被容器外访问的方案：

@@ -49,6 +49,10 @@ module.exports = {
 			text: 'Notes',
             items: [
                 {
+                    text: '《编程》',
+                    link: '/Programming/index'
+                },
+                {
                     text: '《Python》',
                     link: '/Python/index'
                 },
@@ -80,6 +84,32 @@ module.exports = {
         }],
         sidebarDepth: 0,
         sidebar: {
+            '/Programming/': [{
+                    title: '《编程》',
+                    path: '/Programming/',
+                },
+                {
+                    title: '编程语言',
+                    children: [
+                        '编程语言/简介',
+                        '编程语言/Batch',
+                        '编程语言/Golang',
+                        '编程语言/Groovy',
+                        '编程语言/Lisp',
+                        '编程语言/Lua',
+                        '编程语言/Perl',
+                        '编程语言/PHP',
+                        '编程语言/Ruby',
+                    ]
+                },
+                {
+                    title: '算法',
+                    children: [
+                        '算法/哈希算法',
+                        '算法/加密算法',
+                    ]
+                },
+            ],
             '/Python/': [{
                     title: '《Python》',
                     path: '/Python/',

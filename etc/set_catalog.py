@@ -24,8 +24,8 @@ for book in book_list:
     book_info['catalog'] = {}
     current_chapter = ''
     for line in text.split('\n'):
-        chapter = re.findall(r'- ([^\[].*)', line)
-        article_path = re.findall(r'  - \[.*\]\(([^\)]*).md\)', line)
+        chapter = re.findall(r'^- ([^\[].*)$', line)
+        article_path = re.findall(r'^  - \[.*\]\(([^\)]*).md\)$', line)
         if chapter:
             current_chapter = chapter[0]
             book_info['catalog'][current_chapter] = []

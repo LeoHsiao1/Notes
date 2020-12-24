@@ -6,11 +6,10 @@
   - server 负责存储数据。
   - client 可以访问 server ，对数据进行增删查改。
 - 90 年代发布了 LDAP v3 版本，与 v2 版本不兼容。
-- 应用：
-  - LDAP 常用于存储大量账号的信息，供多个网站进行身份认证，相当于单点登录。
-  - 大部分通用软件都支持连接 LDAP 服务器。
+- LDAP 常用于存储大量账号的信息，供多个网站进行身份认证，实现单点登录。
+  - 大部分通用软件都支持连接 LDAP 服务器进行身份认证。
 
-## 原理
+## 数据结构
 
 ### 条目
 
@@ -29,12 +28,14 @@
 
 ### 属性
 
-- 每个条目要设置至少一个属性（Attribute），用于描述该条目多种方面的信息。
-- 每个属性有一个属性类型（AttributeType），用于定义属性值（Value）的格式、语法。如下：
+- 每个条目要设置至少一个属性（Attribute），用于描述该条目某种方面的信息，格式为 `<attribute>: <value>` 。
+  - attribute 和 value 都不区分大小写。
+  - 一个条目可以拥有多条重复的属性，比如拥有多个 telephoneNumber 属性，通过 {0}、{1} 等序号区分。
+- 每个属性有一个属性类型（AttributeType），用于定义属性值（Value）的语法。如下：
 
   属性                      | 别名   | 语法              | 描述            | 取值举例
   -|-|-|-|-
-  user id                   | uid   | Directory String  | 用户 ID          | LeoHsiao
+  user id                   | uid   | Directory String  | 用户 ID         | LeoHsiao
   commonName                | cn    | Directory String  | 姓名            | LeoHsiao
   surname                   | sn    | Directory String  | 姓              | Leo
   domain component          | dc    | Directory String  | 域名中的一个字段 | com
@@ -43,10 +44,10 @@
   telephoneNumber           |       | Telephone Number  | 电话号码        | 123456
 
 - 每个条目要选出至少一个属性键值对组合成一个字符串（用加号分隔），作为该条目的名称，称为 RDN（Relative DN）。
-  - 例：`cn=leo+telephoneNumber=123456`
+  - 例如： `cn=leo+telephoneNumber=123456`
   - 同一父节点下的各个子节点的 RDN 不能重复。
-  - 如果 RDN 中包含 `#"+,;<>\` 等特殊字符，或者属性值以空格开头或结尾，则要用 `\` 转义。
-  - `+,=` 被视作分隔符，左右可以加上任意个空格。
+  - 如果 RDN 中包含 `#` `"` `+` `,` `;` `<` `>` `\` 等特殊字符，或者属性值以空格开头或结尾，则要用 `\` 转义。
+  - `+` `,` `=` 字符被视作分隔符，左右可以加上任意个空格。
 
 - 将一个条目在目录树的保存路径上的各个节点的 RDN 组合成一个字符串（用逗号分隔），作为该条目的唯一标识名，称为 DN （Distinguished Name）。
   - Unix 文件路径采用从左到右的组合顺序，而 DN 采用从右到左的组合顺序。
@@ -83,8 +84,7 @@
   top                 | 没有属性，一般被 Root DN 继承
 
 - 每个 AttributeType、ObjectClass 有一个唯一的对象标识符（OID），由数字和点组成。比如 `Oid: 1.3.6.1.1.1.0.0` 。
-- 可以将多个 ObjectClass 的定义信息封装成一个模式（Schema）。
-  - Schema 可用于在新增条目时检查条目是否合法。
+- LDAP 服务器通常自带了一些 Schema 文件，定义了大量 ObjectClass ，供用户使用。
 
 ## 配置
 
@@ -113,3 +113,18 @@
   - increment
     - ：指定一个属性名、一个整数值（可以为负），从而对原本的属性值施加一定增量。
 
+## 查询
+
+- LDAP 的查询表达式可以由一个或多个属性过滤条件 filter 组成。
+- filter 的语法为 `(<attribute><operator><value>)` ，其中常用的运算符包括 `=` `<=` `>=` 。
+  - 运算符的前后不能插入多余的空格，否则可能产生歧义。
+  - 每个 filter 要用一对括号作为定界符包住，除非查询表达式中只有一个简单的 filter 。
+  - 条目的 dn 不算属性，不能用于查询，只能用作查询的起点。
+- 对 filter 进行运算的语法为 `(<operator> 《filter>...)` ，其中常用的运算符包括 `&` `|` `!` 。
+- 查询表达式示例：
+  ```ini
+  cn=test         # 查询包含该属性的条目
+  cn=test*        # value 可以使用通配符
+  (!(cn=test))
+  (& (cn=test) (!(| (objectClass=top) (objectClass=dcObject) )) )
+  ```

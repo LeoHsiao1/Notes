@@ -7,25 +7,6 @@
   - Active Directory ：简称为 AD ，同时支持 LDAP 和 Kerberos 协议。
   - Apache Directory Server
 
-## 原理
-
-- OpenLDAP 支持创建多种数据库，常见的后端类型如下：
-  ```sh
-  config    # 用于存储 Slapd 的配置
-  bdb       # 将数据存储到 Berkeley DB 文件数据库，已弃用
-  hdb       # 另一种 bdb ，已弃用
-  ldap      # 将数据存储到另一个 LDAP 服务器
-  ldif      # 将数据存储以 LDIF 格式存储在文件中
-  mdb       # 将数据存储到 LMDB 数据库中
-  meta      # 元数据目录
-  monitor   # 用于监控 slapd ，只能创建一个数据库实例
-  passwd    # 用于以只读权限访问 /etc/passwd 文件
-  shell     # 基于 Shell
-  sql       # 基于 SQL
-  ```
-  - 一般的数据库推荐采用 mdb 。
-
-
 ## 部署
 
 - 用 docker-compose 运行，配置如下：
@@ -55,6 +36,24 @@
     ldapsearch -x -D cn=admin,dc=example,dc=org -w admin -b dc=example,dc=org
     ```
   - 接下来可以在 Ldap Admin 中开始操作。
+
+## 原理
+
+- OpenLDAP 支持创建多种数据库，常见的后端类型如下：
+  ```sh
+  config    # 用于存储 Slapd 的配置
+  bdb       # 将数据存储到 Berkeley DB 文件数据库，已弃用
+  hdb       # 另一种 bdb ，已弃用
+  ldap      # 将数据存储到另一个 LDAP 服务器
+  ldif      # 将数据存储以 LDIF 格式存储在文件中
+  mdb       # 将数据存储到 LMDB 数据库中
+  meta      # 元数据目录
+  monitor   # 用于监控 slapd ，只能创建一个数据库实例
+  passwd    # 用于以只读权限访问 /etc/passwd 文件
+  shell     # 基于 Shell
+  sql       # 基于 SQL
+  ```
+  - 一般的数据库推荐采用 mdb 。
 
 ## 命令
 

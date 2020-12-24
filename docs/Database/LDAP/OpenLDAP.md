@@ -1,8 +1,11 @@
 # OpenLDAP
 
 ：一个开源的 LDAP 服务器软件。
-- 它会运行一个 slapd 进程，作为 LDAP 服务器。
 - [官网](https://www.openldap.org/)
+- 它会运行一个 slapd 进程，作为 LDAP 服务器。
+- 同类产品：
+  - Active Directory ：简称为 AD ，同时支持 LDAP 和 Kerberos 协议。
+  - Apache Directory Server
 
 ## 原理
 
@@ -111,7 +114,7 @@
   olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage
                      by * break
   olcRootDN: cn=admin,cn=config
-  olcRootPW:: e1NTSEF9MGJYN2xxMDZZOEQxVmZwVTFyZUs3RFZrMng4TDFPYWk=
+  olcRootPW: e1NTSEF9MGJYN2xxMDZZOEQxVmZwVTFyZUs3RFZrMng4TDFPYWk=
   structuralObjectClass: olcDatabase
   ConfigentryUUID: 72c4b61a-be77-103a-9ff0-9ddaa4d2c622
   creatorsName: cn=config
@@ -169,7 +172,7 @@
     ```
 
 2. 创建一个 .ldif 文件：
-    ```sh
+    ```ini
     # 替换 {0}config 数据库的 Root 密码
     dn: olcDatabase={0}config, cn=config                # 指定一个要操作的条目
     changetype: modify                                  # 指定操作类型为 modify
@@ -195,7 +198,7 @@
 ### 配置数据库
 
 1. 创建一个 .ldif 文件：
-    ```sh
+    ```ini
     # 设置 {1}mdb 数据库的 olcSuffix
     dn: olcDatabase={1}mdb,cn=config
     changetype: modify
@@ -252,7 +255,7 @@
 ### 导入条目
 
 1. 创建一个 .ldif 文件：
-    ```sh
+    ```ini
     dn: ou=dev,dc=example,dc=org
     objectClass: organizationalUnit
     ou: dev

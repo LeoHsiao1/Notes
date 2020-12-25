@@ -24,8 +24,8 @@
     - 服务器应该要限制同时保持的长连接的最大数量。
 - HTTP 2.0
   - 采用二进制格式传输报文。
-  - 支持 TCP 连接的多路复用，即同一个 TCP 连接可以被多个 HTTP 通信共用。
-  - 可以压缩报文 header 。
+  - 支持 TCP 连接的多路复用，即同一个 TCP 连接中可以发出多个 HTTP 请求。
+  - 支持压缩报文 header 。
   - 支持服务器主动推送报文到客户端。
 
 ## URI
@@ -42,11 +42,11 @@ URI 分为两种形式：
 
 URL 的一般格式为：`protocol://hostname:port/path/?querystring#fragment`
 - protocol ：采用的通信协议，比如 HTTP、HTTPS、FTP 。
-- hostname ：服务器的主机名、域名或 IP 地址，用于定位服务器。
+- hostname ：服务器的主机名称，可以是主机名、域名或 IP 地址。
   - protocol、hostname 不区分大小写，但一般小写。
-  - hostname 填错的话就不能定位服务器，protocol、port 填错的话就不能与服务器建立连接。
 - port ：端口号。
-  - 如果省略不填，则使用当前通信协议的默认端口，比如 HTTP 的默认端口为 80 。
+  - 如果省略不填，则使用当前通信协议的默认端口。比如 HTTP 的默认端口为 80 。
+  - 一个主机上可能运行了多个服务器软件，分别监听不同的端口。通过 hostname、port 才能定位一个唯一的服务器。
 - path ：服务器上某个资源的路径。
   - 如果省略不填，则会访问根目录 / 。比如 www.baidu.com 相当于 www.baidu.com/ 。
   - path 是否区分大小写取决于服务器所在的文件系统。比如 Linux 的文件系统区分大小写，Windows 的 NTFS 文件系统不区分大小写。

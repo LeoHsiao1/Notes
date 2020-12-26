@@ -3332,6 +3332,11 @@ datetime.datetime(2019, 5, 30, 10, 0, 0, 505080, tzinfo=<UTC>)
 >>> datetime.now().astimezone(pytz.timezone("Asia/Shanghai"))
 datetime.datetime(2019, 5, 30, 18, 0, 0, 505080, tzinfo=<DstTzInfo 'Asia/Shanghai' CST+8:00:00 STD>)
 
+
+>>> from datetime import date
+>>> date(2019, 5, 1)
+datetime.date(2019, 5, 1)
+
 ## datetime对象。
 定义：
 class datetime.datetime(year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo=None, *)
@@ -4198,8 +4203,7 @@ False
 ##
  
 访问文件
-## 类Unix平台、Web使用正斜杠 / 作为路径分隔符，而Windows使用反斜杠 \ 作为路径分隔符（在字符串中出现时要转义或者加上前缀r）。
-- Python访问某个路径时可以用正斜杠也可以用反斜杠，比如"C:/"、"C:\\"、r"C:\"。
+
 ## 访问文件的方式。
 - 二进制流
   - 所有文件都是以二进制的形式存储的，因此以二进制的形式可以直接读写所有文件。

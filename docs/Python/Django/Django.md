@@ -176,6 +176,12 @@ TIME_ZONE        = 'Asia/Shanghai'  # 设置时区
 USE_I18N         = True             # 是否自动翻译前端的一些单词
 USE_L10N         = True             # 是否按本地格式显示日期时间
 USE_TZ           = True             # 在 Django 内部按 UTC 时区处理时间，输出到视图或终端时才自动转换成本地时区
+
+# Django 基于 Python 的标准库 logging 记录日志，用户可以自定义日志器，覆盖默认的日志配置
+import logging
+LOGGING = { ... }                   # 配置日志器，略
+logging.config.dictConfig(LOGGING)
+logger = logging.getLogger('django')
 ```
 
 

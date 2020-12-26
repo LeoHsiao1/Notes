@@ -165,7 +165,7 @@ allow_writeable_chroot=YES                  # 允许用户写主目录
 # userlist_file=/etc/vsftpd/user_list       # 黑名单文件，每行记录一个用户名
 # userlist_enable=YES                       # 拒绝 userlist_file 名单中的用户登录
 
-use_localtime=YES                           # 是否显示本地时间（默认为 UTC 时间）
+# use_localtime=YES                         # 是否将显示的时间转换到本地时区（默认为 UTC 时区）
 xferlog_enable=YES                          # 开启日志
 xferlog_file=/var/log/vsftpd.log            # 日志文件的路径
 ```

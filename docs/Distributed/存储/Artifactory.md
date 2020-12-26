@@ -57,7 +57,7 @@ Web 页面如下：
 
 - 上传文件：
   ```sh
-  curl -X PUT -u 用户名:密码 'http://10.0.0.1:8082/artifactory/anonymous/test/1.zip' -T 1.zip
+  curl -X PUT -u 用户名:密码 'http://10.0.0.1:8082/artifactory/anonymous/test/1.zip' -T 1.zip > /dev/null
   ```
 
 - 下载文件：

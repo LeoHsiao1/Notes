@@ -8,7 +8,7 @@
 ```sh
 $ curl <URL>...                    # 访问指定网址（默认为 GET 方法），并将 HTTP 响应内容打印到 stdout
        -o <PATH>                   # 保存为指定路径的文件
-       -O                          # 保存为当前目录下的文件（自动设置文件名）
+       -O                          # 保存为当前目录下的同名文件
 
        -k                          # 不验证网站的 SSL 证书是否有效
        -u USER[:PASSWORD]          # 发送用户名，或者用户名加密码
@@ -29,11 +29,24 @@ $ curl <URL>...                    # 访问指定网址（默认为 GET 方法�
        -L                          # 如果 HTTP 响应报文是重定向，则自动跟随
        --connect-timeout 3         # 设置连接上 Web 服务器的超时时间（单位为秒）
        -m 10                       # 设置整个操作的超时时间（单位为秒）
-       -v                          # 显示通信过程的具体信息
+       -v                          # 显示通信的详细信息
+       --progress-bar              # 显示进度条
 
 ```
-- 如果 URL 包含特殊字符，则要用双引号包住。
+- 如果 URL 包含特殊字符，则要用单引号或双引号作为定界符，以免引发歧义。
 - 用 curl ip:port 也可以测试网络端口能否连通，与 telnet 类似。
+- 使用 curl 时，如果将 stdout 从终端重定向到其它文件，则会显示一个进度表，如下：
+  ```sh
+  [root@Centos ~]# curl -O 127.0.0.1:80/test.zip
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                  Dload  Upload   Total   Spent    Left  Speed
+    0 57.9M    0     0    0  256k      0  84234  0:12:01  0:00:03  0:11:58 84236
+  ```
+  可以改为显示一行简单的进度条：
+  ```sh
+  [root@Centos ~]# curl 127.0.0.1:80/test.zip --progress-bar > /dev/null
+  ######################################################################## 100.0%
+  ```
 
 ## wget
 
@@ -53,11 +66,11 @@ $ wget <URL>...                 # 访问指定网址（默认为 GET 方法）�
 ```
 - `wget URL` 相当于 `curl -O URL` 。
 - 例：爬取网页
-    ```sh
-    wget -e robots=off -r -np -p -k <网址>
-         -e robots=off # 忽略 robot 协议
-         -r            # 递归下载该目录下的所有文件
-         -np           # 递归下载时不遍历上层目录
-         -p            # 下载显示在网页中的所有文件
-         -k            # 将网页中的绝对链接改为本地链接
-    ```
+  ```sh
+  wget -e robots=off -r -np -p -k <网址>
+        -e robots=off # 忽略 robot 协议
+        -r            # 递归下载该目录下的所有文件
+        -np           # 递归下载时不遍历上层目录
+        -p            # 下载显示在网页中的所有文件
+        -k            # 将网页中的绝对链接改为本地链接
+  ```

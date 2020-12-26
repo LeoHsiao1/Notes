@@ -35,7 +35,7 @@
 
 ## 原理
 
-- Nginx 主进程启动之后，会运行多个 worker 进程负责处理 HTTP 请求。
+- Nginx 主进程启动之后，会创建多个 worker 子进程负责处理 HTTP 请求。
 - Nginx 处理每个 HTTP 请求的过程分为 11 个阶段（phase）：
   ```sh
   post-read       # 在读取了 HTTP 请求之后开始执行
@@ -72,14 +72,14 @@
 
 `/etc/nginx/nginx.conf` 的默认内容：
 ```sh
-user  nginx;                                # 启动 Nginx 进程的用户名，可能需要给该用户分配权限
-worker_processes  1;                        # 启动的 Nginx worker 进程数，设置成 auto 则会自动与 CPU 核数相等
+user  nginx;                                # 启动 Nginx 主进程的用户名，可能需要给该用户分配权限
+worker_processes  1;                        # 启动的 worker 进程数，设置成 auto 则会自动与 CPU 核数相等
 #daemon off;                                # 是否以 daemon 方式运行，默认为 on
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;              # 将 Nginx 主进程的 PID 记录到该文件中
 
 events {
-    worker_connections  1024;               # 每个 Nginx worker 支持的最大连接数
+    worker_connections  1024;               # 每个 worker 支持的最大连接数
 }
 
 http {

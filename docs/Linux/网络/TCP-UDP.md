@@ -1,6 +1,8 @@
 # TCP/UDP
 
-## Socket 通信状态
+## Socket
+
+### 通信状态
 
 建立 TCP 连接时：
 
@@ -28,8 +30,18 @@
 - `LAST_ACK`
 - `CLOSED` ：已关闭连接。
 
+### 常见报错
 
-## sockstat
+- 当主机 A 向主机 B 的某个端口发送 SYN 包，请求建立 TCP 连接时：
+  - 如果主机 B 的防火墙禁用了该端口，则会拒绝通信，导致主机 A 报错：`No route to host`
+  - 如果主机 B 的防火墙启用了该端口，但没有进程在监听该 socket ，则会回复一个 RST 包（也可能一直不回复），表示拒绝连接，导致主机 A 报错：`Connection refused`
+  - 如果主机 A 长时间没有收到回复（连 RST 包都没收到），则超出等待时间之后会报错：`Connection timed out`
+
+- 当主机 A 与主机 B 通信过程中，主机 B 突然断开 TCP 连接时：
+  - 如果主机 A 继续读取数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
+  - 如果主机 A 继续发送数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer`
+
+### sockstat
 
 在 Linux 上，执行以下命令可查看各状态的 socket 数量：
 ```
@@ -48,56 +60,42 @@ FRAG: inuse 0 memory 0
   - `alloc` ：已分配的。
   - `mem` ：使用的缓存大小。
 
-## TCP 常见报错
-
-- 当主机 A 向主机 B 的某个端口发送 SYN 包，请求建立 TCP 连接时：
-  - 如果主机 B 的防火墙禁用了该端口，或者启用了该端口但是没有进程在监听该端口，主机 B 的内核就会回复一个 RST 包（也可能一直不回复），导致主机 A 报错：`Connection refused`
-  - 如果主机 A 一直没有收到回复（连 RST 包都没收到），则超出等待时间之后会报错：`Connection timed out`
-
-- 当主机 A 与主机 B 通信过程中，主机 B 突然断开 TCP 连接时：
-  - 如果主机 A 继续读取数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
-  - 如果主机 A 继续发送数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer`
-
 ## telnet
 
 ：一个传统的远程登录工具。
-- 通信内容没有加密，容易被监听。因此不再适合用于远程登录，现在常用于测试 TCP 端口是否连通。
+- 通信内容没有加密，容易被监听。因此现在不适合用于远程登录，常用于测试 TCP 端口能否连通。
 - 命令：
-    ```sh
-    $ telnet <host> [port]    # 连接到某个主机的 TCP 端口（默认是 23 端口）
-    ```
+  ```sh
+  $ telnet <host> [port]    # 连接到某个主机（默认采用 TCP 23 端口）
+  ```
 
 - 例：端口连通
-    ```
-    [root@Centos ~]# telnet baidu.com 80
-    Trying 39.156.69.79...
-    Connected to baidu.com.
-    Escape character is '^]'.
+  ```
+  [root@Centos ~]# telnet baidu.com 80
+  Trying 39.156.69.79...
+  Connected to baidu.com.
+  Escape character is '^]'.
 
-    ```
-    - 可见它成功连接到目标主机的 80 端口。此时按 `Ctrl+]` 和 `Ctrl+D` 即可断开连接。
+  ```
+  - 可见它成功连接到目标主机的 80 端口。此时按 `Ctrl+]` 加 `Ctrl+D` 即可断开连接。
 
-- 例：端口不连通
-    ```
-    [root@Centos ~]# telnet 127.0.0.1 8000
-    Trying 127.0.0.1...
-    telnet: connect to address 127.0.0.1: Connection refused
-    ```
-    - Connection refused 表示与目标主机的物理网络连通，但是连接不到目标端口。原因可能是：
-      - 目标主机的防火墙拦截了发向该端口的数据包。
-      - 目标主机的防火墙开通了该端口，但是目标主机上没有进程在监听该端口。
-    - 上方访问的目标主机是本地环回地址，不会被防火墙拦截，所以是第二种原因。
+- 例：端口不通
+  ```
+  [root@Centos ~]# telnet 127.0.0.1 8000
+  Trying 127.0.0.1...
+  telnet: connect to address 127.0.0.1: Connection refused
+  ```
 
 - 例：无响应
-    ```
-    [root@Centos ~]# telnet baidu.com
-    Trying 220.181.38.148...
+  ```
+  [root@Centos ~]# telnet baidu.com
+  Trying 220.181.38.148...
 
-    ^C
-    ```
-    - 可见它一直尝试连接目标主机的 23 端口，但并没有成功。原因可能是：
-      - 与目标主机的网络不通
-      - 端口无响应
+  ^C
+  ```
+  - 可见它一直尝试连接目标主机的 23 端口，但并没有成功。原因可能是：
+    - 与目标主机的网络不通
+    - 与目标主机的网络连通，但端口不通
 
 ## netstat
 
@@ -199,10 +197,12 @@ $ netstat
     ```
     - 每行包含多个字段：时间戳 源地址 > 目的地址 Flags ... length
     - 常见的几种 TCP 数据包标志：
-      - [S] ：SYN 数据包。
-      - [.] ：ACK 数据包。
-      - [S.] ：SYN+ACK 数据包。
-      - [P] ：PUSH 数据包。
-      - [F] ：FIN 数据包。
-      - [R] ：RST 数据包。
+      ```sh
+      [S]     # SYN 数据包
+      [.]     # ACK 数据包
+      [S.]    # SYN+ACK 数据包
+      [P]     # PUSH 数据包
+      [F]     # FIN 数据包
+      [R]     # RST 数据包
+      ```
 

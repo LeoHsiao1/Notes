@@ -108,8 +108,8 @@ http {
 `/etc/nginx/conf.d/` 目录下默认存在一个 `default.conf` ，配置了 Nginx 的初始 Web 页面，如下：
 ```sh
 server {
-    listen       80;            # 定义该 server 监听的 TCP 端口（必填）
-    server_name  localhost;     # 监听的域名（可以不配置）
+    listen       80;            # 该 server 监听的地址（必填）
+    server_name  localhost;     # 监听的域名（可选）
 
     location / {
         root   /usr/share/nginx/html;
@@ -150,10 +150,11 @@ server {
 - 可用范围：server
 - 例：
   ```sh
-  listen      80;              # 相当于 listen *:80
+  listen      80;              # 相当于 listen 0.0.0.0:80
   listen      127.0.0.1:80;
   listen      unix:/var/run/nginx.sock;
   ```
+- listen 指令决定了 server 绑定一个什么样的 Socket 并监听，只会接收发送到该 Socket 的 TCP 数据包。
 - 如果有多个 server 监听同一个端口，则第一个定义的 server 是默认 server 。也可以手动指定，如下：
   ```sh
   listen       80  default_server;
@@ -161,7 +162,7 @@ server {
 
 ### server_name
 
-：声明 server{} 监听的域名。
+：声明 server 监听的域名。
 - 可用范围：server
 - server_name 有以下几种格式，排在前面的优先匹配：
   ```sh

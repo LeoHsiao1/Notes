@@ -34,52 +34,52 @@
 - 起初，Ken Thompson 在开发 Unix 系统时设计了一个 shell 解释器，名为 sh 。
 - 后来，Unix 系统上出现了多种 shell 解释器，其中名为 bash 的 shell 解释器最流行，成为了大部分 Linux 发行版默认的 shell ，它兼容 sh 。
 - 例：查看系统可用的所有 shell 解释器
-    ```sh
-    [root@Centos ~]# cat /etc/shells
-    /bin/sh
-    /bin/bash
-    /sbin/nologin
-    /usr/bin/sh
-    /usr/bin/bash
-    ```
+  ```sh
+  [root@Centos ~]# cat /etc/shells
+  /bin/sh
+  /bin/bash
+  /sbin/nologin
+  /usr/bin/sh
+  /usr/bin/bash
+  ```
 - 例：查看当前的 shell 解释器
-    ```sh
-    [root@Centos ~]# sh   # 进入 sh 终端
-    sh-4.2# echo $SHELL   # 查看用户的 login shell
-    /bin/bash
-    sh-4.2# echo $0       # 查看当前使用的 shell
-    sh
-    sh-4.2# e             # 输入一条不存在的命令，可以从报错信息中判断出当前使用的 shell
-    sh: e: command not found
-    ```
+  ```sh
+  [root@Centos ~]# sh   # 进入 sh 终端
+  sh-4.2# echo $SHELL   # 查看用户的 login shell
+  /bin/bash
+  sh-4.2# echo $0       # 查看当前使用的 shell
+  sh
+  sh-4.2# e             # 输入一条不存在的命令，可以从报错信息中判断出当前使用的 shell
+  sh: e: command not found
+  ```
 
 ## 运行脚本
 
 - 可以在终端输入 shell 脚本的文件路径，直接运行它：
-    ```sh
-    [root@Centos ~]# ./1.sh 
-    -bash: ./1.sh: Permission denied
-    ```
+  ```sh
+  [root@Centos ~]# ./1.sh 
+  -bash: ./1.sh: Permission denied
+  ```
   - 此时系统会自动选择一个 shell 解释器来运行它。
   - 通常会因为没有该文件的可执行权限而报错，需要先执行： chmod +x 1.sh
   - 运行 shell 脚本时可以输入参数，比如：./1.sh arg1 arg2
 
 - 可以用指定的 shell 解释器来运行 shell 脚本：
-    ```sh
-    $ bash 1.sh        # 启动一个子 shell 来运行脚本，执行完之后会退出该 shell
-           -x          # 打印出执行的每条命令（每行开头会显示加号 + ）
-           -n          # 不运行脚本，而是检查是否有语法错误
-           -c <comman> # 不运行脚本，而是执行一条命令
-    ```
+  ```sh
+  $ bash 1.sh           # 启动一个子 shell 来运行脚本，执行完之后会退出该 shell
+          -x            # 打印出执行的每条命令（每行开头会显示加号 + ）
+          -n            # 不运行脚本，而是检查是否有语法错误
+          -c <comman>   # 不运行脚本，而是执行一条命令
+  ```
 
 - 可以用 source 命令运行 shell 脚本：
-    ```sh
-    $ source 1.sh          # 读取文件的每行字符串，放到当前 shell 中执行
-    ```
-    source 命令又称为点命令，可以用一个点表示，比如：`. 1.sh`
+  ```sh
+  $ source 1.sh         # 读取文件的每行字符串，放到当前 shell 中执行
+  ```
+  source 命令又称为点命令，可以用一个点表示，比如：`. 1.sh`
 
 - 可以用 exec 命令执行 shell 命令：
-    ```sh
-    $ exec <command>...    # 执行一条命令
-    ```
-    exec 执行完命令之后会退出当前 shell ，除非是对文件描述符进行操作，比如：`exec 1> stdout.txt`
+  ```sh
+  $ exec <command>...   # 执行一条命令
+  ```
+  exec 执行完命令之后会退出当前 shell ，除非是对文件描述符进行操作，比如：`exec 1> stdout.txt`

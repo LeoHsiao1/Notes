@@ -7,11 +7,11 @@ module.exports = {
     dest: 'docs/.vuepress/dist',
     lang: 'zh-CN',
     plugins: [
-        ['@vuepress/google-analytics', {
-            'ga': 'UA-155748502-1'
-        }],
         ['sitemap', {
             hostname: 'http://leohsiao.com'
+        }],
+        ['@vuepress/google-analytics', {
+            'ga': 'UA-155748502-1'
         }],
         ['vuepress-plugin-meilisearch',
             {
@@ -31,6 +31,17 @@ module.exports = {
                 },
                 customClass: 'right-anchor',
             }
+        ],
+        [
+            'vuepress-plugin-zooming',
+            {
+                options: {
+                    bgColor: 'rgb(0, 0, 0)',
+                    bgOpacity: 0.5,
+                    scaleBase: 0.9,
+                    transitionDuration: 0.2,
+                },
+            },
         ],
     ],
     markdown: {

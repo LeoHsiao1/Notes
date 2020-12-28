@@ -218,9 +218,9 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
 - `type="password"` ：输入密文。
 - `type="submit"` ：提交按钮。
   - 当用户点击提交按钮时，浏览器会将表单数据放在 HTTP 请求报文中，发送到 action 指向的 URL 。
-    <br>如果没有设置属性 action ，则默认指向当前网页。
+    - 如果没有设置属性 action ，则默认指向当前网页。
   - 默认 method="GET"，浏览器会将表单数据放在请求的 URL 中发送。例如：`http://127.0.0.1/login?username=Leo&password=123456`
-    <br>如果设置 method="POST"，则浏览器会将表单数据放在报文 body 中发送。例如：`username=Leo&password=123456`
+    - 如果设置 method="POST"，则浏览器会将表单数据放在报文 body 中发送。例如：`username=Leo&password=123456`
 
 - `type="button"` ：普通按钮。点击后会执行属性 onclick 指定的动作。
     ```html
@@ -230,8 +230,8 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
 - `type="radio"` ：单选按钮
     ```html
     <form>
-        <input type="radio" name="sex" value="male">Male<br>  # 
-        <input type="radio" name="sex" value="female">Female    # 
+        <input type="radio" name="sex" value="male">Male<br>
+        <input type="radio" name="sex" value="female">Female<br>
     </form>
     ```
   - 属性 name 表示该选项显示的名字。
@@ -241,7 +241,7 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
     ```html
     <form>
         <input type="checkbox" name="sex" value="male">Male<br>
-        <input type="checkbox" name="sex" value="female">Female
+        <input type="checkbox" name="sex" value="female">Female<br>
     </form>
     ```
 
@@ -262,7 +262,7 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
 输入控件的常用属性：
 - `autocomplete="on"` ：根据用户之前的输入值自动完成输入。
 - `pattern="[A-Za-z]{3}"` ：按正则表达式检查输入是否有效。
-  <br>当输入不合法时，用户按下键盘也不会有响应。不过浏览器并不会报错，需要用 JS 显示报错。
+  - 当输入不合法时，用户按下键盘也不会有响应。不过浏览器并不会报错，需要用 JS 显示报错。
 - `maxlength="10"` ：输入的最大长度。
 - `value="123456"` ：该输入控件的初始值，或者显示的名字。
 - `placeholder="Password"` ：在输入框内显示提示语，插入光标时会自动消失。
@@ -318,8 +318,7 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
 可以在元素的开始标签中设置其属性。
 - 每个属性用一个键值对表示，键值对用等号 = 赋值，用空格分隔。
 - HTML5 中，属性的值可以用双引号或单引号包住，也可以不用引号包住（此时不能包含空格）。
-  <br>如果值本身包含了双引号或单引号，则应该用另一种引号包住。
-
+  - 如果值本身包含了双引号或单引号，则应该用另一种引号包住：
     ```html
     <p id="P 1">段落一</p>
     <p id='P 1'>段落一</p>

@@ -261,7 +261,7 @@ multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 bound
   2. server 将自己的 SSL 公钥（通常放在数字证书中，证明它是真的、没有被篡改）回复给 client 。
   3. client 收到 SSL 公钥，用它加密一个随机数发送给 server 。
   4. server 收到加密的消息后，用自己的 SSL 私钥解密它，得到随机数。然后把该随机数回复给 client ，表示自己能解开该公钥，证明自己的身份。
-      <br>同时，server 随机生成一个对称加密的密钥，然后把该密钥用 SSL 公钥加密，发送给 client 。以后双方的 HTTP 通信报文都使用该密钥加密。
+     - 同时，server 随机生成一个对称加密的密钥，然后把该密钥用 SSL 公钥加密，发送给 client 。以后双方的 HTTP 通信报文都使用该密钥加密。
     - 这四次握手的通信过程是明文传输的，不怕泄露。
 - OpenSSL ：一个开源的 SSL 库，提供了一些 SSL 签名算法。
 

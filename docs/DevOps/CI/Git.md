@@ -25,15 +25,13 @@
     ```
     每次执行 `git commit` 时都会自动备注提交者的用户名和邮箱。
 
-3. 在某个目录下创建 git 仓库：
-    ```sh
-    git init
-    ```
-
 ## 基本用法
 
-1. 用户进入项目目录，执行 `git init` 命令进行初始化。
-	- 这默认会在当前目录下创建一个 .git 子目录（称为 git 仓库）。
+1. 用户进入项目根目录，执行 `git init` 命令进行初始化。
+	- 这默认会在当前目录下创建一个 .git 子目录，作为 git 仓库，存储 git 的相关文件。
+  - 执行 `git init --bare` 会创建一个裸仓库。
+    - 它不会创建 .git 子目录，而是将 git 仓库中的文件直接存储到项目根目录。并且通常将项目根目录加上后缀名 .git 。
+    - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远程仓库，供多人推送修改。
 
 2. 用户执行 `git commit` 命令，将项目文件提交为一个版本，让 git 记录。
 	- git 默认会记录项目目录下的所有文件，可以在 .gitignore 文件中声明不想被 git 记录的文件。
@@ -61,7 +59,7 @@ git rm --cached 1.py  # 从暂存区删除某个文件
 ### commit
 
 ```sh
-git commit 
+git commit
 					-m "initial version" # 将当前暂存区的文件提交为一个版本，需要加上备注信息
 					-a                   # 提交从上一个版本以来被改动的所有文件
 					--amend              # 将当前的暂存区合并到上一个版本（不过时间戳依然是上一个版本的）
@@ -216,20 +214,37 @@ git push origin --force --all --tags    # 强制推送，覆盖远端仓库
 git 的配置文件有三种，局部的配置会覆盖全局的配置：
 - 系统的配置文件：保存在 `/etc/gitconfig` 。
 - 当前用户的配置文件：保存在 `~/.gitconfig` 。
-- 当前 git 仓库的配置文件：保存在 `.git/config` 。
+- 当前项目的 git 仓库的配置文件：保存在 `.git/config` 。
 
-可以在文本编辑器中修改配置文件，也可以使用以下命令进行修改：
+配置文件为 INI 格式，下方是一个项目的 git 仓库的配置实例：
+```ini
+[core]
+        repositoryformatversion = 0 # 仓库格式的版本
+        filemode   = true           # 是否保留文件权限中的可执行位
+        bare       = false          # 该仓库是否为裸仓库
+        ignorecase = false          # 是否忽略文件名的大小写
+
+[remote "origin"]                   # 定义一个远程仓库，名为 origin
+        url    = https://github.com/LeoHsiao1/test.git
+        fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，声明让本地的 src 分支跟踪远程仓库的 dst 分支
+
+[branch "master"]
+        remote = origin
+        merge  = refs/heads/master
+```
+
+可以直接修改配置文件，也可以使用以下命令进行修改：
 ```sh
-git config 
-        --system      # 使用系统的配置文件
-        --global      # 使用当前用户的配置文件
-        --local       # 使用当前 git 仓库的配置文件
+git config
+          --system      # 使用系统的配置文件
+          --global      # 使用当前用户的配置文件
+          --local       # 使用当前 git 仓库的配置文件
 
-        -l            # 显示配置文件的全部内容
-        -e            # 在文本编辑器中打开配置文件
-        
-        <key>         # 显示配置文件中某项参数的值
-        <key> <value> # 设置配置文件中某项参数的值
+          -l            # 显示配置文件的全部内容
+          -e            # 在文本编辑器中打开配置文件
+
+          <key>         # 显示配置文件中某项参数的值
+          <key> <value> # 设置配置文件中某项参数的值
 ```
 
 ## 远端仓库

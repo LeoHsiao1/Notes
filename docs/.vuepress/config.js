@@ -492,16 +492,16 @@ module.exports = {
                     title: '配置管理',
                     children: [
                         '配置管理/简介',
+                        '配置管理/Jumpserver',
+                        '监控告警/Supervisor',
                         '配置管理/Ansible',
                         '配置管理/Nacos',
-                        '配置管理/Jumpserver',
                     ]
                 },
                 {
                     title: '监控告警',
                     children: [
                         '监控告警/简介',
-                        '监控告警/Supervisor',
                         '监控告警/Grafana',
                         '监控告警/Zabbix',
                         '监控告警/Prometheus',

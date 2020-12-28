@@ -60,13 +60,13 @@
     systemctl enable supervisord
     ```
 
-## 配置示例
+## 配置
 
 - 用户需要先在配置文件中定义要控制的进程，然后才能用 Supervisor 管理。
-- Supervisor 默认使用 /etc/supervisord.conf 作为主配置文件（用于保存 supervisord 的配置）。
-  - 还会导入 /etc/supervisord.d/ 目录下的其它配置文件（用于保存各个进程的配置），这些配置文件的后缀名为 .ini ，采用 ini 的语法。
+- Supervisor 默认使用 /etc/supervisord.conf 作为主配置文件（常用于保存 supervisord 的配置）。
+  - 还会导入 /etc/supervisord.d/ 目录下的其它配置文件（常用于保存各个进程的配置），这些配置文件的后缀名为 .ini ，采用 INI 的语法。
 
-### /etc/supervisord.conf
+### 主配置
 
 ```ini
 [unix_http_server]
@@ -116,7 +116,7 @@ files = supervisord.d/*.ini
     curl -L "http://10.0.0.1:9001/logtail/ping" -u "admin:WJnhZdpFvtml"                               # 查看日志
     ```
 
-### /etc/supervisord.d/*.ini
+### 进程配置
 
 ```ini
 [program:ping]              ; 被管理的进程名
@@ -187,7 +187,7 @@ stderr_logfile_backups=0
     redirect_stderr=true
     ```
 
-## supervisorctl 命令
+## 命令
 
 ```sh
 supervisorctl

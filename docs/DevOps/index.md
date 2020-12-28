@@ -19,12 +19,12 @@
   - [Rancher](k8s/Rancher.md)
 - 配置管理
   - [简介](配置管理/简介.md)
+  - [Jumpserver](配置管理/Jumpserver.md)
+  - [Supervisor](监控告警/Supervisor.md)
   - [Ansible](配置管理/Ansible.md)
   - [Nacos](配置管理/Nacos.md)
-  - [Jumpserver](配置管理/Jumpserver.md)
 - 监控告警
   - [简介](监控告警/简介.md)
-  - [Supervisor](监控告警/Supervisor.md)
   - [Grafana](监控告警/Grafana.md)
   - [Zabbix](监控告警/Zabbix.md)
   - [Prometheus](监控告警/Prometheus.md)

@@ -6,58 +6,58 @@
   - changelist_view ：表格视图。通过一个表格显示一个数据表的内容，每行显示一个 Model 实例，支持搜索、排序等功能。
   - changeform_view ：表单视图。通过一组表单显示某个 Model 实例的各个字段的内容，常用于新增、查看、编辑实例。
 
-admin页面
-## Django自带了一个admin模块，用于显示Web形式的后台管理页面，可以管理用户组、数据库、各个数据表。
-- admin页面使用的模板文件保存在Django安装目录的django/contrib/admin/templates目录下，可以将这些模板文件拷贝到当前的app目录下，改写它们。
+admin 页面
+## Django 自带了一个 admin 模块，用于显示 Web 形式的后台管理页面，可以管理用户组、数据库、各个数据表。
+- admin 页面使用的模板文件保存在 Django 安装目录的 django/contrib/admin/templates 目录下，可以将这些模板文件拷贝到当前的 app 目录下，改写它们。
 - admin 系统本身会创建一些表。比如 django_admin_log 表用于记录用户在 admin 页面上进行的操作，比如对某个数据表的修改时间。
 
 ## 用法。
-1.    在一个models.py的同目录下创建一个admin.py：
+1.    在一个 models.py 的同目录下创建一个 admin.py ：
 from django.contrib import admin
 from .models import Student
 
-admin.site.register(Student)                # 将数据库的Model注册到admin页面中
-2.    在urls.py中声明该页面的URL（默认已经声明了）。
+admin.site.register(Student)                # 将数据库的 Model 注册到 admin 页面中
+2.    在 urls.py 中声明该页面的 URL（默认已经声明了）。
 from django.urls import path
 from django.contrib import admin
 
 urlpatterns = [
-    path('admin/', admin.site.urls),        # 管理员界面是绑定到django.contrib.admin.site.urls上
+    path('admin/', admin.site.urls),        # 管理员界面是绑定到 django.contrib.admin.site.urls 上
 ]
 3.    创建一个管理员账号（可以创建多个）：
 python manage.py createsuperuser
 4.    在域名后加上'admin/'即可访问管理员页面。
-## 设置admin页面。
+## 设置 admin 页面。
 from django.contrib import admin
 
 admin.site.site_title = "后台管理"        # 设置网页的标题
 admin.site.site_header = "后台管理"    # 设置网页中显示的名称
 
-## 定义Model的显示类。
-- 通过继承admin.ModelAdmin类可以定义某个Model的显示类，并用@admin.register()注册。如下：
+## 定义 Model 的显示类。
+- 通过继承 admin.ModelAdmin 类可以定义某个 Model 的显示类，并用@admin.register()注册。如下：
 from django.contrib import admin
 from .models import Choice, Question
 
-class ChoiceInline(admin.TabularInline):        # 继承admin.TabularInline类
+class ChoiceInline(admin.TabularInline):        # 继承 admin.TabularInline 类
     model = Choice
-    extra = 3                                    # 每次额外显示3个choice项
+    extra = 3                                    # 每次额外显示 3 个 choice 项
 
-@admin.register(Question)                        # 将QuestionAdmin配置应用到Question表
-class QuestionAdmin(admin.ModelAdmin):            # 继承自admin.ModelAdmin类
-    # 设置该Model的管理页面（是一个列表）
-    list_display = ["name", "text"]    # 设置要显示的字段（默认只显示__str__()）
-    list_display_links = ["name"]        # 点击list_display中的哪些字段显示成链接，可以跳转到实例的修改页面
+@admin.register(Question)                        # 将 QuestionAdmin 配置应用到 Question 表
+class QuestionAdmin(admin.ModelAdmin):            # 继承自 admin.ModelAdmin 类
+    # 设置该 Model 的管理页面（是一个列表）
+    list_display = ["name", "text"]    # 设置要显示的字段（默认只显示 __str__()）
+    list_display_links = ["name"]        # 点击 list_display 中的哪些字段显示成链接，可以跳转到实例的修改页面
     # 这些字段必须在 list_display 列表中存在
     # list_display_links = None 表示不会显示链接
 
-    list_editable = ["text"]            # 设置list_display中的哪些字段可以编辑（会显示成文本框）
+    list_editable = ["text"]            # 设置 list_display 中的哪些字段可以编辑（会显示成文本框）
     list_filter = ["pub_date"]          # 在页面右侧显示一个过滤器，可根据指定字段筛选数据。这些字段不能是虚拟字段，但不必在 list_display 列表中存在
     search_fields = ["name"]            # 在页面顶部显示一个搜索栏，可根据指定字段搜索数据
     # filter_horizontal = ('friends',)  # 专门用于编辑 ManyToManyField 类型的字段，显示两个多选框以便于筛选（否则默认只显示一个下拉框）
 
     # 设置在 changeform_view 视图显示哪些字段，可以将显示区域分成竖向的多栏
     fieldsets = [
-        (None,      {"fields": ["text"]}),                  # 定义第一栏，名为None（即不显示名称），包含一个字段
+        (None,      {"fields": ["text"]}),                  # 定义第一栏，名为 None（即不显示名称），包含一个字段
         ("details", {"fields": ['id', 'name', "pub_date"],  # 定义第二栏，名为 details
                      "classes": ["collapse"],               # 采用指定的 CSS 样式
                      'description': 'this is for test',     # 显示一段注释文字
@@ -74,7 +74,7 @@ class QuestionAdmin(admin.ModelAdmin):            # 继承自admin.ModelAdmin类
 
     readonly_fields = ["name"]                    # 设置哪些字段是只读的，不可修改
 
-    inlines = [ChoiceInline]                    # 添加Choice对象作为内部属性
+    inlines = [ChoiceInline]                    # 添加 Choice 对象作为内部属性
 
     def save_model(self, request, obj, form, change):        # 重载“保存”按钮的方法
         if form.is_valid():
@@ -83,32 +83,32 @@ class QuestionAdmin(admin.ModelAdmin):            # 继承自admin.ModelAdmin类
             ...
         super().save_model(request, obj, form, change)
 - 搜索框的使用规则。
-  - 若search_fields = ["name", "text"]，则当用户搜索"1 2"时，Django会按以下逻辑进行搜索：
+  - 若 search_fields = ["name", "text"]，则当用户搜索"1 2"时，Django 会按以下逻辑进行搜索：
 WHERE (name ILIKE '%1%' OR text ILIKE '%1%') AND (name ILIKE '%2%' OR text ILIKE '%2%')
-  - search_fields = ["^name", "=text"]，则当用户搜索"1 2"时，Django会按以下逻辑进行搜索：
+  - search_fields = ["^name", "=text"]，则当用户搜索"1 2"时，Django 会按以下逻辑进行搜索：
 WHERE (name ILIKE '1%' OR text ILIKE '1') AND (name ILIKE '2%' OR text ILIKE '2')
 
 
 
 - 其它设置。
-list_per_page = 100            # 每页最多显示多少条数据（默认100）
-list_max_show_all = 200        # 当总数低于多少时显示"show all"按钮，允许用户查看所有数据（默认200）
+list_per_page = 100            # 每页最多显示多少条数据（默认 100）
+list_max_show_all = 200        # 当总数低于多少时显示"show all"按钮，允许用户查看所有数据（默认 200）
 
-view_on_site = True            # 在admin页面的右上角显示一个跳转到前台网站的链接
+view_on_site = True            # 在 admin 页面的右上角显示一个跳转到前台网站的链接
 
 # 关于实例的修改页面
 save_as = True        # 是显示 “保存为新的” 按钮，还是 “保存并增加另一个” 按钮
 save_on_top = True    # 是否在页面顶部重复显示按钮（默认只在页面底部显示）
 
 
-- 添加Action。
+- 添加 Action 。
 
-# 定义action函数，它接收三个参数，其中queryset表示被选中的数据项的集合
+# 定义 action 函数，它接收三个参数，其中 queryset 表示被选中的数据项的集合
 def delete(self, request, queryset):
     queryset.update(text="")
-    self.message_user(request, "action done")     # 在admin页面上方显示一行提示
+    self.message_user(request, "action done")     # 在 admin 页面上方显示一行提示
 
-# 设置action显示的名字
+# 设置 action 显示的名字
 delete.short_description = "delete"
 
 # actions_selection_counter = True  # 是否显示当前勾选的实例数量
@@ -117,7 +117,7 @@ delete.short_description = "delete"
 actions = ["delete"]                # 一个列表，记录所有 actions 的方法名
 
 
-  - 调用完action函数之后，Django默认会返回之前的修改页面。可以自定义return的结果。比如：return redirect(...)
+  - 调用完 action 函数之后，Django 默认会返回之前的修改页面。可以自定义 return 的结果。比如：return redirect(...)
 
 ##
 ##
@@ -127,24 +127,24 @@ django-import-export ：一个插件，用于在 admin 表格页面增加导入�
 
 
 ♢ xadmin
-## xadmin：Python的第三方库，是Django的插件，提供了更美观的admin页面。
+## xadmin ：Python 的第三方库，是 Django 的插件，提供了更美观的 admin 页面。
 - 优点：
-  - 比Django自带的admin增加了少许功能，比如导出表格、显示外键关系。
+  - 比 Django 自带的 admin 增加了少许功能，比如导出表格、显示外键关系。
 - 缺点：
-  - 使用时需要修改admin.py的内容。
+  - 使用时需要修改 admin.py 的内容。
 ## 用法。
 1.    安装：pip install xadmin2
-2.    在settings.py的INSTALLED_APPS[]中加入'xadmin'和'crispy_forms'。
+2.    在 settings.py 的 INSTALLED_APPS[]中加入'xadmin'和'crispy_forms'。
 3.    更新数据库：
 python manage.py makemigrations
 python manage.py migrate
-4.    在主urls.py中加入URL：
+4.    在主 urls.py 中加入 URL ：
 import xadmin
 
 urlpatterns = [
     path('xadmin/', xadmin.site.urls),
 ]
-5.    在每个app下创建adminx.py，格式如下：
+5.    在每个 app 下创建 adminx.py ，格式如下：
 import xadmin
 from xadmin import views
 from xadmin.plugins.actions import BaseActionView
@@ -167,11 +167,11 @@ class MyAction(BaseActionView): # 定义一个动作
     description = "参数化构建"  # 要显示的名字
     model_perm = "change"   # 该动作所需权限
 
-    def do_action(self, queryset):  # 重载do_action()方法
+    def do_action(self, queryset):  # 重载 do_action()方法
         try:
             for i in queryset:
                 ...
-            self.message_user(message="Done", level="success")    # level的值必须小写
+            self.message_user(message="Done", level="success")    # level 的值必须小写
         except Exception as e:
             self.message_user(e, "error")
 
@@ -186,18 +186,18 @@ class ProjectAdmin():
 ##
  
 ♢ simpleui
-## simpleui：Python的第三方库，是Django的插件，提供了更美观的admin页面。
+## simpleui ：Python 的第三方库，是 Django 的插件，提供了更美观的 admin 页面。
 官方文档：https://simpleui.88cto.com/docs/simpleui/quick.html
 
 - 优点：
   - 显示界面比较轻巧、美观。
-  - 使用时不需要修改admin.py的内容，完全兼容Django自带的admin。
+  - 使用时不需要修改 admin.py 的内容，完全兼容 Django 自带的 admin 。
   - 将页面显示成框架中的视图，方便嵌入自制的页面。
 - 缺点：
-  - 功能与Django自带的admin一样少。
+  - 功能与 Django 自带的 admin 一样少。
   - 加载速度有点慢。
 ## 用法。
-1.    先启用Django自带的admin页面。
+1.    先启用 Django 自带的 admin 页面。
 2.    安装：pip install django-simpleui
 3.    在 settings.py 中 INSTALLED_APPS[] 中加入 simpleui ：
 ```py
@@ -210,17 +210,17 @@ INSTALLED_APPS = [
 ```
 
 
-## 在settings.py中增加simpleui的配置：
+## 在 settings.py 中增加 simpleui 的配置：
 # 设置首页
 # SIMPLEUI_HOME_PAGE = 'https://www.baidu.com'
 
-# 首页图标,支持element-ui的图标和fontawesome的图标
+# 首页图标,支持 element-ui 的图标和 fontawesome 的图标
 # SIMPLEUI_HOME_ICON = 'el-icon-date'
 
-# 设置simpleui 点击首页图标跳转的地址
+# 设置 simpleui 点击首页图标跳转的地址
 SIMPLEUI_INDEX = 'https://www.88cto.com'
 
-# 首页显示服务器、python、django、simpleui相关信息
+# 首页显示服务器、python、django、simpleui 相关信息
 # SIMPLEUI_HOME_INFO = True
 
 # 首页显示快速操作
@@ -229,13 +229,13 @@ SIMPLEUI_INDEX = 'https://www.88cto.com'
 # 首页显示最近动作
 # SIMPLEUI_HOME_ACTION = True
 
-# 自定义SIMPLEUI的Logo
+# 自定义 SIMPLEUI 的 Logo
 # SIMPLEUI_LOGO = 'https://avatars2.githubusercontent.com/u/13655483?s=60&v=4'
 
 # 登录页粒子动画
 # SIMPLEUI_LOGIN_PARTICLES = True
 
-# 自定义simpleui 菜单
+# 自定义 simpleui 菜单
 SIMPLEUI_CONFIG = {
     'system_keep': True,    # 显示系统默认菜单
     'menus': [{     # 自定义菜单（系统默认显示的菜单只包含用户有权限查看的部分，但自定义的菜单总是会全部显示，但是如果用户没有查看权限，则会在点击时返回 403 页面）
@@ -275,8 +275,8 @@ SIMPLEUI_ICON = {
     '员工管理': 'fas fa-user-tie'
 }
 
-# 指定simpleui 是否以脱机模式加载静态资源，为True的时候将默认从本地读取所有资源，即使没有联网一样可以。适合内网项目
-# 不填该项或者为False的时候，默认从第三方的cdn获取
+# 指定 simpleui 是否以脱机模式加载静态资源，为 True 的时候将默认从本地读取所有资源，即使没有联网一样可以。适合内网项目
+# 不填该项或者为 False 的时候，默认从第三方的 cdn 获取
 SIMPLEUI_STATIC_OFFLINE = False
 
 

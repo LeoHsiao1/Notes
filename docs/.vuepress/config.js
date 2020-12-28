@@ -493,7 +493,7 @@ module.exports = {
                     children: [
                         '配置管理/简介',
                         '配置管理/Jumpserver',
-                        '监控告警/Supervisor',
+                        '配置管理/Supervisor',
                         '配置管理/Ansible',
                         '配置管理/Nacos',
                     ]

@@ -20,7 +20,7 @@
 - 配置管理
   - [简介](配置管理/简介.md)
   - [Jumpserver](配置管理/Jumpserver.md)
-  - [Supervisor](监控告警/Supervisor.md)
+  - [Supervisor](配置管理/Supervisor.md)
   - [Ansible](配置管理/Ansible.md)
   - [Nacos](配置管理/Nacos.md)
 - 监控告警

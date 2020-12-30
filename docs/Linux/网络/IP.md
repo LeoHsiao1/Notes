@@ -34,18 +34,25 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 ```
 - 主机一般都有一张物理网卡 eth0 ，还有多张虚拟网卡，比如环回地址的网卡 lo 。
-- inet ：网卡的 IP 地址。
-- ether ：网卡的 MAC 地址。
-- flags
+- flags ：
   - UP ：表示网卡已被启用。
   - BROADCAST ：表示支持广播。
   - RUNNING ：表示网卡已连接到网络。
   - MULTICAST ：表示支持组播。
-- mtu ：最大传输单元，即网卡能传输的数据包最大体积。
-- RX packets、TX packets ：表示接收、发送的数据包数。
-  - error ：出错的数据包数。比如校验错误、帧同步错误。
+- 地址信息：
+  - mtu ：最大传输单元，即网卡能传输的 IP 数据包最大大小，单位 bytes 。
+  - inet ：网卡的 IP 地址。
+  - netmask ：子网掩码。
+  - ether ：网卡的 MAC 地址。
+  - txqueuelen ：传输队列的长度。
+- IP 数据包的统计数量：
+  - RX packets ：接收的数据包总数。
+-   TX packets ：发送的数据包总数。
+  - bytes ：数据包的总大小。
+  - errors ：出错的数据包数。比如校验错误、帧对齐错误。
   - dropped ：因为 buffer 内存不足等原因而被丢弃的数据包数。
-  - overrun ：因为队列已满而被丢弃的数据包数。
+  - overrun ：因为缓冲区已满而被丢弃的数据包数。
+  - frame ：因为数据帧出错的数据包数，比如长度不能被 8 整除。
   - carrier ：因为载体出错的数据包数，比如半双工模式时不可通信。
   - collisions ：发生碰撞的数据包数。
 
@@ -117,12 +124,7 @@ $ ip
 
 ## ping
 
-：常用于测试网络是否连通、网络延迟、域名解析。
-
-原理：
-- 基于 ICMP 协议，向目标主机发送 ICMP 报文，根据收到回复的时间间隔就可以知道通信延迟。
-- ICMP 报文的头部用 1 个字节记录了该报文的生存期（Time To Live ，TTL）。
-- ICMP 报文每经过一跳路由器，TTL 的值就会被减一，当 TTL 为零时路由器就会丢弃该报文。
+：常用于基于 ICMP 协议测试网络是否连通、网络延迟、丢包率、域名解析。
 
 命令：
 ```sh
@@ -162,6 +164,7 @@ PING google.com (93.46.8.90) 56(84) bytes of data.
 - 可见它一直尝试连接目标主机，但并没有成功。原因可能是：
   - 与目标主机的物理网络没有连通。
   - 与目标主机的物理网络连通，但是目标主机没有开启 ICMP 协议。
+- ICMP 不是基于 TCP 通信，因此不需考虑目标主机是否开放了 TCP 端口。
 
 ## traceroute
 

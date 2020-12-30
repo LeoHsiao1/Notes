@@ -531,13 +531,13 @@ scrape_configs:
 ## Alertmanager
 
 ：作为一个 HTTP 服务器运行，用于将 Prometheus 产生的警报加工之后转发给用户。
+- [GitHub 页面](https://github.com/prometheus/alertmanager)
 - 优点：
   - Prometheus 产生的警报是 JSON 格式的信息，Alertmanager 可以对它们进行分组管理，加工成某种格式的告警消息，再转发给用户。
   - 配置比较麻烦但是很灵活。
   - 可以在 Web 页面上搜索警报、分组管理。
 - 缺点：
   - 只能查看当前存在的警报，不能查看已发送的历史消息。
-- [GitHub 页面](https://github.com/prometheus/alertmanager)
 
 ### 部署
 
@@ -750,7 +750,7 @@ inhibit_rules:
 
 ### Prometheus
 
-- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 '/metrics' 。
+- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 `/metrics` 。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 - 常用指标：
   ```sh
@@ -776,7 +776,7 @@ inhibit_rules:
 
 ### Alertmanager
 
-- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 '/metrics' 。
+- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 `/metrics` 。
 - 常用指标：
   ```sh
   alertmanager_build_info{branch="HEAD", goversion="go1.13.5", instance="10.0.0.1:9093", job="alertmanager", revision="f74be0400a6243d10bb53812d6fa408ad71ff32d", version="0.20.0"}   # 版本信息
@@ -795,7 +795,7 @@ inhibit_rules:
 
 ### Grafana
 
-- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 '/metrics' 。
+- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 `/metrics` 。
   - 访问时不需要身份认证，但只提供了关于 Grafana 运行状态的指标。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
 - 常用指标：
@@ -815,7 +815,7 @@ inhibit_rules:
 
 ### Jenkins
 
-- 安装插件 "Prometheus metrics" 可提供 exporter 风格的 API ，默认的 metrics_path 为 '/prometheus/' 。
+- 安装插件 "Prometheus metrics" 可提供 exporter 风格的 API ，默认的 metrics_path 为 `/prometheus/` 。
   - 在 Jenkins 的 "Configure System" 页面可以对 "Prometheus" 栏进行配置。
   - 不能统计到安装该插件以前的 Jenkins 指标。
 - 常用指标：
@@ -861,20 +861,20 @@ inhibit_rules:
   node_exporter_build_info{branch="HEAD", goversion="go1.13.8", instance="10.0.0.1:9100", job="node_exporter", revision="ef7c05816adcb0e8923defe34e97f6afcce0a939", version="1.0.0-rc.0"}  # 版本信息
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
 
-  node_boot_time_seconds                                                      # 主机的启动时刻
-  node_time_seconds                                                           # 主机的当前时间（Unix 时间戳）
-  node_time_seconds - node_boot_time_seconds                                  # 主机的运行时长（s）
-  node_time_seconds - time() + T                                              # 主机的时间误差，其中 T 是估计每次抓取及传输的耗时
+  node_boot_time_seconds                      # 主机的启动时刻
+  node_time_seconds                           # 主机的当前时间（Unix 时间戳）
+  node_time_seconds - node_boot_time_seconds  # 主机的运行时长（s）
+  node_time_seconds - time() + T              # 主机的时间误差，其中 T 是估计每次抓取及传输的耗时
 
-  node_load1                                                                  # 每分钟的平均负载
-  count(node_cpu_seconds_total{mode='idle'})                                  # CPU 核数
-  avg(irate(node_cpu_seconds_total[5m])) without (cpu) * 100                  # CPU 各模式占比（%）
-  (1 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) without(cpu)) * 100 # CPU 使用率（%）
+  node_load1                                                                    # 每分钟的平均负载
+  count(node_cpu_seconds_total{mode='idle'})                                    # CPU 核数
+  avg(irate(node_cpu_seconds_total[5m])) without (cpu) * 100                    # CPU 各模式占比（%）
+  (1 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) without(cpu)) * 100  # CPU 使用率（%）
 
-  node_memory_MemTotal_bytes                                         # 物理内存总量
-  node_memory_MemAvailable_bytes                                     # 物理内存可用量，CentOS 7 以上版本才支持该指标
-  node_memory_SwapTotal_bytes                                        # swap 内存总量
-  node_memory_SwapFree_bytes                                         # swap 内存可用量
+  node_memory_MemTotal_bytes                  # 物理内存总量
+  node_memory_MemAvailable_bytes              # 物理内存可用量，CentOS 7 以上版本才支持该指标
+  node_memory_SwapTotal_bytes                 # swap 内存总量
+  node_memory_SwapFree_bytes                  # swap 内存可用量
 
   sum(node_filesystem_size_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint)  # 磁盘总量
   sum(node_filesystem_avail_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint) # 磁盘可用量
@@ -886,27 +886,29 @@ inhibit_rules:
   irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[5m]) # 网卡每秒发送量
 
   node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast 是广播地址，duplex 是双工模式，）
-  node_network_up                               # 网卡的状态（取值 1、0 表示是否正在启用）
-  node_network_mtu_bytes                        # MTU 大小
-  node_network_receive_packets_total            # 网卡接收的数据包数
-  node_network_receive_errs_total               # 网卡接收的错误包数
-  node_network_receive_drop_total               # 网卡接收时的丢弃包数
-  node_network_receive_compressed_total         # 网卡接收的压缩包数
-  node_network_receive_multicast_total          # 网卡接收的多播包数
-
-  node_network_transmit_packets_total           # 网卡发送的数据包数
+  node_network_up                             # 网卡的状态（取值 1、0 表示是否正在启用）
+  node_network_mtu_bytes                      # MTU 大小
+  node_network_receive_packets_total          # 网卡接收的数据包数（指 IP 数据包）
+  node_network_receive_errs_total             # 网卡接收的错误包数
+  node_network_receive_drop_total             # 网卡接收时的丢弃包数
+  node_network_receive_compressed_total       # 网卡接收的压缩包数
+  node_network_receive_multicast_total        # 网卡接收的多播包数
+  node_network_transmit_packets_total         # 网卡发送的数据包数
   node_network_transmit_errs_total
   node_network_transmit_drop_total
   node_network_transmit_compressed_total
 
-  node_sockstat_sockets_used                    # 使用的 socket 数量
-  node_netstat_Tcp_CurrEstab                    # ESTABLISHED 加 CLOSE_WAIT 状态的 TCP 连接数
-  node_netstat_Tcp_InSegs                       # 接收的 TCP 报文数
-  node_netstat_Tcp_OutSegs                      # 发送的 TCP 报文数
-  node_netstat_Udp_InDatagrams                  # 接收的 UDP 报文数
-  node_netstat_Udp_OutDatagrams                 # 发送的 UDP 报文数
-  node_netstat_Icmp_InMsgs                      # 接收的 ICMP 消息数（包括出错的）
-  node_netstat_Icmp_OutMsgs                     # 发送的 ICMP 消息数
+  node_sockstat_sockets_used                  # 使用的 socket 数量
+  node_netstat_Tcp_CurrEstab                  # ESTABLISHED 加 CLOSE_WAIT 状态的 TCP 连接数
+  node_netstat_Tcp_InSegs                     # 接收的 TCP 包数（包括错误的）
+  node_netstat_Tcp_InErrs                     # 接收的 TCP 错误包数（比如校验和错误）
+  node_netstat_Tcp_OutSegs                    # 发送的 TCP 包数
+  node_netstat_Udp_InDatagrams                # 接收的 UDP 包数
+  node_netstat_Udp_InErrors                   # 接收的 UDP 错误包数
+  node_netstat_Udp_OutDatagrams               # 发送的 UDP 包数
+  node_netstat_Icmp_InMsgs                    # 接收的 ICMP 包数
+  node_netstat_Icmp_InErrors                  # 接收的 ICMP 错误包数
+  node_netstat_Icmp_OutMsgs                   # 发送的 ICMP 包数
   ```
 
 ### process-exporter

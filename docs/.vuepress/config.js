@@ -114,6 +114,14 @@ module.exports = {
                     ]
                 },
                 {
+                    title: 'Java',
+                    children: [
+                        'Java/Java',
+                        'Java/编译',
+                        'Java/语法',
+                    ]
+                },
+                {
                     title: '算法',
                     children: [
                         '算法/哈希算法',

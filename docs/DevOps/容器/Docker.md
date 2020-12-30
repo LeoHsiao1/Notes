@@ -190,15 +190,47 @@ docker network
 - 创建一个容器时，默认会创建一个名字以 veth 开头的虚拟网卡，专门给该容器使用。
   - 创建容器的默认配置是 `docker run --network bridge` ，因此会将容器的虚拟网卡连接到 bridge 网络的 docker0 网卡。
   - 从容器内不能访问到 eth 网卡，因为缺乏 DNS ，比如尝试 ping 会报错 `No route to host` 。
-  - 当容器内的服务监听端口时，是使用虚拟网卡的 Socket ，因此不能被容器外的 eth 网卡或其它网卡访问到。
-- 让容器内端口可以被容器外访问的方案：
+  - 当容器内的服务监听端口时，是监听虚拟网卡上的 Socket ，因此不能被容器外的 eth 网卡或其它网卡访问到。
+- 让容器内端口可以被容器外访问的三种方案：
   - 将容器内端口映射到宿主机的 eth 网卡上的端口。
     - 比如执行 `docker run -p 80:80`
-    - 此时 docker daemon 会配置 iptables 规则，将宿主机 80 端口收到的流量转发到容器内的 80 端口。不过这样相当于在宿主机的防火墙上开通 80 端口，允许被任意 IP 访问。
+    - 此时 docker daemon 会配置 iptables 规则，将宿主机 80 端口收到的流量转发到容器内的 80 端口。
+      - 不过此时相当于在宿主机的防火墙上开通 80 端口，允许被任意外部 IP 访问。
+      - 此时从一个容器中不能访问到另一个容器映射的端口，因为 iptables 规则不会转发该流量。
   - 让容器连接到 host 网络，从而使用宿主机的 eth 网卡，而不创建自己的虚拟网卡。
     - 比如执行 `docker run --network host`
-    - 这样当容器内的服务监听端口时，是使用 eth 网卡的 Socket ，可以被外部访问。
-- 如果几个容器连接到同一个 bridge 网络，就可以在一个容器内访问其它容器、访问所有端口（使用容器的名字作为目标主机）。例如：`ping mysql`
+    - 这样当容器内的服务监听端口时，是监听 eth 网卡上的 Socket ，可以被外部访问。
+  - 如果几个容器连接到同一个 bridge 网络，就可以在一个容器内访问其它容器、访问所有端口（使用容器的名字作为目标主机）。例如：`ping mysql`
+- 例：创建几个容器
+  ```sh
+  [root@Centos ~]# docker run -d --name test1 --network host nginx
+  9c1c537e8a304ad9e4244e3c7ae1743b88d45924b7b48cbb0a9f63606c82d76d
+  [root@Centos ~]# docker run -d --name test2 -p 2080:80 nginx
+  4601a81b438e31e5cb371291e1299e4c5333e853a956baeb629443774a066e9c
+  ```
+  在宿主机上可以访问各个容器映射的端口：
+  ```sh
+  [root@Centos ~]# curl -I 127.0.0.1:80
+  HTTP/1.1 200 OK
+  ...
+  [root@Centos ~]# curl -I 127.0.0.1:2080
+  HTTP/1.1 200 OK
+  ...
+  ```
+  在容器内不能访问另一个容器映射到宿主机的端口，除非源容器或目标容器使用宿主机的网卡。也就是说，映射端口的容器只能与宿主机直接通信，不能与其它容器间接通信。如下：
+  ```sh
+  [root@Centos ~]# docker exec -it test1 curl -I 10.0.0.1:80
+  HTTP/1.1 200 OK
+  ...
+  [root@Centos ~]# docker exec -it test1 curl -I 10.0.0.1:2080
+  HTTP/1.1 200 OK
+  ...
+  [root@Centos ~]# docker exec -it test2 curl -I 10.0.0.1:80
+  HTTP/1.1 200 OK
+  ...
+  [root@Centos ~]# docker exec -it test2 curl -I 10.0.0.1:2080
+  curl: (7) Failed to connect to 10.0.0.1 port 2080: No route to host
+  ```
 
 ### 最佳实践
 

@@ -12,11 +12,11 @@ tagline: null
 <br>
 <br>
 
-> Hello 2020!
+> Hello 2021!
 
 > - 该笔记的主要目的是记录知识点。
-> - 笔记保存为MarkDown格式，分为多个书籍，按章节目录排序。
-> - 基于VuePress显示静态网站，访问URL：<http://leohsiao.com/>
+> - 笔记保存为 MarkDown 格式，分为多个书籍，按章节目录排序。
+> - 基于 VuePress 显示静态网站，访问 URL ：<http://leohsiao.com/>
 > - 欢迎指正
 
 > 目录：

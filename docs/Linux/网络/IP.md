@@ -81,20 +81,21 @@ link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 ```sh
 $ ip
     link                  # 显示所有网卡的信息
-    -s link               # 增加显示网卡接收、发送的字节数
-    -s -s link            # 增加显示网卡接收、发送的错误包数
-    link set eth0 up      # 启用网卡
+        -s                # 增加显示网卡接收、发送的字节数（该选项要放在 link 之前）
+        -s -s             # 增加显示网卡接收、发送的错误包数（该选项要放在 link 之前）
+        show eth0         # 只显示指定网卡的信息
+        set eth0 up       # 启用网卡
                   down    # 停用网卡
-    link del eth0         # 删除网卡
+        del eth0          # 删除网卡
 
-    addr                              # 显示所有网卡的信息，及其 IP 地址
-        add 192.168.0.1/24 dev eth0   # 给网卡增加一个 IP 及掩码
-        del 192.168.0.1/24 dev eth0   # 删除
+    addr                            # 显示所有网卡的信息，及其 IP 地址
+        add 10.0.0.1/24 dev eth0    # 给网卡增加一个 IP 及掩码
+        del 10.0.0.1/24 dev eth0    # 删除
 
-    neighbour                         # 显示当前网段的其它主机
+    neighbour                       # 显示当前网段的其它主机
 
-    route                             # 显示路由表
-        add default via 10.0.0.1      # 增加一个默认网关
+    route                           # 显示路由表
+        add default via 10.0.0.1    # 增加一个默认网关
 ```
 
 ## DNS 配置

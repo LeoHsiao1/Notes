@@ -1,8 +1,8 @@
 # Perl
 
 ：实用报表提取语言（Practical Extraction and Report Language），一种脚本语言。
-- [官网](https://www.perl.org/)
 - 1987 年由加州大学伯克利分校的 Larry Wall 发布，借鉴了 C、shell、awk 等语言的特性。
+- [官方文档](https://www.perl.org/docs.html)
 
 ## 语法特点
 

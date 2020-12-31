@@ -1,8 +1,8 @@
 # Golang
 
 ：Go 语言，一种编译型语言，是强类型语言、静态语言。
-- [官网](https://golang.org/)
 - 于 2009 年由 Google 公司发布。
+- [官方文档](https://golang.org/doc/)
 
 ## 语法特点
 

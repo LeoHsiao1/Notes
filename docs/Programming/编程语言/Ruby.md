@@ -1,8 +1,8 @@
 # Ruby
 
 ：一种脚本语言。
-- [官网](http://www.ruby-lang.org/zh_cn/)
 - 1995 年由日本的松本行弘发布，借鉴了 Lisp、Perl 等语言的特性。
+- [官方文档](http://www.ruby-lang.org/zh_cn/documentation/)
 
 ## 语法特点
 

@@ -8,10 +8,6 @@ tagline: null
 
 <h1 id="homepage_title">LeoHsiao's Notes</h1>
 
-<br>
-<br>
-<br>
-
 > Hello 2021!
 
 > - 该笔记的主要目的是记录知识点。

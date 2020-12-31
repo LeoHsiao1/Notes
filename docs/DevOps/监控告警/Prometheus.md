@@ -890,7 +890,9 @@ inhibit_rules:
   node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast 是广播地址，duplex 是双工模式，）
   node_network_up                             # 网卡的状态（取值 1、0 表示是否正在启用）
   node_network_mtu_bytes                      # MTU 大小
-  node_network_receive_packets_total          # 网卡接收的数据包数（指 IP 数据包）
+
+  # 关于 IP 协议
+  node_network_receive_packets_total          # 网卡接收的数据包数
   node_network_receive_errs_total             # 网卡接收的错误包数
   node_network_receive_drop_total             # 网卡接收时的丢弃包数
   node_network_receive_compressed_total       # 网卡接收的压缩包数
@@ -899,8 +901,17 @@ inhibit_rules:
   node_network_transmit_errs_total
   node_network_transmit_drop_total
   node_network_transmit_compressed_total
+  node_netstat_Icmp_InMsgs                    # 接收的 ICMP 包数
+  node_netstat_Icmp_InErrors                  # 接收的 ICMP 错误包数
+  node_netstat_Icmp_OutMsgs                   # 发送的 ICMP 包数
 
-  node_sockstat_sockets_used                  # 使用的 socket 数量
+  # 关于 Socket
+  node_sockstat_sockets_used                  # 使用的 Socket 数
+  node_sockstat_TCP_inuse                     # 监听的 TCP Socket 数
+  node_sockstat_TCP_tw
+
+
+  # 关于 TCP/UDP 协议
   node_netstat_Tcp_CurrEstab                  # ESTABLISHED 加 CLOSE_WAIT 状态的 TCP 连接数
   node_netstat_Tcp_InSegs                     # 接收的 TCP 包数（包括错误的）
   node_netstat_Tcp_InErrs                     # 接收的 TCP 错误包数（比如校验和错误）
@@ -908,9 +919,6 @@ inhibit_rules:
   node_netstat_Udp_InDatagrams                # 接收的 UDP 包数
   node_netstat_Udp_InErrors                   # 接收的 UDP 错误包数
   node_netstat_Udp_OutDatagrams               # 发送的 UDP 包数
-  node_netstat_Icmp_InMsgs                    # 接收的 ICMP 包数
-  node_netstat_Icmp_InErrors                  # 接收的 ICMP 错误包数
-  node_netstat_Icmp_OutMsgs                   # 发送的 ICMP 包数
   ```
 
 ### process-exporter

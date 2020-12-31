@@ -78,12 +78,12 @@ UDPLITE: inuse 0
 RAW: inuse 0
 FRAG: inuse 0 memory 0
 ```
-- `sockets: used` ：已使用的 socket 数量。
-- `TCP: inuse` ：正在使用的 TCP socket 数量。
-  - `orphan` ：无主的，不属于任何进程。
-  - `tw` ：等待关闭的。
-  - `alloc` ：已分配的。
-  - `mem` ：使用的缓存大小。
+- `used` ：使用的 socket 数量。
+- `inuse` ：监听的 socket 数量。
+- `orphan` ：无主的，不属于任何进程。
+- `tw` ：time_wait 。
+- `alloc` ：allocated ，已分配的。
+- `mem` ：Socket 的缓冲区大小。
 
 ### telnet
 

@@ -8,6 +8,7 @@
   - [CSS](前端/CSS.md)
   - [JavaScript](前端/JavaScript.md)
   - [DOM](前端/DOM.md)
+  - [TypeScript](前端/TypeScript.md)
 - 前端框架
   - [Bootstrap](前端框架/Bootstrap.md)
   - [Node.js](前端框架/Node.js.md)

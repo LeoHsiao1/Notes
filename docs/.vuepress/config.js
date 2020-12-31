@@ -334,6 +334,7 @@ module.exports = {
                         '前端/CSS',
                         '前端/JavaScript',
                         '前端/DOM',
+                        '前端/TypeScript',
                     ]
                 },
                 {

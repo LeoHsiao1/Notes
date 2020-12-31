@@ -430,6 +430,8 @@ scrape_configs:
     - 如果不超过阙值时间，则属于 Pending 状态。
     - 如果超过阙值时间，则属于 Firing 状态。
 
+- 可参考的告警规则：[awesome-prometheus-alerts](https://github.com/samber/awesome-prometheus-alerts)
+
 ## API
 
 - 管理 Prometheus 的 HTTP API ：

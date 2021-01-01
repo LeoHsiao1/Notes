@@ -8,9 +8,9 @@ tagline: null
 
 <h1 id="homepage_title">LeoHsiao's Notes</h1>
 
-> Hello 2021!
+> Hello 2021 !
 
-> - 该笔记的主要目的是记录知识点。
+> - 该笔记主要用于记录知识点。
 > - 笔记保存为 MarkDown 格式，分为多个书籍，按章节目录排序。
 > - 基于 VuePress 显示静态网站，访问 URL ：<http://leohsiao.com/>
 > - 欢迎指正

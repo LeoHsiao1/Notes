@@ -1,8 +1,9 @@
 # PHP
 
-：超文本预处理器（Hypertext Preprocessor），一种脚本语言，常用于 Web 开发。
-- 1994 年，加拿大的 Rasmus Lerdorf 为了维护个人网页而用 Perl 语言编写了一些程序，后来改进成一种新语言 PHP 。
+：超文本预处理器（Hypertext Preprocessor），一种脚本语言。
 - [官方文档](https://www.php.net/manual/en/)
+- 1994 年，加拿大的 Rasmus Lerdorf 为了维护个人网页而用 Perl 语言编写了一些程序，后来改进成一种新语言 PHP 。
+- 常用于 Web 程序开发。
 
 ## 语法特点
 

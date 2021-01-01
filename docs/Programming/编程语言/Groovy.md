@@ -1,8 +1,8 @@
 # Groovy
 
 ：一种脚本语言，基于 Java 实现。
-- 于 2007 年发布。
 - [官方文档](https://groovy-lang.org/documentation.html)
+- 于 2007 年发布。
 
 ## 语法特点
 

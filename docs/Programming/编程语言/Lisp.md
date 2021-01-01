@@ -1,9 +1,9 @@
 # Lisp
 
 ：一种古老的高级编程语言。
+- [官方文档](https://lisp-lang.org/learn/)
 - 虽然古老，但诞生之后经过不断改进，扩展了许多功能。
 - 主要用于人工智能编程。
-- [官方文档](https://lisp-lang.org/learn/)
 
 ## 相关历史
 

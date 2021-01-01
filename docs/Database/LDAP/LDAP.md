@@ -1,6 +1,6 @@
 # LDAP
 
-：轻型目录访问协议（Lightweight Directory Access Protocol），是一个管理树形结构数据的网络协议，可当作 NoSQL 数据库使用。
+：轻型目录访问协议（Lightweight Directory Access Protocol），是一个管理树形结构数据的网络协议，也可当作 NoSQL 数据库使用。
 - [官网](https://ldap.com/)
 - 90 年代发布了 LDAP v3 版本，与 v2 版本不兼容。
 - 采用 C/S 架构、TCP 通信。

@@ -1,8 +1,8 @@
 # ElasticSearch
 
-：简称为 ES ，是一个基于 Lucene 的搜索引擎，也可用作存储 JSON 格式数据的 NoSQL 数据库。
+：简称为 ES ，一个搜索引擎，也可用作存储 JSON 格式数据的 NoSQL 数据库。
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
-- 基于 Java 开发。
+- 基于 Java 开发，基于 Lucene 实现。
 - 于 2010 年开源，由 Elastic 公司管理，
 - 采用 C/S 架构、TCP 通信。
   - 客户端通过 Restful API 访问服务器。

@@ -3,7 +3,12 @@
 ：一个流行的 CI/CD 网站，常用于项目构建、测试、部署。
 - [官方文档](https://jenkins.io/zh/doc/)
 - 基于 Java 开发，提供了 Web 操作页面。
-- 老版本名为 Hudson 。
+
+## 相关历史
+
+- 2005 年，Sun 公司的 Kohsuke Kawaguchi 发布了一个简单的 CI 网站，名为 Hudson 。
+- 2010 年，Oracle 公司收购了 Sun 公司，拥有了 Hudson 的版权。社区被迫将项目改名为 Jenkins ，进行开发。
+- 2011 年，Hudson 被交给 Eclipse 基金会管理。但它越来越落后于 Jenkins ，于 2016 年停止开发。
 
 ## 安装
 

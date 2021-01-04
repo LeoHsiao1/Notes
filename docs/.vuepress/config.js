@@ -143,6 +143,13 @@ module.exports = {
                     ]
                 },
                 {
+                    title: '模块与包',
+                    children: [
+                        '模块与包/模块与包',
+                        '模块与包/代码库',
+                    ]
+                },
+                {
                     title: '文本处理',
                     children: [
                         '文本处理/jinja',

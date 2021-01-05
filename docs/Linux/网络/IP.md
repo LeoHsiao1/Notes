@@ -58,7 +58,7 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 
 ## route
 
-用法：
+命令：
 ```sh
 $ route    # 显示本机的路由表
 ```
@@ -77,7 +77,7 @@ link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
 
 ：可替代 ifconfig、route 命令，且功能更强。
 
-用法：
+命令：
 ```sh
 $ ip
     link                  # 显示所有网卡的信息
@@ -126,55 +126,77 @@ $ ip
 ## ping
 
 ：常用于基于 ICMP 协议测试网络是否连通、网络延迟、丢包率、域名解析。
+- 命令：
+  ```sh
+  $ ping <host>    # 启动 ping
+          -c n     # 最多发送 ICMP 报文多少次（默认为无限次）
+          -i n     # 每次发送 ICMP 报文的间隔时间（默认为 1 秒）
+          -I eth0  # 使用本机的指定网卡来发送 ICMP 报文（默认自动选取网卡）
+  ```
+  - host 可以是 IP 地址或域名，如果是域名，在执行时还会显示出域名解析后的 IP 地址。
 
-命令：
-```sh
-$ ping <host>    # 启动 ping
-        -c n     # 最多发送 ICMP 报文多少次（默认为无限次）
-        -i n     # 每次发送 ICMP 报文的间隔时间（默认为 1 秒）
-        -I eth0  # 使用本机的指定网卡来发送 ICMP 报文（默认自动选取网卡）
-```
-- host 可以是 IP 地址或域名，如果是域名，在执行时还会显示出域名解析后的 IP 地址。
+- 例：
+  ```sh
+  [root@Centos ~]# ping baidu.com
+  PING baidu.com (39.156.69.79) 56(84) bytes of data.
+  64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=1 ttl=250 time=37.0 ms
+  64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=2 ttl=250 time=37.0 ms
+  64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=3 ttl=250 time=37.0 ms
+  64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=4 ttl=250 time=37.0 ms
+  ^C
+  --- baidu.com ping statistics ---
+  4 packets transmitted, 4 received, 0% packet loss, time 3003ms
+  rtt min/avg/max/mdev = 37.008/37.022/37.044/0.136 ms
+  ```
+  - 可见它成功连接到目标主机，显示出 ping 的测试结果。
+  - icmp_seq ：表示这是第几个 ICMP 报文。
+  - ttl ：ICMP 报文剩下的生存期。
+  - time ：发出 ICMP 报文之后，隔了多久才收到回复。
+  - Linux 的 ping 命令默认每隔一秒向目标主机发送一个 ICMP 报文，并且会一直发送，要按 `Ctrl+C` 终止。
 
-例：
-```sh
-[root@Centos ~]# ping baidu.com
-PING baidu.com (39.156.69.79) 56(84) bytes of data.
-64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=1 ttl=250 time=37.0 ms
-64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=2 ttl=250 time=37.0 ms
-64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=3 ttl=250 time=37.0 ms
-64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=4 ttl=250 time=37.0 ms
-^C
---- baidu.com ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3003ms
-rtt min/avg/max/mdev = 37.008/37.022/37.044/0.136 ms
-```
-- 可见它成功连接到目标主机，显示出 ping 的测试结果。
-- icmp_seq ：表示这是第几个 ICMP 报文。
-- ttl ：ICMP 报文剩下的生存期。
-- time ：发出 ICMP 报文之后，隔了多久才收到回复。
-- Linux 的 ping 命令默认每隔一秒向目标主机发送一个 ICMP 报文，并且会一直发送，要按 `Ctrl+C` 终止。
+- 例：
+  ```sh
+  [root@Centos ~]# ping google.com
+  PING google.com (93.46.8.90) 56(84) bytes of data.
 
-例：
-```sh
-[root@Centos ~]# ping google.com
-PING google.com (93.46.8.90) 56(84) bytes of data.
-
-^C
-```
-- 可见它一直尝试连接目标主机，但并没有成功。原因可能是：
-  - 与目标主机的物理网络没有连通。
-  - 与目标主机的物理网络连通，但是目标主机没有开启 ICMP 协议。
-- ICMP 不是基于 TCP 通信，因此不需考虑目标主机是否开放了 TCP 端口。
+  ^C
+  ```
+  - 可见它一直尝试连接目标主机，但并没有成功。原因可能是：
+    - 与目标主机的物理网络没有连通。
+    - 与目标主机的物理网络连通，但是目标主机没有开启 ICMP 协议。
+  - ICMP 不是基于 TCP 通信，因此不需考虑目标主机是否开放了 TCP 端口。
 
 ## traceroute
 
-：用于查看发送一个数据包到目标主机时，要经过哪些路由。
-
-命令：
-```sh
-$ traceroute <host>
-```
+：用于测试发送一个数据包到目标主机，显示经过的各个路由节点。
+- 命令：
+  ```sh
+  $ traceroute <host>
+              -I    # 发送 ICMP ECHO 数据包
+              -T    # 发送 TCP SYN 包，默认端口为 80
+              -U    # 发送 UDP 数据表，默认端口是 53
+  ```
+  - 先探测 TTL 减 1 的路由节点，再探测 TLL 减 2 的路由节点，以此类推，直到 TTL 减为 0 或者到达目标主机。
+- 例：
+  ```sh
+  [root@Centos ~]# traceroute baidu.com
+  traceroute to baidu.com (220.181.38.148), 30 hops max, 60 byte packets
+  1  100.98.0.1 (100.98.0.1)            7.329 ms  7.170 ms  7.232 ms
+  2  * * *
+  3  * * *
+  4  * * *
+  5  * * *
+  6  10.47.55.177 (10.47.55.177)        2.073 ms  2.157 ms  1.765 ms
+  7  10.1.0.146 (10.1.0.146)            2.674 ms  2.276 ms  2.274 ms
+  8  172.16.38.33 (172.16.38.33)        2.876 ms  2.611 ms  2.524 ms
+  9  172.16.38.21 (172.16.38.21)        3.030 ms  3.677 ms  2.978 ms
+  10  220.181.182.129 (220.181.182.129) 3.389 ms  3.682 ms  4.957 ms
+  11  * * *
+  12  220.181.182.174 (220.181.182.174) 4.447 ms  3.676 ms  3.902 ms
+  13  * * *
+  14  * * *
+  ```
+  - 显示为 * 的路由节点，是因为没有回复 traceroute 发送的数据包。
 
 ## cip.cc
 

@@ -1,53 +1,116 @@
 # ♢ Matplotlib
 
-：Python 的第三方库，提供了一些 MATLAB 的绘图函数。
+：Python 的第三方库，提供了一些模仿 MATLAB 的绘图功能。
 - [官方文档](https://matplotlib.org/users/index.html)
 - 安装：`pip install matplotlib`
 - [图像效果示例](https://matplotlib.org/tutorials/introductory/sample_plots.html)
 
+## 折线图
+
+- 可以用 `plt.plot()` 绘制一条折线，如下：
+  ```py
+  >>> import matplotlib.pyplot as plt
+  >>> x = [1, 2, 3]
+  >>> y = [-1, -2, -3]
+  >>> plt.plot(x, y)                                          # 绘制一条折线，x、y 数组分别表示各个点的 x 轴、y 轴坐标，两个数组的长度必须相同
+  [<matplotlib.lines.Line2D object at 0x000001F35773F820>]
+  >>> plt.plot(y, x, label='line2', linestyle='', marker='.') # 绘制第二条折线，它是散点线
+  [<matplotlib.lines.Line2D object at 0x000001F35801BB20>]
+  >>> plt.show()                                              # 显示 Figure 窗口
+  ```
+
+- `plt.plot()` 的常用参数：
+  ```py
+  label='xx'          # 折线的名称
+  linewidth=1.0       # 线宽
+  linestyle='-'       # 线型
+  marker=''           # 在每个点处显示的标记
+  color='#008000'     # 线的颜色。默认每次绘制时，会按蓝、橙、绿等顺序分配颜色
+  ```
+  - 线型有以下几种：
+    ```py
+    None
+    ''
+    ' '
+    '-'
+    '--'
+    '-.'
+    ':'
+    'solid'     # 实线
+    'dashed'    # 虚线
+    'dotted'    # 点线
+    'dashdot'   # 点划线
+    ```
+  - 节点标记有以下几种形状：
+    ```py
+    's'     # 正方形
+    'o'     # 圆形
+    '^'     # 正三角形，分为四种朝向
+    '>'
+    'v'
+    '<'
+    'd'     # 正菱形
+    'p'     # 正五边形
+    'h'     # 正六边形
+    '8'     # 正八边形
+    ```
+
+### 动态折线图
+
+例：
+```py
+import random
+
+plt.ion()
+last_dot = [0, 0]
+for i in range(100):
+    new_dot = [i, random.randint(0, 10)]  # 生成当前点的坐标
+    # 每次循环会绘制一条新折线，与上一条折线连接，并采用统一的颜色
+    plt.plot([last_dot[0], new_dot[0]], [last_dot[1], new_dot[1]], color='blue')
+    last_dot = new_dot
+    plt.pause(0.1)
+
+```
+
 ## Figure
 
-- Matplotlib 提供了显示图像的 GUI 窗口（Figure）。其结构如下：
+- Matplotlib 提供了显示图像的 GUI 窗口，称为 Figure 。其结构如下：
 
   ![](./Matplotlib_1.jpg)
 
-- 每个 Figure 上可以显示一个或多个坐标区（Axes）。
+  - 每个 Figure 上可以显示一个或多个坐标区（Axes）。
   - 坐标区的坐标轴（Axis）有多种类型：
     - xy 二维坐标轴
     - xyz 三维坐标轴
     - 极坐标轴
 
-### 显示
+- 通常有两种绘图方式：
+  - 通过 `plt.plot()` 直接绘图，只能操作一个 Figure 实例。
+  - 通过 `plt.figure()` 创建 Figure 实例，以面向对象的方式绘图。
 
-```py
->>> from matplotlib import pyplot as plt
->>> x = [1, 2, 3]
->>> plt.plot(x, x, label='line1')         # 绘制一条折线
-[<matplotlib.lines.Line2D object at 0x000001F34F904580>]
->>> plt.plot(x, x[::-1], label='line2')   # 绘制另一条折线
-[<matplotlib.lines.Line2D object at 0x000001F34F9048E0>]
->>> plt.show()                            # 显示 Figure 
-```
+### 交互模式
 
-- Matplotlib 默认采用非交互模式：
+- 显示 Figure 窗口时默认采用非交互模式：
   - 执行 `plt.plot()` 等函数时只会记录图像数据，不会实际绘制。执行 `plt.show()` 才会开始绘制图像，显示 Figure 。
   - Figure 显示期间会一直阻塞前端，直到用户关闭其窗口。
+
 - 在交互模式下：
-  - 执行 `plt.plot()`、`plt.show()` 等函数都会立即显示 Figure 。
+  - 执行 `plt.plot()`、`plt.show()` 等函数都会立即显示 Figure 窗口，如果已显示则更新显示。
   - Figure 显示期间不会阻塞前端，从而可以继续执行其它代码来修改 Figure 。
     ```py
-    >>> plt.ion()     # 打开交互模式
-    >>> matplotlib.is_interactive()
+    >>> plt.ion()                     # 打开交互模式
+    >>> matplotlib.is_interactive()   # 判断是否处于交互模式
     True
-    >>> plt.ioff()    # 关闭交互模式
+    >>> plt.ioff()                    # 关闭交互模式
     ```
-- 用 `plt.pause(0.1)` 会显示 Figure ，并阻塞前端 n 秒。
+- 执行 `plt.pause(n)` 会显示 Figure ，并阻塞前端 n 秒。
 
-### 关闭
+### 关闭窗口
 
-- 显示 Figure 窗口时，如果用户关闭该窗口，则会自动销毁该 Figure 对象。
-- Figure 被销毁之后，执行 `plt.show()` 不会作出显示，除非绘制新的 Figure 。
-- 可以在代码中主动关闭 Figure ：
+- 显示 Figure 窗口时，如果用户关闭该窗口：
+  - 非交互模式下，会自动销毁该 Figure 对象，导致不能再次显示。
+  - 交互模式下，可以再次显示。
+- 可以在代码中主动关闭 Figure 窗口：
   ```py
   >>> plt.close()           # 关闭当前的 Figure
   >>> plt.close(f1)         # 关闭指定的 Figure
@@ -57,35 +120,21 @@
 
 ### 排版
 
-
-
-
-设置 Figure 
-
 ```py
-plt.axis('off')    # 不显示坐标轴
-plt.xlabel('x label')
-plt.ylabel('y label')
-plt.title("Simple Plot")
-plt.legend()  # 创建图例（这会自动提取每个折线的 label 名作为图例）
+plt.axis('off')             # 不显示坐标轴（默认显示）
+plt.axis([0, 10, 0, 1])     # 设置 x 轴和 y 轴的长度（如果设置了，显示时窗口比例会固定，否则会自动调整）
 
+plt.title('Simple Plot')    # 设置图像的名称（默认为空）
+plt.xlabel('x label')       # 设置 X 轴的名称（默认为空）
+plt.ylabel('y label', fontsize=16))
+plt.legend()                # 显示图例（这会自动提取每条折线的 label 名作为图例名）
+plt.grid(True)              # 在坐标轴区域显示网格线
 
-plt.title("Simple Plot")        # 设置图像窗口的标题名
-plt.xlabel("X", fontsize=16)    # 设置 x 轴的名字及其字体大小
-plt.ylabel("Y")
+plt.cla()                   # 对当前 figure 中的所有坐标轴执行 axes.cla()，清除其显示内容
+plt.clf()                   # 清除显示当前 figure 中的所有坐标轴
 
-
-# plt.grid(True)        # 显示网格线
-# plt.axis([0, 10, 0, 1])        # 设置 x 轴和 y 轴的长度（如果设置了，显示时窗口比例会固定，否则会自动调整）
-# plt.tick_params(axis="both", labelsize=10)  # 选择显示两条坐标轴，并设置坐标轴数字的大小
-
-plt.savefig("test1.png")    # 保存图像
-
-
-plt.cla()                # 对当前 figure 中的所有坐标轴执行 axes.cla()，清除其中的图像
-plt.clf()                 # 清除当前 figure 中的所有坐标轴
+plt.savefig('./1.png')      # 保存图像
 ```
-
 
 ### 后端
 
@@ -98,23 +147,48 @@ plt.clf()                 # 清除当前 figure 中的所有坐标轴
   ImportError: Failed to import any qt binding
   ```
 
-### 多个 Figure
+### 实例化
 
-- 默认是对单个 Figure 进行操作，也可以创建多个 Figure ，如下：
+- 创建 Figure ：
   ```py
-  >>> f1 = plt.figure('test1')  # 创建一个 Figure ，并设置其名称
-  >>> f2 = plt.figure('test1')
-  >>> f3 = plt.figure('test3')
-  >>> plt.show()                # 这会同时显示所有 Figure 窗口
+  >>> f1 = plt.figure()           # 创建一个 Figure
+  >>> f2 = plt.figure('test')
+  >>> f3 = plt.figure('test')
+  >>> f1.show()                   # 显示 Figure
+  >>> plt.show()                  # 显示所有已激活的 Figure
   ```
 
-- 如果新 Figure 与旧 Figure 重名，则不会创建它，而是返回旧 Figure 的引用。
+- 相关 API ：
   ```py
-  >>> f1 == f2
-  True
-  >>> f1 == f3
-  False
+  def figure(num=None,        # 设置 ID
+             figsize=None,    # 设置宽度、高度，比如 (3, 2.2)
+             dpi=None,        # 设置分辨率，比如 10 。实际的显示尺寸等于 figsize*dpi
+             facecolor=None,  # 设置背景色
+             edgecolor=None,  # 设置边框颜色
+             clear=False,     # 如果已存在相同 ID 的 Figure 则清除它
+             **kwargs
+             ):
   ```
+  创建 Figure 时，传入的 num 参数会用作其唯一 ID 。
+  - 如果没传入 num 参数，或者传入的 num 参数不是 int 类型，则会自动使用一个从 1 开始递增的 num 值。如下：
+    ```py
+    >>> f1.number
+    1
+    ```
+  - 如果传入的 num 参数是 str 类型，则会用作该 Figure 的 Title 。如下：
+    ```py
+    >>> f2.number
+    2
+    >>> f2.get_label()
+    'test'
+    ```
+  - 如果传入的 num 参数是 int 型，且已存在相同 ID 的 Figure ，则会激活该 Figure 并返回其引用。否则创建一个新的 Figure 并返回其引用。如下：
+    ```py
+    >>> f1 == f2
+    False
+    >>> f2 == f3
+    True
+    ```
 
 ### Subplot
 
@@ -132,84 +206,29 @@ plt.clf()                 # 清除当前 figure 中的所有坐标轴
   >>> plt.show()
   ```
 
-
-## 折线图
+## 显示图片
 
 - 例：
   ```py
-  >>> x = list(range(1, 10))
-  >>> y = list(range(-1, -10, -1)) 
-  >>> plt.plot(x, y)    # 绘制一条折线，x、y 数组分别表示各个点的 x 轴、y 轴坐标，两个数组的长度必须相同
-  [<matplotlib.lines.Line2D object at 0x000001F35773F820>]
-  >>> plt.plot(y, x, label='line2', linestyle='', marker='.')  # 绘制第二条折线，它是散点线
-  [<matplotlib.lines.Line2D object at 0x000001F35801BB20>]
-  >>> plt.show()
+  >>> from matplotlib import pyplot as plt, image
+  >>> img = image.imread('./1.jpg')   # 读取本地图片
+  >>> p1 = plt.imshow(img)            # 将图片导入 Figure
+  >>> plt.show()                      # 显示 Figure
   ```
 
-- `plt.plot()` 的常用参数：
-  - `label='xx'` ：名称
-  - `linewidth=1.0` ：线宽
-  - `linestyle='-'` ：线型
-  '-', '--', '-.', ':', 'None', ' ', '', 'solid', 'dashed', 'dashdot', 'dotted'
-  - `marker=''` ：在每个点处显示的标记
-  - `color='#008000'` ：线的颜色。每次绘制时，默认会按特定顺序分配颜色，比如蓝、橙、绿……
-  - `` ：
-  - `` ：
-  - `` ：
-  - `` ：
-
-
-- 节点的形状有以下几种：
-  - `s` ：正方形
-  - `o` ：圆形
-  - `^` `>` `v` `<` ：正三角形（四种朝向）
-  - `d` ：正菱形
-  - `p` ：正五边形
-  - `h` ：正六边形
-  - `8` ：正八边形
-
-- 线型有以下几种：
-  - `solid`   ：实线
-  - `dashed`  ：虚线
-  - `dotted`  ：点线
-  - `dashdot` ：点划线
-
-
-
-例：绘制动态折线图
-```py
-import random
-
-
-plt.ion()
-last_dot = [0, 0]
-for i in range(100):
-    new_dot = [i, random.randint(0, 10)]  # 设置当前点的坐标
-    plt.plot([last_dot[0], new_dot[0]], [last_dot[1], new_dot[1]], color="blue")
-    last_dot = new_dot
-    plt.pause(0.1)
-
-# 每次循环绘制一条新线段。并采用统一的颜色
-```
-
-## 显示图片
-
-```py
->>> from matplotlib import pyplot as plt, image
->>> img = image.imread(r'./1.jpg')  # 读取本地图片
->>> type(img)                       # 读取到的图片对象存储在 numpy 数组中
-<class 'numpy.ndarray'>
->>> img
-array([[[ 72, 164, 201],
-        [ 64, 156, 193],
-        [ 66, 158, 195],
-        ...,
-        [  0,  54,  74],
-        [  0,  53,  73],
-        [  0,  54,  74]]], dtype=uint8)
->>> p1 = plt.imshow(img)            # 将图片导入 Figure 
->>> plt.show()                      # 显示 Figure 
-```
+- 读取到的图片对象实际上存储在 numpy 数组中：
+  ```py
+  >>> type(img)
+  <class 'numpy.ndarray'>
+  >>> img
+  array([[[ 72, 164, 201],
+          [ 64, 156, 193],
+          [ 66, 158, 195],
+          ...,
+          [  0,  54,  74],
+          [  0,  53,  73],
+          [  0,  54,  74]]], dtype=uint8)
+  ```
 
 ## 绘图函数
 

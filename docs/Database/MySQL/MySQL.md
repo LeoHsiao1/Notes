@@ -114,7 +114,7 @@ mysql                    # 启动 MySQL 客户端
 - 执行 SQL 命令时必须以分号 ; 结尾，执行内置命令时则不必。
 - 执行 SQL 命令时，有时显示结果是一个字段太多的表格，排版混乱、难以阅读。可以在执行的 SQL 命令的末尾加上 \G ，将显示结果从横向表格变成纵向列表，方便阅读。例如：`select * from mysql.user\G;`
 - 常用的内置命令：
-  ```
+  ```sh
   connect [db]   # 重新连接到 MySQL 服务器
   status         # 显示 MySQL 服务器的状态
   exit           # 退出 MySQL 客户端（相当于 quit）

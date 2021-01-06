@@ -8,6 +8,8 @@
   - [模块与包](模块与包/模块与包.md)
   - [代码库](模块与包/代码库.md)
 - 文本处理
+  - [INI](文本处理/INI.md)
+  - [XML](文本处理/XML.md)
   - [jinja](文本处理/jinja.md)
 - 数学运算
   - [♢ random](数学运算/random.md)

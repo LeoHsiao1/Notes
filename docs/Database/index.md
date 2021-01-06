@@ -5,7 +5,7 @@
   - [事务](简介/事务.md)
 - SQLite
   - [SQLite](SQLite/SQLite.md)
-  - [♢ sqlite3](SQLite/^sqlite3.md)
+  - [♢ sqlite3](SQLite/sqlite3.md)
 - MySQL
   - [MySQL](MySQL/MySQL.md)
   - [用户权限](MySQL/用户权限.md)
@@ -16,15 +16,15 @@
   - [备份数据](MySQL/备份数据.md)
   - [性能优化](MySQL/性能优化.md)
   - [部署架构](MySQL/部署架构.md)
-  - [♢ PyMySQL](MySQL/^PyMySQL.md)
-  - [♢ SQLAlchemy](MySQL/^SQLAlchemy.md)
+  - [♢ PyMySQL](MySQL/PyMySQL.md)
+  - [♢ SQLAlchemy](MySQL/SQLAlchemy.md)
 - MongoDB
   - [MongoDB](MongoDB/MongoDB.md)
   - [管理单元](MongoDB/管理单元.md)
   - [其它功能](MongoDB/其它功能.md)
   - [性能优化](MongoDB/性能优化.md)
   - [部署架构](MongoDB/部署架构.md)
-  - [♢ pymongo](MongoDB/^pymongo.md)
+  - [♢ pymongo](MongoDB/pymongo.md)
 - Redis
   - [Redis](Redis/Redis.md)
   - [管理单元](Redis/管理单元.md)
@@ -32,7 +32,7 @@
   - [其它功能](Redis/其它功能.md)
   - [性能优化](Redis/性能优化.md)
   - [部署架构](Redis/部署架构.md)
-  - [♢ redis](Redis/^redis.md)
+  - [♢ redis](Redis/redis-py.md)
 - ElasticSearch
   - [ElasticSearch](ElasticSearch/ElasticSearch.md)
   - [管理单元](ElasticSearch/管理单元.md)

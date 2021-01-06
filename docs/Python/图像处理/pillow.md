@@ -1,5 +1,5 @@
 # ♢ pillow
-## pillow ：Python 的第三方库，用于图像处理。
+## pillow ：Python 的第三方库，提供了通用的图像处理功能。
 - 安装：pip install pillow
 - pillow 继承自 Python2 的图像处理库 PIL（python Imaging Library）。
 - 打开图片：

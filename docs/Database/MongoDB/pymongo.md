@@ -1,8 +1,8 @@
 # ♢ pymongo
 
-：Python 的第三方库，提供了 MongoDB 客户端的功能。
-- 通过 ORM API 进行操作。
-- 安装：pip install pymongo
+：Python 的第三方库，提供了 MongoDB 客户端的功能，通过 ORM API 进行操作。
+- [官方文档](https://pymongo.readthedocs.io/en/stable/)
+- 安装：`pip install pymongo`
 
 ## 用法示例
 

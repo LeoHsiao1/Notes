@@ -143,25 +143,35 @@ module.exports = {
                     ]
                 },
                 {
+                    title: '模块与包',
+                    children: [
+                        '模块与包/模块与包',
+                        '模块与包/代码库',
+                    ]
+                },
+                {
                     title: '文本处理',
                     children: [
+                        '文本处理/INI',
+                        '文本处理/XML',
                         '文本处理/jinja',
                     ]
                 },
                 {
                     title: '数学运算',
                     children: [
-                        '数学运算/^random',
-                        '数学运算/^decimal',
-                        '数学运算/^math',
+                        '数学运算/random',
+                        '数学运算/decimal',
+                        '数学运算/math',
+                        '数学运算/numpy',
                     ]
                 },
                 {
                     title: '混合开发',
                     children: [
                         '混合开发/简介',
-                        '混合开发/^ctypes',
-                        '混合开发/^Cython',
+                        '混合开发/ctypes',
+                        '混合开发/Cython',
                         '混合开发/SWIG',
                         '混合开发/pybind11',
                     ]
@@ -366,8 +376,8 @@ module.exports = {
                     title: 'Web爬虫',
                     children: [
                         'Web爬虫/简介',
-                        'Web爬虫/^urllib',
-                        'Web爬虫/^requests',
+                        'Web爬虫/urllib',
+                        'Web爬虫/requests',
                     ]
                 },
                 {
@@ -405,7 +415,7 @@ module.exports = {
                     title: 'SQLite',
                     children: [
                         'SQLite/SQLite',
-                        'SQLite/^sqlite3',
+                        'SQLite/sqlite3',
                     ]
                 },
                 {
@@ -420,8 +430,8 @@ module.exports = {
                         'MySQL/备份数据',
                         'MySQL/性能优化',
                         'MySQL/部署架构',
-                        'MySQL/^PyMySQL',
-                        'MySQL/^SQLAlchemy',
+                        'MySQL/PyMySQL',
+                        'MySQL/SQLAlchemy',
                     ]
                 },
                 {
@@ -432,7 +442,7 @@ module.exports = {
                         'MongoDB/其它功能',
                         'MongoDB/性能优化',
                         'MongoDB/部署架构',
-                        'MongoDB/^pymongo',
+                        'MongoDB/pymongo',
                     ]
                 },
                 {
@@ -444,7 +454,7 @@ module.exports = {
                         'Redis/其它功能',
                         'Redis/性能优化',
                         'Redis/部署架构',
-                        'Redis/^redis',
+                        'Redis/redis-py',
                     ]
                 },
                 {

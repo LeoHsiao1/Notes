@@ -47,7 +47,7 @@ plt.show()
 ![](./NetworkX_1.png)
 
 
-API 说明：
+相关 API ：
 ```py
 def draw_networkx(G,                      # 一个 networkx 的图对象
                   pos:dict,               # 控制各节点的坐标

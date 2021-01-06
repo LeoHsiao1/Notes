@@ -218,12 +218,12 @@ plt.savefig('./1.png')      # 保存图像
   >>> f1.add_subplot(331)           # 当网格布局的行列数不超过 9 时，可以将前三个参数合并成一个三位整数
   <AxesSubplot:>
   ```
-  函数 add_subplot 的定义为：
-  ```py
-  def add_subplot(nrows=1, ncols=1, index=1, **kwargs)
-  ```
-  - index 的取值必须符合 `1 ≤ index ≤ nrows` ，否则会报错。
-  - 可以给同一个 Figure 多次添加子图，不过新的子图在显示时会覆盖旧的子图。
+  - 相关 API ：
+    ```py
+    def add_subplot(nrows=1, ncols=1, index=1, **kwargs)
+    ```
+    - index 的取值必须符合 `1 ≤ index ≤ nrows` ，否则会报错。
+    - 可以给同一个 Figure 多次添加子图，不过新的子图在显示时会覆盖旧的子图。
 
 
 ## 显示图片

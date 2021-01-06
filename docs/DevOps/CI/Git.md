@@ -49,12 +49,14 @@
 ### add
 
 ```sh
-git add <file>        # 将文件加入暂存区（只会处理与上一版本不同的文件）
-git add .             # 将当前目录下所有文件加入暂存区
-git rm --cached 1.py  # 从暂存区删除某个文件
+git add <file>                  # 将文件加入暂存区（只会处理与上一版本不同的文件）
+git add .                       # 将当前目录下所有文件加入暂存区
+git rm --cached 1.py            # 从暂存区删除某个文件
+git mv <src_file> <dst_file>    # 移动文件
 ```
 - 被修改的文件应该先加入暂存区，以便之后提交成一个版本。
 - 用 git rm/mv 做出的改动会自动加入暂存区。
+- 在 Windows 上重命名一个文件时，如果只是改变了文件名的大小写，git 默认不会发现该改动，此时建议使用 `git mv filename Filename` 的方式。
 
 ### commit
 

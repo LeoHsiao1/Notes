@@ -34,7 +34,7 @@
 - 创建一维数组：
   ```py
   >>> import numpy as np
-  >>> a = np.array([1, 2, 3])   # 输入一个 Python 列表，创建数组
+  >>> a = np.array([1, 2, 3])   # 传入一个 Python 列表，创建数组
   >>> a
   array([1, 2, 3])
   ```

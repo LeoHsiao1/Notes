@@ -163,6 +163,7 @@ module.exports = {
                         '数学运算/random',
                         '数学运算/decimal',
                         '数学运算/math',
+                        '数学运算/numpy',
                     ]
                 },
                 {

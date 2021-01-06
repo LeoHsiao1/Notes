@@ -15,6 +15,7 @@
   - [♢ random](数学运算/random.md)
   - [♢ decimal](数学运算/decimal.md)
   - [♢ math](数学运算/math.md)
+  - [♢ numpy](数学运算/numpy.md)
 - 混合开发
   - [简介](混合开发/简介.md)
   - [♢ ctypes](混合开发/ctypes.md)

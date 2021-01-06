@@ -1,8 +1,9 @@
 # ♢ Matplotlib
 
-：Python 的第三方库，提供了一些模仿 MATLAB 的绘图功能。
-- [官方文档](https://matplotlib.org/users/index.html)
+：Python 的第三方库，提供了一些模仿 MATLAB 的数学绘图函数。
 - 安装：`pip install matplotlib`
+- 使用绘图函数时，通常输入 numpy.array 等类型的数组，就会在坐标轴中绘制函数曲线。
+- [官方文档](https://matplotlib.org/users/index.html)
 - [图像效果示例](https://matplotlib.org/tutorials/introductory/sample_plots.html)
 
 ## 折线图
@@ -43,16 +44,16 @@
     ```
   - 节点标记有以下几种形状：
     ```py
-    's'     # 正方形
-    'o'     # 圆形
-    '^'     # 正三角形，分为四种朝向
+    's'         # 正方形
+    'o'         # 圆形
+    '^'         # 正三角形，分为四种朝向
     '>'
     'v'
     '<'
-    'd'     # 正菱形
-    'p'     # 正五边形
-    'h'     # 正六边形
-    '8'     # 正八边形
+    'd'         # 正菱形
+    'p'         # 正五边形
+    'h'         # 正六边形
+    '8'         # 正八边形
     ```
 
 ### 动态折线图
@@ -149,7 +150,7 @@ plt.savefig('./1.png')      # 保存图像
 
 ### 实例化
 
-- 创建 Figure ：
+- 创建 Figure 实例：
   ```py
   >>> f1 = plt.figure()           # 创建一个 Figure
   >>> f2 = plt.figure('test')
@@ -167,7 +168,7 @@ plt.savefig('./1.png')      # 保存图像
              edgecolor=None,  # 设置边框颜色
              clear=False,     # 如果已存在相同 ID 的 Figure 则清除它
              **kwargs
-             ):
+             )
   ```
   创建 Figure 时，传入的 num 参数会用作其唯一 ID 。
   - 如果没传入 num 参数，或者传入的 num 参数不是 int 类型，则会自动使用一个从 1 开始递增的 num 值。如下：
@@ -192,9 +193,10 @@ plt.savefig('./1.png')      # 保存图像
 
 ### Subplot
 
-- 每个 Figure 上可以显示一个或多个子图（Subplot）：
+- 创建一个 Figure 时，默认只包含一个坐标轴图像，可以划分多个子图（Subplot）：
   ```py
-  >>> fig, axes = plt.subplots(2, 2)    # 创建一个 Figure ，在其中划分 2 行、2 列个子图
+  >>> fig, axes = plt.subplots(1)       # 创建一个 Figure ，采用 1 行的网格布局，每一格包含一个子图
+  >>> fig, axes = plt.subplots(2, 3)    # 创建一个 Figure ，采用 2 行、3 列的网格布局，每一格包含一个子图
   >>> fig
   <Figure size 640x480 with 4 Axes>
   >>> axes                              # axes 数组中，每个元素对应一个子图的 axes
@@ -205,6 +207,24 @@ plt.savefig('./1.png')      # 保存图像
   [<matplotlib.lines.Line2D object at 0x000001F35B72B1F0>]
   >>> plt.show()
   ```
+
+- 可以给已有的 Figure 添加子图：
+  ```py
+  >>> f1 = plt.figure()
+  >>> f1.add_subplot(2, 3, 1)       # 让 Figure 采用 2 行、3 列的网格布局，将子图放在横向第 1 格内（只能位于第 1 行内）
+  <AxesSubplot:>
+  >>> f1.add_subplot(3, 3, (1,2))   # 让 Figure 采用 2 行、3 列的网格布局，将子图放在横向第 1 格至 第 2 格区域（只能位于第 1 行内）
+  <AxesSubplot:>
+  >>> f1.add_subplot(331)           # 当网格布局的行列数不超过 9 时，可以将前三个参数合并成一个三位整数
+  <AxesSubplot:>
+  ```
+  函数 add_subplot 的定义为：
+  ```py
+  def add_subplot(nrows=1, ncols=1, index=1, **kwargs)
+  ```
+  - index 的取值必须符合 `1 ≤ index ≤ nrows` ，否则会报错。
+  - 可以给同一个 Figure 多次添加子图，不过新的子图在显示时会覆盖旧的子图。
+
 
 ## 显示图片
 
@@ -229,13 +249,3 @@ plt.savefig('./1.png')      # 保存图像
           [  0,  53,  73],
           [  0,  54,  74]]], dtype=uint8)
   ```
-
-## 绘图函数
-
-所有绘图功能均预期 numpy.array 或 numpy.ma.masked_array 作为输入。
-
-
-
-绘制动态图：https://blog.csdn.net/rumswell/article/details/11731003
-mpl_toolkits 库用于绘制三维图，参考：https://blog.csdn.net/chi_wawa/article/details/68062506
-

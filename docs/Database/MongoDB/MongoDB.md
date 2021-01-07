@@ -6,13 +6,21 @@
 - 采用 C/S 架构、TCP 通信。
 - 虽然属于 NoSQL 数据库，但用法很像 SQL 型数据库。
 - 不支持事务操作，只是保证了增删改等操作的原子性。
+- 客户端采用 JavaScript 的终端，因此可以执行 JS 代码、定义变量、定义函数。
+
+## 版本
+
+- v1.0 ：于 2009 年发布。
+- v2.0 ：于 2011 年发布。
+- v3.0 ：于 2015 年发布。
+- v4.0 ：于 2018 年发布。
 
 ## 服务器
 
 ### 安装
 
 - 用 yum 安装：
-  ```
+  ```sh
   wget https://repo.mongodb.org/yum/redhat/7/mongodb-org/4.0/x86_64/RPMS/mongodb-org-server-4.0.5-1.el7.x86_64.rpm
   wget https://repo.mongodb.org/yum/redhat/7/mongodb-org/4.0/x86_64/RPMS/mongodb-org-shell-4.0.5-1.el7.x86_64.rpm
   wget https://repo.mongodb.org/yum/redhat/7/mongodb-org/4.0/x86_64/RPMS/mongodb-org-tools-4.0.5-1.el7.x86_64.rpm
@@ -20,7 +28,6 @@
   yum install -y mongodb-org-*.rpm
   rm -f mongodb-org-*.rpm
   ```
-
   然后启动：
   ```sh
   mongod                      # 启动 mongo 服务器
@@ -48,7 +55,7 @@
 旧版 MongoDB 的配置文件采用 ini 格式，从 2.6 版开始推荐采用 YAML 格式，分为 storage、systemLog、net 等多个大类。
 
 例：
-```yaml
+```yml
 storage:
   dbPath: /var/lib/mongo  # 存储数据的目录
   journal:
@@ -74,24 +81,20 @@ security:
 
 ## 客户端
 
-MongoDB 客户端的终端采用 JavaScript 的 shell ，因此：
-- 可以执行 JS 代码、定义变量、定义函数。
-- 执行一条语句时，不必以分号 ; 结尾。
-
 ### 启动
 
 ```sh
-mongo                         # 启动客户端（默认连接到本机 6379 端口的服务器，使用 test 数据库）
+mongo                                                 # 启动客户端（默认连接到本机 6379 端口的服务器，使用 test 数据库）
       127.0.0.1:27017/test                            # 指定要连接的服务器、数据库
       username:password@127.0.0.1:27017/admin         # 再指定用户名、密码
       localhost,localhost:27018,localhost:27019/test  # 可以指定多个服务器
 ```
 - 使用 admin 数据的用户进行登录时，必须要切换到 admin 数据库。
 - 可以先启动客户端，再进行密码认证，如下：
-    ```
-    mongo 127.0.0.1:27017/admin
-    db.auth('root', '******')
-    ```
+  ```js
+  mongo 127.0.0.1:27017/admin
+  db.auth('root', '******')
+  ```
 
 ### 启用身份认证
 

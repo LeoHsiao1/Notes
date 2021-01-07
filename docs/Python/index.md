@@ -10,7 +10,7 @@
 - 文本处理
   - [INI](文本处理/INI.md)
   - [XML](文本处理/XML.md)
-  - [jinja](文本处理/jinja.md)
+  - [Jinja](文本处理/Jinja.md)
 - 数学运算
   - [♢ random](数学运算/random.md)
   - [♢ decimal](数学运算/decimal.md)

@@ -154,7 +154,7 @@ module.exports = {
                     children: [
                         '文本处理/INI',
                         '文本处理/XML',
-                        '文本处理/jinja',
+                        '文本处理/Jinja',
                     ]
                 },
                 {

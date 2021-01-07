@@ -1,6 +1,6 @@
 # Linux
 
-- 发音为 /ˈlɪnəks/ 。
+- 发音为 `/ˈlɪnəks/` 。
 - 历史：
   - 1991 年，芬兰的程序员 Linus Torvalds 开发了 Linux 内核，将它按 GPL 协议授权为自由软件。
   - Linux 内核与诸多 GNU 软件组合在一起，构成了一个操作系统，称为 GNU/Linux 。
@@ -24,7 +24,7 @@
 ### Debian
 
 - [官网](https://www.debian.org/)
-- 发音为 /dɛbiːjən/ 。
+- 发音为 `/dɛbiːjən/` 。
 - 由 Debian 社区开发，于 1993 年开始发行。
 - 采用 apt  作为软件包管理工具。
 
@@ -101,7 +101,7 @@
 ### openSUSE
 
 - [官网](https://www.opensuse.org/)
-- suse 的发音为 /suːz/ 。
+- suse 的发音为 `/suːz/` 。
 - 由 openSUSE 社区开发，由 SUSE 等公司赞助。
   - 2004 年，德国的 Novell 公司收购了 SUSE Linux 公司，将它改名为 openSUSE 并以开源形式发布。
   - 2010 年，Attachmate 集团收购了 Novell 公司，拆分成 Novell、SUSE 两个部门。

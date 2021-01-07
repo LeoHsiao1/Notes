@@ -1316,6 +1316,22 @@ set()
 >>> a.add(4)            # 加入一个不重复的元素
 >>> a
 {1, 2, 3, 4}
+
+合并两个集合，不能用加号 + ，可以用 | 或 set.union() 方法：
+>>> set({1}) + set({2})
+TypeError: unsupported operand type(s) for +: 'set' and 'set'
+>>> set({1}) | set({2})
+{1, 2}
+>>> s = {1} 
+>>> type(s)
+<class 'set'>
+>>> s.union({2})
+{1, 2}
+>>> s   # 原集合并没有被修改
+{1}
+
+
+
 ## 查。
 - set.copy() -> set
   - 功能：返回set的一个浅拷贝。

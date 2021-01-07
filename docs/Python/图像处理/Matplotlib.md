@@ -25,7 +25,7 @@
   label='xx'          # 折线的名称
   linewidth=1.0       # 线宽
   linestyle='-'       # 线型
-  marker=''           # 在每个点处显示的标记
+  marker=''           # 节点标记的形状
   color='#008000'     # 线的颜色。默认每次绘制时，会按蓝、橙、绿等顺序分配颜色
   ```
   - 线型有以下几种：
@@ -42,7 +42,7 @@
     'dotted'    # 点线
     'dashdot'   # 点划线
     ```
-  - 节点标记有以下几种形状：
+  - 节点标记的形状有以下几种：
     ```py
     's'         # 正方形
     'o'         # 圆形
@@ -125,7 +125,7 @@ for i in range(100):
 plt.axis('off')             # 不显示坐标轴（默认显示）
 plt.axis([0, 10, 0, 1])     # 设置 x 轴和 y 轴的长度（如果设置了，显示时窗口比例会固定，否则会自动调整）
 
-plt.title('Simple Plot')    # 设置图像的名称（默认为空）
+plt.title('Simple Plot')    # 设置图像的名称（默认为空），这并不是设置 Figure 窗口的 Title
 plt.xlabel('x label')       # 设置 X 轴的名称（默认为空）
 plt.ylabel('y label', fontsize=16))
 plt.legend()                # 显示图例（这会自动提取每条折线的 label 名作为图例名）

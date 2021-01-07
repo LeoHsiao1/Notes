@@ -139,7 +139,7 @@ module.exports = {
                     children: [
                         '简介/Python',
                         '简介/解释器',
-                        '简介/版本差异',
+                        '简介/版本',
                     ]
                 },
                 {

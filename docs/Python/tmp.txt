@@ -4377,7 +4377,7 @@ b'\x80\x03c__main__\nTest\nq\x00)\x81q\x01.'
  
 文本处理
 ♢ fnmatch
-## fnmatch：Python的标准库，可使用shell风格的通配符匹配字符串。
+## fnmatch：Python的标准库，可使用 Unix shell风格的通配符匹配字符串。
 - def fnmatch(string, pattern) -> bool
   - 功能：判断string是否与pattern匹配。
   - 例：
@@ -4388,12 +4388,19 @@ True
 True
 >>> fnmatch.fnmatch("1.txt", "1.txt")
 True
-## shell风格的通配符。
-- *    ：匹配零个或任意个字符。
-- ?    ：匹配单个字符。
-- [abc]：匹配abc中的任意一个字符。
-- [a-z]：匹配a~z范围内的任意一个字符。
-##
+
+shell 风格的 pattern 可使用以下通配符：
+- *    ：匹配任意个任何字符，相当于正则匹配的 `.*`
+- ?    ：匹配单个任何字符，相当于正则匹配的 `.`
+- 用 `[ seq ]` 的格式可声明一个元素组，用 `[! seq ]` 的格式可声明一个反选的元素组。如下：
+  - [abc]：匹配abc中的任意一个字符。
+  - [a-z]：匹配a~z范围内的任意一个字符。
+  - [!a-z]：匹配非a~z范围的任意一个字符。
+
+
+正则匹配是子字符串匹配，而 shell 风格的pattern要求整个字符串匹配。
+
+
 ##
 ##
  

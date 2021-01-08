@@ -18,23 +18,23 @@
 - 多余的空格和换行符会被忽略，只当作一个空格。
 - 用 `<!--` 和 `-->` 声明多行注释。
 - 例：
-    ```html
-    <!DOCTYPE html>          # 声明为 HTML5
-    <html>                   # 标记 HTML 文件开始
+  ```html
+  <!DOCTYPE html>          # 声明为 HTML5
+  <html>                   # 标记 HTML 文件开始
 
-    <head>                   # 标记头部开始
-        <title>测试</title>  # 网页标题
-    </head>                  # 标记头部结束
+  <head>                   # 标记头部开始
+      <title>测试</title>  # 网页标题
+  </head>                  # 标记头部结束
 
-    <body>                   # 标记主体开始
-        <h1>标题一</h1>      # 标题
-        <p>段落一</p>        # 段落
-        <br>                 # 换行符
-        <!-- 注释 -->        # 注释
-    </body>                  # 标记主体结束
+  <body>                   # 标记主体开始
+      <h1>标题一</h1>      # 标题
+      <p>段落一</p>        # 段落
+      <br>                 # 换行符
+      <!-- 注释 -->        # 注释
+  </body>                  # 标记主体结束
 
-    </html>                  # 标记 HTML 文件结束
-    ```
+  </html>                  # 标记 HTML 文件结束
+  ```
 
 ## 元素
 
@@ -354,3 +354,9 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
 - 增加了一些功能。
 - 增加了一些语义元素，实现顾名思义的用途。例如：标签 `<section>` 用于划分一组内容。
 
+## 相关工具
+
+- [formbuild](http://formbuild.leipi.org/) ：一个 HTML 表单生成器，可以方便地拖拽 HTML 元素。
+- Font Awesome ：一个字体库，以字体的方式提供了大量矢量图标，可通过 CSS 调用。
+  - [Font Awesome 4](https://fontawesome.dashgame.com/) ：于 2013 年发布。
+  - [Font Awesome 5](https://fa5.dashgame.com/) ：于 2017 年发布。

@@ -80,9 +80,22 @@
   gulp [task]...    # 执行任务，默认执行名为 default 的任务
   ```
 
-## 相关工具
+## 绘制图表
 
-- [Chart.js](https://chartjs.bootcss.com/samples/) ：一个 JS 库，可以绘制曲线图、条形图、散点图、饼状图、雷达图等常规普通图表。
+常见的用于绘制图表的 JS 库如下：
+
+- [Highcharts.js](https://www.highcharts.com.cn/demo/highcharts) 
+  - 2009 年，由挪威的 Highsoft 公司发布。个人使用免费，商业使用收费。
+  - 支持的图表类型很多，但显示样式比较单调。
+
+- [D3.js](https://d3js.org/)（Data-Driven Documents）
+  - 2011 年，由斯坦福大学的 Michael Bostock 等人开发。
+  - 支持的图表类型很多。
+  - 支持自定义图表，比较灵活。但用法像一个框架，比较复杂。
+
+- [Chart.js](https://chartjs.bootcss.com/samples/) 
+  - 2013 年，由伦敦的 Nick Downie 发布。
+  - 支持的图表类型较少，主要是曲线图、条形图、散点图、饼状图、雷达图等常规图表。
   - 使用示例：
     ```html
     <!-- 导入 Chart.js 库 -->
@@ -112,12 +125,9 @@
     });
     </script>
     ```
-- [highcharts](https://www.highcharts.com.cn/demo/highcharts) ：与 Chart.js 类似，但支持的图表类型更多。
-  - 个人使用免费，商业使用收费。
-  - 显示样式比较单调。
-- [ECharts.js](https://echarts.apache.org/examples/en/index.html) ：与 Chart.js 类似，但支持的图表类型更多，而且显示效果美观。
-  - 由百度公司开源。
-  - 可以绘制常规图表的 3D 版。
-  - 可以绘制一些特殊图表，比如：涨跌图、树形图、仪表盘、地图、3D 地图。
-- [D3.js](https://d3js.org/) ：Data-Driven Documents ，与 Chart.js 类似，但支持的图表类型更多。
-  - 支持自定义图表，比较灵活，但用法比较复杂。
+
+- [ECharts.js](https://echarts.apache.org/examples/en/index.html) （Enterprise Charts）
+  - 2013年，由百度公司开源。
+  - 支持的图表类型很多，显示样式美观。
+  - 支持绘制常规图表的 3D 版。
+  - 支持绘制一些特殊图表，比如：涨跌图、树形图、仪表盘、地图、3D 地图。

@@ -1,6 +1,10 @@
-# ♢ pillow
-## pillow ：Python 的第三方库，提供了通用的图像处理功能。
-- 安装：pip install pillow
+# ♢ Pillow
+
+：Python 的第三方库，提供了丰富的图像处理功能。
+- [官方文档](https://pillow.readthedocs.io/)
+- 安装：`pip install pillow`
+
+
 - pillow 继承自 Python2 的图像处理库 PIL（python Imaging Library）。
 - 打开图片：
 from PIL import Image

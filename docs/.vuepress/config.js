@@ -167,6 +167,15 @@ module.exports = {
                     ]
                 },
                 {
+                    title: '图像处理',
+                    children: [
+                        '图像处理/电子图片',
+                        '图像处理/Pillow',
+                        '图像处理/Matplotlib',
+                        '图像处理/NetworkX',
+                    ]
+                },
+                {
                     title: '混合开发',
                     children: [
                         '混合开发/简介',

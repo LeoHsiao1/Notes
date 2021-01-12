@@ -1,6 +1,61 @@
-# CPU 测试
 
-## 性能指标
+# CPU
+
+：中央处理单元（Central Processing Unit），又称为中央处理器（Central Processor）、处理器（Processor）。
+- 是计算机的核心组件，负责读取程序、执行指令。
+
+## 相关概念
+
+- 时钟周期（Clock Cycle）：CPU 的振荡器发出时钟脉冲的间隔时长。
+  - 其倒数称为时钟频率。
+  - 例如：一个 4 GHz 的 CPU ，每秒产生 `4*10^9` 个时钟脉冲，时钟周期为 `0.25*10*-9` 秒。
+- 指令周期：完成一条指令所需的时长。
+  - 不同指令的指令周期不同，因此通常是计算平均值。
+  - 早期的 CPU ，每个时钟周期只能执行一条指令。现代的 CPU ，每个时钟周期可能执行多条指令。
+  - 将 CPU 的时钟频率，乘以每个时钟周期平均执行的指令数（Instructions Per Cycle，IPC），就得到每秒平均执行的指令数（Instructions Per Second，IPS）。
+- 字长（Word Size）：又称为位元，是指 CPU 每次最多处理多少位二进制数据。
+  - 现代 CPU 的字长通常是 32 位、64 位。
+  - CPU 的指令长度、数据总线的根数通常是字长的倍数。
+- 多核 CPU ：包含多个处理器核心的 CPU ，可以同时执行多个指令。
+  - 通常核心数为偶数，共享二级缓存。
+
+## CPU 指令集
+
+常见的 CPU 指令集架构（Instruction Set Architecture，ISA）：
+
+- CISC（Complex Instruction Set Computer，复杂指令集）
+
+- RISC（Reduced Instruction Set Computer，精简指令集）
+  - 精简了指令数，每个时钟周期执行一条指令。
+  - 指令的长度统一。
+  - 精简了寻址方式。
+
+- EPIC（Explicitly Parallel Instruction Computing，显式并行指令集）
+
+- VLIW（Very Long Instruction Word，超长指令集）
+
+## CPU 架构
+
+常见的 CPU 架构（Architecture）：
+
+- x86
+  - 由美国 Intel 公司发布。
+  - 指令集属于 CISC 。
+  - 1987 年，Intel 公司发布了 8086 型号的 CPU ，被 IBM PC 采用而流行起来。此后的 80186、80286、80386 等型号的 CPU 都沿用这种架构，它们都以 86 结尾，因此称为 x86 架构。
+    - 8086 是 16 位元，80386 是 32 位元。
+  - 2003 年，AMD 公司将 x86 架构扩展为 64 位元，命名为 AMD64 ，又称为 x86_64、x64 。
+
+- ARM （Advanced RISC Machine，进阶精简指令集机器）
+  - 由英国 Arm 公司发布。
+  - 32 位元，指令集属于 RISC 。
+  - 成本低、功耗低、散热低，因此用于手机、平板等小型电子设备比 x86 更有竞争力。
+  - ARM 公司只负责设计 CPU 架构、出售许可证，而 Intel 公司掌握了设计、生产、销售 CPU 的整个流程。
+  - 2011 年，Arm 公司发布了 ARMv8-A 架构，采用 64 位元，并且重新实现了 ARM 32 位的指令集。
+    - ARMv8-A 架构划分了 AArch32、AArch64 两种执行状态，分别用于执行 32 位、64 位的指令。
+
+- MIPS
+
+## CPU 状态
 
 ### CPU 使用率
 
@@ -29,7 +84,9 @@
   - CPU 密集型进程：平均负载高，CPU 使用率也高。
   - IO 密集型进程：平均负载高，但 CPU 使用率不一定高。
 
-## uptime
+## 相关命令
+
+### uptime
 
 ```sh
 $ uptime      # 显示系统运行时长、CPU 平均负载
@@ -43,7 +100,7 @@ $ uptime      # 显示系统运行时长、CPU 平均负载
     - 1 users ：已登录的用户数。
     - load average: 0.52, 0.58, 0.59 ：最近 1 分钟、5 分钟、15 分钟的平均负载。
 
-## perf
+### perf
 
 ：用于查看各个事件占用的 CPU 时长。
 
@@ -103,14 +160,14 @@ $ perf stat <命令>      # 分析某条命令占用 CPU 的过程
 
      Performance counter stats for 'uname':
 
-                  0.89 msec task-clock                #    0.393 CPUs utilized          
-                     1      context-switches          #    0.001 M/sec                  
-                     0      cpu-migrations            #    0.000 K/sec                  
-                   165      page-faults               #    0.186 M/sec                  
-       <not supported>      cycles                                                      
-       <not supported>      instructions                                                
-       <not supported>      branches                                                    
-       <not supported>      branch-misses                                               
+                  0.89 msec task-clock                #    0.393 CPUs utilized
+                     1      context-switches          #    0.001 M/sec
+                     0      cpu-migrations            #    0.000 K/sec
+                   165      page-faults               #    0.186 M/sec
+       <not supported>      cycles
+       <not supported>      instructions
+       <not supported>      branches
+       <not supported>      branch-misses
 
            0.002252426 seconds time elapsed
 

@@ -64,7 +64,7 @@
 
 - 用户需要先在配置文件中定义要控制的进程，然后才能用 Supervisor 管理。
 - Supervisor 默认使用 /etc/supervisord.conf 作为主配置文件（常用于保存 supervisord 的配置）。
-  - 还会导入 /etc/supervisord.d/ 目录下的其它配置文件（常用于保存各个进程的配置），这些配置文件的后缀名为 .ini ，采用 INI 的语法。
+  - 还会导入 /etc/supervisord.d/ 目录下的其它配置文件（常用于保存各个进程的配置），这些配置文件的扩展名为 .ini ，采用 INI 的语法。
 
 ### 主配置
 

@@ -76,13 +76,13 @@ class Popen(args, bufsize=-1, stdin=None, stdout=None, stderr=None, shell=False,
   ```
 
 
-- 可以不指定可执行文件的后缀名，Python 会自动根据当前的操作系统进行判断：
+- 可以不指定可执行文件的扩展名，Python 会自动根据当前的操作系统进行判断：
   ```py
   >>> p = subprocess.Popen(r'C:\Windows\SysWOW64\ping.exe')   # 这里可以省略后缀 .exe
   用法: ping [-t] [-a] [-n count] [-l size] [-f] [-i TTL] [-v TOS]
               [-r count] [-s count] [[-j host-list] | [-k host-list]]
   ```
-  不过如果不是系统定义的可执行文件，比如是脚本文件 `.sh` ，则不能省略后缀名。
+  不过如果不是系统定义的可执行文件，比如是脚本文件 `.sh` ，则不能省略扩展名。
 
 - 可以用 `shlex.split()` 将一条命令分割成字符串列表：
   ```py

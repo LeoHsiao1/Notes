@@ -141,8 +141,8 @@ logging 模块的主要功能分别由四个类实现：
   message     # 日志事件的内容
 
   pathname    # 当前程序文件的绝对路径
-  filename    # pathname 的文件名部分，包含后缀名
-  module      # pathname 的文件名部分，不包含后缀名
+  filename    # pathname 的文件名部分，包含扩展名
+  module      # pathname 的文件名部分，不包含扩展名
   funcName    # 当前代码所在函数名
   lineno      # 当前代码所在行号
 

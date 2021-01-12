@@ -182,7 +182,7 @@ window.$docsify = {
 
 从 docsify 4.6 开始，在 Markdown 中引用链接时，加上 `':include'` 即可嵌入目标文件。
 
-支持的文件类型|文件后缀名
+支持的文件类型|文件扩展名
 -|-
 iframe  |.html .htm
 markdown|.markdown .md

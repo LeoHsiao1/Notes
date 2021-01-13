@@ -9,18 +9,18 @@
 ## 安装
 
 - 在 Centos 上安装：
-    ```sh
-    yum install yum-utils       # 安装 yum-config-manager
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo   # 添加 docker 的官方镜像源
-    yum install docker-ce       # 下载 docker 社区版
-    systemctl start docker      # 启动 docker daemon
-    systemctl enable docker     # 使 docker 开机自启
-    ```
+  ```sh
+  yum install yum-utils       # 安装 yum-config-manager
+  yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo   # 添加 docker 的官方镜像源
+  yum install docker-ce       # 下载 docker 社区版
+  systemctl start docker      # 启动 docker daemon
+  systemctl enable docker     # 使 docker 开机自启
+  ```
 
 - 在 ubuntu 上，可以用官方脚本自动安装：
-    ```sh
-    curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
-    ```
+  ```sh
+  curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
+  ```
 
 ## 原理
   
@@ -91,11 +91,11 @@ docker run <image>            # 运行一个镜像，这会创建一个容器（
             -m 256m                   # 限制最多使用的内存量（超过该值的 2 倍时就会被 OOM 杀死）
 ```
 - 例：
-    ```sh
-    docker run hello-world                   # 运行一个测试镜像
-    docker run -it centos:7 bash             # 创建容器，并进入该容器的终端
-    docker run -d centos:7 tail -f /dev/null # 创建一个容器（让它执行一个不会停止的启动命令）
-    ```
+  ```sh
+  docker run hello-world                   # 运行一个测试镜像
+  docker run -it centos:7 bash             # 创建容器，并进入该容器的终端
+  docker run -d centos:7 tail -f /dev/null # 创建一个容器（让它执行一个不会停止的启动命令）
+  ```
 - 非 root 用户可能无权访问 /var/run/docker.sock 文件，导致无权执行 docker ps 等命令。
   - 此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
 - 容器内不能再创建嵌套的容器，甚至不能联系到 docker daemon ，因此不能使用 docker ps 等命令。
@@ -292,9 +292,9 @@ docker
 - 编写 Dockerfile 文件，然后基于它构建镜像：
     ```sh
     docker build <Dockerfile 所在目录> -t <生成的镜像名:tag>
-        --build-arg VERSION="1.0"  # 传入构建参数给 Dockerfile
-        --target <阶段名>          # 构建到某个阶段就停止
-        --network <name>           # 设置 build 过程中使用的网络
+                --build-arg VERSION="1.0"  # 传入构建参数给 Dockerfile
+                --target <阶段名>          # 构建到某个阶段就停止
+                --network <name>           # 设置 build 过程中使用的网络
     ```
   - 例：
     ```sh
@@ -352,7 +352,8 @@ EXPOSE 80                         # 暴露容器的一个端口
 
 Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
 
-RUN
+#### RUN
+
 - ：用于在构建镜像的过程中，在临时容器内执行一些命令。
 - 有两种写法：
   ```dockerfile
@@ -368,7 +369,8 @@ RUN
   - 执行 rm 等命令也无法删除内层的文件系统中的文件。
   - 因此执行 RUN 命令的次数越多，镜像的体积越大。应该尽量减少 RUN 命令的数量，最好合并成一条 RUN 命令。
 
-ENTRYPOINT
+#### ENTRYPOINT
+
 - ：用于设置容器启动时首先执行的命令。
 - 有两种写法：
   ```dockerfile
@@ -377,7 +379,7 @@ ENTRYPOINT
   ```
 - 构建镜像时，docker daemon 会将 shell 格式的命令转换成 exec 格式再保存，并且转换时会加上前缀"/bin/sh"和"-c"。
 - 例如，如果在 Dockerfile 中编写“Entrypoint echo hello”，在保存会被转换成：
-  ```
+  ```dockerfile
   "Entrypoint": [
       "/bin/sh",
       "-c",
@@ -385,7 +387,8 @@ ENTRYPOINT
   ]
   ```
 
-CMD
+#### CMD
+
 - ：用于设置容器启动时首先执行的命令。
 - 如果用户执行 docker run 命令时设置了启动命令，则会覆盖镜像中的 CMD 命令。
 - 有三种写法：
@@ -397,7 +400,8 @@ CMD
 - Dockerfile 中的 ENTRYPOINT、CMD 命令最多只能各写一个，否则只有最后一个会生效。
 - ENTRYPOINT 命令一般写在 CMD 命令之前，不过写在后面也没关系。
 
-ENTRYPOINT 与 CMD ：
+#### 比较ENTRYPOINT 与 CMD
+
 - 构建镜像时，docker daemon 会将 ENTRYPOINT、CMD 命令都保存为 exec 格式。
 - 启动容器时，docker daemon 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
   - 因此，ENTRYPOINT 命令是容器启动时的真正入口端点。
@@ -409,7 +413,7 @@ ENTRYPOINT 与 CMD ：
   `CMD ["echo", "2"]`   |/bin/sh -c 'echo 1' echo 2               |echo 1 echo 2
   `CMD ["2"]`           |/bin/sh -c 'echo 1' 2                    |echo 1 2
 
-- 可见，当 ENTRYPOINT 命令采用 shell 格式时，不会被 CMD 命令影响，可以忽略 CMD 命令。
+  可见，当 ENTRYPOINT 命令采用 shell 格式时，不会被 CMD 命令影响，可以忽略 CMD 命令。
 
 ### 多阶段构建
 

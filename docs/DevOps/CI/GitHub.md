@@ -40,7 +40,7 @@ jobs:                                 # 开始流水线任务
       run: |
         python -m pip install pytest psutil
         echo $VAR1 $VAR2
-      env:                            # 定义环境变量
+      env:                            # 加入环境变量
         VAR1: Hello
         VAR2: World
     - name: Test

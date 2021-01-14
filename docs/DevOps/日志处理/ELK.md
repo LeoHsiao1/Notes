@@ -130,23 +130,45 @@ https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar
     ```yml
     setup.kibana:
       host: "10.0.0.1:5601"
-    
+
     output.elasticsearch:
       hosts: ["10.0.0.1:9200"]
       # username: "admin"
       # password: "123456"
     ```
 
-3. 初始化：
+3. 启动：
     ```sh
-    ./filebeat modules enable system    # 启用 system 模块，用于采集系统日志
-    ./filebeat setup                    # 连接到 Kibana ，创建索引、索引模板等
+    ./filebeat setup    # 连接到 Kibana 进行初始化，比如创建索引
+    ./filebeat          # 在前台运行
+              -e        # 将 filebeat 本身的输出发送到 stderr ，而不是已配置的 output
     ```
 
-4. 启动：
-    ```sh
-    ./filebeat -e
-    ```
+可以启用 filebeat 的一些内置模块，采集一些系统或流行软件的日志文件。
+- [模块列表](https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-modules.html)
+- 例：
+  ```sh
+  ./filebeat modules enable system mysql nginx
+  ```
+
+
+可以让 filebeat 采集指定的日志文件：
+```yml
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/*.log
+
+  #exclude_files: ['.gz$']
+
+  # Optional additional fields. These fields can be freely picked
+  # to add additional information to the crawled log files for filtering
+  #fields:
+  #  level: debug
+  #  review: 1
+
+```
 
 
 

@@ -28,12 +28,14 @@ jobs:                                 # 开始流水线任务
     steps:                            # 开始流水线步骤
     - name: checkout                  # 一个流水线步骤的名字
       uses: actions/checkout@v2       # 调用一个内置动作，其版本为 v1
-      with:
-        ref: master
+      # with:
+      #  ref: master                  # 指定切换到哪个版本。默认是切换到触发该流水线任务的 commit ，如果不是被 commit 触发则切换到默认分支
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1   # 安装 Python
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       # continue-on-error: false      # 该步骤失败时，是否继续执行后续步骤
       # timeout-minutes: 360          # 该步骤的超时时间
@@ -43,6 +45,7 @@ jobs:                                 # 开始流水线任务
       env:                            # 加入环境变量
         VAR1: Hello
         VAR2: World
+
     - name: Test
       run: |
         pytest -v

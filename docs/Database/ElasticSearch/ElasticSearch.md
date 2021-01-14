@@ -2,7 +2,6 @@
 
 ：简称为 ES ，一个搜索引擎，也可用作存储 JSON 格式数据的 NoSQL 数据库。
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
-- 2010 年，由 ，
 - 基于 Java 开发，基于 Lucene 实现。
 - 采用 C/S 架构、TCP 通信。
   - 客户端通过 Restful API 访问服务器。
@@ -17,18 +16,18 @@
 
 - 下载二进制版：
   ```sh
-  wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.6.0-linux-x86_64.tar.gz
+  wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.10.1-linux-x86_64.tar.gz
   ```
   解压后运行：
   ```sh
   bin/elasticsearch       # 在前台运行
                     -d    # 以 daemon 方式运行
   ```
-  运行 ES 需要 JRE 环境，不过 ES 的 `jdk` 目录下自带了。
+  运行时需要 JRE ，不过二进制版自带了。
 
 - 或者运行 Docker 镜像：
   ```sh
-  docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.6.0
+  docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.10.1
   ```
   9200 端口供用户通过 HTTP 协议访问，9300 端口供 ES 集群的其它节点通过 TCP 协议访问。
 
@@ -65,7 +64,7 @@ ES 启动时会检查以下环境条件是否满足，如果不满足则会发�
   "cluster_name" : "cluster_1",
   "cluster_uuid" : "cDXF4mIeRqK4Dlj_YmSSoA",
   "version" : {
-    "number" : "7.6.0",
+    "number" : "7.10.1",
     "build_flavor" : "default",
     "build_type" : "tar",
     "build_hash" : "7f634e9f44834fbc12724506cc1da681b0c3b1e3",
@@ -101,14 +100,14 @@ ES 启动时会检查以下环境条件是否满足，如果不满足则会发�
   如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
 - 加上 `-H 'content-Type:application/json'` 之后，便可以发送 JSON 格式的查询参数。
 - 为了方便书写，下文将客户端请求简记成如下格式：
-    ```
-    GET /_count
-    {
-        "query": {
-            "match_all": {}
-        }
-    }
-    ```
+  ```json
+  GET /_count
+  {
+      "query": {
+          "match_all": {}
+      }
+  }
+  ```
 
 ## 相关概念
 

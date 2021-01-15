@@ -3,35 +3,36 @@
 ：一套日志采集及展示方案，又称为 ELK Stack 或 Elastic Stack 。由 Elastic 公司发布。
 - [官方文档](https://www.elastic.co/guide/index.html)
 - [下载页面](https://www.elastic.co/cn/downloads/)
-- ELK 系统的收费版本称为 X-Pack ，增加了告警、安全、机器学习等功能。
 
 ## 架构
 
 ELk 系统主要用到以下软件：
-- ElasticSearch ：用于存储数据，并支持查询。
-- Logstash ：用于采集日志数据，发送到 ES 中存储。
-- Kibana ：一个 Web 服务器，用于查询、展示 ES 中存储的数据。支持显示简单的仪表盘。
+- ElasticSearch
+  - 用于存储数据，并支持查询。
+- Logstash
+  - 一个命令行工具，用于采集日志数据，并解析成格式化数据，发送到 ES 中存储。
+  - 基于 Ruby 开发，通过 JRuby 解释器运行在 JVM 上。
+- Kibana
+  - 一个基于 node.js 运行的 Web 服务器，用于查询、展示 ES 中存储的数据。支持显示简单的仪表盘。
 
 ELK 系统还可选择加入以下软件：
-- Beats ：轻量级代理程序，用于采集日志数据。
-- Elastic Agent ：v7.8 版本新增的软件，用于采集日志数据。它集成了不同类型的 Beats 的功能。
-- Enterprise Search ：提供搜索功能，可以集成到网站的搜索栏中。
-- Observability ：为 Kibana 扩展了一些日志可视化的功能，比如实时查看日志、设置告警规则。
-- Security ：用于监控一些安全事项。
-- APM ：Application Performance Monitoring ，用于采集、监控应用程序的性能指标。
+- Beats
+  - 基于 Golang 开发，用于采集日志数据。比 Logstash 更轻量级，但功能较少。
+- Elastic Agent
+  - v7.8 版本新增的软件，用于采集日志数据。它集成了不同类型的 Beats 的功能。
+- Observability
+  - 为 Kibana 扩展了一些日志可视化的功能，比如实时查看日志、设置告警规则。
+- Security
+  - 用于监控一些安全事项。
+- APM（Application Performance Monitoring）
+  - 用于采集、监控应用程序的性能指标。
+- Enterprise Search
+  - 提供搜索功能，可以集成到业务网站的搜索栏中。
 
 总结：
 - 上述软件都是由 Elastic 公司开发。
 - 部署时，ELk 系统中各个软件的版本应该尽量一致，否则可能不兼容。
-
-## Logstash
-
-部署：
-```sh
-https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar.gz
-
-
-```
+- ELK 系统的收费版本称为 X-Pack ，增加了告警、安全、机器学习等功能。
 
 ## Kibana
 
@@ -66,10 +67,10 @@ https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar
 - 访问 URL `/status` 可查看 Kibana 本身的状态。
 - 除了使用 Logstash、Beats 等服务采集日志数据，还可以在 Kibana 网站上直接上传日志文件，解析后存储到 ES ，便于测试。
 
-建议在 Kibana 网站上进行以下设置：
-- 设置 Default 工作区，只显示 Kibana、Observability 中需要用到的部分功能，没必要显示 Enterprise Search、Security 等功能模块。
-- 将显示的日期格式设置为 `YYYY/MM/D HH:mm:ss` 。
 - 在 Kibana 的管理页面，可以查看、配置索引、数据流、索引模板、组建模板、索引模式。
+- 建议在 Kibana 网站上进行以下设置：
+  - 设置 Default 工作区，只显示 Kibana、Observability 中需要用到的部分功能，没必要显示 Enterprise Search、Security 等功能模块。
+  - 将显示的日期格式设置为 `YYYY/MM/D HH:mm:ss` 。
 
 <!--
 - 上传日志文件时，配置 Grok 模式的语法？
@@ -95,10 +96,44 @@ https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar
 
 - Kibana 的 Fleet 页面原本名为 Ingest Manager ，用于查看、配置 Elastic Agent 。
 
+
+## Logstash
+
+### 部署
+
+1. 下载二进制版：
+    ```sh
+    wget https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar.gz
+    ```
+
+2. 解压后，编辑配置文件 config/kibana.yml ：
+    ```yml
+    server.port: 5601           # Kibana 监听的端口
+    server.host: '10.0.0.1'     # Kibana 监听的 IP
+
+    elasticsearch.hosts: ['http://10.0.0.1:9200']   # 连接到 ES ，可以指定多个 host ，如果前一个不能访问则使用后一个
+    # elasticsearch.username: 'admin'
+    # elasticsearch.password: '123456'
+
+    # kibana.index: '.kibana'   # 在 ES 中创建该索引，存储 Kibana 的数据
+
+    i18n.locale: 'zh-CN'        # 让 Kibana 网站显示中文
+    ```
+
+3. 启动：
+    ```sh
+    bin/kibana
+    ```
+
+### 配置
+
+- Grok是Logstash过滤器的基础，广泛用于从非结构化数据中导出结构
+
+
 ## Beats
 
-- Logstash 运行在 JVM 上，消耗内存较多，采集日志的效率较低，因此后来推出了 Beats 来取代 Logstash 。
-  - 不过目前 Beats 不擅长解析日志文本。因此通常不让 Beats 直接将原始日志发送到 ES ，而是先发送给 Logstash 解析成结构化数据（通常是转换成 JSON 格式）。
+- Logstash 消耗内存较多，采集日志的效率较低，因此后来推出了 Beats 来取代 Logstash 。
+  - 不过目前 Beats 不擅长解析日志文本。因此通常不让 Beats 直接将原始日志发送到 ES ，而是先发送给 Logstash 解析成结构化数据。
 - 使用 Beats 时需要在每个要监控的主机上部署 Beats 进程，且监控不同类型的日志时需要部署不同的 beats 进程，比较麻烦。
 - Beats 进程有多种类型，例如：
   - Filebeat ：用于采集日志文件。
@@ -148,7 +183,7 @@ https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar
       # index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 指定索引名。如果修改索引名，则还需要修改 setup.template.name 和 setup.template.pattern
 
     # output.logstash:          # 关于输出到 Logstash 的配置
-      # hosts: ['localhost:5044']
+    #   hosts: ['localhost:5044']
     ```
 
 3. 启动：

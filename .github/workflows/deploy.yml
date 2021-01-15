@@ -1,6 +1,8 @@
 name: Deploy
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
 
 jobs:
   build-vuepress:
@@ -26,7 +28,9 @@ jobs:
     needs: build-vuepress
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@master
+    - name: Checkout repository
+      uses: actions/checkout@master
+
     - name: Run docs-scraper
       env:
         API_KEY: ${{ secrets.MEILISEARCH_API_KEY }}

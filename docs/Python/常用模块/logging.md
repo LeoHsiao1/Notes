@@ -9,7 +9,7 @@
 import logging
 
 formatter = logging.Formatter(             # 创建一个格式器
-    fmt='{asctime} {levelname:5} {threadName:15} --> {message}',
+    fmt='{asctime} {levelname:5} {threadName:15}  {message}',
     datefmt='%Y-%m-%d %H:%M:%S',
     style='{')
 
@@ -124,9 +124,9 @@ logging 模块的主要功能分别由四个类实现：
 
 - 例：
   ```py
-  formatter = logging.Formatter(                                    # 创建一个格式器
-      fmt='{asctime} {levelname:5} {threadName:15} --> {message}',  # 设置每个日志事件的格式化字符串
-      datefmt='%Y-%m-%d %H:%M:%S',                                  # 设置 asctime 时间字段的格式化字符串
+  formatter = logging.Formatter(                                  # 创建一个格式器
+      fmt='{asctime} {levelname:5} {threadName:15}  {message}',   # 设置每个日志事件的格式化字符串
+      datefmt='%Y-%m-%d %H:%M:%S',                                # 设置 asctime 时间字段的格式化字符串
       style='{')
   ```
   - 在 fmt 中嵌入字段的格式：
@@ -166,7 +166,7 @@ LOGGING = {
     'disable_existing_loggers': False,          # 是否禁用已存在的其它 logger 实例
     'formatters': {
         'verbose': {                            # 定义一个日志的格式器
-            'format': '{asctime}  {levelname:6} {filename:15} {funcName:15} L{lineno:<8} {message}',
+            'format': '{asctime} {levelname:5} {threadName:15}  {message}',
             'datefmt': '%Y/%m/%d %H:%M:%S',
             'style': '{',
         },

@@ -1,6 +1,6 @@
 # ♢ Django
 
-：Python 的第三方库，是一个大型的 Web 后端开发框架。
+：Python 的第三方库，是一个大型的 Web 应用开发框架。
 - [官方文档](https://docs.djangoproject.com/)
 - 读音为 `/ˈdʒæŋɡoʊ/`
 - 安装：`pip install django`

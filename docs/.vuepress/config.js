@@ -534,12 +534,7 @@ module.exports = {
                         '监控告警/Grafana',
                         '监控告警/Zabbix',
                         '监控告警/Prometheus',
-                    ]
-                },
-                {
-                    title: '日志处理',
-                    children: [
-                        '日志处理/ELK',
+                        '监控告警/ELK',
                     ]
                 },
                 {

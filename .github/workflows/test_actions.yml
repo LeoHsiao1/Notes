@@ -1,0 +1,29 @@
+# This script is used to test GitHub Actions.
+
+name: Test Actions
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  Test_run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, macOS-10.15, windows-2019]
+        python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v1
+      with:
+        ref: master
+
+    - name: Test
+      run: |
+        python .github/workflows/test_actions.py
+      env:
+        NAME_FOR_IMPORT_PYEXIV2: pyexiv2
+

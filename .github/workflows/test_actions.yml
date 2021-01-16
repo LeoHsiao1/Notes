@@ -12,6 +12,7 @@ env:                            # 全局的环境变量
 
 jobs:
   job-1:
+    name: Test
     runs-on: ubuntu-18.04
     strategy:
       matrix:

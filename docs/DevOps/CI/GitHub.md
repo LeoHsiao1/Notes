@@ -8,13 +8,20 @@
 
 ：GitHub 提供的一种 CI 功能。
 - [官方文档](https://help.github.com/en/actions)
-- 它类似 Jenkins 的流水线，用 YAML 文件描述，保存为 .github/workflows/xx.yml 文件。
+- 它采用 YAML 格式声明 CI 脚本，保存到项目的 `.github/workflows/` 目录下。
+- GitHub 免费提供了一些虚拟机，用户可以直接在其中执行 workflows 脚本，而不必自己准备主机。这是与 GitLab、Jenkins 相比的一大优点。
 
-例：
+### workflows
+
 ```yml
 name: Python test
 
-on: [push]                            # 定义触发流水线的事件
+on:                                   # 定义触发流水线的事件
+  push:                               # 在 push 时触发
+    branches:
+      - master
+  release:                            # 在 release 时触发
+  workflow_dispatch:                  # 允许在网页上手动触发
 
 jobs:                                 # 开始流水线任务
   job1:                               # 第一个任务
@@ -51,20 +58,33 @@ jobs:                                 # 开始流水线任务
         pytest -v
 ```
 
-- 执行每个 step 之前，都会重新切换到一个临时的工作目录，比如 `/root/actions-runner/_work/myjob/` 。
+- 执行 jobs 时会创建一个临时的工作目录，比如 `/root/actions-runner/_work/myjob/`。执行每个 step 之前，都会重新切换到该目录。
 - 在 GitHub 账号的个人设置页面的 Notifications 分栏中，可以设置在 GitHub Actions 执行失败时发送邮件通知。
 
-## Runner
+### Runner
 
-Actions 默认运行在 GitHub 提供的运行环境中（包括 Linux、Windows、MacOS），用户也可以添加自己主机作为运行环境，称为 Runner 。
-- 作为 Runner 的机器要保持运行一个进程，连接到 GitHub 仓库，接受控制。
-- Github 仓库的 Settings->Actions 页面上有添加 Runner 的教程，在自己的主机上执行它要求的命令即可。首先要创建一个非 root 用户：
-  ```sh
-  useradd github
-  su - github
-  ```
-- 在流水线文件中用 `self-hosted` 标签即可使用自己的 Runner ，如下：
-  ```yml
-  runs-on: [self-hosted, linux]
-  ```
-- 使用自己的 Runner 构建项目时，要小心仓库中有恶意代码被执行。
+- 执行 GitHub workflows 脚本的主机称为 Runner 。
+- GitHub 免费提供了一些虚拟机作为 Runner ，供用户使用。规格如下：
+  - 配置都为：
+    - 2-core CPU
+    - 7 GB of RAM memory
+    - 14 GB of SSD disk space
+  - 可用的操作系统包括：
+    - ubuntu-18.04 、ubuntu-20.04 等
+    - macos-10.15
+    - windows-2019
+  - 取消了权限限制，比如使用 sudo 时不需要输入密码。
+
+- 用户也可以添加自己的主机作为 Runner ，这需要在 Github 个人仓库的 `Settings->Actions` 页面进行配置。
+  - 作为 Runner 的主机要保持运行一个客户端进程，连接到 GitHub 仓库，接受控制。
+    - 该进程必须使用非 root 用户启动：
+        ```sh
+        useradd github
+        su - github
+        ```
+  - 在流水线脚本中用 `self-hosted` 标签即可使用自己的 Runner ，如下：
+    ```yml
+    runs-on: [self-hosted, linux]
+    ```
+  - 使用自己的 Runner 构建项目时，要小心仓库中有恶意代码被执行。
+

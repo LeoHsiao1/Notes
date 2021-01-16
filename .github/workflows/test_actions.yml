@@ -15,16 +15,8 @@ jobs:
       run: |
         touch f1
 
-    - name: Check
-      run: |
-        pwd
-        ls -al
-
-  job2:
-    runs-on: ubuntu-18.04
-    steps:
-    - name: Check
-      run: |
-        pwd
-        ls -al
-
+    - uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: |
+          f1

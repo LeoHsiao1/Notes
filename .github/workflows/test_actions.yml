@@ -7,23 +7,19 @@ on:
     types: [published]
   workflow_dispatch:
 
-jobs:
-  Test_run:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-18.04, macOS-10.15, windows-2019]
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v1
-      with:
-        ref: master
+env:                            # 全局的环境变量
+  VAR1: A
 
+jobs:
+  job-1:
+    runs-on: ubuntu-18.04
+    env:                        # 作用于 job 的环境变量
+      VAR1: B
+    steps:
     - name: Test
       run: |
-        python .github/workflows/test_actions.py
-      env:
-        NAME_FOR_IMPORT_PYEXIV2: pyexiv2
+        echo $VAR1 $VAR2
+      env:                      # 作用于 step 的环境变量
+        VAR1: Hello
+        VAR2: World
 

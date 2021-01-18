@@ -31,6 +31,7 @@ ELK 系统还可选择加入以下软件：
 
 总结：
 - 上述软件都是由 Elastic 公司开发。
+  - 这些软件运行时可能需要 JDK、node.js 等环境，不过二进制发行版都已经自带了。
 - 部署时，ELk 系统中各个软件的版本应该尽量一致，否则可能不兼容。
 - ELK 系统的收费版本称为 X-Pack ，增加了告警、安全、机器学习等功能。
 
@@ -94,43 +95,7 @@ ELK 系统还可选择加入以下软件：
 
 ### Fleet
 
-- Kibana 的 Fleet 页面原本名为 Ingest Manager ，用于查看、配置 Elastic Agent 。
-
-
-## Logstash
-
-<!-- - 采集的每个日志称为一个日志事件（event）。 -->
-
-<!-- 
-### 部署
-
-1. 下载二进制版：
-    ```sh
-    wget https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar.gz
-    ```
-
-2. 解压后，编辑配置文件 config/kibana.yml ：
-    ```yml
-    server.port: 5601           # Kibana 监听的端口
-    server.host: '10.0.0.1'     # Kibana 监听的 IP
-
-    elasticsearch.hosts: ['http://10.0.0.1:9200']   # 连接到 ES ，可以指定多个 host ，如果前一个不能访问则使用后一个
-    # elasticsearch.username: 'admin'
-    # elasticsearch.password: '123456'
-
-    # kibana.index: '.kibana'   # 在 ES 中创建该索引，存储 Kibana 的数据
-
-    i18n.locale: 'zh-CN'        # 让 Kibana 网站显示中文
-    ```
-
-3. 启动：
-    ```sh
-    bin/kibana
-    ``` -->
-
-### 配置
-
-- Grok是Logstash过滤器的基础，广泛用于从非结构化数据中导出结构
+- Kibana 的 Fleet 页面原本名为 Ingest Manager ，用于批量管理 Elastic Agent 。
 
 
 ## Beats
@@ -144,6 +109,7 @@ ELK 系统还可选择加入以下软件：
   - Winlogbeat ：用于采集 Windows 的 event 日志。
   - Metricbeat ：用于采集系统或软件的性能指标。
   - Auditbeat ：用于采集 Linux Audit 进程的日志。
+- 社区也可以基于 Beats 框架开发自定义的 Beats 。
 - Beats 采集日志数据之后，支持多种输出端：
   - ES
   - Logstash
@@ -162,10 +128,9 @@ ELK 系统还可选择加入以下软件：
 - Filebeat 会对每个日志文件定期执行一个 harvester ，逐行读取日志文件，发送到输出端。
   - 开始读取时会打开文件描述符，读取结束之后才关闭文件描述符。
   - 读取时会记录日志文件的 inode ，以及当前读取的偏移量（bytes offset），从而避免重复采集日志。
-    - 这些信息记录在 `data/registry/` 目录下的 registry 文件中。
+    - 这些信息记录在 `data/registry/` 目录下的 registry 文件中，删除这些文件就会让 Filebeat 重新采集。
 - Filebeat 可以将采集的日志发送到 ES 或 Logstash 等输出端，但最终通常存储到 ES 中。
   - 同一个 Filebeat 进程采集的所有日志会存储到 ES 中同一个 index 之下。
-  - 每条日志存储到 ES 中时，会加上一个 `@timestamp` 字段，表示当前时刻，但不一定是该日志产生的时刻。
 
 #### 部署
 
@@ -176,16 +141,16 @@ ELK 系统还可选择加入以下软件：
 
 2. 解压后，编辑配置文件 filebeat.yml ：
     ```yml
-    setup.kibana:               # 关于 kibana 的配置
+    setup.kibana:               # kibana 的配置
       host: '10.0.0.1:5601'
 
-    output.elasticsearch:       # 关于输出到 ES 的配置
+    output.elasticsearch:       # 输出到 ES 的配置
       hosts: ['10.0.0.1:9200']
       # username: 'admin'
       # password: '123456'
       # index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 指定索引名。如果修改索引名，则还需要修改 setup.template.name 和 setup.template.pattern
 
-    # output.logstash:          # 关于输出到 Logstash 的配置
+    # output.logstash:          # 输出到 Logstash 的配置
     #   hosts: ['localhost:5044']
     ```
 
@@ -253,5 +218,101 @@ ELK 系统还可选择加入以下软件：
       - '/var/lib/docker/containers/*/*.log'
   ```
 
+## Logstash
+
+### 原理
+
+- 采集的每个日志称为一个日志事件（event）。
+  - 每个日志存储为 JSON 格式的结构化数据。
+- Logstash 记录每条日志时，会自动加上一个 `@timestamp` 字段，表示当前时刻。
+  - 它采用 UTC 时区。
+  - 它不一定是该日志产生的时刻，因为日志可能产生一段时间之后才被记录。
+
+
+
+### 部署
+
+1. 下载二进制版：
+    ```sh
+    wget https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar.gz
+    ```
+
+2. 启动：
+    ```sh
+    bin/logstash
+                  -f CONFIG_FILE              # 指定配置文件的路径
+                  -e CONFIG_STRING            # 传入一个字符串作为配置
+                  --config.reload.automatic   # 发现配置文件变化时，自动重新加载
+                  --log.level=info            # 指定日志等级
+                  -V                          # 显示版本号
+    ```
+
+### pipeline
+
+- Logstash 处理数据的过程称为管道（pipeline）。
+- 每个管道的主要部分如下：
+  - input ：输入项，用于接收数据。
+  - filter ：过滤器，用于过滤、修改数据。是可选部分。
+  - output ：输出项，用于输出数据。
+
+
+- 不带 filter 的管道示例：
+  1. 启动 Logstash ，运行一个简单的管道：
+      ```sh
+      bin/logstash -e 'input { stdin { } } output { stdout {} }'
+      ```
+      这里接收 stdin 输入的数据，转换成日志输出到 stdout 。
+
+  2. 此时在终端输入一个字符串 Hello ，按下回车，就会转换成一条日志。如下：
+      ```sh
+      {
+          "@timestamp" => 2020-01-12T07:37:00.045Z,
+                "host" => "CentOS-1",
+            "message" => "Hello",
+            "@version" => "1"
+      }
+      ```
+
+- 带 filter 的管道示例：
+  1. 创建一个配置文件 `config/pipeline.conf` ，定义一个管道：
+      ```sh
+      input {
+          beats {           # 接收 beats 的输入
+            port => "5044"
+        }
+      }
+      # filter {
+      # }
+      output {
+        elasticsearch {
+          hosts => ["http://localhost:9200"]
+          index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+          # user => "elastic"
+          # password => "changeme"
+        }
+      }
+      ```
+      - pipeline 的配置文件中，用 # 声明单行注释。
+      - 需要修改 Beats 的配置文件，让它们将日志发送到 Logstash 。
+
+  2. 启动 Logstash ，运行指定的管道：
+      ```sh
+      bin/logstash -f config/pipeline.conf --log.level=debug
+      ```
+
+### Grok
+
+- Grok 是一个过滤器插件，用于根据 pattern 匹配纯文本格式的日志数据，转换成 JSON 格式的结构化数据。
+- Kibana 网页上的开发工具中提供了 Grok Debugger ，可用于调试 Grok pattern 。
+
+
+在 pipeline 配置中加入 filter ：
+```sh
+filter {
+    grok {
+        match => { "message" => "%{COMBINEDAPACHELOG}"}
+    }
+}
+```
 
 

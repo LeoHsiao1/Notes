@@ -23,7 +23,7 @@
   bin/elasticsearch       # 在前台运行
                     -d    # 以 daemon 方式运行
   ```
-  运行时需要 JRE ，不过二进制版自带了。
+  运行时需要 JDK 环境，不过二进制发行版自带了一个 JDK 。
 
 - 或者运行 Docker 镜像：
   ```sh

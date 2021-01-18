@@ -14,20 +14,23 @@
 
 ## 变量
 
-- Groovy 既支持静态类型，也支持动态类型。
-- 可以用基本数据类型的关键字定义变量。如下：
+### 静态类型
+
+- 可以用基本数据类型的关键字定义变量，属于静态类型。如下：
   ```groovy
-  byte x = 1
-  char x = 'A'
-  short x = 1
-  int x = 5
-  long x = 100L
-  float x = 3.14f
-  double x = 3.14
+  byte    x = 1
+  char    x = 'A'
+  short   x = 1
+  int     x = 5
+  long    x = 100L
+  float   x = 3.14f
+  double  x = 3.14
   boolean x = true
 
-  int[] x = [1, 2, 3]     // 数组，只能包含同种类型的元素
+  int[]   x = [1, 2, 3]     // 数组，只能包含同种类型的元素
   ```
+
+### 动态类型
 
 - 可以用 `def` 关键字定义 Object 类型的变量，甚至可以省略该关键字。
   - Object 类型的变量可以存储各种类型的值。
@@ -46,13 +49,19 @@
   // 运行时会报错：The current scope already contains a variable of the name a
   ```
 
+- 查询对象的类型：
+  ```groovy
+  a = 1
+  a.getClass()
+  ```
+
 ### 字符串
 
 - 例：
   ```groovy
   String x = 'Hello'
-  x += ' World'       // 字符串可以直接拼接，甚至
-  x += 123
+  x += ' World'       // 字符串之间可以直接拼接
+  x += 123            // 其它类型的值与字符串拼接时，会自动转换成字符串类型
   println x
   // 显示：Hello World123
   println x.length()  // 获取字符串的长度
@@ -69,6 +78,12 @@
   // 显示：false
   println x.matches('He.*')
   // 显示：true
+  ```
+
+- 字符串的类型转换：
+  ```groovy
+  x = '' + 12                   // 从其它类型转换成字符串类型
+  println Integer.parseInt(x)   // 从字符串类型转换成 int 类型
   ```
 
 ### 列表

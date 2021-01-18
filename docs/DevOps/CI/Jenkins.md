@@ -230,27 +230,28 @@ pipeline {
   - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
 
 - Jenkins 还提供了一些内置的环境变量，如下：
-    ```sh
-    NODE_NAME       # 节点名
-    JENKINS_HOME    # Jenkins 主目录
-    WORKSPACE       # 该 Job 的工作目录
+  ```sh
+  NODE_NAME       # 节点名
+  JENKINS_HOME    # Jenkins 主目录
+  WORKSPACE       # 该 Job 的工作目录
 
-    JOB_NAME        # 任务名
-    JOB_URL         # 任务链接
-    BUILD_NUMBER    # 构建编号
-    BUILD_URL       # 构建链接
+  JOB_NAME        # 任务名
+  JOB_URL         # 任务链接
+  BUILD_NUMBER    # 构建编号
+  BUILD_URL       # 构建链接
 
-    BRANCH_NAME     # 分支名
-    CHANGE_AUTHOR   # 版本的提交者
-    CHANGE_URL      # 版本的链接
-    ```
-    这些变量可以按以下格式读取：
+  BRANCH_NAME     # 分支名
+  CHANGE_AUTHOR   # 版本的提交者
+  CHANGE_URL      # 版本的链接
+  ```
+  - 这些变量的值都是 String 类型。
+  - 这些变量可以按以下格式读取：
     ```groovy
     script {
-        echo env.NODE_NAME
-        echo "${env.NODE_NAME}"
+        echo env.NODE_NAME              // 在 Groovy 代码中，通过 env 字典读取
+        echo "${env.NODE_NAME}"         // 在字符串中，通过 $ 取值
         sh "echo ${env.NODE_NAME}"
-        sh 'echo $NODE_NAME'
+        sh 'echo $NODE_NAME'            // 内置变量会加入 Shell 的环境变量，可以直接读取
     }
     ```
 
@@ -356,6 +357,7 @@ pipeline {
         echo 'Hello'
     }
     ```
+- echo 语句只能显示 String 类型的值，使用 println 可以显示任意类型的值。
 - 使用字符串时，要用双引号 " 或单引号 ' 包住（除非是纯数字组成的字符串），否则会被当作变量取值。
   - 例如：`echo ID` 会被当作 `echo "$ID"` 执行。
   - 使用三引号 """ 或 ''' 包住时，可以输入换行的字符串。

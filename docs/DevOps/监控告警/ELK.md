@@ -74,7 +74,6 @@ ELK 系统还可选择加入以下软件：
   - 将显示的日期格式设置为 `YYYY/MM/D HH:mm:ss` 。
 
 <!--
-- 上传日志文件时，配置 Grok 模式的语法？
 - Kibana 查询语言的语法？
 -->
 
@@ -96,7 +95,6 @@ ELK 系统还可选择加入以下软件：
 ### Fleet
 
 - Kibana 的 Fleet 页面原本名为 Ingest Manager ，用于批量管理 Elastic Agent 。
-
 
 ## Beats
 
@@ -129,6 +127,7 @@ ELK 系统还可选择加入以下软件：
   - 开始读取时会打开文件描述符，读取结束之后才关闭文件描述符。
   - 读取时会记录日志文件的 inode ，以及当前读取的偏移量（bytes offset），从而避免重复采集日志。
     - 这些信息记录在 `data/registry/` 目录下的 registry 文件中，删除这些文件就会让 Filebeat 重新采集。
+    - 切割日志时可能使日志文件的 inode 或 bytes offset 变化，导致 filebeat 漏采日志。
 - Filebeat 可以将采集的日志发送到 ES 或 Logstash 等输出端，但最终通常存储到 ES 中。
   - 同一个 Filebeat 进程采集的所有日志会存储到 ES 中同一个 index 之下。
 
@@ -194,6 +193,8 @@ ELK 系统还可选择加入以下软件：
     # include_lines: ['^WARN', '^ERROR']  # 只采集日志文件中的指定行，采用正则匹配。默认采集所有非空的行
     # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中的指定行，采用正则匹配。该规则会在 include_lines 之后生效
     # max_bytes: 10485760                 # 每条日志文本的最大字节数，超过的部分不会采集。默认为 10 MB
+    # ignore_older: 0                     # 不扫描在多长时间之前修改文件，比如 2h、10m
+    # scan_frequency: 10s                 # 每隔多久扫描一次日志文件，如果在 registry 记录的位置之后有新增的日志，则进行采集
 
     # 默认将每行视作一条日志，可以加入 multiline 配置项，将连续的多行文本视作同一条日志。multiline 规则会在 include_lines 之前生效
     # multiline.type: pattern       # 采用 pattern 方式，根据正则匹配处理多行。也可以采用 count 方式，根据指定行数处理多行
@@ -220,15 +221,9 @@ ELK 系统还可选择加入以下软件：
 
 ## Logstash
 
-### 原理
-
-- 采集的每个日志称为一个日志事件（event）。
-  - 每个日志存储为 JSON 格式的结构化数据。
-- Logstash 记录每条日志时，会自动加上一个 `@timestamp` 字段，表示当前时刻。
-  - 它采用 UTC 时区。
-  - 它不一定是该日志产生的时刻，因为日志可能产生一段时间之后才被记录。
-
-
+- Logstash 记录的每个日志称为一个日志事件（event）。
+  - 每个日志通常存储为 JSON 格式的结构化数据。
+- Logstash 记录每条日志时，会自动加上一个 `@timestamp` 字段。它采用 UTC 时区，默认取值为当前时刻。
 
 ### 部署
 
@@ -254,7 +249,10 @@ ELK 系统还可选择加入以下软件：
   - input ：输入项，用于接收数据。
   - filter ：过滤器，用于过滤、修改数据。是可选部分。
   - output ：输出项，用于输出数据。
-
+- pipeline 采用特殊的语法：
+  - 用 # 声明单行注释。
+  - 用 `=>` 连接键值对。
+  - 支持布尔、数值、列表、hash 字典等数据类型。
 
 - 不带 filter 的管道示例：
   1. 启动 Logstash ，运行一个简单的管道：
@@ -277,16 +275,20 @@ ELK 系统还可选择加入以下软件：
   1. 创建一个配置文件 `config/pipeline.conf` ，定义一个管道：
       ```sh
       input {
-          beats {           # 接收 beats 的输入
-            port => "5044"
+        beats {               # 接收 beats 的输入
+          port => "5044"      # 监听一个 TCP 端口，供 beats 发送数据进来
+          host => "0.0.0.0"
         }
+        # file {              # 读取本机的文件作为输入
+        #   path => "/var/log/http.log"
+        # }
       }
       # filter {
       # }
       output {
         elasticsearch {
           hosts => ["http://localhost:9200"]
-          index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+          # index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
           # user => "elastic"
           # password => "changeme"
         }
@@ -300,19 +302,103 @@ ELK 系统还可选择加入以下软件：
       bin/logstash -f config/pipeline.conf --log.level=debug
       ```
 
-### Grok
+#### grok
 
-- Grok 是一个过滤器插件，用于根据 pattern 匹配纯文本格式的日志数据，转换成 JSON 格式的结构化数据。
-- Kibana 网页上的开发工具中提供了 Grok Debugger ，可用于调试 Grok pattern 。
+- grok 是一个 filter 插件，用于解析纯文本格式的日志数据，通过正则表达式提取一些字段，转换成 JSON 格式。
+- Kibana 网页上提供的开发工具包含了 grok Debugger ，便于调试 grok pattern 。
+- 例：
+  1. 假设原始日志为：
+      ```sh
+      2020-01-12 07:24:43.659+0000  INFO  10.0.0.1 User login successfully
+      ```
+  2. 编写一个 grok 表达式来匹配日志：
+      ```sh
+      %{TIMESTAMP_ISO8601:datetime}\s+(?<loglevel>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$
+      ```
+      - 可以按 `(?<field>pattern)` 的格式匹配字段。例如 `(?<loglevel>\S+)` 表示使用正则表达式 `\S+` 进行匹配，将匹配结果赋值给名为 loglevel 的字段。
+      - 可以按 `%{NAME:field}` 的格式调用事先定义的正则表达式。例如 `%{TIMESTAMP_ISO8601:datetime}` 表示使用一个名为 TIMESTAMP_ISO8601 的正则表达式进行匹配，将匹配结果赋值给名为 datetime 的字段。
 
-
-在 pipeline 配置中加入 filter ：
-```sh
-filter {
+  3. grok 输出的结构化数据为：
+      ```sh
+      {
+        "loglevel": "INFO",
+        "client_ip": "10.0.0.1",
+        "message": "User login successfully",
+        "datetime": "2020-01-12 07:24:43.659+0000"
+      }
+      ```
+- 可以事先定义一些正则表达式，然后通过名称调用它们。
+  - 定义格式为：
+    ```sh
+    NAME  pattern
+    ```
+  - 例：
+    ```sh
+    INT         (?:[+-]?(?:[0-9]+))
+    WORD        \b\w+\b
+    SPACE       \s*
+    NOTSPACE    \S+
+    GREEDYDATA  .*
+    ```
+  - grok 内置了一些 [patterns](https://github.com/logstash-plugins/logstash-patterns-core/blob/master/patterns/grok-patterns) 。
+- 例：在 pipeline 的 filter 中使用 grok 插件
+  ```sh
+  filter {
     grok {
-        match => { "message" => "%{COMBINEDAPACHELOG}"}
+      match => { "message" => "%{TIMESTAMP_ISO8601:datetime}\s+(?<loglevel>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$" }  # 指定用于匹配的表达式
+      # patterns_dir => ["config/patterns"]             # 加载 patterns 的定义文件
+      # keep_empty_captures => false                    # 如果匹配到的字段为空，是否依然保留该字段
+      # tag_on_failure => ["_grokparsefailure"]         # 如果匹配失败，则给日志添加这些 tag
+      # tag_on_timeout => ["_groktimeout"]              # 如果匹配超时，则给日志添加这些 tag
+      # timeout_millis => 30000                         # 匹配的超时时间，单位 ms
+
+      # 以下是所有 filter 插件通用的配置参数
+      # add_field       => {                            # 添加字段
+      #   "test_field"  => "Hello"
+      #   "from_%{IP}"  => "this is from %{IP}"         # 可以通过 %{x} 的格式，引用已有的字段的值
+      # }
+      # add_tag         => ["test_tag", "from_%{IP}"]   # 添加标签
+      # remove_field    => ["field_1" , "from_%{IP}"]   # 删除字段
+      # remove_tag      => ["test_tag", "from_%{IP}"]   # 删除标签
+      # id              => "ABC"                        # 该插件的唯一 id ，默认会自动生成
+      # enable_metric   => true                         # 是否记录该插件的指标
     }
-}
-```
+  }
+  ```
 
+#### date
 
+- date 是一个 filter 插件，用于解析日志事件的一个字段，获取时间，赋值给 `"@timestamp` 字段。
+- 例：
+  ```sh
+  filter {
+    date {
+      match => [ "datetime", "yyyy-MMM-dd HH:mm:ss.SSSZ" ]
+      # target => "@timestamp"                              # 要赋值的目标字段
+      # tag_on_failure => ["_dateparsefailure"]
+    }
+  }
+  ```
+
+#### mutate
+
+- mutate 是一个 filter 插件，用于修改日志事件的一些字段。
+- 例：
+  ```sh
+  filter {
+    mutate {
+        copy       => { "field1" => "field2" }         # 拷贝一个字段的值，赋值给另一个字段
+        rename     => { "field1" => "field2" }         # 重命名一个字段
+        replace    => { "field1" => "new: %{field2}" } # 替换一个字段的值
+        convert    => {                                # 转换字段的数据类型，默认都是字符串类型
+          "field1" => "boolean"
+          "field2" => "integer"                        # 可以按这种格式同时处理多个字段
+        }
+        lowercase  => [ "field1" ]                     # 将字段的值改为小写
+        uppercase  => [ "field1" ]                     # 将字段的值改为大写
+        strip      => ["field1"]                       # 删掉字段的值前后的空白字符
+        split      => { "field1" => "," }              # 根据指定的字符分割一个字段的值，保存为数组形式
+        # tag_on_failure => ["_mutate_error"]
+    }
+  }
+  ```

@@ -27,7 +27,7 @@
     - windows-2019
   - 取消了权限限制，比如使用 sudo 时不需要输入密码。
 
-- 用户也可以添加自己的主机作为 Runner ，这需要在 Github 个人仓库的 `Settings -> Actions` 页面进行配置。
+- 用户也可以添加自己的主机作为 Runner ，这需要在 Github 仓库的 `Settings -> Actions` 页面进行配置。
   - 作为 Runner 的主机要保持运行一个客户端进程，连接到 GitHub 仓库，接受控制。
     - 该进程必须使用非 root 用户启动：
         ```sh
@@ -76,7 +76,7 @@ jobs:                             # 该 workflow 的任务列表
       types:              # release 分为 created、edited、deleted、published 等多种情况，如果不指定 types ，则每种情况都会触发一次
         - created
 
-    workflow_dispatch:    # 允许在网页上手动触发
+    workflow_dispatch:    # 允许在 GitHub 网页上手动触发
 
     schedule:             # 作为定时任务触发
       - cron:  '*/15 * * * *'
@@ -102,13 +102,40 @@ jobs:                             # 该 workflow 的任务列表
           VAR1: Hello
           VAR2: World
   ```
+
+- `$GITHUB_ENV` 指向一个存储环境变量的文件，向该文件中添加变量，就会被加入当前 job 的后续 step 的终端环境变量中。如下：
+  ```yml
+  steps:
+  - name: Test write
+    run: |
+      echo  action_state=yellow  >>  $GITHUB_ENV
+  - name: Test read
+    run: |
+      echo  $action_state
+  ```
+  - 这种添加环境变量的方式，比使用 `env` 参数的功能更强。
+
+- 在 GitHub 仓库的 `Settings -> Secrets` 页面可以添加以密文形式存储的环境变量。然后在 workflow 中按如下格式使用：
+  ```yml
+  steps:
+    - name: Test
+      env:
+        password: ${{ secrets.PASSWORD }}
+      run: |
+        echo $password
+  ```
+  - 在 workflow 中可以用 `${{ xx }}` 的格式读取环境变量。
+  - 定义环境变量之后，不能在同一个 env 块中读取它。
+
 - GitHub 会自动加入一些内置的环境变量，例如：
   ```sh
   GITHUB_WORKFLOW     # 当前 workflow 的名称
   GITHUB_WORKSPACE    # 工作目录
+  GITHUB_RUN_NUMBER   # 当前 workflow 执行的编号，从 1 开始递增
+  GITHUB_JOB          # 当前 job 的名称
   GITHUB_SHA          # 触发该 workflow 的版本的哈希值
-  GITHUB_REF          # 触发该 workflow 的分支或标签名
   ```
+  - 不过这些变量只会加入终端的环境变量，不支持在 workflow 中读取。
 
 ### job
 
@@ -164,16 +191,17 @@ jobs:                             # 该 workflow 的任务列表
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]    # 这会创建 4 个 job 实例，每个实例使用 python-version 变量的一种取值
+        python_version: [3.5, 3.6, 3.7, 3.8]    # 这会创建 4 个 job 实例，每个实例使用 python_version 变量的一种取值
       # fail-fast: true                         # 默认只要有一个 job 实例执行失败，则会放弃执行其它 job 实例
       # max-parallel: 2                         # 限制并行执行的 job 实例数，默认会尽量最大化
     steps:
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ matrix.python_version }}
   ```
   - 最多创建 256 个 job 实例。
+  - 在 workflow 中可以通过 `${{ matrix.xx }}` 的格式读取矩阵变量，但它们不会自动加入终端环境变量。
 
 - 可以在 `job.strategy` 中定义 `runs-on` 用到的变量，从而创建多个运行环境：
   ```yml
@@ -181,13 +209,13 @@ jobs:                             # 该 workflow 的任务列表
     strategy:
       matrix:                   # 这里会创建 3*4=12 个 job 实例
         os: [ubuntu-18.04, macos-10.15, windows-2019]
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python_version: [3.5, 3.6, 3.7, 3.8]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ matrix.python_version }}
   ```
 
 ### step
@@ -227,26 +255,35 @@ jobs:                             # 该 workflow 的任务列表
       python-version: '3.8'
   ```
 
-- 上传文件：
+- 缓存文件：
+  ```yml
+  - uses: actions/cache@v2
+    with:
+      path: |                 # 指定要缓存的文件
+        f1
+        test/                 # 可以指定目录
+        tmp*/                 # 可以使用通配符
+        !test/*.py            # 可以用 ! 排除一些文件
+      key: ${{ runner.os }}-${{ hashFiles('f1') }}    # 缓存项的唯一 key
+  ```
+  - path 指定的所有文件会先压缩成一个包，再缓存。
+  - 缓存时，如果已存在相同 key 的缓存项，则称为缓存命中。否则称为未命中，并创建新的缓存项。
+
+- 上传、下载文件：
   ```yml
   - uses: actions/upload-artifact@v2
     with:
       name: my-artifact       # 上传之后，保存的工件名
-      path: |                 # 声明上传的文件路径
-        f1                    
-        test/                 # 可以上传目录
-        tmp*/                 # 可以使用通配符
-        !*.py                 # 可以用 ! 排除一些文件
+      path: |                 # 指定要上传的文件
+        f1
+        test/
+        tmp*/
+        !test/*.py
       # retention-days: 90    # 保存时长，超时之后会自动删除
-  ```
-  - 上传的所有文件会被压缩成一个 ZIP 包。同时上传多个文件路径时，会从它们共同的父目录开始打包。
-  - 在 GitHub 网页上查看该 workflow 的执行记录，即可看到下载 Artifacts 的链接。
-
-- 下载文件：
-  ```yml
   - uses: actions/download-artifact@v2
     with:
       name: my-artifact       # 指定工件名。如果省略，则下载所有工件，并根据工件名分别创建子目录
       # path: tmp/            # 指定下载到哪个目录
   ```
-
+  - path 指定的所有文件会先压缩成一个 ZIP 包，再上传。
+  - 在 GitHub 网页上查看该 workflow 的执行记录，即可看到下载 Artifacts 的链接。

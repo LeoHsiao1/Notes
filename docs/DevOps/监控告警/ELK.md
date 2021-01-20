@@ -147,7 +147,7 @@ ELK 系统还可选择加入以下软件：
       hosts: ['10.0.0.1:9200']
       # username: 'admin'
       # password: '123456'
-      # index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 指定索引名。如果修改索引名，则还需要修改 setup.template.name 和 setup.template.pattern
+      # index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 指定索引名，此时还需要修改 setup.template.name 和 setup.template.pattern
 
     # output.logstash:          # 输出到 Logstash 的配置
     #   hosts: ['localhost:5044']
@@ -196,7 +196,7 @@ ELK 系统还可选择加入以下软件：
     # ignore_older: 0                     # 不扫描在多长时间之前修改文件，比如 2h、10m
     # scan_frequency: 10s                 # 每隔多久扫描一次日志文件，如果在 registry 记录的位置之后有新增的日志，则进行采集
 
-    # 默认将每行视作一条日志，可以加入 multiline 配置项，将连续的多行文本视作同一条日志。multiline 规则会在 include_lines 之前生效
+    # 默认将每行视作一条日志，可以加入 multiline 配置项，将连续的多行文本记录成同一条日志。multiline 规则会在 include_lines 之前生效
     # multiline.type: pattern       # 采用 pattern 方式，根据正则匹配处理多行。也可以采用 count 方式，根据指定行数处理多行
     # multiline.pattern: '^\s\s'    # 如果一行文本与 pattern 正则匹配，则按 match 规则与上一行或下一行合并
     # multiline.negate: false       # 是否反向匹配
@@ -244,17 +244,13 @@ ELK 系统还可选择加入以下软件：
 
 ### pipeline
 
-- Logstash 处理数据的过程称为管道（pipeline）。
-- 每个管道的主要部分如下：
+- Logstash 通过运行管道（pipeline）来处理数据。每个管道主要分为三个阶段：
   - input ：输入项，用于接收数据。
-  - filter ：过滤器，用于过滤、修改数据。是可选部分。
+  - filter ：过滤器，用于过滤、修改数据。是可选阶段。
+    - 通常通过 grok 插件将纯文本格式的日志数据转换成 JSON 格式。
   - output ：输出项，用于输出数据。
-- pipeline 采用特殊的语法：
-  - 用 # 声明单行注释。
-  - 用 `=>` 连接键值对。
-  - 支持布尔、数值、列表、hash 字典等数据类型。
 
-- 不带 filter 的管道示例：
+- 通过命令行创建管道的示例：
   1. 启动 Logstash ，运行一个简单的管道：
       ```sh
       bin/logstash -e 'input { stdin { } } output { stdout {} }'
@@ -271,38 +267,110 @@ ELK 系统还可选择加入以下软件：
       }
       ```
 
-- 带 filter 的管道示例：
+- 通过配置文件创建管道的示例：
   1. 创建一个配置文件 `config/pipeline.conf` ，定义一个管道：
       ```sh
       input {
+        # file {              # 读取文件作为输入
+        #   path => "/var/log/http.log"
+        # }
         beats {               # 接收 beats 的输入
           port => "5044"      # 监听一个 TCP 端口，供 beats 发送数据进来
           host => "0.0.0.0"
         }
-        # file {              # 读取本机的文件作为输入
-        #   path => "/var/log/http.log"
-        # }
       }
+
       # filter {
       # }
+
       output {
-        elasticsearch {
+        # file {                                  # 输出到文件
+        #   path => "/tmp/http.log"
+        #   codec => line { format => "custom format: %{message}"}    # 指定数据的每行格式，默认每行一个 JSON 格式的日志事件
+        # }
+        elasticsearch {                           # 输出到 ES
           hosts => ["http://localhost:9200"]
-          # index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
-          # user => "elastic"
-          # password => "changeme"
+          # index => "logstash-%{+yyyy.MM.dd}"    # 指定索引，默认每天新建一个索引
+          # user => "admin"
+          # password => "123456"
         }
       }
       ```
-      - pipeline 的配置文件中，用 # 声明单行注释。
-      - 需要修改 Beats 的配置文件，让它们将日志发送到 Logstash 。
 
   2. 启动 Logstash ，运行指定的管道：
       ```sh
       bin/logstash -f config/pipeline.conf --log.level=debug
       ```
 
-#### grok
+pipeline 的配置文件的语法如下：
+- 用 # 声明单行注释。
+- 变量的名称与值通过 `=>` 连接，比如 `field1 => true` 。
+- 变量的值支持多种数据类型，包括：
+  - Boolean
+  - Numbers ：int 型或 float 型的数值。
+  - String ：使用单引号或双引号作为定界符。
+  - List ：比如 `["Hello", "World"]` 。
+  - Hash 字典 ：比如 `{"field1" => "A" "field2" => "B"}` 。键值对之间通过空格分隔。
+- 支持引用变量：
+  - 可以通过 `filed` 或 `[filed]` 的格式引用日志事件的顶级字段，通过 `[filed][sub_filed]...` 的格式引用子字段。
+  - 可以通过 `%{filed}` 的格式获取字段的值。
+  - 可以通过 `${VAR}` 的格式获取终端环境变量的值。
+  - 例：
+    ```sh
+    filter {
+      if [agent_name] and [@metadata][time] {
+        mutate {
+          add_field {
+            "port" => "${TCP_PORT}"
+            "[@metadata][tmp_name]" => "%{agent_name} %{[@metadata][time]}"
+          }
+        }
+      }
+    }
+    ```
+    - `@metadata` 字段不会被 output 阶段输出，适合存储一些临时的子字段。
+
+- 支持使用 if 语句：
+  - 支持使用 `<`、`>`、`<=`、`>=`、`==`、`!=` 比较运算符。
+  - 支持使用 `=~` `!~` 运算符，判断左侧的字符串是否匹配右侧的正则表达式。
+  - 支持使用 `and`、`or`、`!`、`not`、`not in` 逻辑运算符。
+  - 例：
+    ```sh
+    filter {
+      if [loglevel] == "DEBUG" {
+        grok {...}
+      }
+      else if [loglevel] == "WARN" {
+        grok {...}
+      }
+      else {
+        grok {...}
+      }
+    }
+    ```
+    ```sh
+    if [loglevel] =~ "DEBUG" or [loglevel] =~ "WARN" or [loglevel] =~ "ERROR"
+    ```
+    ```sh
+    if [loglevel] in ["DEBUG", "WARN", "ERROR"]
+    ```
+    ```sh
+    if "_grokparsefailure" not in [tags]    # 判断一个 tag 是否在 tags 字段中存在
+    ```
+    ```sh
+    if [loglevel]                           # 判断一个字段是否存在，且取值不为 false、null
+    ```
+
+### codec
+
+- codec 类型的插件用于按特定的文本格式编码、解码数据，可以用于 pipeline 的 input 或 output 阶段。
+- 常见的几种 codec 插件：
+  - line ：用于解码输入时，将每行文本视作一条日志。用于编码输出时，将每条日志保存成一行文本。
+  - multiline ：将连续的多行文本记录成同一条日志。不过该操作由 Beats 完成更方便。
+  - json ：按 JSON 格式处理日志，忽略换行符、缩进。
+  - json_lines ：根据换行符 `\n` 将文本分成多行，每行一条 JSON 格式的日志。
+
+### grok
 
 - grok 是一个 filter 插件，用于解析纯文本格式的日志数据，通过正则表达式提取一些字段，转换成 JSON 格式。
 - Kibana 网页上提供的开发工具包含了 grok Debugger ，便于调试 grok pattern 。
@@ -355,7 +423,7 @@ ELK 系统还可选择加入以下软件：
       # 以下是所有 filter 插件通用的配置参数
       # add_field       => {                            # 添加字段
       #   "test_field"  => "Hello"
-      #   "from_%{IP}"  => "this is from %{IP}"         # 可以通过 %{x} 的格式，引用已有的字段的值
+      #   "from_%{IP}"  => "this is from %{IP}"
       # }
       # add_tag         => ["test_tag", "from_%{IP}"]   # 添加标签
       # remove_field    => ["field_1" , "from_%{IP}"]   # 删除字段
@@ -365,8 +433,18 @@ ELK 系统还可选择加入以下软件：
     }
   }
   ```
+  - 如果原始日志的每行格式可能不同，则可以在 match 中指定多个表达式用于尝试匹配：
+    ```sh
+    match => {
+      "message" => [
+        "DEBUG (?<message>.*)$",
+        "INFO  (?<message>.*)$"
+      ]
+    }
+    ```
+    不过这样会多次执行正则表达式，比如第一个正则表达式总是会被执行，开销较大。不如通过 if 语句选择性地执行 grok 。
 
-#### date
+### date
 
 - date 是一个 filter 插件，用于解析日志事件的一个字段，获取时间，赋值给 `"@timestamp` 字段。
 - 例：
@@ -380,7 +458,21 @@ ELK 系统还可选择加入以下软件：
   }
   ```
 
-#### mutate
+### drop
+
+- drop 是一个 filter 插件，用于丢弃一些日志。
+- 例：
+  ```sh
+  filter {
+    if [loglevel] == "debug" {
+      drop {
+        # percentage => 40      # 丢弃大概 40% 的这种日志
+      }
+    }
+  }
+  ```
+
+### mutate
 
 - mutate 是一个 filter 插件，用于修改日志事件的一些字段。
 - 例：
@@ -399,6 +491,23 @@ ELK 系统还可选择加入以下软件：
         strip      => ["field1"]                       # 删掉字段的值前后的空白字符
         split      => { "field1" => "," }              # 根据指定的字符分割一个字段的值，保存为数组形式
         # tag_on_failure => ["_mutate_error"]
+    }
+  }
+  ```
+
+### geoip
+
+- geoip 是一个 filter 插件，用于查询 IP 地址对应地理位置，包括经纬度坐标、国家名、城市名等。
+- 查询时的开销比较大。
+- 例：
+  ```sh
+  filter {
+    geoip {
+      source => "client_ip"                         # 存储 IP 地址的字段
+      target => "geoip"                             # 存储查询结果的字段
+      # database => "xx/xx/GeoLite2-City.mmdb"      # 用于查询的数据库文件
+      # cache_size => 1000                          # 缓存区的大小。查询一些重复 IP 或相邻 IP 时，使用缓存可以提高效率
+      # tag_on_failure => ["_geoip_lookup_failure"]
     }
   }
   ```

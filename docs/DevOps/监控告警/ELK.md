@@ -85,12 +85,27 @@ ELK 系统还可选择加入以下软件：
 
   ![](./ELK_discover.png)
 
-  - 页面上侧是搜索栏，默认使用 Kibana 查询表达式，支持设置时间范围。
+  - 页面上侧是搜索栏，支持筛选时间范围。
   - 页面中央是一个时间轴，显示每个时刻命中的 document 数量。
   - 页面中下方是一个列表，显示所有查询结果。
     - 每行一条 document ，点击某个 document 左侧的下拉按钮，就会显示其详细信息。
     - 默认显示 Time 和 _source 字段，可以在左侧栏中指定其它字段用作显示。
   - 点击页面右上角的 Save 按钮，就会保存当前查询页面，以便日后再次查看。
+
+- 搜索时，默认使用 Kibana 自带的查询语言 KQL ，语法如下：
+  - 用 `:` 表示等于关系：
+    ```sh
+    _index : "filebeat-0001"    # _index 字段等于指定的值
+    agent_* : "filebeat-00*"    # 支持在字段名、值中使用通配符
+    agent_name: *               # agent_name 字段存在
+    not agent_name: *           # agent_name 字段不存在
+    ```
+  - 支持使用 `<`、`>`、`<=`、`>=` 比较运算符。
+  - 支持使用 and、or、not 逻辑运算符：
+    ```sh
+    status_code : (401 or 403 or 404)
+    status_code : 200 and not (tags : (success and info))
+    ```
 
 ### Fleet
 
@@ -302,7 +317,7 @@ ELK 系统还可选择加入以下软件：
       bin/logstash -f config/pipeline.conf --log.level=debug
       ```
 
-pipeline 的配置文件的语法如下：
+定义 pipeline 的语法如下：
 - 用 # 声明单行注释。
 - 变量的名称与值通过 `=>` 连接，比如 `field1 => true` 。
 - 变量的值支持多种数据类型，包括：

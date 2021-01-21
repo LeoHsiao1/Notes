@@ -68,7 +68,7 @@
   - 执行 `config rewrite` 会将运行时的配置项保存到配置文件中，否则当 Redis 服务器终止时就会丢失被修改的配置。
 
 redis.conf 的配置示例：
-```ini
+```sh
 bind 0.0.0.0
 port 6379
 requirepass ******           # Redis 的密码
@@ -128,7 +128,7 @@ redis-cli               # 启动客户端（默认连接到本地 6379 端口的
 
 ### 常用命令
 
-```
+```sh
 auth ******                  # 填入密码，进行认证
 ping                         # 测试能否连接到 Redis 服务器
 

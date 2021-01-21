@@ -12,13 +12,20 @@
 
 ### 数据包结构
 
-TCP 数据包包含以下信息：
-- 源端口 ：16 bit
-- 目标端口 ：16 bit
-- seq ：序列号，32 bit ，用于保证消息顺序。
-- ack ：确认号，32 bit ，表示期望收到的下一个序列号。
-- ...
-- flag ：标志符，6 bit ，每个 bit 代表一个标志位，默认为 0 。
+TCP 数据包的结构如下：
+
+![](./tcp.jpg)
+
+- Source Port ：源端口，长度为 16 bit 。
+- Dest Port ：目标端口，16 bit 。
+- Seq number ：序列号，32 bit ，用于保证消息顺序。
+- Ack number ：确认号，32 bit ，表示期望收到的下一个序列号，用于标识符 ACK=1 的情况。
+- Data offset ：偏移量，4 bit 。表示 Payload 的起始坐标，即 TCP Header 的总长度。
+- Reserved ：保留给未来使用，3 bit ，默认值为 0 。
+- Flag ：标志符，9 bit 。每个 bit 代表一个标志位，默认值为 0 。
+  - NS
+  - CWR
+  - ECE
   - URG=1 ：表示该数据是紧急数据，应该被优先处理。
   - ACK=1 ：表示确认。
   - PSH=1 ：表示发送方应该立即将该数据打包成一个 TCP 数据包发送，接收方也应该立即将该数据上报给上层程序。
@@ -27,9 +34,12 @@ TCP 数据包包含以下信息：
   - RST=1 ：用于重新建立 TCP 连接，也可用于拒绝连接。
   - SYN=1 ：用于建立 TCP 连接，开始同步。
   - FIN=1 ：用于断开 TCP 连接。
-- checksum ：校验和，16 bit
-- ...
-- 数据
+- Window size
+- Checksum ：校验和，16 bit。
+- Urgent pointer
+- Options
+- Payload ：有效载体，即该数据包要传递的实际数据。
+  - Payload 之前的其它数据都只是用于描述 TCP 数据包的元数据，称为 TCP Header 。
 
 ### 建立连接
 

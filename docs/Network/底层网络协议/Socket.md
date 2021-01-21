@@ -31,9 +31,8 @@
   - SMTP 协议    ：25
   - HTTP 协议    ：80
   - HTTPS 协议   ：443
-  - Socks 协议   ：1080
   - Mysql 服务器  ：3306
-  - tomcat 服务器 ：8080
+  - Tomcat 服务器 ：8080
 
 ## Socket API
 

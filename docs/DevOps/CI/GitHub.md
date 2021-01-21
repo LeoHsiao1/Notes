@@ -120,11 +120,14 @@ jobs:                             # 该 workflow 的任务列表
   steps:
     - name: Test
       env:
-        password: ${{ secrets.PASSWORD }}   # 在 workflow 中可以通过 ${{ xx }} 的格式读取环境变量
+        password: ${{ secrets.PASSWORD }}
       run: |
         echo $password
   ```
-  - 定义环境变量之后，不能在同一个 env 块中读取它。
+::: v-pre
+  - 在 workflow 中可以通过 `${{ expression }}` 的格式获取一个表达式的值。
+:::
+  - 定义环境变量时，不能在同一个 env 块中读取它。
 
 - GitHub 会自动加入一些内置的环境变量，例如：
   ```sh
@@ -194,7 +197,7 @@ jobs:                             # 该 workflow 的任务列表
       # fail-fast: true                         # 默认只要有一个 job 实例执行失败，则会放弃执行其它 job 实例
       # max-parallel: 2                         # 限制并行执行的 job 实例数，默认会尽量最大化
     steps:
-    - name: Set up Python ${{ matrix.python_version }}    # 在 workflow 中可以通过 `${{ matrix.xx }}` 的格式读取矩阵变量，但它们不会加入终端环境变量
+    - name: Set up Python ${{ matrix.python_version }}    # 读取矩阵变量，它们不会自动加入终端环境变量
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}

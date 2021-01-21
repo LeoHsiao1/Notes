@@ -96,16 +96,22 @@ ar -rc lib1.a 1.o  ...          # 可以加上多个目标文件
 
 ## 移植 Linux 程序
 
-在 Linux 上编译的程序，
+在 Linux 上编译程序时：
 - 如果程序没有调用 Linux 上特有的库文件、API ，则可以直接放到 Windows 上运行。
 - 如果程序依赖 Linux ，则可以用 Visual Studio、MinGW、Cygwin 等工具编译成 Window 的可执行文件。
 
 相关概念：
-- MinGW（Minimalist GNU For Windows）：将 GNU 套件移植到了 Windows 上，让用户可以在 Windows 上使用 GNU 编译器（一般是在 DOS 窗口中使用），编译生成的可执行文件是 .exe 格式。
-  - MinGW 在编译时，会将源代码中调用的 Linux 库文件、API 转换成 Windows 库文件、API 。
-  - MinGW 有一个子项目 Msys ，提供了一个在 Windows 上运行的简单 Linux 系统。
-- Visual Studio 可以像 MinGW 一样编译代码，而且更好用。
-- Cygwin ：一个可以在 Windows 上运行的简单 Linux 系统。
+- MinGW（Minimalist GNU For Windows）
+  - 将 GNU 套件移植到了 Windows 上，让用户可以在 Windows 上使用 GNU 编译器（一般是在 DOS 窗口中使用），编译生成的可执行文件是 .exe 格式。
+  - 在编译时，会将源代码中调用的 Linux 库文件、API 转换成 Windows 库文件、API 。
+- Msys
+  - ：MinGW 的子项目，提供了一个在 Windows 上运行的简单 Linux 系统。
+- Cygwin
+  - ：一个可以在 Windows 上运行的简单 Linux 系统。
   - Cygwin 将一些 Linux 特有的库文件、API 移植到了 Windows 上，模拟出 Linux 的运行环境。被 Cygwin 编译出的程序在运行时会调用这些库文件。
-- Java 通过 JVM 的机制与底层平台解耦，只要编译一次，就可以放到多个平台上直接运行。Python 也是同理。
-- Qt ：一个跨平台框架，在该框架中编译的程序可以编译成 Linux、Windows、MacOS 等多平台的可执行文件。
+- Visual Studio
+  - 也可用于在 Windows 上编译 C/C++ 代码，而且比 MinGW 更好用。
+  - 可以在 IDE 里编译，也可以使用 Microsoft C ++（MSVC）编译器工具集，包括 msbuild、cl、link、nmake 等命令行工具。
+- Qt
+  - ：一个跨平台框架，在该框架中编译的程序可以编译成 Linux、Windows、MacOS 等多平台的可执行文件。
+- 一些编程语言本身就能跨平台。比如 Java 通过 JVM 的机制与底层平台解耦，只要编译一次，就可以放到多个平台上直接运行。

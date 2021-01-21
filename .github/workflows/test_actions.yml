@@ -11,11 +11,12 @@ jobs:
   job1:
     runs-on: ubuntu-18.04
     steps:
-    - name: Touch
-      run: |
-        touch f1
-
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
       # with:
       #   vs-version: '[16.4,16.5)'
+
+    - name: Run msbuild
+      run: |
+        msbuild
+        cl

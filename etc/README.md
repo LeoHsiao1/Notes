@@ -2,27 +2,20 @@
 
 ## 部署方法
 
-调试时，只需启动开发环境的服务器：
-```sh
-cd /home/github/Notes
-yarn
-yarn vuepress dev docs
-```
+- 调试时，只需启动开发环境的服务器：
+  ```sh
+  yarn
+  yarn vuepress dev docs
+  ```
 
-正式部署时，先构建出静态文件，再启动一个 Nginx 服务器：
-```sh
-cd /home/github/Notes
-yarn
-yarn vuepress build docs
-docker run -d --name nginx \
-        --restart on-failure \
-        -p 80:80 \
-        -v $PWD/docs/.vuepress/dist/:/root/Notes/ \
-        -v $PWD/etc/nginx.conf:/etc/nginx/nginx.conf \
-        nginx
-```
+- 正式部署时，需要先构建出静态文件，再，再启动一个 Nginx 服务器：
+  ```sh
+  yarn
+  yarn vuepress build docs
+  ```
+  此时生成的静态文件会保存到 `docs/.vuepress/dist/` 目录下，用 Nginx 代理它们即可。
 
-另外，还需要部署 meilisearch 服务器、执行 scrape 工具，才能使用搜索栏。
+- 另外，还需要部署 meilisearch 服务器、执行 scrape ，才能使用网站的搜索栏。
 
 ## 生成目录
 

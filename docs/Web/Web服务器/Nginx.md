@@ -124,10 +124,6 @@ server {
 ```
 - http{} 区块中至少要定义一个 server{} ，才能监听 TCP 端口，接收 HTTP 请求。
 - server{} 区块中至少要定义一个 location{} ，才能对 HTTP 请求进行路由处理。
-- server{} 中的其它配置项：
-  ```sh
-  charset  utf-8;
-  ```
 
 ## 关于路由
 

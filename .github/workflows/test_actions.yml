@@ -15,8 +15,7 @@ jobs:
       run: |
         touch f1
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: my-artifact
-        path: |
-          f1
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+      # with:
+      #   vs-version: '[16.4,16.5)'

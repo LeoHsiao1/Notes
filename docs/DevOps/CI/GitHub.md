@@ -120,11 +120,10 @@ jobs:                             # 该 workflow 的任务列表
   steps:
     - name: Test
       env:
-        password: ${{ secrets.PASSWORD }}
+        password: ${{ secrets.PASSWORD }}   # 在 workflow 中可以通过 ${{ xx }} 的格式读取环境变量
       run: |
         echo $password
   ```
-  - 在 workflow 中可以用 `${{ xx }}` 的格式读取环境变量。
   - 定义环境变量之后，不能在同一个 env 块中读取它。
 
 - GitHub 会自动加入一些内置的环境变量，例如：
@@ -195,13 +194,12 @@ jobs:                             # 该 workflow 的任务列表
       # fail-fast: true                         # 默认只要有一个 job 实例执行失败，则会放弃执行其它 job 实例
       # max-parallel: 2                         # 限制并行执行的 job 实例数，默认会尽量最大化
     steps:
-    - name: Set up Python ${{ matrix.python_version }}
+    - name: Set up Python ${{ matrix.python_version }}    # 在 workflow 中可以通过 `${{ matrix.xx }}` 的格式读取矩阵变量，但它们不会加入终端环境变量
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
   ```
   - 最多创建 256 个 job 实例。
-  - 在 workflow 中可以通过 `${{ matrix.xx }}` 的格式读取矩阵变量，但它们不会自动加入终端环境变量。
 
 - 可以在 `job.strategy` 中定义 `runs-on` 用到的变量，从而创建多个运行环境：
   ```yml

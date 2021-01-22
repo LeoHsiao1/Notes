@@ -112,14 +112,14 @@ ELK 系统还可选择加入以下软件：
 
 - Logstash 消耗内存较多，采集日志的效率较低，因此后来推出了 Beats 来取代 Logstash 。
   - 不过目前 Beats 不擅长解析日志文本。因此通常不让 Beats 直接将原始日志发送到 ES ，而是先发送给 Logstash 解析成结构化数据。
-  - 使用 Beats 时需要在每个要监控的主机上部署 Beats 进程，且监控不同类型的日志时需要部署不同的 beats 进程，比较麻烦。
-- Beats 进程有多种类型，例如：
+  - 使用 Beats 时需要在每个要监控的主机上部署 Beats 程序，且监控不同类型的日志时需要部署不同的 beats 程序，比较麻烦。
+- Beats 程序有多种类型，例如：
   - Filebeat ：用于采集日志文件。
   - Packetbeat ：用于采集网络数据包的日志。
   - Winlogbeat ：用于采集 Windows 的 event 日志。
   - Metricbeat ：用于采集系统或软件的性能指标。
   - Auditbeat ：用于采集 Linux Audit 进程的日志。
-- 社区也可以基于 Beats 框架开发自定义的 Beats 。
+- 用户也可以基于 Beats 框架开发自定义的 Beats 程序。
 - Beats 采集日志数据之后，支持多种输出端：
   - ES
   - Logstash
@@ -186,6 +186,90 @@ ELK 系统还可选择加入以下软件：
   - 如果发送日志事件到输出端失败，会自动重试。直到发送成功，才更新 registry 中记录的发送进度。
   - 每个日志事件只有成功发送到输出端，且收到确认接收的回复，才视作发送成功。
     - 因此，采集到的日志事件至少会被发送一次。但如果在确认接收之前重启 Filebeat ，则可能重复发送。
+
+### 相关源码
+
+- 存储日志数据的结构体：
+  ```go
+  type Log struct {
+    fs           harvester.Source     // 文件的路径
+    offset       int64                // 偏移量
+    config       LogConfig            // 配置参数
+    lastTimeRead time.Time            // 最后修改时间
+    backoff      time.Duration
+    done         chan struct{}
+  }
+  ```
+
+- harvester 读取到文件末尾时的检查：
+  ```go
+  info, statErr := f.fs.Stat()
+  if statErr != nil {
+    logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
+    return statErr
+  }
+
+  // check if file was truncated
+  if info.Size() < f.offset {
+    logp.Debug("harvester",
+      "File was truncated as offset (%d) > size (%d): %s", f.offset, info.Size(), f.fs.Name())
+    return ErrFileTruncate
+  }
+
+  // Check file wasn't read for longer then CloseInactive
+  age := time.Since(f.lastTimeRead)
+  if age > f.config.CloseInactive {
+    return ErrInactive
+  }
+  ```
+
+- 当要采集的文件名不存在时：
+  ```go
+  // checkFileDisappearedErrors checks if the log file has been removed or renamed (rotated).
+  func (f *Log) checkFileDisappearedErrors() error {
+    // No point doing a stat call on the file if configuration options are
+    // not enabled
+    if !f.config.CloseRenamed && !f.config.CloseRemoved {
+      return nil
+    }
+
+    // Refetch fileinfo to check if the file was renamed or removed.
+    // Errors if the file was removed/rotated after reading and before
+    // calling the stat function
+    info, statErr := f.fs.Stat()    // 获取文件的状态信息，包括文件名、大小、文件模式、最后修改时间、是否为目录等信息
+    if statErr != nil {
+      logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
+      return statErr
+    }
+
+    if f.config.CloseRenamed {
+      // Check if the file can still be found under the same path
+      if !file.IsSameFile(f.fs.Name(), info) {
+        logp.Debug("harvester", "close_renamed is enabled and file %s has been renamed", f.fs.Name())
+        return ErrRenamed
+      }
+    }
+
+    if f.config.CloseRemoved {
+      // Check if the file name exists. See https://github.com/elastic/filebeat/issues/93
+      if f.fs.Removed() {       // 检查该路径的文件是否存在
+        logp.Debug("harvester", "close_removed is enabled and file %s has been removed", f.fs.Name())
+        return ErrRemoved
+      }
+    }
+
+    return nil
+  }
+  ```
+<!-- 
+- 根据 inode 和 device 编号识别日志文件，因此即使文件重命名也能找到。
+  - 如果 harvester 打开一个文件 A 时，该文件被重命名为 B ，则会继续采集文件 B ，直到 close_inactive 超时而关闭 harvester 。当然以后不会再采集文件 B 。\
+    此时，如果出现一个使用原文件名的文件 A ，则会再创建一个 harvester 同时采集它。两个文件都会记录在 registry 中，只是 inode 不同。
+
+https://github.com/elastic/beats/blob/315543b4e894806dde5f77d6eda1046d98c3669a/filebeat/tests/system/test_harvester.py
+ -->
+
+
 
 ### 部署
 

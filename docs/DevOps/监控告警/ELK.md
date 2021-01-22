@@ -33,7 +33,7 @@ ELK 系统还可选择加入以下软件：
 - 上述软件都是由 Elastic 公司开发。
   - 这些软件运行时可能需要 JDK、node.js 等环境，不过二进制发行版都已经自带了。
 - 部署时，ELk 系统中各个软件的版本应该尽量一致，否则可能不兼容。
-- ELK 系统的收费版本称为 X-Pack ，增加了告警、安全、机器学习等功能。
+- ELK 系统普通发行版称为 OSS ，收费版本称为 X-Pack ，增加了身份认证、用户权限控制、告警、机器学习等功能。
 
 ## Kibana
 
@@ -112,7 +112,7 @@ ELK 系统还可选择加入以下软件：
 
 - Logstash 消耗内存较多，采集日志的效率较低，因此后来推出了 Beats 来取代 Logstash 。
   - 不过目前 Beats 不擅长解析日志文本。因此通常不让 Beats 直接将原始日志发送到 ES ，而是先发送给 Logstash 解析成结构化数据。
-- 使用 Beats 时需要在每个要监控的主机上部署 Beats 进程，且监控不同类型的日志时需要部署不同的 beats 进程，比较麻烦。
+  - 使用 Beats 时需要在每个要监控的主机上部署 Beats 进程，且监控不同类型的日志时需要部署不同的 beats 进程，比较麻烦。
 - Beats 进程有多种类型，例如：
   - Filebeat ：用于采集日志文件。
   - Packetbeat ：用于采集网络数据包的日志。
@@ -128,28 +128,81 @@ ELK 系统还可选择加入以下软件：
   - Redis
   - File
   - Console
+- 采集的每条日志称为一个日志事件（event），通常存储为 JSON 格式的结构化数据。
+  - 每个日志事件会自动添加一个 `@timestamp` 字段。它采用 UTC 时区，默认取值为当前时刻。
 
-### Filebeat
+## Filebeat
+
+### 原理
 
 - Filebeat 的主要模块：
   - input ：输入端。
   - output ：输出端。
   - harvester ：收割机，负责采集日志。
-- Filebeat 会对每个日志文件定期执行一个 harvester ，逐行读取日志文件，发送到输出端。
-  - 开始读取时会打开文件描述符，读取结束之后才关闭文件描述符。
-- Filebeat 会记录采集日志文件的进度，从而避免重复采集、漏采。
-  - 具体原理：如果成功采集并输出日志，则到 `data/registry/` 目录下以 JSON 格式记录每个日志文件的 inode ，以及当前采集的偏移量（bytes offset）。
-    - 删除 registry 目录就会让 Filebeat 重新采集。
-  - 切割日志时可能使日志文件的 inode 或 bytes offset 变化，导致 filebeat 漏采日志。
+- Filebeat 会定期扫描（scan）日志文件，如果发现其最后修改时间改变，则创建 harvester 去采集日志。
+  - 每个日志文件创建一个 harvester ，逐行读取文本，转换成日志事件，发送到输出端。
+    - 每行日志文本必须以换行符分隔，最后一行也要加上换行符才能视作一行。
+  - harvester 开始读取时会打开文件描述符，默认会一直读取到文件末尾，如果文件未更新的时长超过 close_inactive ，才关闭文件描述符。
 
-#### 部署
+- Filebeat 每次采集时，都会通过 registry 记录日志文件的当前状态。
+  - 即使只有一个日志文件被修改了，也会在 registry 文件中写入一次所有日志文件的当前状态。
+  - registry 保存在 `data/registry/` 目录下，如下：
+    ```sh
+    data/registry/filebeat/
+    ├── 237302.json         # 快照文件，使用最后一次动作的编号作为文件名
+    ├── active.dat          # 记录快照文件的路径
+    ├── log.json            # 记录日志文件的状态。该文件体积超过 10 MB 时会自动清空，并将此时所有文件的状态保存到快照文件中
+    └── meta.json           # 记录一些元数据
+    ```
+  - 单个日志文件的记录示例：
+    ```json
+    {"op":"set", "id":237302}                             // 本次动作的编号
+    {
+      "k": "filebeat::logs::native::778887-64768",        // key ，由 beat 类型、日志文件的 id 组成
+      "v": {
+        "id": "native::778887-64768",                     // 日志文件的 id ，由 identifier_name、inode、device 组成
+        "prev_id": "",
+        "ttl": -1,                                        // -1 表示永不失效
+        "type": "log",
+        "source": "/var/log/supervisor/supervisord.log",  // 日志文件的路径（文件被重命名之后，并不会更新该参数）
+        "timestamp": [2061628216741, 1611303609],         // 日志文件最后一次修改的 Unix 时间戳
+        "offset": 1343,                                   // 当前采集的字节偏移量，表示最后一次采集的日志行的末尾位置
+        "identifier_name": "native",                      // 识别日志文件的方式，native 表示原生方式，即根据 inode 和 device 编号识别
+        "FileStateOS": {                                  // 文件的状态
+          "inode": 778887,                                // 文件的 inode 编号
+          "device": 64768                                 // 文件所在的磁盘编号
+        }
+      }
+    }
+    ```
+    - 根据 inode 和 device 编号识别日志文件，因此即使文件重命名也能找到。
+    - 根据 bytes offset 确定最后一次采集的位置。
+      - 如果文件的体积减少，则 Filebeat 会重新从 offset 0 处开始读取，可能重复采集。
+      - 切割日志时可能使日志文件的 inode 或 bytes offset 变化，导致遗漏采集、重复采集。
+    - 删除 `data/registry/` 目录就会让 harvester 重新采集。
+
+- Filebeat 每次发送日志事件到输出端时，也会通过 registry 记录发送状态。
+  - 如果不能连接到输出端，会每隔几秒尝试连接。
+  - 如果发送日志事件到输出端失败，会自动重试。直到发送成功，才更新 registry 中记录的发送进度。
+  - 每个日志事件只有成功发送到输出端，且收到确认接收的回复，才视作发送成功。
+    - 因此，采集到的日志事件至少会被发送一次。但如果在确认接收之前重启 Filebeat ，则可能重复发送。
+
+### 部署
 
 1. 下载二进制版：
     ```sh
     wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.10.1-linux-x86_64.tar.gz
     ```
 
-2. 解压后，编辑配置文件 filebeat.yml ：
+2. 启动：
+    ```sh
+    ./filebeat          # 在前台运行
+              -e        # 将 filebeat 本身的输出发送到 stderr ，而不是已配置的 output
+    ```
+
+### 配置
+
+- 编辑配置文件 filebeat.yml ：
     ```yml
     setup.kibana:               # kibana 的配置
       host: '10.0.0.1:5601'
@@ -160,7 +213,7 @@ ELK 系统还可选择加入以下软件：
       # password: '123456'
       # index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
 
-    # output.logstash:          # 输出到 Logstash 的配置，不能与 output.elasticsearch 同时启用
+    # output.logstash:          # 输出到 Logstash 的配置
     #   hosts: ['localhost:5044']
 
     # 索引模板的配置
@@ -171,19 +224,12 @@ ELK 系统还可选择加入以下软件：
     #   index.number_of_replicas: 1
     #   _source.enabled: true
     ```
+    - Filebeat 同时只能启用一种输出。
     - 如果修改了默认的索引名，则相应地还需要配置 `setup.template.name` 和 `setup.template.pattern` 参数，并在 Kibana 页面上配置索引模板、索引模式。
-
-3. 启动：
-    ```sh
-    ./filebeat          # 在前台运行
-              -e        # 将 filebeat 本身的输出发送到 stderr ，而不是已配置的 output
-    ```
     - 如果 Filebeat 直接输出到 ES ，则会自动创建默认的索引模板。如果 Filebeat 直接输出到 Logstash ，则 ES 中可能一直缺少合适的索引模板。此时建议先让 Filebeat 连接到 ES 一次，进行初始化：
       ```sh
       ./filebeat setup  # 初始化，先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
       ```
-
-#### 配置
 
 - 所有类型的 beats 都支持以下 General 配置项：
   ```yml
@@ -213,32 +259,48 @@ ELK 系统还可选择加入以下软件：
     - /var/log/mysql.log
     - '/var/log/nginx/*'            # 可以使用通配符
 
+  - type: log
+    paths:
+      - '/var/log/apache/*'
+
+    # fields:                       # 可以覆盖全局的 General 配置项
+    #   apache: true
+    # fields_under_root: true
+
     # enabled: true                       # 是否启用该输入项
     # encoding: utf-8                     # 编码格式
     # exclude_files: ['\.tgz$']           # 排除一些文件，采用正则匹配
     # include_lines: ['^WARN', '^ERROR']  # 只采集日志文件中的指定行，采用正则匹配。默认采集所有非空的行
     # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中的指定行，采用正则匹配。该规则会在 include_lines 之后生效
-    # max_bytes: 10485760                 # 每条日志文本的最大字节数，超过的部分不会采集。默认为 10 MB
-    # ignore_older: 0                     # 不扫描在多长时间之前修改文件，比如 2h、10m
-    # scan_frequency: 10s                 # 每隔多久扫描一次日志文件，如果在 registry 记录的位置之后有新增的日志，则进行采集
 
-    # 默认将每行视作一条日志，可以加入 multiline 配置项，将连续的多行文本记录成同一条日志。multiline 规则会在 include_lines 之前生效
+    # 如果启用任何一个以 json 开头的配置项，则会将每行日志文本按 JSON 格式解析，解析的字段默认保存到一个名为 json 的子字典中
+    # json.keys_under_root: true    # 是否将解析的字典保存为日志的顶级字段
+    # json.add_error_key: true      # 如果解析出错，则加入 error.message 等字段
+
+    # 默认将每行日志文本视作一个日志事件，可以通过 multiline 规则将连续的多行文本记录成同一个日志事件。multiline 规则会在 include_lines 之前生效。
     # multiline.type: pattern       # 采用 pattern 方式，根据正则匹配处理多行。也可以采用 count 方式，根据指定行数处理多行
     # multiline.pattern: '^\s\s'    # 如果一行文本与 pattern 正则匹配，则按 match 规则与上一行或下一行合并
     # multiline.negate: false       # 是否反向匹配
     # multiline.match: after        # 取值为 after 则放到上一行之后，取值为 before 则放到下一行之前
     # multiline.max_lines: 500      # 多行日志最多包含多少行，超过的行数不会采集
 
-    # 启用任何一个以 json 开头的配置项，就会将每条日志文本按 JSON 格式解析，解析的字段默认保存到一个名为 json 的子字典中
-    # json.keys_under_root: true    # 是否将解析的字典保存为日志的顶级字段
-    # json.add_error_key: true      # 如果解析出错，则加入 error.message 等字段
+    # scan_frequency: 10s           # 每隔多久扫描一次日志文件，如果有变动则创建 harvester 进行采集
+    # ignore_older: 0               # 不扫描最后修改时间在多久之前的文件，默认不限制，可使用 5m、2h 等值。其值应该大于 close_inactive
+    # harvester_buffer_size: 16384  # 每个 harvester 在采集日志时的缓冲区大小，单位 bytes
+    # max_bytes: 10485760           # 每条日志文本的最大字节数，超过的部分不会采集。默认为 10 MB
+    # tail_files: false             # 是否从文件的末尾开始，倒序读取
+    # backoff: 1s                   # 如果 harvester 读取到文件末尾，则隔多久才检查文件是否更新
 
-  - type: log
-    paths:
-      - '/var/log/apache2/*'
-    fields:                         # 可以覆盖全局的 General 配置项
-      apache: true
-    fields_under_root: true
+    # 配置 close_* 参数可以尽快关闭 harvester ，但不利于实时采集日志
+    # close_timeout: 0              # harvester 每次读取文件的超时时间，超时之后立即关闭。默认不限制
+    # close_eof: false              # 如果 harvester 读取到文件末尾，则立即关闭
+    # close_inactive: 5m            # 如果 harvester 读取到文件末尾，且日志文件超过该时长未更新，则立即关闭 
+    # close_removed: true           # 如果日志文件被删除，则立即关闭
+    # close_renamed: false          # 如果日志文件被重命名，则立即关闭
+
+    # 配置 clean_* 参数可以自动清理 registry 文件，但可能导致遗漏采集，或重复采集
+    # clean_removed: true           # 如果日志文件在磁盘中被删除，则从 registry 中删除它
+    # clean_inactive: 0             # 如果日志文件长时间未活动，则从 registry 中删除它。默认不限制。可使用 5m、2h 等值。其值应该大于 scan_frequency + ignore_older
 
   - type: container                 # 采集容器的日志
     paths:
@@ -246,10 +308,6 @@ ELK 系统还可选择加入以下软件：
   ```
 
 ## Logstash
-
-- Logstash 将每条日志记录成一个日志事件（event）。
-  - 每个日志通常存储为 JSON 格式的结构化数据。
-- Logstash 记录每条日志时，会自动加上一个 `@timestamp` 字段。它采用 UTC 时区，默认取值为当前时刻。
 
 ### 部署
 
@@ -303,6 +361,7 @@ ELK 系统还可选择加入以下软件：
         beats {               # 接收 beats 的输入
           port => "5044"      # 监听一个 TCP 端口，供 beats 发送数据进来
           host => "0.0.0.0"
+          client_inactivity_timeout => 300     # 如果 beats 连续 n 秒未活动，则关闭 TCP 连接。默认是 60 秒
           # beats 与 logstash 之间的通信不是采用 HTTP 协议，因此不支持 Basic Auth 认证
         }
       }
@@ -322,11 +381,12 @@ ELK 系统还可选择加入以下软件：
           hosts => ["http://localhost:9200"]
           # user                => "admin"
           # password            => "123456"
+          # document_id         => "%{[@metadata][_id]}"                    # 用于存储日志事件的文档 id 。如果重复保存相同 id 的文档，则会覆盖旧的文档
+          # index               => "logstash-%{+yyyy.MM.dd}-%{index_num}"   # 索引名
           # manage_template     => true                                     # 在 Logstash 启动时，是否在 ES 中创建索引模板
           # template            => "/path/to/logstash/logstash-apache.json" # 指定模板的定义文件，默认使用内置的模板
           # template_name       => "logstash"                               # 模板的名称
           # template_overwrite  => false                                    # 如果模板在 ES 中已存在，是否覆盖它。如果不覆盖，可能会一直使用老版本的内置模板
-          # index               => "logstash-%{+yyyy.MM.dd}-%{index_num}"   # 用于存储日志事件的索引名
         }
       }
       ```
@@ -545,7 +605,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 - 可以导入一个 Ruby 脚本文件：
   ```sh
   ruby {
-    path => "test_filter.rb"                 
+    path => "test_filter.rb"
     script_params => { "percentage" => 0.9 }
   }
   ```

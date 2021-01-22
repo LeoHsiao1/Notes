@@ -98,7 +98,7 @@ files = supervisord.d/*.ini
 ```
 
 - 使用非 root 用户启动 supervisord 时，它会因为无法创建某些目录而无法启动。因此建议采用以下措施：
-  - 将配置文件中的 /var/run/ 路径改为 /var/log/
+  - 将配置文件中的 `/var/run/supervisor/` 目录改为 `/var/log/supervisor/` 。
   - 手动创建以下目录，并分配权限：
     ```sh
     sudo mkdir /etc/supervisord.d/

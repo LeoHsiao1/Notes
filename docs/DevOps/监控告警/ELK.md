@@ -142,9 +142,10 @@ ELK 系统还可选择加入以下软件：
 - Filebeat 会定期扫描（scan）日志文件，如果发现其最后修改时间改变，则创建 harvester 去采集日志。
   - 每个日志文件创建一个 harvester ，逐行读取文本，转换成日志事件，发送到输出端。
     - 每行日志文本必须以换行符分隔，最后一行也要加上换行符才能视作一行。
-  - harvester 开始读取时会打开文件描述符，默认会一直读取到文件末尾，如果文件未更新的时长超过 close_inactive ，才关闭文件描述符。
+  - harvester 开始读取时会打开文件描述符，读取结束时才关闭文件描述符。
+    - 默认会一直读取到文件末尾，如果文件未更新的时长超过 close_inactive ，才关闭。
 
-- Filebeat 每次采集时，都会通过 registry 记录日志文件的当前状态。
+- Filebeat 每次采集时，都会通过 registry 记录日志文件的当前状态信息（State）。
   - 即使只有一个日志文件被修改了，也会在 registry 文件中写入一次所有日志文件的当前状态。
   - registry 保存在 `data/registry/` 目录下，如下：
     ```sh
@@ -175,101 +176,175 @@ ELK 系统还可选择加入以下软件：
       }
     }
     ```
-    - 根据 inode 和 device 编号识别日志文件，因此即使文件重命名也能找到。
+    - 根据 inode 和 device 编号识别日志文件。
+      - 因此日志文件被重命名时，也可能继续采集原 inode 对应的磁盘空间，直到关闭文件。
     - 根据 bytes offset 确定最后一次采集的位置。
-      - 如果文件的体积减少，则 Filebeat 会重新从 offset 0 处开始读取，可能重复采集。
+      - 如果文件的体积减少，则 Filebeat 会重新从 offset 0 处开始读取，可能导致重复采集。
       - 切割日志时可能使日志文件的 inode 或 bytes offset 变化，导致遗漏采集、重复采集。
-    - 删除 `data/registry/` 目录就会让 harvester 重新采集。
+    - 删除 `data/registry/` 目录就会重新采集所有日志文件。
 
-- Filebeat 每次发送日志事件到输出端时，也会通过 registry 记录发送状态。
+- 假设将日志文件 A 重命名为 B ，在类 Unix 系统上这样并不会中断其它进程对文件 A 的操作。需要分析：
+  - 如果 harvester 没打开文件 A ，则以后会一直找不到路径为 A 的文件，不会采集它。
+  - 如果 harvester 打开了文件 A ，则会一直读取该 inode 对应的磁盘空间，直到文件末尾才判断是否关闭：
+    - 默认启用 close_removed 配置，因此会因为路径为 A 的文件不存在，而立即关闭已打开的文件。
+      - 关闭之后，以后会一直找不到路径为 A 的文件，不会采集它。
+    - 如果禁用 close_removed 配置，则会继续读取该 inode ，相当于读取文件 B 。比如等到 close_inactive 超时才关闭。
+      - 此时，如果又出现一个路径为 A 的文件，则 Filebeat 会再创建一个 harvester 同时采集它。两个文件都会记录在 registry 中，只是 inode 不同。
+
+- Filebeat 每次发送日志事件到输出端时，也会记录发送状态。
   - 如果不能连接到输出端，会每隔几秒尝试连接。
-  - 如果发送日志事件到输出端失败，会自动重试。直到发送成功，才更新 registry 中记录的发送进度。
+  - 如果发送日志事件到输出端失败，会自动重试。直到发送成功，才更新记录。
   - 每个日志事件只有成功发送到输出端，且收到确认接收的回复，才视作发送成功。
     - 因此，采集到的日志事件至少会被发送一次。但如果在确认接收之前重启 Filebeat ，则可能重复发送。
 
 ### 相关源码
 
-- 存储日志数据的结构体：
-  ```go
-  type Log struct {
-    fs           harvester.Source     // 文件的路径
-    offset       int64                // 偏移量
-    config       LogConfig            // 配置参数
-    lastTimeRead time.Time            // 最后修改时间
-    backoff      time.Duration
-    done         chan struct{}
-  }
-  ```
+这里分析 [filebeat/input/log/log.go](https://github.com/elastic/beats/blob/master/filebeat/input/log/log.go) 中的部分源码：
 
-- harvester 读取到文件末尾时的检查：
-  ```go
-  info, statErr := f.fs.Stat()
-  if statErr != nil {
-    logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
-    return statErr
-  }
-
-  // check if file was truncated
-  if info.Size() < f.offset {
-    logp.Debug("harvester",
-      "File was truncated as offset (%d) > size (%d): %s", f.offset, info.Size(), f.fs.Name())
-    return ErrFileTruncate
-  }
-
-  // Check file wasn't read for longer then CloseInactive
-  age := time.Since(f.lastTimeRead)
-  if age > f.config.CloseInactive {
-    return ErrInactive
-  }
-  ```
-
-- 当要采集的文件名不存在时：
-  ```go
-  // checkFileDisappearedErrors checks if the log file has been removed or renamed (rotated).
-  func (f *Log) checkFileDisappearedErrors() error {
-    // No point doing a stat call on the file if configuration options are
-    // not enabled
-    if !f.config.CloseRenamed && !f.config.CloseRemoved {
-      return nil
+- 存储日志数据的结构体如下：
+    ```go
+    type Log struct {
+        fs           harvester.Source     // 指向日志文件的接口
+        offset       int64                // 采集的偏移量
+        config       LogConfig            // 配置参数
+        lastTimeRead time.Time            // 最后修改时间
+        backoff      time.Duration        // backoff 的时长
+        done         chan struct{}
     }
+    ```
 
-    // Refetch fileinfo to check if the file was renamed or removed.
-    // Errors if the file was removed/rotated after reading and before
-    // calling the stat function
-    info, statErr := f.fs.Stat()    // 获取文件的状态信息，包括文件名、大小、文件模式、最后修改时间、是否为目录等信息
-    if statErr != nil {
-      logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
-      return statErr
+- 读取日志文件的主要逻辑如下：
+    ```go
+    func (f *Log) Read(buf []byte) (int, error) {
+        totalN := 0                           // 记录总共读取的字节数
+
+        for {                                 // 循环读取日志文件，一直读取到装满 buf 缓冲区
+            select {
+            case <-f.done:
+                return 0, ErrClosed
+            default:
+            }
+
+            // 开始读取之前，先检查文件是否存在
+            err := f.checkFileDisappearedErrors()
+            if err != nil {
+                return totalN, err
+            }
+
+            // 读取文件的内容，存储到 buf 缓冲区中
+            n, err := f.fs.Read(buf)          // 最多读取 len(buf) 个字节，并返回实际读取的字节数 n
+            if n > 0 {                        // 如果读取到的内容不为空，则更新偏移量、最后读取时间
+                f.offset += int64(n)
+                f.lastTimeRead = time.Now()
+            }
+            totalN += n                       // 更新 totalN 的值
+
+            // 如果 err == nil ，则代表读取没有出错，此时要么 buf 读取满了，要么读取到了文件末尾 EOF
+            if err == nil {
+                f.backoff = f.config.Backoff  // 重置 backoff 的时长，以供下次读取
+                return totalN, nil            // 结束读取，返回总共读取的字节数
+            }
+            buf = buf[n:]                     // 更新 buf 指向的位置，从而使用剩下的缓冲区
+
+            // 检查 err 的类型，如果它是 EOF 则进行处理
+            err = f.errorChecks(err)
+
+            // 如果读取出错，或者 buf 满了，则结束读取
+            if err != nil || len(buf) == 0 {
+                return totalN, err
+            }
+
+            // 如果读取没出错，buf 也没满，只是读取到了文件末尾，则等待 backoff 时长再循环读取
+            logp.Debug("harvester", "End of file reached: %s; Backoff now.", f.fs.Name())
+            f.wait()
+        }
     }
+    ```
 
-    if f.config.CloseRenamed {
-      // Check if the file can still be found under the same path
-      if !file.IsSameFile(f.fs.Name(), info) {
-        logp.Debug("harvester", "close_renamed is enabled and file %s has been renamed", f.fs.Name())
-        return ErrRenamed
-      }
+- `checkFileDisappearedErrors()` 方法的定义如下：
+    ```go
+    func (f *Log) checkFileDisappearedErrors() error {
+        // 如果没启用 close_renamed、close_removed 配置，则不进行检查
+        if !f.config.CloseRenamed && !f.config.CloseRemoved {
+            return nil
+        }
+
+        // 获取文件的状态信息（State），包括文件名、大小、文件模式、最后修改时间、是否为目录等
+        info, statErr := f.fs.Stat()
+        if statErr != nil {                   // 如果不能获取状态，则结束执行
+            logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
+            return statErr
+        }
+
+        // 检查文件是否被重命名
+        // 原理为：获取已打开的文件 f 的 State ，再获取磁盘中当前路径为 f.Name() 的文件的 State ，如果两者的 inode、device 不同，则说明文件 f 当前的路径已经不是 f.Name()
+        if f.config.CloseRenamed {
+            if !file.IsSameFile(f.fs.Name(), info) {
+                logp.Debug("harvester", "close_renamed is enabled and file %s has been renamed", f.fs.Name())
+                return ErrRenamed
+            }
+        }
+
+        // 检查文件是否被删除
+        // 原理为：执行 os.Stat(f.Name()) ，如果没报错则说明磁盘中路径为 f.Name() 的文件依然存在
+        if f.config.CloseRemoved {
+            if f.fs.Removed() {
+                logp.Debug("harvester", "close_removed is enabled and file %s has been removed", f.fs.Name())
+                return ErrRemoved
+            }
+        }
+
+        // 如果检查没问题，则返回 nil ，表示没有错误
+        return nil
     }
+    ```
 
-    if f.config.CloseRemoved {
-      // Check if the file name exists. See https://github.com/elastic/filebeat/issues/93
-      if f.fs.Removed() {       // 检查该路径的文件是否存在
-        logp.Debug("harvester", "close_removed is enabled and file %s has been removed", f.fs.Name())
-        return ErrRemoved
-      }
+- `errorChecks()` 方法的定义如下：
+    ```go
+    func (f *Log) errorChecks(err error) error {
+        // 处理 err 不是 EOF 的情况
+        if err != io.EOF {
+            logp.Err("Unexpected state reading from %s; error: %s", f.fs.Name(), err)
+            return err
+        }
+
+        // 以下处理 err 是 EOF 的情况
+
+        // 判断文件是否支持继续读取，比如 stdin 就不支持
+        if !f.fs.Continuable() {
+            logp.Debug("harvester", "Source is not continuable: %s", f.fs.Name())
+            return err
+        }
+
+        // 如果启用了 close_eof 配置，则结束执行
+        if f.config.CloseEOF {
+            return err
+        }
+
+        // 获取文件的状态信息
+        info, statErr := f.fs.Stat()
+        if statErr != nil {
+            logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
+            return statErr
+        }
+
+        // 如果文件的体积小于采集的偏移量，则认为发生了日志截断，结束执行
+        if info.Size() < f.offset {
+            logp.Debug("harvester",
+                "File was truncated as offset (%d) > size (%d): %s", f.offset, info.Size(), f.fs.Name())
+            return ErrFileTruncate
+        }
+
+        // 如果最后一次读取日志的时间，距离现在的时长超过 close_inactive ，则结束执行
+        age := time.Since(f.lastTimeRead)
+        if age > f.config.CloseInactive {
+            return ErrInactive
+        }
+
+        // 此时，忽略 EOF 的错误，从而继续读取
+        return nil
     }
-
-    return nil
-  }
-  ```
-<!-- 
-- 根据 inode 和 device 编号识别日志文件，因此即使文件重命名也能找到。
-  - 如果 harvester 打开一个文件 A 时，该文件被重命名为 B ，则会继续采集文件 B ，直到 close_inactive 超时而关闭 harvester 。当然以后不会再采集文件 B 。\
-    此时，如果出现一个使用原文件名的文件 A ，则会再创建一个 harvester 同时采集它。两个文件都会记录在 registry 中，只是 inode 不同。
-
-https://github.com/elastic/beats/blob/315543b4e894806dde5f77d6eda1046d98c3669a/filebeat/tests/system/test_harvester.py
- -->
-
-
+    ```
 
 ### 部署
 
@@ -373,14 +448,14 @@ https://github.com/elastic/beats/blob/315543b4e894806dde5f77d6eda1046d98c3669a/f
     # harvester_buffer_size: 16384  # 每个 harvester 在采集日志时的缓冲区大小，单位 bytes
     # max_bytes: 10485760           # 每条日志文本的最大字节数，超过的部分不会采集。默认为 10 MB
     # tail_files: false             # 是否从文件的末尾开始，倒序读取
-    # backoff: 1s                   # 如果 harvester 读取到文件末尾，则隔多久才检查文件是否更新
+    # backoff: 1s                   # 如果 harvester 读取到文件末尾，则每隔多久检查一次文件是否更新
 
-    # 配置 close_* 参数可以尽快关闭 harvester ，但不利于实时采集日志
+    # 配置 close_* 参数可以让 harvester 尽早关闭文件，但不利于实时采集日志
     # close_timeout: 0              # harvester 每次读取文件的超时时间，超时之后立即关闭。默认不限制
     # close_eof: false              # 如果 harvester 读取到文件末尾，则立即关闭
-    # close_inactive: 5m            # 如果 harvester 读取到文件末尾，且日志文件超过该时长未更新，则立即关闭 
-    # close_removed: true           # 如果日志文件被删除，则立即关闭
-    # close_renamed: false          # 如果日志文件被重命名，则立即关闭
+    # close_inactive: 5m            # 如果 harvester 读取到文件末尾之后，超过该时长没有读取到新日志，则立即关闭
+    # close_removed: true           # 如果 harvester 读取到文件末尾之后，日志文件被删除，则立即关闭
+    # close_renamed: false          # 如果 harvester 读取到文件末尾之后，日志文件被重命名，则立即关闭
 
     # 配置 clean_* 参数可以自动清理 registry 文件，但可能导致遗漏采集，或重复采集
     # clean_removed: true           # 如果日志文件在磁盘中被删除，则从 registry 中删除它

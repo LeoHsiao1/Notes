@@ -221,7 +221,7 @@ string      // 字符串类型，采用 UTF-8 编码
   slice = append(slice, 5, 6, 7)  // 可以同时追加多个元素
   fmt.Println(slice)              // 这里会打印：[0 1 2 3 4 5 6 7]
   ```
-- 调用 make 函数可以创建 Map、channel 等类型的内存空间。
+- 调用 make 函数可以创建 slice、Map、channel 等类型的内存空间。
   ```go
   slice := make([]int, 4)         // 创建一个切片，长度为 4
   ```
@@ -419,7 +419,7 @@ string      // 字符串类型，采用 UTF-8 编码
   - 函数可以没有返回值，或者返回多个值。
   - 函数不支持嵌套，不能在一个函数内定义另一个函数。
 
-- 可以在函数头末尾声明返回值列表：
+- 如果函数有返回值，则必须在函数头末尾声明返回值列表：
   ```go
   func fun1() (int, int) {
       return 1, 2
@@ -442,7 +442,7 @@ string      // 字符串类型，采用 UTF-8 编码
   - 这里声明了返回值列表为 `(a, b int)` ，因此会在函数开始时就创建这两个局部变量。
   - 如果 return 语句的内容为空，则会返回 a、b 两个变量作为返回值。
 
-- 在函数内可以使用 defer 语句推迟调用一个函数：
+- 用关键字 defer 调用一个函数，会推迟执行它：
   ```go
   func fun1(){
       defer fmt.Println("defer...")   // 使用 defer 语句
@@ -451,8 +451,7 @@ string      // 字符串类型，采用 UTF-8 编码
 
   fun1() 
   ```
-  - defer 语句的内容只能是调用一个函数。
-  - defer 语句会在当前函数退出时才执行。
+  - defer 语句只能在一个函数内使用，在该函数退出时才执行。
   - 如果有多个 defer 语句，则按后进先出的顺序执行。
 
 ## package
@@ -480,24 +479,57 @@ string      // 字符串类型，采用 UTF-8 编码
 
 ## 协程
 
-Golang 提供了 Goroutines 机制，用于创建轻量级的协程。还提供了 Channels 机制，用于协程之间的通信。
-
-- 用关键字 go 可以创建一个协程：
+- Golang 提供了 Goroutines 机制，用于创建轻量级的协程。还提供了 Channels 机制，用于协程之间的通信。
+- 用关键字 go 调用一个函数，会创建一个协程去执行它：
   ```go
-  go fun1(1, "a")
+  func fun1(x int){
+      fmt.Println(x)
+  }
+
+  go fun1(1)
   ```
-  - 当主线程退出时这些协程会被自动终止。
+  - 创建协程的当前线程，称为主线程。
+  - 协程会共享主线程的内存，但不会共享 stdin、stdout 。
+  - 当主线程退出时，其下的所有协程会被自动终止。
 
 - 协程之间可以通过 channel 类型的变量进行通信：
   ```go
-  ch := make(chan int, 100)  // 用关键字 chan 创建一个通道，并设置缓冲区大小为 100
-  ch <- 1                    // 写入数据到通道。如果通道的缓冲区没有可用空间，则一直等待，陷入阻塞
-  v := <-ch                  // 从通道取出数据，并赋值给 v 。如果通道为空，则一直等待，陷入阻塞
-  close(c)                   // 关闭通道
+  func fun1(ch chan int){
+      for i := 0; i < 100; i++ {
+          ch <- i               // 写入一个值到通道。如果通道的缓冲区没有可用空间，则一直等待，陷入阻塞
+      }
+      close(ch)                 // 关闭通道。只有发送者能关闭通道
+  }
 
-  for i := range c {         // 遍历通道。如果通道为空，则一直等待，陷入阻塞，除非通道被关闭
-      fmt.Println(i)
+  func main() {
+      ch := make(chan int, 10)  // 用关键字 chan 创建一个通道，其数据类型为 int ，缓冲区可存储 10 个 int 型值
+      go fun1(ch)               // 创建协程，并传递通道以便通信
+      for value := range ch {   // 遍历通道。如果通道为空，则一直等待，陷入阻塞，除非通道被关闭
+          fmt.Println(value)
+      }
   }
   ```
-  - 只有发送者能关闭通道，不过通常不必主动关闭。
+  - 可以主动判断通道是否关闭：
+    ```go
+    value, ok := <-ch           // 从通道取出一个值，如果 ok 为 false 则说明通道已被关闭
+    ```
+
+- 可以用 select 语句同时处理多个通道：
+  ```go
+  for {
+      select {
+      case ch <- 1:
+          fmt.Println("写入一次")
+      case <- quit:
+          fmt.Println("终止执行")
+          return
+      default:
+          fmt.Println("sleep ...")
+          time.Sleep(1000 * time.Millisecond)
+      }
+      }
+  }
+  ```
+  - select 语句会检查哪个 case 条件满足，都不满足则执行 default 语句块。
+  - 如果没有 default 语句，则 select 语句会保持阻塞，直到某个 case 条件满足，才执行相应的语句块。
 

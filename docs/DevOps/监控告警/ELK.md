@@ -201,15 +201,15 @@ ELK 系统还可选择加入以下软件：
 
 这里分析 [filebeat/input/log/log.go](https://github.com/elastic/beats/blob/master/filebeat/input/log/log.go) 中的部分源码：
 
-- 存储日志数据的结构体如下：
+- 记录日志文件的结构体如下：
     ```go
     type Log struct {
-        fs           harvester.Source     // 指向日志文件的接口
-        offset       int64                // 采集的偏移量
-        config       LogConfig            // 配置参数
-        lastTimeRead time.Time            // 最后修改时间
-        backoff      time.Duration        // backoff 的时长
-        done         chan struct{}
+        fs           harvester.Source   // 指向日志文件的接口
+        offset       int64              // 采集的偏移量
+        config       LogConfig          // 配置参数
+        lastTimeRead time.Time          // 最后修改时间
+        backoff      time.Duration      // backoff 的时长
+        done         chan struct{}      // 一个通道，用于判断文件是否被关闭
     }
     ```
 

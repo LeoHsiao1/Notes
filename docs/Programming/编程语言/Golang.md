@@ -114,6 +114,10 @@ func main() {
   fmt.Println(_)          // 不能读取 _ 的值，编译时会报错：cannot use _ as value
   ```
 
+- 变量的作用域：
+  - 全局变量：在函数外、包内创建。
+  - 局部变量：在函数、for 语句块等区域内创建。
+
 ## 数据类型
 
 ### 基本数据类型
@@ -358,7 +362,7 @@ string      // 字符串类型，采用 UTF-8 编码
   ```go
   sum := 0
   for i := 0; i < 10; i++ {
-    sum += i
+      sum += i
   }
   ```
   - 当条件表达式的布尔值为 false 时，for 循环才结束。
@@ -405,37 +409,74 @@ string      // 字符串类型，采用 UTF-8 编码
 
 - 例：
   ```go
-  func fun1(x int, y string) (int) {
-      fmt.Println("%d, %s", x, y)
-      defer fmt.Println("done")   // defer 语句
-      return 0
+  func fun1(x int, y int){    // 定义一个函数，名为 fun1 ，形参为 (x int, y int)
+      fmt.Println(x, y)
   }
 
-  fun1(1, "a")
-
-  func numbers()(int,int,string){
-    a , b , c := 1 , 2 , "str"
-    return a,b,c    // 返回多个值
-  }
+  fun1(1, 2)                  // 调用函数
   ```
-  - defer 语句会在当前函数退出时才执行。
-    - defer 语句的内容只能是调用一个函数。
-    - 如果有多个 defer 语句，则按后进先出的顺序执行。
-- 函数可以没有参数或接受多个参数。
+  - 函数可以没有形参，或声明多个形参。
+  - 函数可以没有返回值，或者返回多个值。
+  - 函数不支持嵌套，不能在一个函数内定义另一个函数。
 
+- 可以在函数头末尾声明返回值列表：
+  ```go
+  func fun1() (int, int) {
+      return 1, 2
+  }
+
+  fmt.Println(fun1())
+  ```
+  - 这里声明了返回值列表为 `(int, int)` ，因此函数必须返回两个 int 类型的值，否则编译时会报错。
+
+- 可以在返回值列表中指定变量名：
+  ```go
+  func fun1() (a, b int) {
+      a = 1
+      return
+      // return 1, 2
+  }
+
+  fmt.Println(fun1())
+  ```
+  - 这里声明了返回值列表为 `(a, b int)` ，因此会在函数开始时就创建这两个局部变量。
+  - 如果 return 语句的内容为空，则会返回 a、b 两个变量作为返回值。
+
+- 在函数内可以使用 defer 语句推迟调用一个函数：
+  ```go
+  func fun1(){
+      defer fmt.Println("defer...")   // 使用 defer 语句
+      fmt.Println("function end")
+  }
+
+  fun1() 
+  ```
+  - defer 语句的内容只能是调用一个函数。
+  - defer 语句会在当前函数退出时才执行。
+  - 如果有多个 defer 语句，则按后进先出的顺序执行。
 
 ## package
 
-```go
-import "fmt"
-import "math"
-
-import (
-  "fmt"
-  "time"
-)
-
-```
+- 导入包：
+  ```go
+  import "fmt"
+  import "math"
+  ```
+  - 可以通过括号写成多行的格式：
+    ```go
+    import (
+        "fmt"
+        "math"
+    )
+    ```
+- Golang 根据包内的成员是否以大写字母开头，控制包外的访问权限。
+  - 以大写字母开头的成员会被导出（export），可以被外部调用，相当于 Java 的 public 权限。
+  - 其它成员不会被导出，对外部不可见，相当于 Java 的 protected 权限。
+  - 例：
+    ```go
+    fmt.Println(math.Pi)    // 可以访问
+    fmt.Println(math.pi)    // 不可以访问，编译时会报错：cannot refer to unexported name
+    ```
 
 ## 协程
 

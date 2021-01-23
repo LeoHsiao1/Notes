@@ -45,11 +45,12 @@ func main() {
 }
 ```
 - 启动一个 Golang 程序时，会找到其中名为 main 的包，执行其中名为 main 的函数。
-- 包 fmt 提供了格式化输入输出的函数。如下：
+- 包 fmt 提供了一些输入输出的函数，如下：
   ```go
   fmt.Print("Hello")                    // 打印一个值到终端
   fmt.Println("Hello")                  // 打印一个值并换行
   fmt.Println("Hello\nWorld", 1, 3.14)  // 可以打印任意个值
+  fmt.Printf("%d, %d\n", 1, 2)        // 格式化输出
   ```
 - Golang 要求左花括号 `{` 不能独占一行，如下：
   ```go
@@ -271,11 +272,11 @@ string      // 字符串类型，采用 UTF-8 编码
   fmt.Println(p)      // 获取指针变量本身的值，即十六进制地址，这里会打印：0xc000086020
   fmt.Println(*p)     // 用 * 运算符取消指针的引用，读取其引用地址的值。这里会打印：42
   ```
-  创建指针时可简写为：
-  ```go
-  x := 42
-  p := &x
-  ```
+  - 创建指针时可简写为：
+    ```go
+    x := 42
+    p := &x
+    ```
 
 - 取值为 nil 的指针称为空指针，相当于 C 语言的 null 指针。
   - 刚创建的指针变量，默认值都为 nil 。
@@ -290,10 +291,66 @@ string      // 字符串类型，采用 UTF-8 编码
   ```go
   var book1 Book
   book_p := &book1
-  book_p.id           // 这里指针 book_p 相当于 book1 的别名，用法一样，不需要用 * 运算符取消引用
+  book_p.id             // 这里指针 book_p 相当于 book1 的别名，用法一样，不需要用 * 运算符取消引用
 
-  fmt.Println(book1)  // 这里会打印：{0  }
-  fmt.Println(book_p) // 这里会打印：&{0  }
+  fmt.Println(book1)    // 这里会打印：{0  }
+  fmt.Println(book_p)   // 这里会打印：&{0  }
+  ```
+
+## 流程控制
+
+### if 语句
+
+- 例：
+  ```go
+  if x := 1; x < 2 {    // 可以在条件表达式之前加上一个子句
+      fmt.Printf(true)
+  } else {
+      fmt.Printf(false)
+  }
+  ```
+
+- 多层判断：
+  ```go
+  x := 1
+  if x == 1 {
+      fmt.Println(1)
+  } else if x == 2 {
+      fmt.Println(2)
+  } else {
+      fmt.Println(0)
+  }
+  ```
+
+### for 语句
+
+- 例：
+  ```go
+  sum := 0
+  for i := 0; i < 10; i++ {
+    sum += i
+  }
+  ```
+  - 当条件表达式的布尔值为 false 时，for 循环才结束。
+
+- 可以省略初始化子句、后置子句，只留下条件表达式子句：
+  ```go
+  sum := 1
+  for ; sum < 10; {
+      sum += sum
+  }
+  ```
+  还可以再省略分号，格式相当于 Python 的 while 循环：
+  ```go
+	sum := 1
+	for sum < 10 {
+		  sum += sum
+	}
+  ```
+- 可以省略所有子句，写成无限循环：
+  ```go
+  for {
+  }
   ```
 
 ## 函数
@@ -302,7 +359,7 @@ string      // 字符串类型，采用 UTF-8 编码
   ```go
   func fun1(x int, y string) (int) {
       fmt.Println("%d, %s", x, y)
-      defer fmt.Println("done")   // 当函数退出时调用该函数
+      defer fmt.Println("done")   // defer 语句
       return 0
   }
 
@@ -313,6 +370,9 @@ string      // 字符串类型，采用 UTF-8 编码
     return a,b,c    // 返回多个值
   }
   ```
+  - defer 语句会在当前函数退出时才执行。
+    - defer 语句的内容只能是调用一个函数。
+    - 如果有多个 defer 语句，则按后进先出的顺序执行。
 - 函数可以没有参数或接受多个参数。
 
 ## package
@@ -333,19 +393,19 @@ import (
 Golang 提供了 Goroutines 机制，用于创建轻量级的协程。还提供了 Channels 机制，用于协程之间的通信。
 
 - 用关键字 go 可以创建一个协程：
-    ```go
-    go fun1(1, "a")
-    ```
+  ```go
+  go fun1(1, "a")
+  ```
   - 当主线程退出时这些协程会被自动终止。
 
 - 协程之间可以通过 channel 类型的变量进行通信：
-    ```go
-    ch := make(chan int, 100)  // 用关键字 chan 创建一个通道，并设置缓冲区大小为 100
-    ch <- 1                    // 写入数据到通道（如果通道不带缓冲或缓冲区已满，则会陷入阻塞）
-    v := <-ch                  // 从通道取出数据，并赋值给 v（如果通道为空，则会陷入阻塞）
-    close(c)                   // 关闭通道
+  ```go
+  ch := make(chan int, 100)  // 用关键字 chan 创建一个通道，并设置缓冲区大小为 100
+  ch <- 1                    // 写入数据到通道。如果通道的缓冲区没有可用空间，则一直等待，陷入阻塞
+  v := <-ch                  // 从通道取出数据，并赋值给 v 。如果通道为空，则一直等待，陷入阻塞
+  close(c)                   // 关闭通道
 
-    for i := range c {         // 遍历通道，如果通道为空就保持阻塞，除非通道被关闭
-        fmt.Println(i)
-    }
-    ```
+  for i := range c {         // 遍历通道。如果通道为空，则一直等待，陷入阻塞，除非通道被关闭
+      fmt.Println(i)
+  }
+  ```

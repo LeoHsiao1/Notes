@@ -50,14 +50,14 @@
   #!/usr/bin/ruby
   # -*- coding : utf-8 -*-
 
-  print "Hello", "World"    # 调用 print 函数，输出任意个值到终端，每个值之间不加分隔符
-  puts  "Hello", "World"    # 调用 puts 函数，输出任意个值到终端，每个值之间加上换行符
+  print "Hello", "World"    # 打印任意个值到终端，每个值之间没有分隔符，挨在一起
+  puts  "Hello", "World"    # 打印任意个值到终端，每个值之间加上换行符作为分隔符
 
-  BEGIN {             # 在程序运行之前被执行的代码
+  BEGIN {                   # 在程序运行之前被执行的代码
   puts "初始化..."
   }
 
-  END {               # 在程序运行结束时被执行的代码
+  END {                     # 在程序运行结束时被执行的代码
   puts "结束..."
   }
   ```

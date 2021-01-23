@@ -170,7 +170,7 @@ string      // 字符串类型，采用 UTF-8 编码
 
 ### 数组
 
-- 创建数组的示例：
+- 创建数组：
   ```go
   var array [10] int              // 创建一个指定长度的数组，不赋值
   ```
@@ -182,7 +182,7 @@ string      // 字符串类型，采用 UTF-8 编码
   ```
   - 数组中的元素必须属于同一数据类型。
 
-- 访问数组的示例：
+- 访问数组：
   ```go
   array[0] = 10   // 给指定位置的元素赋值
   array[0]        // 读取指定位置的元素
@@ -210,7 +210,7 @@ string      // 字符串类型，采用 UTF-8 编码
 ### 结构体
 
 - 用关键字 `type ... struct` 可以定义一个结构体，从而自定义一种数据类型。
-- 定义结构体的示例：
+- 定义结构体：
   ```go
   type Book struct {  // 定义一个结构体，名为 Book
       id int          // 给该结构体定义一个成员，名为 id ，数据类型为 int
@@ -218,7 +218,7 @@ string      // 字符串类型，采用 UTF-8 编码
       author string
   }
   ```
-- 使用结构体的示例：
+- 使用结构体：
   ```go
   var book1 Book      // 创建结构体 Book 的一个实例，名为 book1
   book1.id            // 读取结构体的成员。这里 id 还未赋值，所以采用 int 型变量的默认值
@@ -229,13 +229,41 @@ string      // 字符串类型，采用 UTF-8 编码
   book2 := Book{2, "Hello", "unknown"}   // 创建一个实例，并赋值。此时如果只给部分成员赋值，则编译时会报错：too few values in Book literal
   ```
   ```go
-  book3 := Book{title: "Hello", author: "unknown"}   // 通过键值对的形式赋值。此时可以只给部分成员赋值
+  book3 := Book{title: "Hello", author: "unknown"}   // 可以通过键值对的形式赋值，并且此时可以只给部分成员赋值
   fmt.Println(book3)  // 这里会打印：{0 Hello unknown}
+  ```
+
+### Map
+
+- Map（映射）是包含一组键值对的集合，类似于 Python 的字典类型。
+  - 各键值对是无序存储的。
+- 创建 Map ：
+  ```go
+  m := make(map[string]int) // 创建一个 Map 变量，名为 m ，键值对的数据类型分别为 string、int
+  m["A"] = 1                // 添加一个键值对
+  m["B"] = 2
+  delete(m, "B")            // 从 Map 中删除一个 key 及其值。如果该 key 不存在，并不会报错
+  ```
+- 检查一个 key 是否存在：
+  ```go
+  value, ok := m["A"]
+  if (ok) {
+      fmt.Println("key 存在", value)
+  } else {
+      fmt.Println("key 不存在", value)
+  }
+  ```
+  - 读取一个 key 对应的值时，如果该 key 不存在，则读取到的值为其数据类型的默认值，但并不会报错。
+- 遍历 Map ：
+  ```go
+  for key := range m {
+      fmt.Println(key, "=", m[key])
+  }
   ```
 
 ### 指针
 
-- 使用指针的示例：
+- 使用指针：
   ```go
   x := 42
   var p *int          // 创建一个变量，并声明为 *int 型指针
@@ -258,7 +286,7 @@ string      // 字符串类型，采用 UTF-8 编码
     fmt.Println(*p)   // 空指针不能读取其引用地址的值，这里运行时会报错：runtime error: invalid memory address or nil pointer dereference
     ```
 
-- 使用结构体指针的示例：
+- 使用结构体指针：
   ```go
   var book1 Book
   book_p := &book1

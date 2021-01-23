@@ -11,9 +11,54 @@
 - 语法与 C 语言相似。
 - 源文件的扩展名为 .go 。
 - 每个语句的末尾以换行符或分号 ; 作为分隔符。
-- 用 // 声明单行注释。
+- 用 `//` 声明单行注释，用 `/*`、`*/` 声明多行注释。
 - 支持定义函数，不支持定义类，但可以通过结构体（struct）实现面向对象编程。
+- 支持指针。
 - 会自动回收垃圾内存。
+
+## 编译
+
+- 安装编译器：
+  ```sh
+  yum install golang
+  ```
+
+- 使用编译器：
+  ```sh
+  go
+      run test.go     # 编译并执行一个源文件
+      run .           # 指定一个目录时，会自动执行该目录下包含 main 包及 main 函数的源文件
+      
+      build test.go   # 编译一个源文件，这会生成一个名为 test 的可执行文件
+  ```
+
+## 基础示例
+
+编写一个源文件 test.go ：
+```go
+package main      // 声明当前文件属于一个名为 main 的包
+
+import "fmt"      // 导入名为 fmt 的包
+
+func main() {
+    var x = "Hello World!"
+    fmt.Println(x)
+}
+```
+- 启动一个 Golang 程序时，会找到其中名为 main 的包，执行其中名为 main 的函数。
+- 包 fmt 提供了格式化输入输出的函数。如下：
+  ```go
+  fmt.Print("Hello")                    // 打印一个值到终端
+  fmt.Println("Hello")                  // 打印一个值并换行
+  fmt.Println("Hello\nWorld", 1, 3.14)  // 可以打印任意个值
+  ```
+- Golang 要求左花括号 `{` 不能独占一行，如下：
+  ```go
+  func main()
+  {                           // 编译时会报错：unexpected semicolon or newline before {
+      fmt.Println("Hello")
+  }
+  ```
 
 ## 变量
 
@@ -33,7 +78,7 @@
     var x, y int
     var a, b, c = 1, true, "Hello"
     ```
-  - 可以写成多行的格式：
+  - 可以通过括号写成多行的格式：
     ```go
     var (
         a int
@@ -71,39 +116,42 @@
 
 ## 数据类型
 
-- 基本数据类型如下：
+### 基本数据类型
+
+```go
+int         // 整型
+int8        // 别名为 byte
+int16 
+int32       // 别名为 rune
+int64 
+
+uint        // 无符号整型 ，还有 uint8、uint16、uint32、uint64
+uintptr     // 无符号整型，用于存储指针
+
+float32     // 浮点型
+float64
+
+complex64   // 复数，比如 c := 1 + 2i
+complex128
+
+bool        // 布尔类型，取值为 true 或 false
+
+string      // 字符串类型，采用 UTF-8 编码
+```
+- int、uint、uintptr 在 32 位系统上容量为 4 bytes ，在 64 位系统上容量为 8 bytes 。
+- 创建不同数据类型的变量时，其默认值如下：
+  - 数值类型，默认值为 0 。
+  - 布尔类型，默认值为 false 。
+  - 字符类型，默认值为 '' 。
+  - 字符串类型，默认值为 "" 。
+- 通过定界符区分字符、字符串常量：
   ```go
-  int         // 整型
-  int8        // 别名为 byte
-  int16 
-  int32       // 别名为 rune
-  int64 
-
-  uint        // 无符号整型 ，还有 uint8、uint16、uint32、uint64
-  uintptr     // 无符号整型，用于存储指针
-
-  float32     // 浮点型
-  float64
-
-  complex64   // 复数，比如 c := 1 + 2i
-  complex128
-
-  bool        // 布尔类型，取值为 true 或 false
-
-  string      // 字符串类型，采用 UTF-8 编码
+  c := 'H'        // 定界符为单引号，因此视作字符类型，存储为 rune 型
+  c := 'Hello'    // 字符类型只能包含单个字符，这里编译时会报错：invalid character literal (more than one character)
+  s := "Hello"    // 定界符为双引号，因此视作字符串类型，存储为 string 型
   ```
-  - int、uint、uintptr 在 32 位系统上容量为 4 bytes ，在 64 位系统上容量为 8 bytes 。
-  - 创建不同数据类型的变量时，其默认值如下：
-    - 数值类型，默认值为 0 。
-    - 布尔类型，默认值为 false 。
-    - 字符类型，默认值为 '' 。
-    - 字符串类型，默认值为 "" 。
-  - 区分字符、字符串常量：
-    ```go
-    c := 'H'        // 定界符为单引号，因此视作字符类型，存储为 rune 型
-    c := 'Hello'    // 字符类型只能包含单个字符，这里编译时会报错：invalid character literal (more than one character)
-    s := "Hello"    // 定界符为双引号，因此视作字符串类型，存储为 string 型
-    ```
+
+### 类型转换
 
 - 不支持自动类型转换：
   ```go
@@ -138,10 +186,25 @@
     return a,b,c    // 返回多个值
   }
   ```
+- 函数可以没有参数或接受多个参数。
+
+## package
+
+```go
+import "fmt"
+import "math"
+
+import (
+	"fmt"
+	"time"
+)
+
+```
+
 
 ## 协程
 
-Golang 提供了 Goroutines ，可以创建轻量级的协程；还提供了 Channels 机制，用于协程之间的通信。
+Golang 提供了 Goroutines 机制，用于创建轻量级的协程。还提供了 Channels 机制，用于协程之间的通信。
 
 - 用关键字 go 可以创建一个协程：
     ```go
@@ -160,13 +223,3 @@ Golang 提供了 Goroutines ，可以创建轻量级的协程；还提供了 Cha
         fmt.Println(i)
     }
     ```
-
-## package
-
-```go
-import (
-	"fmt"
-	"time"
-)
-
-```

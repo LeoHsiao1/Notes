@@ -45,7 +45,7 @@
   ruby test.rb
   ```
 
-- 脚本文件的内容示例：
+- 脚本文件示例：
   ```ruby
   #!/usr/bin/ruby
   # -*- coding : utf-8 -*-

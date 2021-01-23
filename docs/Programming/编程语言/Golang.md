@@ -8,12 +8,11 @@
 
 ## 语法特点
 
-- 语法与 C 语言相似。
+- 语法与 C 语言相似，支持定义结构体、指针。
 - 源文件的扩展名为 .go 。
 - 每个语句的末尾以换行符或分号 ; 作为分隔符。
 - 用 `//` 声明单行注释，用 `/*`、`*/` 声明多行注释。
 - 支持定义函数，不支持定义类，但可以通过结构体（struct）实现面向对象编程。
-- 支持指针。
 - 会自动回收垃圾内存。
 
 ## 编译
@@ -28,7 +27,7 @@
   go
       run test.go     # 编译并执行一个源文件
       run .           # 指定一个目录时，会自动执行该目录下包含 main 包及 main 函数的源文件
-      
+
       build test.go   # 编译一个源文件，这会生成一个名为 test 的可执行文件
   ```
 
@@ -121,9 +120,9 @@ func main() {
 ```go
 int         // 整型
 int8        // 别名为 byte
-int16 
+int16
 int32       // 别名为 rune
-int64 
+int64
 
 uint        // 无符号整型 ，还有 uint8、uint16、uint32、uint64
 uintptr     // 无符号整型，用于存储指针
@@ -151,6 +150,24 @@ string      // 字符串类型，采用 UTF-8 编码
   s := "Hello"    // 定界符为双引号，因此视作字符串类型，存储为 string 型
   ```
 
+### 类型转换
+
+- 不支持自动类型转换：
+  ```go
+  i := 42     // 创建的变量为 int 型
+  i  = 3.14   // int 型变量不能被 float 型常量赋值，此时会报错：constant 3.14 truncated to integer
+  ```
+  ```go
+  f := 3.14   // 创建的变量为 float64 型
+  f  = 42     // float64 型变量可以被 int 型常量赋值
+  f  = i      // 不同类型的变量不能相互赋值。此时会报错：cannot use i (type int) as type float64 in assignment
+  ```
+- 支持强制类型转换：
+  ```go
+  var i int     = 42
+  var f float64 = float64(i)  // 相当于 f := float64(i)
+  ```
+
 ### 数组
 
 - 创建数组的示例：
@@ -165,7 +182,7 @@ string      // 字符串类型，采用 UTF-8 编码
   ```
   - 数组中的元素必须属于同一数据类型。
 
-- 访问数组的元素：
+- 访问数组的示例：
   ```go
   array[0] = 10   // 给指定位置的元素赋值
   array[0]        // 读取指定位置的元素
@@ -190,22 +207,65 @@ string      // 字符串类型，采用 UTF-8 编码
     array[0:6]    // 下标不能大于数组长度，这里运行时会报错：runtime error: slice bounds out of range [:6] with capacity 5
     ```
 
-### 类型转换
+### 结构体
 
-- 不支持自动类型转换：
+- 用关键字 `type ... struct` 可以定义一个结构体，从而自定义一种数据类型。
+- 定义结构体的示例：
   ```go
-  i := 42     // 创建的变量为 int 型
-  i  = 3.14   // int 型变量不能被 float 型常量赋值，此时会报错：constant 3.14 truncated to integer
+  type Book struct {  // 定义一个结构体，名为 Book
+      id int          // 给该结构体定义一个成员，名为 id ，数据类型为 int
+      title string
+      author string
+  }
+  ```
+- 使用结构体的示例：
+  ```go
+  var book1 Book      // 创建结构体 Book 的一个实例，名为 book1
+  book1.id            // 读取结构体的成员。这里 id 还未赋值，所以采用 int 型变量的默认值
+  book1.id = 1        // 给成员赋值
+  fmt.Println(book1)  // 打印结构体时，会按顺序打印各个成员的值。这里会打印：{0  }
   ```
   ```go
-  f := 3.14   // 创建的变量为 float64 型
-  f  = 42     // float64 型变量可以被 int 型常量赋值
-  f  = i      // 不同类型的变量不能相互赋值。此时会报错：cannot use i (type int) as type float64 in assignment
+  book2 := Book{2, "Hello", "unknown"}   // 创建一个实例，并赋值。此时如果只给部分成员赋值，则编译时会报错：too few values in Book literal
   ```
-- 支持强制类型转换：
   ```go
-  var i int     = 42
-  var f float64 = float64(i)  // 相当于 f := float64(i)
+  book3 := Book{title: "Hello", author: "unknown"}   // 通过键值对的形式赋值。此时可以只给部分成员赋值
+  fmt.Println(book3)  // 这里会打印：{0 Hello unknown}
+  ```
+
+### 指针
+
+- 使用指针的示例：
+  ```go
+  x := 42
+  var p *int          // 创建一个变量，并声明为 *int 型指针
+  p = &x              // 用 & 运算符获取一个变量的地址，赋值给指针变量
+  fmt.Println(p)      // 获取指针变量本身的值，即十六进制地址，这里会打印：0xc000086020
+  fmt.Println(*p)     // 用 * 运算符取消指针的引用，读取其引用地址的值。这里会打印：42
+  ```
+  创建指针时可简写为：
+  ```go
+  x := 42
+  p := &x
+  ```
+
+- 取值为 nil 的指针称为空指针，相当于 C 语言的 null 指针。
+  - 刚创建的指针变量，默认值都为 nil 。
+  - 例：
+    ```go
+    p = nil
+    fmt.Println(p)    // 这里会打印： nil
+    fmt.Println(*p)   // 空指针不能读取其引用地址的值，这里运行时会报错：runtime error: invalid memory address or nil pointer dereference
+    ```
+
+- 使用结构体指针的示例：
+  ```go
+  var book1 Book
+  book_p := &book1
+  book_p.id           // 这里指针 book_p 相当于 book1 的别名，用法一样，不需要用 * 运算符取消引用
+
+  fmt.Println(book1)  // 这里会打印：{0  }
+  fmt.Println(book_p) // 这里会打印：&{0  }
   ```
 
 ## 函数
@@ -234,12 +294,11 @@ import "fmt"
 import "math"
 
 import (
-	"fmt"
-	"time"
+  "fmt"
+  "time"
 )
 
 ```
-
 
 ## 协程
 

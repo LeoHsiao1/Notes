@@ -33,7 +33,6 @@ ELK 系统还可选择加入以下软件：
 - 上述软件都是由 Elastic 公司开发。
   - 这些软件运行时可能需要 JDK、node.js 等环境，不过二进制发行版都已经自带了。
 - 部署时，ELk 系统中各个软件的版本应该尽量一致，否则可能不兼容。
-- ELK 系统普通发行版称为 OSS ，收费版本称为 X-Pack ，增加了身份认证、用户权限控制、告警、机器学习等功能。
 
 ## Kibana
 
@@ -792,3 +791,13 @@ pipeline 的语法与 Ruby 相似，特点如下：
     end
   end
   ```
+
+## Open Distro
+
+- ELK 系的统普通发行版称为 OSS ，收费版本称为 X-Pack 。
+  - Elastic 公司加大了商业化的程度，逐渐对软件的部分功能收费，导致 OSS 版缺少一些重要功能，比如身份认证、用户权限控制、告警。
+- 2019 年，AWS 公司分叉出 Open Distro for Elasticsearch 项目，以完全开源的方式扩展了 ES、Kibana 软件的功能。
+  - 给 ES、Kibana 软件安装一些 Open Distro 插件，即可提供一些付费版的功能，甚至更多功能。
+  - [官方文档](https://opendistro.github.io/for-elasticsearch-docs/)
+  - [版本列表及兼容的 ELK 版本](https://opendistro.github.io/for-elasticsearch-docs/version-history/)
+  - [给 Kibana 安装插件](https://opendistro.github.io/for-elasticsearch-docs/docs/kibana/plugins/)

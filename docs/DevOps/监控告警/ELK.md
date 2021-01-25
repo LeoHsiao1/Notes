@@ -128,8 +128,7 @@ ELK 系统还可选择加入以下软件：
   - Redis
   - File
   - Console
-- 采集的每条日志称为一个日志事件（event），通常存储为 JSON 格式的结构化数据。
-  - 每个日志事件会自动添加一个 `@timestamp` 字段。它采用 UTC 时区，默认取值为当前时刻。
+- 采集的每条日志称为一个日志事件（event）。
 
 ## Filebeat
 
@@ -183,15 +182,18 @@ ELK 系统还可选择加入以下软件：
       - 切割日志时可能使日志文件的 inode 或 bytes offset 变化，导致遗漏采集、重复采集。
     - 删除 `data/registry/` 目录就会重新采集所有日志文件。
 
-- 假设将日志文件 A 重命名为 B ，在类 Unix 系统上这样并不会中断其它进程对文件 A 的操作。需要分析：
-  - 如果 harvester 没打开文件 A ，则以后会一直找不到路径为 A 的文件，不会采集它。
-  - 如果 harvester 打开了文件 A ，则会一直读取该 inode 对应的磁盘空间，直到文件末尾才判断是否关闭：
-    - 默认启用 close_removed 配置，因此会因为路径为 A 的文件不存在，而立即关闭已打开的文件。
-      - 关闭之后，以后会一直找不到路径为 A 的文件，不会采集它。
-    - 如果禁用 close_removed 配置，则会继续读取该 inode ，相当于读取文件 B 。比如等到 close_inactive 超时才关闭。
-      - 此时，如果又出现一个路径为 A 的文件，则 Filebeat 会再创建一个 harvester 同时采集它。两个文件都会记录在 registry 中，只是 inode 不同。
+- 假设让 Filebeat 采集日志文件 A 。切割日志时，可能经常出现将文件 A 重命名为 B 的情况，比如 `mv A B` 。Filebeat 会按以下规则处理：
+  - 如果没打开文件 A ，则以后会因为文件 A 不存在而采集不了。
+    - 在 Windows 系统上，都属于这种情况。在类 Unix 系统上，允许在 Filebeat 打开文件时，重命名文件。
+  - 如果打开了文件 A ，则会继续读取到文件末尾，然后每隔 backoff 时间检查一次文件：
+    - 如果在 backoff 时长之内又创建文件 A ，比如 `touch A` 。则 Filebeat 会认为文件被重命名（renamed）。
+      - 默认配置了 `close_renamed: false` ，因此会既采集文件 A ，又采集文件 B ，直到因为 close_inactive 超时等原因才关闭文件 B 。
+      - 此时两个文件的状态都会记录在 registry 中，文件路径 source 相同，只是 inode 不同。
+    - 如果在 backoff 时长之后，依然没有创建文件 A 。则 Filebeat 会认为文件被删除（removed）。
+      - 默认配置了 `close_removed: true` ，因此会立即关闭文件 B 而不采集，而文件 A 又因为不存在而采集不了。
 
-- Filebeat 每次发送日志事件到输出端时，也会记录发送状态。
+- Filebeat 每次发送日志事件到输出端时，都会记录发送状态。
+  - 此次操作称为发布事件（publish event）。
   - 如果不能连接到输出端，会每隔几秒尝试连接。
   - 如果发送日志事件到输出端失败，会自动重试。直到发送成功，才更新记录。
   - 每个日志事件只有成功发送到输出端，且收到确认接收的回复，才视作发送成功。
@@ -382,6 +384,11 @@ ELK 系统还可选择加入以下软件：
     #   index.number_of_shards: 1
     #   index.number_of_replicas: 1
     #   _source.enabled: true
+
+    # filebeat.shutdown_timeout: 0s                         # 当 Filebeat 关闭时，如果有日志事件正在发送，则等待一定时间直到其完成。默认不等待
+    # filebeat.registry.path: ${path.data}/registry         # registry 文件的保存目录
+    # filebeat.registry.file_permissions: 0600              # registry 文件的权限
+    # filebeat.registry.flush: 0s                           # 每当 Filebeat 发布一个日志事件到输出端，隔多久才刷新 registry 文件
     ```
     - Filebeat 同时只能启用一种输出。
     - 如果修改了默认的索引名，则相应地还需要配置 `setup.template.name` 和 `setup.template.pattern` 参数，并在 Kibana 页面上配置索引模板、索引模式。
@@ -390,7 +397,7 @@ ELK 系统还可选择加入以下软件：
       ./filebeat setup  # 初始化，先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
       ```
 
-- 所有类型的 beats 都支持以下 General 配置项：
+- 所有类型的 beats 都支持以下 General 配置项。可以在全局配置，也可以在局部配置。
   ```yml
   name: 'filebeat-001'        # 该 Beat 的名称，默认使用当前主机名
   tags: ['json']              # 给每条日志加上标签，保存到一个名为 tags 的字段中，便于筛选日志
@@ -422,7 +429,7 @@ ELK 系统还可选择加入以下软件：
     paths:
       - '/var/log/apache/*'
 
-    # fields:                       # 可以覆盖全局的 General 配置项
+    # fields:                       # 覆盖全局的 General 配置项
     #   apache: true
     # fields_under_root: true
 
@@ -444,27 +451,28 @@ ELK 系统还可选择加入以下软件：
     # multiline.max_lines: 500      # 多行日志最多包含多少行，超过的行数不会采集
 
     # scan_frequency: 10s           # 每隔多久扫描一次日志文件，如果有变动则创建 harvester 进行采集
-    # ignore_older: 0               # 不扫描最后修改时间在多久之前的文件，默认不限制，可使用 5m、2h 等值。其值应该大于 close_inactive
+    # ignore_older: 0s              # 不扫描最后修改时间在多久之前的文件，默认不限制时间。其值应该大于 close_inactive
     # harvester_buffer_size: 16384  # 每个 harvester 在采集日志时的缓冲区大小，单位 bytes
     # max_bytes: 10485760           # 每条日志文本的最大字节数，超过的部分不会采集。默认为 10 MB
     # tail_files: false             # 是否从文件的末尾开始，倒序读取
     # backoff: 1s                   # 如果 harvester 读取到文件末尾，则每隔多久检查一次文件是否更新
 
     # 配置 close_* 参数可以让 harvester 尽早关闭文件，但不利于实时采集日志
-    # close_timeout: 0              # harvester 每次读取文件的超时时间，超时之后立即关闭。默认不限制
+    # close_timeout: 0s             # harvester 每次读取文件的超时时间，超时之后立即关闭。默认不限制
     # close_eof: false              # 如果 harvester 读取到文件末尾，则立即关闭
     # close_inactive: 5m            # 如果 harvester 读取到文件末尾之后，超过该时长没有读取到新日志，则立即关闭
-    # close_removed: true           # 如果 harvester 读取到文件末尾之后，日志文件被删除，则立即关闭
-    # close_renamed: false          # 如果 harvester 读取到文件末尾之后，日志文件被重命名，则立即关闭
+    # close_removed: true           # 如果 harvester 读取到文件末尾之后，检查发现日志文件被删除，则立即关闭
+    # close_renamed: false          # 如果 harvester 读取到文件末尾之后，检查发现日志文件被重命名，则立即关闭
 
     # 配置 clean_* 参数可以自动清理 registry 文件，但可能导致遗漏采集，或重复采集
     # clean_removed: true           # 如果日志文件在磁盘中被删除，则从 registry 中删除它
-    # clean_inactive: 0             # 如果日志文件长时间未活动，则从 registry 中删除它。默认不限制。可使用 5m、2h 等值。其值应该大于 scan_frequency + ignore_older
+    # clean_inactive: 0s            # 如果日志文件长时间未活动，则从 registry 中删除它。默认不限制时间。其值应该大于 scan_frequency + ignore_older
 
   - type: container                 # 采集容器的日志
     paths:
       - '/var/lib/docker/containers/*/*.log'
   ```
+  - 配置时间时，默认单位为秒，可使用 1、1s、2m、3h 等格式的值。
 
 ## Logstash
 
@@ -490,9 +498,11 @@ ELK 系统还可选择加入以下软件：
 - Logstash 通过运行管道（pipeline）来处理数据。每个管道主要分为三个阶段：
   - input ：输入项，用于接收数据。
   - filter ：过滤器，用于过滤、修改数据。是可选阶段。
-    - 通常通过 grok 插件将纯文本格式的日志数据转换成 JSON 格式。
+    - 通常通过 grok 插件将纯文本格式的日志数据转换成 JSON 格式的结构化数据。
+    - 默认会给每个日志事件添加一个 `@timestamp` 字段。
+      - 它采用 UTC 时区，默认取值为当前时刻。
+      - 也可以从原始日志解析出时间。即使超过当前时间，也会生效。
   - output ：输出项，用于输出数据。
-
 - 通过命令行创建管道的示例：
   1. 启动 Logstash ，运行一个简单的管道：
       ```sh

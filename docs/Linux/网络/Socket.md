@@ -5,9 +5,9 @@
   - Unix Domain Socket ：用于本机的进程之间通信，保存为一个 Socket 文件，比如 /var/lib/mysql/mysql.sock 。
   - 基于 TCP/UDP 协议的 Socket ：用于不同主机的进程之间通信，用一对 host:port 确定一个 Socket 。
 
-## 原理
+## 相关 API
 
-常用函数如下：
+与 Socket 相关的一些内核函数：
 ```c
 int socket(int protofamily, int type, int protocol);                      // 打开一个 Socket
 int close(int fd);                                                        // 关闭一个 Socket

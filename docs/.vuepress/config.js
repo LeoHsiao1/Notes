@@ -194,6 +194,7 @@ module.exports = {
                     title: '简介',
                     children: [
                         '简介/Linux',
+                        '简介/发行版',
                         '简介/相关概念',
                     ]
                 },

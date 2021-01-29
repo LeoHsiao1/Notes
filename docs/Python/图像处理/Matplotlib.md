@@ -1,6 +1,6 @@
 # ♢ Matplotlib
 
-：Python 的第三方库，提供了一些模仿 MATLAB 的数学绘图函数。
+：Python 的第三方库，提供了一些模仿 MATLAB 的数学绘图函数，并基于 tkinter、qt5 等 GUI 库显示图像。
 - [官方文档](https://matplotlib.org/users/index.html)
 - 安装：`pip install matplotlib`
 - 使用绘图函数时，通常输入 numpy.array 等类型的数组，就会在坐标轴中绘制函数曲线。

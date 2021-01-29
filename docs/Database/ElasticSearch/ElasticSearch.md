@@ -16,7 +16,7 @@
 
 - 下载二进制版：
   ```sh
-  wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.10.1-linux-x86_64.tar.gz
+  wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.10.0-linux-x86_64.tar.gz
   ```
   解压后运行：
   ```sh
@@ -27,7 +27,7 @@
 
 - 或者运行 Docker 镜像：
   ```sh
-  docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.10.1
+  docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.10.0
   ```
   9200 端口供用户通过 HTTP 协议访问，9300 端口供 ES 集群的其它节点通过 TCP 协议访问。
 
@@ -64,7 +64,7 @@ ES 启动时会检查以下环境条件是否满足，如果不满足则会发�
   "cluster_name" : "cluster_1",
   "cluster_uuid" : "cDXF4mIeRqK4Dlj_YmSSoA",
   "version" : {
-    "number" : "7.10.1",
+    "number" : "7.10.0",
     "build_flavor" : "default",
     "build_type" : "tar",
     "build_hash" : "7f634e9f44834fbc12724506cc1da681b0c3b1e3",

@@ -40,7 +40,7 @@ ELK 系统还可选择加入以下软件：
 
 1. 下载二进制版：
     ```sh
-    wget https://artifacts.elastic.co/downloads/kibana/kibana-7.10.1-linux-x86_64.tar.gz
+    wget https://artifacts.elastic.co/downloads/kibana/kibana-7.10.0-linux-x86_64.tar.gz
     ```
 
 2. 解压后，编辑配置文件 config/kibana.yml ：
@@ -351,13 +351,14 @@ ELK 系统还可选择加入以下软件：
 
 1. 下载二进制版：
     ```sh
-    wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.10.1-linux-x86_64.tar.gz
+    wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.10.0-linux-x86_64.tar.gz
     ```
 
 2. 启动：
     ```sh
-    ./filebeat          # 在前台运行
-              -e        # 将 filebeat 本身的输出发送到 stderr ，而不是已配置的 output
+    # ./filebeat setup    # 初始化，先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
+    ./filebeat            # 在前台运行
+              -e          # 将 filebeat 本身的输出发送到 stderr ，而不是已配置的 output
     ```
 
 ### 配置
@@ -391,10 +392,6 @@ ELK 系统还可选择加入以下软件：
     ```
     - Filebeat 同时只能启用一种输出。
     - 如果修改了默认的索引名，则相应地还需要配置 `setup.template.name` 和 `setup.template.pattern` 参数，并在 Kibana 页面上配置索引模板、索引模式。
-    - 如果 Filebeat 直接输出到 ES ，则会自动创建默认的索引模板。如果 Filebeat 直接输出到 Logstash ，则 ES 中可能一直缺少合适的索引模板。此时建议先让 Filebeat 连接到 ES 一次，进行初始化：
-      ```sh
-      ./filebeat setup  # 初始化，先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
-      ```
 
 - 所有类型的 beats 都支持以下 General 配置项。可以在全局配置，也可以在局部配置。
   ```yml
@@ -475,11 +472,14 @@ ELK 系统还可选择加入以下软件：
 
 ## Logstash
 
+- 2009 年，Jordan Sissel 发布了 Logstash ，成为了流向的日志采集工具。
+- 2013 年，Logstash 被 Elastic 公司收购，组成了 ELK 系统。
+
 ### 部署
 
 1. 下载二进制版：
     ```sh
-    wget https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar.gz
+    wget https://artifacts.elastic.co/downloads/logstash/logstash-7.10.0-linux-x86_64.tar.gz
     ```
 
 2. 启动：
@@ -494,7 +494,8 @@ ELK 系统还可选择加入以下软件：
 
 ### pipeline
 
-- Logstash 通过运行管道（pipeline）来处理数据。每个管道主要分为三个阶段：
+- Linux 系统上通常通过管道符筛选日志，比如 `cat test.log | grep DEBUG'` 。而 Logstash 处理日志数据的机制也称为管道（pipeline）。
+- 每个管道主要分为三个阶段：
   - input ：输入项，用于接收数据。
   - filter ：过滤器，用于过滤、修改数据。是可选阶段。
     - 通常通过 grok 插件将纯文本格式的日志数据转换成 JSON 格式的结构化数据。

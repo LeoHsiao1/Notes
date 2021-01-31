@@ -244,8 +244,8 @@ module.exports = {
                         '网络/Socket',
                         '网络/防火墙',
                         '网络/SSH',
-                        '网络/HTTP',
                         '网络/FTP',
+                        '网络/HTTP',
                     ]
                 },
                 {
@@ -321,7 +321,6 @@ module.exports = {
                 {
                     title: '高层网络协议',
                     children: [
-                        '高层网络协议/FTP',
                         '高层网络协议/MQTT',
                         '高层网络协议/网络代理',
                     ]

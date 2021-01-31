@@ -14,8 +14,9 @@
 - 构建大型项目时，通常用 npm 安装 Vue ：`npm install vue`
 - Vue 提供了一个 cli 工具，用于快速为复杂的单页面应用 (SPA) 搭建脚手架。
 
-## 基础示例
+## 用法示例
 
+在 HTML 文件中加入以下代码：
 ```html
 <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
 <script>

@@ -9,10 +9,9 @@
   - Bootstrap 3 ：于 2013 年发布。
   - Bootstrap 4 ：于 2018 年发布。
 
-## 基础示例
+## 用法示例
 
-如下是一个基于 Bootstrap 的 HTML 例子：
-
+编写一个使用 Bootstrap 的 test.html ：
 ```html
 <!DOCTYPE html>
 <html lang="en">

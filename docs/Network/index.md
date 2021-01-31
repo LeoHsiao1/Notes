@@ -19,7 +19,6 @@
 - 高层网络协议
   - [Email](高层网络协议/Email.md)
   - [FTP](高层网络协议/FTP.md)
-  - [DNS](高层网络协议/DNS.md)
   - [HTTP](高层网络协议/HTTP.md)
   - [WebSocket](高层网络协议/WebSocket.md)
   - [MQTT](高层网络协议/MQTT.md)

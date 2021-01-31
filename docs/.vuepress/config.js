@@ -240,6 +240,7 @@ module.exports = {
                     title: '网络',
                     children: [
                         '网络/IP',
+                        '网络/DNS',
                         '网络/Socket',
                         '网络/防火墙',
                         '网络/SSH',
@@ -321,7 +322,6 @@ module.exports = {
                     children: [
                         '高层网络协议/Email',
                         '高层网络协议/FTP',
-                        '高层网络协议/DNS',
                         '高层网络协议/HTTP',
                         '高层网络协议/WebSocket',
                         '高层网络协议/MQTT',

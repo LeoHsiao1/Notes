@@ -28,6 +28,7 @@
   - [CPU](设备/CPU.md)
 - 网络
   - [IP](网络/IP.md)
+  - [DNS](网络/DNS.md)
   - [Socket](网络/Socket.md)
   - [防火墙](网络/防火墙.md)
   - [SSH](网络/SSH.md)

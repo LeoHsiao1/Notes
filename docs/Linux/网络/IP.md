@@ -98,31 +98,6 @@ $ ip
         add default via 10.0.0.1    # 增加一个默认网关
 ```
 
-## DNS 配置
-
-系统会读取如下三处 DNS 配置，它们的优先级从高到低：
-- `/etc/hosts` 文件中配置了静态 DNS 路由：
-  ```
-  127.0.0.1   localhost localhost4
-  ::1         localhost localhost6
-  ```
-  如果一个域名同时匹配多条 DNS 路由，则采用第一条匹配的。
-
-- `/etc/sysconfig/network-scripts/ifcfg-eth0` 文件中配置了网卡 eth0 采用的 DNS 服务器：
-  ```
-  DNS1=202.96.134.133
-  DNS2=202.96.128.166
-  DNS3=202.96.128.86
-  DNS4=114.114.114.114
-  ```
-
-- `/etc/resolv.conf` 文件中配置了 Linux 系统采用的 DNS 服务器：
-  ```
-  nameserver 114.114.114.114
-  nameserver 8.8.8.8
-  ```
-- 修改网络配置之后需要重启 network 服务：`systemctl restart network`
-
 ## ping
 
 ：常用于基于 ICMP 协议测试网络是否连通、网络延迟、丢包率、域名解析。

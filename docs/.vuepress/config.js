@@ -321,8 +321,6 @@ module.exports = {
                     title: '高层网络协议',
                     children: [
                         '高层网络协议/FTP',
-                        '高层网络协议/HTTP',
-                        '高层网络协议/WebSocket',
                         '高层网络协议/MQTT',
                         '高层网络协议/网络代理',
                     ]
@@ -343,6 +341,8 @@ module.exports = {
                     title: '简介',
                     children: [
                         '简介/Web',
+                        '简介/HTTP',
+                        '简介/WebSocket',
                     ]
                 },
                 {

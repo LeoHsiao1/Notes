@@ -320,7 +320,6 @@ module.exports = {
                 {
                     title: '高层网络协议',
                     children: [
-                        '高层网络协议/Email',
                         '高层网络协议/FTP',
                         '高层网络协议/HTTP',
                         '高层网络协议/WebSocket',

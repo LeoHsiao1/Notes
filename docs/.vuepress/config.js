@@ -516,9 +516,9 @@ module.exports = {
                     title: '配置管理',
                     children: [
                         '配置管理/简介',
+                        '配置管理/Ansible',
                         '配置管理/Jumpserver',
                         '配置管理/Supervisor',
-                        '配置管理/Ansible',
                         '配置管理/Nacos',
                     ]
                 },

@@ -154,31 +154,31 @@ $ perf report           # 显示 perf record 记录的信息
 $ perf stat <命令>      # 分析某条命令占用 CPU 的过程
 ```
 - 例：
-    ```sh
-    [root@Centos ~]# perf stat uname
-    Linux
+  ```sh
+  [root@Centos ~]# perf stat uname
+  Linux
 
-     Performance counter stats for 'uname':
+    Performance counter stats for 'uname':
 
-                  0.89 msec task-clock                #    0.393 CPUs utilized
-                     1      context-switches          #    0.001 M/sec
-                     0      cpu-migrations            #    0.000 K/sec
-                   165      page-faults               #    0.186 M/sec
-       <not supported>      cycles
-       <not supported>      instructions
-       <not supported>      branches
-       <not supported>      branch-misses
+                0.89 msec task-clock                #    0.393 CPUs utilized
+                    1      context-switches          #    0.001 M/sec
+                    0      cpu-migrations            #    0.000 K/sec
+                  165      page-faults               #    0.186 M/sec
+      <not supported>      cycles
+      <not supported>      instructions
+      <not supported>      branches
+      <not supported>      branch-misses
 
-           0.002252426 seconds time elapsed
+          0.002252426 seconds time elapsed
 
-           0.000000000 seconds user
-           0.001507000 seconds sys
-    ```
-    - task-clock (msec)  ：该命令使用 CPU 的毫秒数。（备注的 CPUs utilized 表示使用了 CPU 的几个核）
-    - context-switches  ：进程上下文切换的次数。（不宜太大）
-    - cache-misses    ：CPU 在 cache 中找不到需要读取的数据的次数。
-    - cpu-migrations  ：进程被迁移到其它 CPU 上运行的次数。
-    - page-faults    ：CPU 抛出 page fault 异常的次数。
-    - cycles      ：CPU 的时钟周期数。一条机器指令可能需要多个 cycles 。
-    - instructions    : 机器指令数。Instructions/Cycles 的比值越大越好。
-    - seconds time elapsed ：运行该命令消耗的秒数。
+          0.000000000 seconds user
+          0.001507000 seconds sys
+  ```
+  - task-clock (msec)  ：该命令使用 CPU 的毫秒数。（备注的 CPUs utilized 表示使用了 CPU 的几个核）
+  - context-switches  ：进程上下文切换的次数。（不宜太大）
+  - cache-misses    ：CPU 在 cache 中找不到需要读取的数据的次数。
+  - cpu-migrations  ：进程被迁移到其它 CPU 上运行的次数。
+  - page-faults    ：CPU 抛出 page fault 异常的次数。
+  - cycles      ：CPU 的时钟周期数。一条机器指令可能需要多个 cycles 。
+  - instructions    : 机器指令数。Instructions/Cycles 的比值越大越好。
+  - seconds time elapsed ：运行该命令消耗的秒数。

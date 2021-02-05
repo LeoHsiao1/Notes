@@ -127,7 +127,7 @@
     ```
 
 - [ECharts.js](https://echarts.apache.org/examples/en/index.html) （Enterprise Charts）
-  - 2013年，由百度公司开源。
+  - 2013 年，由百度公司开源。
   - 支持的图表类型很多，显示样式美观。
   - 支持绘制常规图表的 3D 版。
   - 支持绘制一些特殊图表，比如：K 线图、树形图、仪表盘、地图、3D 地图。

@@ -35,7 +35,7 @@ TCP 数据包的结构如下：
   - SYN=1 ：用于建立 TCP 连接，开始同步。
   - FIN=1 ：用于断开 TCP 连接。
 - Window size
-- Checksum ：校验和，16 bit。
+- Checksum ：校验和，16 bit 。
 - Urgent pointer
 - Options
 - Payload ：有效载体，即该数据包要传递的实际数据。

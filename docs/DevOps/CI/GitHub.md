@@ -154,7 +154,7 @@ jobs:                             # 该 workflow 的任务列表
       - name: checkout
         uses: actions/checkout@v2
   ```
-- 执行 job 时会创建一个临时的工作目录，比如 `/home/runner/work/repo-name/repo-name`。
+- 执行 job 时会创建一个临时的工作目录，比如 `/home/runner/work/repo-name/repo-name` 。
   - 执行每个 job 之前，都会重新创建该目录。因此上一个 job 生成的文件不会保留到下一个 job 。
   - 执行每个 step 之前，都会重新切换到该目录。因此上一个 step 切换的工作目录，并不会影响下一个 step 。
 - 每个 job 最多执行 6 小时，超时则会放弃执行。
@@ -237,7 +237,7 @@ jobs:                             # 该 workflow 的任务列表
 ### step.uses
 
 - `step.uses` 参数用于调用一个 Action 。
-  - Action 是一个实现某种动作的功能模块，命名格式为 `作者名/模块名@版本号` 。
+  - Action 是一个实现某种动作的功能模块，命名格式为 ` 作者名/模块名@版本号 ` 。
   - [搜索可用的 Actions](https://github.com/marketplace?type=actions)
 
 - 检出仓库的示例：

@@ -400,7 +400,7 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
 - Dockerfile 中的 ENTRYPOINT、CMD 命令最多只能各写一个，否则只有最后一个会生效。
 - ENTRYPOINT 命令一般写在 CMD 命令之前，不过写在后面也没关系。
 
-#### 比较ENTRYPOINT 与 CMD
+#### 比较 ENTRYPOINT 与 CMD
 
 - 构建镜像时，docker daemon 会将 ENTRYPOINT、CMD 命令都保存为 exec 格式。
 - 启动容器时，docker daemon 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。

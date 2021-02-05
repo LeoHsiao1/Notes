@@ -12,7 +12,7 @@
 - 指令周期：完成一条指令所需的时长。
   - 不同指令的指令周期不同，因此通常是计算平均值。
   - 早期的 CPU ，每个时钟周期只能执行一条指令。现代的 CPU ，每个时钟周期可能执行多条指令。
-  - 将 CPU 的时钟频率，乘以每个时钟周期平均执行的指令数（Instructions Per Cycle，IPC），就得到每秒平均执行的指令数（Instructions Per Second，IPS）。
+  - 将 CPU 的时钟频率，乘以每个时钟周期平均执行的指令数（Instructions Per Cycle ，IPC），就得到每秒平均执行的指令数（Instructions Per Second ，IPS）。
 - 字长（Word Size）：又称为位元，是指 CPU 每次最多处理多少位二进制数据。
   - 现代 CPU 的字长通常是 32 位、64 位。
   - CPU 的指令长度、数据总线的根数通常是字长的倍数。
@@ -21,18 +21,18 @@
 
 ## CPU 指令集
 
-常见的 CPU 指令集架构（Instruction Set Architecture，ISA）：
+常见的 CPU 指令集架构（Instruction Set Architecture ，ISA）：
 
-- CISC（Complex Instruction Set Computer，复杂指令集）
+- CISC（Complex Instruction Set Computer ，复杂指令集）
 
-- RISC（Reduced Instruction Set Computer，精简指令集）
+- RISC（Reduced Instruction Set Computer ，精简指令集）
   - 精简了指令数，每个时钟周期执行一条指令。
   - 指令的长度统一。
   - 精简了寻址方式。
 
-- EPIC（Explicitly Parallel Instruction Computing，显式并行指令集）
+- EPIC（Explicitly Parallel Instruction Computing ，显式并行指令集）
 
-- VLIW（Very Long Instruction Word，超长指令集）
+- VLIW（Very Long Instruction Word ，超长指令集）
 
 ## CPU 架构
 
@@ -45,7 +45,7 @@
     - 8086 是 16 位元，80386 是 32 位元。
   - 2003 年，AMD 公司将 x86 架构扩展为 64 位元，命名为 AMD64 ，又称为 x86_64、x64 。
 
-- ARM （Advanced RISC Machine，进阶精简指令集机器）
+- ARM （Advanced RISC Machine ，进阶精简指令集机器）
   - 由英国 Arm 公司发布。
   - 32 位元，指令集属于 RISC 。
   - 成本低、功耗低、散热低，因此用于手机、平板等小型电子设备比 x86 更有竞争力。

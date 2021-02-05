@@ -34,7 +34,7 @@
 
 ### 安装
 
-- yum 默认源的 Redis 版本很老，建议这样安装：
+- 用 yum 安装 Redis ：
   ```sh
   yum install -y http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
   yum --enablerepo=remi install redis
@@ -47,7 +47,10 @@
 
 - 或者运行 Docker 镜像：
   ```sh
-  docker run -d --name redis -p 6379:6379 redis:6.0.8
+  docker run -d --name redis -p 6379:6379  \
+          # -v /opt/redis/redis.conf:/opt/redis/redis.conf  \   # 挂载配置文件
+          # -v /opt/redis:/opt/redis                        \   # 挂载数据目录
+          redis:6.0.8
   ```
 
 ### 配置

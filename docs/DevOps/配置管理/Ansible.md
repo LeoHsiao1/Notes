@@ -79,20 +79,20 @@ Ansible 将待管理主机（称为 host）的配置信息保存在 .ini 文件�
 ```ini
 localhost ansible_connection=local    ; 定义一个不分组的 host ，连接方式为本机
 
-[webservers]                          ; 定义一个 组
+[web]                                 ; 定义一个组，名为 web
 www.example.com                       ; 添加一个 host 的地址
 10.0.0.1
 node100 ansible_host=10.0.0.2         ; 添加一个 host 的名字、地址
 
-[webservers:vars]                     ; 设置组 webservers 的参数
+[web:vars]                            ; 设置组 web 的参数
 ; ansible_connection=ssh              ; Ansible 的连接方式
 ; ansible_ssh_port=22                 ; SSH 登录时的端口号
 ansible_ssh_user='root'               ; SSH 登录时的用户名
 ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需要安装 sshpass）
 ; ansible_ssh_private_key_file='~/.ssh/id_rsa'   ; 用密钥文件进行 SSH 登录
 ; ansible_become=false                ; SSH 登录之后是否切换用户
+; ansible_become_method=sudo          ; 切换用户的方式
 ; ansible_become_user=root            ; 切换到哪个用户
-; ansible_become_method=sudo          ; 切换用户的方法
 ; ansible_become_pass='123456'        ; 用 sudo 切换用户时的密码
 ; ansible_python_interpreter=/usr/bin/python
 ```
@@ -103,9 +103,9 @@ ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需
 - 一个 host 可以同时属于多个组，甚至一个组可以是另一个组的成员。
 - 组名支持使用下标，如下：
   ```ini
-  webservers[0]     # 选取第一个 host
-  webservers[0:4]   # 选取第 0 ~ 4 个 host （包括第 4 个）
-  webservers[-1]
+  web[0]     # 选取第一个 host
+  web[0:4]   # 选取第 0 ~ 4 个 host （包括第 4 个）
+  web[-1]
   ```
 
 ## Playbook

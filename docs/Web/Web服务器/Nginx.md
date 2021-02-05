@@ -396,7 +396,7 @@ server {
           # proxy_pass_request_body on;                   # 转发请求 body
           # proxy_set_body    $request_body;              # 设置转发过去的请求 body
 
-          # proxy_request_buffering on;   # 接收客户端的 请求时，缓冲之后再转发给上游服务器
+          # proxy_request_buffering on;   # 接收客户端的请求时，缓冲之后再转发给上游服务器
           # proxy_connect_timeout 60s;    # 与上游服务器建立连接的超时时间
           # proxy_send_timeout 60s;       # 限制发送请求给上游服务器时，写操作中断的超时时间
           # proxy_read_timeout 60s;       # 限制从上游服务器读取响应时，读操作中断的超时时间

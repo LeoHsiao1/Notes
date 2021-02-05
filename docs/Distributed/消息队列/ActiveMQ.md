@@ -9,7 +9,7 @@
 
 - 先安装 JRE 1.7+ 环境，然后下载二进制版：
   ```sh
-  wget https://mirrors.bfsu.edu.cn/apache/activemq/5.16.0/apache-activemq-5.16.0-bin.tar.gz
+  wget https://archive.apache.org/dist/activemq/5.16.0/apache-activemq-5.16.0-bin.tar.gz
   ```
   解压后运行：
   ```sh

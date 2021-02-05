@@ -127,37 +127,34 @@ FRAG: inuse 0 memory 0
 
 ：用于查看本机网络连接的状态。
 
-<details>
-<summary>已淘汰不用</summary>
-
 命令：
 ```sh
 $ netstat
         -a  # 显示所有网络连接、socket
-        -l  # 只显示 LISTEN 状态的
-        -t  # 只显示 tcp 的 socket
-        -u  # 只显示 udp 的 socket
+        -l  # 只显示被进程 listen 的 socket
+        -t  # 只显示 TCP 的 socket
+        -u  # 只显示 UDP 的 socket
         -x  # 只显示 unix socket
-        -p  # 显示使用每个网络连接的进程名
+        
+        -p  # 显示使用每个 socket 的进程名
+        -n  # 不允许用服务名代替端口号（比如默认会把 22 端口显示成 ssh）
 ```
-
-</details>
 
 ### ss
 
-：socket statistics ，用于查看 socket 的统计信息。
+：socket statistics ，用于查看本机 socket 的状态。
 - 与 netstat 命令类似，但运行速度更快。
 - 命令：
   ```sh
   $ ss        # 显示 established 状态的 socket
-      -a      # 显示所有状态的 socket
+      -a      # 显示所有 socket
       -l      # 只显示被进程 listen 的 socket
-      -t      # 只显示 TCP 协议的端口
-      -u      # 只显示 UDP 协议的端口
-      -x      # 只显示本机通信的 socket
+      -t      # 只显示 TCP 的 socket
+      -u      # 只显示 UDP 的 socket
+      -x      # 只显示 unix socket
 
       -p      # 显示使用每个 socket 的进程名
-      -n      # 不允许用服务名代替端口号（比如默认会把 22 端口显示成 ssh）
+      -n      # 不允许用服务名代替端口号
       -s      # 增加显示 TCP、UDP 等类型端口的统计信息
   ```
 

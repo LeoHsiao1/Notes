@@ -46,21 +46,27 @@ MySQL 存在多个分支：
 
 - 或者运行 Docker 镜像：
   ```sh
-  docker run -d --name percona -p 3306:3306 \
-          -e MYSQL_ROOT_PASSWORD=****** \   # root 密码（必须设置该环境变量）
-          # -e MYSQL_ROOT_HOST=%        \   # root 的登录地址
-          # -e MYSQL_DATABASE=db1       \   # 创建一个数据库
-          # -e MYSQL_USER=leo           \   # 创建一个用户（会自动授予该用户对上面数据库的全部权限）
-          # -e MYSQL_PASSWORD=******    \
-          -v mysql_data:/var/lib/mysql  \   # 挂载数据卷
+  docker run -d --name mysql -p 3306:3306   \
+          -e MYSQL_ROOT_PASSWORD=******     \   # root 用户的密码（必须设置该环境变量）
+          # -e MYSQL_ROOT_HOST=%            \   # root 用户的登录地址
+          # -e MYSQL_DATABASE=db1           \   # 创建一个数据库
+          # -e MYSQL_USER=leo               \   # 创建一个用户（会自动授予该用户对上面数据库的全部权限）
+          # -e MYSQL_PASSWORD=******        \
+          -v /opt/mysql/my.cnf:/etc/my.cnf  \   # 挂载配置文件
+          -v /opt/mysql:/var/lib/mysql      \   # 挂载数据目录
           percona:5.7.26-centos
   ```
-  如果挂载指定目录 `-v /opt/mysql:/var/lib/mysql` ，则需要先分配权限 `chmod -R 777 /opt/mysql` 。
+  该 Docker 镜像默认以 mysql 用户（uid 为 999）运行服务器，对于挂载文件可能没有访问权限，需要先在宿主机上修改文件的权限：
+  ```sh
+  mkdir -p /data/mysql
+  touch /data/mysql/my.cnf
+  chown -R 999:999 mysql
+  ```
 
 ### 配置
 
 MySQL 服务器启动时，默认会使用以下位置的配置文件。如果前一个配置文件不存在则使用后一个，如果都不存在则使用默认配置。
-```
+```sh
 /etc/my.cnf
 /etc/mysql/my.cnf
 /usr/etc/my.cnf
@@ -74,20 +80,25 @@ MySQL 服务器启动时，默认会使用以下位置的配置文件。如果�
 [mysqld]                              # 这部分配置会被 mysqld 命令读取
 bind-address=0.0.0.0                  # 允许从任何 IP 地址访问
 port=3306
-datadir=/var/lib/mysql                # 存储 MySQL 数据文件的目录
+datadir=/var/lib/mysql                # 数据目录，用于存放 MySQL 的数据文件
 socket=/var/lib/mysql/mysql.sock
 pid-file=/var/run/mysqld/mysqld.pid
 log-error=/var/log/mysqld.log
 
 default_storage_engine=InnoDB         # 设置 MySQL 默认使用的引擎
 character-set-server=utf8mb4          # 默认的字符集
-init-connect='SET NAMES utf8mb4'      # 让客户端连接之后初始化字符集
+init-connect='set names utf8mb4'      # 设置一条 SQL 命令，让客户端每次建立连接时执行，从而初始化连接
+
+default-time_zone='+8:00'             # 设置时区，默认采用主机的时区
+symbolic-links=0                      # 在数据目录中禁止使用符号链接
 
 # skip-grant-tables                   # 跳过权限验证，此时不需要密码就能访问所有数据库
 
-[client]                              # 这部分配置会被 mysql、mysqldump 等客户端命令读取
-#user=root                            # 设置默认用户名
-#password=******                      # 设置默认密码
+[client]                              # 这部分配置会被 mysql、mysqldump 等命令读取
+# port=3306                           # 设置连接服务器的默认端口
+# socket=/var/lib/mysql/mysql.sock
+# user=root                           # 设置默认用户名
+# password=******                     # 设置默认密码
 ```
 
 ## 客户端

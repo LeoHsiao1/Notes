@@ -7,7 +7,7 @@
   - 没有提供 Web 操作页面，只能通过命令行操作。
   - 提供了文件存储、上传、下载等功能，适合管理海量的中小型文件（4KB~500MB）。
 - 同类产品：
-  - go-fastdfs ：国内开源软件，使用更方便，功能更多。
+  - go-fastdfs ：国内开源软件，功能更多。支持通过浏览器或 curl 命令上传文件、文件自动去重。
 
 ## 原理
 
@@ -28,43 +28,39 @@ FastDFS 的服务器分为两种角色：
 
 ## 部署
 
-### tracker server
-
-1. 启动 Docker 镜像：
+1. 用 Docker 运行 tracker server ：
     ```sh
-    docker run -d -p 22122:22122 --name tracker  delron/fastdfs tracker
+    docker run -d --name tracker    \
+             -p 22122:22122         \
+             # -v /opt/fdfs/tracker.conf:/etc/fdfs/tracker.conf           \  # 挂载配置文件
+             delron/fastdfs tracker
     ```
 
-2. 执行 `docker exec -it tracker bash` 进入容器，再执行 `vi /etc/fdfs/tracker.conf` ，修改配置文件：
-    ```ini
-    port=22122    # 该 tracker 监听的端口
-    ```
-
-### storage server
-
-1. 启动 Docker 镜像：
+2. 用 Docker 运行 storage server ：
     ```sh
-    docker run -d -p 23000:23000 -v /var/fdfs/storage:/var/fdfs -e TRACKER_SERVER=10.0.0.1:22122 --name storage delron/fastdfs storage
+    docker run -d --name storage                \
+        -p 23000:23000 -p 8888:8888             \
+        -e TRACKER_SERVER=10.0.0.1:22122        \   # 声明 tracker server 的地址，该配置会保存到配置文件中
+        # -v /opt/fdfs:/var/fdfs                                     \  # 挂载数据目录
+        # -v /opt/fdfs/storage.conf:/etc/fdfs/storage.conf           \  # 挂载配置文件
+        # -v /opt/fdfs/nginx.conf:/usr/local/nginx/conf/nginx.conf   \  # 挂载 Nginx 的配置文件
+        delron/fastdfs storage
     ```
 
-2. 执行 `docker exec -it storage bash` 进入容器，再执行 `vi /etc/fdfs/storage.conf` ，修改配置文件：
+3. storage.conf 的配置示例：
     ```ini
     base_path=/var/fdfs             # 工作目录，用于存储数据和日志
-    store_path0=/var/fdfs           # 存储文件的目录，可以重复设置多个，从 0 开始编号
+    store_path0=/var/fdfs           # 存储文件的目录。该参数可以设置多个，从 0 开始编号
     #store_path1=/var/fdfs2
-    tracker_server=10.0.0.1:22122   # tracker 的地址，可以重复设置多个
+    tracker_server=10.0.0.1:22122   # tracker 的地址。该参数可以设置多个
+    # tracker_server=10.0.0.2:22122
     http.server_port=23000          # 该 storage 监听的端口
     ```
 
-3. 重启 storage ：
-    ```sh
-    /usr/bin/fdfs_storaged /etc/fdfs/storage.conf restart
-    ```
-
-4. 执行 `vi /usr/local/nginx/conf/nginx.conf` ，修改 Nginx 的配置文件：
+4. nginx.conf 的配置示例：
     ```sh
     server {
-        listen       80;
+        listen       8888;
         location ~ /group[0-9]/ {
             ngx_fastdfs_module;     # 该模块用于对 storage 进行代理，其配置文件是 /etc/fdfs/mod_fastdfs.conf
         }
@@ -75,21 +71,16 @@ FastDFS 的服务器分为两种角色：
     }
     ```
 
-5. 重载 Nginx 的配置文件：
-    ```sh
-    /usr/local/nginx/sbin/nginx -s reload
-    ```
-
 ## 用法
 
-### 上传、下载文件
+### 上传文件
 
 1. 进入 fastdfs 容器，执行 `vi /etc/fdfs/client.conf` ，修改配置文件：
     ```ini
     tracker_server=10.0.0.1:22122
     ```
 
-2. 上传文件：
+2. 通过客户端上传文件：
     ```sh
     [root@Centos ~]# /usr/bin/fdfs_upload_file /etc/fdfs/client.conf test.txt
     group1/M00/00/00/lRyeml-QA76AWkC1AAAAAAAAAAA357.txt
@@ -102,16 +93,7 @@ FastDFS 的服务器分为两种角色：
 
     storage 不支持文件去重，重复上传同一个文件时，会存储到不同的 path 。
 
-3. 下载文件：
-    ```sh
-    /usr/bin/fdfs_download_file /etc/fdfs/client.conf <path>
-    ```
-    或者直接通过 Nginx 下载：
-    ```sh
-    wget http://10.0.0.1:80/<path> -O test.txt
-    ```
-
-4. 查看文件信息：
+3. 可以查看文件信息：
     ```sh
     [root@Centos ~]# /usr/bin/fdfs_file_info /etc/fdfs/client.conf group1/M00/00/00/lRyeml-QA76AWkC1AAAAAAAAAAA357.txt
     source storage id: 0
@@ -119,6 +101,18 @@ FastDFS 的服务器分为两种角色：
     file create timestamp: 2020-10-30 12:42:49
     file size: 49
     file crc32: 1050033651 (0x3E963DF3)
+    ```
+
+### 下载文件
+
+1. 通过客户端下载文件：
+    ```sh
+    /usr/bin/fdfs_download_file /etc/fdfs/client.conf <path>
+    ```
+
+2. 也可以直接通过 Nginx 下载：
+    ```sh
+    wget http://10.0.0.1:8888/<path> -O test.txt
     ```
 
 ### 常用命令

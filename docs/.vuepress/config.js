@@ -426,7 +426,7 @@ module.exports = {
                     title: 'MySQL',
                     children: [
                         'MySQL/MySQL',
-                        'MySQL/用户权限',
+                        'MySQL/访问权限',
                         'MySQL/管理单元',
                         'MySQL/数据类型',
                         'MySQL/函数',
@@ -442,8 +442,9 @@ module.exports = {
                     title: 'MongoDB',
                     children: [
                         'MongoDB/MongoDB',
+                        'MongoDB/访问权限',
                         'MongoDB/管理单元',
-                        'MongoDB/其它功能',
+                        'MongoDB/其它配置',
                         'MongoDB/性能优化',
                         'MongoDB/部署架构',
                         'MongoDB/pymongo',

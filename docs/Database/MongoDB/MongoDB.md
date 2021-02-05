@@ -95,21 +95,3 @@ mongo                                                 # 启动客户端（默认
   mongo 127.0.0.1:27017/admin
   db.auth('root', '******')
   ```
-
-### 启用身份认证
-
-MongoDB 默认没有启用身份认证，可按以下步骤启用：
-1. 创建一个管理员用户：
-    ```js
-    use admin
-    db.createUser(
-      {
-        user: 'root',
-        pwd: '******',
-        roles: [{role: 'root', db: 'admin'}]
-      }
-    )
-    ```
-    如果已启用身份认证，但是不知道管理员账号，可以先用 `mongod ---noauth` 重启服务器，再创建管理员账号。
-
-2. 退出 MongoDB 终端，用 `mongod --auth` 重启 MongoDB 服务器，启用身份认证。

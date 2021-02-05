@@ -8,7 +8,7 @@
   - [♢ sqlite3](SQLite/sqlite3.md)
 - MySQL
   - [MySQL](MySQL/MySQL.md)
-  - [用户权限](MySQL/用户权限.md)
+  - [访问权限](MySQL/访问权限.md)
   - [管理单元](MySQL/管理单元.md)
   - [数据类型](MySQL/数据类型.md)
   - [函数](MySQL/函数.md)
@@ -20,8 +20,9 @@
   - [♢ SQLAlchemy](MySQL/SQLAlchemy.md)
 - MongoDB
   - [MongoDB](MongoDB/MongoDB.md)
+  - [访问权限](MongoDB/访问权限.md)
   - [管理单元](MongoDB/管理单元.md)
-  - [其它功能](MongoDB/其它功能.md)
+  - [其它配置](MongoDB/其它配置.md)
   - [性能优化](MongoDB/性能优化.md)
   - [部署架构](MongoDB/部署架构.md)
   - [♢ pymongo](MongoDB/pymongo.md)

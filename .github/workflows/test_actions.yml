@@ -11,11 +11,11 @@ jobs:
   job1:
     runs-on: ubuntu-18.04
     steps:
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
-      # with:
-      #   vs-version: '[16.4,16.5)'
-
+    - uses: ilammy/msvc-dev-cmd@v1
+    - name: Build something requiring CL.EXE
+      run: |
+        cmake -G "NMake Makefiles" .
+        nmake
     - name: Run msbuild
       run: |
         msbuild

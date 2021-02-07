@@ -12,11 +12,15 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: ilammy/msvc-dev-cmd@v1
-    - name: Build something requiring CL.EXE
+    - name: test cmake
+      continue-on-error: true
       run: |
-        cmake -G "NMake Makefiles" .
-        nmake
-    - name: Run msbuild
+        cmake
+    - name: test msbuild
+      continue-on-error: true
       run: |
         msbuild
+    - name: test cl
+      continue-on-error: true
+      run: |
         cl

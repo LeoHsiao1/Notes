@@ -873,8 +873,8 @@ inhibit_rules:
   avg(irate(node_cpu_seconds_total[5m])) without (cpu) * 100                    # CPU 各模式占比（%）
   (1 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) without(cpu)) * 100  # CPU 使用率（%）
 
-  node_memory_MemTotal_bytes                  # 物理内存总量
-  node_memory_MemAvailable_bytes              # 物理内存可用量，CentOS 7 以上版本才支持该指标
+  node_memory_MemTotal_bytes                  # 内存总量
+  node_memory_MemAvailable_bytes              # 内存可用量，CentOS 7 以上版本才支持该指标
   node_memory_SwapTotal_bytes                 # swap 内存总量
   node_memory_SwapFree_bytes                  # swap 内存可用量
 
@@ -972,7 +972,7 @@ inhibit_rules:
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的进程实例数量）
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 同一个 groupname 中最老的那个进程的运行时长（ s ）
   sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)   # 进程占用的 CPU 核数
-  namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程占用的物理内存
+  namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程占用的内存
   irate(namedprocess_namegroup_read_bytes_total[5m])                        # 进程的磁盘每秒读取量
   irate(namedprocess_namegroup_write_bytes_total[5m])                       # 进程的磁盘每秒写入量
 

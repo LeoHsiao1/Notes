@@ -147,9 +147,9 @@ jobs:                             # 该 workflow 的任务列表
     job1:                         # 第一个 job ，其 id 为 job1
       # name: Test                # 该 job 的名称。如果省略，则赋值为 job_id
       runs-on: ubuntu-18.04       # 运行该 workflow 的虚拟机
+      # if: ${{ success() }}      # 当 if 条件为 true 时才执行该 job 。这里当之前的 job 执行成功时，success() 的结果才为 true
       # continue-on-error: false  # 该 job 失败时，是否继续执行后续的 job
       # timeout-minutes: 360      # 该 job 的超时时间
-      # if: ${{ success() }}      # 当之前的 job 执行成功时才执行该 job
       steps:                      # 该 job 包含的步骤
       - name: checkout
         uses: actions/checkout@v2
@@ -229,9 +229,9 @@ jobs:                             # 该 workflow 的任务列表
     run: |                      # 在终端执行命令，可以使用多行命令
       python -m pip install pytest psutil
       echo Hello
+    # if: ${{ success() }}      # 当之前的 step 执行成功时才执行该 step
     # continue-on-error: false  # 该 step 失败时，是否继续执行后续的 step
     # timeout-minutes: 360      # 该 step 的超时时间
-    # if: ${{ success() }}      # 当之前的 step 执行成功时才执行该 step
   ```
 
 ### step.uses

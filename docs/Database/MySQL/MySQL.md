@@ -25,9 +25,9 @@ MySQL 存在多个分支：
 ## 服务器
 
 - 运行 mysqld 进程，即可作为 MySQL 服务器提供服务。
-  - 通常作为守护进程运行，监听 3306 端口，供 MySQL 客户端连接。
+- mysqld 通常作为守护进程运行，监听 3306 端口，供 MySQL 客户端连接。
 
-### 安装 Percona
+### 部署
 
 - yum 默认源的 MySQL 版本很老，建议这样安装：
   ```sh
@@ -63,64 +63,6 @@ MySQL 存在多个分支：
   chown -R 999:999 mysql
   ```
 
-### 配置
-
-- [配置参数参考列表](https://dev.mysql.com/doc/refman/5.7/en/server-option-variable-reference.html)
-- MySQL 常见的几种配置方式如下：
-  - 启动 mysqld 时读取配置文件。
-  - 启动 mysqld 时加上命令行选项。
-    - mysqld 启动时，默认会使用以下位置的配置文件。如果前一个配置文件不存在则使用后一个，如果都不存在则使用默认配置。
-      ```sh
-      /etc/my.cnf
-      /etc/mysql/my.cnf
-      /usr/etc/my.cnf
-      ~/.my.cnf 
-      ```
-    - 配置文件的扩展名必须为 .cnf ，采用 INI 的语法。
-  - 在 mysqld 运行时，通过客户端登录，修改系统变量。
-    - 例如：
-      ```sql
-      show variables like '%time_zone%';  -- 查看系统变量
-      ```
-      ```sql
-      set time_zone = '+9:00';            -- 修改系统变量
-      ```
-    - 启动 mysqld 时，会根据命令行选项、配置文件设置系统变量。因此，在 mysqld 运行时修改的系统变量，当 mysqld 重启时会失效。
-    - 命令行选项、配置文件参数、系统变量名不一定相同。
-
-- 配置文件示例：
-  ```ini
-  [mysqld]                              # 这部分配置会被 mysqld 命令读取
-  # user       = mysql                  # 指定运行 mysqld 进程的系统用户，以 root 用户启动时必须配置该参数
-  bind-address = 0.0.0.0
-  port         = 3306
-  datadir      = /var/lib/mysql         # 数据目录，用于存放 MySQL 的数据文件
-  log_error    = /var/log/mysqld.log    # 错误日志的保存路径，也会记录服务器的启动信息
-  socket       = /var/lib/mysql/mysql.sock
-  pid_file     = /var/run/mysqld/mysqld.pid
-
-  character_set_server = utf8mb4        # 设置服务器的默认字符集
-  default_time_zone='+8:00'                     # 设置时区，默认采用主机的时区
-  default_storage_engine=InnoDB         # 设置 MySQL 默认使用的引擎
-  init_connect='set names utf8mb4'      # 设置一条 SQL 命令，让客户端每次建立连接时执行，从而初始化连接
-  symbolic-links=0                      # 在数据目录中禁止使用符号链接
-
-  lower_case_table_names=1    # 设置为 0 时，表名在比较时区分大小写；设置为 1 时，表名在创建时先转换成小写，比较时不区分大小写；设置为 2 时，表名在比较时先转换成小写
-
-  # open_files_limit=5000           # 限制服务器打开的文件描述符数
-  # max_connect_errors=100          # 限制客户端的错误连接数，超过该值则禁止连接
-  # max_connections=151             # 限制同时连接的客户端数，超过该值则禁止连接
-  # max_allowed_packet=4M           # 限制客户端请求包的最大大小，写入很大的 blob 字段时需要提高该参数
-
-  # !includedir /etc/my.cnf.d/          # 可以用 !includedir 导入指定目录下的所有配置文件
-
-  [client]                              # 这部分配置会被 mysql、mysqldump 等命令读取
-  # port=3306                           # 设置连接服务器的默认端口
-  # socket=/var/lib/mysql/mysql.sock
-  # user=root                           # 设置默认用户名
-  # password=******                     # 设置默认密码
-  ```
-
 ## 客户端
 
 ### 安装
@@ -138,15 +80,16 @@ MySQL 存在多个分支：
 ### 用法
 
 ```sh
-mysql                    # 启动 MySQL 客户端
-      -h <host>          # 要连接的 MySQL 服务器的 IP 地址（默认是 localhost）
-      -P <port>          # 连接的端口号（默认为 3306）
-      -u <user>          # 连接的用户名（默认为 root）
-      -p                 # 以带密码的方式连接（接下来会提示输入密码）
-      --password=******  # 以带密码的方式连接（直接传入密码）
-      -D <db>            # 打开一个 database
+mysql                     # 启动 MySQL 客户端，登录成功之后会打开客户端的终端
+      -h <host>           # 要连接的 MySQL 服务器的 IP 地址（默认是 localhost）
+      -P <port>           # 连接的端口号（默认为 3306）
+      -u <user>           # 连接的用户名（默认为 root）
+      -p                  # 以带密码的方式连接（接下来会提示输入密码）
+      --password=******   # 以带密码的方式连接（直接传入密码）
+      -D <db>             # 切换到一个 database
+
+      -e 'source 1.sql;'  # 不打开客户端的终端，只是执行 SQL 命令
 ```
-- 执行 mysql 命令时，如果不能成功连接并登录 MySQL 服务器，就不会进入 MySQL 客户端的终端。
 - 刚安装 mysql 服务器时，执行 `mysql -u root -p` 即可登录。
   - 如果不使用 -p 选项，则默认以免密的方式连接，就不能通过 MySQL 服务器的身份认证。
 
@@ -170,7 +113,7 @@ mysqladmin [OPTIONS] [command]...   # 连接到 MySQL 服务器，执行某种�
           -P <port>
           -u <user>
           -p
-          --password=****** 
+          --password=******
 
           password ******   # 修改该用户的密码
           create <db>       # 创建一个 datebase

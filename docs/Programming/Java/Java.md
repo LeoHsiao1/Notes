@@ -34,3 +34,4 @@
   - JMX 将被管理的对象称为 MBean（Managed Bean）。
   - 在 Java 应用中调用 JMX 库，实现其接口，便可以从外部通过 HTTP 通信等方式监控、管理该 Java 应用。
   - 比如通过 JMX 接口可以获取 JVM 的运行状态。
+- JDBC ：Java 程序访问数据库的 API 规范。

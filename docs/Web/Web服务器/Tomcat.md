@@ -1,7 +1,7 @@
 # Tomcat
 
 ：一个 Web 服务器软件，由 Apache 基金会管理。
-- [官方文档](http://tomcat.apache.org/tomcat-9.0-doc/index.html)
+- [官方文档](https://tomcat.apache.org/)
 - 一般用作动态服务器，支持 Servlet、JSP ，常用于运行 Java Web 项目。
 
 ## 安装
@@ -32,31 +32,31 @@
   - shutdown.sh ：用于停止 Tomcat ，实际上是调用 `catalina.sh stop` 。
   - version.sh  ：用于显示版本信息。
 
-- 每次更新 Tomcat 应用或配置时，建议重启 Tomcat ，使修改立即生效。可以自定义一个重启脚本 restart.sh ：
-    ```sh
-    cd $TOMCAT_DIR
-    bin/shutdown.sh
-    sleep 5
-    kill -9 `ps -ef | grep Dcatalina.home=$TOMCAT_DIR | grep -v grep | awk '{print $2}'`
-    if [ "$TOMCAT_PID" ]
-    then
-        echo "Tomcat 没有立即停止，正在强制终止它："
-        kill -9 $TOMCAT_PID
-    fi
-    echo 已停止 Tomcat
+- 每次更新 Tomcat 应用或配置时，建议重启 Tomcat ，使修改立即生效。可以编写一个重启脚本 restart.sh ：
+  ```sh
+  cd $TOMCAT_DIR
+  bin/shutdown.sh
+  sleep 3
+  kill -9 `ps -ef | grep Dcatalina.home=$TOMCAT_DIR | grep -v grep | awk '{print $2}'`
+  if [ "$TOMCAT_PID" ]
+  then
+      echo "Tomcat 没有立即停止，正在强制终止它："
+      kill -9 $TOMCAT_PID
+  fi
+  echo 已停止 Tomcat
 
-    rm -rf tomcat/work/Catalina/    # 删除 JSP 页面编译后的缓存
-    bin/startup.sh
-    sleep 1
-    TOMCAT_PID=`ps -ef | grep Dcatalina.home=$TOMCAT_DIR | grep -v grep | awk '{print $2}'`
-    if [ "$TOMCAT_PID" ]
-    then
-        echo 已启动 Tomcat
-    else
-        echo 启动 Tomcat 失败
-        exit 1
-    fi
-    ```
+  rm -rf tomcat/work/Catalina/    # 删除 JSP 页面编译后的缓存
+  bin/startup.sh
+  sleep 3
+  TOMCAT_PID=`ps -ef | grep Dcatalina.home=$TOMCAT_DIR | grep -v grep | awk '{print $2}'`
+  if [ "$TOMCAT_PID" ]
+  then
+      echo 已启动 Tomcat
+  else
+      echo 启动 Tomcat 失败
+      exit 1
+  fi
+  ```
 
 ## 初始页面
 

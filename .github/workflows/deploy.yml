@@ -14,8 +14,8 @@ jobs:
         git pull
         yarn
         yarn vuepress build docs
-        rm -rf /opt/Notes/*
-        cp -r docs/.vuepress/dist/* /opt/Notes/
+        rm -rf /data/Notes/*
+        cp -r docs/.vuepress/dist/* /data/Notes/
 
     - name: Test
       run: |

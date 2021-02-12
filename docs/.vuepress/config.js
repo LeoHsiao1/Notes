@@ -429,6 +429,7 @@ module.exports = {
                         'MySQL/管理单元',
                         'MySQL/数据类型',
                         'MySQL/函数',
+                        'MySQL/配置',
                         'MySQL/存储引擎',
                         'MySQL/备份数据',
                         'MySQL/性能优化',

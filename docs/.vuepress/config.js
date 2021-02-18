@@ -335,8 +335,6 @@ module.exports = {
                     title: '简介',
                     children: [
                         '简介/Web',
-                        '简介/HTTP',
-                        '简介/WebSocket',
                     ]
                 },
                 {
@@ -361,6 +359,7 @@ module.exports = {
                 {
                     title: '后端',
                     children: [
+                        '后端/HTTP',
                         '后端/通信协议',
                         '后端/cookie',
                         '后端/登录',

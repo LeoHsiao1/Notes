@@ -25,34 +25,6 @@ ssize_t write(int fd, const void *buf, size_t nbytes);                    // 往
 - 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会收到本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
 - 如果一个进程绑定 IP 为 0.0.0.0 并监听，则会收到所有目标 IP 的数据包，只要目标端口一致。
 
-## 通信状态
-
-建立 TCP 连接时：
-
-![](./tcp_1.png)
-
-- `SYN_SENT` ：已发出 SYN=1 的 TCP 包，还没有收到 ACK=1、SYN=1 的 TCP 包。
-- `SYN_RECEIVED`
-- `ESTABLISHED` ：已建立连接，可以通信。
-- `LISTEN` ：该 Socket 已绑定到某个进程，内核正在监听该 Socket 。
-
-
-断开 TCP 连接时：
-
-![](./tcp_2.png)
-
-- `FIN-WAIT-1`
-- `FIN-WAIT-2`
-- `TIME_WAIT`
-  - 主动关闭方在关闭连接之后，还要等待 2*MSL 时间之后才能变成 CLOSED 状态，避免对方来不及关闭连接。此时该端口占用的资源不会被内核释放。
-  - MSL（Maximum Segment Lifetime）：TCP 段在网络传输中的最大生存时间，超过该时间就会被丢弃。它的默认值为 2 分钟。
-  - 一般 HTTP 通信时，服务器发出响应报文之后就会主动关闭连接（除非是长连接），使端口变成 TIME_WAIT 状态。
-  - 如果服务器处理大部分 HTTP 请求的时长，都远低于 TIME_WAIT 时长，就容易产生大量 TIME_WAIT 状态的端口，影响并发性能。
-- `CLOSE_WAIT`
-  - 例如：HTTP 客户端发送 FIN 包来主动关闭连接时，HTTP 服务器没有马上调用 close() 关闭端口，就会长时间处于 CLOSE_WAIT 状态。
-- `LAST_ACK`
-- `CLOSED` ：已关闭连接。
-
 ## 常见报错
 
 - 当主机 A 向主机 B 的某个端口发送 SYN 包，请求建立 TCP 连接时：

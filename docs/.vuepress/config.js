@@ -385,8 +385,7 @@ module.exports = {
                 {
                     title: 'Web安全',
                     children: [
-                        'Web安全/前端安全',
-                        'Web安全/后端安全',
+                        'Web安全/服务器安全',
                         'Web安全/客户端安全',
                     ]
                 },

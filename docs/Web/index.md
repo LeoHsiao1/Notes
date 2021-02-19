@@ -28,8 +28,7 @@
   - [♢ urllib](Web爬虫/urllib.md)
   - [♢ requests](Web爬虫/requests.md)
 - Web安全
-  - [前端安全](Web安全/前端安全.md)
-  - [后端安全](Web安全/后端安全.md)
+  - [服务器安全](Web安全/服务器安全.md)
   - [客户端安全](Web安全/客户端安全.md)
 - CMS
   - [简介](CMS/简介.md)

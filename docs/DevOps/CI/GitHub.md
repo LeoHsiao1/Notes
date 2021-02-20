@@ -38,7 +38,7 @@
 
 ## workflows
 
-### 基本示例
+### 用法示例
 
 ```yml
 name: Test                        # 该 workflow 的名称。如果省略，则赋值为当前文件名

@@ -1,22 +1,21 @@
 # pybind11
 
-：一个 C++ 库，可以将 C++ 代码封装成 Python 模块，或者在 C++ 中导入 Python 模块。
+：Python 的第三方库。用于将 C++ 代码编译成 Python 模块，或者在 C++ 中导入 Python 模块。
 - [官方文档](https://pybind11.readthedocs.io/en/master/index.html)
 - 安装：`pip install pybind11`
-- 用 pybind11 编译出 Python 模块之后，用户不需要安装 pybind11 也可以导入该模块，但是必须使用与编译时版本一致的 Python 解释器。
-- 需要使用支持 C++11 的编译器。
 
-## 基本示例
+## 用法示例
 
 1. 编写 C++ 源文件 api.cpp ，如下：
     ```cpp
-    #include <pybind11/pybind11.h>
+    #include <pybind11/pybind11.h>      // 导入 pybind11 的 C++ 库
     namespace py = pybind11;
 
     int sum(int x, int y)
     {
         return (x + y);
     }
+
     char *p1 = "Hello world!";
     ```
 
@@ -32,6 +31,7 @@
     ```
 
 3. 编译成 pyd 文件 或 so 文件。
+
 4. 在 Python 解释器中试用：
     ```py
     >>> import api
@@ -43,7 +43,9 @@
 
 ## 编译
 
-安装 pybind11 之后，就可以调用它的动态库，将 C++ 代码编译成 Python 模块。
+- 安装 pybind11 之后，就可以调用它的动态库，将 C++ 代码编译成 Python 模块。
+  - 需要使用支持 C++11 的编译器。
+  - 编译后的 Python 模块，用户不需要安装 pybind11 就可以使用，但是只能采用与编译时版本一致的 Python 解释器。
 
 ### 手动编译
 
@@ -207,16 +209,16 @@
     }
     ```
     类的构造函数需要主动绑定，而析构函数会自动绑定，且会自动被 Python 的内存回收机制调用。
-    
+
 - 编译后，在 Python 终端中测试：
     ```py
     >>> import api
     >>> p = api.Pet('puppy', '3')
     >>> p
     <api.Pet object at 0x000001EC69DD63E8>
-    >>> p.name 
+    >>> p.name
     'puppy'
-    >>> p.name = 'AA' 
+    >>> p.name = 'AA'
     >>> p.name
     'AA'
     >>> p.setName('BB')
@@ -236,10 +238,10 @@
     效果如下：
     ```py
     >>> import api
-    >>> p = api.Pet()    
+    >>> p = api.Pet()
     >>> p
     <Pet: >
-    >>> p.name = 'AA' 
+    >>> p.name = 'AA'
     >>> p
     <Pet: AA>
     ```
@@ -396,7 +398,7 @@ py::object test_dict()
     for (auto item : d1)    // 遍历字典
         std::cout << "key=" << std::string(py::str(item.first)) << ", "
                   << "value=" << std::string(py::str(item.second)) << std::endl;
-    
+
     return d1;              // 将字典作为 py::object 传给 Python
 }
 ```
@@ -465,7 +467,7 @@ py::object obj = py::cast(p);
     ```
     如果没有绑定 Pet 类，则 pybind11 就不知道如何转换函数 test_cast()的返回值，会报错：
     ```py
-    >>> import api       
+    >>> import api
     >>> api.test_cast()
     TypeError: Unable to convert function return value to a Python type! The signature was
             () -> object

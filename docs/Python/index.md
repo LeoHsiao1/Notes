@@ -26,5 +26,5 @@
   - [简介](混合开发/简介.md)
   - [♢ ctypes](混合开发/ctypes.md)
   - [♢ Cython](混合开发/Cython.md)
+  - [♢ pybind11](混合开发/pybind11.md)
   - [SWIG](混合开发/SWIG.md)
-  - [pybind11](混合开发/pybind11.md)

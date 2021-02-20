@@ -182,8 +182,8 @@ module.exports = {
                         '混合开发/简介',
                         '混合开发/ctypes',
                         '混合开发/Cython',
-                        '混合开发/SWIG',
                         '混合开发/pybind11',
+                        '混合开发/SWIG',
                     ]
                 },
             ],

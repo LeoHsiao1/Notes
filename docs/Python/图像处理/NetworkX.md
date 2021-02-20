@@ -2,9 +2,9 @@
 
 ：Python 的第三方库，用于绘制无向图、有向图等图结构。
 - [官方文档](https://networkx.org/documentation/stable/)
-- 安装：`pip install networkx`
-- 用 NetworkX 生成图像数据之后，通常再用 Matplotlib 绘制图像。
 - [图像示例](https://networkx.org/documentation/stable/auto_examples/index.html)
+- 安装：`pip install networkx`
+- 本身不支持 GUI 显示，通常先用它生成图像数据，再用 Matplotlib 绘制图像。
 
 ## 原理
 

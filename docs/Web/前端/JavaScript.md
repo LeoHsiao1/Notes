@@ -208,7 +208,7 @@ if (y.nodeType == 1) {
 
 - [Chart.js](https://chartjs.bootcss.com/samples/)
   - 2013 年，由伦敦的 Nick Downie 发布。
-  - 支持的图表类型较少，主要是曲线图、条形图、散点图、饼状图、雷达图等常规图表。
+  - 支持的图表类型较少，主要是曲线图、柱形图、散点图、饼状图、雷达图等常规图表。
   - 使用示例：
     ```html
     <!-- 导入 Chart.js 库 -->
@@ -239,8 +239,9 @@ if (y.nodeType == 1) {
     </script>
     ```
 
-- [ECharts.js](https://echarts.apache.org/examples/en/index.html)（Enterprise Charts）
+- [ECharts.js](https://echarts.apache.org/examples/zh/index.html)（Enterprise Charts）
   - 2013 年，由百度公司开源。
+  - 2020 年底，成为 Appache 顶级项目。并发布 v5.0 版本，将项目代码迁移到 TypeScript 。
   - 支持的图表类型很多，显示样式美观。
   - 支持绘制常规图表的 3D 版。
   - 支持绘制一些特殊图表，比如：K 线图、树形图、仪表盘、地图、3D 地图。

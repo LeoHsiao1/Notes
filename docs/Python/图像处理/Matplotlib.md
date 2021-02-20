@@ -2,12 +2,12 @@
 
 ：Python 的第三方库，提供了一些模仿 MATLAB 的数学绘图函数，并基于 tkinter、qt5 等 GUI 库显示图像。
 - [官方文档](https://matplotlib.org/users/index.html)
+- [图像示例](https://matplotlib.org/tutorials/introductory/sample_plots.html)
 - 安装：`pip install matplotlib`
-- 使用绘图函数时，通常输入 numpy.array 等类型的数组，就会在坐标轴中绘制函数曲线。
-- [图像效果示例](https://matplotlib.org/tutorials/introductory/sample_plots.html)
 
 ## 折线图
 
+- 使用绘图函数时，通常输入 numpy.array 等类型的数组，就会在坐标轴中绘制函数曲线。
 - 可以用 `plt.plot()` 绘制一条折线，如下：
   ```py
   >>> import matplotlib.pyplot as plt

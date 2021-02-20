@@ -173,6 +173,7 @@ module.exports = {
                         '图像处理/Pillow',
                         '图像处理/Matplotlib',
                         '图像处理/NetworkX',
+                        '图像处理/pyecharts',
                     ]
                 },
                 {

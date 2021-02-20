@@ -21,6 +21,7 @@
   - [♢ Pillow](图像处理/Pillow.md)
   - [♢ Matplotlib](图像处理/Matplotlib.md)
   - [♢ NetworkX](图像处理/NetworkX.md)
+  - [♢ pyecharts](图像处理/pyecharts.md)
 - 混合开发
   - [简介](混合开发/简介.md)
   - [♢ ctypes](混合开发/ctypes.md)

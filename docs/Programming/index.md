@@ -10,6 +10,8 @@
   - [Perl](编程语言/Perl.md)
   - [PHP](编程语言/PHP.md)
   - [Ruby](编程语言/Ruby.md)
+- C
+  - [编译](C/编译.md)
 - Java
   - [Java](Java/Java.md)
   - [编译](Java/编译.md)

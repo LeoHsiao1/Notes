@@ -114,6 +114,12 @@ module.exports = {
                     ]
                 },
                 {
+                    title: 'C',
+                    children: [
+                        'C/编译',
+                    ]
+                },
+                {
                     title: 'Java',
                     children: [
                         'Java/Java',

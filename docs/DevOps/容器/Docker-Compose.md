@@ -109,7 +109,8 @@ services:                     # 开始定义服务
       retries: 3
       start_period: 40s
 
-networks:                     # 定义网络（默认会创建一个 compose_default 网络）
+networks:                     # 定义网络
+  # default:                  # 如果没有自定义网络，则默认创建该网络
   net:
     driver: bridge
 

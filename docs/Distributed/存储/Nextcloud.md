@@ -13,39 +13,39 @@
 
 ## 部署
 
-- 创建 docker-compose.yml 文件来部署：
-    ```yml
-    version: '3'
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
 
-    services:
-      mysql:
-        image: percona
-        restart: on-failure
-        environment:
-        - MYSQL_ROOT_PASSWORD=******    # 设置 root 密码
-        - MYSQL_DATABASE==nextcloud
-        - MYSQL_USER=nextcloud
-        - MYSQL_PASSWORD=******         # 设置密码
-        networks:
-        - net
-        volumes:
-        - ./mysql:/var/lib/mysql
+  services:
+    mysql:
+      image: percona
+      restart: on-failure
+      environment:
+      - MYSQL_ROOT_PASSWORD=******    # 设置 root 密码
+      - MYSQL_DATABASE==nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=******         # 设置密码
+      networks:
+      - net
+      volumes:
+      - ./mysql:/var/lib/mysql
 
-      web:
-        image: nextcloud
-        depends_on:
-        - mysql
-        restart: on-failure
-        ports:
-        - 80:80
-        networks:
-        - net
-        volumes:
-        - ./html:/var/www/html
+    web:
+      image: nextcloud
+      depends_on:
+      - mysql
+      restart: on-failure
+      ports:
+      - 80:80
+      networks:
+      - net
+      volumes:
+      - ./html:/var/www/html
 
-    networks:
-      net:
-    ```
+  networks:
+    net:
+  ```
 
 ## 用法
 

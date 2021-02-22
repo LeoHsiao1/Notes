@@ -56,7 +56,7 @@ MySQL 存在多个分支：
           -v /opt/mysql/data:/var/lib/mysql \   # 挂载数据目录
           percona:5.7.26-centos
   ```
-  该 Docker 镜像默认以 mysql 用户（uid 为 999）运行服务器，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
+  该容器内默认以 mysql 用户（uid 为 999 ，与宿主机的 polkitd 用户的 uid 相同）运行服务器，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
   ```sh
   mkdir -p /opt/mysql
   touch /opt/mysql/my.cnf

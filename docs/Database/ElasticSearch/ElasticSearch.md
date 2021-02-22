@@ -35,8 +35,8 @@
 
 ES 服务器的配置文件是 `config/elasticsearch.yml` ，内容示例如下：
 ```yml
-cluster.name: cluster_1           # 该 ES 所属的集群名
-node.name: node_1                 # 该 ES 的节点名，默认为当前主机名
+cluster.name: cluster-1           # 该 ES 所属的集群名
+node.name: node-1                 # 该 ES 的节点名，默认为当前主机名
 path.data: /var/data/elasticsearch
 path.logs: /var/log/elasticsearch
 network.host: 0.0.0.0             # 监听的 IP
@@ -45,14 +45,13 @@ http.port: 9200                   # 监听的端口
 
 ES 启动时会检查以下环境条件是否满足，如果不满足则会发出警告。如果此时还配置了 `network.host` 参数，则 ES 会按生产环境严格要求，将这些警告升级为异常。
 - 禁用 Swap 分区：
-  需要执行命令 `swapoff -a` ，并且将 `/etc/fstab` 文件中的 swap 分区都注释。
+  - 需要执行命令 `swapoff -a` ，并且将 `/etc/fstab` 文件中的 swap 分区都注释。
 - 增加进程虚拟内存的上限：
-  需要执行命令 `sysctl vm.max_map_count=262144` ，并在 `/etc/sysctl.conf` 文件中永久修改该参数。
+  - 需要执行命令 `sysctl vm.max_map_count=262144` ，并在 `/etc/sysctl.conf` 文件中永久修改该参数。
 - 增加进程数量的上限：
-  需要执行命令 `ulimit -u 4096` ，并在 `/etc/security/limits.conf` 文件中永久修改该参数。
+  - 需要执行命令 `ulimit -u 4096` ，并在 `/etc/security/limits.conf` 文件中永久修改该参数。
 - 增加文件描述符数量的上限：
-  需要执行命令 `ulimit -n 65535` ，并在 `/etc/security/limits.conf` 文件中永久修改该参数。
-
+  - 需要执行命令 `ulimit -n 65535` ，并在 `/etc/security/limits.conf` 文件中永久修改该参数。
 
 ## 用法示例
 
@@ -60,8 +59,8 @@ ES 启动时会检查以下环境条件是否满足，如果不满足则会发�
 ```sh
 [root@Centos ~]# curl 127.0.0.1:9200
 {
-  "name" : "node_1",
-  "cluster_name" : "cluster_1",
+  "name" : "node-1",
+  "cluster_name" : "cluster1",
   "cluster_uuid" : "cDXF4mIeRqK4Dlj_YmSSoA",
   "version" : {
     "number" : "7.10.0",

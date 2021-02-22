@@ -6,7 +6,7 @@
 
 ## 架构
 
-ELk 系统主要用到以下软件：
+ELk 系统主要由以下软件组成：
 - ElasticSearch
   - 用于存储数据，并支持查询。
 - Logstash
@@ -15,7 +15,7 @@ ELk 系统主要用到以下软件：
 - Kibana
   - 一个基于 node.js 运行的 Web 服务器，用于查询、展示 ES 中存储的数据。支持显示简单的仪表盘。
 
-ELK 系统还可选择加入以下软件：
+ELK 系统还可以选择加入以下软件：
 - Beats
   - 基于 Golang 开发，用于采集日志数据。比 Logstash 更轻量级，但功能较少。
 - Elastic Agent
@@ -46,7 +46,8 @@ ELK 系统还可选择加入以下软件：
 2. 解压后，编辑配置文件 config/kibana.yml ：
     ```yml
     server.port: 5601           # Kibana 监听的端口
-    server.host: '10.0.0.1'     # Kibana 监听的 IP
+    server.host: '0.0.0.0'      # Kibana 监听的 IP
+    server.name: 'kibana'       # 服务器显示的名称
 
     elasticsearch.hosts: ['http://10.0.0.1:9200']   # 连接到 ES ，可以指定多个 host ，如果前一个不能访问则使用后一个
     # elasticsearch.username: 'admin'
@@ -795,10 +796,87 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ## Open Distro
 
-- ELK 系的统普通发行版称为 OSS ，收费版本称为 X-Pack 。
+- ELK 系统的普通发行版称为 OSS ，收费版本称为 X-Pack 。
   - Elastic 公司加大了商业化的程度，逐渐对软件的部分功能收费，导致 OSS 版缺少一些重要功能，比如身份认证、用户权限控制、告警。
-- 2019 年，AWS 公司分叉出 Open Distro for Elasticsearch 项目，以完全开源的方式扩展了 ES、Kibana 软件的功能。
-  - 给 ES、Kibana 软件安装一些 Open Distro 插件，即可提供一些付费版的功能，甚至更多功能。
+- 2019 年，AWS 公司分叉出 Open Distro for Elasticsearch 项目，以完全开源的方式扩展了 ES、Kibana 软件的功能，甚至功能比付费版还多。
   - [官方文档](https://opendistro.github.io/for-elasticsearch-docs/)
-  - [版本列表及兼容的 ELK 版本](https://opendistro.github.io/for-elasticsearch-docs/version-history/)
-  - [给 Kibana 安装插件](https://opendistro.github.io/for-elasticsearch-docs/docs/kibana/plugins/)
+
+### 部署
+
+- 可以部署 Open Distro 整合版，也可以给普通的 ES、Kibana 软件安装一些 Open Distro 插件（这需要考虑版本兼容性）。
+- 用 docker-compose 部署整合版：
+  ```yml
+  version: '3'
+
+  services:
+    elasticsearch:
+      image: amazon/opendistro-for-elasticsearch:1.13.0
+      container_name: elasticsearch
+      ports:
+        - 9200:9200
+        - 9300:9300
+        # - 9600:9600   # 供 Performance Analyzer 访问
+      networks:
+        - net
+      volumes:
+        - ./elasticsearch/data:/usr/share/elasticsearch/data
+        - ./elasticsearch/config:/usr/share/elasticsearch/config
+      ulimits:
+        memlock:
+          soft: -1
+          hard: -1
+        nofile:
+          soft: 65536
+          hard: 65536
+
+    kibana:
+      image: amazon/opendistro-for-elasticsearch-kibana:1.13.0
+      container_name: kibana
+      depends_on:
+        - elasticsearch
+      ports:
+        - 5601:5601
+      networks:
+        - net
+      volumes:
+        - ./kibana/config:/usr/share/kibana/config
+
+  networks:
+    net:
+  ```
+  - 容器内以非 root 用户运行服务，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
+    ```sh
+    mkdir -p elasticsearch/data elasticsearch/config kibana/config
+    chown -R 1000 elasticsearch kibana
+    ```
+  - 先不挂载配置目录，启动一次。然后将容器内的 config 目录拷贝出来（包含了自动生成的 pem 文件，允许 SSL 连接），修改之后再挂载，重新启动容器。\
+    例如 elasticsearch.yml 的配置：
+    ```yml
+    cluster.name: cluster-log
+    node.name: node-1
+    network.host: 0.0.0.0
+    http.port: 9200
+
+    discovery.seed_hosts:
+      - 10.0.0.1:9300
+
+    cluster.initial_master_nodes:
+      - node-1
+
+    ...
+    ```
+    kibana.yml 的配置：
+    ```yml
+    server.port: 5601
+    server.host: '0.0.0.0'
+    server.name: 'kibana'
+
+    elasticsearch.hosts: ['https://elasticsearch:9200']
+    elasticsearch.ssl.verificationMode: none
+    elasticsearch.username: kibanaserver
+    elasticsearch.password: kibanaserver
+    elasticsearch.requestHeadersWhitelist: ["securitytenant","Authorization"]
+
+    ...
+    ```
+

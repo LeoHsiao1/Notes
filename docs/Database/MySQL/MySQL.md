@@ -53,14 +53,14 @@ MySQL 存在多个分支：
           # -e MYSQL_USER=leo               \   # 创建一个用户（会自动授予该用户对上面数据库的全部权限）
           # -e MYSQL_PASSWORD=******        \
           -v /opt/mysql/my.cnf:/etc/my.cnf  \   # 挂载配置文件
-          -v /opt/mysql:/var/lib/mysql      \   # 挂载数据目录
+          -v /opt/mysql/data:/var/lib/mysql \   # 挂载数据目录
           percona:5.7.26-centos
   ```
-  该 Docker 镜像默认以 mysql 用户（uid 为 999）运行服务器，对于挂载文件可能没有访问权限，需要先在宿主机上修改文件的权限：
+  该 Docker 镜像默认以 mysql 用户（uid 为 999）运行服务器，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
   ```sh
-  mkdir -p /data/mysql
-  touch /data/mysql/my.cnf
-  chown -R 999:999 mysql
+  mkdir -p /opt/mysql
+  touch /opt/mysql/my.cnf
+  chown -R 999:999 /opt/mysql
   ```
 
 ## 客户端

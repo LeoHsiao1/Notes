@@ -10,7 +10,7 @@ $ curl <URL>...                    # 访问指定网址（默认为 GET 方法�
        -o <PATH>                   # 保存为指定路径的文件
        -O                          # 保存为当前目录下的同名文件
 
-       -k                          # 不验证网站的 SSL 证书是否有效
+       -k                          # 等价于 --insecure ，不验证网站的 SSL 证书是否有效，但依然会建立 SSL 连接
        -u USER[:PASSWORD]          # 发送用户名，或者用户名加密码
        -x [PROTOCOL://]HOST[:PORT] # 使用代理服务器
        -X POST                     # 使用指定类型的 HTTP 方法

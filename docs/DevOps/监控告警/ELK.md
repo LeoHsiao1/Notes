@@ -1,8 +1,12 @@
 # ELK
 
-：一套日志采集及展示方案，又称为 ELK Stack 或 Elastic Stack 。由 Elastic 公司发布。
+：一个分布式的日志采集、存储及展示系统，又称为 ELK Stack 或 Elastic Stack 。由 Elastic 公司开发。
 - [官方文档](https://www.elastic.co/guide/index.html)
 - [下载页面](https://www.elastic.co/cn/downloads/)
+- 同类产品：
+  - Flume ：一个分布式的日志采集系统，功能相当于 ELK 中的 Logstash 。
+    - 由 Cloudera 公司基于 Java 开发，2012 年成为 ASF 的顶级项目。
+    - 通过 tail -f 的方式采集日志文件的内容，重启采集进程之后会重复采集。
 
 ## 架构
 
@@ -70,8 +74,9 @@ ELK 系统还可以选择加入以下软件：
 
 - 在 Kibana 的管理页面，可以管理索引、数据流、索引模板、组件模板、索引模式。
 - 建议在 Kibana 网站上进行以下设置：
-  - 设置 Default 工作区，只显示 Kibana、Observability 中需要用到的部分功能，没必要显示 Enterprise Search、Security 等功能模块。
+  - 设置 Default 工作区，只显示 Kibana、Observability 中需要用到的部分功能。
   - 将显示的日期格式设置为 `YYYY/MM/D HH:mm:ss` 。
+- Kibana 会将自身的数据存储在 ES 中名为 .kibana 的索引中。
 
 ### Discover
 
@@ -551,6 +556,7 @@ ELK 系统还可以选择加入以下软件：
           hosts => ["http://localhost:9200"]
           # user                => "admin"
           # password            => "123456"
+          # ssl_certificate_verification => true                            # 使用 HTTPS 连接时，是否验证 SSL 证书
           # document_id         => "%{[@metadata][_id]}"                    # 用于存储日志事件的文档 id 。如果重复保存相同 id 的文档，则会覆盖旧的文档
           # index               => "logstash-%{+yyyy.MM.dd}-%{index_num}"   # 索引名
           # manage_template     => true                                     # 在 Logstash 启动时，是否在 ES 中创建索引模板
@@ -798,8 +804,11 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 - ELK 系统的普通发行版称为 OSS ，收费版本称为 X-Pack 。
   - Elastic 公司加大了商业化的程度，逐渐对软件的部分功能收费，导致 OSS 版缺少一些重要功能，比如身份认证、用户权限控制、告警。
-- 2019 年，AWS 公司分叉出 Open Distro for Elasticsearch 项目，以完全开源的方式扩展了 ES、Kibana 软件的功能，甚至功能比付费版还多。
+- 2019 年，AWS 公司创建了 Open Distro for Elasticsearch 项目，通过给 ES、Kibana 软件安装一些插件，以完全开源的方式扩展其功能，甚至比付费版的功能还多。
   - [官方文档](https://opendistro.github.io/for-elasticsearch-docs/)
+- 2021 年初，Elastic 公司宣布从 v7.11 版本开始，将 ES、Kibana 项目的开源协议从 Apache V2 改为 SSPL 。
+  - SSPL 是一种未被 OSI（Open Source Initiative）组织认可的开源协议，禁止用户将该软件作为服务出售，除非购买商业许可证。
+  - 对此，AWS 公司宣布分叉 ES、Kibana 项目并独立维护，采用 Apache V2 开源协议。
 
 ### 部署
 
@@ -820,7 +829,8 @@ pipeline 的语法与 Ruby 相似，特点如下：
         - net
       volumes:
         - ./elasticsearch/data:/usr/share/elasticsearch/data
-        - ./elasticsearch/config:/usr/share/elasticsearch/config
+      #  - ./elasticsearch/config:/usr/share/elasticsearch/config
+      #  - ./elasticsearch/securityconfig:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig
       ulimits:
         memlock:
           soft: -1
@@ -839,44 +849,49 @@ pipeline 的语法与 Ruby 相似，特点如下：
       networks:
         - net
       volumes:
-        - ./kibana/config:/usr/share/kibana/config
+       - ./kibana/data:/usr/share/kibana/data
+      # - ./kibana/config:/usr/share/kibana/config
 
   networks:
     net:
   ```
   - 容器内以非 root 用户运行服务，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
     ```sh
-    mkdir -p elasticsearch/data elasticsearch/config kibana/config
+    mkdir -p elasticsearch/config elasticsearch/data kibana/config kibana/data
     chown -R 1000 elasticsearch kibana
     ```
-  - 先不挂载配置目录，启动一次。然后将容器内的 config 目录拷贝出来（包含了自动生成的 pem 文件，允许 SSL 连接），修改之后再挂载，重新启动容器。\
-    例如 elasticsearch.yml 的配置：
-    ```yml
-    cluster.name: cluster-log
-    node.name: node-1
-    network.host: 0.0.0.0
-    http.port: 9200
+  - 先不挂载配置目录，启动一次。然后将容器内的 config 目录拷贝出来（包含了自动生成的 pem 文件），修改之后再挂载配置目录，重新启动容器。
 
-    discovery.seed_hosts:
-      - 10.0.0.1:9300
+### 配置
 
-    cluster.initial_master_nodes:
-      - node-1
+- elasticsearch.yml 的配置示例：
+  ```yml
+  cluster.name: cluster-log
+  node.name: node-1
+  network.host: 0.0.0.0
+  http.port: 9200
 
-    ...
-    ```
-    kibana.yml 的配置：
-    ```yml
-    server.port: 5601
-    server.host: '0.0.0.0'
-    server.name: 'kibana'
+  discovery.seed_hosts:
+    - 10.0.0.1:9300
 
-    elasticsearch.hosts: ['https://elasticsearch:9200']
-    elasticsearch.ssl.verificationMode: none
-    elasticsearch.username: kibanaserver
-    elasticsearch.password: kibanaserver
-    elasticsearch.requestHeadersWhitelist: ["securitytenant","Authorization"]
+  cluster.initial_master_nodes:
+    - node-1
 
-    ...
-    ```
+  ...
+  ```
+
+- kibana.yml 的配置示例：
+  ```yml
+  server.port: 5601
+  server.host: '0.0.0.0'
+  server.name: 'kibana'
+
+  elasticsearch.hosts: ['https://elasticsearch:9200']   # 连接 ES 时采用 HTTPS 协议
+  elasticsearch.ssl.verificationMode: none              # 不验证 ES 的 SSL 证书是否有效
+  elasticsearch.username: kibanaserver
+  elasticsearch.password: kibanaserver
+  elasticsearch.requestHeadersWhitelist: ["securitytenant","Authorization"]
+
+  ...
+  ```
 

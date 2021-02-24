@@ -1,6 +1,6 @@
 # Tomcat
 
-：一个 Web 服务器软件，由 Apache 基金会管理。
+：一个 Web 服务器软件，由 ASF 管理。
 - [官方文档](https://tomcat.apache.org/)
 - 一般用作动态服务器，支持 Servlet、JSP ，常用于运行 Java Web 项目。
 

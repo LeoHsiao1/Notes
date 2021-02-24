@@ -3,7 +3,7 @@
 ：一个消息队列。
 - [官方文档](http://kafka.apache.org/documentation/)
 - 基于 Scala 开发。
-- 由 LinkedIn 公司开源，捐献给了 Apache 基金会。
+- 由 LinkedIn 公司开源，捐献给了 ASF 。
 - 容易横向扩展，吞吐量的上限很高。
 
 ## 原理

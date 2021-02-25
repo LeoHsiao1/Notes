@@ -256,9 +256,12 @@ docker network
 
 ```sh
 docker
-      images                 # 列出本机的所有镜像
-      image rm <image>...    # 删除镜像
-      tag <image> <imageName>:<tag>  # 给镜像加上 imageName 和 tag
+      images                          # 显示本机的所有镜像
+        -a                            # 显示所有的（默认不显示中间镜像）
+      image rm <image>...             # 删除镜像
+      prune                           # 删除没有被容器使用的镜像
+           -a                         # 删除所有未使用的镜像（默认只删除可显示的）
+      tag <image> <imageName>:<tag>   # 给镜像加上名称和 tag ，可以反复添加
 ```
 - 例：删除所有 none 镜像
     ```sh
@@ -278,9 +281,9 @@ docker
 - 尽量不要拉取 latest 版本，而使用具体的版本名，比如 v1.0 ，否则在不同时间拉取的 latest 版本会不一样。
 - 镜像在宿主机上会存储成一些零散的文件，使用以下命令可以导出成压缩包：
   ```sh
-  docker save -o images.tar <image>...           # 将镜像打包成 tar 文件
-  docker save <image>... | gzip > images.tar.gz  # 打包成 tar.gz 文件
-  docker load -i images.tar                      # 导入镜像
+  docker save -o images.tar <image>...        # 将镜像打包成 tar 文件
+  docker save <image>... | gzip > images.tgz  # 或者打包并压缩
+  docker load -i images.tar                   # 导入镜像
   ```
 
 ### 制作

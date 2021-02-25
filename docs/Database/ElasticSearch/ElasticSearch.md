@@ -35,7 +35,7 @@
 
 ES 服务器的配置文件是 `config/elasticsearch.yml` ，内容示例如下：
 ```yml
-cluster.name: cluster-1           # 该 ES 所属的集群名
+cluster.name: uster_1           # 该 ES 所属的集群名
 node.name: node-1                 # 该 ES 的节点名，默认为当前主机名
 path.data: /var/data/elasticsearch
 path.logs: /var/log/elasticsearch

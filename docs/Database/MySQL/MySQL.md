@@ -25,7 +25,8 @@ MySQL 存在多个分支：
 ## 服务器
 
 - 运行 mysqld 进程，即可作为 MySQL 服务器提供服务。
-- mysqld 通常作为守护进程运行，监听 3306 端口，供 MySQL 客户端连接。
+  - mysqld 默认监听 TCP 3306 端口，供 MySQL 客户端连接。
+  - 默认是使用 mysqld_safe 脚本启动 mysqld 进程，当其异常退出时会自动重启。
 
 ### 部署
 

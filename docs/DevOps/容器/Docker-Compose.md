@@ -92,7 +92,7 @@ services:                     # 开始定义服务
       - 9090-9091:8080-8081
     networks:                 # 连接到的 docker 网络
       - net
-    # network_mode: host      # 网络模式
+    # network_mode: host      # 网络模式，不能与 networks 同时配置
     volumes:                  # 挂载目录
       - /root/data:/root/data # 可以直接挂载目录
       - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）

@@ -194,16 +194,19 @@ docker network
   - 创建容器的默认配置是 `docker run --network bridge` ，因此会将容器的虚拟网卡连接到 bridge 网络的 docker0 网卡。
   - 从容器内不能访问到 eth 网卡，因为缺乏 DNS ，比如尝试 ping 会报错 `No route to host` 。
   - 当容器内的服务监听端口时，是监听虚拟网卡上的 Socket ，因此不能被容器外的 eth 网卡或其它网卡访问到。
+
 - 让容器内端口可以被容器外访问的三种方案：
   - 将容器内端口映射到宿主机的 eth 网卡上的端口。
-    - 比如执行 `docker run -p 80:80`
-    - 此时 docker daemon 会配置 iptables 规则，将宿主机 80 端口收到的流量转发到容器内的 80 端口。
-      - 不过此时相当于在宿主机的防火墙上开通 80 端口，允许被任意外部 IP 访问。
+    - 比如执行 `docker run -p 80:80` ，此时 docker daemon 会自动配置 iptables 规则，将宿主机 80 端口收到的 TCP 流量转发到容器的 80 端口。
+    - 缺点：
+      - 此时宿主机的防火墙会暴露 80 端口，允许被任意外部 IP 访问。
       - 此时从一个容器中不能访问到另一个容器映射的端口，因为 iptables 规则不会转发该流量。
+      - 这样自动配置的 iptables 规则比较复杂，可能会出错。此时建议先重启 docker daemon ，让它重新配置网络。
   - 让容器连接到 host 网络，从而使用宿主机的 eth 网卡，而不创建自己的虚拟网卡。
-    - 比如执行 `docker run --network host`
-    - 这样当容器内的服务监听端口时，是监听 eth 网卡上的 Socket ，可以被外部访问。
-  - 如果几个容器连接到同一个 bridge 网络，就可以在一个容器内访问其它容器、访问所有端口（使用容器的名字作为目标主机）。例如：`ping mysql`
+    - 比如执行 `docker run --network host` ，这样当容器内的服务监听端口时，是监听 eth 网卡上的 Socket ，因此可以被外部 IP 访问。
+  - 如果几个容器连接到同一个 bridge 网络，就可以在一个容器内访问其它容器、访问所有端口（使用容器的名字作为目标主机）。
+    - 比如执行 `ping mysql` 时会自动将容器名 mysql 解析成容器的 IP 。
+
 - 例：创建几个容器
   ```sh
   [root@Centos ~]# docker run -d --name test1 --network host nginx

@@ -308,7 +308,6 @@ meilisearch 是一个开源的搜索引擎，基于 Rust 语言开发，借鉴�
 1. 启动 meilisearch 服务器：
     ```sh
     docker run -d --name meilisearch \
-            --restart on-failure \
             -p 7700:7700 \
             -e MEILI_MASTER_KEY=****** \
             -e MEILI_HTTP_ADDR=0.0.0.0:7700 \

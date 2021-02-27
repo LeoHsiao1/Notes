@@ -23,7 +23,6 @@
     services:
       sonarqube:
         image: sonarqube:8-community
-        restart: on-failure
         ports:
           - 9000:9000
         networks:
@@ -40,7 +39,6 @@
 
       postgres:
         image: postgres:12
-        restart: on-failure
         networks:
           - net
         environment:

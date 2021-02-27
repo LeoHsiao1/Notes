@@ -17,7 +17,6 @@
     openldap:
       image: osixia/openldap:1.4.0
       hostname: openldap
-      restart: on-failure
       ports:
         - 389:389
         - 636:636

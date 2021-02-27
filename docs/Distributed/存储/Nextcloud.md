@@ -20,7 +20,6 @@
   services:
     mysql:
       image: percona
-      restart: on-failure
       environment:
       - MYSQL_ROOT_PASSWORD=******    # 设置 root 密码
       - MYSQL_DATABASE==nextcloud
@@ -35,7 +34,6 @@
       image: nextcloud
       depends_on:
       - mysql
-      restart: on-failure
       ports:
       - 80:80
       networks:

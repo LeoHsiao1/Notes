@@ -11,7 +11,6 @@
 
     gitlab:
       image: gitlab/gitlab-ce:latest
-      restart: on-failure
       hostname: 10.0.0.1
       environment:
         GITLAB_OMNIBUS_CONFIG: |

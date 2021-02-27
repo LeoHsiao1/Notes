@@ -27,20 +27,25 @@
 
 - 或者用 Docker 部署：
   ```sh
-  docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.10.0
+  docker run -d --name elasticsearch \
+             --network host \                     # 使用宿主机的网卡，以便绑定宿主机的对外 IP
+             -e "discovery.type=single-node" \
+             elasticsearch:7.10.0
   ```
-  9200 端口供用户通过 HTTP 协议访问，9300 端口供 ES 集群的其它节点通过 TCP 协议访问。
 
 ## 配置
 
 ES 服务器的配置文件是 `config/elasticsearch.yml` ，内容示例如下：
 ```yml
-cluster.name: uster_1           # 该 ES 所属的集群名
+cluster.name: cluster_1           # 该 ES 所属的集群名
 node.name: node-1                 # 该 ES 的节点名，默认为当前主机名
+
+network.host: 10.0.0.1            # 该 ES 绑定的 IP ，该 IP 会公布给集群中其它 ES ，供它们访问
+http.port: 9200                   # HTTP 通信监听的端口，供用户访问
+transport.port: 9300              # TCP 通信监听的端口，供集群中其它 ES 节点访问
+
 path.data: /var/data/elasticsearch
 path.logs: /var/log/elasticsearch
-network.host: 0.0.0.0             # 监听的 IP
-http.port: 9200                   # 监听的端口
 ```
 
 ES 启动时会检查以下环境条件是否满足，如果不满足则会发出警告。如果此时还配置了 `network.host` 参数，则 ES 会按生产环境严格要求，将这些警告升级为异常。

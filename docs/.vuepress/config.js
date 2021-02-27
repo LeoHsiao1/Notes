@@ -577,11 +577,12 @@ module.exports = {
                     title: '存储',
                     children: [
                         '存储/简介',
-                        '存储/h5ai',
-                        '存储/Nextcloud',
-                        '存储/Artifactory',
                         '存储/FastDFS',
+                        '存储/go-fastdfs',
                         '存储/MinIO',
+                        '存储/Artifactory',
+                        '存储/Nextcloud',
+                        '存储/h5ai',
                     ]
                 },
             ],

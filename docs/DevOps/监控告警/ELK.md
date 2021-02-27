@@ -14,7 +14,7 @@ ELk 系统主要由以下软件组成：
 - ElasticSearch
   - 用于存储数据，并支持查询。
 - Logstash
-  - 一个命令行工具，用于采集日志数据，并解析成格式化数据，发送到 ES 中存储。
+  - 用于采集日志数据，并解析成格式化数据，发送到 ES 中存储。
   - 基于 Ruby 开发，通过 JRuby 解释器运行在 JVM 上。
 - Kibana
   - 一个基于 node.js 运行的 Web 服务器，用于查询、展示 ES 中存储的数据。支持显示简单的仪表盘。
@@ -61,6 +61,7 @@ ELK 系统还可以选择加入以下软件：
 
     i18n.locale: 'zh-CN'        # 让 Kibana 网站显示中文
     ```
+    - 如果 ES 集群包含多个节点，为了对 Kibana 发向 ES 的查询请求进行负载均衡，建议在 Kibana 所在主机上部署一个 ES 节点，只担任 coordinating 角色，然后让 Kibana 将查询请求都发给它。
 
 3. 启动：
     ```sh
@@ -70,12 +71,14 @@ ELK 系统还可以选择加入以下软件：
 ### 用法
 
 - 访问 URL `/status` 可查看 Kibana 本身的状态。
-- 除了使用 Logstash、Beats 等服务采集日志数据，还可以在 Kibana 网站上直接上传日志文件，解析后存储到 ES ，便于测试。
-
-- 在 Kibana 的管理页面，可以管理索引、数据流、索引模板、组件模板、索引模式。
-- 建议在 Kibana 网站上进行以下设置：
+- Kibana 的主要功能：
+  - 查询 ES 中的数据，并可以创建仪表盘，便于分析。
+  - 管理 ES 的索引，进行多种配置。
+  - 支持在网页上上传日志文件，解析后存储到 ES ，便于测试。
+- 建议在 Kibana 的网页上进行以下设置：
   - 设置 Default 工作区，只显示 Kibana、Observability 中需要用到的部分功能。
-  - 将显示的日期格式设置为 `YYYY/MM/D HH:mm:ss` 。
+  - 将 Date format 参数设置为 `YYYY/MM/D HH:mm:ss` ，控制显示的日期格式。
+  - 将 defaultRoute 参数设置为 `/app/discover` ，控制登录 kibane 之后默认跳转的页面。
 - Kibana 会将自身的数据存储在 ES 中名为 .kibana 的索引中。
 
 ### Discover
@@ -92,7 +95,8 @@ ELK 系统还可以选择加入以下软件：
   - 页面中下方是一个列表，显示所有查询结果。
     - 每行一条 document ，点击某个 document 左侧的下拉按钮，就会显示其详细信息。
     - 默认显示 Time 和 _source 字段，可以在左侧栏中指定其它字段用作显示。
-  - 点击页面右上角的 Save 按钮，就会保存当前查询页面，以便日后再次查看。
+  - 点击搜索栏前端的保存按钮，可以保存当前的 query 配置，包括查询表达式、字段筛选、时间筛选。
+  - 点击页面右上角的 Save 按钮，可以会保存当前的 search 页面，包括查询表达式、字段筛选、显示的字段，但不包括时间筛选。
 
 - 搜索时，默认使用 Kibana 自带的查询语言 KQL ，语法如下：
   - 用 `:` 表示等于关系：
@@ -159,7 +163,7 @@ ELK 系统还可以选择加入以下软件：
     ├── log.json            # 记录日志文件的状态。该文件体积超过 10 MB 时会自动清空，并将此时所有文件的状态保存到快照文件中
     └── meta.json           # 记录一些元数据
     ```
-  - 单个日志文件的记录示例：
+  - 单个记录的示例：
     ```json
     {"op":"set", "id":237302}                             // 本次动作的编号
     {
@@ -404,8 +408,7 @@ ELK 系统还可以选择加入以下软件：
   name: 'filebeat-001'        # 该 Beat 的名称，默认使用当前主机名
   tags: ['json']              # 给每条日志加上标签，保存到一个名为 tags 的字段中，便于筛选日志
   fields:                     # 给每条日志加上字段，这些字段默认保存到一个名为 fields 的子字典中
-    env: test
-    level: debug
+    project: test
   fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
   ```
 
@@ -432,7 +435,8 @@ ELK 系统还可以选择加入以下软件：
       - '/var/log/apache/*'
 
     # fields:                       # 覆盖全局的 General 配置项
-    #   apache: true
+    #   project: test
+    #   logformat: apache
     # fields_under_root: true
 
     # enabled: true                       # 是否启用该输入项
@@ -534,10 +538,9 @@ ELK 系统还可以选择加入以下软件：
         #   path => "/var/log/http.log"
         # }
         beats {               # 接收 beats 的输入
-          port => "5044"      # 监听一个 TCP 端口，供 beats 发送数据进来
+          port => "5044"      # 监听一个端口，供 beats 发送数据进来。这里采用 TCP 协议通信，而不是 HTTP 协议
           host => "0.0.0.0"
-          client_inactivity_timeout => 300     # 如果 beats 连续 n 秒未活动，则关闭 TCP 连接。默认是 60 秒
-          # beats 与 logstash 之间的通信不是采用 HTTP 协议，因此不支持 Basic Auth 认证
+          # client_inactivity_timeout => 60       # 如果 beats 连续多久未活动，则关闭 TCP 连接，单位为秒
         }
       }
 
@@ -670,7 +673,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
     NOTSPACE    \S+
     GREEDYDATA  .*
     ```
-  - grok 内置了一些 [patterns](https://github.com/logstash-plugins/logstash-patterns-core/blob/master/patterns/grok-patterns) 。
+  - grok 内置了一些 [patterns](https://github.com/logstash-plugins/logstash-patterns-core/blob/master/patterns/ecs-v1/grok-patterns) 。
 - 例：在 pipeline 的 filter 中使用 grok 插件
   ```sh
   filter {
@@ -804,8 +807,9 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 - ELK 系统的普通发行版称为 OSS ，收费版本称为 X-Pack 。
   - Elastic 公司加大了商业化的程度，逐渐对软件的部分功能收费，导致 OSS 版缺少一些重要功能，比如身份认证、用户权限控制、告警。
-- 2019 年，AWS 公司创建了 Open Distro for Elasticsearch 项目，通过给 ES、Kibana 软件安装一些插件，以完全开源的方式扩展其功能，甚至比付费版的功能还多。
+- 2019 年，AWS 公司创建了 Open Distro for Elasticsearch 项目，通过给 ES、Kibana 软件安装一些插件，以完全开源的方式扩展其功能。
   - [官方文档](https://opendistro.github.io/for-elasticsearch-docs/)
+  - 功能、配置有些小差异，这是为了回避 Elastic 公司的版权。
 - 2021 年初，Elastic 公司宣布从 v7.11 版本开始，将 ES、Kibana 项目的开源协议从 Apache V2 改为 SSPL 。
   - SSPL 是一种未被 OSI（Open Source Initiative）组织认可的开源协议，禁止用户将该软件作为服务出售，除非购买商业许可证。
   - 对此，AWS 公司宣布分叉 ES、Kibana 项目并独立维护，采用 Apache V2 开源协议。
@@ -821,12 +825,8 @@ pipeline 的语法与 Ruby 相似，特点如下：
     elasticsearch:
       image: amazon/opendistro-for-elasticsearch:1.13.0
       container_name: elasticsearch
-      ports:
-        - 9200:9200
-        - 9300:9300
-        # - 9600:9600   # 供 Performance Analyzer 访问
-      networks:
-        - net
+      network_mode:
+        host            # 使用宿主机的网卡，以便绑定宿主机的对外 IP
       volumes:
         - ./elasticsearch/data:/usr/share/elasticsearch/data
       #  - ./elasticsearch/config:/usr/share/elasticsearch/config
@@ -845,18 +845,13 @@ pipeline 的语法与 Ruby 相似，特点如下：
         - elasticsearch
       ports:
         - 5601:5601
-      networks:
-        - net
       volumes:
        - ./kibana/data:/usr/share/kibana/data
       # - ./kibana/config:/usr/share/kibana/config
-
-  networks:
-    net:
   ```
   - 容器内以非 root 用户运行服务，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
     ```sh
-    mkdir -p elasticsearch/config elasticsearch/data kibana/config kibana/data
+    mkdir -p elasticsearch/data elasticsearch/config kibana/data kibana/config
     chown -R 1000 elasticsearch kibana
     ```
   - 先不挂载配置目录，启动一次。然后将容器内的 config 目录拷贝出来（包含了自动生成的 pem 文件），修改之后再挂载配置目录，重新启动容器。
@@ -867,17 +862,21 @@ pipeline 的语法与 Ruby 相似，特点如下：
   ```yml
   cluster.name: cluster-log
   node.name: node-1
-  network.host: 0.0.0.0
+
+  network.host: 10.0.0.1
   http.port: 9200
+  transport.port: 9300
 
   discovery.seed_hosts:
-    - 10.0.0.1:9300
+    - localhost:9300
 
   cluster.initial_master_nodes:
     - node-1
 
+  opendistro_security.ssl.http.enabled: true      # HTTP 通信时是否启用 SSL（TCP 通信时必须启用，不支持关闭）
   ...
   ```
+
 
 - kibana.yml 的配置示例：
   ```yml
@@ -885,8 +884,8 @@ pipeline 的语法与 Ruby 相似，特点如下：
   server.host: '0.0.0.0'
   server.name: 'kibana'
 
-  elasticsearch.hosts: ['https://elasticsearch:9200']   # 连接 ES 时采用 HTTPS 协议
-  elasticsearch.ssl.verificationMode: none              # 不验证 ES 的 SSL 证书是否有效
+  elasticsearch.hosts: ['https://10.0.0.1:9200']  # 连接 ES 时采用 HTTPS 协议
+  elasticsearch.ssl.verificationMode: none        # 不验证 ES 的 SSL 证书是否有效
   elasticsearch.username: kibanaserver
   elasticsearch.password: kibanaserver
   elasticsearch.requestHeadersWhitelist: ["securitytenant","Authorization"]
@@ -908,15 +907,6 @@ pipeline 的语法与 Ruby 相似，特点如下：
         -cacert config/root-ca.pem \                          # 使用 root 用户的 SSL 证书
         -cert config/kirk.pem \
         -key config/kirk-key.pem
-    
-    bash plugins/opendistro_security/tools/securityadmin.sh \
-        -cd tmp/ \
-        -icl \
-        -nhnv \
-        -cacert config/root-ca.pem \
-        -cert config/kirk.pem \
-        -key config/kirk-key.pem
-
     ```
 
 - Security 插件支持多种认证后端，比如内部用户数据库（Internal users Database）、LDAP、Kerberos 等。

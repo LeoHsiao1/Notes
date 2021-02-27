@@ -37,7 +37,7 @@
 
 ES 服务器的配置文件是 `config/elasticsearch.yml` ，内容示例如下：
 ```yml
-cluster.name: cluster_1           # 该 ES 所属的集群名
+cluster.name: cluster-1           # 该 ES 所属的集群名
 node.name: node-1                 # 该 ES 的节点名，默认为当前主机名
 
 network.host: 10.0.0.1            # 该 ES 绑定的 IP ，该 IP 会公布给集群中其它 ES ，供它们访问
@@ -65,7 +65,7 @@ ES 启动时会检查以下环境条件是否满足，如果不满足则会发�
 [root@Centos ~]# curl 127.0.0.1:9200
 {
   "name" : "node-1",
-  "cluster_name" : "cluster1",
+  "cluster_name" : "cluster-1",
   "cluster_uuid" : "cDXF4mIeRqK4Dlj_YmSSoA",
   "version" : {
     "number" : "7.10.0",

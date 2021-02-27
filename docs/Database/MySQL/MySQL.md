@@ -45,7 +45,7 @@ MySQL 存在多个分支：
   set password for 'root'@'localhost' = password('******');  # 设置新密码
   ```
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -d --name mysql -p 3306:3306   \
           -e MYSQL_ROOT_PASSWORD=******     \   # root 用户的密码（必须设置该环境变量）
@@ -73,7 +73,7 @@ MySQL 存在多个分支：
   yum install mysql
   ```
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -it --rm percona:5.7.26-centos mysql -h 127.0.0.1 -u root -p
   ```

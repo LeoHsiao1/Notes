@@ -35,7 +35,7 @@
   ```
   - 启动服务器时，默认使用的配置文件是 /etc/mongod.conf ，在前台运行，监听端口 27017 ，
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -d --name mongo -p 27017:27017 mongo:4
   ```

@@ -14,7 +14,7 @@
   sh startup.sh -m standalone
   ```
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -d --name nacos \
           -p 8848:8848 \

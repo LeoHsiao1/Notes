@@ -17,7 +17,7 @@
   ```
   - 默认的访问地址为 <http://localhost1:3000> 。默认的用户名、密码是 admin、admin 。
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -d --name grafana -p 3000:3000 grafana/grafana
   ```

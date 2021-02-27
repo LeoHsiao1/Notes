@@ -11,7 +11,7 @@
 
 ## 部署
 
-- 运行 Docker 镜像：
+- 用 Docker 部署：
   ```sh
   docker run -d --name artifactory \
          -p 8082:8082 \

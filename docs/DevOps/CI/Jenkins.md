@@ -17,7 +17,7 @@
   2. 安装 JDK 。
   3. 执行 `java -jar jenkins.war --httpPort=8080` 启动 Jenkins ，然后便可以访问其 Web 网站 `http://localhost:8080` 。
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   mkdir /var/jenkins_home
   docker run -d \

@@ -24,7 +24,7 @@
               --web.enable-lifecycle                         # 启用 reload、quit 等 HTTP API
   ```
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -d --name prometheus -p 9090:9090 \
           -v /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \    # 挂载配置文件（可选项）

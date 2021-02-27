@@ -25,7 +25,7 @@
   ```
   运行时需要 JDK 环境，不过二进制发行版自带了一个 JDK 。
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.10.0
   ```

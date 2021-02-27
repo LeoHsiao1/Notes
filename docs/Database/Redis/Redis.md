@@ -45,7 +45,7 @@
               /opt/redis/redis.conf  # 使用指定的配置文件
   ```
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -d --name redis -p 6379:6379  \
           # -v /opt/redis/redis.conf:/opt/redis/redis.conf  \   # 挂载配置文件

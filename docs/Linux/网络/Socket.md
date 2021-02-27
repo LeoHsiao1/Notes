@@ -98,19 +98,18 @@ FRAG: inuse 0 memory 0
 ### netstat
 
 ：用于查看本机网络连接的状态。
-
-命令：
-```sh
-$ netstat
-        -a  # 显示所有网络连接、socket
-        -l  # 只显示被进程 listen 的 socket
-        -t  # 只显示 TCP 的 socket
-        -u  # 只显示 UDP 的 socket
-        -x  # 只显示 unix socket
-        
-        -p  # 显示使用每个 socket 的进程名
-        -n  # 不允许用服务名代替端口号（比如默认会把 22 端口显示成 ssh）
-```
+- 命令：
+  ```sh
+  $ netstat
+          -a  # 显示所有网络连接、socket
+          -l  # 只显示被进程 listen 的 socket
+          -t  # 只显示 TCP 的 socket
+          -u  # 只显示 UDP 的 socket
+          -x  # 只显示 unix socket
+          
+          -p  # 显示使用每个 socket 的进程名
+          -n  # 不允许用服务名代替端口号（比如默认会把 22 端口显示成 ssh）
+  ```
 
 ### ss
 

@@ -11,7 +11,7 @@
 
 ## 部署
 
-- 运行 Docker 镜像：
+- 用 Docker 部署：
   ```sh
   docker run -d -p 9000:9000 \
           --name minio \

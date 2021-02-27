@@ -25,7 +25,7 @@
         -s reload           # 重新加载配置文件
   ```
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
   ```sh
   docker run -d --name nginx -p 80:80
         -v /opt/web/dist:/usr/share/nginx/html         # 挂载静态文件目录

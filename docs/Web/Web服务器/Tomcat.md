@@ -15,7 +15,7 @@
     ./startup.sh
     ```
 
-- 或者运行 Docker 镜像：
+- 或者用 Docker 部署：
     ```sh
     docker run -d --name=tomcat -p 8080:8080 tomcat:9.0
 

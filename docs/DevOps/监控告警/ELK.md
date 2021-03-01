@@ -70,7 +70,7 @@ ELK 系统还可以选择加入以下软件：
 
 ### 用法
 
-- 访问 URL `/status` 可查看 Kibana 本身的状态。
+- 访问 URL `/status` 可查看 Kibana 自身的状态。
 - Kibana 的主要功能：
   - 查询 ES 中的数据，并可以创建仪表盘，便于分析。
   - 管理 ES 的索引，进行多种配置。
@@ -137,7 +137,6 @@ ELK 系统还可以选择加入以下软件：
   - Redis
   - File
   - Console
-- 采集的每条日志称为一个日志事件（event）。
 
 ## Filebeat
 
@@ -201,10 +200,14 @@ ELK 系统还可以选择加入以下软件：
     - 如果在 backoff 时长之后，依然没有创建文件 A 。则 Filebeat 会认为文件被删除（removed）。
       - 默认配置了 `close_removed: true` ，因此会立即关闭文件 B 而不采集，而文件 A 又因为不存在而采集不了。
 
-- Filebeat 每次发送日志事件到输出端时，都会记录发送状态。
-  - 此次操作称为发布事件（publish event）。
-  - 如果不能连接到输出端，会每隔几秒尝试连接。
-  - 如果发送日志事件到输出端失败，会自动重试。直到发送成功，才更新记录。
+- Filebeat 每采集一条日志文本，都会在内存中保存为 JSON 对象，称为日志事件（event）。
+  - 日志事件默认使用 message 字段，保存日志的原始内容。
+  - 日志事件会尽快处理，发送到输出端，不会保存到磁盘中。
+
+- Filebeat 每次发送日志事件到输出端时，都会记录其发送状态。
+  - 该操作称为发布事件（publish event）。
+  - 如果不能连接到输出端，则会每隔几秒尝试连接。
+  - 如果发送日志事件到输出端失败，则会自动重试。直到发送成功，才更新记录。
   - 每个日志事件只有成功发送到输出端，且收到确认接收的回复，才视作发送成功。
     - 因此，采集到的日志事件至少会被发送一次。但如果在确认接收之前重启 Filebeat ，则可能重复发送。
 
@@ -368,61 +371,64 @@ ELK 系统还可以选择加入以下软件：
     ```sh
     # ./filebeat setup    # 初始化，先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
     ./filebeat            # 在前台运行
-              -e          # 将 filebeat 本身的输出发送到 stderr ，而不是已配置的 output
+              -e          # 将 filebeat 自身的日志输出到 stderr
     ```
 
 ### 配置
 
-- 编辑配置文件 filebeat.yml ：
+- filebeat.yml 的基本配置：
     ```yml
-    setup.kibana:               # kibana 的配置
-      host: '10.0.0.1:5601'
-
-    output.elasticsearch:       # 输出到 ES 的配置
-      hosts: ['10.0.0.1:9200']
-      # username: 'admin'
-      # password: '123456'
-      # index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
-
-    # output.logstash:          # 输出到 Logstash 的配置
-    #   hosts: ['localhost:5044']
-
-    # 索引模板的配置
-    # setup.template.name: "filebeat-%{[agent.version]}"    # 索引模板的名称
-    # setup.template.pattern: "filebeat-*"                  # 索引模式
-    # setup.template.settings:
-    #   index.number_of_shards: 1
-    #   index.number_of_replicas: 1
-    #   _source.enabled: true
-
+    # path.config: ${path.home}                             # 配置文件的路径，默认是项目根目录
     # filebeat.shutdown_timeout: 0s                         # 当 Filebeat 关闭时，如果有日志事件正在发送，则等待一定时间直到其完成。默认不等待
     # filebeat.registry.path: ${path.data}/registry         # registry 文件的保存目录
     # filebeat.registry.file_permissions: 0600              # registry 文件的权限
     # filebeat.registry.flush: 0s                           # 每当 Filebeat 发布一个日志事件到输出端，隔多久才刷新 registry 文件
+
+    # 配置 filebeat 自身的日志
+    logging.level: info                     # 只记录不低于该级别的日志
+    logging.to_stderr: true                 # 将日志输出到 stderr （否则默认是输出到文件 ./logs/filebeat ）
+    logging.json: true                      # 输出的日志采用 JSON 格式
+    # logging.metrics.enabled: true         # 在日志中输出 filebeat 的状态信息，等级为 info
+    # logging.metrics.period: 30s           # 输出 metrics 信息的时间间隔
+
+    output.logstash:                        # 输出到 Logstash 的配置
+      hosts: ['localhost:5044']
+
+    # setup.kibana:                         # kibana 的配置
+    #   host: '10.0.0.1:5601'
+
+    # output.elasticsearch:                 # 输出到 ES 的配置
+    #   hosts: ['10.0.0.1:9200']
+    #   username: 'admin'
+    #   password: '123456'
+    #   index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
+
+    processors:                             # 对采集的所有日志事件进行加工处理，然后才输出
+      - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
+          when.not.contains.tags: forwarded # 如果该日志不属于转发的
+    #   - drop_event:                       # 丢弃日志事件，如果它满足条件
+    #       when:
+    #         regexp:
+    #           message: "^DEBUG"
+    #   - drop_fields:
+    #       fields: ["cpu.user", "cpu.system"]
+
+    filebeat.config.modules:                # 加载模块的配置
+      path: ${path.config}/modules.d/*.yml
     ```
-    - Filebeat 同时只能启用一种输出。
-    - 如果修改了默认的索引名，则相应地还需要配置 `setup.template.name` 和 `setup.template.pattern` 参数，并在 Kibana 页面上配置索引模板、索引模式。
+    - Filebeat 同时只能启用一种 output 输出端。
+    - 如果修改了默认的索引名，则还需要修改默认配套的索引模板、索引模式。
 
 - 所有类型的 beats 都支持以下 General 配置项。可以在全局配置，也可以在局部配置。
   ```yml
   name: 'filebeat-001'        # 该 Beat 的名称，默认使用当前主机名
   tags: ['json']              # 给每条日志加上标签，保存到一个名为 tags 的字段中，便于筛选日志
-  fields:                     # 给每条日志加上字段，这些字段默认保存到一个名为 fields 的子字典中
+  fields:                     # 给每条日志加上字段，这些字段默认保存到一个名为 fields 的字段的子字典中
     project: test
   fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
   ```
 
-- 可以启用 filebeat 的一些内置模块，采集一些系统或流行软件的日志文件。
-  - [模块列表](https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-modules.html)
-  - 用法：
-    ```sh
-    ./filebeat modules
-                      enable  [module]...   # 启用一些模块
-                      disable [module]...   # 禁用一些模块
-                      list                  # 列出启用、禁用的所有模块
-    ```
-
-- 可以在配置文件中让 filebeat 采集一些指定的日志文件：
+- 让 filebeat 采集指定的日志文件的配置：
   ```yml
   filebeat.inputs:                  # 关于输入项的配置
   - type: log                       # 定义一个输入项，类型为一般的日志文件
@@ -431,6 +437,7 @@ ELK 系统还可以选择加入以下软件：
     - '/var/log/nginx/*'            # 可以使用通配符
 
   - type: log
+    # enabled: true                 # 是否启用该输入项
     paths:
       - '/var/log/apache/*'
 
@@ -439,22 +446,23 @@ ELK 系统还可以选择加入以下软件：
     #   logformat: apache
     # fields_under_root: true
 
-    # enabled: true                       # 是否启用该输入项
-    # encoding: utf-8                     # 编码格式
-    # exclude_files: ['\.tgz$']           # 排除一些文件，采用正则匹配
-    # include_lines: ['^WARN', '^ERROR']  # 只采集日志文件中的指定行，采用正则匹配。默认采集所有非空的行
-    # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中的指定行，采用正则匹配。该规则会在 include_lines 之后生效
-
-    # 如果启用任何一个以 json 开头的配置项，则会将每行日志文本按 JSON 格式解析，解析的字段默认保存到一个名为 json 的子字典中
-    # json.keys_under_root: true    # 是否将解析的字典保存为日志的顶级字段
+    # 如果启用任何一个以 json 开头的配置项，则会将每行日志文本按 JSON 格式解析，解析的字段默认保存到一个名为 json 的字段的子字典中
+    # 解析 JSON 的操作会在 multiline 之前执行。因此建议让 filebeat 只执行 multiline 操作，将日志发送到 Logstash 时才解析 JSON
     # json.add_error_key: true      # 如果解析出错，则加入 error.message 等字段
+    # json.keys_under_root: true    # 是否将解析的字典保存为日志的顶级字段
 
-    # 默认将每行日志文本视作一个日志事件，可以通过 multiline 规则将连续的多行文本记录成同一个日志事件。multiline 规则会在 include_lines 之前生效。
+    # 默认将每行日志文本视作一个日志事件，可以通过 multiline 规则将连续的多行文本记录成同一个日志事件
+    # multiline 操作会在 include_lines 之前执行
     # multiline.type: pattern       # 采用 pattern 方式，根据正则匹配处理多行。也可以采用 count 方式，根据指定行数处理多行
     # multiline.pattern: '^\s\s'    # 如果一行文本与 pattern 正则匹配，则按 match 规则与上一行或下一行合并
     # multiline.negate: false       # 是否反向匹配
     # multiline.match: after        # 取值为 after 则放到上一行之后，取值为 before 则放到下一行之前
     # multiline.max_lines: 500      # 多行日志最多包含多少行，超过的行数不会采集
+
+    # encoding: utf-8                     # 编码格式
+    # exclude_files: ['\.tgz$']           # 排除一些正则匹配的文件
+    # include_lines: ['^WARN', '^ERROR']  # 只采集日志文件中正则匹配的那些行。默认采集所有非空的行。该操作会在 exclude_lines 之前执行
+    # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中正则匹配的那些行。
 
     # scan_frequency: 10s           # 每隔多久扫描一次日志文件，如果有变动则创建 harvester 进行采集
     # ignore_older: 0s              # 不扫描最后修改时间在多久之前的文件，默认不限制时间。其值应该大于 close_inactive
@@ -479,6 +487,16 @@ ELK 系统还可以选择加入以下软件：
       - '/var/lib/docker/containers/*/*.log'
   ```
   - 配置时间时，默认单位为秒，可使用 1、1s、2m、3h 等格式的值。
+
+- 可以启用 filebeat 的一些内置模块，采集一些系统或流行软件的日志文件。
+  - [模块列表](https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-modules.html)
+  - 用法：
+    ```sh
+    ./filebeat modules
+                      enable  [module]...   # 启用一些模块
+                      disable [module]...   # 禁用一些模块
+                      list                  # 列出启用、禁用的所有模块
+    ```
 
 ## Logstash
 
@@ -508,7 +526,7 @@ ELK 系统还可以选择加入以下软件：
 - 每个管道主要分为三个阶段：
   - input ：输入项，用于接收数据。
   - filter ：过滤器，用于过滤、修改数据。是可选阶段。
-    - 通常通过 grok 插件将纯文本格式的日志数据转换成 JSON 格式的结构化数据。
+    - 通常使用 grok 插件将纯文本格式的日志数据转换成 JSON 格式的结构化数据。
     - 默认会给每个日志事件添加一个 `@timestamp` 字段。
       - 它采用 UTC 时区，默认取值为当前时刻。
       - 也可以从原始日志解析出时间。即使超过当前时间，也会生效。
@@ -556,7 +574,7 @@ ELK 系统还可以选择加入以下软件：
         #   codec => line { format => "custom format: %{message}"}    # 指定数据的每行格式，默认每行一个 JSON 格式的日志事件
         # }
         elasticsearch {                           # 输出到 ES
-          hosts => ["http://localhost:9200"]
+          hosts => ["http://10.0.0.1:9200"]
           # user                => "admin"
           # password            => "123456"
           # ssl_certificate_verification => true                            # 使用 HTTPS 连接时，是否验证 SSL 证书
@@ -578,9 +596,18 @@ ELK 系统还可以选择加入以下软件：
 pipeline 的语法与 Ruby 相似，特点如下：
 - Hash 字典的键值对之间通过空格分隔，比如 `{"field1" => "A" "field2" => "B"}` 。
 - 支持引用变量：
-  - 可以通过 `filed` 或 `[filed]` 的格式引用日志事件的顶级字段，通过 `[filed][sub_filed]...` 的格式引用子字段。
-  - 可以通过 `%{filed}` 的格式获取字段的值。
-  - 可以通过 `${VAR}` 的格式获取终端环境变量的值。
+  - 用 `filed` 或 `[filed]` 的格式引用日志事件的顶级字段。
+  - 用 `[filed][sub_filed]...` 的格式引用子字段。
+    - 引用子字段时，如果父字段不存在，则会自动创建它，因此应该先检查父字段是否存在。如下：
+      ```sh
+      if [json] and [json][version] == "null" {
+        mutate {
+          remove_field => [ "[json][version]" ]
+        }
+      }
+      ```
+  - 用 `%{filed}` 的格式获取字段的值。
+  - 用 `${VAR}` 的格式获取终端环境变量的值。
   - 例：
     ```sh
     filter {
@@ -594,18 +621,18 @@ pipeline 的语法与 Ruby 相似，特点如下：
       }
     }
     ```
-    - `@metadata` 字段不会被 output 阶段输出，适合存储一些临时的子字段。
+    - `@metadata` 字段不会被 output 阶段输出，因此适合存储一些临时的子字段。
 - 支持使用 if 语句：
-  - 支持使用 `<`、`>`、`<=`、`>=`、`==`、`!=` 比较运算符。
-  - 支持使用 `=~` `!~` 运算符，判断左侧的字符串是否匹配右侧的正则表达式。
-  - 支持使用 `and`、`or`、`!`、`not`、`not in` 逻辑运算符。
+  - 支持 `<`、`>`、`<=`、`>=`、`==`、`!=` 比较运算符。
+  - 支持 `=~` `!~` 运算符，判断左侧的字符串是否匹配右侧的正则表达式。
+  - 支持 `and`、`or`、`!`、`not`、`not in` 逻辑运算符。
   - 例：
     ```sh
     filter {
-      if [loglevel] == "DEBUG" {
+      if [level] == "DEBUG" {
         grok {...}
       }
-      else if [loglevel] == "WARN" {
+      else if [level] == "WARN" {
         grok {...}
       }
       else {
@@ -614,16 +641,16 @@ pipeline 的语法与 Ruby 相似，特点如下：
     }
     ```
     ```sh
-    if [loglevel] =~ "DEBUG" or [loglevel] =~ "WARN" or [loglevel] =~ "ERROR"
+    if [level] =~ "DEBUG" or [level] =~ "WARN" or [level] =~ "ERROR"
     ```
     ```sh
-    if [loglevel] in ["DEBUG", "WARN", "ERROR"]
+    if [level] in ["DEBUG", "WARN", "ERROR"]
     ```
     ```sh
     if "_grokparsefailure" not in [tags]    # 判断一个 tag 是否在 tags 字段中存在
     ```
     ```sh
-    if [loglevel]                           # 判断一个字段是否存在，且取值不为 false、null
+    if [level]                              # 判断一个字段是否存在，且取值不为 false、null
     ```
 
 ### codec
@@ -646,15 +673,15 @@ pipeline 的语法与 Ruby 相似，特点如下：
       ```
   2. 编写一个 grok 表达式来匹配日志：
       ```sh
-      %{TIMESTAMP_ISO8601:timestamp}\s+(?<loglevel>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$
+      %{TIMESTAMP_ISO8601:timestamp}\s+(?<level>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$
       ```
-      - 可以按 `(?<field>pattern)` 的格式匹配字段。例如 `(?<loglevel>\S+)` 表示使用正则表达式 `\S+` 进行匹配，将匹配结果赋值给名为 loglevel 的字段。
+      - 可以按 `(?<field>pattern)` 的格式匹配字段。例如 `(?<level>\S+)` 表示使用正则表达式 `\S+` 进行匹配，将匹配结果赋值给名为 level 的字段。
       - 可以按 `%{NAME:field}` 的格式调用事先定义的正则表达式。例如 `%{TIMESTAMP_ISO8601:timestamp}` 表示使用一个名为 TIMESTAMP_ISO8601 的正则表达式进行匹配，将匹配结果赋值给名为 timestamp 的字段。
 
   3. grok 输出的结构化数据为：
       ```sh
       {
-        "loglevel": "INFO",
+        "level": "INFO",
         "client_ip": "10.0.0.1",
         "message": "User login successfully",
         "timestamp": "2020-01-12 07:24:43.659+0000"
@@ -678,8 +705,8 @@ pipeline 的语法与 Ruby 相似，特点如下：
   ```sh
   filter {
     grok {
-      match => { "message" => "%{TIMESTAMP_ISO8601:timestamp}\s+(?<loglevel>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$" }  # 指定用于匹配的表达式
-      overwrite => [ "message" ]                        # 用提取的字段覆盖日志事件中的字段
+      match => { "message" => "%{TIMESTAMP_ISO8601:timestamp}\s+(?<level>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$" }  # 解析 message 字段，通过正则匹配提取字段
+      overwrite => [ "message" ]                        # 允许提取的这些字段覆盖日志事件中已存在的字段
       # patterns_dir => ["config/patterns"]             # 加载 patterns 的定义文件
       # keep_empty_captures => false                    # 如果匹配到的字段为空，是否依然保留该字段
       # tag_on_failure => ["_grokparsefailure"]         # 如果匹配失败，则给日志添加这些 tag
@@ -711,16 +738,31 @@ pipeline 的语法与 Ruby 相似，特点如下：
     ```
     不过这样会多次执行正则表达式，比如第一个正则表达式总是会被执行，开销较大。不如通过 if 语句选择性地执行 grok 。
 
-### date
+### json
 
-- date 是一个 filter 插件，用于解析日志事件的一个字段，获取时间，赋值给 `"@timestamp` 字段。
-- [官方文档](https://www.elastic.co/guide/en/logstash/current/plugins-filters-date.html)
+- json 是一个 filter 插件，用于按 JSON 格式解析日志事件的一个字段。
 - 例：
   ```sh
-  date {
-    match => ["timestamp", "UNIX", "UNIX_MS", "ISO8601", "yyyy-MM-dd HH:mm:ss.SSSZ"]   # 指定源字段，然后可以指定多个尝试匹配的时间字符串格式
-    # target => "@timestamp"                              # 要赋值的目标字段
-    # tag_on_failure => ["_dateparsefailure"]
+  json {
+    source => "message"                         # 按 JSON 格式解析 message 字段的值
+    # target => "json"                          # 将解析之后的 JSON 字典保存到该字段.如果该字段已存在，则覆盖它。如果不配置，则存储为顶级字段
+    # skip_on_invalid_json => false             # 解析失败时，不发出警告
+    # tag_on_failure => ["_jsonparsefailure"]
+  }
+  ```
+
+### date
+
+- date 是一个 filter 插件，用于解析日志事件的一个字段，获取时间。
+- 例：
+  ```sh
+  if [timestamp] {
+    date {
+      match => ["timestamp", "UNIX", "UNIX_MS", "ISO8601", "yyyy-MM-dd HH:mm:ss.SSSZ"]   # 指定源字段，然后可以指定多个尝试匹配的时间字符串格式
+      remove_field => ["timestamp"]
+      # target => "@timestamp"                      # 将解析之后的时间保存到该字段。如果该字段已存在，则覆盖它
+      # tag_on_failure => ["_dateparsefailure"]
+    }
   }
   ```
 
@@ -729,7 +771,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 - drop 是一个 filter 插件，用于丢弃一些日志。
 - 例：
   ```sh
-  if [loglevel] == "DEBUG" {
+  if [level] == "DEBUG" {
     drop {
       # percentage => 40      # 丢弃大概 40% 的这种日志
     }
@@ -751,8 +793,8 @@ pipeline 的语法与 Ruby 相似，特点如下：
     }
     lowercase  => [ "field1" ]                     # 将字段的值改为小写
     uppercase  => [ "field1" ]                     # 将字段的值改为大写
-    strip      => ["field1"]                       # 删掉字段的值前后的空白字符
-    split      => { "field1" => "," }              # 根据指定的字符分割一个字段的值，保存为数组形式
+    strip      => [ "field1" ]                     # 删掉字段的值前后的空白字符
+    split      => { "[json][version]" => "." }     # 根据指定的字符分割一个字段的值，保存为数组形式
     # tag_on_failure => ["_mutate_error"]
   }
   ```
@@ -942,14 +984,10 @@ pipeline 的语法与 Ruby 相似，特点如下：
 - 权限（Permissions）：表示允许某种操作，比如 `cluster:monitor/health`、`indices:data/read/get` 。
   - 还可以定义动作组（Action Group），包含一组权限或动作组。
   - 创建普通角色时，可以只分配以下权限：
-    ```sh
-    对集群 cluster 没有权限
-
-    对索引 .kibana* 的 read 权限（read 包括 get、mget、search）
-    对索引 logstash* 的 read 权限，可以筛选可见的文档、字段
-
-    对 Global tenant 的 Read only 权限
-    ```
+    - 对集群 cluster 没有权限
+    - 对索引 .kibana* 的 read 权限（read 包括 get、mget、search）
+    - 对索引 logstash* 的 read 权限，可以筛选可见的文档、字段
+    - 对 Global tenant 的 Read only 权限
 
 - 租户（tenant）：一种命名空间，用于独立保存索引模式、可视化、仪表盘等配置。
   - 每个用户在登录之后，需要选用一个租户，并可以随时切换租户。
@@ -963,3 +1001,6 @@ pipeline 的语法与 Ruby 相似，特点如下：
     opendistro_security.multitenancy.tenants.enable_global: true      # 启用 Global 租户
     opendistro_security.multitenancy.tenants.enable_private: false    # 禁用 Private 租户
     ```
+
+
+

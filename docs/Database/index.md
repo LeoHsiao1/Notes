@@ -29,11 +29,11 @@
   - [♢ pymongo](MongoDB/pymongo.md)
 - Redis
   - [Redis](Redis/Redis.md)
+  - [部署](Redis/部署.md)
   - [管理单元](Redis/管理单元.md)
   - [数据类型](Redis/数据类型.md)
   - [其它功能](Redis/其它功能.md)
   - [性能优化](Redis/性能优化.md)
-  - [部署架构](Redis/部署架构.md)
   - [♢ redis](Redis/redis-py.md)
 - ES
   - [ElasticSearch](ES/ElasticSearch.md)

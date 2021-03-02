@@ -4,9 +4,12 @@
 - [官方文档](https://www.elastic.co/guide/index.html)
 - [下载页面](https://www.elastic.co/cn/downloads/)
 - 同类产品：
-  - Flume ：一个分布式的日志采集系统，功能相当于 ELK 中的 Logstash 。
+  - Flume ：一个日志采集工具，功能相当于 Logstash ，但功能较少。
     - 由 Cloudera 公司基于 Java 开发，2012 年成为 ASF 的顶级项目。
-    - 通过 tail -f 的方式采集日志文件的内容，重启采集进程之后会重复采集。
+    - 通过 tail -f 的方式采集日志文件的内容，因此重启采集进程之后会重复采集。
+  - Fluentd ：一个日志采集工具，功能相当于 Logstash ，也有丰富的插件。
+    - 2011 年首次发布，由 Treasure Data 公司基于 Ruby 开发。
+    - 采集的数据解析为 JSON 对象，可以输出到 ES、MongoDB、Kafka 等。
 
 ## 架构
 
@@ -516,7 +519,7 @@ ELK 系统还可以选择加入以下软件：
 
   filebeat.inputs:
   - type: container
-    paths: 
+    paths:
       - '/var/lib/docker/containers/*/*-json.log'
   ```
   - 注意 docker 的日志文件默认需要 root 权限才能查看。

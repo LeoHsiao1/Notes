@@ -429,15 +429,15 @@ module.exports = {
                     title: 'MySQL',
                     children: [
                         'MySQL/MySQL',
+                        'MySQL/部署',
+                        'MySQL/配置',
                         'MySQL/访问权限',
                         'MySQL/管理单元',
                         'MySQL/数据类型',
                         'MySQL/函数',
-                        'MySQL/配置',
                         'MySQL/存储引擎',
                         'MySQL/备份数据',
                         'MySQL/性能优化',
-                        'MySQL/部署架构',
                         'MySQL/PyMySQL',
                         'MySQL/SQLAlchemy',
                     ]
@@ -458,11 +458,11 @@ module.exports = {
                     title: 'Redis',
                     children: [
                         'Redis/Redis',
+                        'Redis/部署',
                         'Redis/管理单元',
                         'Redis/数据类型',
                         'Redis/其它功能',
                         'Redis/性能优化',
-                        'Redis/部署架构',
                         'Redis/redis-py',
                     ]
                 },

@@ -35,7 +35,7 @@
 
 以下是用 Prometheus 监控自身的步骤：
 1. 在 Prometheus 的配置文件中加入监控任务：
-    ```yaml
+    ```yml
     global:
       scrape_interval: 30s          # 每隔多久采集一次指标（这是全局值，可以被局部值覆盖）
       scrape_timeout: 10s           # 每次采集的超时时间
@@ -65,7 +65,7 @@
 - Prometheus Server 会定时向各个 exporter 发出 HTTP 请求，获得指标数据，并存储到自己的时序数据库中。
   - 它属于离散采样，可能有遗漏、有延迟、有误差。
   - 数据默认保存在 `${prometheus}/data` 目录下，目录结构如下：
-    ```
+    ```sh
     data/
     ├── 01E728KFZWGDM7HMY6M2D26QJD/   # 一个 block 目录
     │   ├── chunks
@@ -91,7 +91,7 @@
 ## 监控对象
 
 用户必须在 Prometheus 的配置文件中配置需要监控的对象（称为 targets ），格式如下：
-```yaml
+```yml
 scrape_configs:
 - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
   # honor_labels: false

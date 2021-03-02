@@ -467,12 +467,12 @@ module.exports = {
                     ]
                 },
                 {
-                    title: 'ElasticSearch',
+                    title: 'ES',
                     children: [
-                        'ElasticSearch/ElasticSearch',
-                        'ElasticSearch/管理单元',
-                        'ElasticSearch/查询',
-                        'ElasticSearch/集群',
+                        'ES/ElasticSearch',
+                        'ES/部署',
+                        'ES/管理单元',
+                        'ES/查询',
                     ]
                 },
                 {

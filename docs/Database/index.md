@@ -35,11 +35,11 @@
   - [性能优化](Redis/性能优化.md)
   - [部署架构](Redis/部署架构.md)
   - [♢ redis](Redis/redis-py.md)
-- ElasticSearch
-  - [ElasticSearch](ElasticSearch/ElasticSearch.md)
-  - [管理单元](ElasticSearch/管理单元.md)
-  - [查询](ElasticSearch/查询.md)
-  - [集群](ElasticSearch/集群.md)
+- ES
+  - [ElasticSearch](ES/ElasticSearch.md)
+  - [部署](ES/部署.md)
+  - [管理单元](ES/管理单元.md)
+  - [查询](ES/查询.md)
 - LDAP
   - [LDAP](LDAP/LDAP.md)
   - [OpenLDAP](LDAP/OpenLDAP.md)

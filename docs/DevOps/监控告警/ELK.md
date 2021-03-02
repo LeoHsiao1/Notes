@@ -162,7 +162,7 @@ ELK 系统还可以选择加入以下软件：
     ├── log.json            # 记录日志文件的状态。该文件体积超过 10 MB 时会自动清空，并将此时所有文件的状态保存到快照文件中
     └── meta.json           # 记录一些元数据
     ```
-  - 单个记录的示例：
+  - 一个记录的示例：
     ```json
     {"op":"set", "id":237302}                             // 本次动作的编号
     {
@@ -200,9 +200,29 @@ ELK 系统还可以选择加入以下软件：
     - 如果在 backoff 时长之后，依然没有创建文件 A 。则 Filebeat 会认为文件被删除（removed）。
       - 默认配置了 `close_removed: true` ，因此会立即关闭文件 B 而不采集，而文件 A 又因为不存在而采集不了。
 
-- Filebeat 每采集一条日志文本，都会在内存中保存为 JSON 对象，称为日志事件（event）。
-  - 日志事件默认使用 message 字段，保存日志的原始内容。
-  - 日志事件会尽快处理，发送到输出端，不会保存到磁盘中。
+- Filebeat 每采集一条日志文本，都会保存为 JSON 对象，称为日志事件（event）。
+  - 日志事件保存在内存中，经过处理之后会发送到输出端，不会保存到磁盘中。
+  - 一个日志事件的示例：
+    ```json
+    {
+        "agent": {                                // Beats 的信息
+            "type": "filebeat",
+            "version": "7.10.0",
+            "name": "CentOS-1",
+            "hostname": "CentOS-1",
+        },
+        "log": {
+          "file": {                               // 采集的日志文件的路径
+              "path": "/var/log/nginx/access.log"
+          },
+          "offset": 765072                        // 采集的偏移量
+        },
+        "message": "127.0.0.1 - [2/Feb/2021:12:02:34 +0000] GET /static/bg.jpg HTTP/1.1 200 0", // 日志的原始内容，之后可以进行解析
+        "fields": {},                             // 可以给日志事件加上一些字段
+        "tags": [],                               // 可以给日志事件加上一些标签，便于筛选
+        ...
+    }
+    ```
 
 - Filebeat 每次发送日志事件到输出端时，都会记录其发送状态。
   - 该操作称为发布事件（publish event）。
@@ -428,7 +448,7 @@ ELK 系统还可以选择加入以下软件：
   fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
   ```
 
-- 让 filebeat 采集指定的日志文件的配置：
+- 让 filebeat 采集一般日志文件的配置：
   ```yml
   filebeat.inputs:                  # 关于输入项的配置
   - type: log                       # 定义一个输入项，类型为一般的日志文件
@@ -487,6 +507,19 @@ ELK 系统还可以选择加入以下软件：
       - '/var/lib/docker/containers/*/*.log'
   ```
   - 配置时间时，默认单位为秒，可使用 1、1s、2m、3h 等格式的值。
+
+- 采集容器日志的配置：
+  ```yml
+  processors:
+    - add_docker_metadata: ~        # 如果存在 Docker 环境，则自动添加容器、镜像的信息
+    - add_kubernetes_metadata: ~    # 如果存在 k8s 环境，则则自动添加 Pod 等信息
+
+  filebeat.inputs:
+  - type: container
+    paths: 
+      - '/var/lib/docker/containers/*/*-json.log'
+  ```
+  - 注意 docker 的日志文件默认需要 root 权限才能查看。
 
 - 可以启用 filebeat 的一些内置模块，采集一些系统或流行软件的日志文件。
   - [模块列表](https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-modules.html)
@@ -687,6 +720,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
         "timestamp": "2020-01-12 07:24:43.659+0000"
       }
       ```
+
 - 可以事先定义一些正则表达式，然后通过名称调用它们。
   - 定义格式为：
     ```sh
@@ -919,7 +953,6 @@ pipeline 的语法与 Ruby 相似，特点如下：
   ...
   ```
 
-
 - kibana.yml 的配置示例：
   ```yml
   server.port: 5601
@@ -1001,6 +1034,3 @@ pipeline 的语法与 Ruby 相似，特点如下：
     opendistro_security.multitenancy.tenants.enable_global: true      # 启用 Global 租户
     opendistro_security.multitenancy.tenants.enable_private: false    # 禁用 Private 租户
     ```
-
-
-

@@ -6,6 +6,18 @@
 - 于 2013 年被 Docker 公司发布，掀起了容器技术的潮流。
 - 运行在 Linux 平台上。也有 Docker for Windows 版本，但只能运行 windows 上的应用程序。
 
+## 原理
+
+- Docker 采用 C/S 架构工作：
+  - 服务器作为宿主机上的守护进程运行，称为 docker daemon ，负责管理本机的容器、镜像。
+  - 用户可以在宿主机上执行 docker 命令，作为客户端。这些命令会发送给服务器，由服务器执行。
+- 通过 Linux namespace 隔离了各个容器的运行环境。
+  - 隔离了进程、网络、文件系统，接近于独享一个虚拟机环境。
+  - 没有隔离物理资源。例如：一个容器可能占用全部的 CPU 和内存；在容器内执行 top 命令会看到整个宿主机的资源。
+  - 没有隔离 Linux 内核，容器内的进程可能通过内核漏洞溢出到宿主机上。
+- 通过 Linux cgroups 限制了各个容器使用的 CPU、内存等资源。
+- 容器内不支持再运行嵌套的容器。
+
 ## 安装
 
 - 在 Centos 上安装：
@@ -22,16 +34,9 @@
   curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
   ```
 
-## 原理
-  
-- 采用 C/S 架构。
-  - 服务器作为宿主机上的守护进程运行，称为 docker daemon ，负责管理本机的容器、镜像。
-  - 用户可以在宿主机上执行 docker 命令，作为客户端。这些命令会发送给服务器，由服务器执行。
-- 通过 Linux namespace 隔离了各个容器的运行环境。
-  - 隔离了进程、网络、文件系统，接近于独享一个虚拟机环境。
-  - 没有隔离物理资源。例如：一个容器可能占用全部的 CPU 和内存；在容器内执行 top 命令会看到整个宿主机的资源。
-  - 没有隔离 Linux 内核，容器内的进程可能通过内核漏洞溢出到宿主机上。
-- 通过 Linux cgroups 限制了各个容器使用的 CPU、内存等资源。
+## 配置
+
+- 配置 docker daemon 时，需要创建 `/etc/docker/daemon.json` 文件，然后重启 docker daemon 。
 
 
 ## 容器
@@ -63,7 +68,7 @@ docker run <image>            # 运行一个镜像，这会创建一个容器（
             -i                # 启用容器的 stdin
             -t                # 创建一个伪终端绑定到容器的 stdin 上，供用户操作
             -d                # 以 daemon 方式运行
-            
+
             --name <name>     # 设置容器的名字
             --workdir <path>  # 指定容器的工作目录
             --init            # 使用 init 作为容器的 1 号进程（它会照常执行容器的启动命令）
@@ -97,17 +102,13 @@ docker run <image>            # 运行一个镜像，这会创建一个容器（
   docker run -it centos:7 bash             # 创建容器，并进入该容器的终端
   docker run -d centos:7 tail -f /dev/null # 创建一个容器（让它执行一个不会停止的启动命令）
   ```
-- 非 root 用户可能无权访问 /var/run/docker.sock 文件，导致无权执行 docker ps 等命令。
-  - 此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
-- 容器内不能再创建嵌套的容器，甚至不能联系到 docker daemon ，因此不能使用 docker ps 等命令。
-  - 将 /var/run/docker.sock 文件挂载到容器内之后，可以在容器内与 docker daemon 通信。
-- 将宿主机的 /etc/localtime 文件挂载到容器中，就会让容器采用宿主机的时区。
-
+- 用户执行 docker 命令时，是通过 `/var/run/docker.sock` 文件与 docker daemon 通信。
+  - 非 root 用户无权访问 docker.sock 文件，导致无权执行 docker ps 等命令。此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
 
 ### 管理
 
 ```sh
-docker 
+docker
       ps                  # 显示所有处于运行状态的容器
           -a              # 显示所有状态的容器
           -n <int>        # 显示最后创建的几个容器（包括所有状态的）
@@ -126,19 +127,60 @@ docker
           -m 256m
 
       inspect <name>      # 显示一个容器或镜像的详细信息
-      logs <容器>         # 显示一个容器的日志（来自终端输出）
-          --tail 10       # 显示最后几行
-          -f              # 保持显示
-          -t              # 显示时间戳
       stats               # 显示所有容器的资源使用情况
 ```
+
+### 日志
+
+- 命令：
+  ```sh
+  docker logs <容器>        # 显示一个容器的日志
+            --tail 10       # 显示最后几行
+            -f              # 保持显示
+            -t              # 显示时间戳
+  ```
+- docker daemon 会记录容器内 1 号进程的 stdout、stderr ，作为该容器的日志。
+  - 将其它进程的日志文件重定向到 /proc/1/fd/1、/proc/1/fd/2 ，就会一起记录到容器的日志中。
+  - 例如， Nginx 的官方镜像中重定向了其日志文件：
+    ```sh
+    ln -sf /dev/stdout /var/log/nginx/access.log
+    ln -sf /dev/stderr /var/log/nginx/error.log
+    ```
+
+#### 日志驱动器
+
+docker daemon 会通过日志驱动器（logging driver）保存容器的日志。
+- 常见的几种如下：
+  - nong ：不保存日志。
+  - local
+    - 将日志按文本格式保存在宿主机的 `/var/lib/docker/containers/{ContainerId}/local-logs/container.log` 文件中。
+  - json-file
+    - 默认启用，但不会进行日志切割。
+    - 将日志按 JSON 格式保存在宿主机的 `/var/lib/docker/containers/{ContainerId}/{ContainerId}-json.log` 文件中。如下：
+      ```sh
+      [root@CentOS ~]# tail -n 1 /var/lib/docker/containers/3256c21887f9b110e84f0f4a620a2bf01a8a7b9e3a5c857e5cae53b22c5436d4/3256c21887f9b110e84f0f4a620a2bf01a8a7b9e3a5c857e5cae53b22c5436d4-json.log
+      {"log":"2021-02-22T03:16:15.807469Z 0 [Note] mysqld: ready for connections.\n","stream":"stderr","time":"2021-02-22T03:16:15.80758596Z"}
+      ```
+    - 使用 docker logs 命令查看日志时，只会显示其 log 字段的值。
+  - syslog
+  - journald
+  - fluentd
+- 同时只能启用一种日志驱动器。
+- 可以在启动容器时配置日志驱动器：
+  ```sh
+  docker run -d \
+        --log-driver json-file \    # 选择日志驱动器的类型
+        --log-opt max-size=10m \    # 日志文件超过 10MB 时切割一次
+        --log-opt max-file=3 \      # 最多保留 3 份切割日志
+        nginx
+  ```
+- 也可以在 daemon.json 中配置日志驱动器，但需要重启 docker daemon 才会生效， 而且只会对新创建的容器生效。
 
 ### 执行命令
 
 ```sh
 docker exec [options] <container> <command>  # 在容器内执行一条命令
 ```
-
 - 这样可以在宿主机上让容器执行命令，不必进入容器的终端。执行后产生的 stdout 会打印到宿主机的当前终端，但是不会接收宿主机的 stdin ，在宿主机上按 Ctrl + C 不能发送关闭信号到容器内。
 - 例：
     ```sh
@@ -172,6 +214,13 @@ docker volume
   - 实际上是先在宿主机的 `/var/lib/docker/volumes/<name>/` 目录下创建一个 _data 目录，再将它挂载到容器中。
     - 会自动给 _data 目录分配合适的文件权限，供容器内应用访问。
   - 一个数据卷可以被多个容器共用，一个容器也可以挂载多个数据卷。
+- 一些经常挂载的文件：
+  ```sh
+  /etc/hosts
+  /etc/passwd             # 让容器采用宿主机的用户名、uid
+  /etc/localtime          # 让容器采用宿主机的时区
+  /var/run/docker.sock    # 允许在容器内与 docker daemon 通信，可以执行 docker ps 等命令
+  ```
 
 ### 网络
 

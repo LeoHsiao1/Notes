@@ -1,6 +1,6 @@
 # Docker
 
-：目前最流行的容器引擎。
+：目前最流行的容器平台。
 - [官方文档](https://docs.docker.com/engine/docker-overview/)
 - 基于 Golang 开发。
 - 于 2013 年被 Docker 公司发布，掀起了容器技术的潮流。
@@ -16,7 +16,7 @@
   - 没有隔离物理资源。例如：一个容器可能占用全部的 CPU 和内存；在容器内执行 top 命令会看到整个宿主机的资源。
   - 没有隔离 Linux 内核，容器内的进程可能通过内核漏洞溢出到宿主机上。
 - 通过 Linux cgroups 限制了各个容器使用的 CPU、内存等资源。
-- 容器内不支持再运行嵌套的容器。
+
 
 ## 安装
 
@@ -95,6 +95,8 @@ docker run <image>            # 运行一个镜像，这会创建一个容器（
             --cpus 2                  # 限制该容器最多使用 2 个 CPU（平均值）
             --cpu-shares 1024         # 与其它容器抢占 CPU 时的权重（取值为 1~1024）
             -m 256m                   # 限制最多使用的内存量（超过该值的 2 倍时就会被 OOM 杀死）
+
+            --privileged              # 特权模式，允许在容器内访问所有设备文件，比如挂载磁盘，甚至可以在容器内运行嵌套的容器
 ```
 - 例：
   ```sh
@@ -104,6 +106,13 @@ docker run <image>            # 运行一个镜像，这会创建一个容器（
   ```
 - 用户执行 docker 命令时，是通过 `/var/run/docker.sock` 文件与 docker daemon 通信。
   - 非 root 用户无权访问 docker.sock 文件，导致无权执行 docker ps 等命令。此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
+- 运行嵌套容器的示例：
+  ```sh
+  docker run -d --name dind --privileged docker:dind  # dind 镜像代表 docker in docker ，内置了 docker daemon
+  docker exec -it dind sh                             # 进入 dind 容器
+  docker run -d nginx                                 # 在 dind 容器内运行嵌套的容器
+  ps auxf                                             # 查看此时的进程树
+  ```
 
 ### 管理
 

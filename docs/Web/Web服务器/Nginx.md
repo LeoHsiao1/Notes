@@ -24,6 +24,11 @@
         -s quit             # 向 Nginx 进程发送一个 quit 信号（Nginx 处理完当前的 HTTP 请求之后才会终止）
         -s reload           # 重新加载配置文件
   ```
+  或者用 systemctl 启动：
+  ```sh
+  systemctl start nginx
+  systemctl enable nginx
+  ```
 
 - 或者用 Docker 部署：
   ```sh

@@ -1,6 +1,6 @@
 # go-fastdfs
 
-：一个与 fastdfs 类似的文件服务器，但功能更强。
+：一个与 fastdfs 类似的文件服务器，但功能更多。
 - [GitHub 页面](https://github.com/sjqzhang/go-fastdfs)
 - 由国内开发者发布，基于 Golang 开发。
 - 功能：

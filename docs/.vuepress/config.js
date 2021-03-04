@@ -534,8 +534,16 @@ module.exports = {
                         '监控告警/简介',
                         '监控告警/Grafana',
                         '监控告警/Zabbix',
-                        '监控告警/Prometheus',
                         '监控告警/ELK',
+                    ]
+                },
+                {
+                    title: 'Prometheus',
+                    children: [
+                        'Prometheus/Prometheus',
+                        'Prometheus/exporter',
+                        'Prometheus/Pushgateway',
+                        'Prometheus/Alertmanager',
                     ]
                 },
                 {

@@ -28,8 +28,12 @@
   - [简介](监控告警/简介.md)
   - [Grafana](监控告警/Grafana.md)
   - [Zabbix](监控告警/Zabbix.md)
-  - [Prometheus](监控告警/Prometheus.md)
   - [ELK](监控告警/ELK.md)
+- Prometheus
+  - [Prometheus](Prometheus/Prometheus.md)
+  - [exporter](Prometheus/exporter.md)
+  - [Pushgateway](Prometheus/Pushgateway.md)
+  - [Alertmanager](Prometheus/Alertmanager.md)
 - 其它
   - [VS Code](其它/VSCode.md)
   - [SonarQube](其它/SonarQube.md)

@@ -325,6 +325,26 @@ server {
   }
   ```
 
+### try_files
+
+：尝试寻找多个位置的文件作为响应报文。
+- 可用范围：server、location
+- 语法：
+  ```sh
+  try_files file ...  uri;
+  try_files file ...  =code;
+  ```
+  - 可以指定一个或多个 file 参数，寻找对应的文件作为响应报文。如果所有 file 都不存在，则返回最后一个参数对应的响应报文。
+    - file 参数只能是本机上有效的文件路径，不能指向 URL 。
+    - 最后一个参数可以是一个 uri 或 code 。
+  - 该命令属于内部重定向，不会改变客户端请求的 URL 。
+- 例：
+  ```sh
+  try_files $uri $uri/index.html $uri.html  /index.html;
+  try_files $uri $uri/index.html $uri.html  =404;
+  ```
+
+
 ### absolute_redirect
 
 ：服务器返回重定向的响应报文时，重定向之后的地址是完整的 URL （即绝对路径，从 http 协议头开始），还是 URI （即相对路径）。

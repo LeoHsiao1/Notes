@@ -534,7 +534,6 @@ module.exports = {
                         '监控告警/简介',
                         '监控告警/Grafana',
                         '监控告警/Zabbix',
-                        '监控告警/ELK',
                     ]
                 },
                 {
@@ -544,7 +543,7 @@ module.exports = {
                         'ELK/Kibana',
                         'ELK/Beats',
                         'ELK/Logstash',
-                        'ELK/Open_Distro',
+                        'ELK/OpenDistro',
                     ]
                 },
                 {

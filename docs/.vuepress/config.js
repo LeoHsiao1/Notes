@@ -538,6 +538,16 @@ module.exports = {
                     ]
                 },
                 {
+                    title: 'ELK',
+                    children: [
+                        'ELK/ELK',
+                        'ELK/Kibana',
+                        'ELK/Beats',
+                        'ELK/Logstash',
+                        'ELK/Open_Distro',
+                    ]
+                },
+                {
                     title: 'Prometheus',
                     children: [
                         'Prometheus/Prometheus',

@@ -443,7 +443,7 @@ scrape_configs:
   ```
 - 关于数据的 API ：
   ```sh
-  GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600               # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）  
+  GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600               # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）
   GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589266000&step=1m  # 查询一段时间内的所有值
   POST /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000   # 删除数据（不指定时间则删除所有时间的数据）
   POST /api/v1/admin/tsdb/clean_tombstones                                                      # 让 TSDB 立即释放被删除数据的磁盘空间
@@ -472,11 +472,11 @@ scrape_configs:
 
 ## Pushgateway
 
-：作为一个 HTTP 服务器运行，允许其它监控对象主动推送数据到这里，相当于一个缓存，可以被 Prometheus 定时拉取。
+：作为一个 HTTP 服务器运行，支持推送监控数据到这里并缓存。
 - [GitHub 页面](https://github.com/prometheus/pushgateway)
+- Prometheus 只支持主动从 exporter 拉取数据，不支持被 exporter 推送数据。使用 Pushgateway 可以允许 exporter 推送数据到这里，再由 Prometheus 定时拉取。
 - 优点：
-  - 不需要保持运行一个 exporter 进程。
-  - 允许 exporter 与 Prometheus 异步工作。
+  - 解耦了 exporter 与 Prometheus ，允许它们异步工作，允许 exporter 不保持运行。
   - 提供了 Web 页面，可以查看其状态。
 - 缺点：
   - 不能控制监控对象生成指标的间隔时间。
@@ -747,7 +747,7 @@ inhibit_rules:
 
 ## exporter
 
-- [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/) 
+- [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/)
 - 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就提供了 exporter 风格的 HTTP API 。
 
 ### Prometheus
@@ -873,7 +873,7 @@ inhibit_rules:
   avg(irate(node_cpu_seconds_total[5m])) without (cpu) * 100                    # CPU 各模式占比（%）
   (1 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) without(cpu)) * 100  # CPU 使用率（%）
 
-  node_memory_MemTotal_bytes                  # 内存总量
+  node_memory_MemTotal_bytes                  # 内存总量，单位 bytes
   node_memory_MemAvailable_bytes              # 内存可用量，CentOS 7 以上版本才支持该指标
   node_memory_SwapTotal_bytes                 # swap 内存总量
   node_memory_SwapFree_bytes                  # swap 内存可用量
@@ -964,11 +964,10 @@ inhibit_rules:
       ```sh
       curl 127.0.0.1:9256/metrics | grep num_procs
       ```
-
 - 常用指标：
   ```sh
   namedprocess_scrape_errors                                                # 抓取时的错误数
-  
+
   namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的进程实例数量）
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 同一个 groupname 中最老的那个进程的运行时长（ s ）
   sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)   # 进程占用的 CPU 核数
@@ -986,19 +985,15 @@ inhibit_rules:
   irate(namedprocess_namegroup_thread_io_bytes_total{iomode="write"}[5m])         # 线程的磁盘每秒写入量
   ```
   - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 停止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。
-    但是如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
-    例如：如果主机重启之后，进程没有启动，则它不能发现进程没有恢复，不会发出警报。
+    - 但是如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。\
+      例如：如果主机重启之后，进程没有启动，则它不能发现进程没有恢复，不会发出警报。
   - 不能监控进程的网络 IO 。
 
 ### windows_exporter
 
 ：用于监控 Windows 主机的状态，也可监控其进程的状态。
 - [GitHub 页面](https://github.com/prometheus-community/windows_exporter)
-- 下载 exe 版：
-  ```sh
-  wget https://github.com/prometheus-community/windows_exporter/releases/download/v0.13.0/windows_exporter-0.13.0-amd64.exe
-  ```
-  启动：
+- 下载 exe 版后启动：
   ```sh
   windows_exporter.exe
                       # --telemetry.addr :9182
@@ -1007,11 +1002,7 @@ inhibit_rules:
                       # --collector.process.whitelist="firefox|chrome"                # 指定要监控的进程的白名单（对进程名进行正则匹配）
                       # --collector.process.blacklist=""                              # 指定要监控的进程的黑名单
   ```
-- 或者下载 msi 版：
-  ```sh
-  wget https://github.com/prometheus-community/windows_exporter/releases/download/v0.13.0/windows_exporter-0.13.0-amd64.msi
-  ```
-  执行它会安装 windows_exporter ，并作为后台服务运行、自动开通防火墙。
+- 或者下载 msi 版。执行它会安装 windows_exporter ，并作为后台服务运行、自动开通防火墙。
   ```sh
   windows_exporter.msi
                       # LISTEN_ADDR 0.0.0.0
@@ -1020,6 +1011,7 @@ inhibit_rules:
                       ENABLED_COLLECTORS=cpu,cs,logical_disk,net,os,process,system
                       EXTRA_FLAGS="--collector.process.whitelist=firefox|chrome"
   ```
+
 - 常用指标：
   ```sh
   windows_exporter_build_info{branch="master", goversion="go1.13.3", instance="10.0.0.1:9182", job="windows_exporter", revision="c62fe4477fb5072e569abb44144b77f1c6154016", version="0.13.0"}  # 版本信息
@@ -1066,17 +1058,50 @@ inhibit_rules:
   - 不能监控进程的网络 IO 。
   - 不能通过启动命令区分相同名字的进程，只能通过 PID 区分。
 
-
 ### cAdvisor
 
 ：用于监控容器的状态。
 - [GitHub 页面](https://github.com/google/cadvisor)
+- 该工具由 Google 公司开发，支持将监控数据输出到 Prometheus、InfluxDB、Kafka、ES 等存储服务。
+- 下载后启动：
+  ```sh
+  ./cadvisor
+            # --listen_ip 0.0.0.0
+            # --port 8080
+            # --prometheus_endpoint  /metrics
+            --docker_only=true    # 不输出 raw cgourp 的指标，除了 root gourp ，即 id="/"
+  ```
+- 它提供了 Web 监控页面，默认只允许从 localhost 访问，可以加上 HTTP Basic Auth 后公开：
+  ```sh
+  htpasswd -cb passwd admin 123456
+  ./cadvisor --http_auth_file passwd --http_auth_realm 0.0.0.0
+  ```
+  访问地址为 `127.0.0.1:8080/containers/` 。
+- 常用指标：
+  ```sh
+  container_start_time_seconds{container_label_maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>", id="/docker/e2b21f73d372c59a5cc6c5180ae1325c9d8c3e9a211087db036228ffa5b54b43",
+  image="nginx:latest", instance="10.0.0.1:8080", job="cadvisor", name="nginx"}   # 容器的创建时刻（不是启动时刻），采用 Unix 时间戳
 
+  container_cpu_usage_seconds_total         # 容器占用 CPU 的累计时长
+  container_cpu_load_average_10s            # 容器占用 CPU 的 10 秒平均负载
+
+  container_memory_rss                      # 容器占用的 rss 内存大小
+  container_memory_swap                     # 容器占用的 swap 大小
+
+  container_fs_reads_total                  # 磁盘读的累计字节数
+  container_fs_read_seconds_total           # 磁盘读的累计耗时
+  container_fs_writes_bytes_total           # 磁盘写的累计字节数
+  container_fs_write_seconds_total          # 磁盘写的累计耗时
+
+  container_network_receive_bytes_total     # 网卡接收的累计字节量
+  container_network_receive_packets_total   # 网卡接收的累计数据包数
+  container_network_transmit_bytes_total    # 网卡发送的累计字节量
+  container_network_transmit_packets_total  # 网卡发送的累计数据包数
+  ```
 
 ### blackbox_exporter
 
-：可以检测 DNS、ICMP、TCP、HTTP 状态，以及 SSL 证书过期时间。
-- 相当于探针（probe）。
+：相当于探针（probe），可以监控 DNS、ICMP、TCP、HTTP 状态，以及 SSL 证书过期时间。
 - [GitHub 页面](https://github.com/prometheus/blackbox_exporter)
 - 下载后启动：
   ```sh

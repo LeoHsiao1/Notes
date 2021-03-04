@@ -226,7 +226,7 @@ server {
       ...
   }
   ```
-  - 这是给 location 分配一个名称，从而可以在其它位置调用。像一个 URI ，可以将请求内部重定向到它。
+  - 这是将 location 命名，从而可以在其它位置调用。像一个 URI ，可以将请求内部重定向到它。
   - 这种语法不支持嵌套：不能被 location 包含，也不能包含 location 。
   - 例：
     ```sh
@@ -239,7 +239,7 @@ server {
         return 200 'Hello\n';
     }
     ```
-    - 该例中把所有 `@test` 替换成 `/test` ，效果一致。
+    - 该例中把所有 `@test` 替换成 `/test` ，效果一样。
 
 ### root
 
@@ -344,6 +344,25 @@ server {
   try_files $uri $uri/index.html $uri.html  =404;
   ```
 
+### error_page
+
+：将指定状态码的响应报文内部重定向到某个 URI 。
+- 可用范围：http、server、location
+- 语法：
+  ```sh
+  error_page code ... [=[response]] uri;
+  ```
+  - 状态码 code 的取值范围为 300~599 。
+- 例：
+  ```sh
+  error_page 404  /404.html;
+  error_page 401  =200 /login;            # 401 时重定向到登录页面
+  error_page 500 502 503 504  /50x.html;  # 可以同时指定多个状态码
+
+  location = /50x.html {
+      root   /usr/share/nginx/html;
+  }
+  ```
 
 ### absolute_redirect
 

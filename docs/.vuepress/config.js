@@ -537,6 +537,15 @@ module.exports = {
                     ]
                 },
                 {
+                    title: 'Prometheus',
+                    children: [
+                        'Prometheus/Prometheus',
+                        'Prometheus/exporter',
+                        'Prometheus/Pushgateway',
+                        'Prometheus/Alertmanager',
+                    ]
+                },
+                {
                     title: 'ELK',
                     children: [
                         'ELK/ELK',
@@ -544,15 +553,6 @@ module.exports = {
                         'ELK/Beats',
                         'ELK/Logstash',
                         'ELK/OpenDistro',
-                    ]
-                },
-                {
-                    title: 'Prometheus',
-                    children: [
-                        'Prometheus/Prometheus',
-                        'Prometheus/exporter',
-                        'Prometheus/Pushgateway',
-                        'Prometheus/Alertmanager',
                     ]
                 },
                 {

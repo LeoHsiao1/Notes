@@ -28,17 +28,17 @@
   - [简介](监控告警/简介.md)
   - [Grafana](监控告警/Grafana.md)
   - [Zabbix](监控告警/Zabbix.md)
+- Prometheus
+  - [Prometheus](Prometheus/Prometheus.md)
+  - [exporter](Prometheus/exporter.md)
+  - [Pushgateway](Prometheus/Pushgateway.md)
+  - [Alertmanager](Prometheus/Alertmanager.md)
 - ELK
   - [ELK](ELK/ELK.md)
   - [Kibana](ELK/Kibana.md)
   - [Beats](ELK/Beats.md)
   - [Logstash](ELK/Logstash.md)
   - [Open Distro](ELK/OpenDistro.md)
-- Prometheus
-  - [Prometheus](Prometheus/Prometheus.md)
-  - [exporter](Prometheus/exporter.md)
-  - [Pushgateway](Prometheus/Pushgateway.md)
-  - [Alertmanager](Prometheus/Alertmanager.md)
 - 其它
   - [VS Code](其它/VSCode.md)
   - [SonarQube](其它/SonarQube.md)

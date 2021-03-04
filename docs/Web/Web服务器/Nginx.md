@@ -195,21 +195,21 @@ server {
 ### location
 
 ：用于定义 URI 路由规则。
-- 可用范围：server、location
+- 可用范围：server、location ，支持嵌套
 - 语法：
   ```sh
   location [type] URI {
-      [Directives]...
+      ...
   }
   ```
-  - 匹配类型 type 有以下几种，排在前面的优先匹配：
+  - 匹配类型 type 有以下几种，优先级从高到低如下：
     - `=`  ：字符串精确匹配，即匹配与该字符串完全相同的 URI 。
     - `^~` ：字符串前缀匹配，即匹配以该字符串开头的 URI 。
-    - `~`  ：正则匹配。如果某个 URI 同时匹配多个正则 location ，则采用正则表达式最长的那个。
-    - `~*` ：不区分大小写的正则匹配。（其它匹配类型都区分大小写）
+    - `~`  ：正则匹配。
+    - `~*` ：不区分大小写的正则匹配。（其它匹配类型都区分大小写，除非是 Cygwin 等操作系统）
     - 不指定 type 时，匹配类型相当于 `^~` ，但优先级最低。
+  - 如果某个 URI 同时匹配多个 location ，则选择优先级最高、路由表达式最长的那个 location ，不考虑 location 定义的先后顺序。
   - 如果有两个 location 的 type、URI 都相同，则启动 Nginx 时会报错：`duplicate location` 。
-
 - 例：
   ```sh
   location /img/ {
@@ -220,9 +220,30 @@ server {
   - 服务器收到指向 `http://127.0.0.1/img` 的请求时，不会匹配该 location ，可能返回 404 响应报文。
     - 特别地，如果 location 区块内包含了 proxy_pass、fastcgi_pass、uwsgi_pass 等代理指令之一（即使没有被执行），则此时会匹配该 location ，返回一个 301 重定向报文，指向 /img/ 。
 
+- 另一种语法：
+  ```sh
+  location @name {
+      ...
+  }
+  ```
+  - 这是给 location 分配一个名称，从而可以在其它位置调用。像一个 URI ，可以将请求内部重定向到它。
+  - 这种语法不支持嵌套：不能被 location 包含，也不能包含 location 。
+  - 例：
+    ```sh
+    location  / {
+        root /usr/share/nginx/html;
+        error_page 404 @test;
+    }
+
+    location  @test {
+        return 200 'Hello\n';
+    }
+    ```
+    - 该例中把所有 `@test` 替换成 `/test` ，效果一致。
+
 ### root
 
-- 到 root 目录下寻找与 URI 匹配的文件作出响应报文。
+：到指定目录下寻找路径与 URI 匹配的文件作出响应报文。
 - 可用范围：http、server、location
 - 默认值：
   ```sh
@@ -233,7 +254,7 @@ server {
 
 ### index
 
-- 如果请求的 URI 以 / 结尾，则通过内部重定向将请求转发到 `$uri/index` 。
+：如果请求的 URI 以 / 结尾，则通过内部重定向将请求转发到 `$uri/index` 。
 - 可用范围：http、server、location
 - 例：
   ```sh
@@ -243,7 +264,7 @@ server {
 
 ### autoindex
 
-- 如果请求的 URI 以 / 结尾，则返回一个 HTML 页面，显示 URI 对应的磁盘目录的文件列表。
+：如果请求的 URI 以 / 结尾，则返回一个 HTML 页面，显示 URI 对应的磁盘目录的文件列表。
 - 可用范围：http、server、location
 - 默认值：
   ```sh
@@ -264,7 +285,7 @@ server {
 
 ### rewrite
 
-- 如果请求报文的 URI 中的部分字符串与正则表达式匹配，则重写 URI 。
+：如果请求 URI 中的部分字符串与正则表达式匹配，则重写 URI 。
 - 可用范围：server、location
 - 语法：
   ```sh
@@ -306,13 +327,13 @@ server {
 
 ### absolute_redirect
 
-：服务器返回重定向的响应报文时，重定向之后的地址是完整的 URL （即绝对路径，从 http 协议开始），还是 URI （即相对路径）。
+：服务器返回重定向的响应报文时，重定向之后的地址是完整的 URL （即绝对路径，从 http 协议头开始），还是 URI （即相对路径）。
 - 可用范围：http、server、location
 - 默认值：
   ```sh
   absolute_redirect on;
   ```
-- 例如：如果启用该参数时，重定向报文的 Headers 中声明了 `Location: http://localhost/index.html` ，则禁用该参数时就会变成 `Location: /index.html` 。
+- 例如：如果启用该参数时，重定向报文的 Headers 中包含了 `Location: http://localhost/index.html` ，则禁用该参数时就会变成 `Location: /index.html` 。
 
 ### server_name_in_redirect
 
@@ -376,9 +397,10 @@ server {
   ```sh
   server{
       listen  80;
-      return  403;                                # 只返回状态码
+      return  404;                                # 只返回状态码
       return  200 OK\n;                           # 返回状态码和一个字符串（字符串可以不加定界符）
       return  200 '{"name":"test","id":"001"}';   # 返回状态码和 JSON 格式的字符串
+      return  302 /index.html;                    # 返回 302 状态码，并指定重定向的目标
   }
   ```
 
@@ -483,7 +505,7 @@ server {
 - 可用范围：http、server、location
 - 例：
   ```sh
-  proxy_buffering on;             # 启用缓冲（默认启用）	
+  proxy_buffering on;             # 启用缓冲（默认启用）
   proxy_buffers 8 8k;             # 缓冲区的最大数量和大小（默认等于一个内存页大小）
   proxy_buffer_size 8k;           # 读取响应头的缓冲区大小（默认等于一个内存页大小）
   proxy_busy_buffers_size 16k;    # busy 状态的缓冲区的最大大小（一般为 2 个缓冲区）
@@ -529,7 +551,7 @@ server {
   proxy_cache_revalidate on;                  # 刷新过期的缓存项时，向上游服务器发出的请求头中包含 If-Modified-Since、If-None-Match
   proxy_cache_min_uses 3;                     # 当同一个响应被客户端请求至少 3 次之后，才缓存它（调大该参数可以只缓存频繁请求的响应）
   proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504; # 刷新过期的缓存项时，如果上游服务器报出这些错误而不能响应，则将已过期的缓存项发送给客户端
-  
+
   # proxy_cache_key $scheme$proxy_host$request_uri;   # 定义每个缓存项的标签值（用于判断内容是否变化）
   proxy_cache_lock on;                        # 多个请求指向同一个缓存项且没有命中缓存时，只将一个请求转发给上游服务器，其它请求则被阻塞直到从缓存区获得响应
   # proxy_cache_lock_age 5s;                  # 一组请求每被阻塞 5 s  ，就解锁一个请求，转发给上游服务器
@@ -674,7 +696,7 @@ server {
 
 ### error_log
 
-- 配置 Nginx 的错误日志，它会记录 Nginx 的内部运行信息。
+：配置 Nginx 的错误日志，它会记录 Nginx 的内部运行信息。
 - 可用范围：main ，http ，mail ，stream ，server ，location
 - 语法：
   ```sh
@@ -684,7 +706,7 @@ server {
 
 ### access_log
 
-- 配置 Nginx 的访问日志，它会记录 Nginx 处理的所有 HTTP 请求。
+：配置 Nginx 的访问日志，它会记录 Nginx 处理的所有 HTTP 请求。
 - 可用范围：http、server、location、limit_except
 - 语法：
   ```sh
@@ -708,7 +730,7 @@ server {
 
 ### log_format
 
-- 定义日志格式。（该格式只能被 access_log 使用）
+：定义日志格式。该格式只能被 access_log 命令调用。
 - 可用范围：http
 - 默认值：
   ```sh
@@ -747,7 +769,7 @@ server {
   set $variable value;
   ```
 - 例：
-  ```sh	
+  ```sh
   server {
       listen  80;
       set     $port_type 8x;
@@ -762,7 +784,7 @@ server {
 ：用于将源变量输入字典取值，并赋值给目标变量。
 - 可用范围：http
 - 例：
-  ```sh	
+  ```sh
   map $server_port $port_type{
       # default   '';   # 如果字典中没有匹配的 key ，则取默认值
       80        8x;     # 将源变量与 key 进行字符串匹配
@@ -863,7 +885,7 @@ server {
 ：当客户端认证失败时，延迟一段时间再作出响应。
 - 可用范围：http、server、location
 - 默认值：
-  ```sh	
+  ```sh
   auth_delay 0s;
   ```
 - 可以与 auth_basic 等认证措施搭配使用，避免暴力破解，不过客户端依然会保持 TCP 连接，占用资源。
@@ -899,11 +921,11 @@ server {
 ：如果 ngx_http_access_module、ngx_http_auth_basic_module、ngx_http_auth_request_module、ngx_http_auth_jwt_module 模块都允许访问（或任一允许），则最终允许访问。
 - 可用范围：http、server、location
 - 语法：
-  ```sh	
+  ```sh
   satisfy all | any;
   ```
 - 默认值：
-  ```sh	
+  ```sh
   satisfy all;
   ```
 
@@ -936,7 +958,7 @@ server {
 ：限制发送响应报文时，写操作中断的超时时间。
 - 可用范围：http、server、location
 - 默认值：
-  ```sh	
+  ```sh
   send_timeout 60s;
   ```
 - 如果超过该值，关闭 TCP 连接。
@@ -944,7 +966,7 @@ server {
 
 ### sendfile
 
-- 仅当 Nginx 发送本机上的文件时有效，提高发送文件的效率。
+：仅当 Nginx 发送本机上的文件时有效，提高发送文件的效率。
 - 可用范围：http、server、location
 - 默认值：
   ```sh
@@ -955,20 +977,20 @@ server {
 
 ### tcp_nodelay
 
-- 一有数据就立即发出 TCP 包。
+：一有数据就立即发出 TCP 包。
 - 可用范围：http、server、location
 - 默认值：
-  ```sh	
+  ```sh
   tcp_nodelay   on;
   ```
 - 仅在 TCP 长连接中有效。这样会增加网络 I/O 量，但是能减少通信延迟。
 
 ### tcp_nopush
 
-- 有数据时先不发送，而是等满足 TCP 包最大段大小（Maximum Segment Size ，MSS）时才发送。
+：有数据时先不发送，而是等满足 TCP 包最大段大小（Maximum Segment Size ，MSS）时才发送。
 - 可用范围：http、server、location
 - 默认值：
-  ```sh	
+  ```sh
   tcp_nopush    off;
   ```
 - 仅在 sendfile 模式中有效。这样能降低网络 I/O 量，不容易阻塞网络。
@@ -1022,7 +1044,7 @@ server {
 ：限制读取请求报文头部的缓冲区大小。
 - 可用范围：http、server
 - 默认值：
-  ```sh	
+  ```sh
   client_header_buffer_size   1k;
   ```
 
@@ -1031,7 +1053,7 @@ server {
 ：限制读取请求报文头部的超时时间。
 - 可用范围：http、server
 - 默认值：
-  ```sh	
+  ```sh
   client_header_timeout   60s;
   ```
 - 如果超过该值，则返回响应报文：`408 Request Time-out`
@@ -1041,7 +1063,7 @@ server {
 ：限制请求报文 body 的最大值。
 - 可用范围：http、server、location
 - 默认值：
-  ```sh	
+  ```sh
   client_max_body_size  1m;
   ```
 - 如果超过该值，则返回响应报文：`413 Request Entity Too Large`
@@ -1052,7 +1074,7 @@ server {
 ：限制读取请求报文 body 时，读操作中断的超时时间。
 - 可用范围：http、server、location
 - 默认值：
-  ```sh	
+  ```sh
   client_body_timeout   60s;
   ```
 - 如果超过该值，则返回响应报文：`408 Request Time-out`

@@ -1,8 +1,5 @@
 # Beats
 
-- Logstash 消耗内存较多，采集日志的效率较低，因此后来推出了 Beats 来取代 Logstash 。
-  - 不过目前 Beats 不擅长解析日志文本。因此通常不让 Beats 直接将原始日志发送到 ES ，而是先发送给 Logstash 解析成结构化数据。
-  - 使用 Beats 时需要在每个要监控的主机上部署 Beats 程序，且监控不同类型的日志时需要部署不同的 beats 程序，比较麻烦。
 - Beats 程序有多种类型，例如：
   - Filebeat ：用于采集日志文件。
   - Packetbeat ：用于采集网络数据包的日志。

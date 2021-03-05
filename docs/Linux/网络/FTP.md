@@ -210,7 +210,7 @@ xferlog_file=/var/log/vsftpd.log            # 日志文件的路径
     ```
     ```ini
     guest_username=ftpuser
-    local_root=/home/ftpuser    # 本地用户登录之后进入的目录
+    local_root=/home/ftpuser    # 本地用户登录之后进入的目录，这里采用用户的家目录
     # local_umask=077
     ```
 

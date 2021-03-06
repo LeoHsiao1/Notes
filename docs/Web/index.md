@@ -1,7 +1,8 @@
 [《Web》](index.md)
 
 - 简介
-  - [Web](简介/Web.md)
+  - [Web技术](简介/Web技术.md)
+  - [Web爬虫](简介/Web爬虫.md)
 - 前端
   - [简介](前端/简介.md)
   - [HTML](前端/HTML.md)
@@ -13,7 +14,6 @@
   - [Node.js](前端框架/Node.js.md)
   - [Vue.js](前端框架/Vue.js.md)
 - 后端
-  - [HTTP](后端/HTTP.md)
   - [通信协议](后端/通信协议.md)
   - [cookie](后端/cookie.md)
   - [身份验证](后端/身份验证.md)
@@ -22,10 +22,6 @@
   - [Apache](Web服务器/Apache.md)
   - [Tomcat](Web服务器/Tomcat.md)
   - [Nginx](Web服务器/Nginx.md)
-- Web爬虫
-  - [简介](Web爬虫/简介.md)
-  - [♢ urllib](Web爬虫/urllib.md)
-  - [♢ requests](Web爬虫/requests.md)
 - Web安全
   - [服务器安全](Web安全/服务器安全.md)
   - [客户端安全](Web安全/客户端安全.md)

@@ -323,6 +323,7 @@ module.exports = {
                         '网络协议/DNS',
                         '网络协议/TCP-UDP',
                         '网络协议/Socket',
+                        '网络协议/HTTP',
                         '网络协议/MQTT',
                     ]
                 },
@@ -341,7 +342,8 @@ module.exports = {
                 {
                     title: '简介',
                     children: [
-                        '简介/Web',
+                        '简介/Web技术',
+                        '简介/Web爬虫',
                     ]
                 },
                 {
@@ -365,7 +367,6 @@ module.exports = {
                 {
                     title: '后端',
                     children: [
-                        '后端/HTTP',
                         '后端/通信协议',
                         '后端/cookie',
                         '后端/身份验证',
@@ -378,14 +379,6 @@ module.exports = {
                         'Web服务器/Apache',
                         'Web服务器/Tomcat',
                         'Web服务器/Nginx',
-                    ]
-                },
-                {
-                    title: 'Web爬虫',
-                    children: [
-                        'Web爬虫/简介',
-                        'Web爬虫/urllib',
-                        'Web爬虫/requests',
                     ]
                 },
                 {

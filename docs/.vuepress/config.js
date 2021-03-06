@@ -183,6 +183,15 @@ module.exports = {
                     ]
                 },
                 {
+                    title: '网络通信',
+                    children: [
+                        '网络通信/Email',
+                        '网络通信/http',
+                        '网络通信/urllib',
+                        '网络通信/requests',
+                    ]
+                },
+                {
                     title: '混合开发',
                     children: [
                         '混合开发/简介',

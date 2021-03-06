@@ -1,6 +1,4 @@
-# HTTP
-
-## ♢ http
+# ♢ http
 
 ：Python 的标准库，提供了 HTTP 通信的部分基础功能。
 - [官方文档](https://docs.python.org/3/library/http.html)

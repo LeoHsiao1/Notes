@@ -156,11 +156,11 @@ module.exports = {
                     ]
                 },
                 {
-                    title: '文本处理',
+                    title: '文件处理',
                     children: [
-                        '文本处理/INI',
-                        '文本处理/XML',
-                        '文本处理/Jinja',
+                        '文件处理/INI',
+                        '文件处理/XML',
+                        '文件处理/Jinja',
                     ]
                 },
                 {

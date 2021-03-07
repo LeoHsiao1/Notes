@@ -1,9 +1,9 @@
 # ♢ urllib
 
-：Python 的标准库，提供了访问 HTTP 服务器的基础方法，和 URLencode 的方法。
+：Python 的标准库，提供了访问 HTTP 服务器的基础功能，和 URLencode 的方法。
 - 不过使用 requests 更方便。
 
-## 访问 HTTP 服务器
+## 用法示例
 
 例：
 ```py

@@ -1,6 +1,6 @@
 # ♢ requests
 
-：Python 的第三方库，提供了访问 HTTP 服务器的方法。
+：Python 的第三方库，提供了访问 HTTP 服务器的功能。
 - [官方文档](https://requests.readthedocs.io/en/master/)
 - 安装：`pip install requests`
 - 基于 Python 的标准库 urllib 实现，但是功能更多，更加便捷。

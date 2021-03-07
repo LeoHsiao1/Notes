@@ -1,7 +1,10 @@
 # ♢ http
 
-：Python 的标准库，提供了 HTTP 通信的部分基础功能。
+：Python 的标准库，提供了进行 HTTP 通信的基础功能。
 - [官方文档](https://docs.python.org/3/library/http.html)
+
+## 用法示例
+
 - 用 `http.server` 模块可以启动一个简单的 HTTP 服务器。它的功能很少，只适用于临时测试。
   - 可以直接在终端启动：
     ```sh

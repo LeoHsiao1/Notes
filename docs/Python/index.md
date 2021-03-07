@@ -7,10 +7,11 @@
 - 模块与包
   - [模块与包](模块与包/模块与包.md)
   - [代码库](模块与包/代码库.md)
-- 文件处理
-  - [INI](文件处理/INI.md)
-  - [XML](文件处理/XML.md)
-  - [Jinja](文件处理/Jinja.md)
+- 文本处理
+  - [打开文件](文本处理/打开文件.md)
+  - [INI](文本处理/INI.md)
+  - [XML](文本处理/XML.md)
+  - [Jinja](文本处理/Jinja.md)
 - 数学运算
   - [♢ random](数学运算/random.md)
   - [♢ decimal](数学运算/decimal.md)

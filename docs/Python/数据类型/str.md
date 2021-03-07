@@ -117,3 +117,29 @@
     - 1 字节，向下兼容 ASCII 。
     - 2 字节，向下兼容 GBK 。
     - 4 字节
+
+## ♢ codecs
+
+：Python 的标准库，用于管理 Python 的编解码器。
+- 它将编解码器称为 codec ，包括 encoder 和 decoder 。
+- 它为所有编解码器定义了抽象的基类：
+  ```py
+  class Codec:
+      def encode(self, input, errors='strict'):
+          pass
+      
+      def decode(self, input, errors='strict'):
+          pass
+  ```
+- Python 解释器内置了很多种编码格式的编解码器，它们都在 codecs 模块中注册了。
+  - 编码格式的名称不区分大小写。对于连字符 - ，可以替换成下划线 _ ，也可以省略。
+  - 例：查询一种编码格式对应的编解码器
+    ```py
+    >>> import codecs
+    >>> codecs.lookup('utf-8')
+    <codecs.CodecInfo object for encoding utf-8 at 0x151dc6a99a0>
+    >>> codecs.lookup('utf_8')
+    <codecs.CodecInfo object for encoding utf-8 at 0x151dcf59400>
+    >>> codecs.lookup('utf8')
+    <codecs.CodecInfo object for encoding utf-8 at 0x151dcf59280>
+    ```

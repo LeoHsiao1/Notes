@@ -159,6 +159,7 @@ module.exports = {
                     title: '文本处理',
                     children: [
                         '文本处理/打开文件',
+                        '文本处理/文本格式',
                         '文本处理/INI',
                         '文本处理/XML',
                         '文本处理/Jinja',

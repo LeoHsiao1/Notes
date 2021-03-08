@@ -24,14 +24,21 @@
 
 ## 相关概念
 
-- JSP（Java Server Pages）：一种动态网页开发技术，在 HTML 文件中通过特定的标签插入 Java 代码。如下：
-  ```html
-  <p>
-  今天的日期是: <%= (new java.util.Date()).toLocaleString()%>
-  </p>
-  ```
-- JMX（Java Management Extensions）：一组用于监控、管理 Java 应用的 API ，属于 Java 标准库。
+- JSP（Java Server Pages）
+  - ：一种动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
+  - 例：
+    ```html
+    <p>
+    今天的日期是: <%= (new java.util.Date()).toLocaleString()%>
+    </p>
+    ```
+- JMX（Java Management Extensions）
+  - ：一组用于监控、管理 Java 应用的 API ，属于 Java 标准库。
   - JMX 将被管理的对象称为 MBean（Managed Bean）。
   - 在 Java 应用中调用 JMX 库，实现其接口，便可以从外部通过 HTTP 通信等方式监控、管理该 Java 应用。
   - 比如通过 JMX 接口可以获取 JVM 的运行状态。
-- JDBC ：Java 程序访问数据库的 API 规范。
+- JDBC（Java Database Connectivity）
+  - ：Java 程序访问数据库的 API 规范，主要用于关系型数据库。
+- Spring
+  - ：一个流行的 Java 应用开发框架。
+  - 内嵌了一个 Tomcat ，因此可以开发 Web 应用，作为 Web 服务器运行。

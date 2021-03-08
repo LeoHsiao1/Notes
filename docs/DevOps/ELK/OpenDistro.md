@@ -179,7 +179,7 @@
           "description": "管理一般的日志索引",
           "ism_template": {
               "index_patterns": ["logstash*", "filebeat*"], // 指定一些索引模式，被该 ISM 策略管理
-              // "priority": 100                            // 索引的优先级，默认为 0 。ES 重启之后，会按优先级顺序来恢复索引
+              // "priority": 100                            // 优先级，默认为 0
           },
           "default_state": "creat",                         // 执行该 ISM 策略时，索引的初始状态
           "states": [{                                      // 定义状态列表

@@ -161,3 +161,63 @@
   opendistro_security.multitenancy.tenants.enable_global: true      # 启用 Global 租户
   opendistro_security.multitenancy.tenants.enable_private: false    # 禁用 Private 租户
   ```
+
+### ISM
+
+：索引状态管理（Index State Management），是一些自动管理索引的策略，对标 ES 社区版的 ILM 功能。
+- ISM 策略给索引定义了多个状态，每种状态都有待执行的动作。
+- 默认每隔 5 分钟执行一次 ISM 策略。
+  - 开始执行时，首先会让索引进入初始状态。
+  - 索引每进入一个状态（state），就会按顺序执行其中的动作。
+    - 然后检查 transitions 条件，如果满足则切换到下一个状态，如果不满足则结束执行 ISM 策略。
+  - 索引同时只能处于一个状态。
+
+- 例：创建一个 ISM 策略
+  ```json
+  {
+      "policy": {
+          "description": "管理一般的日志索引",
+          "ism_template": {
+              "index_patterns": ["logstash*", "filebeat*"], // 指定一些索引模式，被该 ISM 策略管理
+              // "priority": 100                            // 索引的优先级，默认为 0 。ES 重启之后，会按优先级顺序来恢复索引
+          },
+          "default_state": "creat",                         // 执行该 ISM 策略时，索引的初始状态
+          "states": [{                                      // 定义状态列表
+                  "name": "creat",                          // 一个状态的名称
+                  "actions": [{                             // 该状态要执行的动作列表
+                      "replica_count": {                    // 执行内置的 replica_count 动作，用于设置 replica shard 的数量
+                          "number_of_replicas": 0
+                      }
+                      // "timeout": "1h",                   // 执行该动作的超时时间
+                      // "retry": {                         // 执行该动作失败时进行重试
+                      //    "count": 3,                     // 最多重试几次
+                      //    "delay": "10m"                  // 每次延迟一定时长再重试，默认为 1m
+                      // }
+                  }],
+                  "transitions": [{                         // 如果满足 conditions 条件，就切换到指定状态
+                      "state_name": "keep",
+                      // "conditions": {}                   // 如果省略条件，则会立即切换
+                  }]
+              },
+              {
+                  "name": "keep",
+                  "actions": [],
+                  "transitions": [{
+                      "state_name": "delete",
+                      "conditions": {
+                          "min_index_age": "30d"            // 如果索引的存在时长超过一定值，则删除索引
+                      }
+                  }]
+              },
+              {
+                  "name": "delete",
+                  "actions": [{
+                      "delete": {}
+                  }],
+                  "transitions": []
+              }
+          ]
+      }
+  }
+  ```
+  - 指定了 index_patterns 之后，会自动用该 ISM 策略管理新建的 index ，但不会自动管理已存在的 index 。

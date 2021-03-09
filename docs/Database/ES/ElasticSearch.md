@@ -54,10 +54,12 @@
     }
   }
   ```
-  - ES 返回的报文 body 是 JSON 格式的字符串。\
-    如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
-  - 加上 `-H 'content-Type:application/json'` 之后，便可以发送 JSON 格式的查询参数。
-  - 为了方便书写，下文将客户端请求简记成如下格式：
+  - 客户端通过 Restful API 访问服务器。
+    - 如果客户端发出的请求报文 body 不能按 JSON 格式正常解析，ES 就会返回 HTTP 400 报错。
+    - curl 命令加上 `-H 'content-Type:application/json'` 之后，便可以发送 JSON 格式的查询参数。
+    - ES 返回的响应报文 body 是 JSON 格式的字符串。
+      - 如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
+  - 为了方便书写，下文将客户端的请求简记成如下格式：
     ```json
     GET /_count
     {

@@ -6,11 +6,13 @@
 
 - 属于应用层协议，基于 TCP 通信。
 - 采用 C/S 架构。
-  - 一般的工作流程：客户端发出一个 HTTP 请求报文，服务器返回一个 HTTP 响应报文。
-- 无连接：客户端与服务器通信时不会保持连接，每次通信都要重新建立连接。
+  - 一般的工作流程：客户端发出一个 HTTP 请求报文给服务器，然后服务器返回一个 HTTP 响应报文给客户端。
+- 无连接
+  - ：客户端与服务器通信时不会保持连接，每次通信都要重新建立连接。
   - 每次通信时，客户端首先与服务器建立 TCP 连接，然后发送 HTTP 请求报文，等服务器返回 HTTP 响应报文之后就断开 TCP 连接。
   - HTTP1.1 开始支持长连接。
-- 无状态：HTTP 协议不会记录通信过程中的任何信息，每次通信都是独立的。
+- 无状态
+  - ：HTTP 协议不会记录通信过程中的任何信息，每次通信都是独立的。
   - 尽管如此，服务器或客户端的程序可以自己记录通信过程中的一些信息。
   - 虽然 HTTP 协议不会记录客户端的身份，但服务器可以通过 IP 地址、cookie 辨认不同的客户端。
 
@@ -31,12 +33,11 @@
 ## URI
 
 ：统一资源标识符（Uniform Resource Identifier)，用于表示网络中某个资源的名称或位置。
-- HTTP 通信中，客户端常常通过 URI 定位服务器上的资源。
 - 资源可以是实际存在的图片、文本文件，也可以是提供某种服务的 API 。
-
-URI 分为两种形式：
-- 统一资源名称（Uniform Resource Name ，URN）：用于表示资源的名称。
-- 统一资源定位符（Uniform Resource Locator ，URL）：用于表示资源的位置。
+- HTTP 通信中，客户端通常通过 URI 定位服务器上的资源。
+- URI 分为两种形式：
+  - 统一资源名称（Uniform Resource Name ，URN）：用于表示资源的名称。
+  - 统一资源定位符（Uniform Resource Locator ，URL）：用于表示资源的位置。
 
 ### URL
 
@@ -50,9 +51,11 @@ URL 的一般格式为：`protocol://hostname:port/path/?querystring#fragment`
 - path ：服务器上某个资源的路径。
   - 如果省略不填，则会访问根目录 / 。比如 www.baidu.com 相当于 www.baidu.com/ 。
   - path 是否区分大小写取决于服务器所在的文件系统。比如 Linux 的文件系统区分大小写，Windows 的 NTFS 文件系统不区分大小写。
-- querystring ：查询字符串，用于传递一些键值对形式的参数（称为 Query Param）。其语法格式如下：
-  1. 将每个键值对的内部用 = 连接，外部用 & 分隔，拼接成一个字符串。
-  2. 将该字符串经过 URLencode 编码，放到 URL 的 ? 之后。例如：`HTTPS://www.baidu.com/s?ie=UTF-8&wd=hello%20world`
+- querystring ：查询字符串，用于传递一些键值对形式的参数（称为 Query Param）。
+  - 其语法格式如下：
+    1. 将每个键值对的内部用 = 连接，外部用 & 分隔，拼接成一个字符串。
+    2. 将该字符串经过 URLencode 编码，放到 URL 的 ? 之后。例如：`HTTPS://www.baidu.com/s?ie=UTF-8&wd=hello%20world`
+  - 某些浏览器、服务器限制了 URL 的最大长度（比如 1M），因此不能通过 querystring 传递较多的数据。
 - fragment ：片段，以 # 开头。用于定位到资源中的某一片段。
   - querystring、fragment 都区分大小写。
 
@@ -60,25 +63,24 @@ URL 的一般格式为：`protocol://hostname:port/path/?querystring#fragment`
 
 HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五种请求方法。
 
-- GET ：用于请求获得（根据 URL 指定的）资源。
+- GET
+  - ：用于请求获得（根据 URL 指定的）资源。
   - 客户端发送 GET 请求报文时，报文的第一行包含了请求的 URL 。服务器一般会将回复的内容放在响应报文的 body 中，发给客户端。
 
-- POST ：用于向（根据 URL 指定的）资源提交数据。比如上传 HTML 表单数据、上传文件。
+- POST
+  - ：用于向（根据 URL 指定的）资源提交数据。比如上传 HTML 表单数据、上传文件。
   - 客户端发送 POST 请求报文时，通常将要提交的数据放在报文 body 中，发给服务器。服务器一般会回复一个状态码为 200 的报文，表示已成功收到。
+  - GET 方法常用于只读操作，而 POST 方法常用于写操作。
 
-- HEAD ：与 GET 相似，但要求服务器不返回报文 body 。
-- PUT ：与 POST 相似，但常用于更新数据。
+- HEAD
+  - ：与 GET 相似，但要求服务器不返回报文 body 。
+- PUT
+  - ：与 POST 相似，但常用于更新数据。
   - 常用于具有幂等性的操作。
 - DELETE
 - CONNECT
 - TRACE
 - OPTIONS
-
-比较 GET 方法与 POST 方法：
-- GET 方法通常用于只读操作，而写操作、读写操作都要用 POST 方法。
-- 需要传递数据给服务器时，用 POST 方法比 GET 方法更好。因为：
-  - GET 方法只能传递键值对格式的数据。
-  - 某些浏览器限制了 URL 的最大长度（比如 1M），因此不能用 GET 方法传递较多的数据。
 
 ## 报文
 
@@ -88,11 +90,10 @@ HTTP 协议以报文为单位传输消息，分为两种：
 
 一个 HTTP 报文的结构类似于一个文本文件，分为以下几部分：
 - 请求行 / 状态行 ：报文的第一行内容，用于简单介绍该报文。
-- 头部（headers）：每行声明一个 `key: value` 格式的参数。key 不区分大小写。
-- 一个空行 ：标志头部的结束。
+- 头部（headers）：每行声明一个 `key: value` 格式的参数，主要用于描述报文的属性。key 不区分大小写。
+- 一个空行 ：用于标志头部的结束。
 - 主体（body）：可以为空，也可以存放一段任意内容的数据。
-  - 通常通过 body 传递消息的实际内容。而 body 之前的信息大多用于描述报文的属性，不能装载消息的有效内容。
-  - 请求报文还可以通过 querystring 传递消息。
+  - 总而言之，客户端可以通过请求报文的 url、header、body 向服务器传递有意义的数据，不过最常用的是 body 。
 
 ### 请求报文
 
@@ -194,9 +195,9 @@ multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 bound
   - 202 ：Accepted ，服务器接受了请求，但还没有执行请求的操作。常用于异步处理。
   - 204 ：No Centent ，服务器没有返回任何内容。常用于不需要返回值的 HTTP 请求。
 - 3××：表示资源重定向。
-  - 301 ：Moved Permanently ，资源被永久移动位置，请客户端重新发送请求到新 URI ，以后的请求都这样。
+  - 301 ：Moved Permanently ，资源被永久移动位置，请客户端重新发送请求到新 URI ，并且以后的请求都这样。
     - 例：客户端访问的 URI 为 /home/login 时，服务器访问 301 响应，并在响应报文的 Headers 中声明新地址 `Location: /home/login/` ，请客户端访问它。
-  - 302 ：Moved Temporarily ，资源被临时移动位置，请客户端重新发送请求到新 URI ，但只是本次请求需要这样。
+  - 302 ：Moved Temporarily ，资源被临时移动位置，请客户端重新发送请求到新 URI ，但以后的请求不必使用新 URI 。
   - 303 ：See Other ，资源已找到，但请客户端继续向另一个 URI 发出 GET 请求。
     - 例：当客户端向 /home/login/ 发出 POST 请求进行登录之后，服务器返回 303 报文，让客户端继续向 /home/index.html 发出 GET 请求。
   - 304 ：Not Modified ，资源并没有改变。

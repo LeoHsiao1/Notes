@@ -291,7 +291,7 @@ jobs:                             # 该 workflow 的任务列表
 
 ## 相关概念
 
-- github1s
+- [github1s](https://github.com/conwnet/github1s)
   - ：一个开源项目，于 2021 年初发布。用于以 Web IDE 的方式查看 GitHub 项目。
   - 用法：在浏览器中访问任意 GitHub 项目，将域名 github.com 改为 github1s.com ，即可进入基于 VS Code 构建的 Web IDE 页面。
 

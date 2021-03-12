@@ -499,6 +499,7 @@ module.exports = {
                         'CI/GitLab',
                         'CI/GitHub',
                         'CI/Jenkins',
+                        'CI/Jenkinsfile',
                     ]
                 },
                 {

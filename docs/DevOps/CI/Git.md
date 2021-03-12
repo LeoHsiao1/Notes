@@ -33,9 +33,9 @@
     - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远程仓库，供多人推送修改。
 
 2. 用户执行 `git commit` 命令，将项目文件提交为一个版本，让 git 记录。
-	- git 默认会记录项目目录下的所有文件，可以在 .gitignore 文件中声明不想被 git 记录的文件。
-	- git 会将这些文件拷贝一份到 git 仓库中，根据哈希值识别它们。
-	- git 会记录当前时刻所有文件的哈希值，记作一个版本。
+  - git 默认会记录项目目录下的所有文件，可以在 .gitignore 文件中声明不想被 git 记录的文件。
+  - git 会将这些文件拷贝一份到 git 仓库中，根据哈希值识别它们。
+  - git 会记录当前时刻所有文件的哈希值，记作一个版本。
 
 3. 每次用户修改文件的内容之后，都应该执行 `git commit` 命令，将当前时刻的所有文件提交为一个新版本。
 	- 如果文件的哈希值发生变化，git 就认为文件的内容已经改变，会将改变之后的文件拷贝一份到 git 仓库中。不改变的文件则不会拷贝。
@@ -98,9 +98,9 @@ git clean [path]...     # 删除指定目录（默认为当前目录）下，所
           -x            # 删除所有不受版本控制的文件
 
 git reset [version]     # 将当前分支指向目标版本（默认是最近一个版本）。如果与目标版本之间的所有历史版本没有被其它 branch 或 tag 使用，就可能被删除
-        --soft          # 不改变工作目录的文件，也不删掉历史版本，相当于将当前分支 checkout 到目标版本。不过一旦提交新版本，就会删掉历史版本
-        --mixed         # 不改变工作目录的文件，只是删掉历史版本
-        --hard          # 将工作目录的文件回滚到目标版本的状态（只改变受版本控制的文件），并删掉历史版本
+          --soft        # 不改变工作目录的文件，也不删掉历史版本，相当于将当前分支 checkout 到目标版本。不过一旦提交新版本，就会删掉历史版本
+          --mixed       # 不改变工作目录的文件，只是删掉历史版本。此时将当前文件提交，就又得到了历史最高版本
+          --hard        # 将工作目录的文件回滚到目标版本的状态（只改变受版本控制的文件），并删掉历史版本
 
 git revert [version]    # 自动新建一个版本来抵消某个版本的变化（这样不会删除历史版本）
 
@@ -229,18 +229,18 @@ git 的配置文件有三种，局部的配置会覆盖全局的配置：
 配置文件为 INI 格式，下方是一个项目的 git 仓库的配置实例：
 ```ini
 [core]
-        repositoryformatversion = 0 # 仓库格式的版本
-        filemode   = true           # 是否保留文件权限中的可执行位
-        bare       = false          # 该仓库是否为裸仓库
-        ignorecase = false          # 是否忽略文件名的大小写
+    repositoryformatversion = 0 # 仓库格式的版本
+    filemode   = true           # 是否保留文件权限中的可执行位
+    bare       = false          # 该仓库是否为裸仓库
+    ignorecase = false          # 是否忽略文件名的大小写
 
-[remote "origin"]                   # 定义一个远程仓库，名为 origin
-        url    = https://github.com/LeoHsiao1/test.git
-        fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，声明让本地的 src 分支跟踪远程仓库的 dst 分支
+[remote "origin"]               # 定义一个远程仓库，名为 origin
+    url    = https://github.com/LeoHsiao1/test.git
+    fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，声明让本地的 src 分支跟踪远程仓库的 dst 分支
 
 [branch "master"]
-        remote = origin
-        merge  = refs/heads/master
+    remote = origin
+    merge  = refs/heads/master
 ```
 
 可以直接修改配置文件，也可以使用以下命令进行修改：

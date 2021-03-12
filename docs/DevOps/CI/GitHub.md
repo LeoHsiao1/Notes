@@ -288,3 +288,10 @@ jobs:                             # 该 workflow 的任务列表
   ```
   - path 指定的所有文件会先压缩成一个 ZIP 包，再上传。
   - 在 GitHub 网页上查看该 workflow 的执行记录，即可看到下载 Artifacts 的链接。
+
+## 相关概念
+
+- github1s
+  - ：一个开源项目，于 2021 年初发布。用于以 Web IDE 的方式查看 GitHub 项目。
+  - 用法：在浏览器中访问任意 GitHub 项目，将域名 github.com 改为 github1s.com ，即可进入基于 VS Code 构建的 Web IDE 页面。
+

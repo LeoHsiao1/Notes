@@ -5,6 +5,7 @@
   - [GitLab](CI/GitLab.md)
   - [GitHub](CI/GitHub.md)
   - [Jenkins](CI/Jenkins.md)
+  - [Jenkinsfile](CI/Jenkinsfile.md)
 - 容器
   - [简介](容器/简介.md)
   - [Docker](容器/Docker.md)

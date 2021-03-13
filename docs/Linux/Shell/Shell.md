@@ -52,6 +52,10 @@
   sh-4.2# e             # 输入一条不存在的命令，可以从报错信息中判断出当前使用的 shell
   sh: e: command not found
   ```
+- 交互模式（interactive）
+  - ：指启动 shell 解释器时打开了其终端。
+  - 原理：shell 解释器会检查其输入、输出是否指向终端，如果是，则进入交互模式。
+  - 比如让 shell 解释器从文件中读取输入，就是非交互模式。
 
 ## 执行脚本
 
@@ -66,10 +70,13 @@
 
 - 可以用指定的 shell 解释器来执行 shell 脚本：
   ```sh
-  $ bash 1.sh           # 启动一个子 shell 来执行脚本，执行完之后会退出该 shell
+  $ bash
+          [xx.sh]       # 启动一个子 shell 来执行 shell 脚本，执行完之后该子 shell 会自动退出
           -x            # 打印出执行的每条命令（每行开头会显示加号 + ）
           -n            # 不执行脚本，而是检查是否有语法错误
           -c <comman>   # 不执行脚本，而是执行一条命令
+          -i            # 让 shell 解释器采用交互模式
+          -l            # 让 shell 解释器采用 login shell 的行为
   ```
 
 - 可以用 source 命令执行 shell 脚本：

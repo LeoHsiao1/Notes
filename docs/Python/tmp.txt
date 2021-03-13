@@ -448,6 +448,9 @@ False
 ##
 ##
 ##
+
+类型提示：typing 模块
+
  
 bool
 ## bool：布尔型。取值为True或Flase（首字母大写）。

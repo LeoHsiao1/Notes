@@ -1595,7 +1595,6 @@ def fun1():
         print(x)
 return fun2
   - 该变量称为自由变量：可以在作用域之外的位置被访问。
-  - 闭包函数只能读取自由变量，不能修改自由变量。
 - Python中使用装饰器时，就会把被装饰的函数变成闭包函数。
 
 闭包就是可以使用参数的代码片段，在闭包内创建的变量在闭包被调用的范围内同样可以被引用。
@@ -1627,7 +1626,7 @@ SyntaxError: positional argument follows keyword argument
 ...     print(x,y)
 ...
 SyntaxError: non-default argument follows default argument
-- 元组参数：用一个星号 * 声明，只能声明一个。调用函数时会将额外传入的key型实参打包成一个元组。
+- 元组参数：用一个星号 * 声明，只能声明一个。调用函数时会将额外传入的key型实参打包成一个字典。
 >>> def fun3(x, y, *args):
 ...     print(x, y, args)
 ...
@@ -1670,7 +1669,7 @@ H e l l o
 - 如果实参是不可变的数据类型，无论如何也不会被改变。
 - 如果实参是可变的数据类型，传入函数就可能会被改变（像C语言的指针函数），安全的做法是将实参所指的对象做一个副本，再传入函数。如下：
 >>> def fun1(x, y):        # 调用函数时，解释器会创建形参变量，用实参赋值，使它们指向相同的对象
-...     x[:] = y            # 修改形参时，是修改实参所指的对象
+...     x[:] = y            # 修改形参时，也就是修改实参所指的对象
 ...     x = [0, 0]        # 对形参赋值时，是改变它所指的对象，不再影响实参所指的对象
 ...
 >>> x = [1, 2]
@@ -1708,6 +1707,22 @@ H e l l o
 >>> debug(fun1)(1,2)            # debug(fun1)会返回装饰函数的函数名wrapper
 [DEBUG]: enter fun1()
 1 2
+
+```py
+def decorator(func):
+    def wrapper(*args, **kwargs):
+        print('enter', func.__name__)
+        return func(*args, **kwargs)
+    return wrapper
+
+@decorator
+def fun1():
+    return 1
+
+```
+
+
+
 ## Python提供了装饰器（Decorator）语法：可以在定义函数时用 "@装饰函数名" 的格式方便地添加装饰函数。
 - 例：
 >>> @debug                    # 指定装饰器为debug()，函数fun1()被调用时会自动被debug()装饰
@@ -1832,12 +1847,12 @@ init...
   - 类方法
   - 静态方法
 ## 类成员的访问控制。
-- public        ：公有成员，可以被任何访问。
-  - 按普通方式定义。
-- protected    ：受保护成员，只能在当前类中或子类中访问，不能通过import语句导入。
-  - 定义时以一个下划线 _ 开头。
-- private        ：私有成员，只能在当前类中访问，对子类或实例对象不可见。
-  - 定义时以两个下划线 __ 开头。
+
+- public    ：公有成员，定义时不以下划线 _ 开头，可以被任何对象访问，可以通过import语句导入。
+- protected ：受保护成员，定义时以一个下划线 _ 开头，只能在当前类或子类中，或通过对象访问。
+- private   ：私有成员，定义时以两个下划线 __ 开头，只能在当前类中访问。
+
+
 - 例：
 >>> class Test:
 ...     a = 0
@@ -1997,7 +2012,7 @@ TypeError: 'int' object is not callable
 >>> Test()
 <__main__.Test object at 0x7f96450d45c0>
 - __init__()    ：构造函数，对象被创建之后被自动调用，用于初始化对象。
-  - 当子类没有重载构造函数时，Python解释器会自动调用父类的__init__()方法。如果子类重载了构造函数，就需要主动调用父类的__init__()方法。如下：
+  - 如果子类没有重载构造函数，Python解释器会自动调用父类的__init__()方法。如果子类重载了构造函数，就需要主动调用父类的__init__()方法。如下：
 class B(A, C):
     def __init__(self):
         super().__init__()
@@ -2024,7 +2039,7 @@ TypeError: __init__() missing 1 required positional argument: 'y'
 >>> t1=Test(1, 2)
 TypeError: __new__() takes 2 positional arguments but 3 were given
   - 执行Test()时会实例化该类，先调用__new__()方法创建对象，再调用__init__()方法初始化对象。
-  - 必须让__new__()与__init__()的形参列表相同，或者使用不定长参数。例如，将上例中的def __new__(cls, x)改为def __new__(cls, *args, **kwargs)之后，便可成功创建一个对象。
+  - __new__() 的形参列表必须与 __init__() 的一致，或者兼容。例如，将上例中的def __new__(cls, x)改为def __new__(cls, *args, **kwargs)之后，便可成功创建一个对象。
 ## 使对象能够实现一些基本功能的内置方法。
 - __str__()    ：当对象被转换成字符串时被自动调用。
 - __repr__()    ：当对象在终端上打印时被自动调用。
@@ -2197,27 +2212,35 @@ True
 >>> class Man(Person):        # 创建一个继承类Person的类Man
 ...     pass
 ...
-  - 这里子类Man继承了父类Person的类变量num，如果子类Man一直不修改num的值，它就会一直引用父类的num，改变Person.num就会改变Man.num。
->>> print(Person.num, Man.num)
-0 0
->>> Person.num = 1
->>> print(Person.num, Man.num)
-1 1
-  - 当子类Man修改了num的值之后，它就与父类的num值在当前位置分叉，从此Person.num与Man.num互不影响。
->>> Man.num = 10
->>> print(Person.num, Man.num)
-1 10
->>> Person.num = 20
->>> print(Person.num, Man.num)
-20 10
+
+- 子类继承父类的类变量之后，会保留相同的引用。但是修改子类的类变量，会导致它们不再关联。
+
+>>> Person.num, Man.num
+(0, 0)
+>>> Person.num is Man.num   # 此时子类的类变量，与父类的类变量，实际上是引用同一个对象
+True
+>>> Person.num = 1          # 改变父类的类变量的引用，会导致子类的类变量也变化
+>>> Person.num, Man.num
+(1, 1)
+>>> Person.num = [0]        # 修改父类的类变量，会导致子类的类变量也变化
+>>> Man.num.append(2)
+>>> Person.num, Man.num
+([0, 2], [0, 2])
+>>> Man.num = 2             # 但是，如果改变子类的类变量的引用，会导致子类与父类的该类变量从此取消关联
+>>> Person.num, Man.num
+([0, 2], 2)
+
+
+
 - 类的定义语句执行完之后，该类的定义就确定了。即使重新定义父类，它依然继承的是之前的父类。
 >>> class Person:
 ...     num = 0
 ...     name = ""
 ...
->>> Man.name                        # 子类不会继承新父类的成员
+>>> Man.name                        # 子类不会继承父类的新成员
 AttributeError: type object 'Man' has no attribute 'name'
-##
+
+
 
 C++等语言中支持定义多个名称相同、形参列表不同的方法，实现更丰富的多态性。如下，当调用 Test.get(x=1) 时，根据输入的实参与哪个形参列表匹配，从而判断调用哪个方法。
 但在Python中不支持这样的多态性，只有同名的方法中只有最后一个定义的方法会生效。
@@ -2309,7 +2332,7 @@ class Test(int):
     def fun1(self):
         print("hello")
 ## 元类：继承自type类，可用于创建其它类。
-- 使用元类可以方便地初始化其它类，比setattr()更方便。
+- 使用元类可以方便地初始化其它类，设置成员，比setattr()更方便。
   - 创建一个类时，Python解释器会优先用它或它父类的元类来创建它，如果没有元类则用type()来创建它。
 - 例：
 >>> class Mymeta(type):
@@ -6177,7 +6200,7 @@ https://ilmvfx.wordpress.com/2016/02/16/use-promoted-widgets-in-qt-designer/
   - Publisher可以同时是Subscriber。
   - 代理可以是一台设备或一个应用程序。
   - 从客户端/服务器模式来看，Publisher和Subscriber都是客户端（Client），Broker则是服务器（Server）。
-- 观察者模式与发布/订阅模式很像，但是观察者模式中被观察对象会直接将消息发送给各个观察者，不存在代理。
+- 观察者模式与发布/订阅模式很像，但是被观察对象会直接将消息推送给各个观察者，不存在代理。
 ##
 ##
 ## MVC模式：
@@ -6384,7 +6407,7 @@ for(i=0; i<n; i++)
 s += b;            // 复合赋值运算符也只算一次简单操作
 return s;
 }
-  - 一般只考虑算法时间复杂度的数量级（order），但不是以十进制作为一个数量级，而是当两个数相除的极限值不是无穷小0或无穷大∞时就属于同一级。例如上述算法的数量级可简记为O(n)，其它常见的数量级还有O(2n)、O(n2)、O(n!)等。特别地，O(1)表示时间复杂度为常数，即与问题规模n无关。
+  - 一般只考虑算法时间复杂度的数量级（order），但不是以十进制作为一个数量级，而是当两个数相除的极限值不是无穷小0或无穷大∞时就属于同一级。例如上述算法的数量级可简记为O(n)，其它常见的数量级还有O(n^2)、O(n!)等。特别地，O(1)表示时间复杂度为常数，即与问题规模n无关。
 -
 ##
 ## 基本算法。
@@ -6423,6 +6446,23 @@ int sum(int start,float rate,int n)
 错序排列
 n个有序的元素应有n!个不同的排列，如若一个排列使得所有的元素不在原来的位置上，则称这个排列为错排
 找出规律，用递归求
+
+
+爬楼梯问题：
+初阶：假设有n层的台阶，一開始你站在第0层，每次能够爬上一层或两层。请问爬完楼梯有多少种不同的方法？
+解析：假如有一层楼梯，那就只有一种方案。两层楼梯2种。3层楼梯时，先走一步，剩下两层我们算过了就是2；先走2步，剩下一层我们也算过了就是1
+这就是斐波那契数列
+假定f[i] 表示是爬到第i层的方法，那么f[i] = f[i-1] + f[i-2]
+
+这是一个动态规划问题（DP问题），需要找出状态、状态转移方程：
+状态：假设还剩 i 层，将走法数量记作 f[i]
+状态转移方程为：f[i] = f[i-1] + f[i-2]
+
+进阶：假设每次能够爬上一层或两层，或者倒退一层或两层，请问爬完楼梯有多少种不同的方法？
+解析：
+https://www.jianshu.com/p/c93ed24932c2
+
+
 
 ##
 ##

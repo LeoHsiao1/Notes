@@ -42,3 +42,7 @@
 - Spring
   - ：一个流行的 Java 应用开发框架。
   - 内嵌了一个 Tomcat ，因此可以开发 Web 应用，作为 Web 服务器运行。
+- Servlet
+  - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
+  - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
+

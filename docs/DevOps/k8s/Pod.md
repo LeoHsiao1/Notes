@@ -60,7 +60,7 @@ spec:                       # Controller 的规格
     ```
   - Deployment 的 spec.selector 会被用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 。
 
-- **Deployment 的 spec.template 部分就是 Pod 的配置内容**，当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
+- Deployment 的 spec.template 部分就是 Pod 的配置内容，当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
   - k8s 默认会保存最近两个版本的 Deployment ，便于将 Pod 回滚（rollback）到以前的部署状态。
   - 当用户删除一个 Deployment 时，k8s 会自动销毁对应的 Pod 。当用户修改一个 Deployment 时，k8s 会滚动更新，依然会销毁旧 Pod 。
 
@@ -272,7 +272,7 @@ status:
   - terminated ：已终止。
 
 - Pod 的状态取决于容器的状态。因此，分析 Pod 的状态时，需要考虑更细单位的容器。
-  - **kubelet 创建一个容器之后，还要等容器中的业务进程成功启动，这个容器才算真正启动。**可以通过 postStart 判断容器是否已创建，通过 readinessProbe 判断容器是否已成功启动。
+  - kubelet 创建一个容器之后，还要等容器中的业务进程成功启动，这个容器才算真正启动。可以通过 postStart 判断容器是否已创建，通过 readinessProbe 判断容器是否已成功启动。
   - 当 Pod 中的所有容器都处于 running 状态时，Pod 才能处于 Running 状态。
   - 当 Pod 中有某个容器处于 terminated 状态时，kubelet 会按照 restartPolicy 重启它。在重启完成之前，Pod 都处于 Unavailable 状态。
 
@@ -326,7 +326,7 @@ contaienrs:
 
 ### postStart、preStop
 
-用户可以给 Pod 中的单个容器定义 postStart、preStop 钩子，完善启动、终止过程。如下：
+可以给 Pod 中的单个容器定义 postStart、preStop 钩子，在启动、终止过程中增加操作。如下：
   ```yaml
   contaienrs:
   - name: redis-1
@@ -359,4 +359,4 @@ contaienrs:
 
 当容器重启时，
 - 如果多次重启失败，重启的间隔时间将按 10s、20s、40s 的形式倍增，上限为 5min 。当容器成功运行 10min 之后会重置。
-- 只会在当前 Node 上重启，除非因为 Node 故障等原因触发了主机调度。
+- 容器只会在当前 Node 上重启，除非因为 Node 故障等原因触发了主机调度。

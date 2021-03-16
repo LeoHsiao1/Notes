@@ -22,10 +22,10 @@
   - master 运行以下进程：
     - apiserver ：提供整个 k8s 系统对外的 RESTful API 。
     - scheduler ：负责调度集群的资源，将 Pod 分配到某个节点上。
-      controller-manager ：负责控制 Pod ，比如滚动更新、故障检测、自动扩容等。
+    - controller-manager ：负责控制 Pod ，比如滚动更新、故障检测、自动扩容等。
   - Node 运行以下进程：
-    - kubelet ：负责管理 Pod、上报 Pod 的状态到 master 。\
-      kube-proxy ：为 Service 提供访问 Pod 的网络代理以及负载均衡。
+    - kubelet ：负责管理 Pod、上报 Pod 的状态到 master 。
+    - kube-proxy ：为 Service 提供访问 Pod 的网络代理以及负载均衡。
 - 通常使用 Docker 作为容器引擎。
 - 用 etcd 数据库存储 k8s 集群的各种数据。
 

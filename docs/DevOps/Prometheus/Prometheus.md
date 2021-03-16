@@ -3,7 +3,7 @@
 ：一个流行的监控系统。
 - [官方文档](https://prometheus.io/docs/introduction/overview/)
 - 基于 Golang 开发。
-- 源于 Google Borg 系统的监控系统，2016 年作为一个独立项目交给 CNCF 托管。
+- 由 SoundCloud 公司的前 Google 员工于 2015 年发布，它起源于 Google 内部用于监控 Borg 系统的 Borgmon 系统。
 - 擅长从大量节点上采集指标数据，且提供了 Web 管理页面。
 - 可监控主机、进程、容器等多种对象，可扩展性高，而且自带查询语言，配置比较灵活。
 

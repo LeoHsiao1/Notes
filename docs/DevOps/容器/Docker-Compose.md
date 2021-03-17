@@ -3,7 +3,7 @@
 ：一个 Docker 容器的编排工具。
 - [官方文档](https://docs.docker.com/compose/compose-file/)
 - 由 Docker 公司发布，基于 Python 开发。
-- 只能管理当前宿主机上的容器，不能管理服务器集群。
+- 可以管理当前宿主机上的任意个容器，但不能管理其它主机上的容器。
 
 ## 安装
 

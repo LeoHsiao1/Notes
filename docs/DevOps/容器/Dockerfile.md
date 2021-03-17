@@ -58,7 +58,7 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
   RUN echo hello
   RUN ["/bin/echo", "hello"]
   ```
-- docker daemon 每次执行 RUN 命令时，会在原镜像外部加上一层新的文件系统（file system layer）。
+- dockerd 每次执行 RUN 命令时，会在原镜像外部加上一层新的文件系统（file system layer）。
   - 执行 rm 等命令也无法删除内层的文件系统中的文件。
   - 因此执行 RUN 命令的次数越多，镜像的体积越大。应该尽量减少 RUN 命令的数量，最好合并成一条 RUN 命令。
 
@@ -70,7 +70,7 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
   ENTRYPOINT <command> <param1> <param1>...      # shell 格式
   ENTRYPOINT ["command", "param1", "param2"...]  # exec 格式
   ```
-- 构建镜像时，docker daemon 会将 shell 格式的命令转换成 exec 格式再保存，并且转换时会加上前缀"/bin/sh"和"-c"。
+- 构建镜像时，dockerd 会将 shell 格式的命令转换成 exec 格式再保存，并且转换时会加上前缀"/bin/sh"和"-c"。
 - 例如，如果在 Dockerfile 中编写“Entrypoint echo hello”，在保存会被转换成：
   ```dockerfile
   "Entrypoint": [
@@ -95,8 +95,8 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
 
 ### 比较 ENTRYPOINT 与 CMD
 
-- 构建镜像时，docker daemon 会将 ENTRYPOINT、CMD 命令都保存为 exec 格式。
-- 启动容器时，docker daemon 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
+- 构建镜像时，dockerd 会将 ENTRYPOINT、CMD 命令都保存为 exec 格式。
+- 启动容器时，dockerd 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
   - 因此，ENTRYPOINT 命令是容器启动时的真正入口端点。
 - 下表统计不同写法时，一个 ENTRYPOINT 命令与一个 CMD 命令组合的结果（即最终的容器启动命令是什么）：
 

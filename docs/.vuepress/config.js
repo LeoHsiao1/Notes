@@ -266,7 +266,6 @@ module.exports = {
                         '网络/SSH',
                         '网络/FTP',
                         '网络/HTTP',
-                        '网络/网络代理',
                     ]
                 },
                 {
@@ -357,6 +356,7 @@ module.exports = {
                     children: [
                         '简介/Web技术',
                         '简介/Web爬虫',
+                        '简介/网络代理',
                     ]
                 },
                 {

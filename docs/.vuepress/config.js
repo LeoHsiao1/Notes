@@ -282,7 +282,6 @@ module.exports = {
                         'Shell/Shell',
                         'Shell/变量',
                         'Shell/流程控制',
-                        'Shell/脚本示例',
                     ]
                 },
                 {

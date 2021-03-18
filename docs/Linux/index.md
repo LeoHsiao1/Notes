@@ -42,7 +42,6 @@
   - [Shell](Shell/Shell.md)
   - [变量](Shell/变量.md)
   - [流程控制](Shell/流程控制.md)
-  - [脚本示例](Shell/脚本示例.md)
 - 内核
   - [简介](内核/简介.md)
   - [内核参数](内核/内核参数.md)

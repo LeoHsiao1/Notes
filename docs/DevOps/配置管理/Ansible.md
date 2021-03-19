@@ -292,7 +292,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 
 ## Module
 
-- Anisble 内置了很多种用途的模块，参考 [官方的模块列表](https://docs.ansible.com/ansible/latest/modules/list_of_all_modules.html)
+- Anisble 内置了很多种用途的模块，参考 [官方的模块列表](https://docs.ansible.com/ansible/latest/collections/index_module.html)
 - 如果 host 上启用了 SELinux ，则需要先在它上面安装 `yum install libselinux-python` ，否则一些模块不能执行。
 - Ansible 内置的模块大多具有幂等性。
   - 幂等性可以保证对同一个 host 重复执行一个 playbook 时，只会产生一次效果，不会因为重复执行而出错。比如使用 yum 模块安装软件时，它会检查是否已经安装，如果已经安装就不执行。

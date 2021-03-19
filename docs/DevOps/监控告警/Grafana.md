@@ -5,7 +5,7 @@
 - 基于 Golang 开发。
 - 本身不存储数据，常用作监控系统、数据分析的前端。
 
-## 安装
+## 部署
 
 - 下载二进制包：
   ```sh
@@ -22,6 +22,71 @@
   docker run -d --name grafana -p 3000:3000 grafana/grafana
   ```
 
+## 配置
+
+- 以 rpm 包的方式安装 Grafana 时，有以下几个重要文件，拷贝它们就可以备份 Grafana ：
+  - /etc/grafana/grafana.ini ：配置文件。
+  - /var/lib/grafana/grafana.db ：一个 SQLite 数据库，保存 Grafana 自身的数据，比如用户表、仪表盘配置。
+  - /var/lib/grafana/plugins/ ：插件目录。
+  - /var/log/grafana/ ：日志目录。日志文件会被按天切割，最多保存 7 天。
+- 以二进制版的方式运行 Grafana 时，上述文件都保存在工作目录下：
+  - conf/defaults.ini
+  - data/grafana.db
+  - data/plugins/
+  - data/log/
+- 修改配置文件之后，要重启 Grafana 才会生效。
+
+### 启用 Email
+
+在配置文件中按如下格式配置邮箱，就可以以 Email 的形式发送告警。
+```ini
+[smtp]
+enabled = true
+host = 10.0.0.1:25      # SMTP 服务器的位置
+user =                  # 登录 SMTP 服务器的账号
+password =              # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
+cert_file =
+key_file =
+skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 认证
+from_address = admin@grafana.localhost    # 邮件的发件方邮箱
+from_name = Grafana                       # 邮件的发送方名称
+```
+
+### 第三方登录
+
+Grafana 支持通过 GitLab、GitHub 等第三方账号登录。
+
+启用 GitLab OAuth 的方法：
+1. 进入 GitLab 的 "User Settings" -> "Applications" 页面，添加一个应用：
+    - Name ：填 Grafana
+    - Redirect URI ：填入 Grafana 的 URI ，格式为：https://mygrafana.com/login/gitlab
+    - Scopes ：选择 api
+    注册成功后，GitLab 将生成一对 Application ID 和 Secret 。
+
+2. 修改 Grafana 配置文件中的部分内容：
+    ```ini
+    [server]
+    protocol = http
+    http_addr =                     # 默认绑定 0.0.0.0
+    http_port = 3000                # Grafana 对外的访问端口
+    domain = mygrafana.com          # Grafana 对外的访问 IP 或域名
+    # root_url = %(protocol)s://%(domain)s:%(http_port)s/ # Grafana URL 的格式，可以加上一个后缀作为 sub_path
+    # serve_from_sub_path = false                         # 是否允许 root_url 包含后缀，便于反向代理
+
+    [auth.gitlab]
+    enabled = true
+    allow_sign_up = true
+    client_id = 9c6b79bf4714e5f8cdbcffad0e2d0fe74   # 填 Application ID
+    client_secret = 86a39f5b9f779791aac631704ee0b0  # 填 Secret
+    scopes = api
+    auth_url = http://mygitlab.com/oauth/authorize  # 改为 Gitlab 的域名
+    token_url = http://mygitlab.com/oauth/token
+    api_url = http://mygitlab.com/api/v4
+    allowed_groups =
+    ```
+
+3. 访问 Grafana 网站，在它的登录页面可以看到一个新增的按钮：“Sign in with GitLab”
+
 ## 用法
 
 - 使用步骤：
@@ -29,7 +94,7 @@
   2. 进入 "Dashboard" 页面，创建一个 Panel 。
   3. 配置 Panel ，从某个数据源按某个查询表达式获得数据，然后显示出图表。
 
-- Grafana 支持多种数据源，比如 MySQL、influxdb、Elasticsearch、Prometheus 。
+- Grafana 支持从多种外部数据源拿取数据，比如 MySQL、influxdb、Elasticsearch、Prometheus 。
   - 默认有一个 TestData DB 数据源可供试用。
   - 某些数据源自带了一些 Dashboard 模板，可以导入试用。
 
@@ -39,7 +104,16 @@
   - [官方及社区分享的 Dashboard ](https://grafana.com/grafana/dashboards)
 
 - Playlist ：用于自动循环显示一些 Dashboard 。
-- Snapshot ：对 Dashboard 或 Panel 的快照。只记录了此刻的数据，可以分享 URL 给别人查看。
+- 分享 Dashboard 或 Panel 给他人查看的多种方式：
+  - Link 
+    - ：生成当前内容的 URL 。
+    - 还支持在该 Link 后加一些参数，渲染成 PNG 图片。
+  - Snapshot
+    - ：生成快照 URL ，供任何人查看。
+    - 这样不需要用户通过 Grafana 的身份认证，但是只记录了当前时刻的数据，因此不支持动态查看。
+  - Embed panel
+    - ：嵌入式面板。将 Grafana 仪表盘的 URL 链接通过 HTML iframe 标签嵌入到其它网页中。
+    - 需要在配置文件中启用 `allow_embedding = true` ，
 
 ## Panel
 
@@ -113,7 +187,6 @@ Panel 的主要配置：
     - 用于筛选显示各个字段，支持重命名、排序。
     - 当前 Panel 中只有一个 Query 时才能进行该配置。
 
-
 ## 告警
 
 - 使用步骤：
@@ -167,66 +240,3 @@ Panel 的主要配置：
 - 常用插件：
   - Zabbix 插件：用于分析 Zabbix 的监控数据，包含 Dashboard 模板。
   - Pie Chart 插件：允许绘制饼状图。
-
-## 配置
-
-- 以 rpm 包的方式安装 Grafana 时，有以下几个重要文件，拷贝它们就可以备份 Grafana ：
-  - /etc/grafana/grafana.ini ：配置文件。
-  - /var/lib/grafana/grafana.db ：保存 Grafana 运行时的数据、页面配置。
-  - /var/lib/grafana/plugins/ ：插件目录。
-  - /var/log/grafana/ ：日志目录。日志文件会被按天切割，最多保存 7 天。
-- 以二进制版的方式运行 Grafana 时，上述文件都保存在工作目录下：
-  - conf/defaults.ini
-  - data/grafana.db
-  - data/plugins/
-  - data/log/
-- 修改配置文件之后，要重启 Grafana 才会生效。
-
-### 启用 Email
-
-在配置文件中按如下格式配置邮箱，就可以以 Email 的形式发送告警。
-```ini
-[smtp]
-enabled = true
-host = 10.0.0.1:25      # SMTP 服务器的位置
-user =                  # 登录 SMTP 服务器的账号
-password =              # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
-cert_file =
-key_file =
-skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 认证
-from_address = admin@grafana.localhost    # 邮件的发件方邮箱
-from_name = Grafana                       # 邮件的发送方名称
-```
-
-### 第三方登录
-
-Grafana 支持通过 GitLab、GitHub 等第三方账号登录。
-
-启用 GitLab OAuth 的方法：
-1. 进入 GitLab 的 "User Settings" -> "Applications" 页面，添加一个应用：
-    - Name ：填 Grafana
-    - Redirect URI ：填入 Grafana 的 URI ，格式为：https://mygrafana.com/login/gitlab
-    - Scopes ：选择 api
-    注册成功后，GitLab 将生成一对 Application ID 和 Secret 。
-
-2. 修改 Grafana 配置文件中的部分内容：
-    ```ini
-    [server]
-    protocol = http
-    http_addr =             # 默认绑定 0.0.0.0
-    http_port = 3000        # Grafana 对外的访问端口
-    domain = mygrafana.com  # Grafana 对外的访问 IP 或域名
-
-    [auth.gitlab]
-    enabled = true
-    allow_sign_up = true
-    client_id = 9c6b79bf4714e5f8cdbcffad0e2d0fe74   # 填 Application ID
-    client_secret = 86a39f5b9f779791aac631704ee0b0  # 填 Secret
-    scopes = api
-    auth_url = http://mygitlab.com/oauth/authorize  # 改为 Gitlab 的域名
-    token_url = http://mygitlab.com/oauth/token
-    api_url = http://mygitlab.com/api/v4
-    allowed_groups =
-    ```
-
-3. 访问 Grafana 网站，在它的登录页面可以看到一个新增的按钮：“Sign in with GitLab”

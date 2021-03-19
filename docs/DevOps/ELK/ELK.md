@@ -1,6 +1,6 @@
 # ELK
 
-：一个分布式的日志采集、存储及展示系统，又称为 ELK Stack 或 Elastic Stack 。由 Elastic 公司开发。
+：一个日志采集、存储、展示系统，又称为 ELK Stack 或 Elastic Stack 。由 Elastic 公司发布。
 - [官方文档](https://www.elastic.co/guide/index.html)
 - [下载页面](https://www.elastic.co/cn/downloads/)
 
@@ -51,11 +51,19 @@ ELK 的主要工作流程如下：
 ## 相关概念
 
 - Flume
-  - ：一个日志采集工具，功能相当于 Logstash ，但功能较少。
+  - ：一个日志采集工具，类似于 Logstash ，但功能较少。
   - 由 Cloudera 公司基于 Java 开发，2012 年成为 ASF 的顶级项目。
   - 通过 tail -f 的方式采集日志文件的内容，因此重启采集进程之后会重复采集。
 
 - Fluentd
-  - ：一个日志采集工具，功能相当于 Logstash ，也有丰富的插件。
+  - ：一个日志采集工具，类似于 Logstash ，也有丰富的插件。
   - 2011 年首次发布，由 Treasure Data 公司基于 Ruby 开发。
   - 采集的数据解析为 JSON 对象，可以输出到 ES、MongoDB、Kafka 等。
+  - 可以替换 ELK 系统中的 Logstash ，组成 EFK 。
+
+- Loki
+  - ：一个日志采集、存储、展示系统，由 Grafana Labs 公司发布。包括以下组件：
+    - Promtail ：用于采集日志文件。
+    - Loki ：用于存储日志数据。
+    - Grafana ：用于展示日志数据。
+  - 借鉴了 Prometheus 的工作方式，给日志数据添加一些键值对格式的标签，从而便于筛选，比全文索引更快。

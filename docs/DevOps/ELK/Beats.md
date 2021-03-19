@@ -62,7 +62,6 @@
     }
     ```
     - 根据 inode 和 device 编号识别日志文件。
-      - 因此日志文件被重命名时，也可能继续采集原 inode 对应的磁盘空间，直到关闭文件。
     - 根据 bytes offset 确定最后一次采集的位置。
       - 如果文件的体积减少，则 Filebeat 会重新从 offset 0 处开始读取，可能导致重复采集。
       - 切割日志时可能使日志文件的 inode 或 bytes offset 变化，导致遗漏采集、重复采集。
@@ -70,7 +69,7 @@
 
 - 假设让 Filebeat 采集日志文件 A 。切割日志时，可能经常出现将文件 A 重命名为 B 的情况，比如 `mv A B` 。Filebeat 会按以下规则处理：
   - 如果没打开文件 A ，则以后会因为文件 A 不存在而采集不了。
-    - 在 Windows 系统上，都属于这种情况。在类 Unix 系统上，允许在 Filebeat 打开文件时，重命名文件。
+    - 在类 Unix 系统上，当 Filebeat 打开文件时，允许其它进程重命名文件。而在 Windows 系统上不允许，因此总是这种情况。
   - 如果打开了文件 A ，则会继续读取到文件末尾，然后每隔 backoff 时间检查一次文件：
     - 如果在 backoff 时长之内又创建文件 A ，比如 `touch A` 。则 Filebeat 会认为文件被重命名（renamed）。
       - 默认配置了 `close_renamed: false` ，因此会既采集文件 A ，又采集文件 B ，直到因为 close_inactive 超时等原因才关闭文件 B 。

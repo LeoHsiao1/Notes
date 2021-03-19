@@ -61,7 +61,6 @@
   - 用户可以自定义模块，注册到某个阶段。
   - find-config、post-rewrite、post-access 三个阶段不支持注册模块。
 
-
 ## 配置文件
 
 - Nginx 默认使用 `/etc/nginx/nginx.conf` 作为主配置文件，还会导入 `/etc/nginx/conf.d/` 目录下的其它配置文件。
@@ -1054,6 +1053,19 @@ server {
     ```
 - 版本较老的浏览器可能只支持 HTTP 1.0 协议，甚至不能解析 gzip 报文。
 
+### add_header
+
+：用于添加响应报文的 header 。
+- 可用范围：http、server、location
+- 语法：
+  ```sh
+  add_header name value [always];
+  ```
+  - 该指令可以同时定义多条。
+  - 如果响应报文的状态码属于 200, 201, 206, 301, 302, 303, 307, 308 ，则在头部末尾添加 header 。
+    - 如果声明了 always ，则无论状态码是什么，都会添加 header 。
+  - 如果当前级别没有定义任何 add_header 指令，则继承上一级别的 add_header 指令。
+
 ### types
 
 ：用于定义 MIME 类型与文件扩展名（不区分大小写）的映射关系。
@@ -1074,7 +1086,7 @@ server {
 ：设置响应报文头部中 Content-Type 的默认值。
 - 可用范围：http、server、location
 - 默认值：
-  ```
+  ```sh
   default_type    text/plain;
   ```
 

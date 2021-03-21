@@ -266,13 +266,13 @@ module.exports = {
                         '网络/SSH',
                         '网络/FTP',
                         '网络/HTTP',
-                        '网络/网络代理',
                     ]
                 },
                 {
                     title: '测试',
                     children: [
                         '测试/简介',
+                        '测试/进程测试',
                         '测试/网络测试',
                         '测试/综合测试',
                     ]
@@ -283,7 +283,6 @@ module.exports = {
                         'Shell/Shell',
                         'Shell/变量',
                         'Shell/流程控制',
-                        'Shell/脚本示例',
                     ]
                 },
                 {
@@ -357,6 +356,7 @@ module.exports = {
                     children: [
                         '简介/Web技术',
                         '简介/Web爬虫',
+                        '简介/网络代理',
                     ]
                 },
                 {
@@ -389,9 +389,8 @@ module.exports = {
                     title: 'Web服务器',
                     children: [
                         'Web服务器/简介',
-                        'Web服务器/Apache',
-                        'Web服务器/Tomcat',
                         'Web服务器/Nginx',
+                        'Web服务器/Tomcat',
                     ]
                 },
                 {

@@ -24,7 +24,7 @@
           -p 8080:8080                                    # Jenkins 的 Web 端的访问端口
           -p 50000:50000                                  # 供 Jenkins 代理访问的端口
           -v /var/jenkins_home:/var/jenkins_home          # 挂载 Jenkins 的数据目录，从而可以随时重启 Jenkins 容器
-          -v /var/run/docker.sock:/var/run/docker.sock    # 使容器内的 Jenkins 能与 docker daemon 通信
+          -v /var/run/docker.sock:/var/run/docker.sock    # 使容器内的 Jenkins 能与 dockerd 通信
           jenkins/jenkins
   ```
   - 第一次启动时，终端上会显示一个密钥，用于第一次登陆 Web 端。

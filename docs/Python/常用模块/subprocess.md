@@ -14,7 +14,7 @@ class Popen(args,           # 待执行的命令
             stdin=None,     # 提供子进程标准输入的文件描述符
             stdout=None,
             stderr=None,
-            shell=False,    # 默认不会直接在系统终端中执行该命令，因此不能使用系统终端内置的命令和语法
+            shell=False,    # 是否在系统 shell 终端中执行命令
             cwd=None,       # 执行命令时的工作目录，默认是当前目录
             env=None,       # 可以传入一个字典，作为子进程的所有环境变量。默认继承当前进程的所有环境变量
             ...)
@@ -119,3 +119,18 @@ class Popen(args,           # 待执行的命令
   env_dict.update({'test_id': '1'})
   p = subprocess.Popen('env', env=env_dict)
   ```
+
+- 默认不会将 args 命令放在系统 shell 终端中执行，因此不能使用系统终端内置的命令和语法。比如在 Windows 上执行以下命令：
+  ```py
+  >>> subprocess.Popen('echo Hello')                              # 不是在系统终端中执行，因此找不到 echo 命令
+  FileNotFoundError: [WinError 2] 系统找不到指定的文件。
+  >>> subprocess.Popen(['cmd', '/c', 'echo Hello']).communicate() # 换成用系统终端执行
+  Hello
+  (None, None)
+  >>> subprocess.Popen('echo Hello', shell=True).communicate()    # 换成用系统终端执行
+  Hello
+  (None, None)
+  ```
+
+
+

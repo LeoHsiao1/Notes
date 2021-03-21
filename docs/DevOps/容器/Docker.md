@@ -1,23 +1,25 @@
 # Docker
 
-：目前最流行的容器平台。
-- [官方文档](https://docs.docker.com/engine/docker-overview/)
+：一个用于创建、管理容器的软件。
+- [官方文档](https://docs.docker.com/get-started/overview/)
 - 基于 Golang 开发。
-- 于 2013 年被 Docker 公司发布，掀起了容器技术的潮流。
-- 运行在 Linux 平台上。也有 Docker for Windows 版本，但只能运行 windows 上的应用程序。
+- 于 2013 年由 Docker 公司发布，掀起了容器技术的潮流，是目前最流行的容器平台。
+- 提供了用于 Linux、MacOS、Windows 系统的发行版。
 
 ## 原理
 
 - Docker 采用 C/S 架构工作：
-  - 服务器作为宿主机上的守护进程运行，称为 docker daemon ，负责管理本机的容器、镜像。
-  - 用户可以在宿主机上执行 docker 命令，作为客户端。这些命令会发送给服务器，由服务器执行。
-- 通过 Linux namespace 隔离了各个容器的运行环境。
+  - 在宿主机上以守护进程的方式运行 dockerd 进程，作为服务器，负责管理本机的容器、镜像、数据卷、网络等对象。
+  - 用户可以在宿主机上执行 docker 命令，作为客户端，与 dockerd 交互，比如请求启动容器。
+    - 客户端是通过 `/var/run/docker.sock` 文件与 dockerd 通信。
+    - 非 root 用户无权访问 docker.sock 文件，导致无权执行 docker ps 等命令。此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
+- 基于 Linux namespace 隔离了各个容器的运行环境。
   - 隔离了进程、网络、文件系统，接近于独享一个虚拟机环境。
   - 没有隔离物理资源。例如：一个容器可能占用全部的 CPU 和内存；在容器内执行 top 命令会看到整个宿主机的资源。
   - 没有隔离 Linux 内核，容器内的进程可能通过内核漏洞逃逸到宿主机上。
-- 通过 Linux cgroups 限制了各个容器使用的 CPU、内存等资源。
+- 基于 Linux cgroups 限制了各个容器使用的 CPU、内存等资源。
   - 只是限制，并没有隔离物理资源。
-
+  - Docker 最初是通过 LXC 来控制 namespace、cgroups ，实现容器化。从 v1.1 版本开始，弃用 LXC ，改用 libcontainer 等 Golang 库。
 
 ## 安装
 
@@ -26,7 +28,7 @@
   yum install yum-utils       # 安装 yum-config-manager
   yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo   # 添加 docker 的官方镜像源
   yum install docker-ce       # 下载 docker 社区版
-  systemctl start docker      # 启动 docker daemon
+  systemctl start docker      # 启动 dockerd
   systemctl enable docker     # 使 docker 开机自启
   ```
 
@@ -37,29 +39,29 @@
 
 ## 配置
 
-- 配置 docker daemon 时，需要创建 `/etc/docker/daemon.json` 文件，然后重启 docker daemon 。
+- 配置 dockerd 时，需要创建 `/etc/docker/daemon.json` 文件，然后重启 dockerd 。
 
 
 ## 容器
 
-- 每个容器被创建时，会被 docker daemon 分配两个随机的、独一无二的字符串，作为该容器的标识符。
+- 每个容器被创建时，会被 dockerd 分配两个随机的、独一无二的字符串，作为该容器的标识符。
   - Container ID   ：是一串十六进制数。有 64 位长，但允许用户只用开头少量几位就指定一个容器。
-  - Container Name ：通常由几个英文单词组成。可以由 docker daemon 分配，也可以由用户自定义。
+  - Container Name ：通常由几个英文单词组成。可以由 dockerd 分配，也可以由用户自定义。
   - 容器被创建之后，就不能再修改其标识符。
 
 - 用户创建一个容器时，必须指定一条启动命令（如果有默认配置则无需指定）。
   - 默认由启动命令对应的进程担任容器内的 1 号进程。
   - 容器启动之后，用户可以进入容器内终端，执行任意命令，启动其它进程。
-  - 一旦容器的 1 号进程退出（或者不在前台运行），docker daemon 就会杀死容器内所有进程，使得整个容器停止运行。
+  - 一旦容器的 1 号进程退出（或者不在前台运行），dockerd 就会杀死容器内所有进程，使得整个容器停止运行。
   - 为了让容器保持运行，容器的启动命令应该在前台运行，且能够一直保持运行，比如 `tail -f /dev/null` 。
 
 - 容器的生命周期：
   ```sh
-  Creat     # 创建。此时容器被 docker daemon 分配了 CPU 、内存等资源，创建了根目录文件系统
+  Creat     # 创建。此时容器被 dockerd 分配了 CPU 、内存等资源，创建了根目录文件系统
   Up        # 运行中。
   Exit      # 停止。此时容器占用的资源被释放，但文件系统保留不变。
   Restart   # 重启。此时容器重新被分配资源，但依然使用之前的文件系统，重新执行启动命令。
-  Delete    # 被删除。此时容器占用的资源被释放，文件系统也被删除。最终消失不见，在 docker daemon 中不能查询到该容器。
+  Delete    # 被删除。此时容器占用的资源被释放，文件系统也被删除。最终消失不见，在 dockerd 中不能查询到该容器。
   ```
 
 ### 启动
@@ -90,7 +92,7 @@ docker run <image>            # 运行一个镜像，这会创建一个容器（
             --restart no              # 总是不会自动重启
             --restart on-failure      # 当容器异常终止时，才会自动重启（通过 docker start 重启）
             --restart unless-stopped  # 当容器终止时，就自动重启，除非容器是被 docker stop 终止的
-            --restart always          # 当容器终止时，总是会自动重启（即使被 docker stop 了，当 docker daemon 重启时又会自动重启该容器）
+            --restart always          # 当容器终止时，总是会自动重启（即使被 docker stop 了，当 dockerd 重启时又会自动重启该容器）
 
             # 限制容器占用的 CPU、内存
             --cpus 2                  # 限制该容器最多使用 2 个 CPU（平均值）
@@ -105,11 +107,9 @@ docker run <image>            # 运行一个镜像，这会创建一个容器（
   docker run -it centos:7 bash             # 创建容器，并进入该容器的终端
   docker run -d centos:7 tail -f /dev/null # 创建一个容器（让它执行一个不会停止的启动命令）
   ```
-- 用户执行 docker 命令时，是通过 `/var/run/docker.sock` 文件与 docker daemon 通信。
-  - 非 root 用户无权访问 docker.sock 文件，导致无权执行 docker ps 等命令。此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
 - 运行嵌套容器的示例：
   ```sh
-  docker run -d --name dind --privileged docker:dind  # dind 镜像代表 docker in docker ，内置了 docker daemon
+  docker run -d --name dind --privileged docker:dind  # dind 镜像代表 docker in docker ，内置了 dockerd
   docker exec -it dind sh                             # 进入 dind 容器
   docker run -d nginx                                 # 在 dind 容器内运行嵌套的容器
   ps auxf                                             # 查看此时的进程树
@@ -149,7 +149,7 @@ docker
             -f              # 保持显示
             -t              # 显示时间戳
   ```
-- docker daemon 会记录容器内 1 号进程的 stdout、stderr ，作为该容器的日志。
+- dockerd 会记录容器内 1 号进程的 stdout、stderr ，作为该容器的日志。
   - 将其它进程的日志文件重定向到 /proc/1/fd/1、/proc/1/fd/2 ，就会一起记录到容器的日志中。
   - 例如， Nginx 的官方镜像中重定向了其日志文件：
     ```sh
@@ -159,7 +159,7 @@ docker
 
 #### 日志驱动器
 
-docker daemon 会通过日志驱动器（logging driver）保存容器的日志。
+dockerd 会通过日志驱动器（logging driver）保存容器的日志。
 - 常见的几种如下：
   - nong ：不保存日志。
   - local
@@ -184,7 +184,7 @@ docker daemon 会通过日志驱动器（logging driver）保存容器的日志�
         --log-opt max-file=3 \      # 最多保留 3 份切割日志
         nginx
   ```
-- 也可以在 daemon.json 中配置日志驱动器，但需要重启 docker daemon 才会生效， 而且只会对新创建的容器生效。
+- 也可以在 daemon.json 中配置日志驱动器，但需要重启 dockerd 才会生效， 而且只会对新创建的容器生效。
 
 ### 执行命令
 
@@ -229,7 +229,7 @@ docker volume
   /etc/hosts
   /etc/passwd             # 让容器采用宿主机的用户名、uid
   /etc/localtime          # 让容器采用宿主机的时区
-  /var/run/docker.sock    # 允许在容器内与 docker daemon 通信，可以执行 docker ps 等命令
+  /var/run/docker.sock    # 允许在容器内与 dockerd 通信，可以执行 docker ps 等命令
   ```
 
 ### 网络
@@ -258,11 +258,11 @@ docker network
 
 - 让容器内端口可以被容器外访问的三种方案：
   - 将容器内端口映射到宿主机的 eth 网卡上的端口。
-    - 比如执行 `docker run -p 80:80` ，此时 docker daemon 会自动配置 iptables 规则，将宿主机 80 端口收到的 TCP 流量转发到容器的 80 端口。
+    - 比如执行 `docker run -p 80:80` ，此时 dockerd 会自动配置 iptables 规则，将宿主机 80 端口收到的 TCP 流量转发到容器的 80 端口。
     - 缺点：
       - 此时宿主机的防火墙会暴露 80 端口，允许被任意外部 IP 访问。
       - 此时从一个容器中不能访问到另一个容器映射的端口，因为 iptables 规则不会转发该流量。
-      - 这样自动配置的 iptables 规则比较复杂，可能会出错。此时建议先重启 docker daemon ，让它重新配置网络。
+      - 这样自动配置的 iptables 规则比较复杂，可能会出错。此时建议先重启 dockerd ，让它重新配置网络。
   - 让容器连接到 host 网络，从而使用宿主机的 eth 网卡，而不是自己的虚拟网卡。
     - 比如执行 `docker run --network host` ，这样当容器内的服务监听端口时，是监听 eth 网卡上的 Socket ，因此可以被外部 IP 访问。
   - 如果几个容器连接到同一个 bridge 类型的网络，就可以在一个容器内访问到其它容器的 IP 、所有端口。
@@ -310,9 +310,11 @@ docker network
 
 ## 镜像
 
-- 每个镜像都会被 docker daemon 分配一串随机编号作为 image ID ，用户也可以自定义镜像名和 tag（表示镜像的版本）。
+- 镜像是用于创建容器的模板，容器是镜像的运行实例。
+  - 镜像在宿主机上存储成一些零散的文件，包含了运行容器所需的二进制文件、依赖信息、配置信息等。
+- 每个镜像都会被 dockerd 分配一串随机编号作为 image ID ，用户也可以自定义镜像名和 tag（表示镜像的版本）。
   - 通过 image ID 或 imageName:tag 可以指定一个唯一的 Image 。
-- docker daemon 使用的镜像都存储在宿主机上，也可以将镜像存储到镜像仓库服务器中。
+- dockerd 使用的镜像都存储在宿主机上，也可以将镜像存储到镜像仓库服务器中。
   - 默认使用的是官方的镜像仓库 hub.docker.com ，也可以使用自己部署的仓库。
 
 ### 查看
@@ -342,7 +344,7 @@ docker
 ```
 - 如果不注明镜像的 tag ，则默认拉取 latest 版本。
 - 尽量不要拉取 latest 版本，而使用具体的版本名，比如 v1.0 ，否则在不同时间拉取的 latest 版本会不一样。
-- 镜像在宿主机上会存储成一些零散的文件，使用以下命令可以导出成压缩包：
+- 可以将镜像导出成压缩包：
   ```sh
   docker save -o images.tar <image>...        # 将镜像打包成 tar 文件
   docker save <image>... | gzip > images.tgz  # 或者打包并压缩
@@ -351,7 +353,7 @@ docker
 
 ### 制作
 
-制作 Docker 镜像的方法有两种：
+制作 Docker 镜像的方法主要有两种：
 - 将一个容器提交为镜像：
     ```sh
     docker commit <containerID> <imageName>:<tag>
@@ -369,7 +371,7 @@ docker
     ```sh
     docker build . -t centos:v1.0 --network host
     ```
-  - docker build 命令会将 Dockerfile 所在目录作为上下文目录，将该目录及其子目录下的所有文件都拷贝给 docker daemon 。
+  - docker build 命令会将 Dockerfile 所在目录作为上下文目录，将该目录及其子目录下的所有文件都拷贝给 dockerd 。
   - 可以在 .dockerignore 文件中声明不想被拷贝的文件。
-  - 执行 docker build 命令时，docker daemon 会创建临时容器来构建镜像，构建完成之后会自动删除临时容器。
+  - 执行 docker build 命令时，dockerd 会创建临时容器来构建镜像，构建完成之后会自动删除临时容器。
   - 如果镜像构建失败，则生成的 image ID 为 none 。

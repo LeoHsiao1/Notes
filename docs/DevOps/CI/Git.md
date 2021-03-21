@@ -256,6 +256,34 @@ git config
           <key> <value> # 设置配置文件中某项参数的值
 ```
 
+## submodule
+
+：子模块，用于在当前 git 仓库中以子目录的形式引用其它 git 仓库。
+- 相关命令：
+  ```sh
+  git submodule
+                add <repository_url> [<path>] [--name <name>] [-b <branch>]   # 添加 submodule
+                update        # 更新 submodule ，这会从远程仓库 pull 它的最新版本
+                sync          # 将 .gitmodules 文件中的配置同步到 .git/config 中（默认不会自动同步）
+                status        # 显示所有 submodule 的 commit、path、branch 信息
+  ```
+- 添加了 submodule 之后，会在项目根目录生成一个 .gitmodules 文件，用于保存其配置信息。如下：
+  ```ini
+  [submodule "python_utils"]                            # submodule 的名称
+    url = https://github.com/LeoHsiao1/python_utils.git # submodule 的仓库地址，会通过 git clone 命令下载
+    path = submodules/python_utils                      # 将该 submodule 下载到哪个目录
+    branch = master                                     # 引用的分支
+  ```
+  还会在 `.git/config` 中记录 submodule 的信息，如下：
+  ```ini
+  [submodule "python_utils"]
+    active = true
+    url = https://github.com/LeoHsiao1/python_utils.git
+  ```
+  - 如果想移除一个 submodule ，需要在上述两个配置文件中删除它。
+  - 当前 git 仓库不会对 submodule 的文件进行版本管理，只会记录其配置信息。
+  - 进入 submodule 的目录之后，就相当于处于其 git 仓库下，可以执行 git checkout 等命令。
+
 ## 远端仓库
 
 拥有一个 git 服务器之后，就可以将本地的 git 仓库推送到服务器存储，或从服务器拉取 git 仓库。

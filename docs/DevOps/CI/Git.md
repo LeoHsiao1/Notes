@@ -1,7 +1,7 @@
 # Git
 
 ：一个分布式的版本控制工具。
-- [官网](https://git-scm.com/)
+- [官方文档](https://git-scm.com/docs)
 - 2005 年，由 Linus Torvalds 基于 C 语言开发。
 - 可以记录文件每次修改时的状态，供用户将文件回滚到任意历史时刻。
 - 可以创建多个版本分支，进行分支合并，供多人合作开发同一个项目。
@@ -42,6 +42,21 @@
 
 4. 用户执行 `git checkout xxx` 命令，切换到历史版本。
 	- git 会找到该版本对应的所有文件的哈希值，根据哈希值将这些文件从 git 仓库拷贝到项目目录下，从而将项目目录还原到历史时刻。
+
+## 查看仓库
+
+```sh
+git status              # 查看当前 git 仓库的状态（包括当前的分支名、缓存区内容）
+
+git log                 # 在文本阅读器中查看 git 仓库的日志（按时间倒序显示每个事件）
+
+git diff                # 比较当前仓库与上一次 add 或 commit 的差异
+        --cached        # 比较上一次 add 与上一次 commit 的差异
+        branch1         # 比较当前仓库与某个分支的差异
+        branch1 branch2 # 比较两个分支的差异
+        --stat          # 只显示统计信息
+        <file>          # 只比较某个文件的差异
+```
 
 ## 版本
 
@@ -108,6 +123,11 @@ git revert [version]    # 自动新建一个版本来抵消某个版本的变化
 - 不受 git 版本控制的文件主要有两种：
   - 新增的文件，尚未加入版本控制。
   - 被 .gitignore 忽略的文件。
+- 从 git 仓库的所有版本中永久性地删除某个文件：
+  ```sh
+  git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch <文件的相对路径>' --prune-empty --tag-name-filter cat -- --all
+  git push origin --force --all --tags    # 强制推送，覆盖远端仓库
+  ```
 
 ### .gitignore
 
@@ -196,27 +216,6 @@ git rebae
         <branch>          # 将当前分支以变基方式合并到指定分支（这会产生一个新版本）
         branch1 branch2   # 将 branch2 以变基方式合并到 branch1
         branch1 branch2 --onto branch3  # 将 branch2 相对于 branch1 的变基应用到 branch3 上
-```
-
-## 其它命令
-
-```sh
-git status    # 查看当前 git 仓库的状态（包括当前的分支名、缓存区内容）
-
-git log       # 在文本阅读器中查看 git 仓库的日志（按时间倒序显示每个事件）
-
-git diff                # 比较当前仓库与上一次 add 或 commit 的差异
-        --cached        # 比较上一次 add 与上一次 commit 的差异
-        branch1         # 比较当前仓库与某个分支的差异
-        branch1 branch2 # 比较两个分支的差异
-        --stat          # 只显示统计信息
-        <file>          # 只比较某个文件的差异
-```
-
-从 git 仓库的所有版本中永久性地删除某个文件：
-```sh
-git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch <文件的相对路径>' --prune-empty --tag-name-filter cat -- --all
-git push origin --force --all --tags    # 强制推送，覆盖远端仓库
 ```
 
 ## 配置

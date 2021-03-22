@@ -46,14 +46,14 @@
 - Jenkins 的 Web 页面上，很多地方都显示了 ？ 图标，点击它就会显示此处的帮助文档。
 - 新安装的 Jenkins 需要进行一些系统配置，比如添加节点、设置对外的 URL 。
   - 点击 "Manage Jenkins" -> "Configure System" 可进行一些系统配置，比如设置 Jenkins 对外的 URL、邮箱、全局的环境变量。
-  - 用户可以将密码等私密数据保存成 Jenkins 的“凭据”，然后在执行 Job 时调用，从而避免泄露明文到终端上。
+  - 用户可以将密码等私密数据保存成 Jenkins 的 "凭据" ，然后在执行 Job 时调用，从而避免泄露明文到终端上。
 
-- Jenkins 的主页的左侧显示了菜单列，点击 “新建” 即可创建一个 Job ，常见的几种类型如下：
-  - Freestyle Project ：自由风格的项目，可以通过 Web 页面上的配置实现大多数构建任务。
-  - Pipeline ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
-  - Multibranch Pipeline ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
-  - MultiJob Project ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
-  - Folder ：用于对 Job 进行分组管理。
+- Jenkins 的主页的左侧显示了菜单列，点击 "新建" 即可创建一个 Job ，常见的几种类型如下：
+  - `Freestyle Project` ：自由风格的项目，可以通过 Web 页面上的配置实现大多数构建任务。
+  - `Pipeline` ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
+  - `Multibranch Pipeline` ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
+  - `MultiJob Project `：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
+  - `Folder` ：用于对 Job 进行分组管理。
 - Jenkins 的主页默认显示一个视图（view）。
   - 每个视图以列表形式包含多个任务（Job），便于分组管理。
 - 点击进入一个 Job 的详情页面，如下：
@@ -75,14 +75,15 @@
 - 用户可以添加一些主机作为 Jenkins 的运行环境，称为节点（Node）。
 - Jenkins 服务器所在的节点称为 master 节点，用户还可以添加其它 slave 节点，这些节点都可以用于运行 Job 。
 - 添加 slave 节点时，一般通过 SSH 密钥连接。步骤如下：
-  1. 安装 “SSH Build Agents” 插件。
+  1. 安装 `SSH Build Agents` 插件。
   2. 在 slave 节点上安装 JDK 。
      建议再创建 jenkins 用户，以便使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
-  3. 将 master 节点的 ~/.ssh/id_rsa.pub 公钥拷贝到 slave 节点的 ~/.ssh/authorized_keys 中。
-  4. 在 Jenkins 上创建一个“SSH Username with private key”类型的凭据，填入 master 节点的 ~/.ssh/id_rsa 私钥。
-  5. 在 Jenkins 上新建一个节点，选择以“Launch agents via SSH”方式连接。
-- 当 Jenkins master 通过 SSH 连接到 slave 之后（以 notty 方式连接，不创建终端），会执行 java -jar remoting.jar  命令，保持运行一个客户端。
-  - master 每次连接 slave 时，不会加载 /etc/profile 和 ~/.bash_profile ，只会加载 /etc/bashrc 和 ~/.bashrc 。因此，需要在 slave 的配置页面添加 refix Start Agent Command ：`source /etc/profile;source ~/.bash_profile;` 。
+  3. 将 master 节点的 `~/.ssh/id_rsa.pub` 公钥拷贝到 slave 节点的 `~/.ssh/authorized_keys` 中。
+  4. 在 Jenkins 上创建一个 `SSH Username with private key` 类型的凭据，填入 master 节点的 `~/.ssh/id_rsa` 私钥。
+  5. 在 Jenkins 上新建一个节点，选择以 `Launch agents via SSH` 方式连接。
+- 当 Jenkins master 通过 SSH 连接到 slave 之后（以 notty 方式连接，不创建终端），会执行 `java -jar remoting.jar`  命令，保持运行一个客户端。
+  - master 每次连接 slave 时，不会加载 `/etc/profile` 和 `~/.bash_profile` ，只会加载 `/etc/bashrc` 和 `~/.bashrc` 。\
+    因此，需要在 slave 的配置页面添加 prefix Start Agent Command ：`source /etc/profile;source ~/.bash_profile;` 。
   - 客户端执行的所有 shell 命令都会继承它的 shell 环境变量。因此，当用户修改 shell 环境变量时，客户端不会自动更新，必须手动将 slave 断开重连。
 
 ### 管理权限
@@ -102,12 +103,12 @@
 - Jenkins 只能以 Job 为单位划分权限，因此应该给一个项目开发、测试、正式环境的构建任务分别创建 Job ，而不是通过构建参数选择它们。
   - 虽然这样会产生很多 Job ，但 Job 之间可以相互调用。
 - 给每个或每组 Job 创建两种项目角色，按需要分配给各个用户。
-  - *_user ：只是使用该 Job ，拥有 Job 的 Build、Cancel、Read 权限。
-  - *_editor ：允许编辑该 Job ，拥有大部分权限。
+  - `*_user` ：只是使用该 Job ，拥有 Job 的 Build、Cancel、Read 权限。
+  - `*_editor` ：允许编辑该 Job ，拥有大部分权限。
 
 ## 插件
 
-在“Manage Jenkins”菜单->“Manage Plugins”页面可以管理 Jenkins 的插件。
+在 "Manage Jenkins" -> "Manage Plugins" 页面可以管理 Jenkins 的插件。
 - 安装、卸载插件时都要手动重启 Jenkins 才会生效，甚至修改了插件的配置之后可能也不会立即生效。
 
 常用的插件：
@@ -132,7 +133,7 @@
 ## ♢ jenkinsapi
 
 ：Python 的第三方库，用于通过 HTTP 协议调用 Jenkins 的 API 。
-- 安装：pip install jenkinsapi
+- 安装：`pip install jenkinsapi`
 
 ### 例
 

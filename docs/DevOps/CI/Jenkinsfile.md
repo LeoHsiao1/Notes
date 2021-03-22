@@ -6,8 +6,8 @@
 - Jenkinsfile 有两种写法：
   - 脚本式（Scripted Pipeline）：将流水线定义在 node{} 中，主要内容为 Groovy 代码。
   - 声明式（Declarative Pipeline）：将流水线定义在 pipeline{} 中，更推荐使用，本文采用这种写法。
-- 所有 Pipeline Job 的 Web 页面中都有一个通往“流水线语法”的链接，点击之后可以查看一些关于 Pipeline 的帮助文档。
-  - 比如可以使用“片段生成器”，将通过 Web 表单配置的功能转换成流水线代码。
+- 所有 Pipeline Job 的 Web 页面中都有一个通往 "流水线语法" 的链接，点击之后可以查看一些关于 Pipeline 的帮助文档。
+  - 比如可以使用 "片段生成器" ，将通过 Web 表单配置的功能转换成流水线代码。
 
 ## 例
 
@@ -166,6 +166,9 @@ pipeline {
   - 每次修改了 parameters{} 之后，要执行一次 Job 才会在 Jenkins Web 页面上生效。
   - password 参数虽然在输入时显示成密文，但打印到终端上时会显示成明文，不如 credentials 安全。
   - 对于文件参数，上传的文件会存储到 `${workspace}/${job_name}/f1` 路径处，而用 $f1 可获得上传的文件名。
+    - pipeline job 的文件参数功能无效，不能上传文件。可采用以下两种替代方案：
+      - 创建一个普通类型的 job ，供用户上传文件，保存到主机的 /tmp 目录下。然后让其它 job 从这里拷贝文件。
+      - 在 Jenkins 之外搭建一个文件服务器，供用户上传文件。然后让其它 job 从这里下载文件。这样上传文件时麻烦些，但方便跨主机拷贝文件。
 
 ## agent{}
 

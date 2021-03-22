@@ -49,12 +49,16 @@ FastDFS 的服务器分为两种角色：
 
 3. storage.conf 的配置示例：
     ```ini
+    bind_addr=0.0.0.0
+    port=23000
+
+    group_name=group1               # 该 storage 属于哪个组
     base_path=/var/fdfs             # 工作目录，用于存储数据和日志
     store_path0=/var/fdfs           # 存储文件的目录。该参数可以设置多个，从 0 开始编号
-    #store_path1=/var/fdfs2
-    tracker_server=10.0.0.1:22122   # tracker 的地址。该参数可以设置多个
+    # store_path1=/var/fdfs2
+
+    tracker_server=10.0.0.1:22122   # tracker 的地址。该参数可以配置多个
     # tracker_server=10.0.0.2:22122
-    http.server_port=23000          # 该 storage 监听的端口
     ```
 
 4. nginx.conf 的配置示例：

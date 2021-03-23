@@ -475,11 +475,9 @@ server {
       }
   }
   ```
-
-判断转发之后 URI 的取值：
-- 如果 proxy_pass 目标地址中包含 URI ，则将原 URI 被 location 匹配之后剩下的部分附加到目标地址之后（即转发相对路径）。否则直接将原 URI 附加到目标地址之后（即转发绝对路径）。如下，测试发送指向 `127.0.0.1:80/www/1.html` 的请求
+- 如果 proxy_pass 目标地址中包含 URI ，则将原 URI 被 location 匹配之后剩下的部分附加到目标地址之后（即转发相对路径）。否则直接将原 URI 附加到目标地址之后（即转发绝对路径）。如下，测试发送指向 `127.0.0.1:80/www/1.html` 的请求：
   ```sh
-  location /www {
+  location /www/ {
       proxy_pass  http://127.0.0.1:79;    # 转发到 /www/1.html
   }
   ```
@@ -517,6 +515,26 @@ server {
       proxy_pass  http://127.0.0.1:79/test/;    # 转发到 /index.html
   }
   ```
+
+- 反向代理多个后端服务器时，需要区分发向不同后端服务器的 HTTP 请求。可以通过 URL 的差异进行区分：
+  ```sh
+  location /www/ {
+      proxy_pass  http://127.0.0.1:79/;         # 转发到 /1.html
+  }
+  location /www2/ {
+      proxy_pass  http://127.0.0.1:78/;
+  }
+  ```
+  或者：
+  ```sh
+  location /www/ {
+      proxy_pass  http://127.0.0.1:79/www/;     # 转发到 /www/1.html
+  }
+  location /www2/ {
+      proxy_pass  http://127.0.0.1:78/www2/;
+  }
+  ```
+  - 此时，可能需要修改 HTML 文件里的所有静态链接，使得客户端向正确的 URL 发出 HTTP 请求。
 
 ### proxy_redirect
 

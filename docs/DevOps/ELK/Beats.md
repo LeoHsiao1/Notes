@@ -364,7 +364,7 @@
     # scan_frequency: 10s           # 每隔多久扫描一次日志文件，如果有变动则创建 harvester 进行采集
     # ignore_older: 0s              # 不扫描最后修改时间在多久之前的文件，默认不限制时间。其值应该大于 close_inactive
     # harvester_buffer_size: 16384  # 每个 harvester 在采集日志时的缓冲区大小，单位 bytes
-    # max_bytes: 10485760           # 每条日志文本的最大字节数，超过的部分不会采集。默认为 10 MB
+    max_bytes: 102400               # 每条日志的 message 部分的最大字节数，超过的部分不会发送（但依然会读取）。默认为 10 M，这里设置为 100 K
     # tail_files: false             # 是否从文件的末尾开始，倒序读取
     # backoff: 1s                   # 如果 harvester 读取到文件末尾，则每隔多久检查一次文件是否更新
 

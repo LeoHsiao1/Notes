@@ -20,6 +20,27 @@
                   -V                          # 显示版本号
     ```
 
+## 配置
+
+- Logstash 的 config 目录下存在多个配置文件：
+  ```sh
+  config/
+  ├── jvm.options           # JVM 的配置
+  ├── log4j2.properties     # 日志的配置
+  ├── logstash.yml          # logstash 本身的配置
+  ├── pipeline.conf         # 用于处理日志数据的 pipeline
+  ├── pipelines.yml
+  └── startup.options       # 启动时的配置
+  ```
+
+- jvm.options 的配置示例：
+  ```sh
+  -Xms2g                # JVM 堆内存的初始大小
+  -Xmx2g                # JVM 堆内存的最大大小
+  # JVM 堆内存设置得过小，会经常进行垃圾回收，导致 CPU 使用率偏高。
+  # 建议将 -Xms 与 -Xmx 设置为相同大小，以免在运行时调整堆大小。
+  ```
+
 ## pipeline
 
 ### 原理

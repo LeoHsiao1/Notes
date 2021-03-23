@@ -212,11 +212,11 @@ from_name = Grafana                       # 邮件的发送方名称
 Grafana 支持多种身份认证方式，比如 OAuth、LDAP 等。
 - 默认启用了 HTTP Basic Auth ，可以使用在 Web 登录表单中输入的账号密码。如下：
   ```sh
-  curl -u admin:123456 http://10.0.0.1:3000/grafana/api/user
+  curl -u admin:123456 http://10.0.0.1:3000/api/user
   ```
 - 也可以在 Grafana 网站上创建 API Key ，放在请求报文的 Header 中，完成身份认证。如下：
   ```sh
-  curl -H "Authorization: Bearer eyJrIjoidUlzZjluMEdob3lUYWk1RTRYR2VDSlBuM1ZJaFgwYWIiLCJuIjoidGVzdCIsImlkIjoxfQ==" http://10.0.0.1:3000/grafana/api/user
+  curl -H "Authorization: Bearer eyJrIjoidUlzZjluMEdob3lUYWk1RTRYR2VDSlBuM1ZJaFgwYWIiLCJuIjoidGVzdCIsImlkIjoxfQ==" http://10.0.0.1:3000/api/user
   ```
 - 例如，让 Nginx 采用以下反向代理配置，可以提供一个免登录的 Grafana ：
   ```sh

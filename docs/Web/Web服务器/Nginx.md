@@ -1066,6 +1066,26 @@ server {
     - 如果声明了 always ，则无论状态码是什么，都会添加 header 。
   - 如果当前级别没有定义任何 add_header 指令，则继承上一级别的 add_header 指令。
 
+### expires
+
+：用于设置响应报文的缓存过期时间。
+- 可用范围：http、server、location
+- 语法：
+  ```sh
+  expires [modified] time;
+  expires epoch | max | off;
+  ```
+  - 启用 expires 指令时，如果响应报文的状态码属于 200, 201, 204, 206, 301, 302, 303, 304, 307, 308 ，则会设置响应报文头部的 Expires、Cache-Control 字段。
+- 例：
+  ```sh
+  expires   10m;              # 过期时间为 10m 之后
+  expires   modified  10m;    # 过期时间为文件的最后修改时间 + 10m
+
+  expires   epoch;            # 不缓存。这会设置 Expires: "Thu, 01 Jan 1970 00:00:01 GMT"; Cache-Control: "no-cache"
+  expires   max;              # 最长缓存。这会设置 Expires: "Thu, 31 Dec 2037 23:55:55 GMT"; Cache-Control: "max-age=315360000"
+  expires   off;              # 禁用 expires 指令，这是默认值
+  ```
+
 ### types
 
 ：用于定义 MIME 类型与文件扩展名（不区分大小写）的映射关系。

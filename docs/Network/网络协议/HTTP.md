@@ -124,8 +124,8 @@ ie=UTF-8&wd=1
   Accept-Language: zh-CN,zh;q=0.9            # 客户端能接受的响应 body 语言，q 表示选择这种情况的优先级，默认为 1
   Accept-Encoding: gzip, deflate             # 客户端能接受的响应 body 压缩格式
 
+  If-Modified-Since: Fri, 5 Jun 2019 12:00:00 GMT  # 如果响应报文 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
   If-None-Match: 5edd15a5-e42                # 如果响应报文 body 的标签值依然为 ETag ，则请服务器返回 304 报文，让客户端使用本地缓存
-  If-Modified-Since: Fri, 5 Jun 22019 12:01:20 GMT  # 如果响应报文 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
   ```
 
 ### 响应报文
@@ -149,23 +149,26 @@ Server: Apache/2.4.7 (Ubuntu)
   Refresh: 5                                    # 让客户端 5 秒之后重新请求本页面
   Refresh: 5; url=http://127.0.0.1/index.html   # 让客户端 5 秒之后重定向到该 URL
 
-  Date: Wed, 17 Jul 2019 00:59:49 GMT           # 服务器生成该响应报文的时刻（代理服务器不会改变该值）
+  Date: Wed, 17 Jul 2019 10:00:00 GMT           # 服务器生成该响应报文的时刻（代理服务器不会改变该值）
   Age: 2183                                     # 表示该响应报文来自代理服务器的缓存，这是该缓存的存在时长
 
-  Cache-Control: max-age=0                      # 缓存类型
-  Expires: Wed, 17 Jul 2019 01:59:49 GMT        # 该响应的过期时刻，过期之前客户端应该使用本地缓存，过期之后再重新请求
+  Cache-Control: max-age=0                      # 缓存策略
+  Expires: Wed, 17 Jul 2019 14:00:00 GMT        # 该响应的过期时刻，过期之前客户端应该使用本地缓存，过期之后再重新请求
+
+  Last-Modified: Fri, 5 Jun 2019 12:00:00 GMT   # 该响应报文 body 最后一次修改的时刻（用于判断内容是否变化）
   ETag: 5edd15a5-e42                            # 响应 body 的标签值（用于判断内容是否变化，比 Last-Modified 更准确）
-  Last-Modified: Fri, 5 Jun 22019 12:01:20 GMT  # 该响应报文 body 最后一次修改的时刻（用于判断内容是否变化）
   ```
 
-- 浏览器可以将服务器的返回的 HTML 文件缓存在本地，下次再请求该资源时就直接从本地缓存中读取数据。Cache-Control 的常见取值如下：
-  ```sh
-  max-age=0   # 该缓存在 0 秒后过期，相当于 no-cache
-  no-cache    # 不能直接使用缓存，要先向服务器重新请求该资源，如果服务器返回 304 才可以使用缓存
-  no-store    # 不进行缓存
-  private     # 允许客户端缓存
-  public      # 客户端和代理服务器都可以缓存
-  ```
+- 浏览器可以将服务器的返回的 HTML 文件缓存在本地，下次再请求该资源时就直接从本地缓存中读取数据。
+  - 用 Cache-Control 和 Expires 字段都可以控制缓存，但前者的优先级更高，常见的取值如下：
+    ```sh
+    max-age=10  # 该缓存在 10 秒后过期，到时需要重新向服务器请求该资源
+    max-age=0   # 该缓存在 0 秒后过期，相当于 no-cache
+    no-cache    # 不能直接使用缓存，要先向服务器重新请求该资源，如果服务器返回 304 才可以使用缓存
+    no-store    # 不进行缓存
+    private     # 允许客户端缓存
+    public      # 客户端和代理服务器都可以缓存
+    ```
 
 ### 报文 body
 

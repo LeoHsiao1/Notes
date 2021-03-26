@@ -3,23 +3,43 @@
 ：一个用于创建、管理容器的软件。
 - [官方文档](https://docs.docker.com/get-started/overview/)
 - 基于 Golang 开发。
-- 于 2013 年由 Docker 公司发布，掀起了容器技术的潮流，是目前最流行的容器平台。
+- dotCloud 公司于 2013 年发布 Docker 软件，
+- 于 2013 年由 dotCloud 公司（后来改名为 Docker 公司）发布，成为了最流行的容器引擎。
 - 提供了用于 Linux、MacOS、Windows 系统的发行版。
 
 ## 原理
 
+### 架构
+
+- 容器（Container）是一个类似于虚拟机的沙盒，内部可以运行一个或多个进程。
+- 镜像（Image）是用于创建容器的模板，包含了应用程序的可执行文件文件、依赖文件、配置信息等。
 - Docker 采用 C/S 架构工作：
   - 在宿主机上以守护进程的方式运行 dockerd 进程，作为服务器，负责管理本机的容器、镜像、数据卷、网络等对象。
   - 用户可以在宿主机上执行 docker 命令，作为客户端，与 dockerd 交互，比如请求启动容器。
     - 客户端是通过 `/var/run/docker.sock` 文件与 dockerd 通信。
     - 非 root 用户无权访问 docker.sock 文件，导致无权执行 docker ps 等命令。此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
+
+### 虚拟化
+
 - 基于 Linux namespace 隔离了各个容器的运行环境。
   - 隔离了进程、网络、文件系统，接近于独享一个虚拟机环境。
   - 没有隔离物理资源。例如：一个容器可能占用全部的 CPU 和内存；在容器内执行 top 命令会看到整个宿主机的资源。
   - 没有隔离 Linux 内核，容器内的进程可能通过内核漏洞逃逸到宿主机上。
-- 基于 Linux cgroups 限制了各个容器使用的 CPU、内存等资源。
+- 基于 Linux Cgroup 限制了各个容器使用的 CPU、内存等资源。
   - 只是限制，并没有隔离物理资源。
-  - Docker 最初是通过 LXC 来控制 namespace、cgroups ，实现容器化。从 v1.1 版本开始，弃用 LXC ，改用 libcontainer 等 Golang 库。
+  - Docker 最初是通过 LXC 来控制 namespace、Cgroup ，实现容器化。从 v0.9 版本开始，弃用 LXC ，改用 libcontainer 等 Golang 库。
+
+### 文件系统
+
+- Docker 容器内采用联合挂载（Union mount）技术挂载多层文件系统（file system layer）。
+  - mount 命令会让挂载的文件系统覆盖挂载点，而 Union mount 会让挂载的文件系统与挂载点合并：路径不同的文件会混合，路径相同的文件会覆盖。
+  - 使用 Union mount 合并多层文件系统时，只有最上层的那个文件系统为读写模式（称为 top layer），其它文件系统都为只读模式。
+    - 用户在容器内创建、修改的任何文件，都保存在 top layer 中。
+    - 比如用户要修改 /etc/hosts 文件，而该文件存储在 read-only layer 中，则内核会自动将该文件拷贝到 top layer 中，供用户修改。这一特性称为 COW（copy-on-write）。
+  - 支持 Union mount 的文件系统称为 Union Filesystem ，比如 UnionFS、AUFS、OverlayFS 等。
+- 启动 Docker 容器时，会先根据 Docker 镜像创建一个只读模式的 rootfs 文件系统，包含 /bin、/dev、/home 等 FHS 标准目录。
+  - 然后在它上面挂载一个读写模式的文件系统，内容为空，不包含任何文件，供用户修改文件。
+  - 用于创建 rootfs 的 Docker 镜像由一层或多层文件系统组成，在宿主机上存储成一些零散的文件。
 
 ## 安装
 
@@ -262,7 +282,7 @@ docker network
     - 缺点：
       - 此时宿主机的防火墙会暴露 80 端口，允许被任意外部 IP 访问。
       - 此时从一个容器中不能访问到另一个容器映射的端口，因为 iptables 规则不会转发该流量。
-      - 这样自动配置的 iptables 规则比较复杂，可能会出错。此时建议先重启 dockerd ，让它重新配置网络。
+      - 这样自动配置的 iptables 规则比较复杂，可能会出错。如果出错，建议重启 dockerd ，让它重新配置 iptables 。
   - 让容器连接到 host 网络，从而使用宿主机的 eth 网卡，而不是自己的虚拟网卡。
     - 比如执行 `docker run --network host` ，这样当容器内的服务监听端口时，是监听 eth 网卡上的 Socket ，因此可以被外部 IP 访问。
   - 如果几个容器连接到同一个 bridge 类型的网络，就可以在一个容器内访问到其它容器的 IP 、所有端口。
@@ -310,12 +330,10 @@ docker network
 
 ## 镜像
 
-- 镜像是用于创建容器的模板，容器是镜像的运行实例。
-  - 镜像在宿主机上存储成一些零散的文件，包含了运行容器所需的二进制文件、依赖信息、配置信息等。
 - 每个镜像都会被 dockerd 分配一串随机编号作为 image ID ，用户也可以自定义镜像名和 tag（表示镜像的版本）。
   - 通过 image ID 或 imageName:tag 可以指定一个唯一的 Image 。
 - dockerd 使用的镜像都存储在宿主机上，也可以将镜像存储到镜像仓库服务器中。
-  - 默认使用的是官方的镜像仓库 hub.docker.com ，也可以使用自己部署的仓库。
+  - 默认使用的是官方的镜像仓库 hub.docker.com ，也可以使用自己搭建的仓库服务器，比如 harbor 。
 
 ### 查看
 

@@ -58,8 +58,8 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
   RUN echo hello
   RUN ["/bin/echo", "hello"]
   ```
-- dockerd 每次执行 RUN 命令时，会在原镜像外部加上一层新的文件系统（file system layer）。
-  - 执行 rm 等命令也无法删除内层的文件系统中的文件。
+- dockerd 每次执行 RUN 命令时，会给镜像添加一层文件系统。
+  - 执行 rm 等命令也无法删除下层的文件系统中的文件。
   - 因此执行 RUN 命令的次数越多，镜像的体积越大。应该尽量减少 RUN 命令的数量，最好合并成一条 RUN 命令。
 
 ### ENTRYPOINT

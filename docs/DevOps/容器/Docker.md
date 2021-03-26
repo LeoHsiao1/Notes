@@ -19,17 +19,70 @@
     - 客户端是通过 `/var/run/docker.sock` 文件与 dockerd 通信。
     - 非 root 用户无权访问 docker.sock 文件，导致无权执行 docker ps 等命令。此时可以将该用户加入 docker 用户组：`sudo usermod leo -G docker` ，从而开通权限。
 
-### 虚拟化
+### namespace
 
-- 基于 Linux namespace 隔离了各个容器的运行环境。
+- Docker 基于 Linux namespace 技术隔离了各个容器的运行环境。
   - 隔离了进程、网络、文件系统，接近于独享一个虚拟机环境。
   - 没有隔离物理资源。例如：一个容器可能占用全部的 CPU 和内存；在容器内执行 top 命令会看到整个宿主机的资源。
   - 没有隔离 Linux 内核，容器内的进程可能通过内核漏洞逃逸到宿主机上。
-- 基于 Linux Cgroup 限制了各个容器使用的 CPU、内存等资源。
-  - 只是限制，并没有隔离物理资源。
-  - Docker 最初是通过 LXC 来控制 namespace、Cgroup ，实现容器化。从 v0.9 版本开始，弃用 LXC ，改用 libcontainer 等 Golang 库。
 
-### 文件系统
+- namespace 分为多种类型，分别用于隔离不同的系统资源，如下：
+
+    类型    |Flag           | 隔离资源
+    -|-|-
+    ipc     | CLONE_NEWIPC  | System V 系统的 IPC 对象、POSIX 系统的消息队列
+    network | CLONE_NEWNET  | 网络设备、IP、Socket
+    mnt     | CLONE_NEWNS   | 文件系统的挂载点
+    pid     | CLONE_NEWPID  | 进程的 PID  
+    user    | CLONE_NEWUSER | 用户、用户组
+    uts     | CLONE_NEWUTS  | 主机名、域名
+
+  - 例如：不同 net namespace 中的进程，可以监听相同的端口。
+  - 每种类型的 namespace 可以创建多个实例。
+    - 每个进程可以同时使用多种类型的 namespace 实例。
+    - 如果一个 namespace 内的所有进程都退出，则内核会自动销毁该 namespace 。除非 `/proc/<pid>/ns/<namespace>` 文件被一直打开或挂载。
+  - pid namespace 支持嵌套，当前 pid namespace 中创建的所有 pid namespace 都属于子实例。父实例可以看到子孙实例的进程信息，但反之不行。
+    - 每个 pid namespace 中，第一个创建的进程的 PID 为 1 ，称为 init 进程。
+    - 如果其它进程退出时遗留了子进程，则内核会将它们改为当前 pid namespace 的 init 进程的子进程。
+    - 如果 init 进程退出，则内核会向当前及子孙 pid namespace 中的所有进程发送 SIGKILL 信号，杀死它们。
+
+- `/proc/<pid>/ns/` 目录下，通过一些软链接，记录了进程所属的 namespace ID 。如下：
+  ```sh
+  [root@CentOS ~]# ll /proc/1/ns
+  total 0
+  lrwxrwxrwx. 1 root root 0 Mar 26 13:25 ipc -> ipc:[4026531839]
+  lrwxrwxrwx. 1 root root 0 Mar 26 13:25 mnt -> mnt:[4026531840]
+  lrwxrwxrwx. 1 root root 0 Mar 26 13:25 net -> net:[4026531956]
+  lrwxrwxrwx. 1 root root 0 Mar 26 13:25 pid -> pid:[4026531836]
+  lrwxrwxrwx. 1 root root 0 Mar 26 13:25 user -> user:[4026531837]
+  lrwxrwxrwx. 1 root root 0 Mar 26 13:25 uts -> uts:[4026531838]
+  ```
+  - 如果两个进程的某种 namespace ID 相同，则说明属于这种类型的同一个 namespace 实例。
+
+- 相关的内核 API ：
+  ```c
+  int clone(int (*child_func)(void *), void *child_stack, int flags, void *arg);
+      // 创建一个子进程，并创建指定类型的 namespace ，然后将子进程加入其中
+      // child_func   ：子进程要运行的函数
+      // child_stack  ：子进程使用的栈空间
+      // flags        ：一种或多种 namespace 的 flag
+      // args         ：传给子进程的参数
+
+  int setns(int fd, int nstype);
+      // 让当前进程加入已存在的 namespace
+      // fd     ：一个 namespace 的文件描述符
+      // nstype ：用于检查 fd 指向的 namespace 类型，填 0 则不检查
+
+  int unshare(int flags);
+      // 根据 flags 创建新的 namespace ，然后让当前进程加入其中（这会先离开已加入的同类型 namespace ）
+  ```
+
+### Cgroup
+
+- Docker 基于 Linux Cgroup 技术限制了各个容器占用的 CPU、内存等系统资源。
+- Docker 最初是通过 LXC 来控制 namespace、Cgroup ，实现容器化。从 v0.9 版本开始，弃用 LXC ，改用 libcontainer 等 Golang 库。
+
+### layer
 
 - Docker 容器内采用联合挂载（Union mount）技术挂载多层文件系统（file system layer）。
   - mount 命令会让挂载的文件系统覆盖挂载点，而 Union mount 会让挂载的文件系统与挂载点合并：路径不同的文件会混合，路径相同的文件会覆盖。

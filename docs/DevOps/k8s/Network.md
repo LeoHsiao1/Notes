@@ -47,8 +47,8 @@ spec:
 
 ### 主要分类
 
-- `type: ClusterIP` ：默认类型，给 Service 分配一个集群内的虚拟 IP ，可以被集群内节点访问。
-- `type: NodePort` ：从 Node 的 30000~32767 端口中随机选取或指定一个端口，供用户访问。访问 NodeIP:Port 的流量会被转发到 EndPoint 。如下：
+- `ClusterIP` ：默认类型，给 Service 分配一个集群内的虚拟 IP ，可以被集群内节点访问。
+- `NodePort` ：从 Node 的 30000~32767 端口中随机选取或指定一个端口，供用户访问。访问 NodeIP:Port 的流量会被转发到 EndPoint 。如下：
     ```yaml
     spec:
       type: NodePort
@@ -63,7 +63,7 @@ spec:
         targetPort: 6379
     ```
     - NodePort 类型的 Service 可以被集群外同网段的主机访问。
-- `type: LoadBalancer` ：给 Service 分配一个负载均衡 IP ，供集群外访问。访问 loadBalancerIP:Port 的流量会被转发到 EndPoint 。如下：
+- `LoadBalancer` ：给 Service 分配一个负载均衡 IP ，供集群外访问。访问 loadBalancerIP:Port 的流量会被转发到 EndPoint 。如下：
     ```yaml
     spec:
       type: LoadBalancer

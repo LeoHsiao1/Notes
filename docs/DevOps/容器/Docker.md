@@ -37,14 +37,21 @@
     user    | CLONE_NEWUSER | 用户、用户组
     uts     | CLONE_NEWUTS  | 主机名、域名
 
-  - 例如：不同 net namespace 中的进程，可以监听相同的端口。
   - 每种类型的 namespace 可以创建多个实例。
     - 每个进程可以同时使用多种类型的 namespace 实例。
     - 如果一个 namespace 内的所有进程都退出，则内核会自动销毁该 namespace 。除非 `/proc/<pid>/ns/<namespace>` 文件被一直打开或挂载。
-  - pid namespace 支持嵌套，当前 pid namespace 中创建的所有 pid namespace 都属于子实例。父实例可以看到子孙实例的进程信息，但反之不行。
-    - 每个 pid namespace 中，第一个创建的进程的 PID 为 1 ，称为 init 进程。
-    - 如果其它进程退出时遗留了子进程，则内核会将它们改为当前 pid namespace 的 init 进程的子进程。
+  - 例如：不同 pid namespace 中的进程可以分配相同的 PID 。
+
+- 关于 pid namespace ：
+  - pid namespace 支持嵌套，当前 pid namespace 中创建的所有 pid namespace 都属于子实例。
+    - 父实例可以看到子孙实例的进程信息，但反之不行。\
+      比如在父实例中执行 ps -ef 命令，会将子孙实例中的进程也显示出来，并将它们的 PID 转换成父实例中的 PID 。
+    - 子孙实例不可用看到父实例的进程信息。
+    - 主机启动之后，第一个创建的 pid namespace 就是最上层的实例。
+  - 每个 pid namespace 中，第一个创建的进程的 PID 为 1 ，通常为 init 进程。
+    - 如果其它进程产生了孤儿进程，则内核会将它们改为当前 pid namespace 的 init 进程的子进程。
     - 如果 init 进程退出，则内核会向当前及子孙 pid namespace 中的所有进程发送 SIGKILL 信号，杀死它们。
+    - 内核只支持将已注册 handler 的信号发送给 init 进程，会忽略 SIGKILL、SIGSTOP 等信号。但是可以发送给子孙 pid namespace 中的 init 进程，因为它们在当前 pid namespace 中的 PID 不为 1 。这样会导致子孙 pid namespace 被销毁。
 
 - `/proc/<pid>/ns/` 目录下，通过一些软链接，记录了进程所属的 namespace ID 。如下：
   ```sh
@@ -141,7 +148,7 @@ docker run <image>              # 运行一个镜像，这会创建一个容器�
 
             --name <name>       # 设置容器的名字
             --workdir <path>    # 指定容器的工作目录
-            --init              # 使用 init 作为容器的 1 号进程（它会照常执行容器的启动命令）
+            --init              # 使用 init 进程作为容器的 1 号进程（它会照样执行容器的启动命令）
             --rm                # 当容器终止时，自动删除它
 
             -p 80:8000                # 将宿主机的端口 80 映射到容器的端口 8000（可重复使用该命令选项）

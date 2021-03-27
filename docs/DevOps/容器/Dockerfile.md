@@ -6,19 +6,19 @@
 ## 例
 
 ```dockerfile
-FROM nginx                       # Dockerfile 中的第一条非注释命令，表示以某个镜像为基础开始构建
+FROM nginx                      # Dockerfile 中的第一条非注释命令，表示以某个镜像为基础开始构建
 
-MAINTAINER "..."                 # 注明镜像的作者
-LABEL maintainer="..."           # 添加镜像的标签
+MAINTAINER "..."                # 注明镜像的作者
+LABEL maintainer="..."          # 添加镜像的标签
 
-ENV var1=value1 var2=value2 ...  # 设置环境变量
-ARG var1                         # 设置构建参数（可以在 docker build 时传入该参数的值）
-ARG var2=value2                  # 可以给构建参数设置默认值
+ENV var1=value1 var2=value2 ... # 设置环境变量
+ARG var1                        # 设置构建参数（可以在 docker build 时传入该参数的值）
+ARG var2=value2                 # 可以给构建参数设置默认值
 
-USER <用户名>                     # 切换用户（构建过程中、容器启动后都会使用该用户）
-WORKDIR <目录>                    # 切换工作目录（相当于 cd 命令，此后的相对路径就会以它为起点）
+USER <user>                     # 切换用户（构建过程中、容器启动后都会使用该用户）
+WORKDIR <dir>                   # 切换工作目录（相当于 cd 命令，此后的相对路径就会以它为起点）
 
-COPY <源路径>... <目标路径>        # 将宿主机上下文目录中的文件拷贝到镜像中
+COPY <src_path>... <dst_path>   # 将宿主机上下文目录中的文件拷贝到镜像中
 # 源路径只能是相对路径，且不能使用 .. 指向超出上下文目录的路径
 # 目标路径可以是绝对路径，也可以是相对路径（起点为 WORKDIR ，不会受到 RUN 命令中的 cd 命令的影响）
 # 例：COPY . /root/
@@ -26,11 +26,11 @@ COPY <源路径>... <目标路径>        # 将宿主机上下文目录中的文
 RUN echo "Hello World!" && \
     touch f1
 
-VOLUME ["/root", "/var/log"]      # 将容器内的这些目录设置成挂载点
+VOLUME ["/root", "/var/log"]    # 将容器内的这些目录设置成挂载点
 # 主要是提示用户在启动容器时应该挂载这些目录，如果用户没有主动挂载，则默认会自动创建一些匿名的数据卷来挂载
 # 用 docker inspect 命令查看容器信息，可以看到各个挂载点的实际路径
 
-EXPOSE 80                         # 暴露容器的一个端口
+EXPOSE 80                       # 暴露容器的一个端口
 # 主要是提示用户在启动容器时应该映射该端口，如果用户没有主动映射，则默认会映射到宿主机的一个随机端口
 ```
 
@@ -47,7 +47,7 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
 
 ### RUN
 
-- ：用于在构建镜像的过程中，在临时容器内执行一些命令。
+：用于在构建镜像的过程中，在临时容器内执行一些命令。
 - 有两种写法：
   ```dockerfile
   RUN <command> <param1> <param1>...        # shell 格式
@@ -64,7 +64,7 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
 
 ### ENTRYPOINT
 
-- ：用于设置容器启动时首先执行的命令。
+：用于设置容器启动时首先执行的命令。
 - 有两种写法：
   ```dockerfile
   ENTRYPOINT <command> <param1> <param1>...      # shell 格式
@@ -82,7 +82,7 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
 
 ### CMD
 
-- ：用于设置容器启动时首先执行的命令。
+：用于设置容器启动时首先执行的命令。
 - 如果用户执行 docker run 命令时设置了启动命令，则会覆盖镜像中的 CMD 命令。
 - 有三种写法：
   ```dockerfile

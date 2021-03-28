@@ -2,7 +2,7 @@
 
 ：一种流行的脚本语言。
 - [官网](https://www.python.org/)
-- 1989 年圣诞节期间，荷兰的 Guido van Rossum 在参与开发了 ABC 语言之后，开始开发一种更好的脚本语言，取名为 Python 。
+- 1989 年圣诞节期间，荷兰人 Guido van Rossum 在参与开发了 ABC 语言之后，开始开发一种更好的脚本语言，取名为 Python 。
   - 取名为 Python 是为了致敬英国的喜剧团体 Monty Python 。
   - Python 借鉴了 C、Shell 等语言的特性，比如标识符的命名规则、运算符。
 

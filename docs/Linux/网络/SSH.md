@@ -19,7 +19,7 @@ systemctl start sshd
 systemctl enable sshd
 ```
 
-sshd 的主配置文件是 /etc/ssh/sshd_config ，内容示例：
+sshd 的主配置文件是 `/etc/ssh/sshd_config` ，内容示例：
 ```sh
 Port 22                           # 监听的端口号
 ListenAddress 0.0.0.0             # 允许连接的 IP
@@ -44,12 +44,16 @@ StrictModes yes                   # 在 SSH 认证时检查用户的家目录、
 - `~/.ssh/known_hosts` 文件中保存了所有与本机成功进行了 SSH 认证的主机的公钥。下次再连接到这些主机时，如果其公钥发生变化，则怀疑是被冒充了。
 - 如果 StrictModes 检查不通过，会拒绝 SSH 认证，并在 /var/log/secure 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` ，此时建议执行：
   ```sh
-  chmod 700 ~ ~/.ssh
-  chmod 600 ~/.ssh/authorized_keys
+  chmod 700   ~   ~/.ssh
+  chmod 600   ~/.ssh/authorized_keys
   ```
 - 使用 SSH 客户端登录 SSH 服务器时，有两种认证方式：
   - 账号和密码认证：容易被暴力破解密码，还可能受到“中间人攻击”（连接到一个冒充的 SSH 服务器）。
   - 密钥认证：先将 SSH 客户端的公钥放在 SSH 服务器上，当 SSH 客户端要登录时会发出该公钥的指纹，而 SSH 服务器会根据指纹检查 authorized_keys 中是否有匹配的公钥，有的话就允许该客户端登录。然后 SSH 服务器会用该公钥加密一个消息回复给 SSH 客户端，该消息只能被 SSH 客户端的私钥解密，这样就完成了双向认证。
+- 为了避免恶意用户反复尝试 SSH 登录，进行暴力破解，可采取以下措施：
+  - 使用复杂的 SSH 密码，或者只允许使用 SSH 密钥进行登录。
+  - 禁止 root 用户远程登录，这样暴力破解时还需要猜测用户名。
+  - 只允许白名单的 IP 登录。
 
 ### 白名单和黑名单
 
@@ -79,13 +83,13 @@ in.telnetd:ALL
 ```sh
 $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登录指定主机
                   -p 22      # 指定端口号
-                  [command]  # 执行一条命令，然后就退出登录，不会打开远程主机的 shell
+                  [command]  # 不打开远程主机的 shell ，而是以非交互模式执行一条命令
 ```
 - 例：
   ```sh
   ssh root@10.0.0.1  ls -lh
   ssh root@10.0.0.1  "hostname | xargs echo"  # 用引号将待执行的命令标明为一个字符串，以免被特殊字符截断
-  ssh root@10.0.0.1 'echo $HOSTNAME'          # 用单引号时，不会在本机读取变量的值，而是直接先将命令发送到远端去执行
+  ssh root@10.0.0.1  'echo $HOSTNAME'         # 用单引号时，不会在本机读取变量的值，而是直接先将命令发送到远端去执行
   ```
 - ssh 登录成功之后，会在目标主机上打开一个 shell 终端，并将 stdin、stdout 绑定到当前终端。
 - ssh 连接 timeout 的可能原因：
@@ -109,7 +113,7 @@ $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登�
   yum install sshpass
   sshpass -p 123456 ssh root@10.0.0.1
   ```
-  但尽量不要这样做，会将明文密码泄露到终端。
+  但这样会将明文密码泄露到终端，比较危险。
 
 ## 相关命令
 

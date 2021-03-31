@@ -29,30 +29,22 @@
   2. 进入 "Dashboard" 页面，创建一个 Panel 。
   3. 配置 Panel ，从某个数据源按某个查询表达式获得数据，然后显示出图表。
 
-- Grafana 支持从多种外部数据源拿取数据，比如 MySQL、influxdb、Elasticsearch、Prometheus 。
+- Grafana 支持从多种外部数据源获取数据，比如 MySQL、influxdb、Elasticsearch、Prometheus 。
   - 默认有一个 TestData DB 数据源可供试用。
   - 某些数据源自带了一些 Dashboard 模板，可以导入试用。
 
-- Grafana 上可以创建多个 Dashboard（仪表盘），每个 DashBoard 页面可以包含多个 Panel（面板）。
+### Dashboard
+
+- Grafana 上可以创建多个 Dashboard（仪表盘），每个 DashBoard 页面可以显示多个 Panel 。
   - 可以将 Dashboard 或 Panel 导出 JSON 配置文件。
   - 可以给 Dashboard 加上 tags 来分类管理，也可以创建 Folder 来分组管理。
   - [官方及社区分享的 Dashboard ](https://grafana.com/grafana/dashboards)
 
 - Playlist ：用于自动循环显示一些 Dashboard 。
-- 分享 Dashboard 或 Panel 给他人查看的多种方式：
-  - Link 
-    - ：生成当前内容的 URL 。
-    - 还支持在该 Link 后加一些参数，渲染成 PNG 图片。
-  - Snapshot
-    - ：生成快照 URL ，供任何人查看。
-    - 这样不需要用户通过 Grafana 的身份认证，但是只记录了当前时刻的数据，因此不支持动态查看。
-  - Embed panel
-    - ：嵌入式面板。将 Grafana 仪表盘的 URL 链接通过 HTML iframe 标签嵌入到其它网页中。
-    - 需要在配置文件中启用 `allow_embedding = true` ，
 
 ### Panel
 
-Panel 是 Grafana 的基本显示模块，每个 Panel 负责显示一张图表。
+：面板，是 Grafana 的基本显示模块。每个 Panel 负责显示一个图表。
 - 当 Panel 进入浏览器的显示范围时，Grafana 才开始加载它，从而节省开销。
 - 一个 Panel 中存在多个图例（legend）的曲线时，用鼠标单击某个图例的名字，就会只显示该图例的曲线。按住 Ctrl 再单击，就可以同时选择多个图例。
 - 修改 Panel 时，是以 Dashboard 为单位进行修改，要点击"Save Dashboard"才会保存。
@@ -60,73 +52,93 @@ Panel 是 Grafana 的基本显示模块，每个 Panel 负责显示一张图表�
 - 用鼠标横向拖动选中 Panel 中的一块区域，可以缩小 time range ；按 Ctrl+Z 可以放大 time range 。
   - 注意 time range 过大时，可能显示不出曲线的瞬时变化，需要缩小 time range 进行查看，即放大局部曲线。
 
-Panel 的主要配置：
-- General ：一般的配置项，比如 Panel 的名字。
-- Query ：查询。
-  - 下例是从 MySQL 数据库中查询数据的配置：
-    ```sh
-    FROM process_num                      # 查询 process_num 表
-    Time column update_time               # 取 update_time 列作为时间轴
-    Metric column none
-    SELECT Column: num    Alias: 数量     # 取 num 列的值，并设置别名
-    WHERE Macro: $__timeFilter            # 允许调整查询的时间范围
-    GROUP BY time ($__interval, none)     # 将数据按特定时间间隔分组，采样点没有数据的话赋值为 none
+### Query
 
-    Min time interval 1m                  # group by 分组的最短时间间隔（建议与查询间隔一致）
-    ```
-  - 查询到的数据主要分为以下几种形式：
-    - Time Series ：时间序列，包含多个时间点的数据。
-      勾选 "Instant" 选项之后，只会查询最后一个时间点的数据，从而减少大量查询耗时。
-    - Table
-    - Heatmap
+：Panel 的查询模块。
+- 每个 Panel 可以添加多个 Query ，通过查询表达式从数据源获取数据，再作出显示。
+- 下例是从 MySQL 数据库中查询的配置：
+  ```sh
+  FROM process_num                      # 查询 process_num 表
+  Time column update_time               # 取 update_time 列作为时间轴
+  Metric column none
+  SELECT Column: num    Alias: 数量     # 取 num 列的值，并设置别名
+  WHERE Macro: $__timeFilter            # 允许调整查询的时间范围
+  GROUP BY time ($__interval, none)     # 将数据按特定时间间隔分组，采样点没有数据的话赋值为 none
 
-- Visualization ：显示样式。主要包括：
-  - Graph ：曲线图。适用于显示时间序列形式的数据，可以方便地看出数据的变化历史。
-    - 输入的数据包含多个图例时，会显示成多条曲线。
-  - Stat ：显示单个字段的值，可以选择在背景中显示其变化曲线。
-    - 输入的数据包含多个图例时，会显示成多行值。
-  - Gauge ：显示单个字段的值，并在背景中显示其取值范围。
-  - Bar Gauge ：条形图。
-  - Table ：表格。
-  - Heatmap ：热图。适用于显示大量同类型数据，可以方便地看出各种数值的分布位置。
+  Min time interval 1m                  # group by 分组的最短时间间隔（建议与查询间隔一致）
+  ```
+- 查询到的数据主要分为以下几种形式：
+  - Time Series ：时间序列，包含多个时间点的数据。
+    勾选 "Instant" 选项之后，只会查询最后一个时间点的数据，从而减少大量查询耗时。
+  - Table
+  - Heatmap
 
-- Axes ：坐标轴。
-  - 坐标轴有很多种单位（Unit），比如：
-    - none ：不显示单位。
-    - short ：当数值达到千、百万等量级时，显示 k、m 等缩写单位。
-    - percent(0-100) ：显示百分数，数值 0-100 分别对应 0%-100% 。
-    - percent(0.0-1.0)
-    - bytes(IEC) ：按二进制转换千、百万等量级，即 `1 MiB = 1024 KiB = 1024^2 Bytes` 。
-    - bytes(Metric) ：按十进制转换千、百万等量级，即 `1 MB = 1000 KB = 1000^2 Bytes` 。
-    - seconds
+### Visualization
 
-- Transform ：Grafana 7.0 新增的模块，用于转换显示的数据。包括以下功能：
-  - Merge
-    - 用于自动将当前 Panel 中的所有 Query 的数据合并成一个 Query 。
-    - 可用于将多个表格组合成一个表格，它会自动去掉重复的列。
-  - Outer join
-    - 用于将输入的所有数据按某个字段合并。可用于合并多个时间序列、多个 Query 。
-    - 例如：将所有数据按字段 A 合并后，会得到一个以字段 A 作为第一列的新表格，显示字段 A 每种取值时对应的其它字段的取值。
-    - 与 Merge 功能相比，它不会自动去掉重复的列。但是如果有多行数据的第一列取值重复，则只会保留其中一行，丢失其它行，因此应该确保数据的第一列取值不会重复。
-  - Reduce
-    - 用于显示数据的每个字段的 Min、Max 等统计值，并隐藏具体的值。
-    - 可用于将一个包含很多行数据的表格转换成一个行数较少的表格。
-  - Add field from calculation
-    - 用于增加一个新字段。其值可以是 Min、Max 等统计值，也可以是已有的某两个字段作加减乘除的运算结果。
-    - Reduce 功能是显示所有数据的字段 A 的统计值（即统计表格的每列），而该功能是显示每条数据的某些字段的统计值（即统计表格的每行）。
-  - Filter data by query
-    - 用于筛选显示当前 Panel 中的各个 Query 。
-  - Filter by name
-    - 用于筛选显示各个字段，支持正则匹配。
-    - 可以同时作用于多个 Query 。
-  - Organize fields
-    - 用于筛选显示各个字段，支持重命名、排序。
-    - 当前 Panel 中只有一个 Query 时才能进行该配置。
+：Panel 的显示样式。主要包括：
+- Graph ：曲线图。适用于显示时间序列形式的数据，可以方便地看出数据的变化历史。
+  - 输入的数据包含多个图例时，会显示成多条曲线。
+- Stat ：显示单个字段的值，可以选择在背景中显示其变化曲线。
+  - 输入的数据包含多个图例时，会显示成多行值。
+- Gauge ：显示单个字段的值，并在背景中显示其取值范围。
+- Bar Gauge ：条形图。
+- Table ：表格。
+- Heatmap ：热图。适用于显示大量同类型数据，可以方便地看出各种数值的分布位置。
 
-### 告警
+### Axes
+
+：Panel 显示的坐标轴。
+- 坐标轴有很多种单位（Unit），比如：
+  - none ：不显示单位。
+  - short ：当数值达到千、百万等量级时，显示 k、m 等缩写单位。
+  - percent(0-100) ：显示百分数，数值 0-100 分别对应 0%-100% 。
+  - percent(0.0-1.0)
+  - bytes(IEC) ：按二进制转换千、百万等量级，即 `1 MiB = 1024 KiB = 1024^2 Bytes` 。
+  - bytes(Metric) ：按十进制转换千、百万等量级，即 `1 MB = 1000 KB = 1000^2 Bytes` 。
+  - seconds
+
+### Transform
+
+：Grafana 7.0 新增的模块，用于在 Panel 作出显示之前转换 Query 的数据。包括以下功能：
+- Merge
+  - 用于自动将当前 Panel 中的所有 Query 的数据合并成一个 Query 。
+  - 可用于将多个表格组合成一个表格，它会自动去掉重复的列。
+- Outer join
+  - 用于将输入的所有数据按某个字段合并。可用于合并多个时间序列、多个 Query 。
+  - 例如：将所有数据按字段 A 合并后，会得到一个以字段 A 作为第一列的新表格，显示字段 A 每种取值时对应的其它字段的取值。
+  - 与 Merge 功能相比，它不会自动去掉重复的列。但是如果有多行数据的第一列取值重复，则只会保留其中一行，丢失其它行，因此应该确保数据的第一列取值不会重复。
+- Reduce
+  - 用于显示数据的每个字段的 Min、Max 等统计值，并隐藏具体的值。
+  - 可用于将一个包含很多行数据的表格转换成一个行数较少的表格。
+- Add field from calculation
+  - 用于增加一个新字段。其值可以是 Min、Max 等统计值，也可以是已有的某两个字段作加减乘除的运算结果。
+  - Reduce 功能是显示所有数据的字段 A 的统计值（即统计表格的每列），而该功能是显示每条数据的某些字段的统计值（即统计表格的每行）。
+- Filter data by query
+  - 用于筛选显示当前 Panel 中的各个 Query 。
+- Filter by name
+  - 用于筛选显示各个字段，支持正则匹配。
+  - 可以同时作用于多个 Query 。
+- Organize fields
+  - 用于筛选显示各个字段，支持重命名、排序。
+  - 当前 Panel 中只有一个 Query 时才能进行该配置。
+
+### Share
+
+分享 Dashboard 或 Panel 给他人查看的多种方式：
+- Link 
+  - ：生成当前内容的 URL 。
+  - 还支持在该 Link 后加一些参数，渲染成 PNG 图片。
+- Snapshot
+  - ：生成快照 URL ，供任何人查看。
+  - 这样不需要用户通过 Grafana 的身份认证，但是只记录了当前时刻的数据，因此不支持动态查看。
+- Embed panel
+  - ：嵌入式面板。将 Grafana 仪表盘的 URL 链接通过 HTML iframe 标签嵌入到其它网页中。
+  - 需要在配置文件中启用 `allow_embedding = true` ，
+
+### Alert
 
 - 配置 Grafana 告警的步骤：
-  1. 进入 Alerting 页面，创建至少一个"Notification Channel"，表示发送告警信息到哪里。
+  1. 进入 Alerting 页面，创建至少一个 "Notification Channel" ，表示发送告警信息到哪里。
   2. 进入任意 Panel 的编辑页面，添加 Alert 告警规则。
 
 - 在 Alerting 页面可以看到用户创建的所有 Alert Rule 。
@@ -134,9 +146,9 @@ Panel 的主要配置：
   - 点击 "State history" 可以查看告警历史。
   - 点击 "Test Rule" 可以测试告警条件。
 
-- 缺点：
-  - Grafana 支持定义变量并在 pannel 中调用，从而动态地改变 pannel 的数据，但此时不支持设置告警条件。
-  - Grafana 不擅长处理大量告警，没有一个全局统计面板。
+- Grafana 告警功能的缺点：
+  - 支持定义变量并在 pannel 中调用，从而动态地改变 pannel 的数据，但此时不支持设置告警条件。
+  - 不擅长处理大量告警，没有一个全局统计面板。
 
 告警规则示例：
 - 下例是一种 Alert 的触发条件：

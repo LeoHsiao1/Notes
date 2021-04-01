@@ -7,18 +7,24 @@
 
 ## 相关 API
 
-与 Socket 相关的一些内核函数：
-```c
-int socket(int protofamily, int type, int protocol);                      // 打开一个 Socket
-int close(int fd);                                                        // 关闭一个 Socket
-int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);     // 将一个 Socket 绑定到指定的 IP 地址和 port 端口
+- 创建 Socket 的内核 API ：
+  ```c
+  #include <sys/socket.h>
 
-int listen(int sockfd, int backlog);                                      // 监听指定 Socket （常用于作为服务器的进程）
-int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);  // 连接到指定 Socket（常用于作为客户端的进程）
+  int socket(int domain, int type, int protocol);                           // 打开一个 Socket ，输入的参数都是用于指定协议、类型
+  int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);     // 将一个 Socket 绑定到指定的 IP 地址和 port 端口
 
-ssize_t read(int fd, void *buf, size_t nbyte);                            // 从 Socket 读数据
-ssize_t write(int fd, const void *buf, size_t nbytes);                    // 往 Socket 写数据
-```
+  int listen(int sockfd, int backlog);                                      // 监听指定 Socket （常用于作为服务器的进程）
+  int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);  // 连接到指定 Socket（常用于作为客户端的进程）
+  ```
+- 关闭、读写 Socket 的 API ，与普通文件一致：
+  ```c
+  #include <unistd.h>
+
+  int close(int fd);
+  ssize_t read(int fd, void *buf, size_t count);
+  ssize_t write(int fd, const void *buf, size_t count);
+  ```
 - Linux 收到一个发向本机的 TCP/UDP 数据包时，会检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
 - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
 - 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`

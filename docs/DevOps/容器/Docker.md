@@ -98,7 +98,6 @@
   - 支持 Union mount 的文件系统称为 Union Filesystem ，比如 UnionFS、AUFS、OverlayFS 等。
 - 启动 Docker 容器时，会先根据 Docker 镜像创建一个只读模式的 rootfs 文件系统，包含 /bin、/dev、/home 等 FHS 标准目录。
   - 然后在它上面挂载一个读写模式的文件系统，内容为空，不包含任何文件，供用户修改文件。
-  - 用于创建 rootfs 的 Docker 镜像由一层或多层文件系统组成，在宿主机上存储成一些零散的文件。
 
 ## 安装
 
@@ -417,11 +416,51 @@ docker
 ```
 - 如果不注明镜像的 tag ，则默认拉取 latest 版本。
 - 尽量不要拉取 latest 版本，而使用具体的版本名，比如 v1.0 ，否则在不同时间拉取的 latest 版本会不一样。
+
+### 导出
+
+- Docker 镜像由一层或多层文件系统组成，在宿主机上存储为一些零散的文件。
 - 可以将镜像导出成压缩包：
   ```sh
   docker save -o images.tar <image>...        # 将镜像打包成 tar 文件
-  docker save <image>... | gzip > images.tgz  # 或者打包并压缩
+  docker save <image>... | gzip > images.tgz  # 打包并压缩
+  
   docker load -i images.tar                   # 导入镜像
+  ```
+- 例：
+  ```sh
+  [root@Centos ~]# docker save -o nginx.tar nginx:latest
+  [root@Centos ~]# ls -lh
+  total 131M
+  -rw-------. 1 root root 131M Mar 28 16:04 nginx.tar
+  [root@Centos ~]# tar -tf nginx.tar
+  28d499c51144128e64b6ffefa6c714bbfaf3e55772b080d1b0636f1971cb3203/           # 每个目录对应一层 layer
+  28d499c51144128e64b6ffefa6c714bbfaf3e55772b080d1b0636f1971cb3203/VERSION
+  28d499c51144128e64b6ffefa6c714bbfaf3e55772b080d1b0636f1971cb3203/json
+  28d499c51144128e64b6ffefa6c714bbfaf3e55772b080d1b0636f1971cb3203/layer.tar  # layer 包含的文件
+  40aef34ac16b8c7eee6da1869452f5c9b9963ab583415d4999565738c719ded9/
+  40aef34ac16b8c7eee6da1869452f5c9b9963ab583415d4999565738c719ded9/VERSION
+  40aef34ac16b8c7eee6da1869452f5c9b9963ab583415d4999565738c719ded9/json
+  40aef34ac16b8c7eee6da1869452f5c9b9963ab583415d4999565738c719ded9/layer.tar
+  456351a127e9a9ce4cc79f7f6ad9f401d1714e514780f1603fa0b263119e329b/
+  456351a127e9a9ce4cc79f7f6ad9f401d1714e514780f1603fa0b263119e329b/VERSION
+  456351a127e9a9ce4cc79f7f6ad9f401d1714e514780f1603fa0b263119e329b/json
+  456351a127e9a9ce4cc79f7f6ad9f401d1714e514780f1603fa0b263119e329b/layer.tar
+  9000127bc2e7878a10491bb7a16a4b5874e4bdf6a01952d14211fad55defdd0a/
+  9000127bc2e7878a10491bb7a16a4b5874e4bdf6a01952d14211fad55defdd0a/VERSION
+  9000127bc2e7878a10491bb7a16a4b5874e4bdf6a01952d14211fad55defdd0a/json
+  9000127bc2e7878a10491bb7a16a4b5874e4bdf6a01952d14211fad55defdd0a/layer.tar
+  b526b761d738d1fba0774ea5af56ae1e664c812c6ce75743d74773cb3867bf7b/
+  b526b761d738d1fba0774ea5af56ae1e664c812c6ce75743d74773cb3867bf7b/VERSION
+  b526b761d738d1fba0774ea5af56ae1e664c812c6ce75743d74773cb3867bf7b/json
+  b526b761d738d1fba0774ea5af56ae1e664c812c6ce75743d74773cb3867bf7b/layer.tar
+  b8cf2cbeabb915843204ceb7ef0055fecadd55c2b0c58ac030e01fe75235885a.json
+  c0b073121bb2a6106dae6af85ade7274253f26626661e6e3cb20b0fa7fb59475/
+  c0b073121bb2a6106dae6af85ade7274253f26626661e6e3cb20b0fa7fb59475/VERSION
+  c0b073121bb2a6106dae6af85ade7274253f26626661e6e3cb20b0fa7fb59475/json
+  c0b073121bb2a6106dae6af85ade7274253f26626661e6e3cb20b0fa7fb59475/layer.tar
+  manifest.json                                                               # 镜像的配置文件，记录了镜像名、各个 layer 的位置
+  repositories
   ```
 
 ### 制作

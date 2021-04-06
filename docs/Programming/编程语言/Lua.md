@@ -1,6 +1,6 @@
 # Lua
 
-：一种脚本语言，基于 ANSI C 实现。
+：一个脚本语言，基于 ANSI C 实现。
 - [官方文档](http://www.lua.org/manual/)
 - 1993 年，由里约热内卢天主教大学的 Roberto Ierusalimschy 等人发明。
 - 标准库很小，因此编写的脚本容易嵌入基于 C、C++、Java 等语言开发的其它程序，实现混合开发。

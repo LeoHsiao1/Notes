@@ -1,6 +1,6 @@
 # Groovy
 
-：一种脚本语言，基于 Java 实现。
+：一个脚本语言，基于 Java 实现。
 - [官方文档](https://groovy-lang.org/documentation.html)
 - 于 2007 年由 James Strachan 发布，后来交给 ASF 管理。
 

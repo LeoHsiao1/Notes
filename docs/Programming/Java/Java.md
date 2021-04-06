@@ -1,6 +1,6 @@
 # Java
 
-：一种编译型语言。
+：一个编译型语言。
 - 通过 JVM 容易实现跨平台运行，因此常用于开发 Web 应用、Android 应用。
 
 ## 相关历史
@@ -25,7 +25,7 @@
 ## 相关概念
 
 - JSP（Java Server Pages）
-  - ：一种动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
+  - ：一个动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
   - 例：
     ```html
     <p>
@@ -39,10 +39,34 @@
   - 比如通过 JMX 接口可以获取 JVM 的运行状态。
 - JDBC（Java Database Connectivity）
   - ：Java 程序访问数据库的 API 规范，主要用于关系型数据库。
-- Spring
-  - ：一个流行的 Java 应用开发框架。
+- Mybatis
+  - ：一个 Java 的持久化框架。
+  - 用户不需要直接编写 JDBC 代码，而是先在 XML 文件中编写 SQL 语句，然后通过 Java 方法调用。但可读性差。
+  - Java 持久化框架还有 Hibernate、JPA 等。
+  - 开发 Java Web 项目的常用框架：
+    - SSH（Spring + Struts + Hibernate）
+    - SSM（Spring + SpringMVC + MyBatis）
+- Spring Framework
+  - ：一个流行的 Java 应用开发框架，于 2002 年发布。
   - 内嵌了一个 Tomcat ，因此可以开发 Web 应用，作为 Web 服务器运行。
+  - Spring 中的应用程序由一个或多个 bean 对象组成，由 IoC 容器管理。
+  - 编程时不需要主动 new 对象，而是在代码中声明需要的对象，并在 XML 文件中配置。程序运行时，IoC 容器会去自动根据配置创建对象。
+    - 对象的控制权从程序员手中，转交给了程序自身，因此称为控制反转（Inversion of Control，IoC）。
+    - 例：
+      ```java
+      @Component              // 使用 Component 注解，将该类定义为 Bean ，默认命名为开头小写的类名，即 phone
+      public class Phone {
+          ...
+      }
+
+      @Component
+      public class Person {
+          @Autowired          // 使用 Autowired 注解，创建对应类型的 Bean 对象并注入该属性
+          Phone phone;
+
+          ...
+      }
+      ```
 - Servlet
   - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
   - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
-

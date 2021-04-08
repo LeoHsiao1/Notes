@@ -2,10 +2,16 @@
 
 ：一个用于创建、管理容器的软件。
 - [官方文档](https://docs.docker.com/get-started/overview/)
-- 基于 Golang 开发。
-- dotCloud 公司于 2013 年发布 Docker 软件，
-- 于 2013 年由 dotCloud 公司（后来改名为 Docker 公司）发布，成为了最流行的容器引擎。
-- 提供了用于 Linux、MacOS、Windows 系统的发行版。
+- 基于 Golang 开发，在 Moby 项目中开源。
+- dotCloud 公司于 2013 年发布 Docker 软件，成为了最流行的容器引擎。
+  - 后来公司改名为 Docker 公司。
+
+## 版本
+
+- Docker 提供了用于 Linux、MacOS、Windows 系统的安装包。
+- 2017 年 3 月，Docker 的软件版本号从 v1.13 升级到 17.03 ，从数字编号改为日期格式。并且分为两种发行版：
+  - Docker CE ：社区版（Community Edition），免费提供。
+  - Docker EE ：企业版（Enterprise Edition），增加了一些收费的功能。
 
 ## 原理
 
@@ -22,11 +28,11 @@
 ### namespace
 
 - Docker 基于 Linux namespace 技术隔离了各个容器的运行环境。
-  - 隔离了进程、网络、文件系统，接近于独享一个虚拟机环境。
-  - 没有隔离物理资源。例如：一个容器可能占用全部的 CPU 和内存；在容器内执行 top 命令会看到整个宿主机的资源。
+  - 隔离了进程、网络、文件系统等系统资源，接近于独享一个虚拟机的运行环境。
+  - 没有隔离硬件资源。例如：一个容器可能占用全部的 CPU 和内存；在容器内执行 top 命令会看到整个宿主机的硬件资源。
   - 没有隔离 Linux 内核，容器内的进程可能通过内核漏洞逃逸到宿主机上。
 
-- namespace 分为多种类型，分别用于隔离不同的系统资源，如下：
+- namespace 分为多种类型，分别用于隔离不同的系统资源。如下：
 
     类型    |Flag           | 隔离资源
     -|-|-
@@ -52,6 +58,15 @@
     - 如果其它进程产生了孤儿进程，则内核会将它们改为当前 pid namespace 的 init 进程的子进程。
     - 如果 init 进程退出，则内核会向当前及子孙 pid namespace 中的所有进程发送 SIGKILL 信号，杀死它们。
     - 内核只支持将已注册 handler 的信号发送给 init 进程，会忽略 SIGKILL、SIGSTOP 等信号。但是可以发送给子孙 pid namespace 中的 init 进程，因为它们在当前 pid namespace 中的 PID 不为 1 。这样会导致子孙 pid namespace 被销毁。
+  - 调用 setns() 或 unshare() 时，不会改变当前进程的 pid namespace ，而是影响之后创建的子进程。
+    - 因此，一个进程在创建之后，其 PID 总是不变。成为孤儿进程时， PPID 会变为 1 。
+  - 相关的内核 API ：
+    ```c
+    #include <unistd.h>
+
+    pid_t getpid(void);   // 返回当前进程的 PID ，属于当前的 pid namespace
+    pid_t getppid(void);  // 返回父进程的 PID 。如果父进程属于不同的 pid namespace ，则返回 0
+    ```
 
 - `/proc/<pid>/ns/` 目录下，通过一些软链接，记录了进程所属的 namespace ID 。如下：
   ```sh
@@ -68,11 +83,13 @@
 
 - 相关的内核 API ：
   ```c
+  #include <sched.h>
+
   int clone(int (*child_func)(void *), void *child_stack, int flags, void *arg);
       // 创建一个子进程，并创建指定类型的 namespace ，然后将子进程加入其中
       // child_func   ：子进程要运行的函数
       // child_stack  ：子进程使用的栈空间
-      // flags        ：一种或多种 namespace 的 flag
+      // flags        ：一种或多种 namespace 的 flag ，比如 flags = CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUSER
       // args         ：传给子进程的参数
 
   int setns(int fd, int nstype);
@@ -81,12 +98,12 @@
       // nstype ：用于检查 fd 指向的 namespace 类型，填 0 则不检查
 
   int unshare(int flags);
-      // 根据 flags 创建新的 namespace ，然后让当前进程加入其中（这会先离开已加入的同类型 namespace ）
+      // 根据 flags 创建新的 namespace ，然后让当前进程加入其中。这会先离开已加入的同类型 namespace
   ```
 
 ### Cgroup
 
-- Docker 基于 Linux Cgroup 技术限制了各个容器占用的 CPU、内存等系统资源。
+- Docker 基于 Linux Cgroup 技术限制各个容器占用的 CPU、内存等系统资源。
 
 ### layer
 
@@ -96,7 +113,7 @@
     - 用户在容器内创建、修改的任何文件，都保存在 top layer 中。
     - 比如用户要修改 /etc/hosts 文件，而该文件存储在 read-only layer 中，则内核会自动将该文件拷贝到 top layer 中，供用户修改。这一特性称为 COW（copy-on-write）。
   - 支持 Union mount 的文件系统称为 Union Filesystem ，比如 UnionFS、AUFS、OverlayFS 等。
-- 启动 Docker 容器时，会先根据 Docker 镜像创建一个只读模式的 rootfs 文件系统，包含 /bin、/dev、/home 等 FHS 标准目录。
+- 启动 Docker 容器时，会先根据 Docker 镜像创建一个只读模式的 RootFS 文件系统，包含 /bin、/dev、/home 等 FHS 标准目录。
   - 然后在它上面挂载一个读写模式的文件系统，内容为空，不包含任何文件，供用户修改文件。
 
 ## 安装
@@ -192,13 +209,15 @@ docker run <image>              # 运行一个镜像，这会创建一个容器�
 
 ```sh
 docker
-      ps                      # 显示所有处于运行状态的容器
+      ps                      # 显示所有 running 状态的容器
           -a                  # 显示所有状态的容器
           -n <int>            # 显示最后创建的几个容器（包括所有状态的）
           --no-trunc          # 不截断过长的显示内容
+          -q                  # 只显示 ID
+          -s                  # 增加显示容器占用的磁盘空间
 
-      stop    <container>...  # 停止容器（相当于暂停，容器会变成 stopped 状态）
-      start   <container>...  # 启动 stopped 状态的容器
+      stop    <container>...  # 暂停容器的运行，容器会变成 stopped 状态
+      start   <container>...  # 启动容器，容器会从 stopped 状态变为 running 状态
       restart <container>...  # 重启容器（相当于先 stop 再 start）
       rm      <container>...  # 删除容器（只能删除 stopped 状态的）
           -f                  # 强制删除（可以删除 running 状态的）
@@ -217,6 +236,11 @@ docker
   - ID   ：是一串十六进制数，有 64 位长。允许用户只用开头少量几位就指定一个对象，只需要与其它 ID 不重复。
   - Name ：通常由几个英文单词组成。可以由 dockerd 自动分配，也可以由用户自定义。
   - 每个对象在创建之后，不支持修改其 ID 或 Name 。
+- 例：
+  ```sh
+  docker ps -a
+  docker stop `docker ps -aq` # 停止所有容器
+  ```
 
 ### 日志
 
@@ -290,7 +314,7 @@ docker volume
             inspect <volume>  # 查看数据卷的详细信息
             create  <volume>  # 创建一个数据卷
             rm      <volume>  # 删除一个数据卷
-            prune             # 删除所有没有使用的本地数据卷
+            prune             # 删除所有未使用的数据卷
 ```
 - 如果将宿主机的某个路径或数据卷，挂载到容器内的某个路径，则容器被删除之后该路径下的文件也会一直保存在宿主机上，从而持久保存数据。
 - 挂载宿主机的路径时：
@@ -392,17 +416,17 @@ docker network
   - `imageName:tag` ：镜像名与标签的组合，由用户自定义，通常将 tag 用于表示镜像的版本号。
 - dockerd 使用的镜像都存储在宿主机上，也可以将镜像存储到镜像仓库服务器中。
   - 默认使用的是官方的镜像仓库 hub.docker.com ，也可以使用自己搭建的仓库服务器，比如 harbor 。
+- 悬空镜像（dangling images）：一些只有 ID 的镜像，没有镜像名和标签（而是名为 `<none>:<none>` ），也没有被容器使用。
 
 ### 查看
 
 ```sh
-docker
-      images                          # 显示本机的所有镜像
-            -a                        # 显示所有的（默认不显示中间镜像）
-      image rm <image>...             # 删除镜像
-      prune                           # 删除没有被容器使用的镜像
-            -a                        # 删除所有未使用的镜像（默认只删除可显示的）
-      tag   <image> <imageName>:<tag> # 给镜像加上名称和 tag ，可以反复添加
+docker image
+            ls              # 显示本机的镜像（默认不显示悬空镜像）。等价于 docker images 命令
+                -a          # 显示所有的镜像
+            rm <image>...   # 删除镜像（只能删除未被容器使用的）
+            prune           # 删除所有悬空镜像
+                -a          # 删除所有未被容器使用的镜像
 ```
 
 ### 拉取
@@ -413,9 +437,10 @@ docker
       push    <imageName>:<tag>     # 推送镜像到镜像仓库
       search  <imageName>           # 在镜像仓库中搜索某个镜像
       login -u leo tencentyun.com   # 使用一个用户名登录一个镜像仓库（然后会提示输入密码）
+      tag <image> <imageName>:<tag> # 给镜像加上名称和 tag ，可以多次添加
 ```
 - 如果不注明镜像的 tag ，则默认拉取 latest 版本。
-- 尽量不要拉取 latest 版本，而使用具体的版本名，比如 v1.0 ，否则在不同时间拉取的 latest 版本会不一样。
+  - 尽量不要拉取 latest 版本，否则在不同时间拉取的 latest 版本可能不一样。
 
 ### 导出
 
@@ -470,7 +495,7 @@ docker
     ```sh
     docker commit <container> <imageName>:<tag>
     ```
-  - 每次 commit 时，会在原镜像外部加上一层新的文件系统（file system layer）。因此 commit 次数越多，镜像的体积越大。
+  - 每次 commit 时，会在原镜像外部加上一层新的文件系统。因此 commit 次数越多，镜像的体积越大。
 
 - 编写 Dockerfile 文件，然后基于它构建镜像：
     ```sh
@@ -478,15 +503,11 @@ docker
                 --build-arg VERSION="1.0"   # 传入构建参数给 Dockerfile
                 --target  <stage>           # 构建到某个阶段就停止
                 --network <name>            # 设置 build 过程中使用的网络
+                --no-cache                  # 构建时不使用缓存
     ```
   - 例：
     ```sh
     docker build . -t centos:v1.0 --network host
     ```
-  - docker build 命令会将 Dockerfile 所在目录作为上下文目录，将该目录及其子目录下的所有文件都拷贝给 dockerd 。
-  - 可以在 .dockerignore 文件中声明不想被拷贝的文件。
-  - 执行 docker build 命令时，dockerd 会创建临时容器来构建镜像，构建完成之后会自动删除临时容器。
-  - 如果镜像构建失败，则会遗留一些名为 `<none>:<none>` 的中间镜像，可以执行以下命令删除它们：
-    ```sh
-    docker images | awk '$2=="<none>" {print $3}' | xargs docker image rm
-    ```
+  - 执行 docker build 命令时，会将 Dockerfile 所在目录及其子目录的所有文件作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 命令拷贝文件到容器中。
+    - 可以在 `.dockerignore` 文件中声明不想被发送的文件。

@@ -3,7 +3,7 @@
 ：套接字。一个在内存中创建的文件描述符，并不会实际存储在磁盘上。
 - 使用 Socket ，程序可以按读写文件的方式进行进程间通信。主要有两种用法：
   - Unix Domain Socket ：用于本机的进程之间通信，保存为一个 Socket 文件，比如 /var/lib/mysql/mysql.sock 。
-  - 基于 TCP/UDP 协议的 Socket ：用于不同主机的进程之间通信，用一对 host:port 确定一个 Socket 。
+  - Network Socket ：用于不同主机的进程之间通信，基于 TCP/UDP 协议通信，用 host:port 表示通信方。
 
 ## 相关 API
 
@@ -25,11 +25,17 @@
   ssize_t read(int fd, void *buf, size_t count);
   ssize_t write(int fd, const void *buf, size_t count);
   ```
-- Linux 收到一个发向本机的 TCP/UDP 数据包时，会检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
-- 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
-- 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`
-- 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会收到本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
-- 如果一个进程绑定 IP 为 0.0.0.0 并监听，则会收到所有目标 IP 的数据包，只要目标端口一致。
+- Linux 收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
+  - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
+  - 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`
+  - 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会收到本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
+  - 如果一个进程绑定 IP 为 0.0.0.0 并监听，则会收到所有目标 IP 的数据包，只要目标端口一致。
+- 建立 Network Socket 连接时，进程会以文件的形式打开 Socket 。
+  - 每个 Socket 连接由五元组 protocol、src_addr、src_port、dst_addr、dst_port 确定，只要其中一项元素不同， Socket 的文件描述符就不同。
+  - 例如，当服务器监听一个 TCP 端口时，可以被任意 dst_addr、dst_port 连接，理论上可以建立大概 255^4 * 65535 个 Socket 连接。
+  - 实际上，一个主机上建立的 Socket 连接总数一般为几万个，主要受以下因素限制：
+    - 进程可以打开的文件描述符数量
+    - 内存总量
 
 ## 常见报错
 

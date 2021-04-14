@@ -81,7 +81,7 @@ services:                     # 开始定义服务
     hostname: CentOS          # 主机名
     command: [tail, -f, /dev/null]  # 启动命令
     init: true                # 使用 init 作为 1 号进程
-    restart: on-failure       # 重启策略
+    restart: unless-stopped   # 重启策略
     depends_on:               # 依赖关系
       - redis                 # 这表示：如果启动 web 服务，则会自动先启动 redis 服务；如果停止 redis 服务，则会自动先停止 web 服务
     environment:              # 环境变量

@@ -20,6 +20,7 @@
     elasticsearch:
       image: amazon/opendistro-for-elasticsearch:1.13.0
       container_name: elasticsearch
+      restart: unless-stopped
       network_mode:
         host            # 使用宿主机的网卡，以便绑定宿主机的对外 IP
       volumes:
@@ -36,6 +37,7 @@
     kibana:
       image: amazon/opendistro-for-elasticsearch-kibana:1.13.0
       container_name: kibana
+      restart: unless-stopped
       depends_on:
         - elasticsearch
       ports:

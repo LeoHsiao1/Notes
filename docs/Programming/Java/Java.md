@@ -46,6 +46,12 @@
   - 开发 Java Web 项目的常用框架：
     - SSH（Spring + Struts + Hibernate）
     - SSM（Spring + SpringMVC + MyBatis）
+- Servlet
+  - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
+  - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
+
+### Spring
+
 - Spring Framework
   - ：一个流行的 Java 应用开发框架，于 2002 年发布。
   - 内嵌了一个 Tomcat ，因此可以开发 Web 应用，作为 Web 服务器运行。
@@ -67,6 +73,11 @@
           ...
       }
       ```
-- Servlet
-  - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
-  - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
+
+- Spring Boot
+  - ：对 Spring 框架进行了一些开箱即用的配置，简化了开发的过程。
+  - 可以基于 Spring Boot 快速开发单个应用，比如单个微服务。
+
+- Spring Cloud
+  - ：一个基于 Spring Boot 的开发框架，适合开发分布式应用，比如微服务。
+  - 提供了构建分布式系统的一系列工具，比如配置管理、服务发现、服务网关等。

@@ -107,6 +107,10 @@ ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需
   web[0:4]  ; 选取第 0 ~ 4 个 host （包括第 4 个）
   web[-1]
   ```
+- Inventory 文件中以明文形式存储 SSH 密钥，需要小心泄露。比如将 Ansible 目录设置为只允许 root 用户访问：
+  ```sh
+  chmod -R go=- /etc/ansible
+  ```
 
 ## Playbook
 

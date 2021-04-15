@@ -52,7 +52,7 @@ class Popen(args,           # 待执行的命令
   30760
   >>> p.communicate()                     # 调用 communicate(input=None, timeout=None) 会返回子进程的 (stdout, stderr)
   (None, None)
-  >>> p.wait(timeout=10)                  # 等待子进程退出
+  >>> p.wait(timeout=10)                  # 等待子进程退出，并返回其退出码。默认是一直等待，可以指定等待的超时时间。重复调用该方法会立即返回退出码
   0
   >>> p.returncode                        # 获取子进程的返回码，如果它尚未退出则返回 None
   0

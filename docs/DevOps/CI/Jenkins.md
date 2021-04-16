@@ -52,7 +52,7 @@
   - `Freestyle Project` ：自由风格的项目，可以通过 Web 页面上的配置实现大多数构建任务。
   - `Pipeline` ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
   - `Multibranch Pipeline` ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
-  - `MultiJob Project `：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
+  - `MultiJob Project ` ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
   - `Folder` ：用于对 Job 进行分组管理。
 - Jenkins 的主页默认显示一个视图（view）。
   - 每个视图以列表形式包含多个任务（Job），便于分组管理。

@@ -57,7 +57,7 @@
   - 内嵌了一个 Tomcat ，因此可以开发 Web 应用，作为 Web 服务器运行。
   - Spring 中的应用程序由一个或多个 bean 对象组成，由 IoC 容器管理。
   - 编程时不需要主动 new 对象，而是在代码中声明需要的对象，并在 XML 文件中配置。程序运行时，IoC 容器会去自动根据配置创建对象。
-    - 对象的控制权从程序员手中，转交给了程序自身，因此称为控制反转（Inversion of Control，IoC）。
+    - 对象的控制权从程序员手中，转交给了程序自身，因此称为控制反转（Inversion of Control ，IoC）。
     - 例：
       ```java
       @Component              // 使用 Component 注解，将该类定义为 Bean ，默认命名为开头小写的类名，即 phone

@@ -40,6 +40,7 @@
     ├── log.json            # 记录日志文件的状态。该文件体积超过 10 MB 时会自动清空，并将此时所有文件的状态保存到快照文件中
     └── meta.json           # 记录一些元数据
     ```
+    - 删除该目录就会重新采集所有日志文件，这会导致重复采集。
   - 一个记录的示例：
     ```json
     {"op":"set", "id":237302}                             // 本次动作的编号
@@ -61,11 +62,9 @@
       }
     }
     ```
-    - 根据 inode 和 device 编号识别日志文件。
-    - 根据 bytes offset 确定最后一次采集的位置。
-      - 如果文件的体积减少，则 Filebeat 会重新从 offset 0 处开始读取，可能导致重复采集。
-      - 切割日志时可能使日志文件的 inode 或 bytes offset 变化，导致遗漏采集、重复采集。
-    - 删除 `data/registry/` 目录就会重新采集所有日志文件。
+    - 采集每个日志文件时，会记录已采集的字节偏移量（bytes offset）。
+      - 每次 harvester 读取日志文件时，会从 offset 处继续采集。
+      - 如果 harvester 发现文件体积小于已采集的 offset ，则认为文件被截断了，会从 offset 0 处重新开始读取。这可能会导致重复采集。
 
 - 假设让 Filebeat 采集日志文件 A 。切割日志时，可能经常出现将文件 A 重命名为 B 的情况，比如 `mv A B` 。Filebeat 会按以下规则处理：
   - 如果没打开文件 A ，则以后会因为文件 A 不存在而采集不了。
@@ -113,149 +112,149 @@
 这里分析 [filebeat/input/log/log.go](https://github.com/elastic/beats/blob/master/filebeat/input/log/log.go) 中的部分源码：
 
 - 记录日志文件的结构体如下：
-    ```go
-    type Log struct {
-        fs           harvester.Source   // 指向日志文件的接口
-        offset       int64              // 采集的偏移量
-        config       LogConfig          // 配置参数
-        lastTimeRead time.Time          // 最后修改时间
-        backoff      time.Duration      // backoff 的时长
-        done         chan struct{}      // 一个通道，用于判断文件是否被关闭
-    }
-    ```
+  ```go
+  type Log struct {
+      fs           harvester.Source   // 指向日志文件的接口
+      offset       int64              // 采集的偏移量
+      config       LogConfig          // 配置参数
+      lastTimeRead time.Time          // 最后修改时间
+      backoff      time.Duration      // backoff 的时长
+      done         chan struct{}      // 一个通道，用于判断文件是否被关闭
+  }
+  ```
 
 - 读取日志文件的主要逻辑如下：
-    ```go
-    func (f *Log) Read(buf []byte) (int, error) {
-        totalN := 0                           // 记录总共读取的字节数
+  ```go
+  func (f *Log) Read(buf []byte) (int, error) {
+      totalN := 0                           // 记录总共读取的字节数
 
-        for {                                 // 循环读取日志文件，一直读取到装满 buf 缓冲区
-            select {
-            case <-f.done:
-                return 0, ErrClosed
-            default:
-            }
+      for {                                 // 循环读取日志文件，一直读取到装满 buf 缓冲区
+          select {
+          case <-f.done:
+              return 0, ErrClosed
+          default:
+          }
 
-            // 开始读取之前，先检查文件是否存在
-            err := f.checkFileDisappearedErrors()
-            if err != nil {
-                return totalN, err
-            }
+          // 开始读取之前，先检查文件是否存在
+          err := f.checkFileDisappearedErrors()
+          if err != nil {
+              return totalN, err
+          }
 
-            // 读取文件的内容，存储到 buf 缓冲区中
-            n, err := f.fs.Read(buf)          // 最多读取 len(buf) 个字节，并返回实际读取的字节数 n
-            if n > 0 {                        // 如果读取到的内容不为空，则更新偏移量、最后读取时间
-                f.offset += int64(n)
-                f.lastTimeRead = time.Now()
-            }
-            totalN += n                       // 更新 totalN 的值
+          // 读取文件的内容，存储到 buf 缓冲区中
+          n, err := f.fs.Read(buf)          // 最多读取 len(buf) 个字节，并返回实际读取的字节数 n
+          if n > 0 {                        // 如果读取到的内容不为空，则更新偏移量、最后读取时间
+              f.offset += int64(n)
+              f.lastTimeRead = time.Now()
+          }
+          totalN += n                       // 更新 totalN 的值
 
-            // 如果 err == nil ，则代表读取没有出错，此时要么 buf 读取满了，要么读取到了文件末尾 EOF
-            if err == nil {
-                f.backoff = f.config.Backoff  // 重置 backoff 的时长，以供下次读取
-                return totalN, nil            // 结束读取，返回总共读取的字节数
-            }
-            buf = buf[n:]                     // 更新 buf 指向的位置，从而使用剩下的缓冲区
+          // 如果 err == nil ，则代表读取没有出错，此时要么 buf 读取满了，要么读取到了文件末尾 EOF
+          if err == nil {
+              f.backoff = f.config.Backoff  // 重置 backoff 的时长，以供下次读取
+              return totalN, nil            // 结束读取，返回总共读取的字节数
+          }
+          buf = buf[n:]                     // 更新 buf 指向的位置，从而使用剩下的缓冲区
 
-            // 检查 err 的类型，如果它是 EOF 则进行处理
-            err = f.errorChecks(err)
+          // 检查 err 的类型，如果它是 EOF 则进行处理
+          err = f.errorChecks(err)
 
-            // 如果读取出错，或者 buf 满了，则结束读取
-            if err != nil || len(buf) == 0 {
-                return totalN, err
-            }
+          // 如果读取出错，或者 buf 满了，则结束读取
+          if err != nil || len(buf) == 0 {
+              return totalN, err
+          }
 
-            // 如果读取没出错，buf 也没满，只是读取到了文件末尾，则等待 backoff 时长再循环读取
-            logp.Debug("harvester", "End of file reached: %s; Backoff now.", f.fs.Name())
-            f.wait()
-        }
-    }
-    ```
+          // 如果读取没出错，buf 也没满，只是读取到了文件末尾，则等待 backoff 时长再循环读取
+          logp.Debug("harvester", "End of file reached: %s; Backoff now.", f.fs.Name())
+          f.wait()
+      }
+  }
+  ```
 
 - `checkFileDisappearedErrors()` 方法的定义如下：
-    ```go
-    func (f *Log) checkFileDisappearedErrors() error {
-        // 如果没启用 close_renamed、close_removed 配置，则不进行检查
-        if !f.config.CloseRenamed && !f.config.CloseRemoved {
-            return nil
-        }
+  ```go
+  func (f *Log) checkFileDisappearedErrors() error {
+      // 如果没启用 close_renamed、close_removed 配置，则不进行检查
+      if !f.config.CloseRenamed && !f.config.CloseRemoved {
+          return nil
+      }
 
-        // 获取文件的状态信息（State），包括文件名、大小、文件模式、最后修改时间、是否为目录等
-        info, statErr := f.fs.Stat()
-        if statErr != nil {                   // 如果不能获取状态，则结束执行
-            logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
-            return statErr
-        }
+      // 获取文件的状态信息（State），包括文件名、大小、文件模式、最后修改时间、是否为目录等
+      info, statErr := f.fs.Stat()
+      if statErr != nil {                   // 如果不能获取状态，则结束执行
+          logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
+          return statErr
+      }
 
-        // 检查文件是否被重命名
-        // 原理为：获取已打开的文件 f 的 State ，再获取磁盘中当前路径为 f.Name() 的文件的 State ，如果两者的 inode、device 不同，则说明文件 f 当前的路径已经不是 f.Name()
-        if f.config.CloseRenamed {
-            if !file.IsSameFile(f.fs.Name(), info) {
-                logp.Debug("harvester", "close_renamed is enabled and file %s has been renamed", f.fs.Name())
-                return ErrRenamed
-            }
-        }
+      // 检查文件是否被重命名
+      // 原理为：获取已打开的文件 f 的 State ，再获取磁盘中当前路径为 f.Name() 的文件的 State ，如果两者的 inode、device 不同，则说明文件 f 当前的路径已经不是 f.Name()
+      if f.config.CloseRenamed {
+          if !file.IsSameFile(f.fs.Name(), info) {
+              logp.Debug("harvester", "close_renamed is enabled and file %s has been renamed", f.fs.Name())
+              return ErrRenamed
+          }
+      }
 
-        // 检查文件是否被删除
-        // 原理为：执行 os.Stat(f.Name()) ，如果没报错则说明磁盘中路径为 f.Name() 的文件依然存在
-        if f.config.CloseRemoved {
-            if f.fs.Removed() {
-                logp.Debug("harvester", "close_removed is enabled and file %s has been removed", f.fs.Name())
-                return ErrRemoved
-            }
-        }
+      // 检查文件是否被删除
+      // 原理为：执行 os.Stat(f.Name()) ，如果没报错则说明磁盘中路径为 f.Name() 的文件依然存在
+      if f.config.CloseRemoved {
+          if f.fs.Removed() {
+              logp.Debug("harvester", "close_removed is enabled and file %s has been removed", f.fs.Name())
+              return ErrRemoved
+          }
+      }
 
-        // 如果检查没问题，则返回 nil ，表示没有错误
-        return nil
-    }
-    ```
+      // 如果检查没问题，则返回 nil ，表示没有错误
+      return nil
+  }
+  ```
 
 - `errorChecks()` 方法的定义如下：
-    ```go
-    func (f *Log) errorChecks(err error) error {
-        // 处理 err 不是 EOF 的情况
-        if err != io.EOF {
-            logp.Err("Unexpected state reading from %s; error: %s", f.fs.Name(), err)
-            return err
-        }
+  ```go
+  func (f *Log) errorChecks(err error) error {
+      // 处理 err 不是 EOF 的情况
+      if err != io.EOF {
+          logp.Err("Unexpected state reading from %s; error: %s", f.fs.Name(), err)
+          return err
+      }
 
-        // 以下处理 err 是 EOF 的情况
+      // 以下处理 err 是 EOF 的情况
 
-        // 判断文件是否支持继续读取，比如 stdin 就不支持
-        if !f.fs.Continuable() {
-            logp.Debug("harvester", "Source is not continuable: %s", f.fs.Name())
-            return err
-        }
+      // 判断文件是否支持继续读取，比如 stdin 就不支持
+      if !f.fs.Continuable() {
+          logp.Debug("harvester", "Source is not continuable: %s", f.fs.Name())
+          return err
+      }
 
-        // 如果启用了 close_eof 配置，则结束执行
-        if f.config.CloseEOF {
-            return err
-        }
+      // 如果启用了 close_eof 配置，则结束执行
+      if f.config.CloseEOF {
+          return err
+      }
 
-        // 获取文件的状态信息
-        info, statErr := f.fs.Stat()
-        if statErr != nil {
-            logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
-            return statErr
-        }
+      // 获取文件的状态信息
+      info, statErr := f.fs.Stat()
+      if statErr != nil {
+          logp.Err("Unexpected error reading from %s; error: %s", f.fs.Name(), statErr)
+          return statErr
+      }
 
-        // 如果文件的体积小于采集的偏移量，则认为发生了日志截断，结束执行
-        if info.Size() < f.offset {
-            logp.Debug("harvester",
-                "File was truncated as offset (%d) > size (%d): %s", f.offset, info.Size(), f.fs.Name())
-            return ErrFileTruncate
-        }
+      // 如果文件的体积小于采集的偏移量，则认为发生了日志截断，结束执行
+      if info.Size() < f.offset {
+          logp.Debug("harvester",
+              "File was truncated as offset (%d) > size (%d): %s", f.offset, info.Size(), f.fs.Name())
+          return ErrFileTruncate
+      }
 
-        // 如果最后一次读取日志的时间，距离现在的时长超过 close_inactive ，则结束执行
-        age := time.Since(f.lastTimeRead)
-        if age > f.config.CloseInactive {
-            return ErrInactive
-        }
+      // 如果最后一次读取日志的时间，距离现在的时长超过 close_inactive ，则结束执行
+      age := time.Since(f.lastTimeRead)
+      if age > f.config.CloseInactive {
+          return ErrInactive
+      }
 
-        // 此时，忽略 EOF 的错误，从而继续读取
-        return nil
-    }
-    ```
+      // 此时，忽略 EOF 的错误，从而继续读取
+      return nil
+  }
+  ```
 
 ### 部署
 

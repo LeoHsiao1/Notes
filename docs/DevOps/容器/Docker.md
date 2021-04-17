@@ -128,6 +128,192 @@
 ### Cgroup
 
 - Docker 基于 Linux Cgroup 技术限制各个容器占用的 CPU、内存等系统资源。
+  - 在 Cgroup 技术之前，通常通过 ulimit 命令限制 shell 终端占用的系统资源，但功能较少。
+
+- Cgroup 的版本：
+  - v1
+  - v2
+    <!-- - 将所有的 subsystem 挂载到一个 unified hierarchy 的根节点。叶子结点负责关联 cgroup ，非叶子结点负责关联 subsystem 。 -->
+
+#### 主要概念
+
+- task
+  - ：代表一个进程。
+- cgroup
+  - ：控制组，包含一组进程。
+  - cgroup 的最小管理单位是进程，不能管理进程中的某个线程。
+  - 创建子进程时，默认继承父进程的 cgroup 。但是创建之后，修改父进程或子进程的 cgroup ，不再相互影响。
+  - 每个 cgroup 可以关联任意个 subsystem ，从而控制 cgroup 内进程占用的系统资源。
+- hierarchy
+  - ：层级，是由多个 cgroup 实例以目录树的形式组成，又称为 cgroup 树。
+  - 以挂载文件系统的方式，创建 hierarchy 。
+    - 通过在 hierarchy 目录下创建、删除子目录、孙目录的方式，创建、删除 cgroup 节点。
+    - 创建 hierarchy 时，根路径下的 cgroup 节点是第一个创建的节点，称为 root cgroup 。
+    - cgroup 子节点默认继承父节点的属性。
+    - 如果一个 cgroup 节点不包含任何进程，也没有子节点，则称为空节点，允许被删除。
+  - 每个进程同时可以存在于多个 hierarchy 中。
+    - 在同一个 hierarchy 中，每个进程同时只能属于一个 cgroup ，但可以切换到其它 cgroup 。
+- subsystem
+  - ：资源控制器（Resource Controller）。
+  - 分为多种类型，分别用于控制不同的系统资源。如下：
+    ```sh
+    cpu         # 限制 CPU 使用率
+    cpuacct     # 统计 CPU 使用率
+    cpuset      # 绑定cgroup到指定CPUs和NUMA节点
+    memory      # 统计、限制内存使用率，包括process memory、kernel memory、swap
+    devices     # 限制cgroup访问设备的权限
+    freezer     # suspend和restore一个cgroup中的所有进程。
+    net_cls     # 将一个cgroup中进程创建的所有网络包加上一个classid标记，用于tc和iptables。 只对发出去的网络包生效，对收到的网络包不起作用。
+    blkio       # 限制cgroup访问块设备的IO速度
+    perf_event  # 对cgroup进行性能监控
+    net_prio    # 针对每个网络接口设置cgroup的访问优先级
+    hugetlb     # 限制cgroup的huge pages的使用量
+    pids        # 限制一个cgroup及其子孙cgroup中的总进程数
+    ```
+
+#### 示例
+
+使用 Cgroup 的基本步骤：
+1. 创建 hierarchy ：
+    ```sh
+    [root@CentOS ~]# mkdir -p /cgroup/hierarchy_1
+    [root@CentOS ~]# mount -t cgroup -o none,name=hierarchy_1  hierarchy_1  /cgroup/hierarchy_1
+    ```
+    - 这里是挂载一个 cgroup 类型的虚拟文件系统，作为 hierarchy ，并用 -o 选项传入一些参数。
+    - 删除 hierarchy 的命令：
+      ```sh
+      umount      /cgroup/hierarchy_1
+      /bin/rm -r  /cgroup/hierarchy_1
+      ```
+2. hierarchy 在挂载之后会自动创建 root cgroup 节点，生成一些默认文件。如下：
+    ```sh
+    [root@CentOS ~]# cd /cgroup/hierarchy_1
+    [root@CentOS /cgroup/hierarchy_1]# ll
+    total 0
+    -rw-r--r--. 1 root root 0 Mar 26 17:17 cgroup.clone_children  # 文件内容默认为 0 。如果为 1 ，则创建子节点时会拷贝当前节点的 cpuset subsystem 配置
+    --w--w--w-. 1 root root 0 Mar 26 17:17 cgroup.event_control
+    -rw-r--r--. 1 root root 0 Mar 26 17:17 cgroup.procs           # 记录该 cgroup 关联的所有进程，每行一个 PID
+    -r--r--r--. 1 root root 0 Mar 26 17:17 cgroup.sane_behavior
+    -rw-r--r--. 1 root root 0 Mar 26 17:17 notify_on_release      # 文件内容默认为 0 。如果为 1 ，则 cgroup 退出时会执行 release_agent
+    -rw-r--r--. 1 root root 0 Mar 26 17:17 release_agent          # 该文件只存在于 root cgroup 中，包含一些 cgroup 退出时需要执行的命令
+    -rw-r--r--. 1 root root 0 Mar 26 17:17 tasks                  # 与 cgroup.procs 类似，记录进程中主线程的 TID ，即与 PID 一致
+    [root@CentOS /cgroup/hierarchy_1]# head cgroup.procs          # root cgroup 默认包含系统的所有进程
+    1
+    2
+    4
+    6
+    7
+    8
+    9
+    10
+    11
+    12
+    ```
+
+3. 在 hierarchy 目录下添加 cgroup 节点：
+    ```sh
+    [root@CentOS /cgroup/hierarchy_1]# mkdir cgroup_1             # 创建一个 cgroup 子节点，这会自动生成一些默认文件
+    [root@CentOS /cgroup/hierarchy_1]# cd cgroup_1/
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# ll
+    total 0
+    -rw-r--r--. 1 root root 0 Mar 26 17:35 cgroup.clone_children
+    --w--w--w-. 1 root root 0 Mar 26 17:35 cgroup.event_control
+    -rw-r--r--. 1 root root 0 Mar 26 17:35 cgroup.procs
+    -rw-r--r--. 1 root root 0 Mar 26 17:35 notify_on_release
+    -rw-r--r--. 1 root root 0 Mar 26 17:35 tasks
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cat cgroup.procs  # 非 root cgroup 的节点，默认不包含任何进程
+    ```
+4. 在 cgroup 节点中增加进程：
+    ```sh
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo 1 >> cgroup.procs   # 向该 cgroup 分组加入一个进程，这会自动将该进程移出之前的 cgroup
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cat cgroup.procs
+    1
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# head ../cgroup.procs
+    2
+    4
+    6
+    7
+    8
+    9
+    10
+    11
+    12
+    13
+    [root@test236 /cgroup/hierarchy_1/cgroup_1]# cat ../cgroup.procs >> cgroup.procs  # 每次只能加入一个 PID
+    cat: write error: Argument list too long
+    [root@test236 /cgroup/hierarchy_1/cgroup_1]# echo 3 >> cgroup.procs               # 不能加入不存在的进程的 PID
+    -bash: echo: write error: No such process
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo > cgroup.procs                   # 只能在 cgroup 中加入进程，不支持删除进程
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cat cgroup.procs
+    1
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo $$ > cgroup.procs  # 加入当前终端的 PID
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cat cgroup.procs
+    1
+    4593
+    6121                                                                # 终端执行命令时创建了子进程，因此也加入了其 PID
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo $$ > cgroup.procs  # 加入 PID 时，会自动排序、去重、去掉不存在的 PID
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cat cgroup.procs
+    1
+    4593
+    6160
+    ```
+    - 非 root 用户只能修改自己进程所属的 cgroup 。
+    - 非空节点的 cgroup 不允许被删除：
+      ```sh
+      [root@test236 /cgroup/hierarchy_1/cgroup_1]# cd ..
+      [root@test236 /cgroup/hierarchy_1]# /bin/rm -r cgroup_1/
+      /bin/rm: cannot remove ‘cgroup_1/cgroup.clone_children’: Operation not permitted
+      /bin/rm: cannot remove ‘cgroup_1/cgroup.event_control’: Operation not permitted
+      /bin/rm: cannot remove ‘cgroup_1/notify_on_release’: Operation not permitted
+      /bin/rm: cannot remove ‘cgroup_1/cgroup.procs’: Operation not permitted
+      /bin/rm: cannot remove ‘cgroup_1/tasks’: Operation not permitted
+      ```
+
+- 例：查看指定进程的 cgroup 信息
+  ```sh
+  [root@CentOS ~]# cat /proc/$$/cgroup
+  11:memory:/user.slice
+  10:cpuset:/
+  9:cpuacct,cpu:/user.slice
+  8:hugetlb:/
+  7:net_prio,net_cls:/
+  6:devices:/user.slice
+  5:freezer:/
+  4:blkio:/user.slice
+  3:pids:/user.slice
+  2:perf_event:/
+  1:name=systemd:/user.slice/user-1000.slice/session-3785.scope
+  ```
+  - 每行的三个字段分别表示：
+    - cgroup ID
+    - cgroup 绑定的所有 subsystem 的名称，用逗号分隔
+      - `name=systemd` 表示没有绑定 subsystem ，只是定义了名称。
+    - 进程在 cgroup 树中的路径。
+      - 这是对于挂载点的相对路径，以 / 开头。
+  - 对于 Cgroup v2 ，每行总是显示成 `0::<PATH>` 的格式。
+
+- 例：查看系统所有 subsystem 的统计信息
+  ```sh
+  [root@CentOS ~]# cat /proc/cgroups
+  #subsys_name    hierarchy       num_cgroups     enabled
+  cpuset          10              5               1
+  cpu             9               71              1
+  cpuacct         9               71              1
+  memory          11              71              1
+  devices         6               71              1
+  freezer         5               5               1
+  net_cls         7               5               1
+  blkio           4               71              1
+  perf_event      2               5               1
+  hugetlb         8               5               1
+  pids            3               71              1
+  net_prio        7               5               1
+  ```
+  - 四列分别表示 subsystem 的：
+    - 名称
+    - 关联的 hierarchy 的 ID
+    - 关联的 cgroup 中的进程数
+    - 是否启用
 
 ### layer
 

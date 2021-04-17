@@ -18,7 +18,7 @@
 
 ## Filebeat
 
-### 原理
+### 采集日志
 
 - Filebeat 的主要模块：
   - input ：输入端。
@@ -30,7 +30,23 @@
   - harvester 开始读取时会打开文件描述符，读取结束时才关闭文件描述符。
     - 默认会一直读取到文件末尾，如果文件未更新的时长超过 close_inactive ，才关闭。
 
-- Filebeat 每次采集时，都会通过 registry 记录日志文件的当前状态信息（State）。
+- 假设让 Filebeat 采集日志文件 A 。切割日志时，可能经常出现将文件 A 重命名为 B 的情况，比如 `mv A B` 。Filebeat 会按以下规则处理：
+  - 如果没打开文件 A ，则以后会因为文件 A 不存在而采集不了。
+    - 在类 Unix 系统上，当 Filebeat 打开文件时，允许其它进程重命名文件。而在 Windows 系统上不允许，因此总是这种情况。
+  - 如果打开了文件 A ，则会继续读取到文件末尾，然后每隔 backoff 时间检查一次文件：
+    - 如果在 backoff 时长之内又创建文件 A ，比如 `touch A` 。则 Filebeat 会认为文件被重命名（renamed）。
+      - 默认配置了 `close_renamed: false` ，因此会既采集文件 A ，又采集文件 B ，直到因为 close_inactive 超时等原因才关闭文件 B 。
+      - 此时两个文件的状态都会记录在 registry 中，文件路径 source 相同，只是 inode 不同。
+    - 如果在 backoff 时长之后，依然没有创建文件 A 。则 Filebeat 会认为文件被删除（removed）。
+      - 默认配置了 `close_removed: true` ，因此会立即关闭文件 B 而不采集，而文件 A 又因为不存在而采集不了。此时 Filebeat 的日志如下：
+        ```sh
+        2021-02-02T15:49:49.446+0800    INFO    log/harvester.go:302    Harvester started for file: /var/log/A.log      # 开始采集文件 A
+        2021-02-02T15:50:55.457+0800    INFO    log/harvester.go:325    File was removed: /var/log/A.log. Closing because close_removed is enabled.   # 发现文件 A 被删除了，停止采集
+        ```
+
+### 注册表
+
+- Filebeat 会通过 registry 文件记录所有日志文件的当前状态信息（State）。
   - 即使只有一个日志文件被修改了，也会在 registry 文件中写入一次所有日志文件的当前状态。
   - registry 保存在 `data/registry/` 目录下，如下：
     ```sh
@@ -41,40 +57,32 @@
     └── meta.json           # 记录一些元数据
     ```
     - 删除该目录就会重新采集所有日志文件，这会导致重复采集。
-  - 一个记录的示例：
-    ```json
-    {"op":"set", "id":237302}                             // 本次动作的编号
-    {
-      "k": "filebeat::logs::native::778887-64768",        // key ，由 beat 类型、日志文件的 id 组成
-      "v": {
-        "id": "native::778887-64768",                     // 日志文件的 id ，由 identifier_name、inode、device 组成
-        "prev_id": "",
-        "ttl": -1,                                        // -1 表示永不失效
-        "type": "log",
-        "source": "/var/log/supervisor/supervisord.log",  // 日志文件的路径（文件被重命名之后，并不会更新该参数）
-        "timestamp": [2061628216741, 1611303609],         // 日志文件最后一次修改的 Unix 时间戳
-        "offset": 1343,                                   // 当前采集的字节偏移量，表示最后一次采集的日志行的末尾位置
-        "identifier_name": "native",                      // 识别日志文件的方式，native 表示原生方式，即根据 inode 和 device 编号识别
-        "FileStateOS": {                                  // 文件的状态
-          "inode": 778887,                                // 文件的 inode 编号
-          "device": 64768                                 // 文件所在的磁盘编号
-        }
+- registry 中一个记录的示例：
+  ```json
+  {"op":"set", "id":237302}                             // 本次动作的编号
+  {
+    "k": "filebeat::logs::native::778887-64768",        // key ，由 beat 类型、日志文件的 id 组成
+    "v": {
+      "id": "native::778887-64768",                     // 日志文件的 id ，由 identifier_name、inode、device 组成
+      "prev_id": "",
+      "ttl": -1,                                        // -1 表示永不失效
+      "type": "log",
+      "source": "/var/log/supervisor/supervisord.log",  // 日志文件的路径（文件被重命名之后，并不会更新该参数）
+      "timestamp": [2061628216741, 1611303609],         // 日志文件最后一次修改的 Unix 时间戳
+      "offset": 1343,                                   // 当前采集的字节偏移量，表示最后一次采集的日志行的末尾位置
+      "identifier_name": "native",                      // 识别日志文件的方式，native 表示原生方式，即根据 inode 和 device 编号识别
+      "FileStateOS": {                                  // 文件的状态
+        "inode": 778887,                                // 文件的 inode 编号
+        "device": 64768                                 // 文件所在的磁盘编号
       }
     }
-    ```
-    - 采集每个日志文件时，会记录已采集的字节偏移量（bytes offset）。
-      - 每次 harvester 读取日志文件时，会从 offset 处继续采集。
-      - 如果 harvester 发现文件体积小于已采集的 offset ，则认为文件被截断了，会从 offset 0 处重新开始读取。这可能会导致重复采集。
+  }
+  ```
+  - 采集每个日志文件时，会记录已采集的字节偏移量（bytes offset）。
+    - 每次 harvester 读取日志文件时，会从 offset 处继续采集。
+    - 如果 harvester 发现文件体积小于已采集的 offset ，则认为文件被截断了，会从 offset 0 处重新开始读取。这可能会导致重复采集。
 
-- 假设让 Filebeat 采集日志文件 A 。切割日志时，可能经常出现将文件 A 重命名为 B 的情况，比如 `mv A B` 。Filebeat 会按以下规则处理：
-  - 如果没打开文件 A ，则以后会因为文件 A 不存在而采集不了。
-    - 在类 Unix 系统上，当 Filebeat 打开文件时，允许其它进程重命名文件。而在 Windows 系统上不允许，因此总是这种情况。
-  - 如果打开了文件 A ，则会继续读取到文件末尾，然后每隔 backoff 时间检查一次文件：
-    - 如果在 backoff 时长之内又创建文件 A ，比如 `touch A` 。则 Filebeat 会认为文件被重命名（renamed）。
-      - 默认配置了 `close_renamed: false` ，因此会既采集文件 A ，又采集文件 B ，直到因为 close_inactive 超时等原因才关闭文件 B 。
-      - 此时两个文件的状态都会记录在 registry 中，文件路径 source 相同，只是 inode 不同。
-    - 如果在 backoff 时长之后，依然没有创建文件 A 。则 Filebeat 会认为文件被删除（removed）。
-      - 默认配置了 `close_removed: true` ，因此会立即关闭文件 B 而不采集，而文件 A 又因为不存在而采集不了。
+### 发送日志
 
 - Filebeat 每采集一条日志文本，都会保存为 JSON 对象，称为日志事件（event）。
   - 日志事件保存在内存中，经过处理之后会发送到输出端，不会保存到磁盘中。

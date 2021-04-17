@@ -166,7 +166,7 @@
     ```sh
     pids        # 限制、统计进程总数，包括 Cgroup 当前节点及其子节点
 
-    cpu         # 限制 CPU 使用量。只会在 CPU 忙碌时限制，如果 CPU 不忙碌则不限制
+    cpu         # 限制 CPU 使用量
     cpuacct     # 统计 CPU 使用量
     cpuset      # 只允许使用 CPU 的指定核
 
@@ -181,13 +181,14 @@
     net_prio    # 设置对网络接口的访问优先级
     net_cls     # 通过等级识别符 (classid) 标记进程发出的网络数据包，便于被 iptables 等工具统计
     ```
-    每种 subsystem 会包含一组配置文件，比如：
+    每种 subsystem 通过读写一组文件来实现配置，例如：
     ```sh
     pids.max                  # 限制进程总数，取值为 max 则不限制
     pids.current              # 记录当前的进程总数
 
-    cpu.cfs_period_us         # 设置一个周期的长度，单位为 ms
-    cpu.cfs_quota_us          # 限制每个周期内占用 CPU 的最大时长
+    cpu.cfs_period_us         # 设置一个周期的长度，单位为 us ，取值范围为 1ms ~ 1s
+    cpu.cfs_quota_us          # 限制每个周期内占用 CPU 的最大时长。取值至少为 1ms ，如果取值为 -1 则不限制
+    cpu.shares                # 设置与其它 cgroup 抢占 CPU 时的权重，取值范围为 1 ~ 1024
 
     memory.limit_in_bytes     # 限制进程最大的内存使用量，取值为 -1 则不限制
     memory.usage_in_bytes     # 记录进程当前的内存使用量

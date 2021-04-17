@@ -83,7 +83,7 @@
     - 内核只支持将已注册 handler 的信号发送给 init 进程，会忽略 SIGKILL、SIGSTOP 等信号。但是可以发送给子孙 pid namespace 中的 init 进程，因为它们在当前 pid namespace 中的 PID 不为 1 。这样会导致子孙 pid namespace 被销毁。
   - 调用 setns() 或 unshare() 时，不会改变当前进程的 pid namespace ，而是影响之后创建的子进程。
     - 因此，一个进程在创建之后，其 PID 总是不变。成为孤儿进程时， PPID 会变为 1 。
-  - 相关的内核 API ：
+  - 相关 API ：
     ```c
     #include <unistd.h>
 
@@ -105,7 +105,7 @@
   - 如果两个进程的某种 namespace ID 相同，则说明属于这种类型的同一个 namespace 实例。
   - 创建子进程时，默认继承父进程的 namespace 实例。
 
-- 相关的内核 API ：
+- 相关 API ：
   ```c
   #include <sched.h>
 

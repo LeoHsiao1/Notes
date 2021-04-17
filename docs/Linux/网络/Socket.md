@@ -7,7 +7,7 @@
 
 ## 相关 API
 
-- 创建 Socket 的内核 API ：
+- 创建 Socket 的 API ：
   ```c
   #include <sys/socket.h>
 

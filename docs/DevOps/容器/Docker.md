@@ -132,8 +132,12 @@
 
 - Cgroup 的版本：
   - v1
+    - [官方文档](https://www.kernel.org/doc/Documentation/cgroup-v1/)
+    - 本文采用该版本。
   - v2
-    <!-- - 将所有的 subsystem 挂载到一个 unified hierarchy 的根节点。叶子结点负责关联 cgroup 。 -->
+    - 将所有 subsystem 都关联到一个 unified hierarchy 中。
+    - 同一个 subsystem 不能同时关联 v1 和 v2 版本的 hierarchy 。
+    - 只允许在根节点、叶子节点创建 cgroup 。
 
 #### 主要概念
 
@@ -143,10 +147,10 @@
   - ：控制组，包含一组进程。
   - cgroup 的最小管理单位是进程，不能管理进程中的某个线程。
   - 创建子进程时，默认继承父进程的 cgroup 。但是创建之后，修改父进程或子进程的 cgroup ，不再相互影响。
-  - 每个 cgroup 可以关联任意个 subsystem ，从而控制 cgroup 内进程占用的系统资源。
 - hierarchy
   - ：层级，是由多个 cgroup 实例以目录树的形式组成，又称为 cgroup 树。
-  - 以挂载文件系统的方式，创建 hierarchy 。
+  - 通过挂载文件系统的方式，创建 hierarchy 。
+    - 一般将 hierarchy 挂载在 `/sys/fs/cgroup/` 目录下。
     - 通过在 hierarchy 目录下创建、删除子目录的方式，创建、删除 cgroup 节点。
     - cgroup 子节点默认继承父节点的属性。
     - 如果一个 cgroup 节点不包含任何进程，也没有子节点，则称为空节点，允许被删除。
@@ -155,20 +159,39 @@
     - 在同一个 hierarchy 中，每个进程同时只能属于一个 cgroup ，但可以切换到其它 cgroup 。
 - subsystem
   - ：资源控制器（Resource Controller）。
-  - 分为多种类型，分别用于控制不同的系统资源。如下：
+  - 通过将 subsystem 关联到 hierarchy 的方式，控制 cgroup 内进程占用的系统资源。
+    - 每个 subsystem 同时只能关联一个 hierarchy 。
+    - 每个 hierarchy 同时可以关联多个 subsystem 。
+  - subsystem 分为多种类型：
     ```sh
-    cpu         # 限制 CPU 使用率
-    cpuacct     # 统计 CPU 使用率
-    cpuset      # 绑定cgroup到指定CPUs和NUMA节点
-    memory      # 统计、限制内存使用率，包括process memory、kernel memory、swap
-    devices     # 限制cgroup访问设备的权限
-    freezer     # suspend和restore一个cgroup中的所有进程。
-    net_cls     # 将一个cgroup中进程创建的所有网络包加上一个classid标记，用于tc和iptables。 只对发出去的网络包生效，对收到的网络包不起作用。
-    blkio       # 限制cgroup访问块设备的IO速度
-    perf_event  # 对cgroup进行性能监控
-    net_prio    # 针对每个网络接口设置cgroup的访问优先级
-    hugetlb     # 限制cgroup的huge pages的使用量
-    pids        # 限制一个cgroup及其子孙cgroup中的总进程数
+    pids        # 限制、统计进程总数，包括 Cgroup 当前节点及其子节点
+
+    cpu         # 限制 CPU 使用量。只会在 CPU 忙碌时限制，如果 CPU 不忙碌则不限制
+    cpuacct     # 统计 CPU 使用量
+    cpuset      # 只允许使用 CPU 的指定核
+
+    memory      # 统计、限制内存的使用量
+
+    blkio       # 限制对块设备的 IO 速度
+    devices     # 控制能否访问设备
+    freezer     # 暂停或恢复进程
+    hugetlb     # 限制 huge page 的使用量
+    perf_event  # 允许进程被 perf 命令监控
+
+    net_prio    # 设置对网络接口的访问优先级
+    net_cls     # 通过等级识别符 (classid) 标记进程发出的网络数据包，便于被 iptables 等工具统计
+    ```
+    每种 subsystem 会包含一组配置文件，比如：
+    ```sh
+    pids.max                  # 限制进程总数，取值为 max 则不限制
+    pids.current              # 记录当前的进程总数
+
+    cpu.cfs_period_us         # 设置一个周期的长度，单位为 ms
+    cpu.cfs_quota_us          # 限制每个周期内占用 CPU 的最大时长
+
+    memory.limit_in_bytes     # 限制进程最大的内存使用量，取值为 -1 则不限制
+    memory.usage_in_bytes     # 记录进程当前的内存使用量
+    memory.oom_control        # 取值为 0 时，如果进程的内存使用量超过限制，则通过 OOM 杀死进程。取值为 1 时，禁用 OOM-killer ，只是暂停进程
     ```
 
 #### 查看
@@ -189,14 +212,14 @@
   1:name=systemd:/user.slice/user-1000.slice/session-3785.scope
   ```
   - 每行的三个字段分别表示：
-    - cgroup ID
-    - cgroup 绑定的所有 subsystem 的名称，用逗号分隔
+    - cgroup ID 。
+    - cgroup 绑定的所有 subsystem 的名称，用逗号分隔。
       - `name=systemd` 表示没有绑定 subsystem ，只是定义了名称。
     - 进程在 cgroup 树中的路径。
       - 这是对于挂载点的相对路径，以 / 开头。
   - 对于 Cgroup v2 ，每行总是显示成 `0::<PATH>` 的格式。
 
-- 例：查看系统所有 subsystem 的统计信息
+- 例：查看系统的所有 subsystem
   ```sh
   [root@CentOS ~]# cat /proc/cgroups
   #subsys_name    hierarchy       num_cgroups     enabled
@@ -219,33 +242,32 @@
     - 关联的 cgroup 中的进程数
     - 是否启用
 
-- libcgroup-tools ：一个查看、配置 Cgroup 的工具包。
-  - 安装：`yum install -y libcgroup-tools`
-  - 命令：
-    ```sh
-    lscgroup        # 显示本机的所有 cgroup ，格式为 subsystem_type:cgroup_path
-    ```
-    ```sh
-    lssubsys        # 显示已挂载的 subsystem
-            -a      # 显示所有 subsystem
-            -i      # 增加显示每个 subsystem 关联的 hierarchy ID
-            -m      # 增加显示每个 subsystem 的挂载点
-    ```
-
 #### 创建
 
 创建 Cgroup 的示例：
-1. 创建 hierarchy ：
+1. 通过挂载文件系统的方式，创建 hierarchy ：
     ```sh
-    [root@CentOS ~]# mkdir -p /cgroup/hierarchy_1
-    [root@CentOS ~]# mount -t cgroup -o none,name=hierarchy_1  hierarchy_1  /cgroup/hierarchy_1
+    mkdir -p /cgroup/hierarchy_1
+
+    # 挂载一个 cgroup 类型的虚拟文件系统，作为 hierarchy ，命名为 hierarchy_1 。默认关联所有 subsystem
+    # mount -t cgroup hierarchy_1 /cgroup/hierarchy_1
+
+    # 可以通过 -o 选项传入一些参数，这里是只关联指定的 subsystem
+    # mount -t cgroup -o cpuset,cpuacct hierarchy_1 /cgroup/hierarchy_1
+
+    # 挂载 hierarchy ，关联的 subsystem 为空
+    mount -t cgroup -o none,name=subsystem_1  hierarchy_1  /cgroup/hierarchy_1
     ```
-    - 这里是挂载一个 cgroup 类型的虚拟文件系统，作为 hierarchy ，并用 -o 选项传入一些参数。
+    - 如果使用的 subsystem 已经被关联，则挂载 hierarchy 时会报错：
+      ```sh
+      mount: hierarchy_1 is already mounted or /cgroup/hierarchy_1 busy
+      ```
     - 删除 hierarchy 的命令：
       ```sh
       umount      /cgroup/hierarchy_1
       /bin/rm -r  /cgroup/hierarchy_1
       ```
+
 2. hierarchy 在挂载之后会自动创建 root cgroup 节点，生成一些默认文件。如下：
     ```sh
     [root@CentOS ~]# cd /cgroup/hierarchy_1
@@ -284,6 +306,7 @@
     -rw-r--r--. 1 root root 0 Mar 26 17:35 tasks
     [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cat cgroup.procs  # 非 root cgroup 的节点，默认不包含任何进程
     ```
+
 4. 在 cgroup 节点中增加进程：
     ```sh
     [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo 1 >> cgroup.procs   # 向该 cgroup 分组加入一个进程，这会自动将该进程移出之前的 cgroup
@@ -300,11 +323,11 @@
     11
     12
     13
-    [root@test236 /cgroup/hierarchy_1/cgroup_1]# cat ../cgroup.procs >> cgroup.procs  # 每次只能加入一个 PID
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cat ../cgroup.procs >> cgroup.procs # 每次只能加入一个 PID
     cat: write error: Argument list too long
-    [root@test236 /cgroup/hierarchy_1/cgroup_1]# echo 3 >> cgroup.procs               # 不能加入不存在的进程的 PID
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo 3 >> cgroup.procs              # 不能加入不存在的进程的 PID
     -bash: echo: write error: No such process
-    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo > cgroup.procs                   # 只能在 cgroup 中加入进程，不支持删除进程
+    [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo > cgroup.procs                 # 只能在 cgroup 中加入进程，不支持删除进程
     [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cat cgroup.procs
     1
     [root@CentOS /cgroup/hierarchy_1/cgroup_1]# echo $$ > cgroup.procs  # 加入当前终端的 PID
@@ -321,14 +344,51 @@
     - 非 root 用户只能修改自己进程所属的 cgroup 。
     - 非空节点的 cgroup 不允许被删除：
       ```sh
-      [root@test236 /cgroup/hierarchy_1/cgroup_1]# cd ..
-      [root@test236 /cgroup/hierarchy_1]# /bin/rm -r cgroup_1/
+      [root@CentOS /cgroup/hierarchy_1/cgroup_1]# cd ..
+      [root@CentOS /cgroup/hierarchy_1]# /bin/rm -r cgroup_1/
       /bin/rm: cannot remove ‘cgroup_1/cgroup.clone_children’: Operation not permitted
       /bin/rm: cannot remove ‘cgroup_1/cgroup.event_control’: Operation not permitted
       /bin/rm: cannot remove ‘cgroup_1/notify_on_release’: Operation not permitted
       /bin/rm: cannot remove ‘cgroup_1/cgroup.procs’: Operation not permitted
       /bin/rm: cannot remove ‘cgroup_1/tasks’: Operation not permitted
       ```
+
+#### libcgroup-tools
+
+：一个查看、配置 Cgroup 的工具包。
+- 安装：`yum install -y libcgroup-tools`
+- 命令：
+  ```sh
+  lscgroup        # 显示本机的所有 cgroup
+  ```
+  ```sh
+  lssubsys        # 显示已挂载的 subsystem
+          -a      # 显示所有 subsystem
+          -m      # 增加显示每个 subsystem 的挂载点
+          -i      # 增加显示每个 subsystem 关联的 hierarchy ID
+  ```
+  ```sh
+  cgdelete [<controllers>:<path>]...  # 删除 cgroup
+  ```
+- 例：
+  ```sh
+  [root@CentOS ~]# lscgroup
+  ...
+  cpu,cpuacct:/               # 每行的格式为 <controllers>:<path> ，即 subsystem 的类型、cgroup 在 hierarchy 下的相对路径
+  cpu,cpuacct:/docker
+  cpu,cpuacct:/docker/baf31e1d1a0b055b7f7d9947ec035d716a2d7788ee47473f85f9f4061633fabe
+  cpu,cpuacct:/docker/ba919a1393fbd560291ec8dd28eedf12b1e6ce4f0c1ab4df04d929074a436661
+  cpu,cpuacct:/user.slice
+  cpu,cpuacct:/system.slice
+  cpu,cpuacct:/system.slice/iptables.service
+  cpu,cpuacct:/system.slice/run-user-1000.mount
+  cpu,cpuacct:/system.slice/crond.service
+  cpuset:/
+  cpuset:/docker
+  cpuset:/docker/baf31e1d1a0b055b7f7d9947ec035d716a2d7788ee47473f85f9f4061633fabe
+  cpuset:/docker/ba919a1393fbd560291ec8dd28eedf12b1e6ce4f0c1ab4df04d929074a436661
+  name=subsystem_1:/
+  ```
 
 ### layer
 

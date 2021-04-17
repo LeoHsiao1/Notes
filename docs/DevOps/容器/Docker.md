@@ -133,7 +133,7 @@
 - Cgroup 的版本：
   - v1
   - v2
-    <!-- - 将所有的 subsystem 挂载到一个 unified hierarchy 的根节点。叶子结点负责关联 cgroup ，非叶子结点负责关联 subsystem 。 -->
+    <!-- - 将所有的 subsystem 挂载到一个 unified hierarchy 的根节点。叶子结点负责关联 cgroup 。 -->
 
 #### 主要概念
 
@@ -147,10 +147,10 @@
 - hierarchy
   - ：层级，是由多个 cgroup 实例以目录树的形式组成，又称为 cgroup 树。
   - 以挂载文件系统的方式，创建 hierarchy 。
-    - 通过在 hierarchy 目录下创建、删除子目录、孙目录的方式，创建、删除 cgroup 节点。
-    - 创建 hierarchy 时，根路径下的 cgroup 节点是第一个创建的节点，称为 root cgroup 。
+    - 通过在 hierarchy 目录下创建、删除子目录的方式，创建、删除 cgroup 节点。
     - cgroup 子节点默认继承父节点的属性。
     - 如果一个 cgroup 节点不包含任何进程，也没有子节点，则称为空节点，允许被删除。
+    - 创建 hierarchy 时，根路径下的 cgroup 节点是第一个创建的节点，称为 root cgroup 。
   - 每个进程同时可以存在于多个 hierarchy 中。
     - 在同一个 hierarchy 中，每个进程同时只能属于一个 cgroup ，但可以切换到其它 cgroup 。
 - subsystem
@@ -171,9 +171,70 @@
     pids        # 限制一个cgroup及其子孙cgroup中的总进程数
     ```
 
-#### 示例
+#### 查看
 
-使用 Cgroup 的基本步骤：
+- 例：查看指定进程的 cgroup 信息
+  ```sh
+  [root@CentOS ~]# cat /proc/$$/cgroup
+  11:memory:/user.slice
+  10:cpuset:/
+  9:cpuacct,cpu:/user.slice
+  8:hugetlb:/
+  7:net_prio,net_cls:/
+  6:devices:/user.slice
+  5:freezer:/
+  4:blkio:/user.slice
+  3:pids:/user.slice
+  2:perf_event:/
+  1:name=systemd:/user.slice/user-1000.slice/session-3785.scope
+  ```
+  - 每行的三个字段分别表示：
+    - cgroup ID
+    - cgroup 绑定的所有 subsystem 的名称，用逗号分隔
+      - `name=systemd` 表示没有绑定 subsystem ，只是定义了名称。
+    - 进程在 cgroup 树中的路径。
+      - 这是对于挂载点的相对路径，以 / 开头。
+  - 对于 Cgroup v2 ，每行总是显示成 `0::<PATH>` 的格式。
+
+- 例：查看系统所有 subsystem 的统计信息
+  ```sh
+  [root@CentOS ~]# cat /proc/cgroups
+  #subsys_name    hierarchy       num_cgroups     enabled
+  cpuset          10              5               1
+  cpu             9               71              1
+  cpuacct         9               71              1
+  memory          11              71              1
+  devices         6               71              1
+  freezer         5               5               1
+  net_cls         7               5               1
+  blkio           4               71              1
+  perf_event      2               5               1
+  hugetlb         8               5               1
+  pids            3               71              1
+  net_prio        7               5               1
+  ```
+  - 四列分别表示 subsystem 的：
+    - 名称
+    - 关联的 hierarchy ID
+    - 关联的 cgroup 中的进程数
+    - 是否启用
+
+- libcgroup-tools ：一个查看、配置 Cgroup 的工具包。
+  - 安装：`yum install -y libcgroup-tools`
+  - 命令：
+    ```sh
+    lscgroup        # 显示本机的所有 cgroup ，格式为 subsystem_type:cgroup_path
+    ```
+    ```sh
+    lssubsys        # 显示已挂载的 subsystem
+            -a      # 显示所有 subsystem
+            -i      # 增加显示每个 subsystem 关联的 hierarchy ID
+            -m      # 增加显示每个 subsystem 的挂载点
+    ```
+
+#### 创建
+
+创建 Cgroup 的示例：
 1. 创建 hierarchy ：
     ```sh
     [root@CentOS ~]# mkdir -p /cgroup/hierarchy_1
@@ -268,52 +329,6 @@
       /bin/rm: cannot remove ‘cgroup_1/cgroup.procs’: Operation not permitted
       /bin/rm: cannot remove ‘cgroup_1/tasks’: Operation not permitted
       ```
-
-- 例：查看指定进程的 cgroup 信息
-  ```sh
-  [root@CentOS ~]# cat /proc/$$/cgroup
-  11:memory:/user.slice
-  10:cpuset:/
-  9:cpuacct,cpu:/user.slice
-  8:hugetlb:/
-  7:net_prio,net_cls:/
-  6:devices:/user.slice
-  5:freezer:/
-  4:blkio:/user.slice
-  3:pids:/user.slice
-  2:perf_event:/
-  1:name=systemd:/user.slice/user-1000.slice/session-3785.scope
-  ```
-  - 每行的三个字段分别表示：
-    - cgroup ID
-    - cgroup 绑定的所有 subsystem 的名称，用逗号分隔
-      - `name=systemd` 表示没有绑定 subsystem ，只是定义了名称。
-    - 进程在 cgroup 树中的路径。
-      - 这是对于挂载点的相对路径，以 / 开头。
-  - 对于 Cgroup v2 ，每行总是显示成 `0::<PATH>` 的格式。
-
-- 例：查看系统所有 subsystem 的统计信息
-  ```sh
-  [root@CentOS ~]# cat /proc/cgroups
-  #subsys_name    hierarchy       num_cgroups     enabled
-  cpuset          10              5               1
-  cpu             9               71              1
-  cpuacct         9               71              1
-  memory          11              71              1
-  devices         6               71              1
-  freezer         5               5               1
-  net_cls         7               5               1
-  blkio           4               71              1
-  perf_event      2               5               1
-  hugetlb         8               5               1
-  pids            3               71              1
-  net_prio        7               5               1
-  ```
-  - 四列分别表示 subsystem 的：
-    - 名称
-    - 关联的 hierarchy 的 ID
-    - 关联的 cgroup 中的进程数
-    - 是否启用
 
 ### layer
 

@@ -17,7 +17,7 @@
 
 - `broker` ：代理服务器，负责存储、管理消息。
   - broker 会将消息以日志文件的形式存储，存放在 `logs/<topic>-<partition>/` 目录下，因此会受到文件系统的影响。
-  - 增加 broker 的数量，就可以提高 Kafka 集群的吞吐量。（不过会引发一次 rebalance）
+  - 增加 broker 的数量，就可以提高 Kafka 集群的吞吐量。
   - `Group Coordinator` ：在每个 broker 上都运行的一个进程，主要负责管理 Consumer Group、Consumer Rebalance、消息的 offset 。
 
 - `topic` ：主题，用于对消息进行分组管理。
@@ -108,6 +108,11 @@ Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如
   ```
 
 - 部署 Kafka 集群时，需要先部署 Zookeeper 集群，然后让每个 broker 服务器连接到 Zookeeper ，即可相互发现，组成集群。
+- 新增的 broker 加入集群之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
+  - 用官方脚本 bin/kafka-reassign-partitions.sh 将指定 topic 的所有分区迁移到指定 broker 上。
+  - 在 Kafka Manager 网页上迁移 topic 。
+    - 需要先点击 Generate Partition Assignments ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 Run Partition Assignments ，执行自动分配的策略。
+    - 如果该 topic 已经分配到这些 broker 上，则不会再重新分配。
 
 ## 配置
 
@@ -135,7 +140,6 @@ zookeeper.connection.timeout.ms=18000
  
 - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 IRS 中移除。
   - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
-
 
 ## ♢ kafka-Python
 

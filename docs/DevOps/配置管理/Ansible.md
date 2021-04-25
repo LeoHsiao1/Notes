@@ -79,12 +79,12 @@ Ansible 将待管理主机（称为 host）的配置信息保存在 .ini 文件�
 ```ini
 localhost ansible_connection=local    ; 定义一个不分组的 host ，连接方式为本机
 
-[web]                                 ; 定义一个组，名为 web
+[web_nodes]                           ; 定义一个组，名为 web_nodes
 www.example.com                       ; 添加一个 host 的地址
 10.0.0.1
 node100 ansible_host=10.0.0.2         ; 添加一个 host 的名字、地址
 
-[web:vars]                            ; 设置组 web 的参数
+[web_nodes:vars]                      ; 设置组 web_nodes 的参数
 ; ansible_connection=ssh              ; Ansible 的连接方式
 ; ansible_ssh_port=22                 ; SSH 登录时的端口号
 ansible_ssh_user='root'               ; SSH 登录时的用户名
@@ -103,9 +103,9 @@ ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需
 - 一个 host 可以同时属于多个组，甚至一个组可以是另一个组的成员。
 - 组名支持使用下标，如下：
   ```ini
-  web[0]    ; 选取第一个 host
-  web[0:4]  ; 选取第 0 ~ 4 个 host （包括第 4 个）
-  web[-1]
+  web_nodes[0]    ; 选取第一个 host
+  web_nodes[0:4]  ; 选取第 0 ~ 4 个 host （包括第 4 个）
+  web_nodes[-1]
   ```
 - Inventory 文件中以明文形式存储 SSH 密钥，需要小心泄露。比如将 Ansible 目录设置为只允许 root 用户访问：
   ```sh
@@ -143,10 +143,18 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 ### task
 
 - task 是 Ansible 执行任务的基本单位，而模块是 Ansible 执行任务的基本方式。每个 task 通过调用一个模块来实现某种操作。
-- Ansible 每执行一个 task 时，会生成一个临时的 .py 文件，传送到 host 上，用 python 解释器执行。如下：
-    ```sh
-    /bin/sh -c '/usr/bin/python /root/.ansible/tmp/ansible-tmp-xxx.py && sleep 0'
-    ```
+
+- Ansible 在执行 task 时，会为每个 host 创建一个子进程，然后通过 SSH 连接到 host ，执行任务。进程树如下：
+  ```sh
+  -bash
+  \_ /usr/bin/python3 /usr/local/bin/ansible web_nodes -m shell -a ping localhost
+      \_ /usr/bin/python3 /usr/local/bin/ansible web_nodes -m shell -a ping localhost
+      |   \_ sshpass -d11 ssh -C -o ControlMaster=auto -o ControlPersist=60s -o StrictHostKeyChecking=no -o User="root" -o ConnectTi
+  meout=10 -o ControlPath=/root/.ansible/cp/5d2a6a8c55 -tt 10.0.0.1 /bin/sh -c '/usr/bin/python2.7 /root/.ansible/tmp/ansible-tmp-1619313582.094223-15190-6242900803349/AnsiballZ_command.py && sleep 0'
+      \_ /usr/bin/python3 /usr/local/bin/ansible web_nodes -m shell -a ping localhost
+          \_ sshpass ...
+  ```
+  - 执行每个 task 时，会生成一个临时的 .py 文件，拷贝到 host 上，用 python 解释器执行。
 
 - 可以给 playbook 或 task 设置 become 选项，用于控制在 SSH 登录之后是否切换用户。如下：
   ```yaml

@@ -106,13 +106,22 @@ Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如
   bin/zookeeper-server-start.sh config/zookeeper.properties # 启动 zookeeper 服务器
   bin/kafka-server-start.sh config/server.properties        # 启动 kafka broker 服务器
   ```
+  - 部署 Kafka 集群时，需要先部署 Zookeeper 集群，然后让每个 broker 服务器连接到 Zookeeper ，即可相互发现，组成集群。
 
-- 部署 Kafka 集群时，需要先部署 Zookeeper 集群，然后让每个 broker 服务器连接到 Zookeeper ，即可相互发现，组成集群。
-- 新增的 broker 加入集群之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
+- 新增的 broker 加入 Kafka 集群之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
   - 用官方脚本 bin/kafka-reassign-partitions.sh 将指定 topic 的所有分区迁移到指定 broker 上。
   - 在 Kafka Manager 网页上迁移 topic 。
-    - 需要先点击 Generate Partition Assignments ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 Run Partition Assignments ，执行自动分配的策略。
+    - 需要到 Topic 列表页面，点击 Generate Partition Assignments ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 Run Partition Assignments ，执行自动分配的策略。
+    - 可以到 Reassign Partitions 页面，查看正在执行的自动分配策略。
     - 如果该 topic 已经分配到这些 broker 上，则不会再重新分配。
+
+- 停止 Kafka broker 时，可以使用官方脚本 `bin/kafka-server-stop.sh` 。
+  - 它会查找本机上的所有 kafka 进程，发送 SIGTERM 信号。
+  - Kafka 进程收到终止信号后，会将所有数据保存到磁盘中，才退出，该过程需要几秒甚至几十秒。
+  - 如果强制杀死 Kafka 进程，可能导致数据丢失。重启时会发出警告：
+    ```sh
+    WARN  Found a corrupted index file, xxxx/0000000000000000xxxx.index, deleting and rebuilding index... (kafka.log.Log)
+    ```
 
 ## 配置
 

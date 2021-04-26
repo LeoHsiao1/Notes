@@ -8,10 +8,12 @@
 
 ## 原理
 
-- 基本架构：运行一些 broker 服务器组成 Kafka 集群，而用户通过客户端连接到 broker ，作为 Producer 生产消息，或者作为 Consumer 消费消息。
+- 基本架构：
+  - 运行一些 broker 服务器组成 Kafka 集群。
+  - 用户运行客户端程序，连接到 broker ，作为 Producer 生产消息，或者作为 Consumer 消费消息。
 - Kafka 在逻辑上根据 topic 对消息进行分组，在存储时将每个 topic 分成多个 partition ，并且每个 partition 会存储多个 replica 。
-- Kafka 会尽量将同一 Topic 的各个 partition、同一 partition 的各个 replica 存储到不同的 broker 上，从而抵抗单点故障。
-  而客户端只需要连接 broker 就能生产、消费消息，不需要关心消息的实际存储位置。
+  - Kafka 会尽量将同一 Topic 的各个 partition、同一 partition 的各个 replica 存储到不同的 broker 上，从而抵抗单点故障。\
+    而客户端只需要连接 broker 就能生产、消费消息，不需要关注消息的实际存储位置。
 
 ### broker
 
@@ -123,7 +125,23 @@ Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如
     WARN  Found a corrupted index file, xxxx/0000000000000000xxxx.index, deleting and rebuilding index... (kafka.log.Log)
     ```
 
-## 配置
+### 版本
+
+- v0.7.0 ：于 2012 年发布。
+- v0.10.0.0 ：于 2016 年发布。
+  - 引入了 Kafka Stream 。
+- v0.11.0.0 ：于 2017 年发布。
+  - 改进了消息格式。
+  - 提供幂等性的 Producer API 。
+  - 支持事务。
+- v1.0.0 ：于 2017 年底发布。
+- v2.0.0 ：于 2018 年发布。
+
+总结：
+- 例如 kafka_2.13-2.6.0.tgz ，前面的 2.13 是指 Scala 编译器的版本，后面的 2.6.0 是指 Kafka 的版本。
+- 使用 Kafka 时，应该尽量让客户端与服务器的版本一致。
+
+### 配置
 
 server.properties 的配置示例：
 ```sh

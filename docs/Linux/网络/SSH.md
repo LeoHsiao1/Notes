@@ -30,14 +30,15 @@ AllowGroups *                     # 只允许这些用户组进行 SSH 登录
 Protocol 2                        # SSH 协议的版本
 HostKey /etc/ssh/ssh_host_rsa_key # 使用 SSH2 时，RSA 私钥的位置
 
-PermitRootLogin yes               # 允许 root 用户登录
 MaxAuthTries 6                    # 每个 TCP 连接的最多认证次数。如果客户端输错密码的次数达到该值的一半，则断开连接
 MaxSessions 10                    # 最多连接的终端数
 
+PermitRootLogin yes               # 允许 root 用户登录
 PasswordAuthentication yes        # 允许使用密码登录（否则只能使用 SSH 私钥登录）
 PermitEmptyPasswords no           # 不允许使用空密码登录
 
-StrictModes yes                   # 在 SSH 认证时检查用户的家目录、authorized_keys 等文件是否只被用户拥有写权限
+UseDNS no                         # 不检查目标主机的主机名、 IP 是否与 DNS 一致，否则会增加建立 SSH 连接的耗时
+StrictModes yes                   # 在 SSH 认证时检查用户的家目录、authorized_keys 等文件是否只被该用户拥有写权限
 ```
 - 修改了配置文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
 - `~/.ssh/authorized_keys` 文件中保存了一些公钥，允许客户端使用对应的私钥进行 SSH 认证，登录到本机。

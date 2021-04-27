@@ -77,22 +77,35 @@ services:                     # 开始定义服务
       network: host
       args:
         arg1: Hello
-    working_dir: /opt         # 工作目录
-    hostname: CentOS          # 主机名
-    command: [tail, -f, /dev/null]  # 启动命令
-    init: true                # 使用 init 作为 1 号进程
     restart: unless-stopped   # 重启策略
     depends_on:               # 依赖关系
       - redis                 # 这表示：如果启动 web 服务，则会自动先启动 redis 服务；如果停止 redis 服务，则会自动先停止 web 服务
-    environment:              # 环境变量
-      var1: 1
-      var2: hello
+    
+    init: true                # 使用 init 作为 1 号进程
+    hostname: CentOS          # 主机名
+    working_dir: /opt         # 工作目录
+    entrypoint: ["echo", "1"]       # 覆盖 Dockerfile 中的 ENTRYPOINT
+    command: [tail, -f, /dev/null]  # 覆盖 Dockerfile 中的 CMD
+    
+    environment:              # 环境变量，采用数组的格式声明
+      - var1=1
+      - var2=hello
+    # environment:            # 也可以采用键值对的格式声明
+    #   var1: 1
+    #   var2: hello
+    env_file:                 # 从文件中导入环境变量，这些文件中每行为 VAR=VALUE 的格式，用 # 声明单行注释
+      - ./test.env
+      - /etc/test.env
+
     ports:                    # 映射端口
       - 9000:8000             # 注意这里的每行配置是一个字符串，因此冒号 : 之后不能加空格
       - 9090-9091:8080-8081
     networks:                 # 连接到的 docker 网络
       - net
     # network_mode: host      # 网络模式，不能与 networks 同时配置
+    dns:                      # 指定 DNS 服务器
+      - 8.8.8.8
+      
     volumes:                  # 挂载目录
       - /root/data:/root/data # 可以直接挂载目录
       - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）

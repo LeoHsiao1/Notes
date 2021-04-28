@@ -31,7 +31,7 @@ client 提供了与 Redis 大部分命令同名的方法，例如：
   - `def mset(mapping)`
   - `def get(name)`
   - `def mget(*names)`
-  
+
 - hash 类型的方法
   - `def hset(name, key, value)`
   - `def hget(name, key)`

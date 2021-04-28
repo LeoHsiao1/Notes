@@ -7,10 +7,10 @@
 连接到数据库：
 ```py
 >>> import sqlite3
->>> 
+>>>
 >>> db = sqlite3.connect("db.sqlite3")      # 连接到一个 SQLite 数据库，如果该文件不存在则自动创建
 >>> # db = sqlite3.connect(":memory:")      # 在内存中打开一个数据库
->>> 
+>>>
 >>> db.execute("CREATE table table1(id INTEGER PRIMARY KEY, name TEXT)") # 执行一条 SQL 命令
 <sqlite3.Cursor object at 0x000001715CB4BCE0>
 ```
@@ -21,7 +21,7 @@
 <sqlite3.Cursor object at 0x000001715CBDB9D0>
 >>> db.execute("INSERT INTO table1 (id,name) VALUES (?, ?)", (2, 'two')) # 输入 SQL 模板和参数
 <sqlite3.Cursor object at 0x000001715CB4BCE0>
->>> 
+>>>
 >>> datas = [(i, str(id(i))) for i in range(3, 10)]
 >>> db.executemany("INSERT INTO table1 (id, name) VALUES (?, ?)", datas) # 插入多行数据
 <sqlite3.Cursor object at 0x000001715CBDB9D0>
@@ -40,7 +40,7 @@
 (2, 'two')
 (3, '140708040237776')
 ...etc...
->>> 
+>>>
 >>> ret = db.execute("select * FROM table1 WHERE id=? AND name=?", (1, "one"))   # 输入 SQL 模板和参数
 >>> ret
 <sqlite3.Cursor object at 0x000001715CBDB9D0>

@@ -10,7 +10,6 @@
   - [MySQL](MySQL/MySQL.md)
   - [部署](MySQL/部署.md)
   - [配置](MySQL/配置.md)
-  - [访问权限](MySQL/访问权限.md)
   - [管理单元](MySQL/管理单元.md)
   - [数据类型](MySQL/数据类型.md)
   - [函数](MySQL/函数.md)

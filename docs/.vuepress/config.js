@@ -438,7 +438,6 @@ module.exports = {
                         'MySQL/MySQL',
                         'MySQL/部署',
                         'MySQL/配置',
-                        'MySQL/访问权限',
                         'MySQL/管理单元',
                         'MySQL/数据类型',
                         'MySQL/函数',

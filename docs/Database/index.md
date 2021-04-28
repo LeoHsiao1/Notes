@@ -23,7 +23,6 @@
   - [部署](MongoDB/部署.md)
   - [访问权限](MongoDB/访问权限.md)
   - [管理单元](MongoDB/管理单元.md)
-  - [其它功能](MongoDB/其它功能.md)
   - [性能优化](MongoDB/性能优化.md)
   - [♢ pymongo](MongoDB/pymongo.md)
 - Redis

@@ -455,7 +455,6 @@ module.exports = {
                         'MongoDB/部署',
                         'MongoDB/访问权限',
                         'MongoDB/管理单元',
-                        'MongoDB/其它功能',
                         'MongoDB/性能优化',
                         'MongoDB/pymongo',
                     ]

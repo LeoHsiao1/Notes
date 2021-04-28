@@ -443,7 +443,6 @@ module.exports = {
                         'MySQL/数据类型',
                         'MySQL/函数',
                         'MySQL/存储引擎',
-                        'MySQL/备份数据',
                         'MySQL/性能优化',
                         'MySQL/PyMySQL',
                         'MySQL/SQLAlchemy',

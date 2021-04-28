@@ -15,7 +15,6 @@
   - [数据类型](MySQL/数据类型.md)
   - [函数](MySQL/函数.md)
   - [存储引擎](MySQL/存储引擎.md)
-  - [备份数据](MySQL/备份数据.md)
   - [性能优化](MySQL/性能优化.md)
   - [♢ PyMySQL](MySQL/PyMySQL.md)
   - [♢ SQLAlchemy](MySQL/SQLAlchemy.md)

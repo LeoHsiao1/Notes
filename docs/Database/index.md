@@ -20,7 +20,7 @@
 - MongoDB
   - [MongoDB](MongoDB/MongoDB.md)
   - [部署](MongoDB/部署.md)
-  - [访问权限](MongoDB/访问权限.md)
+  - [配置](MongoDB/配置.md)
   - [管理单元](MongoDB/管理单元.md)
   - [性能优化](MongoDB/性能优化.md)
   - [♢ pymongo](MongoDB/pymongo.md)

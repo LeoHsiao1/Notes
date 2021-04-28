@@ -27,6 +27,7 @@
 - Redis
   - [Redis](Redis/Redis.md)
   - [部署](Redis/部署.md)
+  - [配置](Redis/配置.md)
   - [管理单元](Redis/管理单元.md)
   - [数据类型](Redis/数据类型.md)
   - [其它功能](Redis/其它功能.md)

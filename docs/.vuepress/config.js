@@ -463,6 +463,7 @@ module.exports = {
                     children: [
                         'Redis/Redis',
                         'Redis/部署',
+                        'Redis/配置',
                         'Redis/管理单元',
                         'Redis/数据类型',
                         'Redis/其它功能',

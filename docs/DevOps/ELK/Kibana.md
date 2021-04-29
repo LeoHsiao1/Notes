@@ -11,7 +11,7 @@
     ```yml
     server.port: 5601           # Kibana 监听的端口
     server.host: '0.0.0.0'      # Kibana 监听的 IP
-    server.name: 'kibana'       # 服务器显示的名称
+    server.name: kibana         # 服务器显示的名称
 
     elasticsearch.hosts: ['http://10.0.0.1:9200']   # 连接到 ES ，可以指定多个 host ，如果前一个不能访问则使用后一个
     # elasticsearch.username: 'admin'

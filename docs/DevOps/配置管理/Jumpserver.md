@@ -56,7 +56,7 @@ sh jmsctl.sh
               stop
               status
 ```
-- 部署主机至少需要 4G 内存。
+- 部署时至少需要 4G 内存。
 - 基于 docker-compose 启动。
 
 ## 配置

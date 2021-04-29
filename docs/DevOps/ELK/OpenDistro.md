@@ -12,20 +12,21 @@
 ## 部署
 
 - 可以部署 Open Distro 整合版，也可以给普通的 ES、Kibana 软件安装一些 Open Distro 插件（这需要考虑版本兼容性）。
-- 用 docker-compose 部署整合版：
+- 用 docker-compose 部署整合版的 ES、Kibana ：
   ```yml
   version: '3'
 
   services:
     elasticsearch:
-      image: amazon/opendistro-for-elasticsearch:1.13.0
       container_name: elasticsearch
+      image: amazon/opendistro-for-elasticsearch:1.13.0
       restart: unless-stopped
       network_mode:
         host            # 使用宿主机的网卡，以便绑定宿主机的对外 IP
       volumes:
-        - ./elasticsearch/data:/usr/share/elasticsearch/data
-      #  - ./elasticsearch/config:/usr/share/elasticsearch/config
+      #  - ./config:/usr/share/elasticsearch/config
+        - ./data:/usr/share/elasticsearch/data
+        - ./logs:/usr/share/elasticsearch/logs
       ulimits:
         memlock:
           soft: -1
@@ -33,25 +34,27 @@
         nofile:
           soft: 65536
           hard: 65536
+  ```
+  ```yml
+  version: '3'
 
+  services:
     kibana:
-      image: amazon/opendistro-for-elasticsearch-kibana:1.13.0
       container_name: kibana
+      image: amazon/opendistro-for-elasticsearch-kibana:1.13.0
       restart: unless-stopped
-      depends_on:
-        - elasticsearch
       ports:
         - 5601:5601
       volumes:
-       - ./kibana/data:/usr/share/kibana/data
-      # - ./kibana/config:/usr/share/kibana/config
+      #  - ./config:/usr/share/kibana/config
+        - ./data:/usr/share/kibana/data
   ```
   - 容器内以非 root 用户运行服务，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
     ```sh
-    mkdir -p elasticsearch/data elasticsearch/config kibana/data kibana/config
-    chown -R 1000 elasticsearch kibana
+    mkdir -p  config data logs
+    chown -R 1000 .
     ```
-  - 先不挂载配置目录，启动一次。然后将容器内的 config 目录拷贝出来（包含了自动生成的 pem 文件），修改之后再挂载配置目录，重新启动容器。
+  - 可以先不挂载配置目录，启动一次。然后将容器内的 config 目录拷贝出来，修改之后再挂载配置目录，重新启动容器。
 
 ## 配置
 

@@ -5,33 +5,55 @@
 
 ## 部署
 
-1. 下载二进制版：
-    ```sh
-    wget https://artifacts.elastic.co/downloads/logstash/logstash-7.10.0-linux-x86_64.tar.gz
-    ```
+- 下载二进制版：
+  ```sh
+  wget https://artifacts.elastic.co/downloads/logstash/logstash-7.10.0-linux-x86_64.tar.gz
+  ```
+  然后启动：
+  ```sh
+  bin/logstash
+                -f PATH                     # --path.config ，指定配置文件的目录
+                -e STRING                   # --config.string ，传入一个字符串作为配置
+                --config.reload.automatic   # 发现配置文件变化时，自动重新加载
+                --log.level=info            # 指定日志等级
+                -V                          # 显示版本号
+  ```
 
-2. 启动：
-    ```sh
-    bin/logstash
-                  -f CONFIG_FILE              # 指定配置文件的路径
-                  -e CONFIG_STRING            # 传入一个字符串作为配置
-                  --config.reload.automatic   # 发现配置文件变化时，自动重新加载
-                  --log.level=info            # 指定日志等级
-                  -V                          # 显示版本号
-    ```
+- 或者用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    logstash:
+      container_name: logstash
+      image: logstash:7.10.0
+      restart: unless-stopped
+      ports:
+        - 5044:5044
+      volumes:
+        - ./config:/usr/share/logstash/config
+        - ./data:/usr/share/logstash/data
+  ```
 
 ## 配置
 
-- Logstash 的 config 目录下存在多个配置文件：
+- Logstash 的配置目录的结构如下：
   ```sh
   config/
+  ├── conf.d/               # 存放一些管道的定义文件
+  |   ├── a.conf
+  |   └── b.conf
   ├── jvm.options           # JVM 的配置
   ├── log4j2.properties     # 日志的配置
   ├── logstash.yml          # logstash 本身的配置
-  ├── pipeline.conf         # 用于处理日志数据的 pipeline
   ├── pipelines.yml
-  └── startup.options       # 启动时的配置
+  └── startup.options       # 自定义 logstash 的启动命令时的配置，供 systemd 等进程读取
   ```
+  - pipelines.yml 的内容如下，它会导入 conf.d/ 目录下定义的管道。
+    ```yml
+    - pipeline.id: main
+      path.config: "config/conf.d/*.conf"
+    ```
 
 - jvm.options 的配置示例：
   ```sh

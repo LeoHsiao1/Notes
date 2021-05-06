@@ -5,7 +5,9 @@
 - 基于 Java 开发，由 ASF 管理。
 - 功能丰富，支持 JMS、AMQP、STOMP、MQTT 等多种协议。
 
-## 单点部署
+## 部署
+
+### 单示例
 
 - 先安装 JRE 1.7+ 环境，然后下载二进制版：
   ```sh
@@ -20,6 +22,17 @@
               restart
               status    # 显示运行状态
   ```
+
+### 集群
+
+ActiveMQ 集群主要有两种架构：
+- Master-Slave 集群
+  - ：一个节点为 Master ，其它节点为 slave 。由 Master 节点提供服务。当 Master 节点宕机后，选出一个 Slave 节点作为新的 Master 节点。
+  - 优点是可以保证服务的高可用性，缺点是不能解决负载均衡和分布式的问题。
+- Broker Cluster 集群
+  - ：各个 broker 互相连通，共享消息队列，同时提供服务。
+  - 优点是可以解决负载均衡和分布式的问题，缺点是不能保证服务的高可用性。
+  - 一般将 Master-Slave 和 Broker Cluster 两种方式结合使用。
 
 ## 配置
 
@@ -42,12 +55,3 @@
   </transportConnectors>
   ```
   通常使用 TCP 端口 61616 。
-
-## 集群部署
-
-ActiveMQ 集群主要有两种架构：
-- Master-Slave 集群：一个节点为 Master ，其它节点为 slave 。由 Master 节点提供服务。当 Master 节点宕机后，选出一个 Slave 节点作为新的 Master 节点。
-  - 优点是可以保证服务的高可用性，缺点是不能解决负载均衡和分布式的问题。
-- Broker Cluster 集群：各个 broker 互相连通，共享消息队列，同时提供服务。
-  - 优点是可以解决负载均衡和分布式的问题，缺点是不能保证服务的高可用性。
-- 一般将 Master-Slave 和 Broker Cluster 两种方式结合使用。

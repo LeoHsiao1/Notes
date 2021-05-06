@@ -23,38 +23,55 @@
 
 ## 部署
 
-1. 下载二进制版并解压：
-    ```sh
-    wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
-    ```
+- 下载二进制版：
+  ```sh
+  wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
+  ```
+  解压后运行：
+  ```sh
+  bin/zkServer.sh
+                  start               # 在后台启动
+                  start-foreground    # 在前台启动
+                  stop
+                  restart
+                  status              # 显示状态
+                  version             # 显示版本信息
+  ```
+- 或者用 docker-compose 部署：
+  ```yml
+  version: '3'
 
-2. 创建配置文件 `conf/zoo.cfg` ：
-    ```sh
-    clientPort=2181                 # 供客户端连接的端口
-    dataDir=/zk/data                # 数据目录
-    dataLogDir=/zk/log              # 日志目录
+  services:
+    zookeeper:
+      container_name: zookeeper
+      image: zookeeper:3.6.2
+      restart: unless-stopped
+      network_mode:
+        host
+      volumes:
+        - ./conf:/conf
+        - ./data:/data
+        - ./log:/datalog
+  ```
 
-    tickTime=2000                   # 向其它 server 、client 发送心跳包的时间间隔（ms）
-    initLimit=5                     # server 初始化连接到 leader 的超时时间，单位为 tickTime
-    syncLimit=2                     # server 与 leader 之间通信（请求、应答）的超时时间，单位为 tickTime
+## 配置
 
-    # 以下声明 Zookeeper 集群的所有 server
-    server.1=10.0.0.1:2888:3888     # 一个 server 的 IP 地址、与其它 server 通信的端口、用于 leader 选举的端口
-    server.2=10.0.0.2:2888:3888
-    server.3=10.0.0.3:2888:3888
-    ```
-    - 每个 server 启动之后，会根据 `$dataDir/myid` 的值确定自己的 server 编号。因此还需要在初次部署时创建 myid 文件，如下：
-      ```sh
-      echo 1 > $dataDir/myid
-      ```
+配置文件 `conf/zoo.cfg` 示例：
+```sh
+clientPort=2181                 # 供客户端连接的端口
+dataDir=/zk/data                # 数据目录
+dataLogDir=/zk/log              # 日志目录
 
-3. 启动 server ：
-    ```sh
-    bin/zkServer.sh
-                    start               # 在后台启动
-                    start-foreground    # 在前台启动
-                    stop
-                    restart
-                    status              # 显示状态
-                    version             # 显示版本信息
-    ```
+tickTime=2000                   # 向其它 server 、client 发送心跳包的时间间隔（ms）
+initLimit=5                     # server 初始化连接到 leader 的超时时间，单位为 tickTime
+syncLimit=2                     # server 与 leader 之间通信（请求、应答）的超时时间，单位为 tickTime
+
+# 以下声明 Zookeeper 集群的所有 server
+server.1=10.0.0.1:2888:3888     # 一个 server 的 IP 地址、与其它 server 通信的端口、用于 leader 选举的端口
+server.2=10.0.0.2:2888:3888
+server.3=10.0.0.3:2888:3888
+```
+- 每个 server 启动之后，会根据 `$dataDir/myid` 的值确定自己的 server 编号。因此初次部署时需要创建 myid 文件，如下：
+  ```sh
+  echo 1 > $dataDir/myid
+  ```

@@ -145,72 +145,6 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   - Kafka 官方没有提供 Docker 镜像，这里采用社区提供的一个镜像。
     - 该镜像会根据环境变量配置 server.properties 文件，这里直接挂载配置目录，通过 CUSTOM_INIT_SCRIPT 执行命令还原配置文件。
 
-### 命令行工具
-
-bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
-- `kafka-server-stop.sh` 用于停止 broker 进程。
-  - 它会查找本机上的所有 broker 进程，发送 SIGTERM 信号。
-    - broker 进程收到终止信号后，会将所有数据保存到磁盘中，才退出，该过程需要几秒甚至几十秒。
-  - 如果强制杀死 broker 进程，可能导致数据丢失。重启时会发出警告：
-    ```sh
-    WARN  Found a corrupted index file, xxxx/0000000000000000xxxx.index, deleting and rebuilding index... (kafka.log.Log)
-    ```
-
-- `kafka-topics.sh` 用于管理 topic 。
-  - 例：连接到 zk ，查询 topic 列表。
-    ```sh
-    ./kafka-topics.sh  --zookeeper localhost:2181  --list
-    ```
-  - 例：连接到 zk ，请求创建 topic ，并指定分区数、每个分区的副本数。
-    ```sh
-    ./kafka-topics.sh \
-        --zookeeper localhost:2181 \
-        --create \
-        --topic topic-1 \
-        --partitions 1 \
-        --replication-factor 1
-    ```
-  - 例：连接到 zk ，请求删除 topic 。
-    ```sh
-    ./kafka-topics.sh \
-        --zookeeper localhost:2181 \
-        --delete \
-        --topic topic-1
-    ```
-    - 这里将 --delete 选项改为 --describe ，就是查询 topic 的状态。
-
-- 运行生产者终端，从 stdin 读取消息并发送到 broker ：
-  ```sh
-  ./kafka-console-producer.sh \
-      --broker-list localhost:9092 \
-      --topic topic-1
-  ```
-
-- 运行消费者终端，读取消息并输出到 stdout ：
-  ```sh
-  ./kafka-console-consumer.sh \
-      --bootstrap-server localhost:9092 \
-      --topic topic-1 \
-      --from-beginning    # 从第一条消息开始消费
-  ```
-
-- 运行生产者的性能测试：
-  ```sh
-  ./kafka-producer-perf-test.sh \
-      --topic topic-1 \
-      --num-records 10000 \         # 发送多少条消息
-      --record-size 1024 \          # 每条消息的大小
-      --throughput 10000 \          # 限制每秒种发送的消息数
-      --producer.config ../config/producer.properties
-  ```
-
-- 给 Kafka 集群新增 broker 之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
-  - 使用 `kafka-reassign-partitions.sh` 脚本，将指定 topic 的所有分区迁移到指定 broker 上。
-  - 使用 Kafka Manager ，在网页上迁移 topic ，更方便。
-    - 需要到 Topic 列表页面，点击 Generate Partition Assignments ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 Run Partition Assignments ，执行自动分配的策略。
-    - 可以到 Reassign Partitions 页面，查看正在执行的自动分配策略。
-    - 如果该 topic 已经分配到这些 broker 上，则不会再重新分配。
-
 ### 版本
 
 - v0.7.0 ：于 2012 年发布。
@@ -227,7 +161,7 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
 - 例如 kafka_2.13-2.6.0.tgz ，前面的 2.13 是指 Scala 编译器的版本，后面的 2.6.0 是指 Kafka 的版本。
 - 使用 Kafka 时，应该尽量让客户端与服务器的版本一致。
 
-## 配置
+### 配置
 
 - kafka 的配置目录示例：
   ```sh
@@ -304,6 +238,72 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
     - 如果单个消息小于 batch.size ，生产者每批就可能发送多个消息。
     - 如果单个消息大于 batch.size ，依然会作为一批消息发送。但如果大于 max.request.size ，就不能发送。
     - 生产者的 batch.size 不能大于 max.request.size ，也不能大于 broker 的 message.max.bytes 。
+
+### 命令行工具
+
+bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
+- `kafka-server-stop.sh` 用于停止 broker 进程。
+  - 它会查找本机上的所有 broker 进程，发送 SIGTERM 信号。
+    - broker 进程收到终止信号后，会将所有数据保存到磁盘中，才退出，该过程需要几秒甚至几十秒。
+  - 如果强制杀死 broker 进程，可能导致数据丢失。重启时会发出警告：
+    ```sh
+    WARN  Found a corrupted index file, xxxx/0000000000000000xxxx.index, deleting and rebuilding index... (kafka.log.Log)
+    ```
+
+- `kafka-topics.sh` 用于管理 topic 。
+  - 例：连接到 zk ，查询 topic 列表。
+    ```sh
+    ./kafka-topics.sh  --zookeeper localhost:2181  --list
+    ```
+  - 例：连接到 zk ，请求创建 topic ，并指定分区数、每个分区的副本数。
+    ```sh
+    ./kafka-topics.sh \
+        --zookeeper localhost:2181 \
+        --create \
+        --topic topic-1 \
+        --partitions 1 \
+        --replication-factor 1
+    ```
+  - 例：连接到 zk ，请求删除 topic 。
+    ```sh
+    ./kafka-topics.sh \
+        --zookeeper localhost:2181 \
+        --delete \
+        --topic topic-1
+    ```
+    - 这里将 --delete 选项改为 --describe ，就是查询 topic 的状态。
+
+- 运行生产者终端，从 stdin 读取消息并发送到 broker ：
+  ```sh
+  ./kafka-console-producer.sh \
+      --broker-list localhost:9092 \
+      --topic topic-1
+  ```
+
+- 运行消费者终端，读取消息并输出到 stdout ：
+  ```sh
+  ./kafka-console-consumer.sh \
+      --bootstrap-server localhost:9092 \
+      --topic topic-1 \
+      --from-beginning    # 从第一条消息开始消费
+  ```
+
+- 运行生产者的性能测试：
+  ```sh
+  ./kafka-producer-perf-test.sh \
+      --topic topic-1 \
+      --num-records 10000 \         # 发送多少条消息
+      --record-size 1024 \          # 每条消息的大小
+      --throughput 10000 \          # 限制每秒种发送的消息数
+      --producer.config ../config/producer.properties
+  ```
+
+- 给 Kafka 集群新增 broker 之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
+  - 使用 `kafka-reassign-partitions.sh` 脚本，将指定 topic 的所有分区迁移到指定 broker 上。
+  - 使用 Kafka Manager ，在网页上迁移 topic ，更方便。
+    - 需要到 Topic 列表页面，点击 Generate Partition Assignments ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 Run Partition Assignments ，执行自动分配的策略。
+    - 可以到 Reassign Partitions 页面，查看正在执行的自动分配策略。
+    - 如果该 topic 已经分配到这些 broker 上，则不会再重新分配。
 
 ## ♢ kafka-Python
 

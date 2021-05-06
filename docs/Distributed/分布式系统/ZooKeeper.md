@@ -54,7 +54,7 @@
         - ./log:/datalog
   ```
 
-## 配置
+### 配置
 
 配置文件 `conf/zoo.cfg` 示例：
 ```sh

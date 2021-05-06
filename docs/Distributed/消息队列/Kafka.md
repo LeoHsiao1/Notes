@@ -118,19 +118,12 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   ```
   解压后运行：
   ```sh
-  bin/zookeeper-server-start.sh config/zookeeper.properties # 启动 zookeeper 服务器
-  bin/kafka-server-start.sh config/server.properties        # 启动 kafka broker 服务器
+  bin/zookeeper-server-start.sh config/zookeeper.properties   # 启动 zookeeper 服务器
+  bin/kafka-server-start.sh     config/server.properties      # 启动 kafka broker 服务器
   ```
   - 部署 Kafka 集群时，需要先部署 zk 集群，然后让每个 broker 服务器连接到 zk ，即可相互发现，组成集群。
+  - Kafka 发行版包含了 zk 的可执行文件，可以同时启动 kafka、zk 服务器，也可以在其它地方启动 zk 服务器。
   - broker 在 zk 注册自己的 IP、端口时，会尝试获取本机主机名对应的 IP ，因此需要先在 /etc/hosts 中添加 DNS 记录。
-
-- 停止 Kafka broker 时，可以使用官方脚本 `bin/kafka-server-stop.sh` 。
-  - 它会查找本机上的所有 kafka 进程，发送 SIGTERM 信号。
-  - Kafka 进程收到终止信号后，会将所有数据保存到磁盘中，才退出，该过程需要几秒甚至几十秒。
-  - 如果强制杀死 Kafka 进程，可能导致数据丢失。重启时会发出警告：
-    ```sh
-    WARN  Found a corrupted index file, xxxx/0000000000000000xxxx.index, deleting and rebuilding index... (kafka.log.Log)
-    ```
 
 - 或者用 docker-compose 部署 Kafka ：
   ```yml
@@ -152,9 +145,68 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   - Kafka 官方没有提供 Docker 镜像，这里采用社区提供的一个镜像。
     - 该镜像会根据环境变量配置 server.properties 文件，这里直接挂载配置目录，通过 CUSTOM_INIT_SCRIPT 执行命令还原配置文件。
 
-- 新增的 broker 加入 Kafka 集群之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
-  - 用官方脚本 bin/kafka-reassign-partitions.sh 将指定 topic 的所有分区迁移到指定 broker 上。
-  - 在 Kafka Manager 网页上迁移 topic 。
+### 命令行工具
+
+bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
+- `kafka-server-stop.sh` 用于停止 broker 进程。
+  - 它会查找本机上的所有 broker 进程，发送 SIGTERM 信号。
+    - broker 进程收到终止信号后，会将所有数据保存到磁盘中，才退出，该过程需要几秒甚至几十秒。
+  - 如果强制杀死 broker 进程，可能导致数据丢失。重启时会发出警告：
+    ```sh
+    WARN  Found a corrupted index file, xxxx/0000000000000000xxxx.index, deleting and rebuilding index... (kafka.log.Log)
+    ```
+
+- `kafka-topics.sh` 用于管理 topic 。
+  - 例：连接到 zk ，查询 topic 列表。
+    ```sh
+    ./kafka-topics.sh  --zookeeper localhost:2181  --list
+    ```
+  - 例：连接到 zk ，请求创建 topic ，并指定分区数、每个分区的副本数。
+    ```sh
+    ./kafka-topics.sh \
+        --zookeeper localhost:2181 \
+        --create \
+        --topic topic-1 \
+        --partitions 1 \
+        --replication-factor 1
+    ```
+  - 例：连接到 zk ，请求删除 topic 。
+    ```sh
+    ./kafka-topics.sh \
+        --zookeeper localhost:2181 \
+        --delete \
+        --topic topic-1
+    ```
+    - 这里将 --delete 选项改为 --describe ，就是查询 topic 的状态。
+
+- 运行生产者终端，从 stdin 读取消息并发送到 broker ：
+  ```sh
+  ./kafka-console-producer.sh \
+      --broker-list localhost:9092 \
+      --topic topic-1
+  ```
+
+- 运行消费者终端，读取消息并输出到 stdout ：
+  ```sh
+  ./kafka-console-consumer.sh \
+      --bootstrap-server localhost:9092 \
+      --topic topic-1 \
+      --from-beginning    # 从第一条消息开始消费
+  ```
+
+- 运行生产者的性能测试：
+  ```sh
+  ./kafka-producer-perf-test.sh \
+      --topic topic-1 \
+      --num-records 10000 \         # 发送多少条消息
+      --record-size 1024 \          # 每条消息的大小
+      --throughput 10000 \          # 限制每秒种发送的消息数
+      --producer.config ../config/producer.properties
+  ```
+
+- 给 Kafka 集群新增 broker 之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
+  - 使用 `kafka-reassign-partitions.sh` 脚本，将指定 topic 的所有分区迁移到指定 broker 上。
+  - 使用 Kafka Manager ，在网页上迁移 topic ，更方便。
     - 需要到 Topic 列表页面，点击 Generate Partition Assignments ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 Run Partition Assignments ，执行自动分配的策略。
     - 可以到 Reassign Partitions 页面，查看正在执行的自动分配策略。
     - 如果该 topic 已经分配到这些 broker 上，则不会再重新分配。
@@ -205,7 +257,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
 
   # 关于 topic
   # auto.create.topics.enable=true          # 如果 producer 向不存在的 topic 生产消息，是否自动创建该 topic
-  # delete.topic.enable=true                # 允许客户端删除 topic ，否则只能通过命令行工具删除
+  # delete.topic.enable=false               # 是否允许删除 topic 。默认不允许，在 kafka 中删除 topic 时只是标记为删除状态，需要在 zk 中手动删除
   # num.partitions=1                        # 新建 topic 时默认的 partition 数
   # message.max.bytes=1048576               # 允许接收的生产者的每批消息的最大大小，默认为 1M 。该参数作用于所有 topic ，也可以对每个 topic 分别设置 max.message.bytes
   # replica.fetch.max.bytes=1048576         # 限制 partition 的副本之间拉取消息的最大大小，默认为 1M
@@ -234,13 +286,19 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址，多个地址之间用逗号分隔
 
   # request.timeout.ms=30000      # 发送请求时，等待响应的超时时间
-  # max.block.ms=60000            # 生产者调用 send()、partitionsFor() 等方法时，最多阻塞多久
+  # linger.ms=0                   # 生产者发送每个消息时，延迟多久才实际发送。调大该值，有助于让每个 batch 包含更多消息。特别是当新增消息的速度，比发送消息的速度更快时
+  # delivery.timeout.ms=120000    # 生产者调用 send() 方法发送消息的超时时间，该值应该不低于 request.timeout.ms + linger.ms
+  # max.block.ms=60000            # 生产者调用 send()、partitionsFor() 等方法时，如果 buffer.memory 不足或 metadata 获取不到，阻塞等待的超时时间
 
   # max.request.size=1048576      # 限制生产者向 broker 发送的每个请求的大小
-  # linger.ms=0                   # 生产者发送每个消息时，延迟多久才实际发送。调大该值，有助于让每个 batch 包含更多消息。特别是当新增消息的速度，比发送消息的速度更快时
   # batch.size=16384              # 限制每个 batch 的大小
 
   # buffer.memory=33554432        # 限制生产者用于发送消息的缓冲区大小，默认为 32M
+  # acks=1                        # 判断消息发送成功的策略
+    # 取值为 0 ，则不等待 broker 的回复，直接认为消息已发送成功
+    # 取值为 1 ，则等待 leader replica 确认接收消息
+    # 取值为 all ，则等待消息被同步到所有 replica 
+  # retries=2147483647            # 发送消息失败时，如果不超过 delivery.timeout.ms 时长，则尝试重发多少次
   ```
   - 生产者向每个 partition 发送消息时，会累积多个消息为一批（batch），再一起发送，从而提高效率。
     - 如果单个消息小于 batch.size ，生产者每批就可能发送多个消息。

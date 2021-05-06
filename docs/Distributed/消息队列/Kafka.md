@@ -125,7 +125,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   - Kafka 发行版包含了 zk 的可执行文件，可以同时启动 kafka、zk 服务器，也可以在其它地方启动 zk 服务器。
   - broker 在 zk 注册自己的 IP、端口时，会尝试获取本机主机名对应的 IP ，因此需要先在 /etc/hosts 中添加 DNS 记录。
 
-- 或者用 docker-compose 部署 Kafka ：
+- 或者用 docker-compose 部署：
   ```yml
   version: '3'
 
@@ -209,7 +209,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   # log.flush.interval.ms=1000              # 每经过多少毫秒，就 flush 一次
 
   # 关于 zk
-  zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
+  zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
   zookeeper.connection.timeout.ms=6000
   ```
   - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 IRS 中移除。
@@ -301,9 +301,37 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
 - 给 Kafka 集群新增 broker 之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
   - 使用 `kafka-reassign-partitions.sh` 脚本，将指定 topic 的所有分区迁移到指定 broker 上。
   - 使用 Kafka Manager ，在网页上迁移 topic ，更方便。
-    - 需要到 Topic 列表页面，点击 Generate Partition Assignments ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 Run Partition Assignments ，执行自动分配的策略。
-    - 可以到 Reassign Partitions 页面，查看正在执行的自动分配策略。
+    - 需要到 Topic 列表页面，点击 `Generate Partition Assignments` ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 `Run Partition Assignments` ，执行自动分配的策略。
+    - 可以到 `Reassign Partition`s 页面，查看正在执行的自动分配策略。
     - 如果该 topic 已经分配到这些 broker 上，则不会再重新分配。
+
+## CMAK
+
+：Cluster Manager for Apache Kafka ，原名为 Kafka Manager 。是一个管理 Kafka 集群的工具，提供了 Web 操作页面，由 Yahoo 公司开源。
+- [GitHub 页面](https://github.com/yahoo/CMAK)
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    kafka-manager:
+      container_name: kafka-manager
+      image: kafkamanager/kafka-manager:3.0.0.4
+      restart: unless-stopped
+      ports:
+        - 9000:9000
+      environment:
+        ZK_HOSTS: 10.0.0.1:2181
+  ```
+  - 需要用一个 zk 服务器存储 CMAK 的状态。
+- 主要功能：
+  - 连接到 Kafka 集群。
+  - 查看 broker 的状态。
+  - 查看、创建、配置 topic 。
+  - Preferred Replica Election : 进行一次 leader replica 的选举。
+  - Schedule Leader Election ：设置 leader 选举的时间间隔。
+  - Reassign Partitions ：将分区的副本分配到指定的 broker 上，并选出新的 leader  。
+  - 查看 Consumer 的状态。
 
 ## ♢ kafka-Python
 

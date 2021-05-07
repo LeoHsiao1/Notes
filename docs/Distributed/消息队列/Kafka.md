@@ -82,7 +82,7 @@ Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如
   - follower 只能进行读操作，负责与 leader 的数据保持一致，从而备份数据。
   - 用户访问 partition 时看到的总是 leader ，看不到 follower 。
 - `Assigned Replicas` ：指一个 partition 拥有的所有 replicas 。
-- `preferred replica` ：指 assigned replicas 中的第一个 replica 。
+- `Preferred replica` ：指 assigned replicas 中的第一个 replica 。
   - 新建一个 partition 时，preferred replica 一般就是 leader replica ，但是之后可能发生选举，改变 leader 。
 - `In-sync Replicas Set`（IRS）：指一个 partition 中与 leader 保持同步的所有 replicas 。
   - leader 本身也属于 IRS 。
@@ -301,14 +301,12 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
 - 给 Kafka 集群新增 broker 之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：
   - 使用 `kafka-reassign-partitions.sh` 脚本，将指定 topic 的所有分区迁移到指定 broker 上。
   - 使用 Kafka Manager ，在网页上迁移 topic ，更方便。
-    - 需要到 Topic 列表页面，点击 `Generate Partition Assignments` ，设置某个 topic 允许分配到哪些 broker 上的策略。然后点击 `Run Partition Assignments` ，执行自动分配的策略。
-    - 可以到 `Reassign Partition`s 页面，查看正在执行的自动分配策略。
-    - 如果该 topic 已经分配到这些 broker 上，则不会再重新分配。
 
-## CMAK
+## Kafka Manager
 
-：Cluster Manager for Apache Kafka ，原名为 Kafka Manager 。是一个管理 Kafka 集群的工具，提供了 Web 操作页面，由 Yahoo 公司开源。
+：一个管理 Kafka 集群的工具，提供了 Web 操作页面，由 Yahoo 公司开源。
 - [GitHub 页面](https://github.com/yahoo/CMAK)
+- 2020 年，发布 v3 版本，改名为 Cluster Manager for Apache Kafka ，简称为 CMAK 。
 - 用 docker-compose 部署：
   ```yml
   version: '3'
@@ -323,15 +321,52 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
       environment:
         ZK_HOSTS: 10.0.0.1:2181
   ```
-  - 需要用一个 zk 服务器存储 CMAK 的状态。
-- 主要功能：
-  - 连接到 Kafka 集群。
-  - 查看 broker 的状态。
-  - 查看、创建、配置 topic 。
-  - Preferred Replica Election : 进行一次 leader replica 的选举。
-  - Schedule Leader Election ：设置 leader 选举的时间间隔。
-  - Reassign Partitions ：将分区的副本分配到指定的 broker 上，并选出新的 leader  。
-  - 查看 Consumer 的状态。
+  - 需要用一个 zk 服务器存储 Kafka Manager 的状态。
+
+### 主要功能
+
+- 连接到 Kafka 集群。
+  - 可选通过 JMX 端口监控消费速度。
+- 查看 Broker 的状态。
+- 查看、创建、配置 Topic、Partition 。
+  - Topic 的统计信息示例：
+    ```sh
+    Replication                 3       # 每个分区的的副本数
+    Number of Partitions        3       # 该 Topic 的分区数
+    Sum of partition offsets    0
+    Total number of Brokers     3       # Kafka 集群存在的 Broker 数
+    Number of Brokers for Topic 2       # 该 Topic 存储时占用的 Broker 数
+    Preferred Replicas %        100     # Leader replica 为 Preferred replica 的分区，所占百分比
+    Brokers Skewed %            0       # 存储的副本过多的 Broker 所占百分比
+    Brokers Leader Skewed %     0       # 存储的 Leader replica 过多的 Broker 所占百分比
+    Brokers Spread %            66      # 该 Topic 占用的 Kafka 集群的 Broker 百分比，这里等于 2/3 * 100%
+    Under-replicated %          0       # 存在未同步副本的分区，所占百分比
+    ```
+    - 上例中的 Topic 总共有 3×3 个副本，占用 2 个 Broker 。为了负载均衡，每个 Broker 应该存储 3×3÷2 个副本，取整后可以为 4 或 5 。如果某个 Broker 实际存储的副本数超过该值，则视作 Skewed 。
+  - Broker 的统计信息示例：
+    ```sh
+    Broker      # of Partitions     # as Leader     Partitions    Skewed?     Leader Skewed?
+    0           3                   1               (0,1,2)       false       false
+    1           3                   2               (0,1,2)       false       true
+    2           3                   0               (0,1,2)       false       false
+    ```
+    每行表示一个 Broker 的信息，各列分别表示该 Broker 的：
+    - ID
+    - 存储的分区副本数
+    - 存储的 Leader replica 数
+    - 存储的各个分区 ID
+    - 存储的副本是否过多
+    - 存储的 Leader replica 是否过多
+- 点击菜单栏的 `Preferred Replica Election` ，可进行一次 leader replica 的选举。
+  - 当某个 Topic 的 Leader replica 不是 Preferred replica 时，才可以进行该操作。
+
+- 在 Topic 详情页面，可设置该 Topic 的分区副本允许被分配到哪些 broker 上。步骤如下：
+  1. 点击 `Generate Partition Assignments` ，设置自动分配的策略。
+  2. 点击 `Run Partition Assignments` ，执行自动分配的策略。
+    - 如果不满足策略，则自动迁移 replica 到指定的 broker 上，并重新选举 leader 。
+    - 如果已满足策略，则不会进行迁移。因此该操作具有幂等性。
+    - 也可以点击 `Manual Partition Assignments` ，进行手动分配。
+  3. 到菜单栏的 `Reassign Partitions` 页面，查看正在执行的分配操作。
 
 ## ♢ kafka-Python
 

@@ -11,14 +11,25 @@
 
 ## 部署
 
-- 用 Docker 部署：
-  ```sh
-  docker run -d --name artifactory \
-         -p 8082:8082 \
-         -v /opt/artifactory:/var/opt/jfrog/artifactory \
-         docker.bintray.io/jfrog/artifactory-oss
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    artifactory:
+      container_name: artifactory
+      image: docker.bintray.io/jfrog/artifactory-oss:7.18.6
+      restart: unless-stopped
+      ports:
+        - 8082:8082
+      volumes:
+        - ./artifactory:/var/opt/jfrog/artifactory
   ```
-  默认用户名、密码为 admin、password 。
+  - 默认用户名、密码为 admin、password 。
+  - 需要先配置挂载目录的权限：
+    ```sh
+    chown -R 1030:1030 artifactory/
+    ```
 
 ## 用法
 

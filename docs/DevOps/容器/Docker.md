@@ -31,8 +31,17 @@
 
 ## 配置
 
-- 配置 dockerd 时，需要创建 `/etc/docker/daemon.json` 文件，然后重启 dockerd 。
-
+- 配置 dockerd 时，需要编辑 `/etc/docker/daemon.json` 文件，然后重启 dockerd 。
+- 如果想让 dockerd 使用代理，需要在 `/usr/lib/systemd/system/docker.service` 中加入环境变量：
+  ```sh
+  [Service]
+  Environment="HTTP_PROXY=socks5://10.0.0.1:1080"
+  ```
+  然后重启 dockerd ：
+  ```sh
+  systemctl daemon-reload
+  systemctl restart docker
+  ```
 
 ## 原理
 

@@ -30,12 +30,20 @@
   systemctl enable nginx
   ```
 
-- 或者用 Docker 部署：
-  ```sh
-  docker run -d --name nginx -p 80:80
-        -v /opt/web/dist:/usr/share/nginx/html         # 挂载静态文件目录
-        -v /opt/web/nginx.conf:/etc/nginx/nginx.conf   # 挂载配置文件
-        nginx
+- 或者用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    nginx :
+      container_name: nginx 
+      image: nginx:1.20
+      restart: unless-stopped
+      ports:
+        - 80:80
+      volumes:
+        # - ./nginx.conf:/etc/nginx/nginx.conf
+        - ./dist:/usr/share/nginx/html
   ```
 
 ## 原理
@@ -95,12 +103,10 @@ http {
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
     access_log  /var/log/nginx/access.log  main;
-
     sendfile        on;
-    #tcp_nopush     on;
+    # tcp_nopush     on;
     keepalive_timeout  65;
-    #gzip  on;
-
+    # gzip  on;
     include /etc/nginx/conf.d/*.conf;
 }
 ```

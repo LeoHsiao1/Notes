@@ -117,7 +117,7 @@ ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需
 Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件中，称为 Playbook 。
 
 配置示例：
-```yaml
+```yml
 - name: Test                             # 定义一个 playbook
   hosts: 10.0.*                          # 是一个 pattern ，用于匹配要管理的 host 或 组
   # gather_facts: true
@@ -157,7 +157,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 执行每个 task 时，会生成一个临时的 .py 文件，拷贝到 host 上，用 python 解释器执行。
 
 - 可以给 playbook 或 task 设置 become 选项，用于控制在 SSH 登录之后是否切换用户。如下：
-  ```yaml
+  ```yml
   - name: Test
     hosts: localhost
     # become: yes               # 默认在 SSH 登录之后会切换用户
@@ -170,7 +170,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 不支持在 shell 模块中执行 su 命令切换用户，否则会阻塞。但可以执行 sudo 命令，或者通过 become 选项切换用户。
 
 - 可以给 task 加上 when 条件选项，当满足条件时才执行该 task ，否则跳过该 task 。如下：
-  ```yaml
+  ```yml
   - name: test echo
     shell: echo {{A}}
     when:
@@ -183,7 +183,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 判断变量的值时，如果该变量未定义，则会报错。
 
 - task 可以通过 with_items 选项迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
-  ```yaml
+  ```yml
   - name: test echo
     shell: echo {{item}}
     with_items:
@@ -199,8 +199,8 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 
 ### tags
 
-- 可以给 playbook 或 task 设置 tags 选项，从而允许只执行具有特定标签的内容。如下：
-  ```yaml
+- 可以给 playbook 或 task 声明 tags 选项，从而允许只执行具有特定标签的任务。如下：
+  ```yml
   - name: Test
     hosts: localhost
     tags: test
@@ -224,11 +224,10 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 如果输入 -t 选项，且指定的标签在 playbook 中并不存在，则不会执行任何 task 。（除非具有 always 标签）
   - 输入 `-t tagged` 会执行所有打了标签的，输入 `-t untagged` 会执行所有没打标签的。
 
-### 使用变量
+### vars
 
-- Ansible 支持在 playbook 中定义变量并调用。
-- 例：
-  ```yaml
+- Ansible 支持在 playbook 中定义变量并调用。如下：
+  ```yml
   - name: Test
     hosts: 10.0.*
     vars:                   # 定义变量
@@ -250,15 +249,16 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 不过在 YAML 文件中，如果该变量独占一个字段，则需要用 `"{{var}}"` 的格式取值，否则不会被 YAML 视作字符串，导致语法错误。
   - 如果读取的变量不存在，会报错，而不会默认取值为空。
 :::
+
 - 启动 playbook 时，可以用 `ansible-playbook test.yml -e "tips=Hello"` 的格式传入外部变量，这会覆盖同名的内部变量。
 - 变量名只能包含字母、数字、下划线，且只能以字母开头。
 - 字典类型的变量可以用以下两种格式取值：
-  ```yaml
+  ```yml
   echo {{service.name}}       # 这种格式的缺点是：key 的名字不能与 Python 中字典对象的成员名冲突
   echo {{service['name']}}
   ```
 - 变量的值允许换行输入，如下：
-  ```yaml
+  ```yml
   vars:
     - text: |
         Hello
@@ -269,23 +269,23 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
 
 - Ansible 提供了一些内置变量。如下：
-  ```yaml
+  ```yml
   debug:
     var: inventory_hostname         # 获取当前 host 的名称
   ```
   获取指定 host 的配置变量：
-  ```yaml
+  ```yml
   hostvars['localhost']             # 一个字典
   hostvars['localhost']['inventory_hostname']
   ```
   获取从当前 host 收集的信息：
-  ```yaml
+  ```yml
   ansible_facts                     # 一个字典
   ansible_facts['distribution']
   ```
 
 - Ansible 会将每个模块的执行结果记录成一段 JSON 信息，可以用 register 选项赋值给变量。如下：
-  ```yaml
+  ```yml
   tasks:
     - name: step1
       shell: ls f1
@@ -302,6 +302,23 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
   不同模块的执行结果的格式可能不同，返回码代表的含义也可能不同。
 
+### environment
+
+- 可以给 playbook 或 task 声明 environment ，从而设置终端的环境变量。如下：
+  ```yml
+  - name: Test
+    hosts: localhost
+    vars:
+      PATH: /usr/local/sbin:/usr/local/bin:/usr/bin/
+    environment:
+      A: Hello
+      PATH: '{{ PATH }}'    # 可以在环境变量中引用 Ansible 变量
+    tasks:
+      - shell: env          # 打印环境变量
+        environment:
+          B: World
+  ```
+
 ## Module
 
 - Anisble 内置了很多种用途的模块，参考 [官方的模块列表](https://docs.ansible.com/ansible/latest/collections/index_module.html)
@@ -316,7 +333,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 ### 关于执行命令
 
 - 测试连接 host ：
-  ```yaml
+  ```yml
   ping:
   ```
   - ping 模块会测试能否通过 ssh 登录 host ，并检查是否有可用的 Python 解释器，如果操作成功则返回 pong 。
@@ -324,11 +341,11 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 - 用 command、shell、raw 模块可以在 host 上执行 shell 命令：
   
   - 
-    ```yaml
+    ```yml
     command: /tmp/test.sh chdir=/tmp/
     ```
     调用模块时也可以写作以下格式：
-    ```yaml
+    ```yml
     command:
       cmd: /tmp/test.sh
       # chdir: /tmp/      # 执行该命令之前，先切换到指定目录（可以是绝对路径或相对路径）
@@ -336,7 +353,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       # removes: /tmp/f1  # 如果该文件不存在，则跳过该任务
     ```
   - 
-    ```yaml
+    ```yml
     shell:
       cmd: ls | grep ssh
       # executable: /bin/sh   # 指定要执行 shell 命令的可执行文件
@@ -354,7 +371,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     如果 command 模块中调用了 shell 环境变量，则会在执行命令之前就完成替换。
 
   - 
-    ```yaml
+    ```yml
     raw: echo hello
     # args:
     #   executable: /bin/bash   # 指定解释器
@@ -362,7 +379,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     raw 模块是通过 ssh 直接向 host 发送 shell 命令。适用于 host 上没有安装 Python 解释器，而无法使用 command、shell 模块的情况。
     
   - 按以下格式可以给模块输入多行字符串：
-    ```yaml
+    ```yml
     shell: |
       cd /tmp
       pwd
@@ -371,7 +388,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     注意输入的内容要缩进一层。
 
 - 在 host 上执行脚本：
-  ```yaml
+  ```yml
   script:
     cmd: /tmp/test.sh
     # executable: /bin/bash  # 设置执行该脚本的程序
@@ -383,11 +400,11 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - executable 不一定是 shell 解释器，因此执行的不一定是 shell 脚本，比如：`script: "executable=/usr/bin/python /tmp/1.py"`
 
 - 打印调试信息：
-  ```yaml
+  ```yml
   debug:
     var: hostvars[inventory_hostname]
   ```
-  ```yaml
+  ```yml
   debug:
     msg: System {{inventory_hostname}} has gateway {{ansible_default_ipv4.gateway}}
   when: ansible_default_ipv4.gateway is defined
@@ -396,7 +413,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - when 选项、debug 模块的 var 选项已经隐式地用花括号包装，因此不需要再给变量加花括号取值。
 
 - 加入断言：
-  ```yaml
+  ```yml
   assert:
     that:                                                     # 相当于 when 选项
       - ansible_facts['distribution'] == "CentOS"
@@ -409,7 +426,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 ### 关于管理文件
 
 - 管理 host 上的文件或目录：
-  ```yaml
+  ```yml
   file:
     path: /tmp/f1
     # state: touch    # 可以取值为 touch（创建文件）、directory（创建目录）、link（创建软链接）、hard（创建硬链接）、absent（删除文件）
@@ -420,7 +437,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 在 path 字符串中不能使用 * 通配符。
 
 - 将本机的文件拷贝到 host 上：
-  ```yaml
+  ```yml
   copy:
     src: f1
     dest: /tmp/
@@ -435,7 +452,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - Ansible 默认通过 SFTP 传输文件。
 
 - 将 host 上的文件拷贝到本机：
-  ```yaml
+  ```yml
   fetch:
     src: /tmp/f1
     dest: /tmp/     # 以 / 结尾，表示这是一个已存在的目录
@@ -444,7 +461,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - src 必须是一个文件的路径，不能是一个目录。
 
 - 对 host 上的文本文件插入多行字符串：
-  ```yaml
+  ```yml
   blockinfile:
     path: /var/spool/cron/root
     block: |
@@ -468,7 +485,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - Ansible 在插入 block 时，会自动在开始、结束处加上一行 marker 字符串作为标记。重复插入该 block 时，如果检查到该标记，且标记中的内容相同，则不会修改该文件。
 
 - 对 host 上的文本文件进行正则替换：
-  ```yaml
+  ```yml
   replace:
     path: /tmp/f1
     regexp: 'Hello(\w*)'    # 将匹配 regexp 的部分替换为 replace
@@ -480,7 +497,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 采用 Python 的正则引擎，默认的编码格式是 utf-8 。
 
 - 渲染 Jinja2 模块文件，生成新文件：
-  ```yaml
+  ```yml
   template:
     src: templates/test.conf.j2
     dest: /tmp/test.conf
@@ -492,7 +509,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
 ### 关于配置系统
 
 - 创建用户：
-  ```yaml
+  ```yml
   user:
     name: leo
     # password: "{{'123456' | password_hash('sha512')}}"    # 设置密码
@@ -506,7 +523,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # comment: testing        # 添加备注信息
     # expires: 1591343903     # 设置过期时间
   ```
-  ```yaml
+  ```yml
   user:
     name: leo
     state: absent         # 删除用户
@@ -514,14 +531,14 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
 
 - 用 yum 安装软件：
-  ```yaml
+  ```yml
   yum:
     name: ['vim', 'git', 'tmux']
     state: latest     # 可以取值为 installed（安装了即可）、latest（安装最新版本）、removed（卸载）
   ```
 
 - 管理 systemd 服务：
-  ```yaml
+  ```yml
   systemd:
     name: httpd
     state: started        # 可以取值为 started、stopped、restarted、reloaded
@@ -530,13 +547,13 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   ```
 
 - 配置 firewalld 防火墙：
-  ```yaml
+  ```yml
   firewalld:              # 设置启用的 zone
     zone: public
     state: present        # zone 的 state 可以取值为 present 或 absent
     permanent: yes
   ```
-  ```yaml
+  ```yml
   firewalld:
     service: http         # 同时只能指定一个 service
     # port: 80/tcp        # 同时只能指定一个端口
@@ -564,7 +581,7 @@ Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当�
 - include_* 导入的内容会在被执行时才开始解析，比如可以每次循环使用不同的变量值，属于动态导入。
 
 例：
-```yaml
+```yml
 - name: test1
   hosts: "{{host}}"
   vars:
@@ -581,7 +598,7 @@ Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当�
     tips: Hello
 ```
 - include_tasks 必须作为一个 playbook 的 task 使用，且导入的目标文件必须是一个纯 tasks 列表，如下：
-    ```yaml
+    ```yml
     - command: echo {{tips}}
     - command: ls
     ```
@@ -591,21 +608,21 @@ Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当�
   上例中，被导入的 test4.yml 不会继承 test1 的 vars ，只会接受从外部传入的变量、标签。
 
 - 使用 include 这类选项时，不能选择只导入具有某些标签的内容，如下：
-  ```yaml
+  ```yml
   - name: test3
     import_playbook: test4.yml
     tags:             # 这里声明的 tags 会作用于 test3
       - debug
   ```
   因此，只能将要导入的内容拆分成不同文件，或者通过变量判断是否执行某些内容，如下：
-  ```yaml
+  ```yml
   - name: test3
     import_playbook: test4.yml
     vars:
       debug:
       tips: Hello
   ```
-  ```yaml
+  ```yml
   - name: test4
     host: "{{host}}"
     tasks:
@@ -652,7 +669,7 @@ Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当�
   - 使用 copy 、script 模块时会自动到 files/ 目录下寻找相应的文件，不需要指明相对路径；使用 template 模块时会自动引用 templates/ 目录；使用 include 选项时会自动引用 tasks/ 目录。
 
 - 在 playbook 中导入 role 的示例：
-  ```yaml
+  ```yml
   - name: Build Docker Image
     hosts: all
     roles:

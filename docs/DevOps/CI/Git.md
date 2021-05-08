@@ -342,9 +342,20 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
 ```
 - 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
 - 例：推送单个分支
+  ```sh
+  git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并
+  git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
+  ```
+- 拉取、推送代码时，默认每次都需要输入 git 服务器的账号、密码。
+  - 可以在远程仓库的 URL 中写入密码：
     ```sh
-    git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并
-    git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
+    git clone http://leo:******@github.com/LeoHsiao1/Notes.git
+    ```
+    但这样会将明文密码泄露到终端。
+  - 或者执行以下命令，将以后输入的凭证都自动缓存起来：
+    ```sh
+    git config --global credential.helper cache   # 将凭证在内存中缓存 15分钟
+    git config --global credential.helper store   # 将凭证持久保存，实际上是以明文形式保存到 ~/.git-credentials 文件中
     ```
 
 ## git flow

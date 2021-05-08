@@ -123,7 +123,6 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   ```
   - 部署 Kafka 集群时，需要先部署 zk 集群，然后让每个 broker 服务器连接到 zk ，即可相互发现，组成集群。
   - Kafka 发行版包含了 zk 的可执行文件，可以同时启动 kafka、zk 服务器，也可以在其它地方启动 zk 服务器。
-  - broker 在 zk 注册自己的 IP、端口时，会尝试获取本机主机名对应的 IP ，因此需要先在 /etc/hosts 中添加 DNS 记录。
 
 - 或者用 docker-compose 部署：
   ```yml
@@ -212,6 +211,10 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
   zookeeper.connection.timeout.ms=6000
   ```
+  - 虽然可以通过 listeners 声明访问地址，但 broker 在启动时，依然会尝试解析本地主机名对应的 IP ，因此需要先在 /etc/hosts 中添加 DNS 记录。如下：
+    ```sh
+    127.0.0.1   hostname-1
+    ```
   - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 IRS 中移除。
     - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
 

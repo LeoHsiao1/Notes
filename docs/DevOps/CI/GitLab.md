@@ -6,22 +6,22 @@
 ## 部署
 
 - 用 docker-compose 部署：
-    ```yml
-    version: "3"
+  ```yml
+  version: "3"
 
-    gitlab:
-      image: gitlab/gitlab-ce:latest
-      hostname: 10.0.0.1
-      environment:
-        GITLAB_OMNIBUS_CONFIG: |
-          external_url 'http://10.0.0.1:80'
-      ports:
-        - 80:80
-      volumes:
-        - ./gitlab/config:/etc/gitlab
-        - ./gitlab/logs:/var/log/gitlab
-        - ./gitlab/data:/var/opt/gitlab
-    ```
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    hostname: 10.0.0.1
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://10.0.0.1:80'
+    ports:
+      - 80:80
+    volumes:
+      - ./gitlab/config:/etc/gitlab
+      - ./gitlab/logs:/var/log/gitlab
+      - ./gitlab/data:/var/opt/gitlab
+  ```
 
 ## API
 

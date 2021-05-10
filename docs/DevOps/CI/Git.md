@@ -57,9 +57,10 @@
 ## 查看仓库
 
 ```sh
-git status              # 查看当前 git 仓库的状态（包括当前的分支名、缓存区内容）
+git status              # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
 
-git log                 # 在文本阅读器中查看 git 仓库的日志（按时间倒序显示每个事件）
+git log                 # 显示 git 仓库的 commit 日志（按时间倒序），这会打开一个文本阅读器
+        -n              # 只显示 n 个 commit
 
 git diff                # 比较当前仓库与上一次 add 或 commit 的差异
         --cached        # 比较上一次 add 与上一次 commit 的差异
@@ -118,10 +119,10 @@ git commit
 ### 撤销修改
 
 ```sh
-git clean [path]...     # 删除指定目录（默认为当前目录）下，所有不受版本控制的文件
+git clean [path]...     # 删除指定目录（默认为当前目录）下，所有未被 git 版本控制，或不在 .gitignore 中记录的文件
           -d            # 递归子目录
           -f            # 强制删除
-          -x            # 删除所有不受版本控制的文件
+          -x            # 将 .gitignore 中记录的文件也删除
 
 git reset [version]     # 将当前分支指向目标版本（默认是最近一个版本）。如果与目标版本之间的所有历史版本没有被其它 branch 或 tag 使用，就可能被删除
           --soft        # 不改变工作目录的文件，也不删掉历史版本，相当于将当前分支 checkout 到目标版本。不过一旦提交新版本，就会删掉历史版本
@@ -129,11 +130,15 @@ git reset [version]     # 将当前分支指向目标版本（默认是最近一
           --hard        # 将工作目录的文件回滚到目标版本的状态（只改变受版本控制的文件），并删掉历史版本
 
 git revert [version]    # 自动新建一个版本来抵消某个版本的变化（这样不会删除历史版本）
-
 ```
 - 不受 git 版本控制的文件主要有两种：
   - 新增的文件，尚未加入版本控制。
   - 被 .gitignore 忽略的文件。
+- 例：复位整个项目的文件
+  ```sh
+  git clean -dfx
+  git reset --hard
+  ```
 - 从 git 仓库的所有版本中永久性地删除某个文件：
   ```sh
   git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch <文件的相对路径>' --prune-empty --tag-name-filter cat -- --all

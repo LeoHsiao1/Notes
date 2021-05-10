@@ -18,18 +18,18 @@
 docker-compose
             -f <file>                 # 指定 compose 文件（默认使用当前目录下的 docker-compose.yml）
 
-            up                        # 启动服务（会重新加载 compose 文件，可能会删除容器或重新创建容器）
+            up [service]...           # 启动服务（会重新加载 compose 文件，可能会删除容器或重新创建容器）
                 -d                    # 以 daemon 方式运行（否则会阻塞当前终端）
                 --scale web=2 mysql=1 # 设置服务运行的实例数量
                 --build               # 强制构建镜像（如果镜像已存在，则默认不会再次构建）
-            down <service>...         # 销毁服务（默认会删除用到的容器、网络）
+            ps      [service]...      # 显示所有正在运行的容器
+            stop    [service]...      # 停止服务
+            start   [service]...      # 启动已停止的服务
+            restart [service]...      # 重启服务
+
+            down                      # 销毁所有服务，删除用到的容器、网络
                 -v                    # 再删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
                 --rmi all             # 再删除该服务用到的所有镜像
-
-            ps                        # 显示所有正在运行的容器
-            stop <service>...         # 停止服务
-            start <service>...        # 启动已停止的服务
-            restart <service>...      # 重启服务
 
             exec <service> <command>  # 在服务的容器中执行一条命令
                 -d                    # 在后台执行命令
@@ -80,13 +80,13 @@ services:                     # 开始定义服务
     restart: unless-stopped   # 重启策略
     depends_on:               # 依赖关系
       - redis                 # 这表示：如果启动 web 服务，则会自动先启动 redis 服务；如果停止 redis 服务，则会自动先停止 web 服务
-    
+
     init: true                # 使用 init 作为 1 号进程
     hostname: CentOS          # 主机名
     working_dir: /opt         # 工作目录
     entrypoint: ["echo", "1"]       # 覆盖 Dockerfile 中的 ENTRYPOINT
     command: [tail, -f, /dev/null]  # 覆盖 Dockerfile 中的 CMD
-    
+
     environment:              # 环境变量，采用数组的格式声明
       - var1=1
       - var2=hello
@@ -105,7 +105,7 @@ services:                     # 开始定义服务
     # network_mode: host      # 网络模式，不能与 networks 同时配置
     dns:                      # 指定 DNS 服务器
       - 8.8.8.8
-      
+
     volumes:                  # 挂载目录
       - /root/data:/root/data # 可以直接挂载目录
       - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）

@@ -17,6 +17,9 @@
   yum install nodejs
   ```
   - 直接从 Centos 的默认 yum 源安装的话，会安装老旧的 8.x 版本。
+  - 有两种安装位置：
+    - 安装到 `./node_modules` 目录下：此时要通过 `node_modules/.bin/<name>` 的方式调用。
+    - 安装到全局：此时会自动加入到系统 PATH 路径中，可以输入命令名直接调用。
 
 ## 用法示例
 
@@ -41,28 +44,50 @@
 
 ：Node Package Manager ，一个 Node.js 自带的包管理工具。
 
-命令：
+### 命令
+
 ```sh
 npm
-    init                  # 初始化项目，这会在当前目录下生成一个 package.json
-    install [name]...     # 安装指定的包，不指定包名则安装 package.json 里记录的所有包
-            jquery@3.0.0  # 可以指定包的版本号
-            -g            # 安装到全局（默认安装到 ./node_modules 目录下）
-            --save        # 安装之后记录到 package.json 的 dependencies 中
-            --save-dev    # 安装之后记录到 package.json 的 devDependencies 中
+    init                      # 初始化项目
+    install [name@version]... # 安装指定的包，不指定包名则安装 package.json 里记录的所有包
+            -g                # 安装到全局（默认安装到 ./node_modules 目录下）
+            --save            # 安装之后记录到 package.json 的 dependencies 中
+            --save-dev        # 安装之后记录到 package.json 的 devDependencies 中
             --registry https://registry.npm.taobao.org    # 指定镜像源
-    uninstall <name>...   # 卸载指定的包
-           --save         # 卸载之后更新 package.json
-    update <name>...      # 升级指定的包
+    uninstall <name>...       # 卸载指定的包
+           --save             # 卸载之后更新 package.json
+    update <name>...          # 升级指定的包
            --save
-    list                  # 列出已安装的所有包
+    list                      # 列出已安装的所有包
 
-    run <name>            # 运行 package.json 中的一个脚本
+    run <name>                # 运行 package.json 中的一个脚本
+
+    config
+          list                # 列出所有配置参数
+          edit                # 编辑所有配置参数
+          get     <key>       # 读取一个配置参数的值
+          set     <key>=<value>
+          delete  <key>
 ```
-- 安装时有两种安装位置：
-  - 安装到 ./node_modules 目录下：此时要通过 `node_modules/.bin/<name>` 的方式调用。
-  - 安装到全局：此时会自动加入到系统 PATH 路径中，可以输入命令名直接调用。
-- package.json 主要用于记录项目用到的依赖包及其版本。如下：
+- 一般构建前端项目时，执行以下命令即可：
+  ```sh
+  npm config set registry https://registry.npm.taobao.org
+  npm install
+  npm run build
+  ```
+
+### 配置文件
+
+- 执行 npm 命令时，会读取以下位置的配置文件：
+  ```sh
+  .npmrc              # 项目目录下的配置文件，优先级最高
+  ~/.npmrc            # 当前用户的配置文件
+  /etc/npmrc          # 全局的配置文件
+  /path/to/npm/npmrc  # npm 内置的配置文件，优先级最低
+  ```
+  - 配置文件采用 INI 格式，每行保存一个键值对形式的参数。
+
+- 用 npm 初始化项目时，会自动在当前目录下生成一个 package.json 文件，用于记录项目用到的依赖包及其版本。内容示例：
   ```json
   {
     "name": "demo",
@@ -96,7 +121,7 @@ npm
     ]
   }
   ```
-- 从 npm 5 开始，用 npm install 安装包时会自动生成 package-lock.json 文件，用于更详细地记录每个包。如下：
+- 从 npm 5 开始，用 npm install 安装包时会自动生成 package-lock.json 文件，用于更详细地记录每个包。内容示例：
   ```json
   {
     ...
@@ -155,9 +180,15 @@ yarn                    # 相当于 npm install
 ## gulp
 
 ：一个自动化构建工具，基于 Node.js ，常用于构建 JS 项目。
-- 安装：npm install -g gulp
 
-命令：
+### 安装
+
+```sh
+npm install -g gulp
+```
+
+### 命令
+
 ```sh
 gulp [task]...    # 执行任务（默认执行 default 任务）
 ```

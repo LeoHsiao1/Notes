@@ -77,8 +77,8 @@ services:                     # 开始定义服务
       network: host
       args:
         arg1: Hello
-    depends_on:               # 依赖关系
-      - redis                 # 这表示：如果启动 web 服务，则会自动先启动 redis 服务；如果停止 redis 服务，则会自动先停止 web 服务
+    depends_on:               # 声明对其它服务的依赖关系
+      - redis                 # 这表示：如果启动 web 服务，则会等先启动 redis 服务；如果停止 redis 服务，则会等先停止 web 服务
 
     init: true                # 使用 init 作为 1 号进程
     hostname: CentOS          # 主机名
@@ -115,8 +115,8 @@ services:                     # 开始定义服务
       nofile:
         soft: 20000
         hard: 40000
-    healthcheck:              # 监控检查
-      test: curl -f https://localhost || exit 1
+    healthcheck:              # 健康检查
+      test: curl http://localhost || exit 1
       interval: 1m30s
       timeout: 10s
       retries: 3
@@ -138,3 +138,22 @@ volumes:                      # 定义数据卷（服务挂载的数据卷都必
   - 如果 Service 要运行多个实例，则不指定容器名、挂载数据卷比较好，这样多个实例会自动命名，不会冲突。
 - 上例中，web 容器向宿主机映射了两个端口，而 redis 容器没有映射端口，因此不能被宿主机访问。
   - 两个容器都连接到了 net_1 网络，因此可以相互访问。比如 web 容器可以通过 `127.0.0.1:6379` 或 `redis:6379` 访问到 redis 容器。
+- 使用 depends_on 并不能判断服务是否就绪，不如自定义启动脚本，自己判断等上一个服务启动就绪了，才启动当前服务。如下：
+  ```yml
+  command: bash -c "
+    sleep 10
+    && python3 manage.py runserver 0.0.0.0:80
+  "
+  ```
+  ```yml
+  command:
+    - /bin/bash
+    - -c
+    - |
+      while ! curl 127.0.0.1:80;
+      do
+        sleep 1;
+      done
+      python3 scrape.py
+  ```
+

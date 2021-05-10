@@ -77,7 +77,6 @@ services:                     # 开始定义服务
       network: host
       args:
         arg1: Hello
-    restart: unless-stopped   # 重启策略
     depends_on:               # 依赖关系
       - redis                 # 这表示：如果启动 web 服务，则会自动先启动 redis 服务；如果停止 redis 服务，则会自动先停止 web 服务
 
@@ -86,6 +85,7 @@ services:                     # 开始定义服务
     working_dir: /opt         # 工作目录
     entrypoint: ["echo", "1"]       # 覆盖 Dockerfile 中的 ENTRYPOINT
     command: [tail, -f, /dev/null]  # 覆盖 Dockerfile 中的 CMD
+    restart: unless-stopped   # 重启策略
 
     environment:              # 环境变量，采用数组的格式声明
       - var1=1

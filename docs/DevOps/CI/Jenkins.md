@@ -13,21 +13,38 @@
 ## 安装
 
 - 用 war 包启动：
-  1. 下载 Jenkins 的 war 包。
-  2. 安装 JDK 。
-  3. 执行 `java -jar jenkins.war --httpPort=8080` 启动 Jenkins ，然后便可以访问其 Web 网站 `http://localhost:8080` 。
+  1. 安装 JDK 。
+  2. 下载 Jenkins 的 war 包。
+  3. 启动 Jenkins ：
+      ```sh
+      java -jar jenkins.war --httpPort=8080
+      ```
+      - 然后便可以访问其 Web 网站 `http://localhost:8080` 。
+      - 首次启动时，终端上会显示一个密钥，用于首次登陆 Web 端。
 
-- 或者用 Docker 部署：
-  ```sh
-  mkdir /var/jenkins_home
-  docker run -d \
-          -p 8080:8080                                    # Jenkins 的 Web 端的访问端口
-          -p 50000:50000                                  # 供 Jenkins 代理访问的端口
-          -v /var/jenkins_home:/var/jenkins_home          # 挂载 Jenkins 的数据目录，从而可以随时重启 Jenkins 容器
-          -v /var/run/docker.sock:/var/run/docker.sock    # 使容器内的 Jenkins 能与 dockerd 通信
-          jenkins/jenkins
+- 或者用 docker-compose 部署：
+  ```yml
+  version: "3"
+
+  services:
+    jenkins:
+      container_name: jenkins
+      image: jenkins/jenkins:lts-jdk11
+      restart: unless-stopped
+      # environment:
+      #   JENKINS_OPTS: "--prefix=/jenkins"           # 设置 URL 前缀，便于反向代理
+      ports:
+        - 8080:8080                                   # 供用户访问 Jenkins 的 Web 页面
+        - 50000:50000                                 # 供 Jenkins agent 访问的端口
+      volumes:
+        - ./jenkins_home:/var/jenkins_home
+        - /var/run/docker.sock:/var/run/docker.sock   # 使容器内的 Jenkins 能与 dockerd 通信
   ```
-  - 第一次启动时，终端上会显示一个密钥，用于第一次登陆 Web 端。
+  - 需要先修改挂载目录的权限：
+    ```sh
+    mkdir jenkins_home
+    chown -R 1000:1000 .
+    ```
 
 ## 运行原理
 

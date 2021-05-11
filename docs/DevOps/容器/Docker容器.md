@@ -228,43 +228,66 @@ docker network
 - 让容器内端口可以被容器外访问的三种方案：
   - 将容器内端口映射到宿主机的 eth 网卡上的端口。
     - 比如执行 `docker run -p 80:80` ，此时 dockerd 会自动添加 iptables 规则，将宿主机 80 端口收到的 TCP 流量转发到容器的 80 端口。
-    - 缺点：
-      - 此时宿主机的防火墙会暴露 80 端口，允许被任意外部 IP 访问。
-      - 此时从一个容器中不能访问到另一个容器映射的端口，因为 iptables 规则不会转发该流量。
-      - 这样自动添加的 iptables 规则很复杂，不建议手动修改，否则可能会出错。如果出错，可以尝试重启 dockerd ，让它重新配置 iptables 。
+    - 此时宿主机的防火墙会暴露 80 端口，允许被任意外部 IP 访问。
+    - 这样自动添加的 iptables 规则很复杂，不建议手动修改，否则可能会出错。如果出错，可以尝试重启 dockerd ，让它重新配置 iptables 。
   - 让容器连接到 host 网络，从而使用宿主机的 eth 网卡，而不是自己的虚拟网卡。
     - 比如执行 `docker run --network host` ，这样当容器内的服务监听端口时，是监听 eth 网卡上的 Socket ，因此可以被外部 IP 访问。
   - 如果几个容器连接到同一个 bridge 类型的网络，就可以在一个容器内访问到其它容器的 IP 、所有端口。
     - 此时可以使用容器的名字作为目标主机，比如执行 `ping mysql` 时会自动将容器名 mysql 解析成该容器的 IP 。
 
-- 例：\
-  创建两个容器
-  ```sh
-  [root@Centos ~]# docker run -d --name test1 --network host nginx
-  9c1c537e8a304ad9e4244e3c7ae1743b88d45924b7b48cbb0a9f63606c82d76d
-  [root@Centos ~]# docker run -d --name test2 -p 2080:80 nginx
-  4601a81b438e31e5cb371291e1299e4c5333e853a956baeb629443774a066e9c
-  ```
-  在宿主机上可以访问各个容器映射的端口：
-  ```sh
-  [root@Centos ~]# curl -I 127.0.0.1:80
-  HTTP/1.1 200 OK
-  ...
-  [root@Centos ~]# curl -I 127.0.0.1:2080
-  HTTP/1.1 200 OK
-  ...
-  ```
-  在容器内不能访问另一个容器映射到宿主机的端口，除非源容器或目标容器使用宿主机的网卡。也就是说，映射端口的容器只能与宿主机直接通信，不能与其它容器间接通信。如下：
-  ```sh
-  [root@Centos ~]# docker exec -it test1 curl -I 10.0.0.1:80
-  HTTP/1.1 200 OK
-  ...
-  [root@Centos ~]# docker exec -it test1 curl -I 10.0.0.1:2080
-  HTTP/1.1 200 OK
-  ...
-  [root@Centos ~]# docker exec -it test2 curl -I 10.0.0.1:80
-  HTTP/1.1 200 OK
-  ...
-  [root@Centos ~]# docker exec -it test2 curl -I 10.0.0.1:2080
-  curl: (7) Failed to connect to 10.0.0.1 port 2080: No route to host
-  ```
+- 例：
+  - 创建两个容器
+    ```sh
+    [root@Centos ~]# docker run -d --name test1 --network host nginx
+    9c1c537e8a304ad9e4244e3c7ae1743b88d45924b7b48cbb0a9f63606c82d76d
+    [root@Centos ~]# docker run -d --name test2 -p 2080:80 nginx
+    4601a81b438e31e5cb371291e1299e4c5333e853a956baeb629443774a066e9c
+    ```
+  - 在宿主机上可以访问各个容器映射的端口：
+    ```sh
+    [root@Centos ~]# curl -I 10.0.0.1:80
+    HTTP/1.1 200 OK
+    ...
+    [root@Centos ~]# curl -I 10.0.0.1:2080
+    HTTP/1.1 200 OK
+    ...
+    ```
+    甚至可以通过环回地址访问：
+    ```sh
+    [root@Centos ~]# curl -I 127.0.0.1:80     # test1 容器与宿主机共用网卡
+    HTTP/1.1 200 OK
+    ...
+    [root@Centos ~]# curl -I 127.0.0.1:2080   # test2 容器的端口已经映射到宿主机的网卡
+    HTTP/1.1 200 OK
+    ...
+    ```
+  - 在容器内访问宿主机上的端口：
+    ```sh
+    [root@Centos ~]# docker exec -it test1 curl -I 10.0.0.1:80
+    HTTP/1.1 200 OK
+    ...
+    [root@Centos ~]# docker exec -it test1 curl -I 10.0.0.1:2080
+    HTTP/1.1 200 OK
+    ...
+    [root@Centos ~]# docker exec -it test2 curl -I 10.0.0.1:80
+    HTTP/1.1 200 OK
+    ...
+    [root@Centos ~]# docker exec -it test2 curl -I 10.0.0.1:2080
+    HTTP/1.1 200 OK
+    ...
+    ```
+  - 在容器内访问环回地址的端口：
+    ```sh
+    [root@Centos ~]# docker exec -it test1 curl -I 127.0.0.1:80
+    HTTP/1.1 200 OK
+    ...
+    [root@Centos ~]# docker exec -it test1 curl -I 127.0.0.1:2080
+    HTTP/1.1 200 OK
+    ...
+    [root@Centos ~]# docker exec -it test2 curl -I 127.0.0.1:80
+    HTTP/1.1 200 OK
+    ...
+    [root@Centos ~]# docker exec -it test2 curl -I 127.0.0.1:2080       # test2 容器的网卡上没有监听 2080 端口，因此不能访问
+    curl: (7) Failed to connect to 127.0.0.1 port 2080: Connection refused
+    ...
+    ```

@@ -167,7 +167,8 @@ __pycache__/    # 忽略所有目录下的指定目录
 
 命令：
 ```sh
-git branch          # 显示所有分支
+git branch          # 显示所有本地分支
+        -a          # 增加显示远程分支
         -v          # 显示每个分支所在的版本
         <branch>    # 新建一个分支
         -d <branch> # 删除一个分支
@@ -215,9 +216,8 @@ git merge <branch>  # 将指定分支合并到当前分支（这会产生一个�
 git tag                 # 显示已有的所有标签
         -a v1.0 9fceb02 # 给版本 9fceb02 加上标签 v1.0
         -d <tagName>    # 删除一个标签
-
-git checkout 
 ```
+- 执行 `git checkout <tagName>` 之后，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
 
 ## 变基
 
@@ -336,9 +336,9 @@ git remote                   # 显示已配置的所有远端仓库的名字
         rm <name>            # 删除一个远端仓库
         rename <name> <name> # 重命名一个远端仓库
 
-git fetch [name 或 URL]      # 获取远端仓库的最新 commit 信息，但并不会下载到本地仓库
+git fetch [name 或 URL]      # 获取远端分支的最新信息，但不会改变本地分支
 
-git pull [name 或 URL]       # 先 fetch 远程仓库，再下载到本地仓库，然后自动将跟踪的远程分支 merge 到本地分支
+git pull [name 或 URL]       # 先 fetch 远程分支，然后将跟踪的远程分支 merge 到本地分支，并不会创建新的本地分支
 
 git push [name 或 URL]       # 推送本地仓库到远端仓库
         --force              # 强制推送
@@ -347,13 +347,6 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
         --tags               # 推送所有标签
 ```
 - 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
-- 执行 `git checkout <tagName>` 之后不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
-
-- 例：推送单个分支
-  ```sh
-  git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并
-  git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
-  ```
 - 拉取、推送代码时，默认每次都需要输入 git 服务器的账号、密码。
   - 可以在远程仓库的 URL 中写入密码：
     ```sh
@@ -365,6 +358,42 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
     git config --global credential.helper cache   # 将凭证在内存中缓存 15分钟
     git config --global credential.helper store   # 将凭证持久保存，实际上是以明文形式保存到 ~/.git-credentials 文件中
     ```
+- 例：推送一个本地分支到远程仓库
+  ```sh
+  git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并
+  git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
+  ```
+- 如果在远程仓库创建了一个 test 分支，则可以执行以下命令，拉取到本地仓库：
+  ```sh
+  [root@Centos ~]# git branch -a                # 查看当前分支，此时没看到 test 分支
+  * master
+    remotes/origin/HEAD -> origin/master
+    remotes/origin/master
+
+  [root@Centos ~]# git fetch                    # 拉取远程分支的最新信息
+  From https://github.com/LeoHsiao1/Notes
+  * [new branch]      test       -> origin/test
+
+  [root@Centos ~]# git branch -a                # 此时可看到远程的 test 分支
+  * master
+    remotes/origin/HEAD -> origin/master
+    remotes/origin/master
+    remotes/origin/test
+
+  [root@Centos ~]# git checkout test            # 切换到本地的 test 分支，会自动创建它，并跟踪到远程的 test 分支
+  Switched to a new branch 'test'
+  Branch 'test' set up to track remote branch 'test' from 'origin'.
+
+  [root@Centos ~]# git checkout test2           # 切换到本地的 test2 分支失败，不会自动创建它
+  error: pathspec 'test2' did not match any file(s) known to git
+
+  [root@Centos ~]# git branch -a                # 查看此时的分支
+    master
+  * test
+    remotes/origin/HEAD -> origin/master
+    remotes/origin/master
+    remotes/origin/test
+  ```
 
 ## git flow
 
@@ -379,4 +408,3 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
 - 对 git 仓库加上权限控制，比如：
   - 禁止对 master 分支 push -f 。甚至禁止直接 push ，只允许将其它分支的代码通过 PR 合并到 master 分支。
   - 提出合并到 master 分支的 PR 时，必须经过其他人 review 同意，才能合并。
-

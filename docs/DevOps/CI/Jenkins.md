@@ -31,7 +31,8 @@
       container_name: jenkins
       image: jenkins/jenkins:lts-jdk11
       restart: unless-stopped
-      # environment:
+      environment:
+        JAVA_OPTS: -Duser.timezone=Asia/Shanghai
       #   JENKINS_OPTS: "--prefix=/jenkins"           # 设置 URL 前缀，便于反向代理
       ports:
         - 8080:8080                                   # 供用户访问 Jenkins 的 Web 页面

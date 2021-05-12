@@ -42,6 +42,7 @@
       ports:
         - 80:80
       volumes:
+        - /etc/localtime:/etc/localtime:ro
         # - ./nginx.conf:/etc/nginx/nginx.conf
         - ./dist:/usr/share/nginx/html
   ```
@@ -497,7 +498,7 @@ server {
       proxy_pass  http://127.0.0.1:79/;   # 转发到 /1.html
   }
   ```
-- 如果 proxy_pass 目标地址中包含 URI 且调用了变量，则将它的值作为转发结果。
+- 如果 proxy_pass 目标地址中包含 URI 且调用了变量，则直接将它的值作为转发结果，不考虑原 URL 。
   ```sh
   location /www/ {
       proxy_pass  http://127.0.0.1:79$request_uri; # 转发到 /www/1.html

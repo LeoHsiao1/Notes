@@ -195,7 +195,7 @@ docker volume
   ```sh
   /etc/hosts
   /etc/passwd             # 让容器采用宿主机的用户名、uid
-  /etc/localtime          # 让容器采用宿主机的时区
+  /etc/localtime          # 让容器内采用与宿主机相同的时区，不过有的容器不会读取该文件
   /var/run/docker.sock    # 允许在容器内与 dockerd 通信，可以执行 docker ps 等命令
   ```
 

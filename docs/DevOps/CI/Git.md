@@ -41,7 +41,7 @@
 	- 这默认会在当前目录下创建一个 .git 子目录，作为 git 仓库，存储 git 的相关文件。
   - 执行 `git init --bare` 会创建一个裸仓库。
     - 它不会创建 .git 子目录，而是将 git 仓库中的文件直接存储到项目根目录。并且通常将项目根目录加上扩展名 .git 。
-    - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远程仓库，供多人推送修改。
+    - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远端仓库，供多人推送修改。
 
 2. 用户执行 `git commit` 命令，将项目文件提交为一个版本，让 git 记录。
   - git 默认会记录项目目录下的所有文件，可以在 .gitignore 文件中声明不想被 git 记录的文件。
@@ -168,7 +168,7 @@ __pycache__/    # 忽略所有目录下的指定目录
 命令：
 ```sh
 git branch          # 显示所有本地分支
-        -a          # 增加显示远程分支
+        -a          # 增加显示远端分支
         -v          # 显示每个分支所在的版本
         <branch>    # 新建一个分支
         -d <branch> # 删除一个分支
@@ -250,9 +250,9 @@ git 的配置文件有三种，局部的配置会覆盖全局的配置：
     bare       = false          # 该仓库是否为裸仓库
     ignorecase = false          # 是否忽略文件名的大小写
 
-[remote "origin"]               # 定义一个远程仓库，名为 origin
+[remote "origin"]               # 定义一个远端仓库，名为 origin
     url    = https://github.com/LeoHsiao1/test.git
-    fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，声明让本地的 src 分支跟踪远程仓库的 dst 分支
+    fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，声明让本地的 src 分支跟踪远端仓库的 dst 分支
 
 [branch "master"]
     remote = origin
@@ -280,7 +280,7 @@ git config
   ```sh
   git submodule
                 add <repository_url> [<path>] [--name <name>] [-b <branch>]   # 添加 submodule
-                update        # 更新 submodule ，这会从远程仓库 pull 它的最新版本
+                update        # 更新 submodule ，这会从远端仓库 pull 它的最新版本
                 sync          # 将 .gitmodules 文件中的配置同步到 .git/config 中（默认不会自动同步）
                 status        # 显示所有 submodule 的 commit、path、branch 信息
   ```
@@ -324,7 +324,8 @@ git config
   - Gitee  ：国内的代码托管平台，对标 GitHub ，但功能更少。只可使用公网版。
   - Gogs   ：只有代码托管功能，轻量级。可使用公网版、私有部署版。
 
-命令：
+### 相关命令
+
 ```sh
 git clone <URL>              # 将一个远端仓库克隆到本地（这会在当前目录下创建该仓库目录）
 # 此时 git 会自动将这个远端仓库命名为 origin ，并让本地的 master 分支跟踪 origin/master 分支
@@ -336,19 +337,22 @@ git remote                   # 显示已配置的所有远端仓库的名字
         rm <name>            # 删除一个远端仓库
         rename <name> <name> # 重命名一个远端仓库
 
-git fetch [name 或 URL]      # 获取远端分支的最新信息，但不会改变本地分支
+git fetch [name 或 URL]      # 拉取远端仓库的最新内容（包括分支、标签），但只是下载到本地仓库，并不会改变本地分支
+        --all                # 拉取所有远端仓库（默认只是 origin 仓库）
+        --tags               # 拉取标签
 
-git pull [name 或 URL]       # 先 fetch 远程分支，然后将跟踪的远程分支 merge 到本地分支，并不会创建新的本地分支
+git pull [name 或 URL]       # 先 fetch 远端仓库，然后将跟踪的远端分支合并到本地分支，但并不会合并到之前不存在的本地分支
 
 git push [name 或 URL]       # 推送本地仓库到远端仓库
         --force              # 强制推送
         --all                # 推送本地仓库的所有分支
         <tag>                # 推送一个标签
         --tags               # 推送所有标签
+        --delete <refs>      # 删除远端的分支或标签
 ```
 - 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
 - 拉取、推送代码时，默认每次都需要输入 git 服务器的账号、密码。
-  - 可以在远程仓库的 URL 中写入密码：
+  - 可以在远端仓库的 URL 中写入密码：
     ```sh
     git clone http://leo:******@github.com/LeoHsiao1/Notes.git
     ```
@@ -358,29 +362,29 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
     git config --global credential.helper cache   # 将凭证在内存中缓存 15分钟
     git config --global credential.helper store   # 将凭证持久保存，实际上是以明文形式保存到 ~/.git-credentials 文件中
     ```
-- 例：推送一个本地分支到远程仓库
+- 例：推送一个本地分支到远端仓库
   ```sh
   git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并
   git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
   ```
-- 如果在远程仓库创建了一个 test 分支，则可以执行以下命令，拉取到本地仓库：
+- 如果在远端仓库创建了一个 test 分支，则可以执行以下命令，拉取到本地仓库：
   ```sh
   [root@Centos ~]# git branch -a                # 查看当前分支，此时没看到 test 分支
   * master
     remotes/origin/HEAD -> origin/master
     remotes/origin/master
 
-  [root@Centos ~]# git fetch                    # 拉取远程分支的最新信息
+  [root@Centos ~]# git fetch                    # 拉取远端仓库
   From https://github.com/LeoHsiao1/Notes
   * [new branch]      test       -> origin/test
 
-  [root@Centos ~]# git branch -a                # 此时可看到远程的 test 分支
+  [root@Centos ~]# git branch -a                # 此时可看到远端的 test 分支
   * master
     remotes/origin/HEAD -> origin/master
     remotes/origin/master
     remotes/origin/test
 
-  [root@Centos ~]# git checkout test            # 切换到本地的 test 分支，会自动创建它，并跟踪到远程的 test 分支
+  [root@Centos ~]# git checkout test            # 切换到本地的 test 分支，会自动创建它，并跟踪到远端的 test 分支
   Switched to a new branch 'test'
   Branch 'test' set up to track remote branch 'test' from 'origin'.
 
@@ -408,4 +412,3 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
 - 对 git 仓库加上权限控制，比如：
   - 禁止对 master 分支 push -f 。甚至禁止直接 push ，只允许将其它分支的代码通过 PR 合并到 master 分支。
   - 提出合并到 master 分支的 PR 时，必须经过其他人 review 同意，才能合并。
-

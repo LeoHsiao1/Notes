@@ -378,3 +378,6 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
 - 对 git 仓库加上权限控制，比如：
   - 禁止对 master 分支 push -f 。甚至禁止直接 push ，只允许将其它分支的代码通过 PR 合并到 master 分支。
   - 提出合并到 master 分支的 PR 时，必须经过其他人 review 同意，才能合并。
+
+
+<!-- - 测试 git fetch -->

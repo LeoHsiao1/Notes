@@ -336,9 +336,9 @@ git remote                   # 显示已配置的所有远端仓库的名字
         rm <name>            # 删除一个远端仓库
         rename <name> <name> # 重命名一个远端仓库
 
-git fetch [name 或 URL]      # 获取远端仓库拉取所有本地仓库没有的 commit
+git fetch [name 或 URL]      # 获取远端仓库的最新 commit 信息，但并不会下载到本地仓库
 
-git pull [name 或 URL]       # 先 fetch 远程仓库，再下载，再自动将跟踪的远程分支 merge 到本地分支
+git pull [name 或 URL]       # 先 fetch 远程仓库，再下载到本地仓库，然后自动将跟踪的远程分支 merge 到本地分支
 
 git push [name 或 URL]       # 推送本地仓库到远端仓库
         --force              # 强制推送
@@ -380,5 +380,4 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
   - 禁止对 master 分支 push -f 。甚至禁止直接 push ，只允许将其它分支的代码通过 PR 合并到 master 分支。
   - 提出合并到 master 分支的 PR 时，必须经过其他人 review 同意，才能合并。
 
-
-<!-- - 测试 git fetch -->
+<!-- - 测试 git pull 是否拉取全部分支 -->

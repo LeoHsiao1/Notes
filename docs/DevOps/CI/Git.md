@@ -174,10 +174,10 @@ git branch          # 显示所有分支
 
 git checkout
         <branch>    # 切换到指定分支所在版本
-        -b <branch> # 切换到指定分支，如果该分支不存在则创建它
+          -b        # 如果该分支不存在则创建它
+        <tagName>  # 切换到指定标签所在版本
         -- <file> 	# 将某个文件恢复到上一次 add 或 commit 的状态
         .           # 将当前目录的所有文件恢复到上一次 add 或 commit 的状态
-				<version>
 
 git merge <branch>  # 将指定分支合并到当前分支（这会产生一个新版本）
 ```
@@ -216,7 +216,7 @@ git tag                 # 显示已有的所有标签
         -a v1.0 9fceb02 # 给版本 9fceb02 加上标签 v1.0
         -d <tagName>    # 删除一个标签
 
-git checkout <tagName>  # 切换到指定标签所在版本
+git checkout 
 ```
 
 ## 变基
@@ -336,9 +336,9 @@ git remote                   # 显示已配置的所有远端仓库的名字
         rm <name>            # 删除一个远端仓库
         rename <name> <name> # 重命名一个远端仓库
 
-git pull [name 或 URL]       # 拉取远端仓库的内容到本地仓库（会自动将被跟踪的远程分支合并到本地分支）
+git fetch [name 或 URL]      # 获取远端仓库拉取所有本地仓库没有的 commit
 
-git fetch [name 或 URL]      # 从远端仓库拉取所有本地仓库没有的内容（不会自动合并，比较安全）
+git pull [name 或 URL]       # 先 fetch 远程仓库，再下载，再自动将跟踪的远程分支 merge 到本地分支
 
 git push [name 或 URL]       # 推送本地仓库到远端仓库
         --force              # 强制推送
@@ -347,6 +347,7 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
         --tags               # 推送所有标签
 ```
 - 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
+- 执行 `git checkout <tagName>` 之后不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
 - 例：推送单个分支
   ```sh
   git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并

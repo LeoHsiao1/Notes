@@ -348,6 +348,7 @@ git push [name 或 URL]       # 推送本地仓库到远端仓库
 ```
 - 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
 - 执行 `git checkout <tagName>` 之后不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
+
 - 例：推送单个分支
   ```sh
   git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并

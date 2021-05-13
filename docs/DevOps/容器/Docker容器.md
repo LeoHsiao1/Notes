@@ -69,34 +69,34 @@ docker run <image>              # 运行一个镜像，这会创建一个容器�
 
 ```sh
 docker
-      ps                      # 显示所有 running 状态的容器
-          -a                  # 显示所有状态的容器
-          -n <int>            # --last ，显示最后创建的几个容器（包括所有状态的）
-          --no-trunc          # 不截断显示过长的内容
-          -q                  # 只显示 ID
-          -s                  # 增加显示容器的可写层 layer 所占磁盘空间、全部层 layer 所占虚拟磁盘空间
+      ps                        # 显示所有 running 状态的容器
+          -a                    # 显示所有状态的容器
+          -n <int>              # --last ，显示最后创建的几个容器（包括所有状态的）
+          --no-trunc            # 不截断显示过长的内容
+          -q                    # 只显示 ID
+          -s                    # 增加显示容器的可写层 layer 所占磁盘空间、全部层 layer 所占虚拟磁盘空间
 
           -f status=running     # --filter ，添加过滤条件，只显示部分容器
-          -f "label=color"      # 过滤具有 color 标签的容器
-          -f "label=color=blue" # 过滤具有 color 标签且取值为 blue 的容器
+          -f "label=branch"     # 过滤具有 branch 标签的容器
+          -f "label=branch=dev" # 过滤具有 branch 标签且取值为 dev 的容器
 
           --format '{{.Names}} {{.Status}}' # 自定义每个容器显示的字段信息，基于 Go 模板语法
 
-      stop    <container>...  # 暂停容器的运行，容器会变成 stopped 状态
-      start   <container>...  # 启动容器，容器会从 stopped 状态变为 running 状态
-      restart <container>...  # 重启容器（相当于先 stop 再 start）
-      rm      <container>...  # 删除容器（只能删除 stopped 状态的）
-          -f                  # 强制删除（可以删除 running 状态的）
-      container prune         # 删除所有 stopped 状态的容器
+      stop    <container>...    # 暂停容器的运行，容器会变成 stopped 状态
+      start   <container>...    # 启动容器，容器会从 stopped 状态变为 running 状态
+      restart <container>...    # 重启容器（相当于先 stop 再 start）
+      rm      <container>...    # 删除容器（只能删除 stopped 状态的）
+          -f                    # 强制删除（可以删除 running 状态的）
+      container prune           # 删除所有 stopped 状态的容器
 
       rename  <container> <new_name>  # 重命名容器
-      update  <container>...  # 更改容器的配置
+      update  <container>...          # 更改容器的配置
           --restart no
           --cpus 2
           -m 256m
 
-      stats                   # 显示所有容器的资源使用情况
-      inspect <object>        # 显示一个 Docker 对象的详细信息
+      stats                     # 显示所有容器的资源使用情况
+      inspect <object>          # 显示一个 Docker 对象的详细信息
 ```
 - 管理容器、镜像、数据卷、网络等对象时，可以以 ID 或 Name 作为标识符，指定某个对象。
   - ID   ：是一串十六进制数，有 64 位长。允许用户只用开头少量几位就指定一个对象，只需要与其它 ID 不重复。

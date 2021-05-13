@@ -9,6 +9,8 @@ docker run <image>              # 运行一个镜像，这会创建一个容器�
             -d                  # 以 daemon 方式运行
 
             --name <name>       # 设置容器的名字
+            -l <key>[=<value>]  # --label ，给容器添加键值对格式的标签，比如 branch=dev 。如果不指定 value ，则默认赋值为 "" 。可以多次使用该选项
+
             --workdir <path>    # 指定容器的工作目录
             --init              # 使用 init 进程作为容器的 1 号进程（它会照样执行容器的启动命令）
             --rm                # 当容器终止时，自动删除它
@@ -69,10 +71,16 @@ docker run <image>              # 运行一个镜像，这会创建一个容器�
 docker
       ps                      # 显示所有 running 状态的容器
           -a                  # 显示所有状态的容器
-          -n <int>            # 显示最后创建的几个容器（包括所有状态的）
-          --no-trunc          # 不截断过长的显示内容
+          -n <int>            # --last ，显示最后创建的几个容器（包括所有状态的）
+          --no-trunc          # 不截断显示过长的内容
           -q                  # 只显示 ID
-          -s                  # 增加显示容器占用的磁盘空间
+          -s                  # 增加显示容器的可写层 layer 所占磁盘空间、全部层 layer 所占虚拟磁盘空间
+
+          -f status=running     # --filter ，添加过滤条件，只显示部分容器
+          -f "label=color"      # 过滤具有 color 标签的容器
+          -f "label=color=blue" # 过滤具有 color 标签且取值为 blue 的容器
+
+          --format '{{.Names}} {{.Status}}' # 自定义每个容器显示的字段信息，基于 Go 模板语法
 
       stop    <container>...  # 暂停容器的运行，容器会变成 stopped 状态
       start   <container>...  # 启动容器，容器会从 stopped 状态变为 running 状态
@@ -106,6 +114,25 @@ docker
   Exit      # 停止。此时容器占用的资源被释放，但文件系统保留不变
   Restart   # 重启。此时容器重新被分配资源，但依然使用之前的文件系统，重新执行启动命令
   Delete    # 被删除。此时容器占用的资源被释放，文件系统也被删除。最终消失不见，在 dockerd 中不能查询到该容器
+  ```
+- `docker ps --format 'xx'` 可显示以下字段，注意区分大小写：
+  ```sh
+  .ID
+  .Image
+  .Command      # 容器的启动命令
+  .CreatedAt    # 容器的创建时间
+  .RunningFor	  # 容器从创建以来，存在的时长
+  .Ports	      # 镜像 EXPOSE 的端口、容器实际映射的端口
+
+  .Names
+  .Labels       # 容器的所有标签
+  .Label        # 容器的指定标签的值，比如 '{{.Label "maintainer"}}'
+
+  .State        # 容器的运行状态，比如 created、running、exited
+  .Status       # 容器的运行状态，以及该状态的持续时间，比如 Up 2 minutes
+  .Size         # 容器占用的磁盘空间
+  .Mounts       # 容器挂载的所有卷
+  .Networks     # 容器关联的所有网络
   ```
 
 ## 日志

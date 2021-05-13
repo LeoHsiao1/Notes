@@ -94,7 +94,7 @@ git commit
           --amend               # 将当前的缓存区合并到上一个版本（不过时间戳依然是上一个版本的）
 ```
 - 每次 commit 时会自动生成一个 SHA-1 哈希值，作为版本名。如下：
-	```
+	```sh
 	commit 86e696bd125aa895e067c2216ae8298289ab94d6
 	Author: Leo <leohsiao@foxmail.com>
 	Date:   Thu Dec 10 09:15:19 2020 +0800
@@ -174,9 +174,8 @@ git branch          # 显示所有本地分支
         -d <branch> # 删除一个分支
 
 git checkout
-        <branch>    # 切换到指定分支所在版本
-          -b        # 如果该分支不存在则创建它
-        <tagName>  # 切换到指定标签所在版本
+        <refs>      # 切换到某个 References 指向的版本，可以填 branch 或 tag 或 commit SHA-1
+          -b        # 声明 refs 是一个分支，如果它不存在则自动创建它，再切换过去
         -- <file> 	# 将某个文件恢复到上一次 add 或 commit 的状态
         .           # 将当前目录的所有文件恢复到上一次 add 或 commit 的状态
 

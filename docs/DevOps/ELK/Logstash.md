@@ -26,14 +26,19 @@
   services:
     logstash:
       container_name: logstash
-      image: logstash:7.10.0
+      image: logstash:7.10.1
       restart: unless-stopped
       ports:
         - 5044:5044
       volumes:
-        - ./config:/usr/share/logstash/config
+      #  - ./config:/usr/share/logstash/config
         - ./data:/usr/share/logstash/data
   ```
+  - 容器内以非 root 用户运行服务，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
+    ```sh
+    mkdir -p  config data
+    chown -R  1000 .
+    ```
 
 ## 配置
 

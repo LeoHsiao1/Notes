@@ -19,14 +19,13 @@
   services:
     elasticsearch:
       container_name: elasticsearch
-      image: amazon/opendistro-for-elasticsearch:1.13.0
+      image: amazon/opendistro-for-elasticsearch:1.13.2
       restart: unless-stopped
       network_mode:
         host            # 使用宿主机的网卡，以便绑定宿主机的对外 IP
       volumes:
       #  - ./config:/usr/share/elasticsearch/config
         - ./data:/usr/share/elasticsearch/data
-        - ./logs:/usr/share/elasticsearch/logs
       ulimits:
         memlock:
           soft: -1
@@ -41,7 +40,7 @@
   services:
     kibana:
       container_name: kibana
-      image: amazon/opendistro-for-elasticsearch-kibana:1.13.0
+      image: amazon/opendistro-for-elasticsearch-kibana:1.13.2
       restart: unless-stopped
       ports:
         - 5601:5601
@@ -51,8 +50,8 @@
   ```
   - 容器内以非 root 用户运行服务，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
     ```sh
-    mkdir -p  config data logs
-    chown -R 1000 .
+    mkdir -p  config data
+    chown -R  1000 .
     ```
   - 可以先不挂载配置目录，启动一次。然后将容器内的 config 目录拷贝出来，修改之后再挂载配置目录，重新启动容器。
 
@@ -60,7 +59,7 @@
 
 - elasticsearch.yml 的配置示例：
   ```yml
-  cluster.name: cluster-log
+  cluster.name: log-cluster
   node.name: node-1
 
   network.host: 10.0.0.1
@@ -96,14 +95,15 @@
 
 默认启用了 Security 插件。
 - 它会在初始化 ES 时读取一次 `/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/` 目录下的各个配置文件，随后一直将自身的数据存储在 ES 中名为 .opendistro_security 的索引中。
-- 如果想修改 Security 插件的配置，应该先使用 securityadmin.sh 从 ES 下载配置文件，修改之后再上传。如下：
+- 如果想修改 Security 插件的配置，应该先使用 securityadmin.sh 从 ES 下载运行时的配置信息，修改之后再上传。如下：
   ```sh
   bash plugins/opendistro_security/tools/securityadmin.sh \
-      -backup tmp/ \                                        # 下载配置文件到该目录（会下载全部类型的配置文件）
-      # -cd plugins/opendistro_security/securityconfig/ \   # 上传该目录下的配置文件（该目录下必须包含全部类型的配置文件）
-      -icl \                                                # 忽略 ES 集群的名称
-      -nhnv \                                               # 不验证 SSL 证书是否有效
-      -cacert config/root-ca.pem \                          # 使用 root 用户的 SSL 证书
+      # -h localhost \              # ES 的 IP 地址
+      -backup tmp/ \                # 下载配置文件到该目录（会下载全部类型的配置文件）
+      # -cd tmp/ \                  # 上传该目录下的配置文件（该目录下必须包含全部类型的配置文件）
+      -icl \                        # 忽略 ES 集群的名称
+      -nhnv \                       # 不验证 SSL 证书是否有效
+      -cacert config/root-ca.pem \  # 使用 root 用户的 SSL 证书
       -cert config/kirk.pem \
       -key config/kirk-key.pem
   ```
@@ -111,7 +111,7 @@
 ### 用户
 
 - Security 插件支持多种认证后端，比如内部用户数据库（Internal users Database）、LDAP、Kerberos 等。
-  - 如果启用了多个后端，当用户登录时，会依次尝试用各个后端进行身份认证，直到认证成功，或者全部认证失败。
+  - 如果启用了多个后端，当用户登录时，会依次尝试用各个后端进行身份认证，直到有一个认证成功，或者全部认证失败。
 - 初始化 ES 时，Security 插件会根据 internal_users.yml 文件创建内部用户数据库，包含多个用户。
 - 每个用户的初始密码等于用户名。
 - 可以按 HTTP Basic Auth 的方式进行用户认证，如下：
@@ -129,9 +129,9 @@
       - 或者使用 securityadmin.sh 脚本上传配置文件。
   4. 更新 kibana.yml 等文件中使用的用户密码。
 
-- kibanaro、logstash、readall、snapshotrestore 用户可以在 Kibana 的网页上修改自己的密码。
-  - 为了安全，应该都改为新的密码。
-  - admin 用户才有权限在 Kibana 上查看 Security 插件的配置页面，管理所有普通用户。
+- 其他用户，比如 kibanaro、logstash ，都可以在 Kibana 的网页上修改自己的密码。
+  - 为了安全，首次部署时应该都更新密码。
+  - admin 用户才有权限在 Kibana 上查看 Security 插件的配置页面，管理所有用户。
 
 ### 角色
 

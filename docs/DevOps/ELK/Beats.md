@@ -290,8 +290,9 @@
 
     # 配置 filebeat 自身的日志
     logging.level: info                     # 只记录不低于该级别的日志
-    logging.to_stderr: true                 # 将日志输出到 stderr （否则默认是输出到文件 ./logs/filebeat ）
     logging.json: true                      # 输出的日志采用 JSON 格式
+    logging.to_files: true                  # 将日志保存到文件 ./logs/filebeat 
+    # logging.to_stderr: true               # 将日志输出到终端
     # logging.metrics.enabled: true         # 在日志中输出 filebeat 的状态信息，等级为 info
     # logging.metrics.period: 30s           # 输出 metrics 信息的时间间隔
 
@@ -332,10 +333,10 @@
   fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
   ```
 
-- 让 filebeat 采集一般日志文件的配置：
+- 让 filebeat 采集普通日志文件的配置示例：
   ```yml
   filebeat.inputs:                  # 关于输入项的配置
-  - type: log                       # 定义一个输入项，类型为一般的日志文件
+  - type: log                       # 定义一个输入项，类型为普通的日志文件
     paths:                          # 指定日志文件的路径
     - /var/log/mysql.log
     - '/var/log/nginx/*'            # 可以使用通配符
@@ -385,14 +386,10 @@
     # 配置 clean_* 参数可以自动清理 registry 文件，但可能导致遗漏采集，或重复采集
     # clean_removed: true           # 如果日志文件在磁盘中被删除，则从 registry 中删除它
     # clean_inactive: 0s            # 如果日志文件长时间未活动，则从 registry 中删除它。默认不限制时间。其值应该大于 scan_frequency + ignore_older
-
-  - type: container                 # 采集容器的日志
-    paths:
-      - '/var/lib/docker/containers/*/*.log'
   ```
   - 配置时间时，默认单位为秒，可使用 1、1s、2m、3h 等格式的值。
 
-- 采集容器日志的配置：
+- 采集容器日志的配置示例：
   ```yml
   processors:
     - add_docker_metadata: ~        # 如果存在 Docker 环境，则自动添加容器、镜像的信息
@@ -401,7 +398,8 @@
   filebeat.inputs:
   - type: container
     paths:
-      - '/var/lib/docker/containers/*/*-json.log'
+      - '/var/lib/docker/containers/*/*.log'
+    # stream: all                   # 从哪个流读取日志，可以取值为 stdout、stderr、all ，默认为 all
   ```
   - 注意 docker 的日志文件默认需要 root 权限才能查看。
 

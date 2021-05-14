@@ -144,7 +144,7 @@ docker logs <container>   # 显示一个容器的日志
           -t              # 显示时间戳
 ```
 - dockerd 会记录容器内 1 号进程的 stdout、stderr ，作为该容器的日志。
-  - 将其它进程的日志文件重定向到 /proc/1/fd/1、/proc/1/fd/2 ，就会一起记录到容器的日志中。
+  - 将其它进程的日志文件重定向到 `/proc/1/fd/1`、`/proc/1/fd/2` ，就会一起记录到容器的日志中。
   - 例如， Nginx 的官方镜像中重定向了其日志文件：
     ```sh
     ln -sf /dev/stdout /var/log/nginx/access.log
@@ -158,27 +158,38 @@ dockerd 会通过日志驱动器（logging driver）保存容器的日志。
   - nong ：不保存日志。
   - local
     - 将日志按文本格式保存在宿主机的 `/var/lib/docker/containers/{ContainerId}/local-logs/container.log` 文件中。
+    - 默认会自动进行日志切割， max-size 为 10m ，max-file 为 5 。
   - json-file
-    - 默认启用，但不会进行日志切割。
     - 将日志按 JSON 格式保存在宿主机的 `/var/lib/docker/containers/{ContainerId}/{ContainerId}-json.log` 文件中。如下：
       ```sh
       [root@CentOS ~]# tail -n 1 /var/lib/docker/containers/3256c21887f9b110e84f0f4a620a2bf01a8a7b9e3a5c857e5cae53b22c5436d4/3256c21887f9b110e84f0f4a620a2bf01a8a7b9e3a5c857e5cae53b22c5436d4-json.log
       {"log":"2021-02-22T03:16:15.807469Z 0 [Note] mysqld: ready for connections.\n","stream":"stderr","time":"2021-02-22T03:16:15.80758596Z"}
       ```
-    - 使用 docker logs 命令查看日志时，只会显示其 log 字段的值。
-  - syslog
-  - journald
-  - fluentd
-- 同时只能启用一种日志驱动器。
-- 可以在启动容器时配置日志驱动器：
+      - 使用 docker logs 命令查看日志时，只会显示其 log 字段的值。
+    - 默认不会进行日志切割， max-size 为 -1 即不限制大小，max-file 为 1 。
+  - syslog  ：将日志保存到宿主机的 syslog 中。
+  - journald ：将日志保存到宿主机的 journald 中。
+  - fluentd ：将日志保存到 fluentd 服务中。
+- 每个容器同时只能启用一种日志驱动器。
+  - 默认启用的是 json-file ，但是
+- 可以在 daemon.json 中配置日志驱动器，但需要重启 dockerd 才会生效，而且只会对新创建的容器生效。如下：
+  ```json
+  {
+    "log-driver": "json-file",  // 设置日志驱动器的类型，默认为 json-file
+    "log-opts": {
+      "max-size": "1g"          // 日志文件的最大大小。超过该大小则滚动一次，创建一个新日志文件继续写入
+      "max-file": "1"           // 最多保留多少份日志文件。即使只保留 1 份，每次滚动时也会创建一个新日志文件
+    }
+  }
+- 也可以在创建每个容器时，单独配置日志驱动器，如下：
   ```sh
   docker run -d \
-        --log-driver json-file \    # 选择日志驱动器的类型
-        --log-opt max-size=10m \    # 日志文件超过 10MB 时切割一次
-        --log-opt max-file=3 \      # 最多保留 3 份切割日志
+        --log-driver json-file  \
+        --log-opt max-size=10m  \
+        --log-opt max-file=5    \
         nginx
   ```
-- 也可以在 daemon.json 中配置日志驱动器，但需要重启 dockerd 才会生效， 而且只会对新创建的容器生效。
+  ```
 
 ## 执行命令
 

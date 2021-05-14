@@ -31,7 +31,7 @@
 
 ## 配置
 
-- 配置 dockerd 时，需要编辑 `/etc/docker/daemon.json` 文件，然后重启 dockerd 。
+- 配置 dockerd 时，需要创建 `/etc/docker/daemon.json` 文件，写入配置信息，然后重启 dockerd 。
 - 如果想让 dockerd 使用代理，需要在 `/usr/lib/systemd/system/docker.service` 中加入环境变量：
   ```sh
   [Service]

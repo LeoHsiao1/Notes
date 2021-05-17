@@ -273,58 +273,65 @@
 
 2. 启动：
     ```sh
-    # ./filebeat setup    # 初始化，先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
+    # ./filebeat setup    # 可选择进行初始化。这会先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
     ./filebeat            # 在前台运行
               -e          # 将 filebeat 自身的日志输出到 stderr
     ```
 
-### 配置
+### 基本配置
 
 - filebeat.yml 的基本配置：
-    ```yml
-    # path.config: ${path.home}                             # 配置文件的路径，默认是项目根目录
-    # filebeat.shutdown_timeout: 0s                         # 当 Filebeat 关闭时，如果有日志事件正在发送，则等待一定时间直到其完成。默认不等待
-    # filebeat.registry.path: ${path.data}/registry         # registry 文件的保存目录
-    # filebeat.registry.file_permissions: 0600              # registry 文件的权限
-    # filebeat.registry.flush: 0s                           # 每当 Filebeat 发布一个日志事件到输出端，隔多久才刷新 registry 文件
+  ```yml
+  # path.config: ${path.home}                     # 配置文件的路径，默认是项目根目录
+  # filebeat.shutdown_timeout: 0s                 # 当 Filebeat 关闭时，如果有日志事件正在发送，则等待一定时间直到其完成。默认不等待
+  # filebeat.registry.path: ${path.data}/registry # registry 文件的保存目录
+  # filebeat.registry.file_permissions: 0600      # registry 文件的权限
+  # filebeat.registry.flush: 0s                   # 每当 Filebeat 发布一个日志事件到输出端，隔多久才刷新 registry 文件
 
-    # 配置 filebeat 自身的日志
-    logging.level: info                     # 只记录不低于该级别的日志
-    logging.json: true                      # 输出的日志采用 JSON 格式
-    logging.to_files: true                  # 将日志保存到文件 ./logs/filebeat 
-    # logging.to_stderr: true               # 将日志输出到终端
-    # logging.metrics.enabled: true         # 在日志中输出 filebeat 的状态信息，等级为 info
-    # logging.metrics.period: 30s           # 输出 metrics 信息的时间间隔
+  # 配置 filebeat 自身的日志
+  logging.level: info                     # 只记录不低于该级别的日志
+  logging.json: true                      # 输出的日志采用 JSON 格式
+  logging.to_files: true                  # 将日志保存到文件 ./logs/filebeat
+  # logging.to_stderr: true               # 将日志输出到终端
+  # logging.metrics.enabled: true         # 在日志中输出 filebeat 的状态信息，等级为 info
+  # logging.metrics.period: 30s           # 输出 metrics 信息的时间间隔
 
-    output.logstash:                        # 输出到 Logstash 的配置
-      hosts: ['localhost:5044']
+  # 输出到 Logstash 的配置
+  output.logstash:
+    hosts: ['localhost:5044']
 
-    # setup.kibana:                         # kibana 的配置
-    #   host: '10.0.0.1:5601'
+  # 输出到 ES 的配置
+  # output.elasticsearch:
+  #   hosts: ['10.0.0.1:9200']
+  #   username: 'admin'
+  #   password: '123456'
+  #   index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
 
-    # output.elasticsearch:                 # 输出到 ES 的配置
-    #   hosts: ['10.0.0.1:9200']
-    #   username: 'admin'
-    #   password: '123456'
-    #   index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
+  # Kibana 的配置。如果不需要直接连接到 Kibana ，则不必配置
+  # setup.kibana:
+  #   host: '10.0.0.1:5601'
 
-    processors:                             # 对采集的所有日志事件进行加工处理，然后才输出
-      - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
-          when.not.contains.tags: forwarded # 如果该日志不属于转发的
-    #   - drop_event:                       # 丢弃日志事件，如果它满足条件
-    #       when:
-    #         regexp:
-    #           message: "^DEBUG"
-    #   - drop_fields:
-    #       fields: ["cpu.user", "cpu.system"]
+  # 对采集的日志事件进行加工处理，然后才输出
+  processors:
+    - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
+        when.not.contains.tags: forwarded # 如果该日志不属于转发的
+    - add_docker_metadata: ~              # 如果存在 Docker 环境，则自动添加容器、镜像的信息
+    - add_kubernetes_metadata: ~          # 如果存在 k8s 环境，则则自动添加 Pod 等信息
+  #   - drop_event:                       # 丢弃日志事件，如果它满足条件
+  #       when:
+  #         regexp:
+  #           message: "^DEBUG"
+  #   - drop_fields:
+  #       fields: ["cpu.user", "cpu.system"]
 
-    filebeat.config.modules:                # 加载模块的配置
-      path: ${path.config}/modules.d/*.yml
-    ```
+  filebeat.config.modules:                # 加载模块的配置
+    path: ${path.config}/modules.d/*.yml
+  ```
     - Filebeat 同时只能启用一种 output 输出端。
-    - 如果修改了默认的索引名，则还需要修改默认配套的索引模板、索引模式。
+    - 可以配置全局的 processors ，作用于采集的所有日志事件，也可以给某个日志源单独配置。
+      - processors 的详细语法见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/defining-processors.html) 。
 
-- 所有类型的 beats 都支持以下 General 配置项。可以在全局配置，也可以在局部配置。
+- 所有类型的 beats 都支持以下 General 配置项：
   ```yml
   name: 'filebeat-001'        # 该 Beat 的名称，默认使用当前主机名
   tags: ['json']              # 给每条日志加上标签，保存到一个名为 tags 的字段中，便于筛选日志
@@ -332,6 +339,9 @@
     project: test
   fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
   ```
+  - 这些参数可以配置全局的，也可以给某个日志源单独配置。
+
+### 采集日志文件
 
 - 让 filebeat 采集普通日志文件的配置示例：
   ```yml
@@ -367,12 +377,12 @@
     # encoding: utf-8                     # 编码格式
     # exclude_files: ['\.tgz$']           # 排除一些正则匹配的文件
     # include_lines: ['^WARN', '^ERROR']  # 只采集日志文件中正则匹配的那些行。默认采集所有非空的行。该操作会在 exclude_lines 之前执行
-    # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中正则匹配的那些行。
+    # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中正则匹配的那些行
 
     # scan_frequency: 10s           # 每隔多久扫描一次日志文件，如果有变动则创建 harvester 进行采集
     # ignore_older: 0s              # 不扫描最后修改时间在多久之前的文件，默认不限制时间。其值应该大于 close_inactive
     # harvester_buffer_size: 16384  # 每个 harvester 在采集日志时的缓冲区大小，单位 bytes
-    max_bytes: 102400               # 每条日志的 message 部分的最大字节数，超过的部分不会发送（但依然会读取）。默认为 10 M ，这里设置为 100 K
+    # max_bytes: 102400             # 每条日志的 message 部分的最大字节数，超过的部分不会发送（但依然会读取）。默认为 10 M ，这里设置为 100 K
     # tail_files: false             # 是否从文件的末尾开始，倒序读取
     # backoff: 1s                   # 如果 harvester 读取到文件末尾，则每隔多久检查一次文件是否更新
 
@@ -386,29 +396,72 @@
     # 配置 clean_* 参数可以自动清理 registry 文件，但可能导致遗漏采集，或重复采集
     # clean_removed: true           # 如果日志文件在磁盘中被删除，则从 registry 中删除它
     # clean_inactive: 0s            # 如果日志文件长时间未活动，则从 registry 中删除它。默认不限制时间。其值应该大于 scan_frequency + ignore_older
+
+    # 可以给该日志源单独配置 processors
+    # processors:
+    # - drop_event: ...
   ```
   - 配置时间时，默认单位为秒，可使用 1、1s、2m、3h 等格式的值。
 
-- 采集容器日志的配置示例：
-  ```yml
-  processors:
-    - add_docker_metadata: ~        # 如果存在 Docker 环境，则自动添加容器、镜像的信息
-    - add_kubernetes_metadata: ~    # 如果存在 k8s 环境，则则自动添加 Pod 等信息
-
-  filebeat.inputs:
-  - type: container
-    paths:
-      - '/var/lib/docker/containers/*/*.log'
-    # stream: all                   # 从哪个流读取日志，可以取值为 stdout、stderr、all ，默认为 all
-  ```
-  - 注意 docker 的日志文件默认需要 root 权限才能查看。
-
-- 可以启用 filebeat 的一些内置模块，采集一些系统或流行软件的日志文件。
-  - [模块列表](https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-modules.html)
-  - 用法：
+- 可以启用 filebeat 的一些内置模块，自动采集一些系统或流行软件的日志文件，此时不需要用户自行配置。
+  - 命令：
     ```sh
     ./filebeat modules
                       enable  [module]...   # 启用一些模块
                       disable [module]...   # 禁用一些模块
                       list                  # 列出启用、禁用的所有模块
+    ```
+  - filebeat 支持的 [模块列表](https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-modules.html)
+
+### 采集容器日志
+
+- 采集容器日志的配置示例：
+  ```yml
+  filebeat.inputs:
+  - type: container
+    paths:
+      - '/var/lib/docker/containers/*/*.log'
+    # stream: all                   # 从哪个流读取日志，可以取值为 stdout、stderr、all ，默认为 all
+    # 兼容 type: log 的配置参数
+  ```
+  - 注意 docker 的日志文件默认需要 root 权限才能查看。
+
+- 上述配置会采集所有容器的日志，而使用以下自动发现（autodiscover）的配置，可以只采集部分容器的日志：
+  ```yml
+  filebeat.autodiscover:
+    providers:
+      - type: docker                # 声明一个自动发现的日志源，为 docker 类型。这会调用内置 docker 变量模板
+        templates:
+          - condition:              # 只采集满足该条件的日志
+              contains:
+                docker.container.name: elasticsearch
+            config:
+              - type: container     # 兼容 type: container 的配置参数
+                paths:
+                  - /var/lib/docker/containers/${data.docker.container.id}/*.log
+
+      - type: kubernetes
+        ...
+  ```
+  - provider 为 docker 类型时，可以引用以下变量：
+    ```sh
+    data.docker.container.id
+    data.docker.container.image
+    data.docker.container.name
+    data.docker.container.labels
+    ```
+  - provider 为 kubernetes 类型时，详细配置见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover.html#_kubernetes) 。
+
+- filebeat 还支持从 Docker 容器的 labels ，或 k8s Pod 的 annotations 中自动加载配置，这称为基于提示（hints）的自动发现。
+  - 例如在 filebeat.yml 中加入配置：
+    ```yml
+    filebeat.autodiscover:
+      providers:
+        - type: docker
+          hints.enabled: true
+    ```
+    然后给 Docker 容器添加 labels ：
+    ```sh
+    co.elastic.logs/enabled: "true"             # 注意 labels 的取值只能为字符串类型
+    co.elastic.logs/exclude_lines: "['^DEBUG']"
     ```

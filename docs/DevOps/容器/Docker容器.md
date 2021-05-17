@@ -170,8 +170,11 @@ dockerd 会通过日志驱动器（logging driver）保存容器的日志。
   - syslog  ：将日志保存到宿主机的 syslog 中。
   - journald ：将日志保存到宿主机的 journald 中。
   - fluentd ：将日志保存到 fluentd 服务中。
+
 - 每个容器同时只能启用一种日志驱动器。
-  - 默认启用的是 json-file ，但是
+  - 默认启用的是 json-file 。
+  - 容器每次重启时并不会清空日志，而是继续写入。
+
 - 可以在 daemon.json 中配置日志驱动器，但需要重启 dockerd 才会生效，而且只会对新创建的容器生效。如下：
   ```json
   {

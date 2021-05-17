@@ -27,7 +27,7 @@ docker-compose
             start   [service]...      # 启动已停止的服务
             restart [service]...      # 重启服务
 
-            down                      # 销毁所有服务，删除用到的容器、网络
+            down                      # 销毁所有服务，删除用到的容器、网络、日志文件
                 -v                    # 再删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
                 --rmi all             # 再删除该服务用到的所有镜像
 
@@ -161,4 +161,14 @@ volumes:                      # 定义数据卷（服务挂载的数据卷都必
       done
       python3 scrape.py
   ```
-
+- docker-compose 会自动给容器添加以下 Labels ：
+  ```sh
+  com.docker.compose.config-hash         : "fcd1bc82cbd8c940c0f6b5bc9c053914332bc3a8a2f4d51b46924feb0e7c05b7"
+  com.docker.compose.container-number    : "1"
+  com.docker.compose.oneoff              : "False"
+  com.docker.compose.project             : "redis"
+  com.docker.compose.project.config_files: "docker-compose.yml"
+  com.docker.compose.project.working_dir : "/opt/redis"
+  com.docker.compose.service             : "redis"
+  com.docker.compose.version             : "1.29.1"
+  ```

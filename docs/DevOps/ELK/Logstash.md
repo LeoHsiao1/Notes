@@ -218,7 +218,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 - codec 类型的插件用于按特定的文本格式编码、解码数据，可以用于 pipeline 的 input 或 output 阶段。
 - 常见的几种 codec 插件：
   - line ：用于解码输入时，将每行文本视作一条日志。用于编码输出时，将每条日志保存成一行文本。
-  - multiline ：将连续的多行文本记录成同一条日志。不过该操作由 Beats 完成更方便。
+  - multiline ：将连续的多行文本记录成同一条日志。不过该操作可以由 Beats 完成，减轻 Logstash 的工作量。
   - json ：按 JSON 格式处理日志，忽略换行符、缩进。
   - json_lines ：根据换行符 `\n` 将文本分成多行，每行一条 JSON 格式的日志。
 

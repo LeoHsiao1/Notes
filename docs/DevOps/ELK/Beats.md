@@ -296,40 +296,32 @@
   # logging.metrics.enabled: true         # 在日志中输出 filebeat 的状态信息，等级为 info
   # logging.metrics.period: 30s           # 输出 metrics 信息的时间间隔
 
-  # 输出到 Logstash 的配置
-  output.logstash:
-    hosts: ['localhost:5044']
-
-  # 输出到 ES 的配置
-  # output.elasticsearch:
-  #   hosts: ['10.0.0.1:9200']
-  #   username: 'admin'
-  #   password: '123456'
-  #   index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
-
-  # Kibana 的配置。如果不需要直接连接到 Kibana ，则不必配置
-  # setup.kibana:
-  #   host: '10.0.0.1:5601'
-
-  # 对采集的日志事件进行加工处理，然后才输出
-  processors:
-    - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
-        when.not.contains.tags: forwarded # 如果该日志不属于转发的
-    - add_docker_metadata: ~              # 如果存在 Docker 环境，则自动添加容器、镜像的信息
-    - add_kubernetes_metadata: ~          # 如果存在 k8s 环境，则则自动添加 Pod 等信息
-  #   - drop_event:                       # 丢弃日志事件，如果它满足条件
-  #       when:
-  #         regexp:
-  #           message: "^DEBUG"
-  #   - drop_fields:
-  #       fields: ["cpu.user", "cpu.system"]
-
   filebeat.config.modules:                # 加载模块的配置
     path: ${path.config}/modules.d/*.yml
   ```
-    - Filebeat 同时只能启用一种 output 输出端。
-    - 可以配置全局的 processors ，作用于采集的所有日志事件，也可以给某个日志源单独配置。
-      - processors 的详细语法见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/defining-processors.html) 。
+
+- 可以将日志事件输出到多种目标：
+  ```yml
+  # 输出到终端，便于调试
+  # output.console:
+  #   pretty: true
+
+  # 输出到 Logstash
+  output.logstash:
+    hosts: ['localhost:5044']
+
+  # 输出到 ES
+  # output.elasticsearch:
+  #   hosts: ['10.0.0.1:9200']
+  #   username: 'admin'
+  #   password: '******'
+  #   index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
+
+  # 如果直接连接到 Kibana ，则需要以下配置
+  # setup.kibana:
+  #   host: '10.0.0.1:5601'
+  ```
+  - 同时只能启用一种输出端。
 
 - 所有类型的 beats 都支持以下 General 配置项：
   ```yml
@@ -340,6 +332,23 @@
   fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
   ```
   - 这些参数可以配置全局的，也可以给某个日志源单独配置。
+
+- 可以配置 processors ，在输出日志事件之前进行加工处理：
+  ```yml
+  processors:
+    - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
+        when.not.contains.tags: forwarded # 如果该日志不属于转发的
+    - add_docker_metadata: ~              # 如果存在 Docker 环境，则自动添加容器、镜像的信息。默认将 labels 中的点 . 替换成下划线 _
+    - add_kubernetes_metadata: ~          # 如果存在 k8s 环境，则则自动添加 Pod 等信息
+  #   - drop_event:                       # 丢弃日志事件，如果它满足条件
+  #       when:
+  #         regexp:
+  #           message: "^DEBUG"
+  #   - drop_fields:
+  #       fields: ["cpu.user", "cpu.system"]
+  ```
+  - processors 的详细语法见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/defining-processors.html) 。
+  - 可以配置全局的 processors ，作用于采集的所有日志事件，也可以给某个日志源单独配置。
 
 ### 采集日志文件
 
@@ -365,6 +374,7 @@
     # 解析 JSON 的操作会在 multiline 之前执行。因此建议让 filebeat 只执行 multiline 操作，将日志发送到 Logstash 时才解析 JSON
     # json.add_error_key: true      # 如果解析出错，则加入 error.message 等字段
     # json.keys_under_root: true    # 是否将解析的字典保存为日志的顶级字段
+    # json.message_key: log         # 指定存储日志内容的字段名。如果指定了该字段，当该字段为顶级字段、取值为字符串类型时，才会进行 multiline、include、exclude 操作
 
     # 默认将每行日志文本视作一个日志事件，可以通过 multiline 规则将连续的多行文本记录成同一个日志事件
     # multiline 操作会在 include_lines 之前执行
@@ -372,13 +382,13 @@
     # multiline.pattern: '^\s\s'    # 如果一行文本与 pattern 正则匹配，则按 match 规则与上一行或下一行合并
     # multiline.negate: false       # 是否反向匹配
     # multiline.match: after        # 取值为 after 则放到上一行之后，取值为 before 则放到下一行之前
-    # multiline.max_lines: 500      # 多行日志最多包含多少行，超过的行数不会采集
+    # multiline.max_lines: 500      # 多行日志最多包含多少行，超过的行数不会采集。默认为 500
 
-    # encoding: utf-8                     # 编码格式
     # exclude_files: ['\.tgz$']           # 排除一些正则匹配的文件
-    # include_lines: ['^WARN', '^ERROR']  # 只采集日志文件中正则匹配的那些行。默认采集所有非空的行。该操作会在 exclude_lines 之前执行
     # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中正则匹配的那些行
+    # include_lines: ['^WARN', '^ERROR']  # 只采集日志文件中正则匹配的那些行。默认采集所有非空的行。该操作会在 exclude_lines 之前执行
 
+    # encoding: utf-8               # 编码格式
     # scan_frequency: 10s           # 每隔多久扫描一次日志文件，如果有变动则创建 harvester 进行采集
     # ignore_older: 0s              # 不扫描最后修改时间在多久之前的文件，默认不限制时间。其值应该大于 close_inactive
     # harvester_buffer_size: 16384  # 每个 harvester 在采集日志时的缓冲区大小，单位 bytes
@@ -452,16 +462,24 @@
     ```
   - provider 为 kubernetes 类型时，详细配置见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover.html#_kubernetes) 。
 
-- filebeat 还支持从 Docker 容器的 labels ，或 k8s Pod 的 annotations 中自动加载配置，这称为基于提示（hints）的自动发现。
+- filebeat 还支持从 Docker 容器的 Labels ，或 k8s Pod 的 Annotations 中加载配置，这称为基于提示（hints）的自动发现。
   - 例如在 filebeat.yml 中加入配置：
     ```yml
     filebeat.autodiscover:
       providers:
         - type: docker
           hints.enabled: true
+          # hints.default_config:     # 设置容器默认的配置参数
+          #   type: container
+          #   paths:
+          #     - /var/log/containers/${data.docker.container.id}/*.log
     ```
-    然后给 Docker 容器添加 labels ：
+    然后给 Docker 容器添加 Labels ：
     ```sh
-    co.elastic.logs/enabled: "true"             # 注意 labels 的取值只能为字符串类型
-    co.elastic.logs/exclude_lines: "['^DEBUG']"
+    co.elastic.logs/enabled: "true"             # 注意 Labels 的取值只能为字符串类型
+    co.elastic.logs/json.*: ...
+    co.elastic.logs/multiline.*: ...
+    co.elastic.logs/exclude_lines: '^DEBUG'
+    co.elastic.logs/include_lines: ...
+    co.elastic.logs/processors.dissect.tokenizer: "%{key2} %{key1}"
     ```

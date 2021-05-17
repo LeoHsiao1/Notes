@@ -342,12 +342,12 @@ git fetch [name 或 URL]      # 拉取远端仓库的最新内容（包括分支
 
 git pull [name 或 URL]       # 先 fetch 远端仓库，然后将跟踪的远端分支合并到本地分支，但并不会合并到之前不存在的本地分支
 
-git push [name 或 URL]       # 推送本地仓库到远端仓库
-        --force              # 强制推送
-        --all                # 推送本地仓库的所有分支
-        <tag>                # 推送一个标签
-        --tags               # 推送所有标签
-        --delete <refs>      # 删除远端的分支或标签
+git push [name 或 URL]          # 推送本地仓库到远端仓库
+        --force                 # 强制推送
+        --all                   # 推送本地仓库的所有分支
+        <tag>                   # 推送一个标签
+        --tags                  # 推送所有标签
+        --delete origin <refs>  # 删除远端的分支或标签
 ```
 - 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
 - 拉取、推送代码时，默认每次都需要输入 git 服务器的账号、密码。

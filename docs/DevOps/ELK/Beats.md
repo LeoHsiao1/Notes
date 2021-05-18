@@ -293,8 +293,8 @@
   logging.json: true                      # 输出的日志采用 JSON 格式
   logging.to_files: true                  # 将日志保存到文件 ./logs/filebeat
   # logging.to_stderr: true               # 将日志输出到终端
-  # logging.metrics.enabled: true         # 在日志中输出 filebeat 的状态信息，等级为 info
-  # logging.metrics.period: 30s           # 输出 metrics 信息的时间间隔
+  # logging.metrics.enabled: true         # 是否在日志中记录监控信息，包括 filebeat 的状态、系统负载
+  # logging.metrics.period: 30s           # 记录监控信息的时间间隔
 
   filebeat.config.modules:                # 加载模块的配置
     path: ${path.config}/modules.d/*.yml
@@ -349,6 +349,7 @@
   ```
   - processors 的详细语法见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/defining-processors.html) 。
   - 可以配置全局的 processors ，作用于采集的所有日志事件，也可以给某个日志源单独配置。
+  - 配置了多个 processors 时，会按顺序执行。
 
 ### 采集日志文件
 
@@ -373,8 +374,9 @@
     # 如果启用任何一个以 json 开头的配置项，则会将每行日志文本按 JSON 格式解析，解析的字段默认保存到一个名为 json 的字段的子字典中
     # 解析 JSON 的操作会在 multiline 之前执行。因此建议让 filebeat 只执行 multiline 操作，将日志发送到 Logstash 时才解析 JSON
     # json.add_error_key: true      # 如果解析出错，则加入 error.message 等字段
-    # json.keys_under_root: true    # 是否将解析的字典保存为日志的顶级字段
     # json.message_key: log         # 指定存储日志内容的字段名。如果指定了该字段，当该字段为顶级字段、取值为字符串类型时，才会进行 multiline、include、exclude 操作
+    # json.keys_under_root: false   # 是否将解析的字典保存为日志的顶级字段
+    # json.overwrite_keys: false    # 在启用了 keys_under_root 时，如果解析出的字段与原有字段冲突，是否覆盖
 
     # 默认将每行日志文本视作一个日志事件，可以通过 multiline 规则将连续的多行文本记录成同一个日志事件
     # multiline 操作会在 include_lines 之前执行
@@ -455,10 +457,10 @@
   ```
   - provider 为 docker 类型时，可以引用以下变量：
     ```sh
-    data.docker.container.id
-    data.docker.container.image
-    data.docker.container.name
-    data.docker.container.labels
+    docker.container.id
+    docker.container.image
+    docker.container.name
+    docker.container.labels
     ```
   - provider 为 kubernetes 类型时，详细配置见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover.html#_kubernetes) 。
 
@@ -476,7 +478,7 @@
     ```
     然后给 Docker 容器添加 Labels ：
     ```sh
-    co.elastic.logs/enabled: "true"             # 注意 Labels 的取值只能为字符串类型
+    co.elastic.logs/enabled: true     # 默认启用，会采集所有容器的日志
     co.elastic.logs/json.*: ...
     co.elastic.logs/multiline.*: ...
     co.elastic.logs/exclude_lines: '^DEBUG'

@@ -123,6 +123,9 @@
         port => "5044"      # 监听一个端口，供 beats 发送数据进来。这里采用 TCP 协议通信，而不是 HTTP 协议
         host => "0.0.0.0"
         # client_inactivity_timeout => 60       # 如果 beats 连续多久未活动，则关闭 TCP 连接，单位为秒
+        # codec => "plain"                      # 设置处理输入数据的格式。默认为 plain
+        # include_codec_tag => true             # 是否给数据添加一个 tag ，记录 codec 信息。默认为 true ，使得每个日志事件都有一个 beats_input_codec_plain_applied 标签
+
       }
     }
 
@@ -135,7 +138,7 @@
       }
       # file {                                  # 输出到文件
       #   path  => "/tmp/http.log"
-      #   codec => line { format => "custom format: %{message}"}    # 指定数据的每行格式，默认每行一个 JSON 格式的日志事件
+      #   codec => line { format => "custom format: %{message}"}    # 设置处理数据的格式。默认为 json_lines
       # }
       elasticsearch {                           # 输出到 ES
         hosts => ["http://10.0.0.1:9200"]
@@ -225,10 +228,14 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 - codec 类型的插件用于按特定的文本格式编码、解码数据，可以用于 pipeline 的 input 或 output 阶段。
 - 常见的几种 codec 插件：
-  - line ：用于解码输入时，将每行文本视作一条日志。用于编码输出时，将每条日志保存成一行文本。
-  - multiline ：将连续的多行文本记录成同一条日志。不过该操作可以由 Beats 完成，减轻 Logstash 的工作量。
-  - json ：按 JSON 格式处理日志，忽略换行符、缩进。
-  - json_lines ：根据换行符 `\n` 将文本分成多行，每行一条 JSON 格式的日志。
+  ```sh
+  plain       # 纯文本，即不进行处理
+  line        # 用于解码输入时，将每行文本视作一条日志。用于编码输出时，将每条日志保存成一行文本
+  multiline   # 将连续的多行文本记录成同一条日志。不过该操作可以由 Beats 完成，减轻 Logstash 的工作量
+  json        # 按 JSON 格式处理，忽略换行符、缩进
+  json_lines  # 根据换行符 `\n` 将文本分成多行，每行视作一条 JSON 格式的日志
+  rubydebug   # 按 Ruby 调试信息的格式处理
+  ```
 
 ### grok
 
@@ -270,6 +277,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
     GREEDYDATA  .*
     ```
   - grok 内置了一些 [patterns](https://github.com/logstash-plugins/logstash-patterns-core/blob/master/patterns/ecs-v1/grok-patterns) 。
+
 - 例：在 pipeline 的 filter 中使用 grok 插件
   ```sh
   filter {

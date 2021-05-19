@@ -36,6 +36,7 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
       -m 10                       # 设置整个操作的超时时间（单位为秒）
       --connect-timeout 3         # 设置连接上 Web 服务器的超时时间（单位为秒）
       --progress-bar              # 显示进度条
+      --http1.0                   # 让 curl 采用 HTTP/1.0 协议。默认采用 HTTP/1.1
 
       # 使用代理
       -x [PROTOCOL://][user:password@]HOST:PORT   # --proxy

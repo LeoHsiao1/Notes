@@ -464,7 +464,7 @@ server {
           # proxy_pass http://unix:/tmp/backend.socket:/uri/;   # 可以转发给 Unix 套接字
 
           # proxy_set_header  Host       $host;           # 转发时加入请求头
-          # proxy_set_header  X-Real-IP  $remote_addr;
+          # proxy_set_header  X-Real-IP  $remote_addr;    # 通过 Header 记录客户端的真实 IP ，供上游服务器识别
           # proxy_pass_request_body on;                   # 转发请求 body
           # proxy_set_body    $request_body;              # 设置转发过去的请求 body
 
@@ -740,32 +740,23 @@ server {
 ：用于定义 TCP 代理。
 - 可用范围：main
 - 例：
-    ```sh
-    stream {
-        upstream mysql {
-            server 10.0.0.1:3306 weight=5;
-            server 10.0.0.2:3306 weight=10;
-        }
-        server {
-            listen 3306;
-            proxy_pass mysql;
-            proxy_timeout 3s;
-            proxy_connect_timeout 1s;
-        }
-    }
-    ```
+  ```sh
+  stream {
+      upstream mysql {
+          server 10.0.0.1:3306 weight=5;
+          server 10.0.0.2:3306 weight=10;
+      }
+      server {
+          listen 3306;
+          proxy_pass mysql;
+          proxy_timeout 3s;
+          proxy_connect_timeout 1s;
+      }
+  }
+  ```
 
 ## 关于日志
 
-### error_log
-
-：配置 Nginx 的错误日志，它会记录 Nginx 的内部运行信息。
-- 可用范围：main ，http ，mail ，stream ，server ，location
-- 语法：
-  ```sh
-  error_log path [level];
-  ```
-  - 日志级别从复杂到简单依次为：debug, info, notice, warn, error, crit, alert, emerg
 
 ### access_log
 
@@ -784,12 +775,22 @@ server {
     - Nginx worker 正在关闭或重新打开日志文件。
   - gzip 的默认压缩级别为 1 。取值为 9 时压缩率最高，速度最慢。
 - 例：
-  ```
+  ```sh
   access_log off;       # 取消当前作用域的访问日志
   ```
   ```sh
   access_log logs/access.log combined gzip=1 flush=5m if=$need_log;
   ```
+
+### error_log
+
+：配置 Nginx 的错误日志，它会记录 Nginx 的内部运行信息。
+- 可用范围：main ，http ，mail ，stream ，server ，location
+- 语法：
+  ```sh
+  error_log path [level];
+  ```
+  - 日志级别从复杂到简单依次为：debug, info, notice, warn, error, crit, alert, emerg
 
 ### log_format
 
@@ -800,14 +801,9 @@ server {
   log_format combined '$remote_addr - $remote_user [$time_local] '
                       '"$request" $status $body_bytes_sent '
                       '"$http_referer" "$http_user_agent"';
+
   ```
-- 例：
-  ```sh
-  log_format  debug '[$time_local] $remote_addr:$remote_port to $server_addr:$server_port  "$request" $status\n'
-                    'content_type: $http_content_type\n'
-                    'body: $request_body\n';       # 定义一种日志格式，名为 debug
-  access_log  /var/log/nginx/access.log  debug;    # 设置 access_log 的路径、日志格式
-  ```
+- log_format 指令只能定义 access_log 的格式，不能改变 error_log 的格式。
 
 ## 关于变量
 
@@ -866,18 +862,19 @@ server {
   uri               # 请求 URI 中的路径部分，比如原始 URI 为 /static/1.html?id=1 时，路径部分为 /static/1.html
   args              # 请求 URL 中的 Query String
   is_args           # 如果存在 Query String 则取值为 ? （即使格式不正确），否则取值为空
-  args_NAME         # Query String 中指定参数的值，不区分大小写
+  args_XXX          # Query String 中指定参数的值，不区分大小写
 
   host              # 请求指向的主机名，取值来自：请求行中的主机名、请求头中的 Host 字段、处理该请求的 server_name
   request_filename  # 请求 URI 指向的服务器文件，比如 /www/static/1.html
   document_root     # request_filename 文件在服务器上所处的根目录，通常由 root 指令决定
 
   request_length    # 请求报文的长度
+  server_protocol   # 请求采用的协议及版本，通常取值为 HTTP/1.0、HTTP/1.1 或 HTTP/2.0
   scheme            # 请求采用的协议，取值为 http 或 https
-  https             # 如果采用了 HTTPS 协议则取值为 on ，否则取值为空
+  https             # 如果请求采用了 HTTPS 协议则取值为 on ，否则取值为空
 
-  http_NAME         # headers 中指定参数的值，不区分大小写
-  cookie_NAME       # cookie 中指定参数的值，不区分大小写
+  http_XXX         # headers 中指定参数的值，不区分大小写
+  cookie_XXX       # cookie 中指定参数的值，不区分大小写
 
   request_body      # 请求 body 。只有当 Nginx 执行了 proxy_pass、fastcgi_pass、uwsgi_pass 或 scgi_pass 时才会将请求 body 载入内存，否则该变量取值为空
   ```
@@ -885,13 +882,17 @@ server {
 - 关于 HTTP 响应报文：
   ```sh
   status            # 响应报文的状态码
-  request_time      # 请求的处理时长，单位 ms
+  bytes_sent        # 响应报文的大小，单位为 bytes
+  body_bytes_sent   # 响应报文 body 的大小
   ```
 
 - 关于客户端：
   ```sh
   remote_addr       # 客户端的地址
   remote_port       # 客户端的端口
+  remote_user       # 客户端的用户名（用于 HTTP Basic Auth）
+  http_referer
+  http_user_agent
   ```
 
 - 关于服务器：
@@ -899,11 +900,14 @@ server {
   server_addr       # 服务器的 IP ，由请求指向的 IP 决定，比如 127.0.0.1
   server_name       # 服务器的名称，由 Nginx 中 server{} 模块配置的 server_name 参数决定，采用小写
   server_port       # 服务器监听的端口号
-  server_protocol   # 服务器采用的 HTTP 协议版本，通常为 HTTP/1.0 或 HTTP/1.1
+  request_time      # 请求的处理时长，单位 ms
 
   hostname          # 服务器的主机名，由服务器所在主机决定
   pid               # Nginx 当前 worker process 的 PID
   nginx_version     # Nginx 的版本号
+
+  upstream_addr
+  upstream_response_time
 
   msec              # Unix 时间戳格式的服务器时间，比如 1603792024.820
   time_iso8601      # ISO 格式的服务器时间，比如 2020-10-28T10:27:14+08:00

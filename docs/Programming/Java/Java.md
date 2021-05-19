@@ -49,6 +49,8 @@
 - Servlet
   - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
   - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
+- Log4j
+  - ：一个用于记录 Java 程序日志的库，支持自动切割日志。
 
 ### Spring
 

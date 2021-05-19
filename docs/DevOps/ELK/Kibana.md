@@ -39,10 +39,11 @@
 - Kibana 网站是单页面应用，但是加载网页时很慢，刷新首页都需要 5 秒。
 - 建议在 Kibana 网站上进行以下设置：
   - 设置 Default 工作区，只显示 Kibana、Observability 中需要用到的部分功能。
-  - 将显示的日期格式（Date format）设置为 `YYYY/MM/D HH:mm:ss.SSS` 。
-  - 将 Kibana 登录之后默认跳转的页面（defaultRoute）设置为 `/app/discover` 。
-  - 将 Discover 页面，每个文档显示的最大高度（Maximum table cell height）设置为 0 ，即取消限制。否则一个文档包含的内容过长时，可能显示不全。
-  - 将 Discover 页面，查询时最多返回的文档数（Number of rows），从默认值 500 改为 200 ，从而降低查询的耗时。
+  - Date format ：显示的日期格式，比如 `YYYY/MM/D HH:mm:ss.SSS` 。
+  - defaultRoute ：Kibana 网站登录之后默认跳转的页面，比如 `/app/discover` 。
+  - Maximum table cell height ：Discover 页面每个文档显示的最大高度。建议设置为 0 ，即取消限制。否则一个文档包含的内容过长时，可能显示不全。
+  - Number of rows ：Discover 页面查询时返回的文档最大数量。
+    - 默认值为 500 ，减小该值可以降低查询的耗时，特别是每个文档体积较大时。
     - 查询到文档之后，会先在浏览器中显示一部分文档。当用户向下翻页时，才动态加载后续的文档，直到显示出查询到的所有文档。
 
 ### Discover

@@ -282,7 +282,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
   ```sh
   filter {
     grok {
-      match => { "message" => "%{TIMESTAMP_ISO8601:timestamp}\s+(?<level>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$" }  # 解析 message 字段，通过正则匹配提取字段
+      match => { "message" => "%{TIMESTAMP_ISO8601:timestamp}\s+(?<level>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$" }  # 解析 message 字段，通过正则匹配提取内容另存为字段
       overwrite => [ "message" ]                        # 允许提取的这些字段覆盖日志事件中已存在的字段
       # patterns_dir => ["config/patterns"]             # 加载 patterns 的定义文件
       # keep_empty_captures => false                    # 如果匹配到的字段为空，是否依然保留该字段
@@ -303,6 +303,15 @@ pipeline 的语法与 Ruby 相似，特点如下：
     }
   }
   ```
+  - 在 if 语句内可以调用 filter 插件，但反之不行。可以写成以下形式：
+    ```sh
+    if xxx {
+      grok {}
+      if xxx {
+        grok {}
+      }
+    }
+    ```
   - 如果原始日志的每行格式可能不同，则可以在 match 中指定多个表达式用于尝试匹配：
     ```sh
     match => {

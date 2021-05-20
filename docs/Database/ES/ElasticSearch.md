@@ -4,7 +4,6 @@
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
 - 基于 Java 开发，基于 Lucene 实现。
 - 采用 C/S 架构、TCP 通信。
-  - 客户端通过 Restful API 访问服务器。
 
 ## 版本
 
@@ -12,30 +11,27 @@
 - v6.0 ：于 2017 年发布。
 - v7.0 ：于 2019 年发布。
 
-## 用法示例
+## 原理
 
-- 客户端向 ES 服务器的根路径发出 GET 请求，即可查看 ES 的基本信息。如下：
-  ```sh
-  [root@Centos ~]# curl 127.0.0.1:9200
-  {
-    "name" : "node-1",
-    "cluster_name" : "cluster-1",
-    "cluster_uuid" : "cDXF4mIeRqK4Dlj_YmSSoA",
-    "version" : {
-      "number" : "7.10.0",
-      "build_flavor" : "default",
-      "build_type" : "tar",
-      "build_hash" : "7f634e9f44834fbc12724506cc1da681b0c3b1e3",
-      "build_date" : "2020-02-06T00:09:00.449973Z",
-      "build_snapshot" : false,
-      "lucene_version" : "8.4.0",
-      "minimum_wire_compatibility_version" : "6.8.0",
-      "minimum_index_compatibility_version" : "6.0.0-beta1"
-    },
-    "tagline" : "You Know, for Search"
-  }
-  ```
+- ES 将数据以 JSON 格式存储。
+  - 每条数据称为一个文档（document）。
+  - 存储文档的集合称为索引（index）。
 
+- 使用 ES 的一般流程：
+  1. 在 ES 中创建索引，定义文档的数据结构。
+  2. 向索引中写入一些文档。
+  3. 向索引中查询一些文档。
+
+- ES 的每个索引由多个分片（shard）组成。
+  - 在 ES 索引中进行搜索时，是先在它的每个分片中进行搜索，然后合并它们的搜索结果。
+  - 索引下新增的文档会平均分配到各个分片中，而分片可以存储在不同 ES 节点上。
+    - 用户发出查询请求时，不必知道文档存储在哪个分片、分片存储在哪个节，因为 ES 会自动完成查询。
+  - 单个分片的存储容量理论上没有上限，但是存储的文档越多，则查询耗时越久。
+
+
+## 客户端
+
+- ES 服务器提供了 Restful API 供客户端访问。
 - 客户端向 ES 服务器发出请求的标准格式如下：
   ```sh
   [root@Centos ~]# curl -X GET 127.0.0.1:9200/_count?pretty -H 'content-Type:application/json' -d '
@@ -54,20 +50,19 @@
     }
   }
   ```
-  - 客户端通过 Restful API 访问服务器。
-    - 如果客户端发出的请求报文 body 不能按 JSON 格式正常解析，ES 就会返回 HTTP 400 报错。
-    - curl 命令加上 `-H 'content-Type:application/json'` 之后，便可以发送 JSON 格式的查询参数。
-    - ES 返回的响应报文 body 是 JSON 格式的字符串。
-      - 如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
-  - 为了方便书写，下文将客户端的请求简记成如下格式：
-    ```json
-    GET /_count
-    {
-      "query": {
-        "match_all": {}
-      }
+  - curl 命令加上 `-H 'content-Type:application/json'` 之后，便可以发送 JSON 格式的查询参数。
+  - 如果客户端发出的请求报文 body 不能按 JSON 格式正常解析，ES 就会返回 HTTP 400 报错。
+  - ES 返回的响应报文 body 是 JSON 格式的字符串。
+    - 如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
+- 为了方便书写，下文将客户端的请求简记成如下格式：
+  ```json
+  GET /_count
+  {
+    "query": {
+      "match_all": {}
     }
-    ```
+  }
+  ```
 
 ## 相关概念
 

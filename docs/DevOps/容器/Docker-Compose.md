@@ -83,8 +83,8 @@ services:                     # 开始定义服务
     init: true                # 使用 init 作为 1 号进程
     hostname: CentOS          # 主机名
     working_dir: /opt         # 工作目录
-    entrypoint: ["echo", "1"]       # 覆盖 Dockerfile 中的 ENTRYPOINT
-    command: [tail, -f, /dev/null]  # 覆盖 Dockerfile 中的 CMD
+    entrypoint: ["echo", "1"]       # 覆盖 Dockerfile 中的 ENTRYPOINT ，可以是 exec 格式或 shell 格式
+    command: tail -f /dev/null      # 覆盖 Dockerfile 中的 CMD
     restart: unless-stopped   # 重启策略
 
     dns:                      # 指定 DNS 服务器
@@ -128,7 +128,7 @@ services:                     # 开始定义服务
       start_period: 40s
 
 networks:                     # 定义网络
-  # default:                  # 如果没有自定义网络，则默认创建该网络
+  # default:                  # 如果没有自定义网络，则默认创建一个名为 default 的网络
   net:
     driver: bridge
 

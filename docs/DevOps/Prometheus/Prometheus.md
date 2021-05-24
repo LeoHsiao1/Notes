@@ -44,24 +44,46 @@
 
 - 下载二进制版：
   ```sh
-  wget https://github.com/prometheus/prometheus/releases/download/v2.18.1/prometheus-2.18.1.linux-amd64.tar.gz
+  wget https://github.com/prometheus/prometheus/releases/download/v2.27.1/prometheus-2.27.1.linux-amd64.tar.gz
   ```
   解压后启动：
   ```sh
   ./prometheus
-              --config.file /etc/prometheus/prometheus.yml   # 使用指定的配置文件
-              --storage.tsdb.retention 15d                   # TSDB 保存数据的最长时间（默认为 15 天）
-              --web.listen-address '0.0.0.0:9090'            # 监听的地址
-              --web.external-url 'http://10.0.0.1:9090'      # 供外部访问的 URL
-              --web.enable-admin-api                         # 启用管理员的 HTTP API .比如删除 tsdb 的数据
-              --web.enable-lifecycle                         # 启用 reload、quit 等 HTTP API
-  ```
+              --config.file /etc/prometheus/prometheus.yml  # 使用指定的配置文件
+              # --web.listen-address '0.0.0.0:9090'         # 监听的地址
+              # --web.external-url 'http://10.0.0.1:9090'   # 供外部访问的 URL
+              # --web.enable-admin-api                      # 启用管理员的 HTTP API .比如删除 tsdb 的数据
+              # --web.enable-lifecycle                      # 启用 reload、quit 等 HTTP API
 
-- 或者用 Docker 部署：
+              # - --storage.tsdb.retention.time=15d         # TSDB 的最大保存时长
+              # - --storage.tsdb.retention.size=500GB       # TSDB 的最大保存体积
+              # - --query.timeout=2m                        # 每次查询的超时时间
+              # - --query.max-samples=50000000              # 每次查询时最多将多少个指标载入内存，如果超过该数量，则查询失败
+              # - --log.format=json
+  ```
+  - 配置文件 prometheus.yml 主要用于控制 Prometheus 的监控任务，而 Prometheus 自身的运行状态只能通过命令行参数控制。
+
+- 或者用 docker-compose 部署：
+  ```yml
+  version: "3"
+
+  services:
+    prometheus:
+      container_name: prometheus
+      image: prom/prometheus:v2.27.1
+      restart: unless-stopped
+      command:
+        - --web.external-url=http://10.0.0.1:9090
+      ports:
+        - 9090:9090
+      volumes:
+        - .:/prometheus
+  ```
+  需要先配置挂载目录的权限：
   ```sh
-  docker run -d --name prometheus -p 9090:9090 \
-          -v /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \    # 挂载配置文件（可选项）
-          prom/prometheus
+  mkdir data
+  touch prometheus.yml
+  chown -R 65534 .
   ```
 
 ### 分布式部署

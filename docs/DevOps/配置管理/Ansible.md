@@ -62,14 +62,14 @@ ansible-playbook <name>.yml...       # 执行 playbook
 配置示例：
 ```ini
 [defaults]
-; inventory = /etc/ansible/hosts        ; Inventory 文件的路径
-log_path = /var/log/ansible.log         ; 记录每次执行 ansible 的 stdout（默认不保存日志）
-; forks = 5                             ; 同时最多执行多少个任务
-host_key_checking = False               ; 进行 SSH 连接时不检查远程主机的密钥是否与 ~/.ssh/known_hosts 中记录的一致
-; remote_tmp = $HOME/.ansible/tmp       ; 登录远程主机时使用的工作目录
-; interpreter_python = auto_legacy      ; 远程主机上的 Python 解释器的路径，用于执行 Ansible 模块
+# inventory = /etc/ansible/hosts      # Inventory 文件的路径
+log_path = /var/log/ansible.log       # 记录每次执行 ansible 的 stdout（默认不保存日志）
+# forks = 5                           # 同时最多执行多少个任务
+host_key_checking = False             # 进行 SSH 连接时不检查远程主机的密钥是否与 ~/.ssh/known_hosts 中记录的一致
+# remote_tmp = $HOME/.ansible/tmp     # 登录远程主机时使用的工作目录
+# interpreter_python = auto_legacy    # 远程主机上的 Python 解释器的路径，用于执行 Ansible 模块
 ```
-- auto_legacy 表示默认使用 /usr/bin/python ，不存在的话则查找其它 Python 路径。
+- auto_legacy 表示默认使用 `/usr/bin/python` ，如果不存在则查找其它 Python 路径。
 
 ## Inventory
 
@@ -77,34 +77,35 @@ Ansible 将待管理主机（称为 host）的配置信息保存在 .ini 文件�
 
 配置示例：
 ```ini
-localhost ansible_connection=local    ; 定义一个不分组的 host ，连接方式为本机
+localhost ansible_connection=local    # 定义一个不分组的 host ，连接方式为本机
 
-[web_nodes]                           ; 定义一个组，名为 web_nodes
-www.example.com                       ; 添加一个 host 的地址
+[web_nodes]                           # 定义一个组，名为 web_nodes
+www.example.com                       # 添加一个 host 的地址
 10.0.0.1
-node100 ansible_host=10.0.0.2         ; 添加一个 host 的名字、地址
+node100 ansible_host=10.0.0.2         # 添加一个 host 的名字、地址
 
-[web_nodes:vars]                      ; 设置组 web_nodes 的参数
-; ansible_connection=ssh              ; Ansible 的连接方式
-; ansible_ssh_port=22                 ; SSH 登录时的端口号
-ansible_ssh_user='root'               ; SSH 登录时的用户名
-ansible_ssh_pass='123456'             ; SSH 登录时的密码（使用该项需要安装 sshpass）
-; ansible_ssh_private_key_file='~/.ssh/id_rsa'   ; 用密钥文件进行 SSH 登录
-; ansible_become=false                ; SSH 登录之后是否切换用户
-; ansible_become_method=sudo          ; 切换用户的方式
-; ansible_become_user=root            ; 切换到哪个用户
-; ansible_become_pass='123456'        ; 用 sudo 切换用户时的密码
-; ansible_python_interpreter=/usr/bin/python
+[web_nodes:vars]                      # 设置组 web_nodes 的参数
+# ansible_connection=ssh              # Ansible 的连接方式
+# ansible_ssh_port=22                 # SSH 登录时的端口号
+ansible_ssh_user='root'               # SSH 登录时的用户名
+ansible_ssh_pass='123456'             # SSH 登录时的密码（使用该项需要安装 sshpass）
+# ansible_ssh_private_key_file='~/.ssh/id_rsa'   # 用密钥文件进行 SSH 登录
+# ansible_become=false                # SSH 登录之后是否切换用户
+# ansible_become_method=sudo          # 切换用户的方式
+# ansible_become_user=root            # 切换到哪个用户
+# ansible_become_pass='123456'        # 用 sudo 切换用户时的密码
+# ansible_python_interpreter=/usr/bin/python
 ```
-- 默认有两个隐式的分组：
-  - all ：包含所有 host 。
-  - ungrouped ：包含所有未分组的 host 。
 - host 的地址可以为 IP 、域名或主机名，只要能被 SSH 连接。
+  - 特别地， `ansible_connection=local` 代表直接连接本机，不会采用 SSH 连接的配置参数。
 - 一个 host 可以同时属于多个组，甚至一个组可以是另一个组的成员。
+  - 默认有两个隐式的分组：
+    - all ：包含所有 host 。
+    - ungrouped ：包含所有未分组的 host 。
 - 组名支持使用下标，如下：
   ```ini
-  web_nodes[0]    ; 选取第一个 host
-  web_nodes[0:4]  ; 选取第 0 ~ 4 个 host （包括第 4 个）
+  web_nodes[0]    # 选取第一个 host
+  web_nodes[0:4]  # 选取第 0 ~ 4 个 host （包括第 4 个）
   web_nodes[-1]
   ```
 - Inventory 文件中以明文形式存储 SSH 密钥，需要小心泄露。比如将 Ansible 目录设置为只允许 root 用户访问：

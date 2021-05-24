@@ -91,18 +91,19 @@
 
 ### 管理节点
 
-- 用户可以添加一些主机作为 Jenkins 的运行环境，称为节点（Node）。
-- Jenkins 服务器所在的节点称为 master 节点，用户还可以添加其它 slave 节点，这些节点都可以用于运行 Job 。
-- 添加 slave 节点时，一般通过 SSH 密钥连接。步骤如下：
+- 用户可以添加一些主机、Docker 容器作为 Jenkins 的运行环境，称为节点（Node）、代理（agent）、slave 。
+  - Jenkins 服务器所在的节点称为 master ，而其它节点称为 slave ，这些节点都可以用于运行 Job 。
+  - 在每个节点上，Jenkins 都需要使用一个目录存储数据。可以指定 `/opt/jenkins/` 目录，或者创建 jenkins 用户，然后使用 `/home/jenkins/` 目录。
+  - 增加节点有利于实现 Jenkins 的横向扩容。
+- 添加 slave 节点时，建议通过 SSH 密钥连接。步骤如下：
   1. 安装 `SSH Build Agents` 插件。
   2. 在 slave 节点上安装 JDK 。
-     建议再创建 jenkins 用户，以便使用 /home/jenkins/ 作为工作目录。或者直接使用 /opt/jenkins/ 作为工作目录。
   3. 将 master 节点的 `~/.ssh/id_rsa.pub` 公钥拷贝到 slave 节点的 `~/.ssh/authorized_keys` 中。
   4. 在 Jenkins 上创建一个 `SSH Username with private key` 类型的凭据，填入 master 节点的 `~/.ssh/id_rsa` 私钥。
-  5. 在 Jenkins 上新建一个节点，选择以 `Launch agents via SSH` 方式连接。
+  5. 在 Jenkins 上添加该节点，选择以 `Launch agents via SSH` 方式连接。
 - 当 Jenkins master 通过 SSH 连接到 slave 之后（以 notty 方式连接，不创建终端），会执行 `java -jar remoting.jar`  命令，保持运行一个客户端。
-  - master 每次连接 slave 时，不会加载 `/etc/profile` 和 `~/.bash_profile` ，只会加载 `/etc/bashrc` 和 `~/.bashrc` 。\
-    因此，需要在 slave 的配置页面添加 Prefix Start Agent Command ：`source /etc/profile;source ~/.bash_profile;` 。
+  - master 每次连接 slave 时，不会加载 `/etc/profile` 和 `~/.bash_profile` ，只会加载 `/etc/bashrc` 和 `~/.bashrc` 。
+  - 建议在 slave 的配置页面添加 Prefix Start Agent Command ：`source /etc/profile;source ~/.bash_profile;` 。
   - 客户端执行的所有 shell 命令都会继承它的 shell 环境变量。因此，当用户修改 shell 环境变量时，客户端不会自动更新，必须手动将 slave 断开重连。
 
 ### 管理权限

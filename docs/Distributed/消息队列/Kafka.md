@@ -193,6 +193,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   # delete.topic.enable=false               # 是否允许删除 topic 。默认不允许，在 kafka 中删除 topic 时只是标记为删除状态，需要在 zk 中手动删除
   # num.partitions=1                        # 新建 topic 时默认的 partition 数
   # message.max.bytes=1048576               # 允许接收的生产者的每批消息的最大大小，默认为 1M 。该参数作用于所有 topic ，也可以对每个 topic 分别设置 max.message.bytes
+  # default.replication.factor=1            # 默认每个 partition 的副本数
   # replica.fetch.max.bytes=1048576         # 限制 partition 的副本之间拉取消息的最大大小，默认为 1M
   # replica.lag.time.max.ms=30000           # replica 的最大滞后时间
 

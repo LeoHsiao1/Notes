@@ -420,6 +420,7 @@ scrape_configs:
   label_replace(go_goroutines, "new_label", "$1-$2", "instance", "(.*):(.*)")  # 给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance 标签的值的正则匹配的结果
   ```
 
+- 如果矢量包含多个时间序列，用算术函数会分别对这些时间序列进行运算，而用聚合函数会将它们合并成一个或多个时间序列。
 - 矢量可以使用以下算术函数：
   ```sh
   abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
@@ -437,7 +438,6 @@ scrape_configs:
   rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的每秒平均增长率（时间间隔越长，曲线越平缓）
   irate(go_goroutines[5m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的每秒平均增长率（曲线比较尖锐，接近瞬时值）
   ```
-  - 如果矢量包含多个时间序列，算术函数会分别对这些时间序列进行运算，而聚合函数会将它们合并成一个或多个时间序列。
   - 使用算术函数时，时间间隔 `[t]` 必须要大于矢量的采样间隔，否则计算结果为空。
   - 例如：正常情况下 node_time_seconds 的值是每秒加 1 ，因此不论 scrape_interval 的取值为多少，
     - delta(node_time_seconds[1m]) 计算得到的每个数据点的值都是 60 。
@@ -455,18 +455,30 @@ scrape_configs:
 
 - 矢量可以使用以下聚合函数：
   ```sh
-  count(go_goroutines)                  # 返回每个时刻处，该矢量包含的数据点的数量（即包含几个时间序列）
+  # 基本统计
+  count(go_goroutines)                  # 返回每个时刻处，该矢量的数据点的数量（即包含几个时间序列）
   count_values("value", go_goroutines)  # 返回每个时刻处，各种值的数据点的数量，并按 {value="x"} 的命名格式生成多个时间序列
   sum(go_goroutines)                    # 返回每个时刻处，所有数据点的总和（即将曲线图中所有曲线叠加为一条曲线）
   min(go_goroutines)                    # 返回每个时刻处，数据点的最小值
   max(go_goroutines)                    # 返回每个时刻处，数据点的最大值
   avg(go_goroutines)                    # 返回每个时刻处，数据点的平均值
-  stdvar(go_goroutines)                 # 返回每个时刻处，数据点之间的标准方差
+ 
+  # 高级统计
+  stddev(go_goroutines)                 # 返回每个时刻处，数据点之间的标准差
+  stdvar(go_goroutines)                 # 返回每个时刻处，数据点之间的方差
   topk(3, go_goroutines)                # 返回每个时刻处，最大的 3 个数据点
   bottomk(3, go_goroutines)             # 返回每个时刻处，最小的 3 个数据点
   quantile(0.5, go_goroutines)          # 返回每个时刻处，大小排在 50% 位置处的数据点
+
+  # 修改数据点的值
+  last_over_time(go_goroutines[1m])     # 返回每个时刻处，过去 1m 内最新数据点的值
+  group(go_goroutines)                  # 将每个数据点的取值置为 1
+  sgn(go_goroutines)                    # 判断每个数据点取值的正负。如果为正数、负数、0，则分别置为 1、-1、0
+  clamp(go_goroutines, 0, 10)           # 限制每个数据点取值的最小值、最大值，语法为 clamp(vector, min, max)
+  clamp_min(go_goroutines, 0)           # 限制最小值
+  clamp_max(go_goroutines, 10)          # 限制最大值
   ```
-  - 聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 _over_time 后缀的函数，如下：
+  - 聚合函数默认不支持输入有限时间范围内的矢量，需要使用带 `_over_time` 后缀的函数，如下：
     ```sh
     sum_over_time(go_goroutines[1m])    # 返回每个时刻处，过去 1m 内数据点的总和（分别计算每个时间序列）
     avg_over_time(go_goroutines[1m])    # 返回每个时刻处，过去 1m 内的平均值

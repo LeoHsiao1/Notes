@@ -38,6 +38,7 @@
   - [部署](ES/部署.md)
   - [管理单元](ES/管理单元.md)
   - [查询](ES/查询.md)
+  - [配置](ES/配置.md)
 - LDAP
   - [LDAP](LDAP/LDAP.md)
   - [OpenLDAP](LDAP/OpenLDAP.md)

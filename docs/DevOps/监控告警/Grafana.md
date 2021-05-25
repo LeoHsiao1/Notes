@@ -17,9 +17,26 @@
   ```
   - 默认的访问地址为 <http://localhost1:3000> 。默认的用户名、密码是 admin、admin 。
 
-- 或者用 Docker 部署：
+- 或者用 docker-compose 部署：
+  ```yml
+  version: "3"
+
+  services:
+    grafana:
+      container_name: grafana
+      image: grafana/grafana:8.0.0-beta2
+      restart: unless-stopped
+      ports:
+        - 3000:3000
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ./grafana.ini:/etc/grafana/grafana.ini
+        - ./grafana.db:/var/lib/grafana/grafana.db
+        - ./plugins:/var/lib/grafana/plugins
+  ```
+  需要先配置挂载目录的权限：
   ```sh
-  docker run -d --name grafana -p 3000:3000 grafana/grafana
+  chown -R 472 .
   ```
 
 ## 用法
@@ -100,28 +117,50 @@
 
 ### Transform
 
-：Grafana 7.0 新增的模块，用于在 Panel 作出显示之前转换 Query 的数据。包括以下功能：
+：Grafana 7.0 新增的模块，用于在 Panel 作出显示之前转换 Query 的数据，包括多种功能。
+
+筛选显示的数据：
+- Filter data by query
+  - ：筛选显示当前 Panel 中的各个 Query 。
+- Filter by name
+  - ：筛选显示各个字段，支持正则匹配。
+  - 可以同时作用于多个 Query 。
+- Filter data by values
+  - ：根据字段的值，筛选显示的数据。支持正则匹配。
+- Organize fields
+  - ：筛选显示各个字段，支持重命名、排序。
+  - 当前 Panel 中只有一个 Query 时才能进行该配置。
+- Group by
+  - ：按某个字段的取值，对数据进行分组，取值相同的归为一组。
+- Sort by
+  - ：根据某个字段的取值，对数据进行排序。
+
+合并输入的数据：
 - Merge
-  - 用于自动将当前 Panel 中的所有 Query 的数据合并成一个 Query 。
-  - 可用于将多个表格组合成一个表格，它会自动去掉重复的列。
+  - ：自动将当前 Panel 中的所有 Query 的数据合并成一个 Query 。
+  - 可用于将多个表格组合成一个表格，它会自动去掉取值重复的列。
 - Outer join
-  - 用于将输入的所有数据按某个字段合并。可用于合并多个时间序列、多个 Query 。
+  - ：将输入的所有数据按某个字段合并。可用于合并多个时间序列、多个 Query 。
   - 例如：将所有数据按字段 A 合并后，会得到一个以字段 A 作为第一列的新表格，显示字段 A 每种取值时对应的其它字段的取值。
   - 与 Merge 功能相比，它不会自动去掉重复的列。但是如果有多行数据的第一列取值重复，则只会保留其中一行，丢失其它行，因此应该确保数据的第一列取值不会重复。
+- Series to row
+  - ：将输入的多个时间序列合并成一个时间序列。
+  - 原理：将多个时间序列的所有值合并为一个 Value 字段，所有 Legend 名合并为一个 Metric 字段，原有字段则保留不变。
+- Concatenate fields
+  - ：将输入的多个表合并为一个表。
+  - 原理：直接拼合，如果有重名的字段，则在字段名之后加上编号，比如 name 1 、name 2 。
+
+修改字段：
 - Reduce
-  - 用于显示数据的每个字段的 Min、Max 等统计值，并隐藏具体的值。
+  - ：显示数据的每个字段的 Min、Max 等统计值，并隐藏具体的值。
   - 可用于将一个包含很多行数据的表格转换成一个行数较少的表格。
 - Add field from calculation
-  - 用于增加一个新字段。其值可以是 Min、Max 等统计值，也可以是已有的某两个字段作加减乘除的运算结果。
+  - ：增加一个新字段。其值可以是 Min、Max 等统计值，也可以是已有的某两个字段作加减乘除的运算结果。
   - Reduce 功能是显示所有数据的字段 A 的统计值（即统计表格的每列），而该功能是显示每条数据的某些字段的统计值（即统计表格的每行）。
-- Filter data by query
-  - 用于筛选显示当前 Panel 中的各个 Query 。
-- Filter by name
-  - 用于筛选显示各个字段，支持正则匹配。
-  - 可以同时作用于多个 Query 。
-- Organize fields
-  - 用于筛选显示各个字段，支持重命名、排序。
-  - 当前 Panel 中只有一个 Query 时才能进行该配置。
+- Rename by regex
+  - ：对字段名进行正则替换。
+- Labels to fields
+  - ：将时间序列中的标签转换成字段，从而将数据从 Time Series 转换成 Table 格式。
 
 ### Share
 
@@ -193,20 +232,24 @@
 ## 配置
 
 - 以 rpm 包的方式部署 Grafana 时，有以下几个重要文件，拷贝它们就可以备份 Grafana ：
-  - /etc/grafana/grafana.ini ：配置文件。
-  - /var/lib/grafana/grafana.db ：一个 SQLite 数据库，保存 Grafana 自身的数据，比如用户表、仪表盘配置。
-  - /var/lib/grafana/plugins/ ：插件目录。
-  - /var/log/grafana/ ：日志目录。日志文件会被按天切割，最多保存 7 天。
-- 以二进制版的方式部署 Grafana 时，上述文件都保存在工作目录下：
-  - conf/defaults.ini
-  - data/grafana.db
-  - data/plugins/
-  - data/log/
+  ```sh
+  /etc/grafana/grafana.ini      # 配置文件
+  /var/lib/grafana/grafana.db   # 一个 SQLite 数据库，保存 Grafana 自身的数据，比如用户表、仪表盘配置
+  /var/lib/grafana/plugins/     # 插件目录
+  /var/log/grafana/             # 日志目录。日志文件会自动按天切割，最多保存 7 天
+  ```
+- 以二进制包的方式部署 Grafana 时，上述文件都保存在工作目录下：
+  ```sh
+  conf/defaults.ini
+  data/grafana.db
+  data/plugins/
+  data/log/
+  ```
 - 修改配置文件之后，要重启 Grafana 才会生效。
 
 ### 启用 Email
 
-在配置文件中按如下格式配置邮箱，就可以以 Email 的形式发送告警。
+在配置文件中按如下格式配置邮箱，就可以通过 Email 的形式发送告警。
 ```ini
 [smtp]
 enabled = true

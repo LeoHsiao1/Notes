@@ -8,14 +8,15 @@
 - 可以给指标数据添加一些键值对格式的标签，从而便于筛选。
 - 可监控主机、进程、容器等多种对象，可扩展性高，而且自带查询语言，配置比较灵活。
 
-## 架构
+## 原理
 
-- 在每个监控对象的主机上运行一个负责采集监控指标的 HTTP 服务器作为 exporter 。
-  - 向该 exporter 服务器发出 HTTP GET 请求，它就会按一种特定的文本格式输出监控指标。
-  - exporter 只负责采集当前时刻的指标数据，不负责存储数据。
+- 运行流程：
+  1. 在每个监控对象的主机上运行一个负责采集监控指标的程序，通过 HTTP API 输出纯文本格式的监控指标，作为 exporter 。
+  2. Prometheus 服务器定期向每个 exporter 发出 HTTP GET 请求，获取监控指标，然后存储到自己的时序数据库 TSDB 中。。
+      - Prometheus 属于离散采样，可能有遗漏、有延迟、有误差。
+      - exporter 一般收到 HTTP 请求时才采集一次当前时刻的监控指标，不负责存储数据。
 
-- Prometheus Server 会定时向各个 exporter 发出 HTTP 请求，获得指标数据，并存储到自己的时序数据库中。
-  - 它属于离散采样，可能有遗漏、有延迟、有误差。
+- 关于 TSDB ：
   - 数据默认保存在 `${prometheus}/data` 目录下，目录结构如下：
     ```sh
     data/
@@ -36,7 +37,6 @@
   - 每隔两个小时就会创建一个随机名字的 block 目录，将 wal/ 目录下的数据经过压缩之后保存到 xxx_block/chunks 目录下。此时才算写入 tsdb 。
   - 每过一段时间， block 目录还会被进一步压缩、合并。
 
-- Prometheus 本身没有身份认证，不需要密码登录，不过可以通过 Nginx 代理，加上 HTTP Basic Auth ，或者通过防火墙只允许指定 IP 访问。
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
 - Prometheus 及其插件都采用 UTC 时间，不支持修改时区。用户可以自行将查询结果中的时间字符串改成本地时区。
 
@@ -440,11 +440,11 @@ scrape_configs:
   ```
   - 使用算术函数时，时间间隔 `[t]` 必须要大于矢量的采样间隔，否则计算结果为空。
   - 例如：正常情况下 node_time_seconds 的值是每秒加 1 ，因此不论 scrape_interval 的取值为多少，
-    - delta(node_time_seconds[1m]) 计算得到的每个数据点的值都是 60 。
-    - rate(node_time_seconds[1m]) 每个点的值都是 1 。
-    - irate(node_time_seconds[1m]) 每个点的值也都是 1 。
+    - `delta(node_time_seconds[1m])` 计算得到的每个数据点的值都是 60 。
+    - `rate(node_time_seconds[1m])` 每个点的值都是 1 。
+    - `irate(node_time_seconds[1m])` 每个点的值也都是 1 。
       因为 node_time_seconds 匀速增长，所以 irate() 与 rate() 的计算结果近似。
-    - 如果 scrape_interval 为 30s ，则 idelta(node_time_seconds[1m]) 计算得到的每个数据点的值都是 30 。
+    - 如果 scrape_interval 为 30s ，则 `idelta(node_time_seconds[1m])` 计算得到的每个数据点的值都是 30 。
 
   - increase() 实际上是 rate() 乘以时间间隔的语法糖。
   - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同。

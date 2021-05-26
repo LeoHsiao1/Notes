@@ -108,12 +108,14 @@
   ./node_exporter
                  # --web.listen-address=":9100"
                  # --web.telemetry-path="/metrics"
+                 # --log.level=info
+                 # --log.format=logfmt
   ```
   默认的访问地址为 <http://localhost:9100/metrics>
 
 - 常用指标：
   ```sh
-  node_exporter_build_info{branch="HEAD", goversion="go1.13.8", instance="10.0.0.1:9100", job="node_exporter", revision="ef7c05816adcb0e8923defe34e97f6afcce0a939", version="1.0.0-rc.0"}  # 版本信息
+  node_exporter_build_info{branch="HEAD", goversion="go1.15.8", instance="10.0.0.1:9100", job="node_exporter", revision="b597c1244d7bef49e6f3359c87a56dd7707f6719", version="1.1.2"}  # 版本信息
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
 
   node_boot_time_seconds                      # 主机的启动时刻
@@ -163,7 +165,6 @@
   node_sockstat_TCP_inuse                     # 监听的 TCP Socket 数
   node_sockstat_TCP_tw
 
-
   # 关于 TCP/UDP 协议
   node_netstat_Tcp_CurrEstab                  # ESTABLISHED 加 CLOSE_WAIT 状态的 TCP 连接数
   node_netstat_Tcp_InSegs                     # 接收的 TCP 包数（包括错误的）
@@ -184,53 +185,72 @@
   ./process-exporter -config.path=process-exporter.yml
                     # -web.listen-address :9256
                     # -web.telemetry-path /metrics
-                     -children=false             # 采集每个进程的指标时，是否包含其所有子进程的指标（默认为 true）
-                     -threads=false              # 是否采集每个线程的指标（默认为 true）
+                    -children=false                 # 是否将子进程占用的资源统计到父进程名下，默认为 true
+                    -threads=false                  # 是否采集每个线程的指标，默认为 true
   ```
 
-- 在配置文件中定义要监控的进程：
-    ```yaml
-    process_names:
-    - exe:                            # 定义多行条件，每个条件可能匹配零个、一个或多个进程
-      - top
-      - /bin/ping
+- 在配置文件中定义需要监控的进程：
+  ```yml
+  process_names:
+  - exe:
+    - top                           # 定义多行条件，匹配任一条件的进程都会被监控
+    - /bin/ping
 
-    - comm:
-      - bash
+  - comm:
+    - bash
 
-    - name: "{{.ExeBase}}"            # 这里使用可执行文件的基本名作为 name
-      cmdline:
-      - prometheus --config.file
+  - name: "{{.ExeBase}}"            # 定义进程组的 name ，这里调用了模板变量
+    cmdline:
+    - /bin/ping localhost
 
-    - name: "{{.Matches.name}}"       # 这里使用正则匹配的元素组作为 name
-      cmdline:
-      - ping www.(?P<name>\S*).com    # 用 ?P<name> 的格式命名正则匹配的元素组
-    ```
-    - 关于匹配规则：
-      - exe 是对进程的 `/proc/<PID>/exe` 指向的可执行文件名进行匹配（必须完全相同）。
-      - comm 是对进程的 `/proc/<PID>/comm` 进行匹配（必须完全相同）。
-      - cmdline 是对进程的 `/proc/<PID>/cmdline` 进行正则匹配（只要匹配部分字符串即可，与 grep 类似）。
-      - exe、comm 可以同时定义多行匹配条件，而 cmdline 同时只能定义一行条件，否则不会被执行。
-      - exe、comm 会自动使用匹配条件作为被匹配的进程的名称，并用作监控指标的 groupname 。而 cmdline 需要手动设置 name 。
-    - 已经被匹配的进程不会被之后的条件重复匹配。
-    - 执行以下命令可查看当前监控的进程：
-      ```sh
-      curl 127.0.0.1:9256/metrics | grep num_procs
+  - name: "ping {{.Matches.name}}"  # 这里调用正则匹配的元素组作为 name
+    cmdline:
+    - ping www.(?P<name>\w*).com    # 用 ?P<name> 的格式命名正则匹配的元素组
+  ```
+  - process-exporter 运行时，会将主机上每个进程尝试匹配配置文件中的规则。
+    - 如果匹配某个条件，则监控该进程。
+    - 如果匹配多个条件，则只采用最先匹配的条件。
+    - 如果所有条件都不匹配，则不监控该进程。
+  - 匹配规则分为 3 种类型：
+    - exe ：对进程启动命令中的可执行文件路径，即 `argv[0]` ，进行匹配（必须完全相同）。
+    - comm ：对进程的可执行文件的文件名，即 `/proc/<PID>/comm` 进行匹配（必须完全相同）。
+    - cmdline ：对进程的启动命令，即 `/proc/<PID>/cmdline`， 进行正则匹配（只要匹配部分字符串即可）。
+      - exe、comm 可以定义多行匹配条件，匹配任一条件的进程都会被监控。
+      - cmdline 也可以定义多行匹配条件，只有同时匹配所有条件的进程才会被监控。
+      - exe、comm 会自动使用匹配条件作为被监控进程的名称，即 groupname 。而 cmdline 需要手动定义 name 。
+    - 可以将 cmdline 与一个 exe 或 comm 组合使用，既要求进程的启动命令匹配，也要求可执行文件匹配。如下：
+      ```yml
+      - name: jenkins
+        comm:
+          - java
+        cmdline:
+          - java .* -jar /usr/share/jenkins/jenkins.war
       ```
+  - 定义 cmdline 的 name 时，可调用以下模板变量：
+    ```sh
+    .Comm         # 可执行文件的文件名，比如 ping
+    .ExeBase      # 进程启动命令中的可执行文件的文件名，比如 ping
+    .ExeFull      # 进程启动命令中的可执行文件路径，比如 /bin/ping
+    .Username     # 启动进程的用户名
+    .Matches      # 一个字典，存储 cmdline 正则匹配的结果
+    .PID          # 进程的 PID
+    .StartTime    # 进程的启动时刻，比如 2021-01-01 07:40:29.22 +0000 UTC
+    ```
+
 - 常用指标：
   ```sh
-  namedprocess_scrape_errors                                                # 抓取时的错误数
+  process_exporter_build_info{branch="",goversion="go1.15.3",revision="",version="0.7.5"}   # 版本信息
 
-  namedprocess_namegroup_num_procs                                          # 进程数（统计属于同一个 groupname 的进程实例数量）
+  namedprocess_namegroup_num_procs                                                # 进程数（统计属于同一个 groupname 的进程实例数量）
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 同一个 groupname 中最老的那个进程的运行时长（ s ）
-  sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)   # 进程占用的 CPU 核数
-  namedprocess_namegroup_memory_bytes{memtype="resident"}                   # 进程占用的内存
-  irate(namedprocess_namegroup_read_bytes_total[5m])                        # 进程的磁盘每秒读取量
-  irate(namedprocess_namegroup_write_bytes_total[5m])                       # 进程的磁盘每秒写入量
+  sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)         # 进程占用的 CPU 核数
+  namedprocess_namegroup_memory_bytes{memtype="resident"}                         # 进程占用的内存
+  irate(namedprocess_namegroup_read_bytes_total[5m])                              # 进程的磁盘每秒读取量
+  irate(namedprocess_namegroup_write_bytes_total[5m])                             # 进程的磁盘每秒写入量
 
-  namedprocess_namegroup_num_threads                                        # 进程包含的线程数
-  namedprocess_namegroup_states{state="Sleeping"}                           # Sleeping 状态的线程数
-  namedprocess_namegroup_open_filedesc                                      # 打开的文件描述符数量
+  namedprocess_namegroup_num_threads                                              # 进程包含的线程数
+  namedprocess_namegroup_states{state="Sleeping"}                                 # Sleeping 状态的线程数
+  namedprocess_namegroup_open_filedesc                                            # 打开的文件描述符数量
 
   namedprocess_namegroup_thread_count{groupname="python", threadname="thread-1"}  # 指定进程包含的，同一名称的线程数
   sum(irate(namedprocess_namegroup_thread_cpu_seconds_total[5m])) without (mode)  # 线程占用的 CPU 核数
@@ -238,9 +258,13 @@
   irate(namedprocess_namegroup_thread_io_bytes_total{iomode="write"}[5m])         # 线程的磁盘每秒写入量
   ```
   - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 停止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。
-    - 但是如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。\
-      例如：如果主机重启之后，进程没有启动，则它不能发现进程没有恢复，不会发出警报。
+    - 如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
+    - 如果主机重启之后，进程没有启动，则它不能发现进程没有恢复，不会发出警报。
   - 不能监控进程的网络 IO 。
+  - 启动 process-exporter 之后，可尝试执行以下命令，查看当前监控的进程：
+    ```sh
+    curl 127.0.0.1:9256/metrics | grep num_procs
+    ```
 
 ## windows_exporter
 

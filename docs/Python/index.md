@@ -13,6 +13,7 @@
   - [♢ logging](文件处理/logging.md)
 - 文本处理
   - [文本格式](文本处理/文本格式.md)
+  - [字节编码](文本处理/字节编码.md)
   - [INI](文本处理/INI.md)
   - [XML](文本处理/XML.md)
   - [Jinja](文本处理/Jinja.md)

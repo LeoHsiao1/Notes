@@ -255,10 +255,10 @@
 enabled = true
 host = 10.0.0.1:25      # SMTP 服务器的位置
 user =                  # 登录 SMTP 服务器的账号
-password =              # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
-cert_file =
-key_file =
-skip_verify = false     # 与 SMTP 服务器通信时是否跳过 SSL 认证
+password =
+; cert_file =
+; key_file =
+skip_verify = false     # 是否跳过验证 SMTP 服务器的 SSL
 from_address = admin@grafana.localhost    # 邮件的发件方邮箱
 from_name = Grafana                       # 邮件的发送方名称
 ```

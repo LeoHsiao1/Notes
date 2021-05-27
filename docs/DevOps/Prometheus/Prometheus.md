@@ -33,8 +33,8 @@
         ├──00000003
         └──checkpoint.000002/
     ```
-  - 最新获得的数据尚未写入 tsdb ，会暂时保存在 wal/ 目录下。此时还不算写入 Prometheus 的 tsdb 。
-  - 每隔两个小时就会创建一个随机名字的 block 目录，将 wal/ 目录下的数据经过压缩之后保存到 xxx_block/chunks 目录下。此时才算写入 tsdb 。
+  - 最新获得的数据尚未写入 tsdb ，会暂时保存在 wal/ 目录下。
+  - 每隔两个小时会创建一个随机编号的 block 目录，将 wal/ 目录下的数据经过压缩之后保存到 `xxx_block/chunks` 目录下。此时才算写入 tsdb 。
   - 每过一段时间， block 目录还会被进一步压缩、合并。
 
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
@@ -155,7 +155,7 @@ scrape_configs:
   # basic_auth:
   #   username: <string>
   #   password: <string>
-  # proxy_url:
+  # proxy_url: <string>
 
 - job_name: 'node_exporter'
   file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
@@ -494,17 +494,17 @@ scrape_configs:
 
 - 用于管理 Prometheus 的 HTTP API ：
   ```sh
-  GET /-/healthy     # 用于健康检查，总是返回 Code 200
-  GET /-/ready       # 返回 Code 200 则代表可以处理 HTTP 请求
-  POST /-/reload     # 重新加载配置文件
-  POST /-/quit       # 终止
+  GET   /-/healthy  # 用于健康检查，总是返回 Code 200
+  GET   /-/ready    # 返回 Code 200 则代表可以处理 HTTP 请求
+  POST  /-/reload   # 重新加载配置文件
+  POST  /-/quit     # 终止
   ```
 
 - 关于数据的 API ：
   ```sh
-  GET /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600               # 查询 query 表达式在指定时刻的值（不指定时刻则为当前时刻）
-  GET /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589266000&step=1m  # 查询一段时间内的所有值
-  POST /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000   # 删除数据（不指定时间则删除所有时间的数据）
-  POST /api/v1/admin/tsdb/clean_tombstones                                                      # 让 TSDB 立即释放被删除数据的磁盘空间
+  GET   /api/v1/query?query=go_goroutines{instance='10.0.0.1:9090'}&time=1589241600               # 查询 query 表达式在指定时刻的值。如果不指定时刻，则采用当前时刻
+  GET   /api/v1/query_range?query=go_goroutines{instance='10.0.0.1:9090'}&start=1589241600&end=1589266000&step=1m  # 查询一段时间内的所有值
+  POST  /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000    # 删除数据。如果不指定时间，则删除所有时间的数据
+  POST  /api/v1/admin/tsdb/clean_tombstones                                                       # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
-  - `data/wal/` 目录下缓存的数据不会被删除，因此即使删除 tsdb 中的所有数据， Prometheus 依然会自动从 data/wal/ 目录加载最近的部分数据。
+  - 即使删除 tsdb 中的所有数据，Prometheus 还可能从 `data/wal/` 目录下加载最近缓存的数据。

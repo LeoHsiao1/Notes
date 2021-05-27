@@ -4222,7 +4222,7 @@ False
  
 编码格式
 
-## 以下编码格式不是代表某种字符集，只是对采用ASCII码的字符串进行处理，以便于网络传输。
+## 以下编码格式不是代表某种字符集，只是将某些ASCII码字符转换成其它字符，类似于转义字符，以便于网络传输。
 - URLencode：将字符串转换成URL格式。
   - 如果有键值对参数，把每对参数用 = 连接、键值对之间用 & 分隔。
   - 按照RFC 3986规范：只保留数字、英文字母和十一种符号（ ~@$&=+,;:/? ），其它字符都转换成百分号 %加两位16进制编码。比如空格要转换成 %20。
@@ -4241,25 +4241,7 @@ open(path, 'r', encoding="utf-8")
 ##
 ##
  
-♢ chardet
-## chardet：Python的第三方库，用于检测bytes对象采用的字符集编码格式。
-- 其原理是通过比对各种字符集的特征字符来猜测编码格式。
-  - 检测的数据量太少就容易猜错。
-  - 不能处理string对象，因为string已经是按Unicode格式编码了。
-- 例：
->>> chardet.detect(b"Hello, world!")
-{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}    # confidence表示可信度，这里是100%
->>> chardet.detect("你".encode("GBK")))
-{'encoding': None, 'confidence': 0.0, 'language': None}
->>> chardet.detect("你好".encode("GBK"))
-{'encoding': 'TIS-620', 'confidence': 0.3598212120361634, 'language': 'Thai'}
->>> chardet.detect("你好，欢迎来到这里！".encode("GBK"))
-{'encoding': 'GB2312', 'confidence': 0.99, 'language': 'Chinese'}
-  - 最好把GB2312也当做GBK编码解码，以防chardet把GBK识别成GB2312。
-- 也可以使用chardet直接检测一个文件，如下：
->>> f=open(path, 'rb')
->>> chardet.detect(f.read())["encoding"]
-'GB2312'
+
 ##
 ##
 ##

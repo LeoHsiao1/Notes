@@ -102,7 +102,7 @@ ansible_ssh_pass='123456'             # SSH 登录时的密码（使用该项需
   - 默认有两个隐式的分组：
     - all ：包含所有 host 。
     - ungrouped ：包含所有未分组的 host 。
-- 组名支持使用下标，如下：
+- 组名支持通过下标进行索引、切片，如下：
   ```ini
   web_nodes[0]    # 选取第一个 host
   web_nodes[0:4]  # 选取第 0 ~ 4 个 host （包括第 4 个）

@@ -156,12 +156,17 @@ module.exports = {
                     ]
                 },
                 {
+                    title: '文件处理',
+                    children: [
+                        '文件处理/文件对象',
+                        '文件处理/io',
+                        '文件处理/logging',
+                    ]
+                },
+                {
                     title: '文本处理',
                     children: [
-                        '文本处理/读写文件',
                         '文本处理/文本格式',
-                        '文本处理/io',
-                        '文本处理/logging',
                         '文本处理/INI',
                         '文本处理/XML',
                         '文本处理/Jinja',

@@ -131,6 +131,7 @@ docker
   .Mounts       # 容器挂载的所有卷
   .Networks     # 容器关联的所有网络
   ```
+- `docker stats` 统计的 MEM USAGE 包含了 Page Cache ，因此比 Resident Memory 偏大。
 
 ## 日志
 

@@ -1,4 +1,3 @@
-
 # CPU
 
 ：中央处理单元（Central Processing Unit），又称为中央处理器（Central Processor）、处理器（Processor）。

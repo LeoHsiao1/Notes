@@ -67,7 +67,7 @@ FRAG: inuse 0 memory 0
 - `orphan` ：无主的，不属于任何进程。
 - `tw` ：time_wait 。
 - `alloc` ：allocated ，已分配的。
-- `mem` ：Socket 的缓冲区大小。
+- `mem` ：内存中缓冲区的大小。
 
 ### telnet
 
@@ -118,8 +118,9 @@ FRAG: inuse 0 memory 0
           -t  # 只显示 TCP 的 socket
           -u  # 只显示 UDP 的 socket
           -x  # 只显示 unix socket
-          
-          -p  # 显示使用每个 socket 的进程名
+
+          -e  # 增加显示 User、Inode 列
+          -p  # 增加显示 PID/Program name 列，表示使用每个 socket 的进程
           -n  # 不允许用服务名代替端口号（比如默认会把 22 端口显示成 ssh）
   ```
 
@@ -149,7 +150,17 @@ FRAG: inuse 0 memory 0
   LISTEN     0      128        *:111                  *:*              users:(("systemd",pid=1,fd=51))
   LISTEN     0      128        *:22                   *:*              users:(("sshd",pid=3057,fd=3))
   ```
-  - Recv-Q、Send-Q ：表示接收队列、发送队列中待处理的数据包数。它们最好为 0 ，即没有包堆积。
+  - 不指定 Socket 类型时，默认显示的第一列是 `Netid` ，表示 Socket 类型，取值包括：
+    ```sh
+    TCP
+    UDP
+    u_str     # Unix Stream
+    u_dgr     # UNIX datagram
+    nl        # net link
+    p_raw     # raw packet
+    p_dgr     # datagram packet
+    ```
+  - Recv-Q、Send-Q ：表示用于接收、发送的队列（即内存缓冲区）中待处理的数据包数。它们最好为 0 ，即没有包堆积。
   - 最右端的一列 users 表示监听每个端口的进程。
 
 - 例：查看指定端口的信息

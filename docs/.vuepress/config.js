@@ -520,7 +520,6 @@ module.exports = {
                         '容器/Docker镜像',
                         '容器/Dockerfile',
                         '容器/Docker-Compose',
-                        '容器/Harbor',
                     ]
                 },
                 {
@@ -543,6 +542,8 @@ module.exports = {
                         '配置管理/Jumpserver',
                         '配置管理/Supervisor',
                         '配置管理/Nacos',
+                        '配置管理/Artifactory',
+                        '配置管理/Harbor',
                     ]
                 },
                 {
@@ -614,7 +615,6 @@ module.exports = {
                         '存储/FastDFS',
                         '存储/go-fastdfs',
                         '存储/MinIO',
-                        '存储/Artifactory',
                         '存储/Nextcloud',
                         '存储/h5ai',
                     ]

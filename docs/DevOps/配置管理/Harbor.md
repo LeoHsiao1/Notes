@@ -39,7 +39,7 @@
     ```sh
     docker push 10.0.0.1:8080/<NAMESPACE>/<REPOSITORY>[:tag]
     ```
-    - Harbor 将每个镜像 Image 称为一个镜像仓库（repository），其下可以存储多个 tag 的镜像。
+    - 每个镜像 Image 划分一个镜像仓库（repository），其下可以存储多个 tag 的镜像。
   - 每个项目可以添加多个用户作为成员。
   - 如果项目的访问级别为 Private ，则其下的所有镜像可以被未登录用户拉取。
 

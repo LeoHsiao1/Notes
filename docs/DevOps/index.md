@@ -13,7 +13,6 @@
   - [Docker 镜像](容器/Docker镜像.md)
   - [Dockerfile](容器/Dockerfile.md)
   - [Docker Compose](容器/Docker-Compose.md)
-  - [Harbor](容器/Harbor.md)
 - k8s
   - [Kubernetes](k8s/Kubernetes.md)
   - [安装](k8s/安装.md)
@@ -28,6 +27,8 @@
   - [Jumpserver](配置管理/Jumpserver.md)
   - [Supervisor](配置管理/Supervisor.md)
   - [Nacos](配置管理/Nacos.md)
+  - [Artifactory](配置管理/Artifactory.md)
+  - [Harbor](配置管理/Harbor.md)
 - 监控告警
   - [简介](监控告警/简介.md)
   - [Grafana](监控告警/Grafana.md)

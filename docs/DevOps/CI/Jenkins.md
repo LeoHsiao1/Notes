@@ -20,7 +20,7 @@
       java -jar jenkins.war --httpPort=8080
       ```
       - 然后便可以访问其 Web 网站 `http://localhost:8080` 。
-      - 首次启动时，终端上会显示一个密钥，用于首次登陆 Web 端。
+      - 首次启动时，终端上会显示一个密钥，用于首次登录 Web 端。
 
 - 或者用 docker-compose 部署：
   ```yml

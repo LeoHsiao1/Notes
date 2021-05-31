@@ -42,6 +42,7 @@
   systemctl daemon-reload
   systemctl restart docker
   ```
+  - 同理，也可以在容器内添加环境变量 HTTP_PROXY ，一些容器内应用支持通过这种方式配置代理。
 
 ## 原理
 

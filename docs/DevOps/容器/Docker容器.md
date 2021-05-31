@@ -24,7 +24,6 @@ docker run <image>              # 运行一个镜像，这会创建一个容器�
 
             -v /root:/root            # 将宿主机的 /root 路径挂载到容器的 /root 路径（可重复使用该命令选项）
             -v volume_1:/root         # 将宿主机的 volume_1 数据卷挂载到容器的 /root 路径
-            -v /etc/localtime:/etc/localtime:ro   # 限制容器对挂载路径只有读取权限
 
             # 设置容器的重启策略，即当容器处于 stopped 状态时，是否通过 docker start 重启
             --restart no              # 总是不会自动重启
@@ -41,9 +40,9 @@ docker run <image>              # 运行一个镜像，这会创建一个容器�
 ```
 - 例：
   ```sh
-  docker run hello-world                   # 运行一个测试镜像
-  docker run -it centos:7 bash             # 创建容器，并进入该容器的终端
-  docker run -d centos:7 tail -f /dev/null # 创建一个容器（让它执行一个不会停止的启动命令）
+  docker run hello-world                    # 运行一个测试镜像
+  docker run -it centos:7 bash              # 创建容器，并进入该容器的终端
+  docker run -d  centos:7 tail -f /dev/null # 创建一个容器（让它执行一个不会停止的启动命令）
   ```
 - 运行嵌套容器的示例：
   ```sh
@@ -233,6 +232,12 @@ docker volume
   - 实际上是先在宿主机的 `/var/lib/docker/volumes/<volumeID>/` 目录下创建一个 _data 目录，再将它挂载到容器中。
     - 会自动给 _data 目录分配合适的文件权限，供容器内应用访问。
   - 一个数据卷可以被多个容器共用，一个容器也可以挂载多个数据卷。
+- 可以限制容器对数据卷的访问权限：
+  ```sh
+  -v /etc/localtime:/etc/localtime:ro  # 只允许读取
+  :z    # 标记该数据卷会被多个容器共享，同时读写
+  :Z    # 标记该数据卷不会被其它容器共享
+  ```
 - 一些经常挂载的文件：
   ```sh
   /etc/hosts

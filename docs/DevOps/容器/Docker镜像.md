@@ -28,7 +28,7 @@ docker
       login -u leo tencentyun.com   # 使用一个用户名登录一个镜像仓库（然后会提示输入密码）
       tag <image> <imageName>:<tag> # 给镜像加上名称和 tag ，可以多次添加
 ```
-- 如果不注明镜像的 tag ，则默认拉取 latest 版本。
+- docker pull 时，如果不注明镜像的 tag ，则默认拉取 latest 版本。
   - 尽量不要拉取 latest 版本，否则在不同时间拉取的 latest 版本可能不一样。
 
 ## 导出

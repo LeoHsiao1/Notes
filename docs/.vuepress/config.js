@@ -520,6 +520,7 @@ module.exports = {
                         '容器/Docker镜像',
                         '容器/Dockerfile',
                         '容器/Docker-Compose',
+                        '容器/Harbor',
                     ]
                 },
                 {

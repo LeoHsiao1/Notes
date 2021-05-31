@@ -13,6 +13,7 @@
   - [Docker 镜像](容器/Docker镜像.md)
   - [Dockerfile](容器/Dockerfile.md)
   - [Docker Compose](容器/Docker-Compose.md)
+  - [Harbor](容器/Harbor.md)
 - k8s
   - [Kubernetes](k8s/Kubernetes.md)
   - [安装](k8s/安装.md)

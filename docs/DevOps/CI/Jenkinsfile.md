@@ -121,6 +121,13 @@ pipeline {
         sh 'echo $NODE_NAME'            // 内置变量会加入 Shell 的环境变量，可以直接读取
     }
     ```
+  - 例：修改本次构建的名称
+    ```groovy
+    script {
+        currentBuild.displayName = "#${BUILD_NUMBER}, branch=${BRANCH}"
+    }
+    ```
+    - 不过如果名称过长，显示时会被截断。
 
 - 在 environment{} 中可以导入 Jenkins 的凭据作为环境变量：
   ```groovy

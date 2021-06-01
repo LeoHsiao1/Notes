@@ -180,29 +180,31 @@ pipeline {
 
 ## agent{}
 
-- 在 pipeline{} 中必须要定义 agent{} ，表示选择哪个节点来执行流水线，适用于所有 stage{} 。
-  - 也可以在一个 stage{} 中单独定义该阶段的 agent{} 。
-- agent 常见的几种定义方式：
+：用于控制在哪个 Jenkins 代理上执行流水线。
+- 可用范围：
+  - 在 pipeline{} 中必须定义 agent{} ，作为所有 stage{} 的默认代理。
+  - 在单个 stage{} 中可选定义 agent{} ，只作用于该阶段。
+- agent 常见的几种定义格式：
   ```groovy
   agent none          // 不设置全局的 agent ，此时要在每个 stage{} 中单独定义 agent{}
   ```
   ```groovy
-  agent any           // 让 Jenkins 选择任一节点
+  agent any           // 让 Jenkins 选择任一代理
   ```
   ```groovy
   agent {
-      label 'master'  // 选择指定名字的节点
+      label 'master'  // 选择指定名字的代理
   }
   ```
   ```groovy
   agent {
-      node {          // 选择指定名字的节点，并指定工作目录
+      node {          // 选择指定名字的代理，并指定工作目录
           label 'master'
           customWorkspace '/opt/jenkins_home/workspace/test1'
       }
   }
   ```
-- 可以临时创建 docker 容器作为 agent ：
+- 可以创建临时的 docker 容器作为 agent ：
   ```groovy
   agent {
       docker {
@@ -446,7 +448,8 @@ pipeline {
 
 ## options{}
 
-在 pipeline{} 或 stage{} 中可以定义 options{} ，用于添加一些可选功能。
+：用于给 Pipeline 添加一些可选配置。
+- 可用范围：pipeline{}、stage{}
 - 例：
     ```groovy
     options {
@@ -459,7 +462,8 @@ pipeline {
 
 ## triggers{}
 
-在 pipeline{} 中可以定义 triggers{} ，用于在特定情况下自动触发该 Pipeline 。
+：用于在满足条件时自动触发 Pipeline 。
+- 可用范围：pipeline{}
 - 例：
     ```groovy
     triggers {
@@ -470,100 +474,103 @@ pipeline {
 
 ## when{}
 
-在 stage{} 中可以定义 when{} ，用于限制在特定条件下才执行该阶段。
-- 不满足 when{} 的条件时会跳过该阶段，但并不会导致执行结果为 Failure 。
+：用于在满足条件时才执行某个阶段。
+- 可用范围：stage{}
+- 不满足 when{} 的条件时，会跳过执行该阶段，但并不会导致执行结果为 Failure 。
 - 常见的几种定义方式：
-    ```groovy
-    when {
-        environment name: 'A', value: '1'  // 当环境变量等于指定值时
-    }
-    ```
-    ```groovy
-    when {
-        branch 'dev'            // 当分支为 dev 时（仅适用于多分支流水线）
-    }
-    ```
-    ```groovy
-    when {
-        expression {            // 当 Groovy 表达式为 true 时
-            return params.A
-        }
-    }
-    ```
-    ```groovy
-    when {
-        not {                   // 当子条件为 false 时
-            environment name: 'A', value: '1'
-        }
-    }
-    ```
-    ```groovy
-    when {
-        allOf {                 // 当子条件都为 true 时
-            environment name: 'A', value: '1'
-            environment name: 'B', value: '2'
-        }
-        branch 'dev'            // 默认就可以包含多个条件，相当于隐式的 allOf{}
-    }
-    ```
-    ```groovy
-    when {
-        anyOf {                 // 当子条件只要有一个为 true 时
-            environment name: 'A', value: '1'
-            environment name: 'B', value: '2'
-        }
-    }
-    ```
+  ```groovy
+  when {
+      environment name: 'A', value: '1'  // 当环境变量等于指定值时
+  }
+  ```
+  ```groovy
+  when {
+      branch 'dev'            // 当分支为 dev 时（仅适用于多分支流水线）
+  }
+  ```
+  ```groovy
+  when {
+      expression {            // 当 Groovy 表达式为 true 时
+          return params.A
+      }
+  }
+  ```
+  ```groovy
+  when {
+      not {                   // 当子条件为 false 时
+          environment name: 'A', value: '1'
+      }
+  }
+  ```
+  ```groovy
+  when {
+      allOf {                 // 当子条件都为 true 时
+          environment name: 'A', value: '1'
+          environment name: 'B', value: '2'
+      }
+      branch 'dev'            // 默认就可以包含多个条件，相当于隐式的 allOf{}
+  }
+  ```
+  ```groovy
+  when {
+      anyOf {                 // 当子条件只要有一个为 true 时
+          environment name: 'A', value: '1'
+          environment name: 'B', value: '2'
+      }
+  }
+  ```
 
 ## input{}
 
-在 stage{} 中可以定义 input{} ，用于暂停任务，等待用户输入某些参数。
+：用于暂停某个阶段的执行，等待用户输入某些参数。
+- 可用范围：stage{}
 - 例：
-    ```groovy
-    input {
-        message '等待输入...'
-        ok '确定'
-        submitter 'admin, ops'  // 限制有输入权限的用户
-        parameters {            // 等待用户输入以下参数
-            string(name: 'NODE', defaultValue: 'master', description: '部署到哪个节点？')
-        }
-    }
-    ```
+  ```groovy
+  input {
+      message '等待输入...'
+      ok '确定'
+      submitter 'admin, ops'  // 限制有输入权限的用户
+      parameters {            // 等待用户输入以下参数
+          string(name: 'NODE', defaultValue: 'master', description: '部署到哪个节点？')
+      }
+  }
+  ```
 
 ## post{}
 
-在 pipeline{} 或 stage{} 中可以定义 post{} ，用于处理 Pipeline 的各种构建结果。
+：用于当构建状态满足某些条件时，才执行操作。
+- 可用范围：pipeline{}、stage{}
 - 例：
-    ```groovy
-    pipeline {
-        agent any
-        stages {
-            stage('Test') {
-                steps {
-                    echo 'testing ...'
-                }
-            }
-        }
-        post {
-            always {
-                echo '任务结束，'
-            }
-            changed {
-                echo '执行结果与上一次不同'
-            }
-            success {
-                echo '执行成功'
-            }
-            failure {
-                echo '执行失败'
-            }
-            unstable {
-                echo '执行状态不稳定'
-            }
-            aborted {
-                echo '放弃执行'
-            }
-        }
-    }
-    ```
+  ```groovy
+  pipeline {
+      agent any
+      stages {
+          stage('Test') {
+              steps {
+                  echo 'testing ...'
+              }
+          }
+      }
+      post {
+          always {
+              echo '任务结束，'
+          }
+          changed {
+              echo '执行结果与上一次不同'
+          }
+          success {
+              echo '执行成功'
+          }
+          failure {
+              echo '执行失败'
+          }
+          unstable {
+              echo '执行状态不稳定'
+          }
+          aborted {
+              echo '放弃执行'
+          }
+      }
+  }
+  ```
 - pipeline 出现语法错误时，Jenkins 会直接报错，而不会执行 post 部分。

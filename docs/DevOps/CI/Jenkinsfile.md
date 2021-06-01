@@ -49,7 +49,7 @@ pipeline {
     }
     post {
         always {            // 任务结束时总是执行以下操作
-            deleteDir()     // 清空全局 agent 的 ${env.WORKSPACE} 目录，但不考虑局部的 agent
+            deleteDir()     // 清空全局 agent 的 ${env.WORKSPACE} 目录，但不考虑局部 agent 的
         }
     }
 }
@@ -95,39 +95,6 @@ pipeline {
   }
   ```
   - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
-
-- Jenkins 还提供了一些内置的环境变量，如下：
-  ```sh
-  NODE_NAME       # 节点名
-  JENKINS_HOME    # Jenkins 主目录
-  WORKSPACE       # 该 Job 的工作目录
-
-  JOB_NAME        # 任务名
-  JOB_URL         # 任务链接
-  BUILD_NUMBER    # 构建编号
-  BUILD_URL       # 构建链接
-
-  BRANCH_NAME     # 分支名
-  CHANGE_AUTHOR   # 版本的提交者
-  CHANGE_URL      # 版本的链接
-  ```
-  - 这些变量的值都是 String 类型。
-  - 这些变量可以按以下格式读取：
-    ```groovy
-    script {
-        echo env.NODE_NAME              // 在 Groovy 代码中，通过 env 字典读取
-        echo "${env.NODE_NAME}"         // 在字符串中，通过 $ 取值
-        sh "echo ${env.NODE_NAME}"
-        sh 'echo $NODE_NAME'            // 内置变量会加入 Shell 的环境变量，可以直接读取
-    }
-    ```
-  - 例：修改本次构建的名称
-    ```groovy
-    script {
-        currentBuild.displayName = "#${BUILD_NUMBER}, branch=${BRANCH}"
-    }
-    ```
-    - 不过如果名称过长，显示时会被截断。
 
 - 在 environment{} 中可以导入 Jenkins 的凭据作为环境变量：
   ```groovy
@@ -177,6 +144,58 @@ pipeline {
       - 创建一个普通类型的 job ，供用户上传文件，保存到主机的 /tmp 目录下。然后让其它 job 从这里拷贝文件。
       - 在 Jenkins 之外搭建一个文件服务器，供用户上传文件。然后让其它 job 从这里下载文件。这样上传文件时麻烦些，但方便跨主机拷贝文件。
   - 在 shell 命令中调用 text 类型的参数时，可能被注入攻击。比如脚本执行 `ls $file` ，而用户输入构建参数 `file=1;rm -rf /` 。
+
+### 内置变量
+
+- 可以通过 env 字典访问 Pipeline 内置的环境变量。如下：
+  ```sh
+  env.JENKINS_HOME    # Jenkins 部署的主目录
+  env.NODE_NAME       # 节点名
+  env.WORKSPACE       # 在当前节点上的工作目录
+
+  env.JOB_NAME        # 任务名
+  env.JOB_URL         # 任务链接
+  env.BUILD_NUMBER    # 构建编号
+  env.BUILD_URL       # 构建链接
+
+  env.BRANCH_NAME     # 分支名
+  env.CHANGE_AUTHOR   # 版本的提交者
+  env.CHANGE_URL      # 版本的链接
+  ```
+  - 这些变量的值都是 String 类型。
+  - 这些变量可以按以下格式读取：
+    ```groovy
+    script {
+        echo env.NODE_NAME              // 在 Groovy 代码中，通过 env 字典读取
+        echo "${env.NODE_NAME}"         // 在字符串中，通过 $ 取值
+
+        sh "echo ${env.NODE_NAME}"
+        sh 'echo $NODE_NAME'            // env 字典的内容会导入 Shell 的环境变量，因此可以在 shell 中直接读取
+    }
+    ```
+
+- 可以通过 currentBuild 字典获取当前的构建信息。如下：
+  ```sh
+  echo currentBuild.displayName       # Build 的名称，格式为 #number 。该变量支持修改
+  echo currentBuild.fullDisplayName   # Build 的全名，格式为 JOB_NAME #number
+  echo currentBuild.description       # Build 的描述，默认为 null 。该变量支持修改
+  echo currentBuild.duration          # Build 的持续时长，单位 ms
+  echo currentBuild.result            # Build 的结果，如果构建尚未结束，则返回值为 null
+  echo currentBuild.currentResult     # Build 的当前结果。开始执行时为 SUCCESS ，受每个 stage 影响，不会为 null
+  ```
+  - 例：修改本次构建的名称
+    ```groovy
+    script {
+        currentBuild.displayName = "#${BUILD_NUMBER}, branch=${BRANCH}"
+    }
+    ```
+    - 如果名称过长，显示时会被截断。
+
+- 可以通过 params 字典可以获取 Pipeline 的构建参数。如下：
+  ```sh
+  params.A
+  params.B
+  ```
 
 ## agent{}
 
@@ -405,7 +424,7 @@ pipeline {
 - 例：
     ```groovy
     emailext (
-        subject: "[${currentBuild.fullDisplayName}]已构建，结果为${currentBuild.currentResult}",
+        subject: "[${currentBuild.fullDisplayName}]的构建结果为${currentBuild.currentResult}",
         to: '123456@email.com',
         from: "Jenkins <123456@email.com>",
         body: """

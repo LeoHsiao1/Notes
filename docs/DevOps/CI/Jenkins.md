@@ -10,7 +10,7 @@
 - 2010 年，Oracle 公司收购了 Sun 公司，拥有了 Hudson 的版权。社区被迫将项目改名为 Jenkins ，进行开发。
 - 2011 年，Hudson 被交给 Eclipse 基金会管理。但它越来越落后于 Jenkins ，于 2016 年停止开发。
 
-## 安装
+## 部署
 
 - 用 war 包启动：
   1. 安装 JDK 。
@@ -46,7 +46,7 @@
     chown -R 1000:1000 .
     ```
 
-## 运行原理
+## 原理
 
 - Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，因此拷贝该目录就可以备份、迁移 Jenkins 。
   - 在启动 Jenkins 之前，可以通过设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，改变 Jenkins 的主目录。
@@ -64,14 +64,19 @@
   - 点击 `Manage Jenkins -> Configure System` 可进行一些系统配置，比如设置 Jenkins 对外的 URL、邮箱、全局的环境变量。
   - 用户可以将密码等私密数据保存成 Jenkins 的凭据，然后在执行 Job 时调用，从而避免泄露明文到终端上。
 
+- Jenkins 的主页默认显示一个视图（view）。
+  - 每个视图以列表形式包含多个任务（Job），便于分组管理。
+
 - Jenkins 的主页的左侧显示了菜单列，点击新建按钮，即可创建一个 Job ，常见的几种类型如下：
   - `Freestyle Project` ：自由风格的项目，可以通过 Web 页面上的配置实现大多数构建任务。
   - `Pipeline` ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
   - `Multibranch Pipeline` ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
   - `MultiJob Project ` ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
   - `Folder` ：用于对 Job 进行分组管理。
-- Jenkins 的主页默认显示一个视图（view）。
-  - 每个视图以列表形式包含多个任务（Job），便于分组管理。
+
+- Job 的名称会用于组成 URL ，还会用于创建工作目录，因此应该避免包含特殊字符。
+  - 可以采用 `项目名_模块名_Job类型_环境` 的命名格式，比如 `mydjango_front_DEPLOY_test`
+
 - 点击进入一个 Job 的详情页面，如下：
 
     ![](./jenkins_job.png)
@@ -126,12 +131,12 @@
   - `*_user` ：只是使用该 Job ，拥有 Job 的 Build、Cancel、Read 权限。
   - `*_editor` ：允许编辑该 Job ，拥有大部分权限。
 
-## 插件
+### 插件
 
 在 `Manage Jenkins -> Manage Plugins` 页面可以管理 Jenkins 的插件。
 - 安装、卸载插件时都要手动重启 Jenkins 才会生效，甚至修改了插件的配置之后可能也不会立即生效。
 
-常用的插件：
+常用插件：
 - Localization: Chinese (Simplified)
   - 用于对 Jenkins 的页面进行汉化。
 - Blue Ocean

@@ -33,10 +33,10 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
 
       # 关于通信过程
       -v                          # 显示通信过程的详细信息（包括请求报文、响应报文）
-      -m 10                       # 设置整个操作的超时时间（单位为秒）
-      --connect-timeout 3         # 设置连接上 Web 服务器的超时时间（单位为秒）
       --progress-bar              # 显示进度条
       --http1.0                   # 让 curl 采用 HTTP/1.0 协议。默认采用 HTTP/1.1
+      -m 10                       # 设置整个操作的超时时间（单位为秒）
+      --connect-timeout 3         # 设置连接上 Web 服务器的超时时间（单位为秒）
 
       # 使用代理
       -x [PROTOCOL://][user:password@]HOST:PORT   # --proxy
@@ -45,18 +45,24 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
 ```
 - 如果 URL 包含特殊字符，则要用单引号或双引号作为定界符，以免引发歧义。
 - 用 `curl ip:port` 也可以测试网络端口能否连通，与 telnet 类似。
-- 使用 curl 时，如果将 stdout 从终端重定向到其它位置，则会显示一个进度表，如下：
-  ```sh
-  [root@Centos ~]# curl -O 127.0.0.1:80/test.zip
-    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                  Dload  Upload   Total   Spent    Left  Speed
-    0 57.9M    0     0    0  256k      0  84234  0:12:01  0:00:03  0:11:58 84236
-  ```
-  可以改为只显示一行简单的进度条：
-  ```sh
-  [root@Centos ~]# curl 127.0.0.1:80/test.zip --progress-bar > /dev/null
-  ######################################################################## 100.0%
-  ```
+- 使用 curl 时，默认不会显示进度表。
+  - 通过 -o 或 -O 选项下载文件时，会显示进度表。
+  - 将 stdout 从终端重定向到其它位置时，会通过 stderr 显示一个进度表。如下：
+    ```sh
+    [root@Centos ~]# curl 127.0.0.1 | grep ok
+      % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                    Dload  Upload   Total   Spent    Left  Speed
+    100   495  100   495    0     0   905k      0 --:--:-- --:--:-- --:--:--  483k
+    ```
+    - 可以改为显示一行简单的进度条：
+      ```sh
+      [root@Centos ~]# curl 127.0.0.1 --progress-bar > /dev/null
+      ######################################################################## 100.0%
+      ```
+    - 或者不显示：
+      ```sh
+      curl 127.0.0.1 2> /dev/null
+      ```
 
 ## wget
 

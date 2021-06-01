@@ -49,7 +49,7 @@ pipeline {
     }
     post {
         always {            // 任务结束时总是执行以下操作
-            deleteDir()     // 清空全局 agent 的 ${env.WORKSPACE} 目录，但不考虑局部 agent 的
+            deleteDir()     // 删除全局 agent 的 ${env.WORKSPACE} 目录，但不考虑局部 agent 的
         }
     }
 }
@@ -186,10 +186,9 @@ pipeline {
   - 例：修改本次构建的名称
     ```groovy
     script {
-        currentBuild.displayName = "#${BUILD_NUMBER}, branch=${BRANCH}"
+        currentBuild.displayName = "#${env.BUILD_NUMBER} branch=${env.BRANCH}"
     }
     ```
-    - 如果名称过长，显示时会被截断。
 
 - 可以通过 params 字典可以获取 Pipeline 的构建参数。如下：
   ```sh

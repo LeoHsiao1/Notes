@@ -410,9 +410,9 @@ pipeline {
           usernameVariable: 'USERNAME',   // 将凭据的值存到变量中（如果在终端显示该变量的值，Jenkins 会自动隐藏）
           passwordVariable: 'PASSWORD'
       )]) {
-      sh """
+      sh '''                              // 此时 sh 语句需要用单引号，避免票据变量被导入 shell 的环境变量
           docker login -u ${USERNAME} -p ${PASSWORD} ${image_hub}
-      """
+      '''
   }
   ```
 

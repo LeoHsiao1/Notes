@@ -311,11 +311,18 @@ server {
   - 每个 HTTP 请求最多被内部重定向 10 次，超过该次数则返回响应报文：`500 Internal Server Error`
   - 当 server 接收一个 HTTP 请求时，会首先解析出 request_uri 等变量的值，即使发生内部重定向也不会改变，除非转发到其它 server 。
 
+- 例：将 HTTP 请求重定向为 HTTPS 请求
+  ```sh
+  server {
+      listen 80;
+      rewrite ^(.*)$  https://$host$1   permanent;  # 可以使用正则替换
+      # return  301   https://$host$request_uri;    # return 语句比 rewrite 更快
+  }
+  ```
 - 下例中，请求 /www/1.html 时会重写成 /index.html ，然后被第二个 rewrite 重定向到 `http://$host:80/index.html` 。
   ```sh
   location  /www/ {
       rewrite   /www/1.html  /index.html;        # 只要 URI 包含 /www/1.html ，就重写成 /index.html
-      rewrite   ^(.*)$       http://$host:80$1;  # 可以使用正则替换
       root      /usr/share/nginx/html;
   }
   ```

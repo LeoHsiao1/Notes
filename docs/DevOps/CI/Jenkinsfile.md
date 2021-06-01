@@ -540,6 +540,22 @@ pipeline {
 
 ：用于当构建状态满足某些条件时，才执行操作。
 - 可用范围：pipeline{}、stage{}
+- pipeline 出现语法错误时，Jenkins 会直接报错，而不会执行 post 部分。
+- 可用条件：
+  ```sh
+  success     # 状态为成功
+  failure     # 失败
+  unstable    # 不稳定
+  aborted     # 放弃执行
+
+  changed       # 与上一次执行的状态不同
+  regression    # 状态为 failure、unstable 或 aborted ，且上一次执行的状态为 success
+  fixed         # 状态为 success ，且上一次执行的状态为 failure 或 unstable
+
+  unsuccessful  # 状态不是 success
+  always        # 匹配任何状态
+  cleanup       # 匹配任何状态，且放在其它所有 post 条件之后执行，通常用于清理
+  ```
 - 例：
   ```groovy
   pipeline {
@@ -552,12 +568,6 @@ pipeline {
           }
       }
       post {
-          always {
-              echo '任务结束，'
-          }
-          changed {
-              echo '执行结果与上一次不同'
-          }
           success {
               echo '执行成功'
           }
@@ -573,4 +583,3 @@ pipeline {
       }
   }
   ```
-- pipeline 出现语法错误时，Jenkins 会直接报错，而不会执行 post 部分。

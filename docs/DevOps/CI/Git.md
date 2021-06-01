@@ -38,21 +38,21 @@
 ## 基本用法
 
 1. 用户进入项目根目录，执行 `git init` 命令进行初始化。
-	- 这默认会在当前目录下创建一个 .git 子目录，作为 git 仓库，存储 git 的相关文件。
-  - 执行 `git init --bare` 会创建一个裸仓库。
-    - 它不会创建 .git 子目录，而是将 git 仓库中的文件直接存储到项目根目录。并且通常将项目根目录加上扩展名 .git 。
-    - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远端仓库，供多人推送修改。
+    - 这默认会在当前目录下创建一个 .git 子目录，作为 git 仓库，存储 git 的相关文件。
+    - 执行 `git init --bare` 会创建一个裸仓库。
+      - 它不会创建 .git 子目录，而是将 git 仓库中的文件直接存储到项目根目录。并且通常将项目根目录加上扩展名 .git 。
+      - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远端仓库，供多人推送修改。
 
 2. 用户执行 `git commit` 命令，将项目文件提交为一个版本，让 git 记录。
-  - git 默认会记录项目目录下的所有文件，可以在 .gitignore 文件中声明不想被 git 记录的文件。
-  - git 会将这些文件拷贝一份到 git 仓库中，根据哈希值识别它们。
-  - git 会记录当前时刻所有文件的哈希值，记作一个版本。
+    - git 默认会记录项目目录下的所有文件，可以在 .gitignore 文件中声明不想被 git 记录的文件。
+    - git 会将这些文件拷贝一份到 git 仓库中，根据哈希值识别它们。
+    - git 会记录当前时刻所有文件的哈希值，记作一个版本。
 
 3. 每次用户修改文件的内容之后，都应该执行 `git commit` 命令，将当前时刻的所有文件提交为一个新版本。
-	- 如果文件的哈希值发生变化，git 就认为文件的内容已经改变，会将改变之后的文件拷贝一份到 git 仓库中。不改变的文件则不会拷贝。
+    - 如果文件的哈希值发生变化，git 就认为文件的内容已经改变，会将改变之后的文件拷贝一份到 git 仓库中。不改变的文件则不会拷贝。
 
 4. 用户执行 `git checkout xxx` 命令，切换到历史版本。
-	- git 会找到该版本对应的所有文件的哈希值，根据哈希值将这些文件从 git 仓库拷贝到项目目录下，从而将项目目录还原到历史时刻。
+    - git 会找到该版本对应的所有文件的哈希值，根据哈希值将这些文件从 git 仓库拷贝到项目目录下，从而将项目目录还原到历史时刻。
 
 ## 查看仓库
 
@@ -85,21 +85,26 @@ git mv <src_file> <dst_file>    # 移动文件
 - 用 git rm/mv 做出的改动会自动加入缓存区。
 - 在 Windows 上重命名一个文件时，如果只是改变了文件名的大小写，git 默认不会发现该改动，此时建议通过 git mv 重命名文件。
 
-### 提交修改
+### 提交版本
 
 ```sh
-git commit
-          -m "initial version"  # 将当前缓存区的所有文件提交为一个版本，需要加上备注信息
-          -a                    # 提交从上一个版本以来被改动的所有文件
-          --amend               # 将当前的缓存区合并到上一个版本（不过时间戳依然是上一个版本的）
+git commit                        # 将当前缓存区的所有文件提交为一个版本
+            -m "initial version"  # 加上备注信息（该选项为强制要求）
+            -a                    # 提交从上一个版本以来被改动的所有文件
+            --amend               # 将当前的缓存区合并到上一个版本（不过时间戳依然是上一个版本的）
 ```
-- 每次 commit 时会自动生成一个 SHA-1 哈希值，作为版本名。如下：
+- 每次提交一个版本时，会自动生成一个 SHA-1 哈希值，作为版本名。如下：
 	```sh
 	commit 86e696bd125aa895e067c2216ae8298289ab94d6
 	Author: Leo <leohsiao@foxmail.com>
 	Date:   Thu Dec 10 09:15:19 2020 +0800
 	```
-	该哈希值长达 40 位，不过用户只使用前几位也能定位到该版本，比如 git checkout 86e696 。
+	- 该哈希值长达 40 位，不过用户只使用前几位也能定位到该版本，比如 git checkout 86e696 。
+- 因为版本的哈希值不方便记忆，git 支持创建以下几种引用（Reference，refs），用于指向某个版本（version）。
+  - 分支（branch）：指向某个版本，且可以随时改为指向其它版本。相当于指针。
+    - master ：git 仓库初始化时，默认创建的一个分支，通常用作主分支。
+    - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。
+  - 标签（tag）：指向某个版本，且创建之后不能改为指向其它版本。相当于某个版本的别名。
 
 - 建议在备注信息的开头声明本次 commit 的大致类型，便于分类整理。如下：
 	```sh
@@ -158,12 +163,7 @@ __pycache__/    # 忽略所有目录下的指定目录
 - 以 / 开头的路径，是从项目根目录开始，匹配方向是明确的。不以 / 开头的路径，可能匹配到多个目录下的文件。
 - 以 / 结尾的路径，是强调匹配目录，不匹配文件。
 
-## 分支
-
-分支（branch）是一个指针，指向某个版本。
-- git 仓库默认创建了一个 master 分支。
-- 用户可以随时修改分支，让它指向任意版本。
-- 分支用于标明用户当前所处的位置，使用分支时才可以提交新版本。
+## branch
 
 命令：
 ```sh
@@ -174,16 +174,21 @@ git branch          # 显示所有本地分支
         -d <branch> # 删除一个分支
 
 git checkout
-        <refs>      # 切换到某个 References 指向的版本，可以填 branch 或 tag 或 commit SHA-1
+        <refs>      # 切换到某个 refs 指向的版本
           -b        # 声明 refs 是一个分支，如果它不存在则自动创建它，再切换过去
         -- <file> 	# 将某个文件恢复到上一次 add 或 commit 的状态
         .           # 将当前目录的所有文件恢复到上一次 add 或 commit 的状态
-
-git merge <branch>  # 将指定分支合并到当前分支（这会产生一个新版本）
 ```
 
-### 合并分支
+### merge
 
+命令：
+```sh
+git merge <branch>  # 将指定分支的所有版本合并到当前分支
+```
+- 合并时，如果目标分支不包含当前分支没有的版本，则合并后当前分支不会变化。否则，合并后会产生一个新版本，以解决两个分支的差异。
+
+示意图：
 1. 用户提交的历史版本会按先后顺序排列成一条线，如下：
 
 	![](./git_branch01.png)
@@ -204,23 +209,9 @@ git merge <branch>  # 将指定分支合并到当前分支（这会产生一个�
 	- 如果 master 分支中包含文件 1.txt ，dev 分支中不包含文件 1.txt ，则 git 会保留文件 1.txt ，自动合并。
 	- 如果 master 分支中文件 1.txt 的内容全为大写，dev 分支中文件 1.txt 的内容全为小写，则用户需要手动确定合并之后文件 1.txt 的内容是什么。
 
-## 标签
+### rebase
 
-标签（tag）相当于不能移动的分支，永远指向某个版本，常用于版本发布。
-- 通常，如果用户想对某个版本进行编辑操作，就将一个分支指向该版本。
-- 如果用户想更方便地辨认某个版本，就给它加上一个标签。
-
-命令：
-```sh
-git tag                 # 显示已有的所有标签
-        -a v1.0 9fceb02 # 给版本 9fceb02 加上标签 v1.0
-        -d <tagName>    # 删除一个标签
-```
-- 执行 `git checkout <tagName>` 之后，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
-
-## 变基
-
-如下图，通过 rebase 方式将 C3 合并到 master 时，会先找到 C3 与 C4 的共同祖先 C2；然后删除 C3 ，将从 C2 到 C3 之间的所有变动应用到 C4 上，生成一个新版本 C3'；最后将 master 分支快进到 C3'处。
+如下图，通过变基（rebase）方式将 C3 合并到 master 时，会先找到 C3 与 C4 的共同祖先 C2；然后删除 C3 ，将从 C2 到 C3 之间的所有变动应用到 C4 上，生成一个新版本 C3'；最后将 master 分支快进到 C3'处。
 
 ![](./git_rebase.png)
 
@@ -233,6 +224,44 @@ git rebae
         branch1 branch2   # 将 branch2 以变基方式合并到 branch1
         branch1 branch2 --onto branch3  # 将 branch2 相对于 branch1 的变基应用到 branch3 上
 ```
+
+## tag
+
+命令：
+```sh
+git tag                 # 显示已有的所有标签
+        -a v1.0 9fceb02 # 给版本 9fceb02 加上标签 v1.0
+        -d <tagName>    # 删除一个标签
+```
+- 执行 `git checkout <tagName>` 之后，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
+
+## submodule
+
+：子模块，用于在当前 git 仓库中以子目录的形式引用其它 git 仓库。
+- 相关命令：
+  ```sh
+  git submodule
+                add <repository_url> [<path>] [--name <name>] [-b <branch>]   # 添加 submodule
+                update        # 更新 submodule ，这会从远端仓库 pull 它的最新版本
+                sync          # 将 .gitmodules 文件中的配置同步到 .git/config 中（默认不会自动同步）
+                status        # 显示所有 submodule 的 commit、path、branch 信息
+  ```
+- 添加了 submodule 之后，会在项目根目录生成一个 .gitmodules 文件，用于保存其配置信息。如下：
+  ```ini
+  [submodule "python_utils"]                            # submodule 的名称
+    url = https://github.com/LeoHsiao1/python_utils.git # submodule 的仓库地址，会通过 git clone 命令下载
+    path = submodules/python_utils                      # 将该 submodule 下载到哪个目录
+    branch = master                                     # 引用的分支
+  ```
+  还会在 `.git/config` 中记录 submodule 的信息，如下：
+  ```ini
+  [submodule "python_utils"]
+    active = true
+    url = https://github.com/LeoHsiao1/python_utils.git
+  ```
+  - 如果想移除一个 submodule ，需要在上述两个配置文件中删除它。
+  - 当前 git 仓库不会对 submodule 的文件进行版本管理，只会记录其配置信息。
+  - 进入 submodule 的目录之后，就相当于处于其 git 仓库下，可以执行 git checkout 等命令。
 
 ## 配置
 
@@ -271,34 +300,6 @@ git config
           <key>         # 显示配置文件中某项参数的值
           <key> <value> # 设置配置文件中某项参数的值
 ```
-
-## submodule
-
-：子模块，用于在当前 git 仓库中以子目录的形式引用其它 git 仓库。
-- 相关命令：
-  ```sh
-  git submodule
-                add <repository_url> [<path>] [--name <name>] [-b <branch>]   # 添加 submodule
-                update        # 更新 submodule ，这会从远端仓库 pull 它的最新版本
-                sync          # 将 .gitmodules 文件中的配置同步到 .git/config 中（默认不会自动同步）
-                status        # 显示所有 submodule 的 commit、path、branch 信息
-  ```
-- 添加了 submodule 之后，会在项目根目录生成一个 .gitmodules 文件，用于保存其配置信息。如下：
-  ```ini
-  [submodule "python_utils"]                            # submodule 的名称
-    url = https://github.com/LeoHsiao1/python_utils.git # submodule 的仓库地址，会通过 git clone 命令下载
-    path = submodules/python_utils                      # 将该 submodule 下载到哪个目录
-    branch = master                                     # 引用的分支
-  ```
-  还会在 `.git/config` 中记录 submodule 的信息，如下：
-  ```ini
-  [submodule "python_utils"]
-    active = true
-    url = https://github.com/LeoHsiao1/python_utils.git
-  ```
-  - 如果想移除一个 submodule ，需要在上述两个配置文件中删除它。
-  - 当前 git 仓库不会对 submodule 的文件进行版本管理，只会记录其配置信息。
-  - 进入 submodule 的目录之后，就相当于处于其 git 仓库下，可以执行 git checkout 等命令。
 
 ## 远端仓库
 

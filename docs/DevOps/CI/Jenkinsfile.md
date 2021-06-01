@@ -457,6 +457,7 @@ pipeline {
         timestamps()                        // 输出信息到终端时，加上时间戳
         timeout(time: 60, unit: 'SECONDS')
         disableConcurrentBuilds()           // 禁止同时执行该 job
+        buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '300')  // 限制构建记录保留的最多天数、最大数量，超过限制则删除。这可以限制其占用的磁盘空间，但会导致统计的总构建次数减少
     }
     ```
 

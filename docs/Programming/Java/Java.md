@@ -24,6 +24,8 @@
 
 ## 相关概念
 
+- Log4j
+  - ：一个用于记录 Java 程序日志的库，支持自动切割日志。
 - JSP（Java Server Pages）
   - ：一个动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
   - 例：
@@ -39,6 +41,9 @@
   - 比如通过 JMX 接口可以获取 JVM 的运行状态。
 - JDBC（Java Database Connectivity）
   - ：Java 程序访问数据库的 API 规范，主要用于关系型数据库。
+- Servlet
+  - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
+  - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
 - Mybatis
   - ：一个 Java 的持久化框架。
   - 用户不需要直接编写 JDBC 代码，而是先在 XML 文件中编写 SQL 语句，然后通过 Java 方法调用。但可读性差。
@@ -46,11 +51,41 @@
   - 开发 Java Web 项目的常用框架：
     - SSH（Spring + Struts + Hibernate）
     - SSM（Spring + SpringMVC + MyBatis）
-- Servlet
-  - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
-  - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
-- Log4j
-  - ：一个用于记录 Java 程序日志的库，支持自动切割日志。
+
+### GC
+
+：垃圾回收（Garbage Collection），指销毁 Java 程序中不需要保留的对象，回收其内存。
+- JVM 提供了垃圾回收的功能，每隔一定时间执行一次。
+- 找出垃圾对象的常见算法：
+  - 引用计数（Reference Counting）
+    - 原理：
+      - 每个对象内置一个引用计数器，表示有多少个地方引用了它。当引用数减为 0 时，就可以销毁。
+      - 创建一个对象并传递给一个变量时，该对象的引用计数为 1 。
+      - 销毁一个对象时，将它引用的其它所有对象的引用技术减 1 。
+    - 优点：
+      - 判断逻辑简单。
+    - 缺点：
+      - 难以发现循环引用的对象，不过可以采用 Recycler 算法。比如对象 A、B 相互引用，则可能一直不会被销毁。
+      - 多线程时，引用计数的变更的开销较大。
+  - 引用链（Tracing garbage）
+    - 原理：
+      1. 记录程序可以访问的所有变量，作为根集（Root Set）
+      2. 遍历根集中的各个对象，递归寻找它们引用的对象，记录成一条条引用链。
+      3. 不在引用链上的对象，就可以销毁。
+    - 目前的 JVM 通常采用根搜索算法进行垃圾回收。
+
+- 对象的引用分为四种，从强到弱如下：
+  - 强引用（Strong Reference）
+    - ：指向一些必须保留的对象，比如 `Object obj = new Object()` 。
+    - 即使内存不足，强引用也不会被回收。
+  - 软引用（Soft Reference）
+    - ：指向一些可能有用，但不是必须保留的对象。
+    - 当内存不足时，会被回收。
+  - 弱引用（Weak Reference）
+    - ：指向一些不需要保留的对象。
+    - 每次执行垃圾回收时，都会被回收。
+  - 虚引用（Phantom Reference）
+    - ：不能用于获取对象的实例，只是用于在该对象被回收时收到一个系统通知。
 
 ### Spring
 

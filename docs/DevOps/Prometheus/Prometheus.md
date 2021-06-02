@@ -307,9 +307,9 @@ scrape_configs:
   {job="prometheus"}                              # 查询具有该标签值的指标
   {__name__="go_goroutines", job='prometheus'}    # 通过内置的 __name__ 标签，可以匹配指标名
 
-  go_goroutines{job="prometheus"}                 # 查询该名称、该标签值的指标
+  go_goroutines{job ="prometheus"}                # 查询该名称、该标签值的指标
   go_goroutines{job!="prometheus"}                # 要求具有 job 标签，且值不等于 prometheus
-  go_goroutines{job=""}                           # 要求 job 标签的值为空字符串（这等价于不具有 job 标签）
+  go_goroutines{job =""}                          # 要求 job 标签的值为空字符串（这等价于不具有 job 标签）
   go_goroutines{job!=""}                          # 要求具有 job 标签且值不为空
   go_goroutines{job=~`prometheu\w`}               # 要求标签的值匹配正则表达式
   go_goroutines{job!~`prometheu\w`}               # 要求标签的值不匹配正则表达式
@@ -334,6 +334,16 @@ scrape_configs:
 
 ### 运算符
 
+- 运算符的优先级从高到低如下，同一优先级的采用左结合性：
+  ```sh
+  ^
+  * /  %
+  + -
+  == != <= < >= >
+  and unless
+  or
+  ```
+
 - 可以进行如下算术运算：
   ```sh
   go_goroutines + 1   # 加
@@ -349,8 +359,8 @@ scrape_configs:
   ```sh
   go_goroutines == 2
   go_goroutines != 2
-  go_goroutines > 2       # 返回大于 2 的部分曲线
-  go_goroutines < 2
+  go_goroutines >  2  # 返回大于 2 的部分曲线
+  go_goroutines <  2
   go_goroutines >= 2
   go_goroutines <= 2
   ```
@@ -359,19 +369,9 @@ scrape_configs:
 
 - 矢量之间可以进行如下集合运算：
   ```sh
-  go_goroutines{job='prometheus'} and go_goroutines                       # 交集（返回两个矢量中标签列表相同的时间序列，取第一个矢量中的值）
-  go_goroutines{job='prometheus'} or go_goroutines{job='prometheus'}      # 并集（将两个矢量中的所有时间序列合并，如果存在标签列表重复的时间序列，则取第一个矢量中的值）
-  go_goroutines{job='prometheus'} unless go_goroutines{job!='prometheus'} # 补集（返回在第一个矢量中存在、但在第二个矢量中不存在的时间序列）
-  ```
-
-- 运算符的优先级从高到低如下，同一优先级的采用左结合性：
-  ```sh
-  ^
-  * /  %
-  + -
-  == != <= < >= >
-  and unless
-  or
+  go_goroutines{job='prometheus'} and     go_goroutines                     # 交集（返回两个矢量中标签列表相同的时间序列，取第一个矢量中的值）
+  go_goroutines{job='prometheus'} or      go_goroutines{job='prometheus'}   # 并集（将两个矢量中的所有时间序列合并，如果存在标签列表重复的时间序列，则取第一个矢量中的值）
+  go_goroutines{job='prometheus'} unless  go_goroutines{job!='prometheus'}  # 补集（返回在第一个矢量中存在、但在第二个矢量中不存在的时间序列）
   ```
 
 - 矢量之间进行运算时，默认只会对两个矢量中标签列表相同的时间序列（即标签名、标签值完全相同）进行运算。如下：
@@ -388,32 +388,40 @@ scrape_configs:
   ```
   以上只是对时间序列进行一对一匹配，可以按下格式进行一对多的匹配：
   ```sh
-  go_goroutines - on() group_left vector(1)   # 不考虑任何标签，用右边的一个时间序列匹配左边的多个时间序列，分别进行运算，相当于 go_goroutines - 1
-  vector(1) + on() group_right go_goroutines  # group_right 表示用左边的一个时间序列匹配右边的多个时间序列，group_left 则相反
+  go_goroutines - on() group_left vector(1)       # 不考虑任何标签，用右边的一个时间序列匹配左边的多个时间序列，分别进行运算，相当于 go_goroutines - 1
+  vector(1)     + on() group_right go_goroutines  # group_right 表示用左边的一个时间序列匹配右边的多个时间序列，group_left 则相反
   ```
 
 ### 函数
 
 - 矢量与标量的转换：
   ```sh
-  vector(1)                             # 输入标量，返回一个矢量
-  scalar(vector(1))                     # 输入一个单时间序列的矢量，以标量的形式返回当前时刻处的值
+  vector(1)                 # 输入标量，返回一个矢量
+  scalar(vector(1))         # 输入一个单时间序列的矢量，以标量的形式返回当前时刻处的值
   ```
 
 - 关于时间：
   ```sh
-  time()                                # 返回当前的时间戳（标量），单位为秒
-  timestamp(vector(1))                  # 返回矢量中每个数据点的时间戳（矢量）
+  time()                    # 返回当前的 Unix 时间戳（标量），单位为秒
+  timestamp(vector(1))      # 返回矢量中每个数据点的时间戳（矢量）
+
+  # 以下函数用于从 UTC 时间戳中提取某个信息。可以输入一个时间矢量，不输入时默认采用当前时间，比如 hour( timestamp(vector(1)) )
+  minute([vector])          # 该小时中的第几分钟，取值为 0~59
+  hour  ([vector])          # 该天中的第几小时，取值为 0~23 。注意为 UTC 时区
+  month ([vector])          # 该年中的第几月，取值为 1~12
+  year  ([vector])          # 年份
+  day_of_week ([vector])    # 周几，取值为 0~6 ，其中 0 表示周日
+  day_of_month([vector])    # 该月中的日期，取值为 1~31
   ```
 
 - 关于排序：
   ```sh
-  sort(go_goroutines)                   # 按指标值升序排列
-  sort_desc(go_goroutines)              # 按指标值降序排列
+  sort(go_goroutines)       # 按指标值升序排列
+  sort_desc(go_goroutines)  # 按指标值降序排列
   ```
   - 在 Promtheus 的 Table 视图中，显示的指标默认是无序的，只能通过 sort() 函数按指标值排序。不支持按 label 进行排序。
   - 在 Graph 视图中，显示的图例是按第一个标签的值进行排序的，且不受 sort() 函数影响。
-
+一
 - 修改矢量的标签：
   ```sh
   label_join(go_goroutines, "new_label", ",", "instance", "job")               # 给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance、job 标签的值的组合，用 , 分隔

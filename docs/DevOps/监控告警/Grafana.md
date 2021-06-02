@@ -197,7 +197,7 @@
   ```
   - 它表示每隔 1m 查询一次，如果满足告警条件，则将该 Panel 从 OK 状态标为 Pending 状态；如果保持 Pending 状态超过 5m ，则标为 Alerting 状态，并发送告警信息。
   - 如果该 Panel 一直处于 Alerting 状态，Grafana 不会再重复告警，除非用户手动暂停再启用其 Alert Rule 。
-  - 如果该 Panel 不再满足告警条件，Grafana 会立即将它的状态标为 OK ，并且默认也会发送一条告警消息（除非在配置"Notification Channel"时，勾选"Disable Resolve Message"）。
+  - 如果该 Panel 不再满足告警条件，Grafana 会立即将它的状态标为 OK ，并且默认也会发送一条告警消息。除非在配置"Notification Channel"时，勾选 "Disable Resolve Message" 。
 
 - 下例是一种 Alert 的告警条件：
   ```

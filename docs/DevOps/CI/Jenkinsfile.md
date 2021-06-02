@@ -1,13 +1,15 @@
 # Jenkinsfile
 
 ：一个文本文件，用于描述 Jenkins 的 Pipeline Job ，可以被 Groovy 解释器执行。
-- 使用 Jenkinsfile 可以将 Jenkins Web 页面上的大部分配置内容都改为代码描述，更灵活，容易迁移。
-- 可以在 Jenkins Web 页面上编写 Jenkinsfile 并保存，不过更推荐保存到项目的代码仓库里，然后被 Jenkins 引用。
+- 在 Jenkins 上编辑 Job 时，可以通过 Web 表单填写多种配置参数。
+  - 使用 Jenkinsfile 时，可以将大部分 Web 表单的配置参数用代码描述，更灵活，容易迁移。
+  - 每执行一次 Jenkinsfile ，Jenkins 会自动识别其中的配置参数，导入相应的 Web 表单中，实现向下兼容。
+    - 不过，有的配置参数是 Jenkinsfile 独有的，不支持导入。
 - Jenkinsfile 有两种写法：
   - 脚本式（Scripted Pipeline）：将流水线定义在 node{} 中，主要内容为 Groovy 代码。
   - 声明式（Declarative Pipeline）：将流水线定义在 pipeline{} 中，更推荐使用，本文采用这种写法。
-- 所有 Pipeline Job 的 Web 页面中都有一个通往 "流水线语法" 的链接，点击之后可以查看一些关于 Pipeline 的帮助文档。
-  - 比如可以使用 "片段生成器" ，将通过 Web 表单配置的功能转换成流水线代码。
+- 所有 Pipeline Job 的 Web 页面中都有一个名为 "流水线语法" 的链接，点击之后可以查看一些关于 Pipeline 的帮助文档。
+  - 比如可以使用 "片段生成器" ，将 Web 表单中的配置参数转换成流水线代码。
 
 ## 例
 

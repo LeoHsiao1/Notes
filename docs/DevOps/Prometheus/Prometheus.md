@@ -406,12 +406,12 @@ scrape_configs:
   timestamp(vector(1))      # 返回矢量中每个数据点的时间戳（矢量）
 
   # 以下函数用于从 UTC 时间戳中提取某个信息。可以输入一个时间矢量，不输入时默认采用当前时间，比如 hour( timestamp(vector(1)) )
-  minute([vector])          # 该小时中的第几分钟，取值为 0~59
-  hour  ([vector])          # 该天中的第几小时，取值为 0~23 。注意为 UTC 时区
-  month ([vector])          # 该年中的第几月，取值为 1~12
+  minute([vector])          # 分钟，取值为 0~59
+  hour  ([vector])          # 小时，取值为 0~23 ，注意为 UTC 时区
+  month ([vector])          # 月份，取值为 1~31
   year  ([vector])          # 年份
-  day_of_week ([vector])    # 周几，取值为 0~6 ，其中 0 表示周日
   day_of_month([vector])    # 该月中的日期，取值为 1~31
+  day_of_week ([vector])    # 周几，取值为 0~6 ，其中 0 表示周日
   ```
 
 - 关于排序：

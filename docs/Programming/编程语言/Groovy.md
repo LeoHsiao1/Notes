@@ -108,13 +108,13 @@
 
 - 例：
   ```groovy
-  def x = [red: '#FF0000', green: '#00FF00']
-  println x
-  // 显示：[red:#FF0000, green:#00FF00]
-  println x['red']    // 通过索引取值
-  // 显示：#FF0000
-  println x.red       // 通过属性取值
-  // 显示：#FF0000
+  def map = [a:1, b:'Hello', c:[1, 2]]
+  println map
+  // 显示：[a:1, b:Hello, c:[1, 2]]
+  println map['a']      // 通过索引取值
+  // 显示：1
+  println map.a         // 通过属性取值
+  // 显示：1
   ```
 
 ## 运算符
@@ -132,7 +132,7 @@
 
 ## 流程控制
 
-### if 语句
+### if
 
 - 例：
   ```groovy
@@ -159,7 +159,7 @@
   }
   ```
 
-### switch 语句
+### switch
 
 - 例：
   ```groovy
@@ -178,7 +178,7 @@
   ```
 
 
-### for 语句
+### for
 
 - 例：循环
   ```groovy
@@ -193,8 +193,15 @@
       println i
   }
   ```
+- 例：遍历字典
+  ```groovy
+  map = [a:1, b:'Hello']
+  for ( i in map ) {
+      println "${i.key}: ${i.value}"
+  }
+  ```
 
-### while 语句
+### while
 
 - 例：
   ```groovy

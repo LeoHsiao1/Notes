@@ -16,6 +16,12 @@
 
   int listen(int sockfd, int backlog);                                      // 监听指定 Socket （常用于作为服务器的进程）
   int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);  // 连接到指定 Socket（常用于作为客户端的进程）
+
+  int shutdown(int sockfd , int how);    // 用于停止 Socket 的通信（但并没有关闭 Socket ）
+      // how ：表示操作类型，可以取值如下：
+        // SHUT_RD ：停止接收，并丢弃接收缓冲区中的数据
+        // SHUT_WR ：停止发送，但继续传输发送缓冲区中的数据
+        // SHUT_RDWR ：停止接收和发送
   ```
 - 关闭、读写 Socket 的 API ，与普通文件一致：
   ```c
@@ -25,17 +31,28 @@
   ssize_t read(int fd, void *buf, size_t count);
   ssize_t write(int fd, const void *buf, size_t count);
   ```
-- Linux 收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
-  - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
-  - 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`
-  - 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会收到本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
-  - 如果一个进程绑定 IP 为 0.0.0.0 并监听，则会收到所有目标 IP 的数据包，只要目标端口一致。
 - 建立 Network Socket 连接时，进程会以文件的形式打开 Socket 。
 - 每个 Socket 连接由五元组 protocol、src_addr、src_port、dst_addr、dst_port 确定，只要其中一项元素不同， Socket 的文件描述符就不同。
   - 当服务器监听一个 TCP 端口时，可以被任意 dst_addr、dst_port 连接，因此建立的 Socket 连接有 255^4 * 65535 种可能性。
   - 实际上，一个主机上建立的 Socket 连接数一般最多为几万个，主要受以下因素限制：
     - 内核允许进程打开的文件描述符总数
     - 内存总量
+- Linux 收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
+  - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
+  - 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`
+  - 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会收到本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
+  - 如果一个进程绑定 IP 为 0.0.0.0 并监听，则会收到所有目标 IP 的数据包，只要目标端口一致。
+- 关闭 Socket 的几种方式：
+  - 等创建该 Socket 的进程主动调用 close() 。
+    - 其它进程不允许关闭，即使是 root 用户。
+  - 终止创建该 Socket 的进程，内核会自动回收其创建的所有 Socket 。
+  - 通过 gdb ，调试创建该 Socket 的进程，调用 close() 。如下：
+    ```sh
+    ss -tapn | grep $PORT     # 找出监听某个端口的进程的 PID
+    lsof -p $PID | grep TCP   # 找出该进程创建的 Socket 的文件描述符 FD
+    gdb  -p $PID              # 调试该进程
+    call close($FD)           # 关闭 Socket
+    ```
 
 ## 常见报错
 
@@ -55,9 +72,9 @@
 查看各状态的 socket 数量：
 ```sh
 [CentOS ~]# cat /proc/net/sockstat
-sockets: used 375
-TCP: inuse 38 orphan 0 tw 34 alloc 150 mem 6
-UDP: inuse 0 mem 2
+sockets: used 1101
+TCP: inuse 44 orphan 0 tw 260 alloc 402 mem 37
+UDP: inuse 2 mem 10
 UDPLITE: inuse 0
 RAW: inuse 0
 FRAG: inuse 0 memory 0
@@ -67,7 +84,7 @@ FRAG: inuse 0 memory 0
 - `orphan` ：无主的，不属于任何进程。
 - `tw` ：time_wait 。
 - `alloc` ：allocated ，已分配的。
-- `mem` ：内存中缓冲区的大小。
+- `mem` ：内存中缓冲区的大小，单位未知。
 
 ### telnet
 
@@ -139,12 +156,13 @@ FRAG: inuse 0 memory 0
 
       -p      # 显示使用每个 socket 的进程名
       -n      # 不允许用服务名代替端口号
-      -s      # 增加显示 TCP、UDP 等类型端口的统计信息
+
+      -s      # 只显示各种 Socket 的统计数量
   ```
 
 - 例：查看所有 TCP 端口的信息
   ```sh
-  [root@Centos ~]# ss -tapn | cat    # 加上 cat 使显示的 users 不换行
+  [root@Centos ~]# ss -tapn | cat    # 加上 cat 使显示的 users 列不换行
   State      Recv-Q Send-Q Local Address:Port    Peer Address:Port
   LISTEN     0      128    127.0.0.1:34186            *:*              users:(("node",pid=15647,fd=19))
   LISTEN     0      128        *:111                  *:*              users:(("systemd",pid=1,fd=51))
@@ -162,12 +180,24 @@ FRAG: inuse 0 memory 0
     ```
   - Recv-Q、Send-Q ：表示用于接收、发送的队列（即内存缓冲区）中待处理的数据包数。它们最好为 0 ，即没有包堆积。
   - 最右端的一列 users 表示监听每个端口的进程。
-
-- 例：查看指定端口的信息
+- 例：查看各种 Socket 的统计数量
   ```sh
-  [root@Centos ~]# ss -tapn | grep 8000
-  LISTEN     0      128         :::8000               :::*             users:(("docker-proxy",pid=18614,fd=4))
+  [root@Centos ~]# ss -s
+  Total: 1101 (kernel 1405)
+  TCP:   697 (estab 140, closed 538, orphaned 0, synrecv 0, timewait 295/0), ports 0
+
+  Transport Total     IP        IPv6
+  *         1405      -         -
+  RAW       0         0         0
+  UDP       3         2         1     # 统计 UDP 类型的 Socket ，包括总数、IPv4 数量、IPv6 数量
+  TCP       159       44        115
+  INET      162       46        116
+  FRAG      0         0         0
   ```
+  - 已关闭的 Socket 会被内核删除，不会被统计。
+  - 这里 closed 状态的 Socket 是指不被使用的 Socket ，包括两种情况：
+    - 程序创建 Socket 之后，没有成功调用 connect() ，导致该 Socket 从未进行通信。
+    - 程序调用了 shutdown() ，但没有调用 socket() ，导致该 Socket 停止通信。
 
 ### tcpdump
 

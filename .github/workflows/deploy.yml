@@ -9,6 +9,8 @@ jobs:
     runs-on: self-hosted
     steps:
     - name: Build
+      env:
+        NODE_OPTIONS: --max_old_space_size=512
       run: |
         cd /home/github/Notes
         git pull

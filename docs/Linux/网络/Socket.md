@@ -183,7 +183,7 @@ FRAG: inuse 0 memory 0
 - 例：查看各种 Socket 的统计数量
   ```sh
   [root@Centos ~]# ss -s
-  Total: 1101 (kernel 1405)
+  Total: 1101 (kernel 1405)           # Total 表示存在的 Socket 数。不过 kernel 中存在的 Socket 数较多一些，因为有些 Socket 已关闭，但尚未回收
   TCP:   697 (estab 140, closed 538, orphaned 0, synrecv 0, timewait 295/0), ports 0
 
   Transport Total     IP        IPv6
@@ -194,10 +194,10 @@ FRAG: inuse 0 memory 0
   INET      162       46        116
   FRAG      0         0         0
   ```
-  - 已关闭的 Socket 会被内核删除，不会被统计。
-  - 这里 closed 状态的 Socket 是指不被使用的 Socket ，包括两种情况：
+  - 执行 `ss -a` 时不会显示 closed 状态的 Socket ，但它们的确存在，占用了文件描述符。
+  - 这里 closed 状态的 Socket ，不是指被 close() 关闭的 Socket （它们会被内核回收），而是指没有通信的 Socket 。比如：
     - 程序创建 Socket 之后，没有成功调用 connect() ，导致该 Socket 从未进行通信。
-    - 程序调用了 shutdown() ，但没有调用 socket() ，导致该 Socket 停止通信。
+    - 程序调用了 shutdown() ，但没有调用 close() ，导致该 Socket 停止通信。
 
 ### tcpdump
 

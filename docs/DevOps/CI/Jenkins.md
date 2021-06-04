@@ -36,6 +36,7 @@
       #   JENKINS_OPTS: "--prefix=/jenkins"           # 设置 URL 前缀，便于反向代理
       ports:
         - 8080:8080                                   # 供用户访问 Jenkins 的 Web 页面
+        # - 50000:50000                               # 供 JNLP 类型的 agent 访问 Jenkins
       volumes:
         - ./jenkins_home:/var/jenkins_home
         - /var/run/docker.sock:/var/run/docker.sock   # 使容器内的 Jenkins 能与 dockerd 通信

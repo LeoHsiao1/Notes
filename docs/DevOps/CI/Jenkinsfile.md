@@ -104,7 +104,7 @@ pipeline {
       ACCOUNT1 = credentials('account1')
   }
   ```
-  假设该凭据是 Username With Password 类型，值为 `admin:123456` ，则 Jenkins 会在 Shell 中加入三个环境变量：
+  假设该凭据是 `Username With Password` 类型，值为 `admin:123456` ，则 Jenkins 会在 Shell 中加入三个环境变量：
   ```sh
   ACCOUNT1=admin:123456
   ACCOUNT1_USR=admin
@@ -246,7 +246,8 @@ pipeline {
 
 ## steps{}
 
-在 steps{} 中可以使用以下 DSL 语句：
+在 steps{} 中可以使用多种 DSL 语句。
+- [官方文档](https://www.jenkins.io/doc/pipeline/steps/)
 
 ### echo
 
@@ -442,11 +443,20 @@ pipeline {
 
 - 例：从 Git 仓库拉取代码
   ```groovy
-  git(
-      branch: 'master',
-      credentialsId: 'credential_for_git',
-      url : 'git@g${repository_url}.git'
-  )
+  script {
+      checkout([
+          $class: 'GitSCM',
+          branches: [[name: "$BRANCH"]],                    // 切换到指定的分支，也可以填 tag 或 commit ID
+          extensions: [
+                        [$class: 'CleanBeforeCheckout'],    // 清理项目文件，默认启用。相当于 git clean -dfx 加 git reset --hard
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: '.'] // 本地仓库的保存目录，默认为 .
+                      ],
+          userRemoteConfigs: [[
+                      credentialsId: "credential_for_git",  // 登录 git 服务器的凭据，为 Username With Password 类型
+                      url: "$repository_url"                // git 远程仓库的地址
+                      ]]
+      ])
+  }
   ```
 
 - 例：从 SVN 仓库拉取代码
@@ -455,9 +465,9 @@ pipeline {
       checkout([
           $class: 'SubversionSCM',
           locations: [[
-              remote: 'https://svnserver/svn/${repository_url}'
+              remote: "$repository_url"
               credentialsId: 'credential_for_svn',
-              local: '.',                               // 保存目录，默认是创建一个与 SVN 最后一段路径同名的子目录
+              local: '.',                               // 本地仓库的保存目录，默认是创建一个与 SVN 最后一段路径同名的子目录
               // depthOption: 'infinity',               // 拉取的目录深度，默认是无限深
           ]],
           quietOperation: true,                         // 不显示拉取代码的过程
@@ -471,27 +481,27 @@ pipeline {
 ：用于给 Pipeline 添加一些可选配置。
 - 可用范围：pipeline{}、stage{}
 - 例：
-    ```groovy
-    options {
-        retry(3)
-        timestamps()                        // 输出信息到终端时，加上时间戳
-        timeout(time: 60, unit: 'SECONDS')
-        disableConcurrentBuilds()           // 禁止同时执行该 job
-        buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '300')  // 限制构建记录保留的最多天数、最大数量，超过限制则删除。这可以限制其占用的磁盘空间，但会导致统计的总构建次数减少
-    }
-    ```
+  ```groovy
+  options {
+      retry(3)
+      timestamps()                        // 输出信息到终端时，加上时间戳
+      timeout(time: 60, unit: 'SECONDS')
+      disableConcurrentBuilds()           // 不允许同时执行该 job ，会排队执行
+      buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '300')  // 限制构建记录保留的最多天数、最大数量，超过限制则删除。这可以限制其占用的磁盘空间，但会导致统计的总构建次数减少
+  }
+  ```
 
 ## triggers{}
 
 ：用于在满足条件时自动触发 Pipeline 。
 - 可用范围：pipeline{}
 - 例：
-    ```groovy
-    triggers {
-        cron('H */4 * * 1-5')       // 定期触发
-        pollSCM('H */4 * * 1-5')    // 定期检查 SCM 仓库，如果提交了新版本代码则构建一次
-    }
-    ```
+  ```groovy
+  triggers {
+      cron('H */4 * * 1-5')       // 定期触发
+      pollSCM('H */4 * * 1-5')    // 定期检查 SCM 仓库，如果提交了新版本代码则构建一次
+  }
+  ```
 
 ## when{}
 

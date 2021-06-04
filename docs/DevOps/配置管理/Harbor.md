@@ -7,7 +7,7 @@
 ## 同类产品
 
 - Docker Hub
-  - ：Docker 官方的镜像仓库，地址为 https://hub.docker.com 。
+  - ：Docker 官方的镜像仓库，地址为 `https://hub.docker.com` 。
   - 公开的镜像不需登录就可以 Pull ，但 Push 镜像时需要登录
 - Docker Registry
   - ：一个提供私有镜像仓库的服务器软件，由 Docker 官方开源。
@@ -25,11 +25,11 @@
   - 部署时至少需要 4G 内存。
   - 包含多个模块，基于 docker-compose 启动。
 
-- dockerd 默认以 HTTPS 方式访问镜像仓库服务器。因此，如果 Harbor 以 HTTP 方式部署，则需要在 dockerd 的 daemon.json 中添加白名单：
+- dockerd 默认以 HTTPS 方式访问镜像仓库服务器。因此，如果 Harbor 以 HTTP 方式部署，则需要将其 URL 加入 dockerd 的 daemon.json 中的白名单：
   ```json
   "insecure-registries" : ["10.0.0.1:8080"]
   ```
-- 在 Harbor 网页上的操作失败时，可能缺乏详细的报错信息，此时建议看日志。
+- 在 Harbor 网页上的操作失败时，可能缺乏详细的报错信息，此时建议看终端日志。
 
 ## 功能
 
@@ -49,14 +49,19 @@
     访客        # 只能拉取镜像
     受限访客    # 只能拉取镜像
     ```
+    - 如果项目的访问级别为 Private ，则允许被未登录用户拉取镜像。
 
-  - 如果项目的访问级别为 Private ，则其下的所有镜像可以被未登录用户拉取。
   - 新建项目时，可以设置为对其它远程仓库的 "代理" 。
     - 当用户请求拉取该项目下的镜像时，会自动从远程仓库拉取同名镜像，并默认缓存 7 天。
     - 不过，拉取缓存镜像时，需要增加一层路径，声明远程镜像的命名空间。如下：
       ```sh
       docker pull <harbor_url>/<proxy_project>/<remote_namespace>/<REPOSITORY>[:tag]
       ```
+  - 支持设置 Tag 的保留规则、项目的磁盘定额，从而限制存储的镜像数量。
+    - 推送镜像到 Harbor 时，默认会覆盖 image:tag 相同的 artifact 。可以将一些 tag 声明为不可变的，不允许被覆盖、删除。
+  - 支持漏洞扫描。
+    - 通用漏洞披露（Common Vulnerabilities and Exposures，CVE）：列出了一些已公开的计算机安全漏洞，每个漏洞有一个 CVE ID 编号。
+  - 支持设置 Webhook ：当项目发生 push、pull 等事件时，发送一个 JSON 格式的消息到某个 URL 。
 
 - 仓库管理（Registries）
   - ：用于定义一些远程的仓库服务器，供其它功能调用。
@@ -78,3 +83,10 @@
   - 触发复制规则时，会创建一个复制任务，在队列中执行。
     - 可以手动触发，也可以定时自动触发。
     - 如果任务执行失败，则会在几分钟之后重试。
+
+- 机器人账户（Robot）
+  - ：供自动化脚本使用，可以用于 docker login ，然后拉取、推送镜像。但不能用于访问 Harbor Web 页面。
+
+- 垃圾清理
+  - 当用户删除镜像时，Harbor 并不会在磁盘中实际删除其使用的 layer 。
+  - 可以在 Web 页面上手动执行垃圾清理，或者定时执行，找出可以删除的 layer ，然后删除。

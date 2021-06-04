@@ -56,17 +56,17 @@
 - ES 的每个分片是基于一个 Lucene 索引实现的。
 - ES 对 Lucene 新增文档的流程做了改进，如下：
   1. 将新增的文档写入内存缓冲区（buffer），并备份到事务日志（translog）中。
+      - translog 由多个 generation 文件组成。
       - 如果 ES 异常终止，则重启后会从 translog 中恢复未提交的数据。
       - 对 translog 文件的修改是存储在内存 dirty page 中，如果系统宕机，则 translog 中的数据依然会丢失。
       - ES 默认每隔 5s 调用一次操作系统的 fsync ，将内存 dirty page 中的文件写入磁盘。
   2. 当 buffer 满了，或者默认每隔 1s ，ES 会将 buffer 中的文档保存为一个新的 segment ，然后清空 buffer 。该过程称为 Refresh 。
-      - 此时，该 segment 文件也是存储在内存 dirty page 中，没有实际写入磁盘。但可以被打开读取，可以查询其中的文档。
+      - 写入文档、删除文档时，都要等到 Refresh 之后才会生效，才能被查询到。
       - 如果 Refresh 的频率过高，则会消耗较多的系统资源，还会产生大量体积小的 segment 。
-      - 一次性新增大量文档时，建议暂时停止 ES 的自动刷新，以减少耗时。
   3. 重复 1、2 步骤，继续新增文档，使得 translog 文件越来越大。
   4. 如果 translog 文件超过一定大小，ES 就会执行一次 fsync ，然后创建一个新的 translog 文件供写入。该过程称为 Flush 。
       - 如果 Flush 的频率过高，则会增加等待磁盘 IO 的耗时。
-      - ES 每次删除文档、更新文档时，都会自动触发一次 Flush 。
+      - Refresh 与 Flush 是两种操作，不一定会同时执行。
 
 - ES 支持将每个 shard 中一些较小的 segment 合并成较大的 segment ，并排除 deleted 文档。从而减少 segment 数量、清理 deleted 文档。
   - ES 会自动合并（normalMerge），用户也可以主动触发一次强制合并（forcemerge）。

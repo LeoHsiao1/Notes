@@ -576,26 +576,32 @@ server {
 - 例：
   ```sh
   proxy_buffering on;             # 启用缓冲（默认启用）
-  proxy_buffers 8 8k;             # 读取每个 HTTP 响应报文的缓冲区的数量和大小（默认等于一个内存页大小）
-  proxy_buffer_size 8k;           # 读取响应头的缓冲区大小（默认等于一个内存页大小）
-  proxy_busy_buffers_size 16k;    # busy 状态的缓冲区的最大大小（一般为 2 个缓冲区）
+  proxy_buffers 8 4k;             # 用于接收每个响应报文，的缓冲区的数量和大小。默认为一个内存页大小
+  proxy_buffer_size 4k;           # 用于接收每个响应报文的第一部分，的缓冲区大小。默认为一个内存页大小
+  proxy_busy_buffers_size  8k;    # busy 状态的缓冲区的最大大小，一般为 2 个缓冲区
 
   proxy_temp_path /tmp/nginx/proxy_temp 1 2;  # 在一个磁盘目录下创建临时文件来缓冲数据，划分 2 层子目录
   proxy_temp_file_write_size  16k;            # 每次写入临时文件的最大数据量
   proxy_max_temp_file_size 1024m;             # 所有临时文件的总大小
   ```
-  - 优先使用内存中的缓冲区，如果满了就缓冲到磁盘的 proxy_temp_path 目录下。
-- 当 Nginx 执行 proxy_pass 时，对于上游服务器的响应报文，默认启用了缓冲，但没有启用缓存。
-  - 缓冲（buffer）
-    - ：Nginx 将上游服务器的响应报文保存几秒钟，等整个接收之后，再发送给客户端。
-    - 当 Nginx 读取一个响应报文时，一般会等全部读取完之后再发送给客户端。
-      - 如果该响应报文大于 proxy_busy_buffers_size ，则会一边读取响应报文，一边将缓冲的数据发送给客户端（这部分缓冲称为 busy 状态）。
-    - 可以尽早与上游服务器断开连接，减少其负载，但是会增加客户端等待响应的时间。
-    - 如果不启用缓冲，则 Nginx 收到上游服务器的一部分响应就会立即发送给客户端，通信延迟低。
-  - 缓存（cache）
-    - ：Nginx 将上游服务器的响应报文保存几分钟，当客户端再次请求同一个响应报文时就直接回复，不必请求上游服务器。
+
+当 Nginx 执行 proxy_pass 接收上游服务器的响应报文时，默认启用了缓冲，但没有启用缓存。
+- 缓冲（buffer）
+  - ：暂存几秒钟，等整个接收之后，再发送给客户端。
+    - 如果该响应报文超出内存缓冲区，则暂存到磁盘的 proxy_temp_path 目录下，并在 error_log 中记录：`	[warn] an upstream response is buffered to a temporary file`
+    - 还没有完全接收该响应报文时，最多可以将缓冲区中 proxy_busy_buffers_size 大小的部分，发送给客户端。这部分缓冲称为 busy 状态。
+  - 优点：
+    - 适用于 Nginx 与上游服务器的通信速度，比 Nginx 与客户端的通信速度快很多的情况。可以尽早与上游服务器断开连接，减少其负载。
+  - 缺点：
+    - 增加了客户端等待响应的时间。
+  - 如果不启用缓冲，则 Nginx 每次接收 proxy_buffer_size 大小的响应数据就发送给客户端。这样通信延迟更低，但是效率低。
+    - 启用了 cache 时，可以不启用 buffer ，反正都要暂存到磁盘。
+- 缓存（cache）
+  - ：暂存几分钟甚至几天，当客户端再次请求同一个响应报文时就拿缓存文件回复，不必请求上游服务器。
+  - 优点：
     - 可以避免重复向上游服务器请求一些固定不变的响应报文，减少上游服务器的负载，减少客户端等待响应的时间。
-    - 启用了 cache 时，就可以减少 buffer 的使用，反正都要暂存到磁盘。
+  - 缺点：
+    - 增加了磁盘 IO 。
 
 ### proxy_cache
 
@@ -1132,6 +1138,11 @@ server {
   - 启用 expires 指令时，如果响应报文的状态码属于 200, 201, 204, 206, 301, 302, 303, 304, 307, 308 ，则会设置响应报文头部的 Expires、Cache-Control 字段。
 - 例：
   ```sh
+  location ~ ^/static/(.+\.(gif|jpe?g|png))$ {    # 设置静态文件的过期时间
+      expires 365d;
+  }
+  ```
+  ```sh
   expires   10m;              # 过期时间为 10m 之后
   expires   modified  10m;    # 过期时间为文件的最后修改时间 + 10m
 
@@ -1171,7 +1182,7 @@ server {
 - 默认值：
   ```sh
   client_header_buffer_size 1k;   # 读取请求报文头部的缓冲区大小
-  client_body_buffer_size   8k;   # 读取请求报文主体的内存缓冲区大小，默认等于一个内存页。超出内存缓冲区的部分会写入 client_body_temp_path 目录下的临时文件中
+  client_body_buffer_size   4k;   # 读取请求报文主体的内存缓冲区大小，默认为一个内存页大小。超出内存缓冲区的部分会写入 client_body_temp_path 目录下的临时文件中
   client_body_temp_path     /tmp/nginx/client_temp 1 2;
 
   client_header_timeout   60s;    # 读取请求报文头部的超时时间。如果超时，则返回响应报文：408 Request Time-out

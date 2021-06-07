@@ -78,7 +78,7 @@ services:                     # 开始定义服务
       args:
         arg1: Hello
     depends_on:               # 声明对其它服务的依赖关系
-      - redis                 # 这表示：如果启动 web 服务，则会等先启动 redis 服务；如果停止 redis 服务，则会等先停止 web 服务
+      - redis                 # 这表示：docker-compose start 时会先启动 redis 服务，再启动 web 服务；docker-compose stop 时顺序相反；但 docker-compose restart 时不控制顺序
 
     init: true                # 使用 init 作为 1 号进程
     hostname: CentOS          # 主机名

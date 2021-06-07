@@ -66,19 +66,21 @@ pipeline {
 
 ## 使用变量
 
-- Jenkinsfile 中可以按 `$变量名 ` 的格式读取变量的值。如下：
-    ```groovy
-    script {
-        ID = "1"            // 执行 Groovy 代码，创建变量
-        NAME = "man" + ID
-        echo NAME
-        echo "$ID"          // 普通的 Groovy 语句，以双引号作为定界符时，会读取 Groovy 变量
-        echo '$ID'          // 普通的 Groovy 语句，以单引号作为定界符时，关于直接打印字符串 '$ID'
-        sh "echo $ID"       // sh 语句，以双引号作为定界符时，会先读取 Groovy 变量，再作为 Shell 命令执行
-        sh 'echo $ID'       // sh 语句，以单引号作为定界符时，会直接作为 Shell 命令执行，因此会读取 Shell 变量
-    }
-    ```
-  - 实际上，Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
+- Jenkinsfile 中的变量名不区分大小写。
+- Groovy 支持在字符串中用 $ 插入变量或表达式的值。如下：
+  ```groovy
+  script {
+      ID = "1"            // 创建变量
+      NAME = "man" + ID   // 拼接字符串
+      echo NAME           // 直接打印 Groovy 的变量
+      echo "$ID"          // 字符串定界符为双引号时，支持用 $ 插入变量或表达式的值
+      echo '$ID'          // 字符串定界符为双引号时，不支持用 $ 取值
+      sh "echo $ID"       // 执行 sh 语句，字符串定界符为双引号时， $ 会先读取 Groovy 变量，再作为 Shell 命令执行
+      sh 'echo $ID'       // 执行 sh 语句，字符串定界符为双引号时，会直接作为 Shell 命令执行，因此 $ 会读取 Shell 变量
+  }
+  ```
+
+- Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
   - 如果使用的 Groovy 变量不存在，则报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
   - 以单引号作为定界符的字符串不会渲染，而是直接使用。
 
@@ -145,7 +147,17 @@ pipeline {
     - pipeline job 的文件参数功能无效，不能上传文件。可采用以下两种替代方案：
       - 创建一个普通类型的 job ，供用户上传文件，保存到主机的 /tmp 目录下。然后让其它 job 从这里拷贝文件。
       - 在 Jenkins 之外搭建一个文件服务器，供用户上传文件。然后让其它 job 从这里下载文件。这样上传文件时麻烦些，但方便跨主机拷贝文件。
-  - 在 shell 命令中调用 text 类型的参数时，可能被注入攻击。比如脚本执行 `ls $file` ，而用户输入构建参数 `file=1;rm -rf /` 。
+  - 如果让用户输入 text 类型的构建参数，并在 Shell 命令中调用，则可能被注入攻击。
+    - 比如脚本执行 `ls $file` ，而用户输入构建参数 `file=1;rm -rf *` 。
+    - 可以替换构建参数中的特殊字符：
+      ```groovy
+      parameters {
+          string(name: 'file')
+      }
+      environment {
+          file = file.replaceAll('[^0-9A-Za-z /._-]', '_')
+      }
+      ```
 
 ### 内置变量
 

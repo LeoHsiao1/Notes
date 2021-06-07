@@ -94,7 +94,7 @@
   println b
   // 显示：Hello 3 !
   ```
- 
+
 - 字符串的正则匹配：
   ```groovy
   println x.matches('He')

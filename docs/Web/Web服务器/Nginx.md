@@ -36,7 +36,7 @@
 
   services:
     nginx :
-      container_name: nginx 
+      container_name: nginx
       image: nginx:1.20
       restart: unless-stopped
       ports:
@@ -576,7 +576,7 @@ server {
 - 例：
   ```sh
   proxy_buffering on;             # 启用缓冲（默认启用）
-  proxy_buffers 8 8k;             # 缓冲区的最大数量和大小（默认等于一个内存页大小）
+  proxy_buffers 8 8k;             # 读取每个 HTTP 响应报文的缓冲区的数量和大小（默认等于一个内存页大小）
   proxy_buffer_size 8k;           # 读取响应头的缓冲区大小（默认等于一个内存页大小）
   proxy_busy_buffers_size 16k;    # busy 状态的缓冲区的最大大小（一般为 2 个缓冲区）
 
@@ -584,19 +584,18 @@ server {
   proxy_temp_file_write_size  16k;            # 每次写入临时文件的最大数据量
   proxy_max_temp_file_size 1024m;             # 所有临时文件的总大小
   ```
-- 当 Nginx 将客户端的请求转发给 proxy_pass 上游服务器时，默认会启用缓冲，但不会启用缓存。
+  - 优先使用内存中的缓冲区，如果满了就缓冲到磁盘的 proxy_temp_path 目录下。
+- 当 Nginx 执行 proxy_pass 时，对于上游服务器的响应报文，默认启用了缓冲，但没有启用缓存。
   - 缓冲（buffer）
     - ：Nginx 将上游服务器的响应报文保存几秒钟，等整个接收之后，再发送给客户端。
-    - 会作用于所有响应报文。
+    - 当 Nginx 读取一个响应报文时，一般会等全部读取完之后再发送给客户端。
+      - 如果该响应报文大于 proxy_busy_buffers_size ，则会一边读取响应报文，一边将缓冲的数据发送给客户端（这部分缓冲称为 busy 状态）。
     - 可以尽早与上游服务器断开连接，减少其负载，但是会增加客户端等待响应的时间。
     - 如果不启用缓冲，则 Nginx 收到上游服务器的一部分响应就会立即发送给客户端，通信延迟低。
   - 缓存（cache）
     - ：Nginx 将上游服务器的响应报文保存几分钟，当客户端再次请求同一个响应报文时就直接回复，不必请求上游服务器。
-    - 只作用于部分响应报文。
     - 可以避免重复向上游服务器请求一些固定不变的响应报文，减少上游服务器的负载，减少客户端等待响应的时间。
-- 优先使用内存中的缓冲区，如果满了就缓冲到磁盘的 proxy_temp_path 目录下。
-- 当 Nginx 读取一个响应报文时，一般会等全部读取完之后再发送给客户端。
-  - 如果该响应报文大于 proxy_busy_buffers_size ，则会一边读取响应报文，一边将缓冲的数据发送给客户端（这部分缓冲称为 busy 状态）。
+    - 启用了 cache 时，就可以减少 buffer 的使用，反正都要暂存到磁盘。
 
 ### proxy_cache
 
@@ -624,7 +623,7 @@ server {
 
   # proxy_cache_key $scheme$proxy_host$request_uri;   # 定义每个缓存项的标签值（用于判断内容是否变化）
   proxy_cache_lock on;                        # 多个请求指向同一个缓存项且没有命中缓存时，只将一个请求转发给上游服务器，其它请求则被阻塞直到从缓存区获得响应
-  # proxy_cache_lock_age 5s;                  # 一组请求每被阻塞 5 s  ，就解锁一个请求，转发给上游服务器
+  # proxy_cache_lock_age 5s;                  # 一组请求每被阻塞 5 s ，就解锁一个请求，转发给上游服务器
   # proxy_cache_lock_timeout 5s;              # 一组请求最多被阻塞 5 s 。超过该时间则全部解锁，但不会缓存响应报文
   ```
 
@@ -1165,49 +1164,24 @@ server {
   default_type    text/plain;
   ```
 
-### client_header_buffer_size
+### client_*
 
-：限制读取请求报文头部的缓冲区大小。
+：关于接收 HTTP 请求报文的配置参数。
 - 可用范围：http、server
 - 默认值：
   ```sh
-  client_header_buffer_size   1k;
+  client_header_buffer_size 1k;   # 读取请求报文头部的缓冲区大小
+  client_body_buffer_size   8k;   # 读取请求报文主体的内存缓冲区大小，默认等于一个内存页。超出内存缓冲区的部分会写入 client_body_temp_path 目录下的临时文件中
+  client_body_temp_path     /tmp/nginx/client_temp 1 2;
+
+  client_header_timeout   60s;    # 读取请求报文头部的超时时间。如果超时，则返回响应报文：408 Request Time-out
+  client_body_timeout     60s;    # 限制读取请求报文 body 时，读操作中断的超时时间。如果超时，则返回响应报文：408 Request Time-out
+  client_max_body_size    1m;     # 限制请求报文 body 的最大体积。如果超过限制，则返回响应报文：413 Request Entity Too Large 。设置成 0 则取消限制
   ```
-
-### client_header_timeout
-
-：限制读取请求报文头部的超时时间。
-- 可用范围：http、server
-- 默认值：
-  ```sh
-  client_header_timeout   60s;
-  ```
-- 如果超过该值，则返回响应报文：`408 Request Time-out`
-
-### client_max_body_size
-
-：限制请求报文 body 的最大值。
-- 可用范围：http、server、location
-- 默认值：
-  ```sh
-  client_max_body_size  1m;
-  ```
-- 如果超过该值，则返回响应报文：`413 Request Entity Too Large`
-- 设置成 0 则取消限制。
-
-### client_body_timeout
-
-：限制读取请求报文 body 时，读操作中断的超时时间。
-- 可用范围：http、server、location
-- 默认值：
-  ```sh
-  client_body_timeout   60s;
-  ```
-- 如果超过该值，则返回响应报文：`408 Request Time-out`
 
 ### ssl_protocols
 
-：用于启用 HTTPS 协议。
+：关于 HTTPS 协议的配置参数。
 - 可用范围：http、server
 - 例：
   ```sh

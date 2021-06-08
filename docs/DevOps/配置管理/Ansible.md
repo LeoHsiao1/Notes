@@ -698,7 +698,7 @@ Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当�
 
 ## Ansible AWX
 
-Ansible Tower 提供了 Ansible 的 Web 操作页面，基于 Django 开发，其开源版本是 Ansible AWX 。
+Ansible Tower 提供了 Ansible 的 Web UI ，基于 Django 开发，其开源版本是 Ansible AWX 。
 - [官方文档](https://docs.ansible.com/ansible-tower/latest/html/userguide/index.html)
 - 用 docker-compose 部署 Ansible AWX ：
   ```sh

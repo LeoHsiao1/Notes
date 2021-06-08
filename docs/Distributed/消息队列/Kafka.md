@@ -308,7 +308,7 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
 
 ## Kafka Manager
 
-：一个管理 Kafka 集群的工具，提供了 Web 操作页面，由 Yahoo 公司开源。
+：一个管理 Kafka 集群的工具，提供了 Web UI ，由 Yahoo 公司开源。
 - [GitHub 页面](https://github.com/yahoo/CMAK)
 - 2020 年，发布 v3 版本，改名为 Cluster Manager for Apache Kafka ，简称为 CMAK 。
 - 用 docker-compose 部署：

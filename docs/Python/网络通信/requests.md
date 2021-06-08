@@ -128,6 +128,8 @@
 b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
 >>> r.text               # 查看响应报文的 body（根据 r.encoding 自动解码成 str 类型）
 '<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
+>>> r.elapsed.total_seconds() # 计算从开始发送请求报文，到解析完响应报文 Headers 的耗时
+0.231441
 ```
 
 ### 重定向

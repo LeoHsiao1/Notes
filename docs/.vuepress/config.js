@@ -544,6 +544,7 @@ module.exports = {
                         '配置管理/Nacos',
                         '配置管理/Artifactory',
                         '配置管理/Harbor',
+                        '配置管理/Zipkin',
                     ]
                 },
                 {

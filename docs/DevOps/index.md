@@ -29,7 +29,6 @@
   - [Nacos](配置管理/Nacos.md)
   - [Artifactory](配置管理/Artifactory.md)
   - [Harbor](配置管理/Harbor.md)
-  - [Zipkin](配置管理/Zipkin.md)
 - 监控告警
   - [简介](监控告警/简介.md)
   - [Grafana](监控告警/Grafana.md)

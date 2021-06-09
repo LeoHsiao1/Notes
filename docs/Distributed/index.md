@@ -7,6 +7,7 @@
 - 分布式系统
   - [简介](分布式系统/简介.md)
   - [ZooKeeper](分布式系统/ZooKeeper.md)
+  - [Zipkin](分布式系统/Zipkin.md)
 - 消息队列
   - [简介](消息队列/简介.md)
   - [ActiveMQ](消息队列/ActiveMQ.md)

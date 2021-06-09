@@ -36,8 +36,8 @@
         - 9411:9411
 
     denpendencies:                        # 该镜像默认每小时执行一次 denpendencies job
-      container_name: zipkin_dependencies
-      image: openzipkin/zipkin-dependencies:2.6
+      container_name: zipkin-dependencies
+      image: openzipkin/zipkin-dependencies:2.4
       entrypoint: crond -f
       environment:
         STORAGE_TYPE: elasticsearch

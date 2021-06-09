@@ -544,7 +544,6 @@ module.exports = {
                         '配置管理/Nacos',
                         '配置管理/Artifactory',
                         '配置管理/Harbor',
-                        '配置管理/Zipkin',
                     ]
                 },
                 {
@@ -599,6 +598,7 @@ module.exports = {
                     children: [
                         '分布式系统/简介',
                         '分布式系统/ZooKeeper',
+                        '分布式系统/Zipkin',
                     ]
                 },
                 {

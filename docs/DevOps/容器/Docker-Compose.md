@@ -59,7 +59,7 @@ docker-compose 根据 compose 配置文件来创建、管理 docker 容器。
 例：
 
 ```yml
-version: '3.8'                # 声明 compose 文件的语法版本
+version: '3'                  # 声明 compose 文件的语法版本
 
 services:                     # 开始定义服务
 
@@ -80,15 +80,16 @@ services:                     # 开始定义服务
     depends_on:               # 声明对其它服务的依赖关系
       - redis                 # 这表示：docker-compose start 时会先启动 redis 服务，再启动 web 服务；docker-compose stop 时顺序相反；但 docker-compose restart 时不控制顺序
 
-    init: true                # 使用 init 作为 1 号进程
     hostname: CentOS          # 主机名
-    working_dir: /opt         # 工作目录
-    entrypoint: ["echo", "1"]       # 覆盖 Dockerfile 中的 ENTRYPOINT ，可以是 exec 格式或 shell 格式
-    command: tail -f /dev/null      # 覆盖 Dockerfile 中的 CMD
-    restart: unless-stopped   # 重启策略
-
+    user: root                # 覆盖 Dockerfile 中的 USER
+    working_dir: /opt         # 覆盖 Dockerfile 中的 WORKDIR
     dns:                      # 指定 DNS 服务器
       - 8.8.8.8
+    init: true                # 使用 init 作为 1 号进程
+    entrypoint: ["echo", "1"] # 覆盖 Dockerfile 中的 ENTRYPOINT ，可以是 exec 格式或 shell 格式
+    command: echo Hello       # 覆盖 Dockerfile 中的 CMD
+    restart: unless-stopped   # 容器的重启策略
+
     environment:              # 环境变量，采用数组的格式声明
       - var1=1
       - var2=hello

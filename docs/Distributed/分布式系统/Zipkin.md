@@ -38,12 +38,15 @@
     denpendencies:                        # 该镜像默认每小时执行一次 denpendencies job
       container_name: zipkin-dependencies
       image: openzipkin/zipkin-dependencies:2.4
-      entrypoint: crond -f
+      user: root
+      init: true
+      entrypoint: crond -f -L /var/log/cron
       environment:
         STORAGE_TYPE: elasticsearch
         ES_HOSTS: http://10.0.0.1:9200
         ES_NODES_WAN_ONLY: 'true'         # 是否只使用 ES_HOSTS 中列出的 ES 地址。默认为 false ，会连接本机的 9200 端口
-
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
   ```
   - Zipkin 的 v2.21 版本更换了 UI ，并且支持的 ES 版本从 v6 改为 v7 。
 

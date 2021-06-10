@@ -51,7 +51,7 @@ docker-compose
 
 ## compose 文件
 
-docker-compose 根据 compose 文件来创建、管理 docker 容器。
+docker-compose 根据 compose 配置文件来创建、管理 docker 容器。
 - compose 文件保存为 yaml 格式，扩展名为 .yaml 或 .yml 。
 - 每个 compose 文件可以定义一种或多种服务，每种服务可以运行一个或多个容器实例。
 - 单个服务运行多个容器实例时可能会因为使用相同的端口、容器名等资源，产生冲突。
@@ -59,12 +59,12 @@ docker-compose 根据 compose 文件来创建、管理 docker 容器。
 例：
 
 ```yml
-version: '3.8'                # 声明 compose 文件的版本
+version: '3.8'                # 声明 compose 文件的语法版本
 
 services:                     # 开始定义服务
 
   redis:                      # 定义第一个服务
-    image: redis:5.0.5        # 使用的镜像名（如果该镜像不存在，且没有指定 build 选项，则尝试 pull 它）
+    image: redis:5.0.5        # 指定使用的镜像（如果该镜像不存在，且没有指定 build 选项，则尝试 pull 它）
     networks:
       - net
 

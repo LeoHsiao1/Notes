@@ -18,6 +18,7 @@
   - [INI](文本处理/INI.md)
   - [XML](文本处理/XML.md)
   - [Jinja](文本处理/Jinja.md)
+  - [字符串匹配](文本处理/字符串匹配.md)
 - 数学运算
   - [♢ random](数学运算/random.md)
   - [♢ decimal](数学运算/decimal.md)

@@ -73,10 +73,11 @@
   - `Pipeline` ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
   - `Multibranch Pipeline` ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
   - `MultiJob Project ` ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
-  - `Folder` ：用于对 Job 进行分组管理。
+  - `Folder` ：用于对 Job 进行分组管理。此时 Job 的全名为 `<folder>/<job>` ，因此不同 Folder 下的 Job 可以重名。
 
 - Job 的名称会用于组成 URL ，还会用于创建工作目录，因此应该避免包含特殊字符。
   - 可以采用 `项目名_模块名_Job类型_环境` 的命名格式，比如 `mydjango_front_DEPLOY_test`
+  - 也可以创建多层 Folder ，分组管理 Job 。
 
 - 点击进入一个 Job 的详情页面，如下：
 

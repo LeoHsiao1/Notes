@@ -6,8 +6,8 @@
   - 每执行一次 Jenkinsfile ，Jenkins 会自动识别其中的配置参数，导入相应的 Web 表单中，实现向下兼容。
     - 不过，有的配置参数是 Jenkinsfile 独有的，不支持导入。
 - Jenkinsfile 有两种写法：
-  - 脚本式（Scripted Pipeline）：将流水线定义在 node{} 中，主要内容为 Groovy 代码。
-  - 声明式（Declarative Pipeline）：将流水线定义在 pipeline{} 中，更推荐使用，本文采用这种写法。
+  - 脚本式（Scripted Pipeline）：将流水线定义在 node{} 中，内容为可执行的 Groovy 脚本。
+  - 声明式（Declarative Pipeline）：将流水线定义在 pipeline{} 中，内容为声明式的语句。本文采用这种写法。
 - 所有 Pipeline Job 的 Web 页面中都有一个名为 "流水线语法" 的链接，点击之后可以查看一些关于 Pipeline 的帮助文档。
   - 比如可以使用 "片段生成器" ，将 Web 表单中的配置参数转换成流水线代码。
 
@@ -510,7 +510,7 @@ pipeline {
 - 例：
   ```groovy
   triggers {
-      cron('H */4 * * 1-5')       // 定期触发
+      cron('H */4 * * 1-5')       // 定期触发。其中 H 表示一个随机值，用于分散执行多个同时触发的任务
       pollSCM('H */4 * * 1-5')    // 定期检查 SCM 仓库，如果提交了新版本代码则构建一次
   }
   ```

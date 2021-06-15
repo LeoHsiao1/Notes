@@ -51,7 +51,7 @@ pipeline {
     }
     post {
         always {            // 任务结束时总是执行以下操作
-            deleteDir()     // 删除全局 agent 的 ${env.WORKSPACE} 目录，但不考虑局部 agent 的
+            deleteDir()     // 递归地删除当前目录。这里只会删除全局 agent 的 ${env.WORKSPACE} 目录，不会删除局部 agent 的
         }
     }
 }

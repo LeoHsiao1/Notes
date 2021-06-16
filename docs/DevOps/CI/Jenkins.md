@@ -69,11 +69,19 @@
   - 每个视图以列表形式包含多个任务（Job），便于分组管理。
 
 - Jenkins 的主页的左侧显示了菜单列，点击新建按钮，即可创建一个 Job ，常见的几种类型如下：
-  - `Freestyle Project` ：自由风格的项目，可以通过 Web 页面上的配置实现大多数构建任务。
-  - `Pipeline` ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
-  - `Multibranch Pipeline` ：多分支流水线，可以对一个 SCM 仓库的多个分支执行流水线。
-  - `MultiJob Project ` ：用于组合调用多个 Job 。可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
-  - `Folder` ：用于对 Job 进行分组管理。此时 Job 的全名为 `<folder>/<job>` ，因此不同 Folder 下的 Job 可以重名。
+  - Freestyle Project
+    - ：自由风格的项目，可以通过 Web 页面上的配置实现大多数构建任务。
+  - Pipeline
+    - ：将项目的处理过程分成多个阶段，依次执行，称为流水线，用 Jenkinsfile 文件描述。
+  - Multibranch Pipeline
+    - ：多分支流水线。用于监听 SCM 仓库的事件，对各个分支分别执行流水线。
+    - 需要先将 pipeline 文件保存到每个分支的 SCM 仓库中。
+  - MultiJob Project
+    - ：用于组合调用多个 Job 。
+    - 可以设置多个阶段（Phase），每个阶段可以串行或并行执行多个 Job 。
+  - Folder
+    - ：用于对 Job 进行分组管理。
+    - 此时 Job 的全名为 `<folder>/<job>` ，因此不同 Folder 下的 Job 可以重名。
 
 - Job 的名称会用于组成 URL ，还会用于创建工作目录，因此应该避免包含特殊字符。
   - 可以采用 `项目名_模块名_Job类型_环境` 的命名格式，比如 `mydjango_front_DEPLOY_test`

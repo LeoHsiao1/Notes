@@ -409,6 +409,15 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   ```
   - 也可以用 post{} 语句块实现异常处理。
 
+- 例：修改 Job 的描述
+  ```groovy
+  script {
+      currentBuild.rawBuild.project.description = 'Hello'
+  }
+  ```
+  - 执行时可能报错：`RejectedAccessException: Scripts not permitted to use method xxx` \
+    需要到 Jenkins 管理页面，点击 `Script Approval` ，批准该方法被脚本调用。
+
 ### retry
 
 ：用于当某段任务执行失败时（不包括语法错误、超时的情况），自动重试。

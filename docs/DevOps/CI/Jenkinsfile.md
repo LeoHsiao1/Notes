@@ -30,7 +30,7 @@ pipeline {
             environment {       // 定义该阶段的环境变量
                 GIT_BRANCH = 'dev'
             }
-            steps {             // 执行一些步骤
+            steps {             // 执行一些命令
                 sh "git checkout $GIT_BRANCH"
                 echo '已切换分支'
             }
@@ -56,15 +56,11 @@ pipeline {
     }
 }
 ```
-
 - 区分大小写。
 - 用 // 声明单行注释。
 - 每个 {} 的内容不能为空。
-- pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一个或多个 stage{} ，表示执行的各个阶段。
-  - 每个 stage{} 中只能定义一个 steps{} ，表示主要执行的操作步骤。
-  - Jenkins 会按先后顺序执行各个 stage{} ，并在 Web 页面上显示执行进度。
 
-## 使用变量
+## 变量
 
 - Jenkinsfile 中的变量名不区分大小写。
 - Groovy 支持在字符串中用 $ 插入变量或表达式的值。如下：
@@ -256,6 +252,19 @@ pipeline {
         centos:7 cat
     ```
 
+## stages{}
+
+pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一个或多个 stage{} ，表示执行的各个阶段。
+- Jenkins 会按先后顺序执行各个 stage{} ，并在 Web 页面上显示执行进度。
+- 每个 stage{} 中有且必须定义一个以下类型的语句块：
+  ```sh
+  stages{}
+  steps{}     # 用于按顺序执行一些命令
+  matrix{}    # 用于在多种配置下分别执行一些命令，相当于将一个 Job 运行多个实例
+  parallel{}  # 用于并行执行一些命令
+  ```
+  - 在非顶层的 stage{} 语句块中，支持嵌套 stages{} ，但不支持嵌套 steps{}、matrix{}、parallel{} 。
+
 ## steps{}
 
 在 steps{} 中可以使用多种 DSL 语句。
@@ -265,11 +274,11 @@ pipeline {
 
 ：用于显示字符串。
 - 例：
-    ```groovy
-    steps {
-        echo 'Hello'
-    }
-    ```
+  ```groovy
+  steps {
+      echo 'Hello'
+  }
+  ```
 - echo 语句只能显示 String 类型的值，使用 println 可以显示任意类型的值。
 - 使用字符串时，要用双引号 " 或单引号 ' 包住（除非是纯数字组成的字符串），否则会被当作变量取值。
   - 例如：`echo ID` 会被当作 `echo "$ID"` 执行。
@@ -313,106 +322,106 @@ pipeline {
 
 ### bat
 
-：用于执行 CMD 命令。
+：用于在 Windows 系统上执行 CMD 命令。
 
 ### build
 
 ：触发一个 Job 。
 - 例：
-    ```groovy
-    build (
-        job: 'job1',
-        parameters: [
-            string(name: 'AGENT', value: 'master'),  // 这里的 string 是指输入值的类型，可输入给大部分类型的 parameters
-        ]
-    )
-    ```
+  ```groovy
+  build (
+      job: 'job1',
+      parameters: [
+          string(name: 'AGENT', value: 'master'),  // 这里的 string 是指输入值的类型，可输入给大部分类型的 parameters
+      ]
+  )
+  ```
 - 一个 Job 可以不指定 agent 、不执行具体命令，只是调用另一个 Job 。
 
 ### script
 
 ：用于执行 Groovy 代码。
 - 可以用赋值号 = 直接创建变量。如下：
-    ```groovy
-    steps {
-        script {
-            A = 1
-        }
-        echo "$A"
-    }
-    ```
-    - 在 script{} 中创建的变量会在 Groovy 解释器中一直存在，因此在该 script{} 甚至该 stage{} 结束之后依然可以读取，但并不会被 Jenkins 加入到 shell 的环境变量中。
+  ```groovy
+  steps {
+      script {
+          A = 1
+      }
+      echo "$A"
+  }
+  ```
+  - 在 script{} 中创建的变量会在 Groovy 解释器中一直存在，因此在该 script{} 甚至该 stage{} 结束之后依然可以读取，但并不会被 Jenkins 加入到 shell 的环境变量中。
 
-- 可以将 shell 命令执行后的 stdout 或返回码赋值给变量，如下：
-    ```groovy
-    script {
-        STDOUT = sh(script: 'echo hello', returnStdout: true).trim()
-        EXIT_CODE = sh(script: 'echo hello', returnStatus: true).trim()
-        echo "$STDOUT"
-        echo "$EXIT_CODE"
-    }
-    ```
-    - .trim() 方法用于去掉字符串末尾的空字符、换行符。
+- 例：将 shell 命令执行后的 stdout 或返回码赋值给变量
+  ```groovy
+  script {
+      STDOUT = sh(script: 'echo hello', returnStdout: true).trim()
+      EXIT_CODE = sh(script: 'echo hello', returnStatus: true).trim()
+      echo "$STDOUT"
+      echo "$EXIT_CODE"
+  }
+  ```
+  - .trim() 方法用于去掉字符串末尾的空字符、换行符。
 
-- 例：从 shell 中获得数组并遍历它：
-    ```groovy
-    script {
-        FILE_LIST = sh(script: "ls /", returnStdout: true)
-        for (f in FILE_LIST.tokenize("\n")){
-            sh "echo $f"
-        }
-    }
-    ```
-    - .tokenize() 方法用于将字符串分割成多个字段的数组，并忽略内容为空的字段。
+- 例：从 shell 中获得数组并遍历它
+  ```groovy
+  script {
+      FILE_LIST = sh(script: "ls /", returnStdout: true)
+      for (f in FILE_LIST.tokenize("\n")){
+          sh "echo $f"
+      }
+  }
+  ```
+  - .tokenize() 方法用于将字符串分割成多个字段的数组，并忽略内容为空的字段。
 
 ### parallel
 
-：用于并行执行一些步骤。
-- 只要有一个并行执行的步骤失败了，最终结果就是 Failure 。
+：用于并行执行一些命令。
+- 只要有一个并行执行的命令失败了，最终结果就是 Failure 。
 - 例：
-    ```groovy
-    steps {
-        parallel '单元测试 1': {
-            echo '测试中...'
-            echo '测试完成'
-        },
-        '单元测试 2': {
-            echo '测试中...'
-            echo '测试完成'
-        }
-    }
-    ```
+  ```groovy
+  steps {
+      parallel '单元测试 1': {
+          echo '测试中...'
+          echo '测试完成'
+      },
+      '单元测试 2': {
+          echo '测试中...'
+          echo '测试完成'
+      }
+  }
+  ```
 
 ### retry
 
 ：用于当某段任务执行失败时（不包括语法错误、超时的情况），自动重试。
 - 例：
-    ```groovy
-    retry(3) {       // 加上第一次失败的次数，最多执行 3 次
-        sh 'ls /tmp/f1'
-    }
-    ```
+  ```groovy
+  retry(3) {       // 加上第一次失败的次数，最多执行 3 次
+      sh 'ls /tmp/f1'
+  }
+  ```
 
 ### timeout
 
 ：用于设置超时时间。
 - 超时之后则放弃执行，并将任务的状态标记成 ABORTED 。
 - 例：
-    ```groovy
-    timeout(time: 3, unit: 'SECONDS') {     // 单位可以是 SECONDS、MINUTES、HOURS
-        sh 'ping baidu.com'
-    }
-    ```
+  ```groovy
+  timeout(time: 3, unit: 'SECONDS') {     // 单位可以是 SECONDS、MINUTES、HOURS
+      sh 'ping baidu.com'
+  }
+  ```
 
 ### waitUntil
 
 ：用于暂停执行任务，直到满足特定的条件。
 - 例：
-    ```groovy
-    waitUntil {
-        fileExists '/tmp/f1'
-    }
-    ```
+  ```groovy
+  waitUntil {
+      fileExists '/tmp/f1'
+  }
+  ```
 
 ### withCredentials
 
@@ -436,20 +445,20 @@ pipeline {
 ：用于发送邮件。
 - 需要先在 Jenkins 系统配置中配置 SMTP 服务器。
 - 例：
-    ```groovy
-    emailext (
-        subject: "[${currentBuild.fullDisplayName}]的构建结果为${currentBuild.currentResult}",
-        to: '123456@email.com',
-        from: "Jenkins <123456@email.com>",
-        body: """
-            任务名：${env.JOB_NAME}
-            任务链接：${env.JOB_URL}
-            构建编号：${env.BUILD_NUMBER}
-            构建链接：${env.BUILD_URL}
-            构建耗时：${currentBuild.duration} ms
-        """
-    )
-    ```
+  ```groovy
+  emailext (
+      subject: "[${currentBuild.fullDisplayName}]的构建结果为${currentBuild.currentResult}",
+      to: '123456@email.com',
+      from: "Jenkins <123456@email.com>",
+      body: """
+          任务名：${env.JOB_NAME}
+          任务链接：${env.JOB_URL}
+          构建编号：${env.BUILD_NUMBER}
+          构建链接：${env.BUILD_URL}
+          构建耗时：${currentBuild.duration} ms
+      """
+  )
+  ```
 
 ### 拉取代码
 

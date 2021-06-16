@@ -186,13 +186,14 @@ pipeline {
 
 - 可以通过 currentBuild 字典获取当前的构建信息。如下：
   ```sh
-  echo currentBuild.displayName       # Build 的名称，格式为 #number 。该变量支持修改
+  echo currentBuild.displayName       # Build 的名称，格式为 #number
   echo currentBuild.fullDisplayName   # Build 的全名，格式为 JOB_NAME #number
-  echo currentBuild.description       # Build 的描述，默认为 null 。该变量支持修改
+  echo currentBuild.description       # Build 的描述，默认为 null
   echo currentBuild.duration          # Build 的持续时长，单位 ms
   echo currentBuild.result            # Build 的结果，如果构建尚未结束，则返回值为 null
   echo currentBuild.currentResult     # Build 的当前结果。开始执行时为 SUCCESS ，受每个 stage 影响，不会为 null
   ```
+  - 只有 displayName、description 变量支持修改。修改其它变量时会报错：`RejectedAccessException: No such field`
   - 例：修改本次构建的名称
     ```groovy
     script {
@@ -200,7 +201,7 @@ pipeline {
     }
     ```
 
-- 可以通过 params 字典可以获取 Pipeline 的构建参数。如下：
+- 可以通过 params 字典获取 Pipeline 的构建参数。如下：
   ```sh
   params.A
   params.B
@@ -391,6 +392,20 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   }
   ```
   - .tokenize() 方法用于将字符串分割成多个字段的数组，并忽略内容为空的字段。
+
+- 例：捕捉异常
+  ```groovy
+  script {
+      try {
+          sh 'exit 1'
+      } catch (err) {     // 将异常捕捉之后，构建状态就会依然为 SUCCESS
+          echo "${err}"
+      } finally {
+          echo "finished"
+      }
+  }
+  ```
+  - 也可以用 post{} 语句块实现异常处理。
 
 ### retry
 

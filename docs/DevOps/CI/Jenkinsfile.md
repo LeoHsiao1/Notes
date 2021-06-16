@@ -256,14 +256,32 @@ pipeline {
 
 pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一个或多个 stage{} ，表示执行的各个阶段。
 - Jenkins 会按先后顺序执行各个 stage{} ，并在 Web 页面上显示执行进度。
+- 每个 stage{} 的名称不能重复。
 - 每个 stage{} 中有且必须定义一个以下类型的语句块：
   ```sh
   stages{}
-  steps{}     # 用于按顺序执行一些命令
-  matrix{}    # 用于在多种配置下分别执行一些命令，相当于将一个 Job 运行多个实例
-  parallel{}  # 用于并行执行一些命令
+  steps{}
+  matrix{}
+  parallel{}
   ```
-  - 在非顶层的 stage{} 语句块中，支持嵌套 stages{} ，但不支持嵌套 steps{}、matrix{}、parallel{} 。
+- 例：
+  ```groovy
+  stages {
+      stage('测试 1') {
+          steps {...}
+      }
+      stage('测试 2') {
+          stages('嵌套阶段') {
+              stage('单元测试 1') {
+                  steps {...}
+              }
+              stage('单元测试 2') {
+                  steps {...}
+              }
+          }
+      }
+  }
+  ```
 
 ## steps{}
 
@@ -374,31 +392,13 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   ```
   - .tokenize() 方法用于将字符串分割成多个字段的数组，并忽略内容为空的字段。
 
-### parallel
-
-：用于并行执行一些命令。
-- 只要有一个并行执行的命令失败了，最终结果就是 Failure 。
-- 例：
-  ```groovy
-  steps {
-      parallel '单元测试 1': {
-          echo '测试中...'
-          echo '测试完成'
-      },
-      '单元测试 2': {
-          echo '测试中...'
-          echo '测试完成'
-      }
-  }
-  ```
-
 ### retry
 
 ：用于当某段任务执行失败时（不包括语法错误、超时的情况），自动重试。
 - 例：
   ```groovy
-  retry(3) {       // 加上第一次失败的次数，最多执行 3 次
       sh 'ls /tmp/f1'
+  retry(3) {       // 加上第一次失败的次数，最多执行 3 次
   }
   ```
 
@@ -509,6 +509,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       timeout(time: 60, unit: 'SECONDS')
       disableConcurrentBuilds()           // 不允许同时执行该 job ，会排队执行
       buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '300')  // 限制构建记录保留的最多天数、最大数量，超过限制则删除。这可以限制其占用的磁盘空间，但会导致统计的总构建次数减少
+      parallelsAlwaysFailFast()           // 用 matrix{}、parallel{} 执行并发任务时，如果有某个任务失败，则立即放弃执行其它任务
   }
   ```
 
@@ -595,10 +596,10 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 - pipeline 出现语法错误时，Jenkins 会直接报错，而不会执行 post 部分。
 - 可用条件：
   ```sh
-  success     # 状态为成功
-  failure     # 失败
-  unstable    # 不稳定
-  aborted     # 放弃执行
+  success       # 状态为成功
+  failure       # 失败
+  unstable      # 不稳定
+  aborted       # 放弃执行
 
   changed       # 与上一次执行的状态不同
   regression    # 状态为 failure、unstable 或 aborted ，且上一次执行的状态为 success
@@ -631,6 +632,29 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
           }
           aborted {
               echo '放弃执行'
+          }
+      }
+  }
+  ```
+
+## parallel{}
+
+：包含多个 stage{} ，会并行执行。
+- 可用范围：stage{}
+- 只要有一个并行执行的任务失败了，最终结果就是 Failure 。
+- 例：
+  ```groovy
+  stage('单元测试') {
+      parallel {
+          stage('单元测试 1') {
+              steps {
+                  echo '测试完成'
+              }
+          }
+          stage('单元测试 2') {
+              steps {
+                  echo '测试完成'
+              }
           }
       }
   }

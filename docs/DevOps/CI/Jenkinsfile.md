@@ -62,7 +62,6 @@ pipeline {
 
 ## 变量
 
-- Jenkinsfile 中的变量名不区分大小写。
 - Groovy 支持在字符串中用 $ 插入变量或表达式的值。如下：
   ```groovy
   script {
@@ -121,10 +120,10 @@ pipeline {
         agent any
         parameters {
             booleanParam(name: 'A', defaultValue: true, description: '')   // 布尔参数
+            choice(name: 'E', choices: ['A', 'B', 'C'], description: '')   // 单选参数，输入时会显示成下拉框
             string(name: 'B', defaultValue: 'Hello', description: '')      // 字符串参数，在 Web 页面上输入时不能换行
             text(name: 'C', defaultValue: 'Hello\nWorld', description: '') // 文本参数，输入时可以换行
             password(name: 'D', defaultValue: '123456', description: '')   // 密文参数，输入时会显示成密文
-            choice(name: 'E', choices: ['A', 'B', 'C'], description: '')   // 单选参数，输入时会显示成下拉框
             file(name: 'f1', description: '')                              // 文件参数，输入时会显示文件上传按钮
         }
         stages {
@@ -138,22 +137,25 @@ pipeline {
     ```
   - 如果定义了 parameters{} ，则会移除在 Jenkins Web 页面中定义的、在上游 Job 中定义的构建参数。
   - 每次修改了 parameters{} 之后，要执行一次 Job 才会在 Jenkins Web 页面上生效。
-  - password 参数虽然在输入时显示成密文，但打印到终端上时会显示成明文，不如 credentials 安全。
-  - 对于文件参数，上传的文件会存储到 `${workspace}/${job_name}/f1` 路径处，而用 $f1 可获得上传的文件名。
+  - password 类型的参数虽然在输入时显示成密文，但打印到终端上时会显示成明文，不如 Jenkins 的 credentials 安全。
+  - file 类型的参数上传的文件会存储到 `${workspace}/${job_name}/f1` 路径处，而用 `$f1` 可获得上传的文件名。
     - pipeline job 的文件参数功能无效，不能上传文件。可采用以下两种替代方案：
       - 创建一个普通类型的 job ，供用户上传文件，保存到主机的 /tmp 目录下。然后让其它 job 从这里拷贝文件。
       - 在 Jenkins 之外搭建一个文件服务器，供用户上传文件。然后让其它 job 从这里下载文件。这样上传文件时麻烦些，但方便跨主机拷贝文件。
-  - 如果让用户输入 text 类型的构建参数，并在 Shell 命令中调用，则可能被注入攻击。
-    - 比如脚本执行 `ls $file` ，而用户输入构建参数 `file=1;rm -rf *` 。
-    - 可以替换构建参数中的特殊字符：
-      ```groovy
-      parameters {
-          string(name: 'file')
-      }
-      environment {
-          file = file.replaceAll('[^0-9A-Za-z /._-]', '_')
-      }
-      ```
+
+- 在 shell 命令中调用构建参数时，可能被注入攻击。
+  - 比如脚本执行 `ls $file` ，而用户输入构建参数 `file=a;rm -rf *` 就会注入攻击。
+  - 如果让用户输入 booleanParam、choice 类型的构建参数，则在 Web 页面上只能选择有限的值。
+    - 即使用户通过 HTTP API 输入构建参数，Jenkins 也会自动检查参数的值是否合法。如果不合法，则采用该参数的默认值。
+  - 如果让用户输入 string、text 类型的构建参数，则应该过滤之后再调用。如下：
+    ```groovy
+    parameters {
+        string(name: 'file')
+    }
+    environment {
+        file = file.replaceAll('[^0-9A-Za-z /._-]', '_')  // 替换构建参数中的特殊字符
+    }
+    ```
 
 ### 内置变量
 

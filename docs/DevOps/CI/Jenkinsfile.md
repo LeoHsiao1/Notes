@@ -460,8 +460,9 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   )
   ```
 
-### 拉取代码
+### checkout
 
+：用于拉取代码。
 - 例：从 Git 仓库拉取代码
   ```groovy
   script {
@@ -494,6 +495,62 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
           quietOperation: true,                         // 不显示拉取代码的过程
           workspaceUpdater: [$class: 'UpdateUpdater']   // 使本地目录更新到最新版本
       ])
+  }
+  ```
+
+## matrix{}
+
+：包含一个 axes{} 和 stages{} ，用于将一个 stages{} 在不同场景下并行执行一次，相当于执行多个实例。
+- 可用范围：stage{}
+- 每个并行任务称为一个 Branch 。
+  - 只要有一个并行执行的任务失败了，最终结果就是 Failure 。
+- 例：
+  ```groovy
+  matrix {
+      axes {
+          axis {
+              name 'PLATFORM'
+              values 'linux', 'darwin', 'windows'
+          }
+          axis {
+              name 'PYTHON_VERSION'
+              values '3.5', '3.6', '3.7', '3.8'
+          }
+      }
+      stages {
+          stage('单元测试') {
+              steps {
+                  echo PLATFORM
+                  echo PYTHON_VERSION
+              }
+          }
+      }
+  }
+  ```
+  - axes{} 用于定义并发任务的矩阵，可以包含多个 axis{} 。
+    - 每个 axis{} 用于定义一个矩阵变量。
+    - 上例中定义了两个 axis{} ，矩阵变量 PLATFORM、PYTHON_VERSION 分别有 3、4 种取值，因此会执行 3*4=12 个并发任务。
+
+
+## parallel{}
+
+：包含多个 stage{} ，用于并行执行多个任务。
+- 可用范围：stage{}
+- 例：
+  ```groovy
+  stage('单元测试') {
+      parallel {
+          stage('单元测试 1') {
+              steps {
+                  echo '测试完成'
+              }
+          }
+          stage('单元测试 2') {
+              steps {
+                  echo '测试完成'
+              }
+          }
+      }
   }
   ```
 
@@ -632,29 +689,6 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
           }
           aborted {
               echo '放弃执行'
-          }
-      }
-  }
-  ```
-
-## parallel{}
-
-：包含多个 stage{} ，会并行执行。
-- 可用范围：stage{}
-- 只要有一个并行执行的任务失败了，最终结果就是 Failure 。
-- 例：
-  ```groovy
-  stage('单元测试') {
-      parallel {
-          stage('单元测试 1') {
-              steps {
-                  echo '测试完成'
-              }
-          }
-          stage('单元测试 2') {
-              steps {
-                  echo '测试完成'
-              }
           }
       }
   }

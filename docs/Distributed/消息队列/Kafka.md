@@ -84,9 +84,9 @@ Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如
 - `Assigned Replicas` ：指一个 partition 拥有的所有 replicas 。
 - `Preferred replica` ：指 assigned replicas 中的第一个 replica 。
   - 新建一个 partition 时，preferred replica 一般就是 leader replica ，但是之后可能发生选举，改变 leader 。
-- `In-sync Replicas Set`（IRS）：指一个 partition 中与 leader 保持同步的所有 replicas 。
-  - leader 本身也属于 IRS 。
-  - 只有 IRS 中的 replica 可以被选举为 leader 。
+- `In Sync Replicas`（ISR）：指一个 partition 中与 leader 保持同步的所有 replicas 。
+  - leader 本身也属于 ISR 。
+  - 只有 ISR 中的 replica 可以被选举为 leader 。
 - `Under-replicated Replicas Set` ：指一个 partition 中与 leader 没有同步的 replicas 。
   - 当一个 follower 将 leader 的最后一条消息（Log End Offset）之前的日志全部成功复制之后，则认为该 follower 已经赶上了 leader ，记录此时的时刻作为该 follower 的 `lastCaughtUpTimeMs` 。
   - Kafka 的 ReplicaManager 会定期计算每个 follower 的 lastCaughtUpTimeMs 与当前时刻的差值，作为该 follower 对 leader 的滞后时间。
@@ -123,6 +123,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   ```
   - 部署 Kafka 集群时，需要先部署 zk 集群，然后让每个 broker 服务器连接到 zk ，即可相互发现，组成集群。
   - Kafka 发行版包含了 zk 的可执行文件，可以同时启动 kafka、zk 服务器，也可以在其它地方启动 zk 服务器。
+  - Kafka 会尽快将数据写入磁盘存储，因此需要的内存一般不超过 6G ，占用的 CPU 也少。
 
 - 或者用 docker-compose 部署：
   ```yml
@@ -216,7 +217,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
     ```sh
     127.0.0.1   hostname-1
     ```
-  - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 IRS 中移除。
+  - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 ISR 中移除。
     - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
 
 - producer.properties 的配置示例：

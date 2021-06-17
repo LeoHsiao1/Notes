@@ -122,8 +122,9 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   bin/kafka-server-start.sh     config/server.properties      # 启动 kafka broker 服务器
   ```
   - 部署 Kafka 集群时，需要先部署 zk 集群，然后让每个 broker 服务器连接到 zk ，即可相互发现，组成集群。
-  - Kafka 发行版包含了 zk 的可执行文件，可以同时启动 kafka、zk 服务器，也可以在其它地方启动 zk 服务器。
-  - Kafka 会尽快将数据写入磁盘存储，因此需要的内存一般不超过 6G ，占用的 CPU 也少。
+    - Kafka 发行版包含了 zk 的可执行文件，可以同时启动 kafka、zk 服务器，也可以在其它地方启动 zk 服务器。
+  - 声明环境变量 `export KAFKA_HEAP_OPTS="-Xmx6G -Xms4G"` ，可以控制 Kafka 使用的内存：
+    - Kafka 会尽快将数据写入磁盘存储，因此需要的内存一般不超过 6G ，占用的 CPU 也少。
 
 - 或者用 docker-compose 部署：
   ```yml
@@ -213,7 +214,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
   zookeeper.connection.timeout.ms=6000
   ```
-  - 虽然可以通过 listeners 声明访问地址，但 broker 在启动时，依然会尝试解析本地主机名对应的 IP ，因此需要先在 /etc/hosts 中添加 DNS 记录。如下：
+  - 通过 listeners 声明访问地址之后， broker 启动时可能依然尝试解析本地主机名对应的 IP ，此时需要先在 `/etc/hosts` 中添加 DNS 记录。如下：
     ```sh
     127.0.0.1   hostname-1
     ```

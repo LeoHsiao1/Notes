@@ -62,7 +62,7 @@ pipeline {
 
 ## 变量
 
-- Groovy 支持在字符串中用 $ 插入变量或表达式的值。如下：
+- Groovy 支持在字符串中用 `$` 插入变量的值，用 `${}` 插入表达式的值。如下：
   ```groovy
   script {
       ID = "1"            // 创建变量
@@ -74,6 +74,7 @@ pipeline {
       sh 'echo $ID'       // 执行 sh 语句，字符串定界符为双引号时，会直接作为 Shell 命令执行，因此 $ 会读取 Shell 变量
   }
   ```
+  - 如果只想在字符串中使用 `$` 字符，则需要转义为 `\$` 。
 
 - Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
   - 如果使用的 Groovy 变量不存在，则报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。

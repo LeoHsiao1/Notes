@@ -17,11 +17,11 @@
 
 - 在 Centos 上安装：
   ```sh
-  yum install yum-utils       # 安装 yum-config-manager
+  yum install -y yum-utils       # 安装 yum-config-manager
   yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo   # 添加 docker 的官方镜像源
-  yum install docker-ce       # 下载 docker 社区版
-  systemctl start docker      # 启动 dockerd
-  systemctl enable docker     # 使 docker 开机自启
+  yum install -y docker-ce      # 下载 docker 社区版
+  systemctl start docker        # 启动 dockerd
+  systemctl enable docker       # 使 docker 开机自启
   ```
 
 - 在 ubuntu 上，可以用官方脚本自动安装：

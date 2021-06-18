@@ -84,7 +84,7 @@
     - 此时 Job 的全名为 `<folder>/<job>` ，因此不同 Folder 下的 Job 可以重名。
 
 - Job 的名称会用于组成 URL ，还会用于创建工作目录，因此应该避免包含特殊字符。
-  - 可以采用 `项目名_模块名_Job类型_环境` 的命名格式，比如 `mydjango_front_DEPLOY_test`
+  - 可以采用 ` 项目名 _ 模块名 _Job 类型 _ 环境 ` 的命名格式，比如 `mydjango_front_DEPLOY_test`
   - 也可以创建多层 Folder ，分组管理 Job 。
 
 - 点击进入一个 Job 的详情页面，如下：
@@ -124,7 +124,7 @@
 ### 管理权限
 
 安装 `Role-based Authorization Strategy` 插件之后便可以实现基于角色的用户权限控制。用法：
-1. 进入 `全局安全配置` 页面，将授权策略改为 `Role-Based Strategy` 。
+1. 进入 ` 全局安全配置 ` 页面，将授权策略改为 `Role-Based Strategy` 。
 2. 进入 `Manage Jenkins -> Manage Users` 页面，创建一个用户账号。
 3. 进入 `Manage Jenkins -> Manage and Assign Roles -> Manage Roles` 页面，创建角色。
     - 比如创建一个全局角色 visitor ，给予 Overall 的 Read 权限。即可以查看 Jenkins 主页，但看不到任何 Job 。

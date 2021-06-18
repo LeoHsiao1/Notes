@@ -481,7 +481,7 @@ scrape_configs:
   # 修改数据点的值
   last_over_time(go_goroutines[1m])     # 返回每个时刻处，过去 1m 内最新数据点的值
   group(go_goroutines)                  # 将每个数据点的取值置为 1
-  sgn(go_goroutines)                    # 判断每个数据点取值的正负。如果为正数、负数、0，则分别置为 1、-1、0
+  sgn(go_goroutines)                    # 判断每个数据点取值的正负。如果为正数、负数、0 ，则分别置为 1、-1、0
   clamp(go_goroutines, 0, 10)           # 限制每个数据点取值的最小值、最大值，语法为 clamp(vector, min, max)
   clamp_min(go_goroutines, 0)           # 限制最小值
   clamp_max(go_goroutines, 10)          # 限制最大值

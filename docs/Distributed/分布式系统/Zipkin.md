@@ -62,7 +62,7 @@
   - 支持给服务器、客户端分别设置采样率。
 
 - Zipkin 提供了多种编程语言的客户端，供业务进程调用。
-- 业务进程将数据发送到 Zipkin 时，负责发送、接收的模块分别称为 Reporter、Collector。
+- 业务进程将数据发送到 Zipkin 时，负责发送、接收的模块分别称为 Reporter、Collector 。
   - Reporter 有几种通信方式可选：
     - HTTP ：默认方式。
     - Kafka ：适合传输大量数据。

@@ -535,6 +535,31 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   }
   ```
 
+### lock
+
+：用于获取一个全局锁，可避免并发任务同时执行时冲突。
+- 可用范围：steps{}、options{}
+- 该功能由插件 Lockable Resources 提供。
+- 例：
+  ```groovy
+  lock('resource_1') {    // 锁定一个名为 resource-1 的资源。如果该资源不存在则自动创建（任务结束之后会删除）。如果该资源已经被锁定，则一直等待获取
+      sleep 10            // 获取锁之后，执行一些语句
+      echo 'done'
+  }                       // 执行完之后，会自动释放锁定的资源
+  ```
+- lock 函数的可用参数如下：
+  ```groovy
+  lock(resource: 'resource_1',        // 要锁定的资源名
+        // label: 'my_resource',      // 通过标签筛选锁定多个资源
+        // quantity: 0,               // 至少要锁定的资源数量、默认为 0 ，表示锁定所有
+        // variable: 'LOCK',          // 将资源名赋值给一个变量
+        // inversePrecedence: false,  // 如果有多个任务在等待获取锁，是否插队到第一个
+        // skipIfLocked: false        // 如果需要等待获取锁，是否跳过执行
+        ) {
+      ...
+  }
+  ```
+
 ## matrix{}
 
 ：包含一个 axes{} 和 stages{} ，用于将一个 stages{} 在不同场景下并行执行一次，相当于执行多个实例。
@@ -604,6 +629,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       disableConcurrentBuilds()           // 不允许同时执行该 job ，会排队执行
       buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '300')  // 限制构建记录保留的最多天数、最大数量，超过限制则删除。这可以限制其占用的磁盘空间，但会导致统计的总构建次数减少
       parallelsAlwaysFailFast()           // 用 matrix{}、parallel{} 执行并发任务时，如果有某个任务失败，则立即放弃执行其它任务
+      lock('resource-1')                  // 获取全局锁（此时不支持附加语句块）
   }
   ```
 

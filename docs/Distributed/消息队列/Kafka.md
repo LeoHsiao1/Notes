@@ -123,8 +123,8 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   ```
   - 部署 Kafka 集群时，需要先部署 zk 集群，然后让每个 broker 服务器连接到 zk ，即可相互发现，组成集群。
     - Kafka 发行版包含了 zk 的可执行文件，可以同时启动 kafka、zk 服务器，也可以在其它地方启动 zk 服务器。
-  - 声明环境变量 `export KAFKA_HEAP_OPTS="-Xmx6G -Xms4G"` ，可以控制 Kafka 使用的内存：
-    - Kafka 会尽快将数据写入磁盘存储，因此需要的内存一般不超过 6G ，占用的 CPU 也少。
+  - kafka-server-start.sh 中默认配置了环境变量 `export KAFKA_HEAP_OPTS="-Xmx1G -Xms1G"` ，限制 Kafka 最多使用 1G 内存。
+    - Kafka 会尽快将数据写入磁盘存储，因此占用的内存一般不超过 6G ，占用的 CPU 也少。
 
 - 或者用 docker-compose 部署：
   ```yml

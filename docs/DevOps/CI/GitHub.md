@@ -93,16 +93,15 @@ jobs:                             # 该 workflow 的任务列表
     job1:
       runs-on: ubuntu-18.04
       env:                        # 作用于 job 的环境变量
-        VAR1: B
+        VAR1: Hello
       steps:
       - name: Test
         run: |
           echo $VAR1 $VAR2
         env:                      # 作用于 step 的环境变量
-          VAR1: Hello
+          VAR1: ${{ env.VAR1 }}   # 在 shell 之外，也可以用模板的语法调用环境变量
           VAR2: World
   ```
-  - 在 shell 之外、workflow 的其它位置，可以用模板的语法 `${{ env.xxx }}` 调用环境变量。
 
 - `$GITHUB_ENV` 指向一个存储环境变量的文件，向该文件中添加变量，就会被加入当前 job 的后续 step 的终端环境变量中。如下：
   ```yml

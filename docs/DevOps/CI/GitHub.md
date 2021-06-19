@@ -102,6 +102,7 @@ jobs:                             # 该 workflow 的任务列表
           VAR1: Hello
           VAR2: World
   ```
+  - 在 shell 之外、workflow 的其它位置，可以用模板的语法 `${{ env.xxx }}` 调用环境变量。
 
 - `$GITHUB_ENV` 指向一个存储环境变量的文件，向该文件中添加变量，就会被加入当前 job 的后续 step 的终端环境变量中。如下：
   ```yml

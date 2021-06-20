@@ -97,6 +97,14 @@ D:\>echo %x:He=he%    :: 字符串替换
 hello
 ```
 
+使用 set 给变量赋值时，会将等号 = 之后的所有字符都视作值。如下：
+```batch
+D:\>set A=Hello World       :: test
+
+D:\>echo __%A%__
+__Hello World    :: test__  :: 赋值的字符串包括了尾部的空字符、注释。可以用 set A=%A: =% 过滤空格
+```
+
 ### 系统环境变量
 
 关于时间：

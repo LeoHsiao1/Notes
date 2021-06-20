@@ -226,12 +226,13 @@ jobs:                             # 该 workflow 的任务列表
   steps:
   - name: Install dependencies  # 该 step 的名称。如果省略，则自动命名
     # id: step1                 # 该 step 的唯一标识符
-    run: |                      # 在终端执行命令，可以使用多行命令
-      python -m pip install pytest psutil
-      echo Hello
     # if: ${{ success() }}      # 当之前的 step 执行成功时才执行该 step
     # continue-on-error: false  # 该 step 失败时，是否继续执行后续的 step
     # timeout-minutes: 360      # 该 step 的超时时间
+    run: |                      # 该 step 的主要内容是调用 run 模块，从而在终端执行命令
+      python -m pip install pytest psutil
+      echo Hello
+    # shell: bash               # 指定 run 模块采用的 shell 。在 Windows 系统上默认是 pwsh ，在其它系统上默认是 bash
   ```
 
 ### step.uses

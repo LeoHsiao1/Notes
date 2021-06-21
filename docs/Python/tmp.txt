@@ -1404,6 +1404,9 @@ KeyError: 'pop from an empty set'
  
 dict
 ## dict：字典类型，存储一些键值对形式的元素。
+
+采用 dic 作为字典的缩写
+
 - key必须是不可变类型、取值唯一。value可以是任何类型、可以重复。
   - dict采用哈希表的存储结构，根据key的哈希值确定value的存储地址，因此查询、插入的效率高。
 - 可以用 {key:value...} 的格式创建dict。

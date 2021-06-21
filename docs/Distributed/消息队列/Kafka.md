@@ -370,6 +370,8 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
   1. 点击 `Generate Partition Assignments` ，设置自动分配的策略。
   2. 点击 `Run Partition Assignments` ，执行自动分配的策略。
     - 如果不满足策略，则自动迁移 replica 到指定的 broker 上，并重新选举 leader 。
+      - 迁移 replica 时会导致客户端短暂无法访问。
+      - 同时迁移多个 replica 时，可能负载过大，导致 Kafka broker 卡死。
     - 如果已满足策略，则不会进行迁移。因此该操作具有幂等性。
     - 也可以点击 `Manual Partition Assignments` ，进行手动分配。
   3. 到菜单栏的 `Reassign Partitions` 页面，查看正在执行的分配操作。

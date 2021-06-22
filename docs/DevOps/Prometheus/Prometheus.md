@@ -515,4 +515,3 @@ scrape_configs:
   POST  /api/v1/admin/tsdb/delete_series?match[]=go_goroutines&start=1589241600&end=1589266000    # 删除数据。如果不指定时间，则删除所有时间的数据
   POST  /api/v1/admin/tsdb/clean_tombstones                                                       # 让 TSDB 立即释放被删除数据的磁盘空间
   ```
-  - 即使删除 tsdb 中的所有数据，Prometheus 还可能从 `data/wal/` 目录下加载最近缓存的数据。

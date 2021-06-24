@@ -8,7 +8,9 @@ Linux 系统会读取如下三处 DNS 配置，它们的优先级从高到低：
   127.0.0.1   localhost localhost4
   ::1         localhost localhost6
   ```
-  - 如果一个域名同时匹配多条 DNS 路由，则采用第一条匹配的。
+  - 每行一条 DNS 路由规则，格式为 `<ip>  <hostname>...` 。
+  - 如果一个主机名同时匹配多条 DNS 规则，则采用第一条匹配的。
+  - 主机名中不支持使用通配符。
 
 - `/etc/sysconfig/network-scripts/ifcfg-eth0` 文件中配置了网卡 eth0 采用的 DNS 服务器：
   ```sh

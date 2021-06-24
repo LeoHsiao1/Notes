@@ -471,8 +471,9 @@ server {
           # proxy_pass http://unix:/tmp/backend.socket:/uri/;   # 可以转发给 Unix 套接字
 
           # proxy_set_header  Host       $host;           # 转发时加入请求头
-          # proxy_set_header  X-Real-IP  $remote_addr;    # 通过 Header 记录客户端的真实 IP ，供上游服务器识别
-          # proxy_pass_request_body on;                   # 转发请求 body
+          # proxy_set_header  X-Real-IP  $remote_addr;    # 添加 Header ，记录客户端的真实 IP ，供上游服务器识别
+          # proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 添加 Header ，按顺序记录 HTTP 请求经过的各层代理
+          # proxy_pass_request_body on;                   # 是否转发请求 body ，默认为 on
           # proxy_set_body    $request_body;              # 设置转发过去的请求 body
 
           # proxy_request_buffering on;   # 接收客户端的请求时，缓冲之后再转发给上游服务器
@@ -559,9 +560,9 @@ server {
   location /www/ {
       proxy_pass      http://127.0.0.1:79/;
       proxy_redirect  default;
-      proxy_redirect  http://localhost:80/      http://$host:$server_port/;
-      proxy_redirect  http://localhost:(\d*)/   http://$host:$1/;
-      proxy_redirect  /   /;
+      # proxy_redirect  http://localhost:80/      http://$host:$server_port/;
+      # proxy_redirect  http://localhost:(\d*)/   http://$host:$1/;
+      # proxy_redirect  /   /;
       # proxy_redirect off;
   }
   ```

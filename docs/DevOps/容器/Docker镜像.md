@@ -2,9 +2,7 @@
 
 - 每个镜像有两种标识符：
   - `image ID` ：由 dockerd 随机分配的编号。
-  - `imageName:tag` ：镜像名与标签的组合，由用户自定义，通常将 tag 用于表示镜像的版本号。
-- dockerd 使用的镜像都存储在宿主机上，也可以将镜像存储到镜像仓库服务器中。
-  - 默认使用的是官方的镜像仓库 hub.docker.com ，也可以使用自己搭建的仓库服务器，比如 harbor 。
+  - `image:tag` ：镜像名与标签的组合，由用户自定义，通常将 tag 用于表示镜像的版本号。
 - 悬空镜像（dangling images）：一些只有 ID 的镜像，没有镜像名和标签（而是名为 `<none>:<none>` ），也没有被容器使用。
 
 ## 查看
@@ -22,14 +20,39 @@ docker image
 
 ```sh
 docker
-      pull    <imageName>:<tag>     # 从镜像仓库拉取镜像
-      push    <imageName>:<tag>     # 推送镜像到镜像仓库
-      search  <imageName>           # 在镜像仓库中搜索某个镜像
+      pull    <image>[:tag] # 从镜像仓库拉取镜像
+      push    <image>[:tag] # 推送镜像到镜像仓库
+      search  <image>       # 在远程镜像仓库中搜索某个镜像
+
+      tag <image> <image>:<tag>     # 给镜像加上名称和 tag ，可以多次添加
       login -u leo tencentyun.com   # 使用一个用户名登录一个镜像仓库（然后会提示输入密码）
-      tag <image> <imageName>:<tag> # 给镜像加上名称和 tag ，可以多次添加
 ```
-- docker pull 时，如果不注明镜像的 tag ，则默认拉取 latest 版本。
-  - 尽量不要拉取 latest 版本，否则在不同时间拉取的 latest 版本可能不一样。
+- 例：
+  ```sh
+  docker pull nginx         # 省略 tag
+  docker pull nginx:1.20    # 
+  ```
+- 省略镜像 tag 时，默认采用 latest 作为 tag 。
+  - 一些软件会将镜像的最新版本添加一个额外的 latest tag ，便于用户拉取。
+    - 不过正式使用时，不应该拉取镜像的 latest 版本，否则不明确镜像的版本，而且在不同时间拉取的 latest 版本可能不同。
+  - 例：
+    ```sh
+    docker build . -t nginx:1.20        # 构建镜像
+    docker tag  nginx:1.20 nginx:latest # 添加 latest tag
+
+    docker push nginx:1.20              # 推送镜像
+    docker push nginx                   # 相当于 docker push nginx:latest
+
+    docker pull nginx:1.20              # 拉取镜像
+    docker pull nginx                   # 相当于 docker pull nginx:latest
+    ```
+- dockerd 使用的镜像都存储在宿主机上，也可以将镜像存储到镜像仓库服务器中。
+  - 默认采用官方的镜像仓库 docker.io ，它还提供了 Web 页面 hub.docker.com 。也可以采用第三方提供的镜像仓库。
+  - 例：
+    ```sh
+    docker pull docker.io/nginx         # 可以简写为 docker pull nginx
+    docker pull harbor.test.com/nginx   # 从自定义的镜像仓库拉取镜像
+    ```
 
 ## 导出
 
@@ -82,13 +105,13 @@ docker
 制作 Docker 镜像的方法主要有两种：
 - 将一个容器提交为镜像：
     ```sh
-    docker commit <container> <imageName>:<tag>
+    docker commit <container> <image>:<tag>
     ```
   - 每次 commit 时，会在原镜像外部加上一层新的文件系统。因此 commit 次数越多，镜像的体积越大。
 
 - 编写 Dockerfile 文件，然后基于它构建镜像：
     ```sh
-    docker build <dir_to_Dockerfile> -t <imageName:tag>
+    docker build <dir_to_Dockerfile> -t <image:tag>
                 --build-arg VERSION="1.0"   # 传入构建参数给 Dockerfile
                 --target  <stage>           # 构建到某个阶段就停止
                 --network <name>            # 设置 build 过程中使用的网络
@@ -96,7 +119,7 @@ docker
     ```
   - 例：
     ```sh
-    docker build . -t centos:v1.0 --network host
+    docker build . -t centos:7.0 --network host
     ```
   - 执行 docker build 命令时，会将 Dockerfile 所在目录及其子目录的所有文件作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 命令拷贝文件到容器中。
     - 可以在 `.dockerignore` 文件中声明不想被发送的文件。

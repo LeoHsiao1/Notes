@@ -83,7 +83,7 @@
 
 ## ♢ Jinja2
 
-：Python 的第三方库，用作 Jinjia 引擎。
+：Python 的第三方库，提供了 Jinjia 模板引擎。
 - 安装：`pip install Jinja2`
 
 ### 用法

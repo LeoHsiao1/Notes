@@ -80,6 +80,8 @@ git add .                       # 将当前目录下所有文件加入缓存区
 git rm <file>                   # 删除某个文件
       --cached                  # 从缓存区删除
 git mv <src_file> <dst_file>    # 移动文件
+
+git rev-parse --show-toplevel   # 返回 Git 项目的顶级目录
 ```
 - 被修改的文件建议先加入 git 缓存区，以便之后提交成一个版本，永久保存到 git 仓库中。也可以不加入缓存区就直接提交版本。
 - 用 git rm/mv 做出的改动会自动加入缓存区。

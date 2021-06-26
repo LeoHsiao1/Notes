@@ -108,21 +108,6 @@ git commit                        # 将当前缓存区的所有文件提交为�
     - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。
   - 标签（tag）：指向某个版本，且创建之后不能改为指向其它版本。相当于某个版本的别名。
 
-- 建议在备注信息的开头声明本次 commit 的大致类型，便于分类整理。如下：
-	```sh
-	# 宽泛的分类
-	Add       function test1()
-	Delete    ...
-	Modify    ...
-
-	# 更准确的分类
-	Update    ...     # 少许改进、增加内容
-	Optimize  ...     # 明显优化
-	Rewrite   ...     # 重写部分内容，比如函数
-	Refactor  ...     # 重构整个或部分系统
-	Fix       bug 20200101_001
-	```
-
 ### 撤销修改
 
 ```sh
@@ -414,3 +399,23 @@ git push [name 或 URL]          # 推送本地仓库到远端仓库
 - 对 git 仓库加上权限控制，比如：
   - 禁止对 master 分支 push -f 。甚至禁止直接 push ，只允许将其它分支的代码通过 PR 合并到 master 分支。
   - 提出合并到 master 分支的 PR 时，必须经过其他人 review 同意，才能合并。
+- 建议在 commit comment 的开头声明该 commit 的大致类型，便于分类整理。例如：
+  ```sh
+  # 宽泛的分类
+  Add       function test1()
+  Delete    ...
+  Modify    ...
+  
+  # 更准确的分类
+  Update    ...     # 少许改进、增加内容
+  Optimize  ...     # 明显优化
+  Rewrite   ...     # 重写部分内容，比如函数
+  Refactor  ...     # 重构整个或部分系统
+  Fix       bug 20200101_001
+
+  # 加上 [] 的分类
+  [CI]   ...
+  [DOC]  ...
+  [TEST] ...
+  ```
+

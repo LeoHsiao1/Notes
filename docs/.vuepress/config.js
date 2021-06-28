@@ -25,6 +25,7 @@ module.exports = {
         ],
         ['vuepress-plugin-right-anchor',
             {
+                showDepth: 4,
                 expand: {
                     default: true,
                     trigger: 'click',

@@ -135,7 +135,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
       container_name: kafka
       image: wurstmeister/kafka:2.12-2.0.1
       restart: unless-stopped
-      network_mode:
+      network_mode:   # 绑定宿主机的网卡
         host
       environment:
         CUSTOM_INIT_SCRIPT: cd /opt/kafka_2.12-2.0.1/config/ && cp server.properties.bak server.properties

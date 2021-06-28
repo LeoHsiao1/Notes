@@ -47,7 +47,7 @@
       container_name: zookeeper
       image: zookeeper:3.6.2
       restart: unless-stopped
-      network_mode:
+      network_mode:   # 绑定宿主机的网卡
         host
       volumes:
         - ./conf:/conf

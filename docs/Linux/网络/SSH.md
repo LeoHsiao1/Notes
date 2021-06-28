@@ -43,7 +43,7 @@ StrictModes yes                   # 在 SSH 认证时检查用户的家目录、
 - 修改了配置文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
 - `~/.ssh/authorized_keys` 文件中保存了一些公钥，允许客户端使用对应的私钥进行 SSH 认证，登录到本机。
 - `~/.ssh/known_hosts` 文件中保存了所有与本机成功进行了 SSH 认证的主机的公钥。下次再连接到这些主机时，如果其公钥发生变化，则怀疑是被冒充了。
-- 如果 StrictModes 检查不通过，会拒绝 SSH 认证，并在 /var/log/secure 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` ，此时建议执行：
+- 如果 StrictModes 检查不通过，则 sshd 依然会拒绝 SSH 认证，并在 `/var/log/secure` 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` 。此时建议执行：
   ```sh
   chmod 700   ~   ~/.ssh
   chmod 600   ~/.ssh/authorized_keys
@@ -51,14 +51,14 @@ StrictModes yes                   # 在 SSH 认证时检查用户的家目录、
 - 使用 SSH 客户端登录 SSH 服务器时，有两种认证方式：
   - 账号和密码认证：容易被暴力破解密码，还可能受到“中间人攻击”（连接到一个冒充的 SSH 服务器）。
   - 密钥认证：先将 SSH 客户端的公钥放在 SSH 服务器上，当 SSH 客户端要登录时会发出该公钥的指纹，而 SSH 服务器会根据指纹检查 authorized_keys 中是否有匹配的公钥，有的话就允许该客户端登录。然后 SSH 服务器会用该公钥加密一个消息回复给 SSH 客户端，该消息只能被 SSH 客户端的私钥解密，这样就完成了双向认证。
-- 为了避免恶意用户反复尝试 SSH 登录，进行暴力破解，可采取以下措施：
+- 为了避免恶意用户频繁尝试 SSH 登录，进行暴力破解，可采取以下措施：
   - 使用复杂的 SSH 密码，或者只允许使用 SSH 密钥进行登录。
-  - 禁止 root 用户远程登录，这样暴力破解时还需要猜测用户名。
-  - 只允许白名单的 IP 登录。
+  - 禁止 root 用户远程登录，这样暴力破解时还需要猜测有效的用户名。
+  - 禁止公网 IP 登录，甚至只允许白名单的 IP 登录。
 
 ### 白名单和黑名单
 
-当 Linux 收到一个 ssh 或 telnet 的连接请求时，会先查看 /etc/hosts.allow 文件：
+当 Linux 收到一个 ssh 或 telnet 的连接请求时，会先查看 `/etc/hosts.allow` 文件：
 - 如果包含该 IP ，则建立 TCP 连接，开始身份认证。
 - 如果不包含该 IP ，则查看 /etc/hosts.deny 文件：
   - 如果包含该 IP ，则拒绝连接。

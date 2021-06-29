@@ -27,7 +27,8 @@ body .site-name {
     font-family: 'mv boli';
 }
 
-body .navbar {                      // 导航栏
+// 导航栏
+body .navbar {                      
     background-color: #e0dbd2;
 }
 
@@ -39,51 +40,77 @@ body .navbar div.links .nav-dropdown {
     background-color: #e0dbd2;
 }
 
-body .sidebar {                     // 侧边栏
-    background-color: #e0dbd2;
-}
-
-body .sidebar-heading {             // 侧边栏的分组标题（不带链接时）
-    font-weight: normal;
-}
-
-body .page {                        // 正文部分
+// 正文部分
+body .page {                        
     background-color: #ebe6dd;
 }
 
-body td, th {                       // 表格
+
+
+// 侧边栏
+body .sidebar {                     
+    background-color: #e0dbd2;
+}
+
+// 侧边栏的分组标题（不带链接时）
+body .sidebar-heading {             
+    font-weight: normal;
+}
+
+// 侧边栏中，嵌套的组
+// .sidebar-group.is-sub-group > .sidebar-heading:not(.clickable) {
+//     opacity: 1;
+// }
+
+// 侧边栏中，所有链接
+// .sidebar-group a.sidebar-link {
+//     color: #3eaf7c;
+// }
+
+// 右侧目录栏
+.right-anchor {
+    opacity: 0.8;
+}
+
+
+
+// MarkDown 文档中的表格
+body td, th {
     border: 1px solid #a3a3a3;
 }
 
-body .theme-default-content code {  // MarkDown的行内代码块
+// MarkDown 文档中的行内代码块
+body .theme-default-content code {
     background-color: #dcd5ca;
     color: #2c3e50;
     font-family: 'Consolas', 'Microsoft YaHei', serif;
 }
 
-body div[class*="language-"] {      // MarkDown的代码块
+// MarkDown 文档中的代码块
+body div[class*="language-"] {
     background-color: #3d3d3d;
 }
 
-body div[class*="language-"] pre[class*="language-"] code {  // MarkDown的代码块
+// MarkDown 文档中的代码块
+body div[class*="language-"] pre[class*="language-"] code {
     color: #d9d9d9;
     font-family: 'Consolas', 'Microsoft YaHei', serif;
 }
 
-.theme-container.homepage_class div {   // 自定义首页
+
+
+// 自定义首页
+.theme-container.homepage_class div {
     background-image: url(/cat.gif);
     background-repeat: no-repeat;
     background-position: 50% 50%;
 }
 
-.theme-container.homepage_class #homepage_title {   // 自定义首页
+// 自定义首页
+.theme-container.homepage_class #homepage_title {
     color: #f8f8f8;
     text-align: center;
     font-family: 'mv boli';
     font-size: 4em;
     font-weight: normal;
-}
-
-.right-anchor {     // 右侧目录栏
-    opacity: 0.8;
 }

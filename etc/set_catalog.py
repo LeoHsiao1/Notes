@@ -1,29 +1,21 @@
 """
-根据 docs/index.md 及各书籍目录下的 index.md 文件中的目录，生成 docs/.vuepress/config.js 文件中的 nav、sidebar 目录。
+根据 docs/index.md 及各书籍目录下的 index.md 文件中的目录信息，生成 docs/.vuepress/config.js 文件中的 nav、sidebar 目录。
 """
-import os
 import re
 
-# 获取书籍列表
-with open('docs/index.md', encoding='utf-8') as f:
-    text = f.read()
 
-book_list = re.findall(r'> - \[《\w*》\]\(([^\)]*)/index.md\)', text)
+def get_book_info(book_dirname):
+    """ 获取指定目录名的一个书籍的章节目录等信息 """
+    with open('docs/{}/index.md'.format(book_dirname), encoding='utf-8') as f:
+        book_index = f.read()
 
-# 获取各书籍的信息，包括名字、目录
-books_info = []
-for book in book_list:
-    index_path = 'docs/{}/index.md'.format(book)
-    with open(index_path, encoding='utf-8') as f:
-        text = f.read()
-    
     book_info = {}
-    book_info['dirname'] = book
-    book_info['display_name'] = re.findall(r'\[《(\w*)》\]\(index.md\)', text)[0]
-    
+    book_info['dirname'] = book_dirname
+    book_info['display_name'] = re.findall(r'\[《(\w*)》\]\(index.md\)', book_index)[0]
+
     book_info['catalog'] = {}
     current_chapter = ''
-    for line in text.split('\n'):
+    for line in book_index.split('\n'):
         chapter = re.findall(r'^- ([^\[].*)$', line)
         article_path = re.findall(r'^  - \[.*\]\(([^\)]*).md\)$', line)
         if chapter:
@@ -33,15 +25,22 @@ for book in book_list:
             book_info['catalog'][current_chapter].append(article_path[0])
         else:
             continue
-    books_info.append(book_info)
+    return book_info
 
 
-# 读取 configs.js
-configs_path = 'docs/.vuepress/config.js'
-with open(configs_path, encoding='utf-8') as f:
-    text = f.read()
+print('获取所有书籍的名称 ...')
+with open('docs/index.md', encoding='utf-8') as f:
+    books_dirname = re.findall(r'> - \[《\w*》\]\(([^\)]*)/index.md\)', f.read())
 
-# 生成 nav 目录
+print('获取所有书籍的章节目录等信息 ...')
+books_info = [get_book_info(book_dirname) for book_dirname in books_dirname]
+
+print('读取 configs.js ...')
+config_js_path = 'docs/.vuepress/config.js'
+with open(config_js_path, encoding='utf-8') as f:
+    config_js = f.read()
+
+print('生成 nav 目录 ...')
 nav = '''
 			text: 'Notes',
             items: [
@@ -57,9 +56,9 @@ for book_info in books_info:
 
 nav += '            ]'
 # print(nav)
-text = re.sub(r"\n[^\n]*text: 'Notes',\s*items: \[[^\]]*\]", nav, text, flags=re.S)
+config_js = re.sub(r"\n[^\n]*text: 'Notes',\s*items: \[[^\]]*\]", nav, config_js, flags=re.S)
 
-# 生成 sidebar 目录
+print('生成 sidebar 目录 ...')
 sidebar = '''
         sidebar: {
 '''
@@ -86,12 +85,12 @@ for book_info in books_info:
 sidebar += '''
         },
         nextLinks: false,
-'''.strip('\n')         # 在 sidebar 配置之后放置 nextLinks 配置，便于定位
+'''.strip('\n')         # 在 sidebar 配置之后放置 nextLinks 配置，便于正则匹配时定位
 # print(sidebar)
-text = re.sub(r"\n[^\n]*sidebar: \{.*\},\s*nextLinks: false,", sidebar, text, flags=re.S)
+config_js = re.sub(r"\n[^\n]*sidebar: \{.*\},\s*nextLinks: false,", sidebar, config_js, flags=re.S)
 
-# 保存到 configs.js 中
-with open(configs_path, 'w', encoding='utf-8') as f:
-    f.write(text)
+print('保存 configs.js ...')
+with open(config_js_path, 'w', encoding='utf-8') as f:
+    f.write(config_js)
 
-print('done')
+print('完成')

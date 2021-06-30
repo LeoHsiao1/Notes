@@ -133,14 +133,19 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   services:
     kafka:
       container_name: kafka
-      image: wurstmeister/kafka:2.12-2.0.1
+      image: wurstmeister/kafka:2.12-2.4.1
       restart: unless-stopped
+      working_dir: /opt/kafka
+      entrypoint:
+        - /bin/sh
+        - -c
+        - /opt/kafka/bin/kafka-server-start.sh  /opt/kafka/config/server.properties
       network_mode:   # 绑定宿主机的网卡
         host
       environment:
-        CUSTOM_INIT_SCRIPT: cd /opt/kafka_2.12-2.0.1/config/ && cp server.properties.bak server.properties
+        KAFKA_HEAP_OPTS: -Xmx4G -Xms1G
       volumes:
-        - ./config:/opt/kafka_2.12-2.0.1/config
+        - ./config:/opt/kafka/config
         - ./data:/data
   ```
   - Kafka 官方没有提供 Docker 镜像，这里采用社区提供的一个镜像。

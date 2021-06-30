@@ -35,18 +35,17 @@
       ports:
         - 9411:9411
 
-    denpendencies:                        # 该镜像默认每小时执行一次 denpendencies job
+    denpendencies:                        # 该容器需要每天执行一次
       container_name: zipkin-dependencies
       image: openzipkin/zipkin-dependencies:2.4
-      user: root
-      init: true
-      entrypoint: crond -f -L /var/log/cron
+      entrypoint:
+        - /bin/sh
+        - -c
+        - start-zipkin-dependencies `date -ud yesterday +%F`
       environment:
         STORAGE_TYPE: elasticsearch
         ES_HOSTS: http://10.0.0.1:9200
         ES_NODES_WAN_ONLY: 'true'         # 是否只使用 ES_HOSTS 中列出的 ES 地址。默认为 false ，会连接本机的 9200 端口
-      volumes:
-        - /etc/localtime:/etc/localtime:ro
   ```
   - Zipkin 的 v2.21 版本更换了 UI ，并且支持的 ES 版本从 v6 改为 v7 。
 
@@ -74,9 +73,10 @@
 - Zipkin 默认每天执行一个 Spark Job ，绘制当天（UTC 时区）的 dependencies 依赖图。
   - 采用外部存储后端时，不会自动执行该 Job 。用户可以主动执行：
     ```sh
-    java -jar zipkin-dependencies.jar
+    java -jar zipkin-dependencies.jar 2021-01-02
     ```
-    配置参数通过环境变量传入。
+    - 执行该 jar 包时，默认处理今天的数据，也可以传入指定的日期。
+    - 其它配置参数通过环境变量传入。
 
 ## ♢ py-zipkin
 

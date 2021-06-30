@@ -86,7 +86,11 @@ services:                     # 开始定义服务
     dns:                      # 指定 DNS 服务器
       - 8.8.8.8
     init: true                # 使用 init 作为 1 号进程
-    entrypoint: ["echo", "1"] # 覆盖 Dockerfile 中的 ENTRYPOINT ，可以是 exec 格式或 shell 格式
+    entrypoint:               # 覆盖 Dockerfile 中的 ENTRYPOINT ，取值可以为字符串类型或列表类型
+      - /bin/sh               # 建议通过 shell 运行启动命令，否则不能使用环境变量等功能
+      - -c
+      - echo Hello            # 此时容器的启动命令为 /bin/sh -c 'echo Hello' World ，实际上只会执行 echo Hello
+      - World
     command: echo Hello       # 覆盖 Dockerfile 中的 CMD
     restart: unless-stopped   # 容器的重启策略
 

@@ -151,11 +151,13 @@ docker logs <container>   # 显示一个容器的日志
           -t              # 显示时间戳
 ```
 - dockerd 会记录容器内 1 号进程的 stdout、stderr ，作为该容器的日志。
-  - 将其它进程的日志文件重定向到 `/proc/1/fd/1`、`/proc/1/fd/2` ，就会一起记录到容器的日志中。
-  - 例如， Nginx 的官方镜像中重定向了其日志文件：
+  - 将其它进程的输出重定向到 1 号进程的终端，就会一起记录到容器的日志中。如下：
     ```sh
-    ln -sf /dev/stdout /var/log/nginx/access.log
-    ln -sf /dev/stderr /var/log/nginx/error.log
+    echo Hello  1> /proc/1/fd/1  2> /proc/1/fd/2
+    ```
+    ```sh
+    ln -s  /proc/1/fd/1  stdout.log
+    echo Hello       &>  stdout.log
     ```
 
 ### 日志驱动器

@@ -15,6 +15,7 @@ docker run <image> [command]    # 实例化某个镜像，从而创建并运行�
 
             -u <UID>            # 在容器内使用指定的用户（默认为 root）
             -w <path>           # --workdir ，指定容器的工作目录
+            --entrypoint 'xx'   # 覆盖 Dockerfile 中的 ENTRYPOINT
 
             -p 80:8000                # 将宿主机的端口 80 映射到容器的端口 8000（可重复使用该命令选项）
             -p 127.0.0.1:80:8000      # 将宿主机指定网卡的端口 80 映射到容器的端口 8000

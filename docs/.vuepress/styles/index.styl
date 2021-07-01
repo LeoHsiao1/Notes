@@ -31,11 +31,9 @@ body .site-name {
 body .navbar {                      
     background-color: #e0dbd2;
 }
-
 body .navbar div.links {
     background-color: #e0dbd2;
 }
-
 body .navbar div.links .nav-dropdown {
     background-color: #e0dbd2;
 }
@@ -46,22 +44,28 @@ body .page {
 }
 
 
-
 // 侧边栏
 body .sidebar {                     
     background-color: #e0dbd2;
 }
-
 // 侧边栏的分组标题（不带链接时）
 body .sidebar-heading {             
     font-weight: normal;
+}
+// 侧边栏中的箭头
+.arrow.right {
+    border-left-color: gray;
+    opacity: 0.5;
+}
+.arrow.down {
+    border-left-color: gray;
+    opacity: 0.5;
 }
 
 // 侧边栏中，嵌套的组
 // .sidebar-group.is-sub-group > .sidebar-heading:not(.clickable) {
 //     opacity: 1;
 // }
-
 // 侧边栏中，所有链接
 // .sidebar-group a.sidebar-link {
 //     color: #3eaf7c;
@@ -73,24 +77,20 @@ body .sidebar-heading {
 }
 
 
-
 // MarkDown 文档中的表格
 body td, th {
     border: 1px solid #a3a3a3;
 }
-
 // MarkDown 文档中的行内代码块
 body .theme-default-content code {
     background-color: #dcd5ca;
     color: #2c3e50;
     font-family: 'Consolas', 'Microsoft YaHei', serif;
 }
-
 // MarkDown 文档中的代码块
 body div[class*="language-"] {
     background-color: #3d3d3d;
 }
-
 // MarkDown 文档中的代码块
 body div[class*="language-"] pre[class*="language-"] code {
     color: #d9d9d9;
@@ -105,8 +105,6 @@ body div[class*="language-"] pre[class*="language-"] code {
     background-repeat: no-repeat;
     background-position: 50% 50%;
 }
-
-// 自定义首页
 .theme-container.homepage_class #homepage_title {
     color: #f8f8f8;
     text-align: center;

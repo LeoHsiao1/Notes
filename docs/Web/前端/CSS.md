@@ -53,20 +53,23 @@ selector { [property: value;]... }
 
 ## 选择器
 
-选择器分为多种类型：
-- 选择一种 HTML 元素
+### 基本类型
+
+- 元素选择器：
   ```css
-  h1 {color: red;}
+  h1 {color: red;}      /* 选择类型为 h1 的元素 */
   ```
-- 选择多种 HTML 元素
-  ```css
-  h1,h2,h3 {color: red;}
-  ```
-- id 选择器
+  - 可以用 * 选择所有元素：
+    ```css
+    * {color: red;}
+    ```
+
+- id 选择器：
   ```css
   #date {color:red;}    /* 选择属性 id 的值为 date 的元素 */
   ```
-- 属性选择器
+
+- 属性选择器：
   ```css
   [id] {color:red;}               /* 选择带有属性 id 的所有元素 */
   [id="date"] {color:red;}        /* 选择属性 id 的值为 "date" 的所有元素 */
@@ -75,44 +78,73 @@ selector { [property: value;]... }
   [id$="d"] {color:red;}          /* 选择属性 id 的值以字符串 "d" 结尾的所有元素 */
   input[id="date"] {color:red;}   /* 选择属性 id 的值为 "date" 的所有 input 元素 */
   ```
-- 兄弟选择器
-  ```css
-  h1 + p {margin-top:20px;}   /* 选择紧跟在 h1 元素之后的 p 元素 */
-  ```
-- 后代选择器（后代元素包括子元素、孙元素等）
-  ```css
-  p strong {color: red;}      /* 选择 p 元素的后代元素中的 strong 元素 */
-  ```
-- 子元素选择器
-  ```css
-  p > strong {color: red;}    /* 选择 p 元素的子元素中的 strong 元素 */
-  ```
-- 类选择器
+
+- 类选择器：
   ```css
   .class1 {text-align: center;}   /* 选择使用 class1 类的所有元素 */
   p.class1 {text-align: center;}  /* 选择使用 class1 类的 p 元素 */
   ```
-- 伪类选择器（Pseudo-classes）
+
+- 伪类选择器（Pseudo-classes）：
+  ```css
+  a:link {color: #FF0000}           /* 在 : 后声明伪类 */
+  a.red : visited {color: #FF0000}  /* 伪类可以与 CSS 类组合使用 */
+  p:first-child {font-weight: bold;}
+  ```
   - link、visited、hover、active 四种伪类作用于“链接”类型的元素。
   - focus ：选择拥有键盘焦点的元素。
   - first-child ：选择元素的第一个实例。
   - lang ：选择带有 lang 属性的元素。
-  - 例：
-    ```css
-    a:link {color: #FF0000}           /* 在 : 后声明伪类 */
-    a.red : visited {color: #FF0000}  /* 伪类可以与 CSS 类组合使用 */
-    p:first-child {font-weight: bold;}
-    ```
-- 伪元素选择器（Pseudo-elements）
+
+- 伪元素选择器（Pseudo-elements）：
+  ```css
+  p:first-letter {color: #FF0000;}
+  h1:before {content: url(logo.gif);}
+  ```
   - first-letter ：选择元素的首字母。
   - first-line ：选择元素的首行。
   - before ：在元素之前加入内容。
   - after ：在元素之后加入内容。
-  - 例：
-    ```css
-    p:first-letter {color: #FF0000;}
-    h1:before {content: url(logo.gif);}
-    ```
+
+### 组合类型
+
+- 选择器列表：
+  ```css
+  h1,h2,h3 {color: red;}      /* 通过逗号同时使用多个选择器，只要元素满足任一选择器就会被选中 */
+  ```
+
+- 一般兄弟选择器：
+  ```css
+  h1 + p {margin-top:20px;}   /* 选择在 h1 元素之后、属于相同父节点的 p 元素 */
+  ```
+
+- 紧邻兄弟选择器：
+  ```css
+  h1 + p {margin-top:20px;}   /* 选择在 h1 元素之后、属于相同父节点、且相邻的 p 元素 */
+  ```
+
+- 后代选择器：
+  ```css
+  p strong {color: red;}      /* 选择 p 元素的后代元素中的 strong 元素 */
+  ```
+  - 后代元素包括子元素、孙元素等。
+
+- 子元素选择器：
+  ```css
+  p > strong {color: red;}    /* 选择 p 元素的子元素中的 strong 元素 */
+  ```
+
+### 优先级
+
+- 如果多个 CSS 样式同时作用于一个元素，则不同类型的样式会合并，同种类型的样式会采用优先级最高的那个。
+- 一个元素默认会继承父级元素的样式，但直接作用于该元素的样式的优先级更高。
+- 选择器的优先级从高到低如下：
+  - 内联样式
+  - id 选择器
+  - 类选择器
+  - 属性选择器
+  - 伪类选择器
+  - 伪元素选择器
 
 ## 常用样式
 

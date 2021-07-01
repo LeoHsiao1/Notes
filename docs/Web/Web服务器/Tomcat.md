@@ -4,27 +4,27 @@
 - [官方文档](https://tomcat.apache.org/)
 - 一般用作动态服务器，支持 Servlet、JSP ，常用于运行 Java Web 项目。
 
-## 安装
+## 部署
 
 - 下载源代码包并启动：
-    ```sh
-    yum install java-1.8.0-openjdk-devel  # 安装 jdk
-    wget https://mirrors.tuna.tsinghua.edu.cn/apache/tomcat/tomcat-9/v9.0.33/bin/apache-tomcat-9.0.33.tar.gz
-    tar -zxvf apache-tomcat-9.0.33.tar.gz
-    cd apache-tomcat-9.0.33/bin/
-    ./startup.sh
-    ```
+  ```sh
+  yum install java-1.8.0-openjdk-devel  # 安装 jdk
+  wget https://mirrors.tuna.tsinghua.edu.cn/apache/tomcat/tomcat-9/v9.0.33/bin/apache-tomcat-9.0.33.tar.gz
+  tar -zxvf apache-tomcat-9.0.33.tar.gz
+  cd apache-tomcat-9.0.33/bin/
+  ./startup.sh
+  ```
 
 - 或者用 Docker 部署：
-    ```sh
-    docker run -d --name=tomcat -p 8080:8080 tomcat:9.0
+  ```sh
+  docker run -d --name=tomcat -p 8080:8080 tomcat:9.0
 
-    docker cp 1.war tomcat:/usr/local/tomcat/webapps      # 拷贝 war 包
-    docker exec tomcat /usr/local/tomcat/bin/startup.sh   # 启动
-    docker exec tomcat /usr/local/tomcat/bin/shutdown.sh  # 停止
-    ```
+  docker cp 1.war tomcat:/usr/local/tomcat/webapps      # 拷贝 war 包
+  docker exec tomcat /usr/local/tomcat/bin/startup.sh   # 启动
+  docker exec tomcat /usr/local/tomcat/bin/shutdown.sh  # 停止
+  ```
 
-## 启动与停止
+### 常用脚本
 
 - tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
   - startup.sh  ：用于启动 Tomcat ，实际上是调用 `catalina.sh start` 。

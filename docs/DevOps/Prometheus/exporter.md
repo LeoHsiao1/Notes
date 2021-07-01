@@ -439,28 +439,51 @@
 - 下载后启动：
   ```sh
   ./kafka_exporter
-                --web.listen-address :9308
-                --web.telemetry-path /metrics
-                --kafka.server kafka:9092
-                --sasl.username xx
-                --sasl.password ******
-                --topic.filter  .*    # 通过正则表达式筛选要监控的 topic
-                --group.filter  .*
+                # --web.listen-address=:9308
+                # --web.telemetry-path=/metrics
+                
+                --kafka.server=10.0.0.1:9092    # kafka 服务器的地址，可以多次使用该选项
+                # - --kafka.server=10.0.0.2:9092
+                --kafka.version=2.2.0
+                # --sasl.enabled=false
+                # --sasl.username=xx
+                # --sasl.password=******
+                # --topic.filter=.*            # 通过正则表达式筛选要监控的 topic ，例如 filter=^[^_].*
+                # --group.filter=.*
+  ```
+  或者用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    kafka:
+      container_name: kafka-exporter
+      image: danielqsj/kafka-exporter:v1.3.1
+      restart: unless-stopped
+      command:
+        - --kafka.server=10.0.0.1:9092
+      ports:
+        - 9308:9308
   ```
 - 常用指标：
   ```sh
-  kafka_brokers                                                               # 该 Kafka 集群的 broker 数量
-  kafka_topic_partitions{topic="xx"}                                          # partition 数量
-  kafka_topic_partition_replicas{topic="xx", partition="x"}                   # partition 的副本数
-  kafka_topic_partition_in_sync_replica{topic="xx", partition="x"}            # partition 的已经同步的副本数
-  kafka_topic_partition_under_replicated_partition{topic="xx", partition="x"} # partition 是否有没有同步的副本
+  kafka_exporter_build_info{goversion="go1.16", instance="10.0.0.1:9308", job="kafka_exporter"} # 版本信息
 
-  kafka_topic_partition_leader{topic="xx", partition="x"}                     # partition 的 leader 的 ID
-  kafka_topic_partition_leader_is_preferred{topic="xx", partition="x"}        # partition 的 leader 是否为 preferred replica
-  kafka_topic_partition_current_offset{topic="xx", partition="x"}             # partition 的当前偏移量
-  kafka_topic_partition_oldest_offset{topic="xx", partition="x"}              # partition 的最后偏移量
-  kafka_consumergroup_current_offset{consumergroup="xx", topic="xx", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
-  kafka_consumergroup_lag{consumergroup="xx", topic="xx", partition="x"}      # 某个 consumergroup 在某个 partition 的滞后量
+  kafka_brokers                                                              # Kafka 集群的 broker 数量
+
+  kafka_topic_partitions{topic="x"}                                          # 某个 topic 的 partition 数量
+  kafka_topic_partition_replicas{topic="x", partition="x"}                   # partition 的副本数
+  kafka_topic_partition_in_sync_replica{topic="x", partition="x"}            # partition 的已经同步的副本数
+  kafka_topic_partition_under_replicated_partition{topic="x", partition="x"} # partition 是否存在未同步的副本
+
+  kafka_topic_partition_leader{topic="x", partition="x"}                     # partition 的 leader 的 ID
+  kafka_topic_partition_leader_is_preferred{topic="x", partition="x"}        # partition 的 leader 是否为 preferred replica
+  kafka_topic_partition_current_offset{topic="x", partition="x"}             # partition 的当前偏移量
+  kafka_topic_partition_oldest_offset{topic="x", partition="x"}              # partition 的最后偏移量
+
+  kafka_consumergroup_members{consumergroup="x"}                                    # 每个 consumergroup 中的成员数
+  kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
+  kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
   ```
 
 ## elasticsearch_exporter

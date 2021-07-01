@@ -45,7 +45,7 @@ module.exports = {
         ],
     ],
     markdown: {
-        extractHeaders: [ 'h1', 'h2', 'h3'],
+        extractHeaders: ['h1', 'h2', 'h3', 'h4'],
     },
     themeConfig: {
         repo: 'https://github.com/LeoHsiao1/Notes',

@@ -367,6 +367,7 @@ module.exports = {
                     children: [
                         '简介/Web技术',
                         '简介/Web爬虫',
+                        '简介/Web安全',
                     ]
                 },
                 {
@@ -397,13 +398,6 @@ module.exports = {
                         'Web服务器/简介',
                         'Web服务器/Nginx',
                         'Web服务器/Tomcat',
-                    ]
-                },
-                {
-                    title: 'Web安全',
-                    children: [
-                        'Web安全/服务器安全',
-                        'Web安全/客户端安全',
                     ]
                 },
                 {

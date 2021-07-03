@@ -3,6 +3,7 @@
 - 简介
   - [Web技术](简介/Web技术.md)
   - [Web爬虫](简介/Web爬虫.md)
+  - [Web安全](简介/Web安全.md)
 - 前端
   - [简介](前端/简介.md)
   - [HTML](前端/HTML.md)
@@ -21,9 +22,6 @@
   - [简介](Web服务器/简介.md)
   - [Nginx](Web服务器/Nginx.md)
   - [Tomcat](Web服务器/Tomcat.md)
-- Web安全
-  - [服务器安全](Web安全/服务器安全.md)
-  - [客户端安全](Web安全/客户端安全.md)
 - CMS
   - [简介](CMS/简介.md)
   - [Jekyll](CMS/Jekyll.md)

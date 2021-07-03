@@ -2,7 +2,7 @@
 
 ：一个用于分布式链路跟踪的服务器。
 - [官方文档](https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md)
-- 由 Twitter 公司开源，基于 Java 开发。
+- 由 Twitter 公司开源，采用 Java 开发。
 - 提供了 Restful API 和 Web UI 。
 
 ## 部署

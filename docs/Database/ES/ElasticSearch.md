@@ -2,7 +2,7 @@
 
 ：简称为 ES ，一个搜索引擎，也可用作存储 JSON 格式数据的 NoSQL 数据库。
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
-- 基于 Java 开发，基于 Lucene 实现。
+- 采用 Java 开发，基于 Lucene 实现。
 - 采用 C/S 架构、TCP 通信。
 
 ## 版本
@@ -33,7 +33,7 @@
 
 ### Lucene
 
-：一个搜索引擎，基于 Java 开发。
+：一个搜索引擎，采用 Java 开发。
 - 于 2000 年开源，由 ASF 管理。
 - Lucene 将存储的每条数据称为文档（document），容纳文档的集合称为索引（index）。
   - 每个索引由一个或多个子索引组成。
@@ -118,7 +118,7 @@
 ## 相关概念
 
 - Solr
-  - ：一个基于 Lucene 的搜索引擎，基于 Java 开发。
+  - ：一个采用 Lucene 的搜索引擎，基于 Java 开发。
   - 于 2006 年开源，由 ASF 管理。
   - 基于 zookeeper 运行分布式系统。
   - Solr 比 ES 的功能更丰富，但 ES 的实时性更强。

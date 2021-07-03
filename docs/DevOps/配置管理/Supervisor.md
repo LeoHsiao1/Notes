@@ -2,7 +2,7 @@
 
 ：一个进程管理工具，类似于 systemd 。，
 - [官方文档](http://supervisord.org/index.html)
-- 基于 Python 开发。
+- 采用 Python 开发。
 - 功能：
   - 支持运行在 Linux、MacOS 等系统上，不支持 Windows 系统。
   - 可以通过简单的命令来启动、停止进程，并且当进程异常退出时会自动重启它。
@@ -225,7 +225,7 @@ Supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
 
 ## Cesi
 
-：一个基于 Python3 的 Flask 开发的 Web 管理平台，可以统一管理多台主机上的 Supervisor （需要它们开启 inet_http_server ）。
+：一个采用 Python3 的 Flask 开发的 Web 管理平台，可以统一管理多台主机上的 Supervisor （需要它们开启 inet_http_server ）。
 - [Github 页面](https://github.com/gamegos/cesi)
 - 安装：
   ```sh

@@ -124,6 +124,6 @@
 - [官网](https://ltb-project.org/)
 
 常用工具：
-- `Self Service Password` ：一个基于 PHP 开发的网站，允许用户通过 Web 页面自行修改密码，而不需要 LDAP 管理员修改。
-- `White Pages` ：一个基于 PHP 开发的网站，允许用户搜索、查看 LDAP 中的数据。
-- `Service Desk` ：一个基于 PHP 开发的网站，供 LDAP 管理员锁定、重置用户密码。
+- `Self Service Password` ：一个采用 PHP 开发的网站，允许用户通过 Web 页面自行修改密码，而不需要 LDAP 管理员修改。
+- `White Pages` ：一个采用 PHP 开发的网站，允许用户搜索、查看 LDAP 中的数据。
+- `Service Desk` ：一个采用 PHP 开发的网站，供 LDAP 管理员锁定、重置用户密码。

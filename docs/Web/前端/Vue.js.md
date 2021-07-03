@@ -48,5 +48,5 @@
 
 - [form-create](http://www.form-create.com/v2/guide/) ：用于生成 Vue 表单。
 - [element-ui](https://element.eleme.cn/) ：一个 UI 组件库，基于 Vue 2 ，提供了图标、按钮、表单、标签页等丰富的 UI 组件，由饿了么公司开源。
-- [element-plus](element-plus) ：基于 Vue 3 ，基于 TypeScript 开发。
+- [element-plus](element-plus) ：基于 Vue 3 ，采用 TypeScript 开发。
 

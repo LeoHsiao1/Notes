@@ -21,7 +21,7 @@
 ## 解释器
 
 - 流行的 Ruby 解释器：
-  - Ruby MRI ：又称为 CRuby ，基于 C 语言开发。
+  - Ruby MRI ：又称为 CRuby ，采用 C 语言开发。
   - JRuby ：将 Ruby 代码解释成 Java 字节码，在 JVM 上运行。
   - YARV ：又称为 Ruby VM ，将 Ruby 代码解释成 YARV 指令，在 Ruby 虚拟机上执行。
   - Rubinius
@@ -205,5 +205,5 @@
 
 ## 相关概念
 
-- Ruby on Rails ：简称为 Rails ，一个基于 Ruby 的 Web 应用开发框架，采用 MVC 设计模式。
+- Ruby on Rails ：简称为 Rails ，一个采用 Ruby 的 Web 应用开发框架，采用 MVC 设计模式。
 

@@ -30,8 +30,8 @@
 ### 主要模块
 
 - Core ：核心组件，通过 Restful API 与其它模块交互。
-- Coco ：基于 Python 开发的 SSH 客户端。目前已被 Koko 替换。
-- Koko ：基于 Golang 开发的 SSH 客户端。
+- Coco ：一个采用 Python 开发的 SSH 客户端。目前已被 Koko 替换。
+- Koko ：一个采用 Golang 开发的 SSH 客户端。
 - Guacamole ：一个无客户端的远程桌面网关，由 Apache 开源。JMS 调用它来实现 RDP 功能。
 - Luna ：用于渲染、输出前端文件。
 - Nginx ：用于反向代理 Luna 。

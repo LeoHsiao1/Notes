@@ -13,13 +13,13 @@ ELk 系统主要由以下软件组成：
   - 用于存储数据，并支持查询。
 - Logstash
   - 用于采集日志数据，并解析成格式化数据，发送到 ES 中存储。
-  - 基于 Ruby 开发，通过 JRuby 解释器运行在 JVM 上。
+  - 采用 Ruby 开发，通过 JRuby 解释器运行在 JVM 上。
 - Kibana
   - 一个基于 node.js 运行的 Web 服务器，用于查询、展示 ES 中存储的数据。
 
 ELK 系统还可以选择加入以下软件：
 - Beats
-  - 基于 Golang 开发，用于采集日志数据。比 Logstash 更轻量级，但功能较少。
+  - 采用 Golang 开发，用于采集日志数据。比 Logstash 更轻量级，但功能较少。
 - Elastic Agent
   - v7.8 版本新增的软件，用于采集日志数据。它集成了不同类型的 Beats 的功能。
 - Observability
@@ -52,12 +52,12 @@ ELK 的主要工作流程如下：
 
 - Flume
   - ：一个日志采集工具，类似于 Logstash ，但功能较少。
-  - 由 Cloudera 公司基于 Java 开发，2012 年成为 ASF 的顶级项目。
+  - 由 Cloudera 公司采用 Java 开发，2012 年成为 ASF 的顶级项目。
   - 通过 tail -f 的方式采集日志文件的内容，因此重启采集进程之后会重复采集。
 
 - Fluentd
   - ：一个日志采集工具，类似于 Logstash ，也有丰富的插件。
-  - 2011 年首次发布，由 Treasure Data 公司基于 Ruby 开发。
+  - 2011 年首次发布，由 Treasure Data 公司采用 Ruby 开发。
   - 采集的数据解析为 JSON 对象，可以输出到 ES、MongoDB、Kafka 等。
   - 可以替换 ELK 系统中的 Logstash ，组成 EFK 。
 

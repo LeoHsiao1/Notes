@@ -295,7 +295,7 @@ module.exports = {
 该插件用于让 Vuepress 的搜索栏支持全文搜索。
 - 当用户在搜索栏中输入字符串时，该插件会实时地向 meilisearch 服务器发出 AJAX 形式的查询请求，然后将查询结果显示在搜索栏下方。
 
-meilisearch 是一个开源的搜索引擎，基于 Rust 语言开发，借鉴了 Algolia 引擎，适合用于实现个人网站的搜索栏。
+meilisearch 是一个开源的搜索引擎，采用 Rust 语言开发，借鉴了 Algolia 引擎，适合用于实现个人网站的搜索栏。
 - [官网](https://docs.meilisearch.com/)
 - 使用 meilisearch 的主要流程如下：
   1. 运行 meilisearch 服务器。

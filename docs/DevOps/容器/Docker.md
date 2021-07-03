@@ -2,7 +2,7 @@
 
 ：一个用于创建、管理容器的软件。
 - [官方文档](https://docs.docker.com/get-started/overview/)
-- 基于 Golang 开发，在 Moby 项目中开源。
+- 采用 Golang 开发，在 Moby 项目中开源。
 - dotCloud 公司于 2013 年发布 Docker 软件，成为了最流行的容器引擎。
   - 后来公司改名为 Docker 公司。
 

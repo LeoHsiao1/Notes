@@ -2,7 +2,7 @@
 
 ：一个分布式服务框架，简称为 zk 。
 - [官方文档](https://zookeeper.apache.org/doc/r3.6.2/index.html)
-- 基于 Java 开发，用 Maven 构建。
+- 采用 Java 开发，用 Maven 构建。
 - 原本是 Hadoop 的子项目，现在已成为一个独立的顶级项目。
   - 取名为 ZooKeeper 是因为 Yahoo 公司的 Pig 等项目都是以动物命名，ZooKeeper 可以协调它们。
 - 主要功能：

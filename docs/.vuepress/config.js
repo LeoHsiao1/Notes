@@ -377,19 +377,15 @@ module.exports = {
                         '前端/CSS',
                         '前端/JavaScript',
                         '前端/TypeScript',
-                    ]
-                },
-                {
-                    title: '前端框架',
-                    children: [
-                        '前端框架/Bootstrap',
-                        '前端框架/Node.js',
-                        '前端框架/Vue.js',
+                        '前端/前端构建',
+                        '前端/Bootstrap',
+                        '前端/Vue.js',
                     ]
                 },
                 {
                     title: '后端',
                     children: [
+                        '后端/后端框架',
                         '后端/通信协议',
                         '后端/cookie',
                         '后端/身份验证',

@@ -1,13 +1,11 @@
 # Node.js
 
-：一个 JavaScript 运行环境。
+：一个 JavaScript 运行环境，于 2009 年发布。
 - [官方文档](https://nodejs.org/en/docs/guides/)
 - 基于 Chrome 浏览器的 V8 引擎。
   - V8 引擎基于 C++ 开发，它将 JS 代码直接编译成机器码（而不是字节码），从而将 JS 代码的执行速度提高到接近二进制程序。
-- 用途：
-  - 构建前端文件。
-  - 运行基于 JavaScript 开发的后端程序。
-    - 一般作为中间层，接收前端的访问请求，然后转发给真正的后端服务器。
+- 常用于运行基于 JS 开发的后端程序。
+  - 一般作为中间层，接收前端的访问请求，然后转发给真正的后端服务器。
 
 ## 安装
 
@@ -17,9 +15,11 @@
   yum install nodejs
   ```
   - 直接从 Centos 的默认 yum 源安装的话，会安装老旧的 8.x 版本。
-  - 有两种安装位置：
-    - 安装到 `./node_modules` 目录下：此时要通过 `node_modules/.bin/<name>` 的方式调用。
-    - 安装到全局：此时会自动加入到系统 PATH 路径中，可以输入命令名直接调用。
+- 用 apt 安装：
+  ```sh
+  apt update
+  apt install nodejs npm
+  ```
 
 ## 用法示例
 
@@ -42,7 +42,11 @@
 
 ## npm
 
-：Node Package Manager ，一个 Node.js 自带的包管理工具。
+：Node Package Manager ，一个 Node.js 自带的 JS 包管理工具，于 2010 年发布。
+- [官方文档](https://docs.npmjs.com/)
+- 用户可以在 <https://www.npmjs.com/> 网站上搜索 JS 包。
+- 安装 Node.js 时，会捆绑安装 npm 命令行工具。
+  - 用户可以执行 npm 命令，从 npm 仓库（称为 registry ）下载包并安装，并记录其版本。
 
 ### 命令
 
@@ -69,6 +73,10 @@ npm
           set     <key>=<value>
           delete  <key>
 ```
+- 包有两种安装位置：
+  - 安装到 `./node_modules` 目录下。此时要通过 `node_modules/.bin/<name>` 的方式调用。
+  - 安装到全局。此时会自动加入到系统 PATH 路径中，可以输入命令名直接调用。
+
 - 一般构建前端项目时，执行以下命令即可：
   ```sh
   npm config set registry https://registry.npm.taobao.org
@@ -140,20 +148,19 @@ npm
 
 ## yarn
 
-：一个较新的包管理工具，用于取代 npm 。
+：一个 JS 包管理工具。
 - [官方文档](https://yarnpkg.com/en/docs)
-- yarn 的用法与 npm 类似，也是从 npm 源下载包，但是有以下优点：
-  - 通过并行下载提高了包的安装速度。
-  - 安装时会检查包文件的哈希值是否一致，更安全。
+- 于 2016 年由 Facebook 公司发布，目标是取代 npm 。
+- yarn 的用法与 npm 类似，也兼容从 npm 仓库下载包，但是有以下优点：
+  - 构建速度更快。
   - 用一个 yarn.lock 文件记录已安装的所有包的版本、哈希值、依赖包，从而严格地管理依赖。
 
 ### 安装
 
-```sh
-# 需要已安装 Node.js
-curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
-yum install yarn
-```
+- 需要已安装 Node.js ，然后用 npm 安装：
+  ```sh
+  npm install --global yarn
+  ```
 
 ### 命令
 

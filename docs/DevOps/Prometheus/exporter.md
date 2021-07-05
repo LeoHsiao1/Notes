@@ -244,9 +244,9 @@
   namedprocess_namegroup_num_procs                                                # 进程数（统计属于同一个 groupname 的进程实例数量）
   timestamp(namedprocess_namegroup_oldest_start_time_seconds) - (namedprocess_namegroup_oldest_start_time_seconds>0)  # 运行时长。如果同一个 groupname 中存在多个进程，则考虑最老的那个进程
   sum(irate(namedprocess_namegroup_cpu_seconds_total[5m])) without (mode)         # 进程占用的 CPU 核数
+  namedprocess_namegroup_memory_bytes{memtype="virtual"}                          # 进程申请的虚拟内存
   namedprocess_namegroup_memory_bytes{memtype="resident"}                         # 进程占用的 RAM 内存
   namedprocess_namegroup_memory_bytes{memtype="swapped"}                          # 进程占用的 Swap 内存
-  namedprocess_namegroup_memory_bytes{memtype="virtual"}                          # 进程申请的虚拟内存
   irate(namedprocess_namegroup_read_bytes_total[5m])                              # 进程的磁盘每秒读取量
   irate(namedprocess_namegroup_write_bytes_total[5m])                             # 进程的磁盘每秒写入量
 

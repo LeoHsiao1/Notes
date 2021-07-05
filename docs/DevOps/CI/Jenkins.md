@@ -29,7 +29,7 @@
   services:
     jenkins:
       container_name: jenkins
-      image: jenkins/jenkins:lts-jdk11
+      image: jenkins/jenkins:2.289.2-lts
       restart: unless-stopped
       environment:
         JAVA_OPTS: -Duser.timezone=Asia/Shanghai

@@ -123,7 +123,7 @@ module.exports = {
                     title: 'Java',
                     children: [
                         'Java/Java',
-                        'Java/编译',
+                        'Java/构建',
                         'Java/语法',
                     ]
                 },

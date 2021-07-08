@@ -58,7 +58,7 @@ def get_book_info(book_dirname):
 
     book_info = {}
     book_info['dirname'] = book_dirname
-    book_info['display_name'] = re.findall(r'\[《(.+?)》\]\(index.md\)', index_md[0])[0]
+    book_info['display_name'] = re.findall(r'\[(《.+?》)\]\(index.md\)', index_md[0])[0]
     book_info['catalog'], _ = parse_index_md(index_md[1:])
     return book_info
 
@@ -90,16 +90,6 @@ with open(config_js_path, encoding='utf-8') as f:
 
 
 print('生成 nav 目录 ...')
-
-# nav_item_template = '''
-#                 {{
-#                     text: '《{}》',
-#                     link: '/{}/index'
-#                 }},
-# '''.lstrip('\n')
-# for book_info in books_info:
-#     nav += nav_item_template.format(book_info['display_name'], book_info['dirname'])
-
 navbar_items = [
     {
         'text': book_info['display_name'],
@@ -108,30 +98,16 @@ navbar_items = [
     for book_info in books_info
 ]
 navbar = {'text': 'Notes', 'items': navbar_items}
-navbar = json.dumps(navbar, ensure_ascii=False, indent=4)
-
-
-navbar = re.sub(r'"(\w+)": ', r'\1: ', navbar)    # 去掉字典的 key 的双引号
-navbar = re.sub(r'\n', '\n'+' '*12, navbar)           # 整体增加缩进
-
-navbar = '''
-nav: [{}],
-'''.format(navbar)
-
+navbar = json.dumps(navbar, ensure_ascii=False, indent=4)   # 格式化为 JSON 文本
+navbar = re.sub(r'"(\w+)": ', r'\1: ', navbar)              # 去掉字典的 key 的双引号
+navbar = re.sub(r'\n', '\n'+' '*8, navbar)                  # 整体增加缩进
+navbar = '        nav: [{}],'.format(navbar)
 navbar_pattern = r"""        nav: \[\{
 .+?
         \}\],"""
-r = re.findall(navbar_pattern, config_js, flags=re.S)
-
 config_js = re.sub(navbar_pattern, navbar, config_js, flags=re.S)
 
 
-
-
-
-# navbar += '            ]'
-# print(nav)
-# config_js = re.sub(r'\n[^\n]*text: 'Notes',\s*items: \[[^\]]*\]', navbar, config_js, flags=re.S)
 
 
 # print('生成 sidebar 目录 ...')

@@ -57,40 +57,40 @@ module.exports = {
         lastUpdated: 'Last Updated',
         smoothScroll: true,
         nav: [{
-			text: 'Notes',
+            text: "Notes",
             items: [
                 {
-                    text: '《编程》',
-                    link: '/Programming/index'
+                    text: "《编程》",
+                    link: "/Programming/index"
                 },
                 {
-                    text: '《Python》',
-                    link: '/Python/index'
+                    text: "《Python》",
+                    link: "/Python/index"
                 },
                 {
-                    text: '《Linux》',
-                    link: '/Linux/index'
+                    text: "《Linux》",
+                    link: "/Linux/index"
                 },
                 {
-                    text: '《计算机网络》',
-                    link: '/Network/index'
+                    text: "《计算机网络》",
+                    link: "/Network/index"
                 },
                 {
-                    text: '《Web》',
-                    link: '/Web/index'
+                    text: "《Web》",
+                    link: "/Web/index"
                 },
                 {
-                    text: '《Database》',
-                    link: '/Database/index'
+                    text: "《Database》",
+                    link: "/Database/index"
                 },
                 {
-                    text: '《DevOps》',
-                    link: '/DevOps/index'
+                    text: "《DevOps》",
+                    link: "/DevOps/index"
                 },
                 {
-                    text: '《分布式》',
-                    link: '/Distributed/index'
-                },
+                    text: "《分布式》",
+                    link: "/Distributed/index"
+                }
             ]
         }],
         sidebarDepth: 0,

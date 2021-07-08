@@ -21,7 +21,7 @@
 
 执行以下命令，会根据 `docs/index.md` 及各书籍目录下的 index.md 文件中的目录，生成 `docs/.vuepress/config.js` 文件中的 nav、sidebar 配置。
 ```sh
-python3 etc/set_catalog.py
+python3 etc/set_sidebar.py
 ```
 
 ## 调整字符间距

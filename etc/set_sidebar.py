@@ -29,6 +29,7 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
     - 用于解析 index.md 中的文档目录，保存到一个 dict 中
     - 函数每次只解析同一层级的文档，通过递归解析子层的文档
     - 文档组默认是可折叠的（collapsable），但除了第一层以外的文档组，全部取消折叠，避免需要经常鼠标点击展开。
+      - 建议可折叠的组，组名不要添加链接，单纯用作折叠组。否则单击一次不会展开，需要单击两次。
     """
     doc_list = []
 

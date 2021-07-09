@@ -106,66 +106,65 @@ module.exports = {
                     title: "编程语言",
                     children: [
                         {
-                            title: "简介",
-                            path: "编程语言/简介"
+                            title: "编程语言",
+                            path: "/Programming/编程语言/编程语言"
+                        },
+                        {
+                            title: "C",
+                            children: [
+                                {
+                                    title: "编译",
+                                    path: "/Programming/编程语言/C/编译"
+                                }
+                            ],
+                            collapsable: false
+                        },
+                        {
+                            title: "Java",
+                            path: "/Programming/编程语言/Java/Java",
+                            children: [
+                                {
+                                    title: "构建",
+                                    path: "/Programming/编程语言/Java/构建"
+                                },
+                                {
+                                    title: "语法",
+                                    path: "/Programming/编程语言/Java/语法"
+                                }
+                            ],
+                            collapsable: false
                         },
                         {
                             title: "Batch",
-                            path: "编程语言/Batch"
+                            path: "/Programming/编程语言/Batch"
                         },
                         {
                             title: "Golang",
-                            path: "编程语言/Golang"
+                            path: "/Programming/编程语言/Golang"
                         },
                         {
                             title: "Groovy",
-                            path: "编程语言/Groovy"
+                            path: "/Programming/编程语言/Groovy"
                         },
                         {
                             title: "Lisp",
-                            path: "编程语言/Lisp"
+                            path: "/Programming/编程语言/Lisp"
                         },
                         {
                             title: "Lua",
-                            path: "编程语言/Lua"
+                            path: "/Programming/编程语言/Lua"
                         },
                         {
                             title: "Perl",
-                            path: "编程语言/Perl"
+                            path: "/Programming/编程语言/Perl"
                         },
                         {
                             title: "PHP",
-                            path: "编程语言/PHP"
+                            path: "/Programming/编程语言/PHP"
                         },
                         {
                             title: "Ruby",
-                            path: "编程语言/Ruby"
-                        }
-                    ]
-                },
-                {
-                    title: "C",
-                    children: [
-                        {
-                            title: "编译",
-                            path: "C/编译"
-                        }
-                    ]
-                },
-                {
-                    title: "Java",
-                    children: [
-                        {
-                            title: "Java",
-                            path: "Java/Java"
-                        },
-                        {
-                            title: "构建",
-                            path: "Java/构建"
-                        },
-                        {
-                            title: "语法",
-                            path: "Java/语法"
+                            path: "/Programming/编程语言/Ruby"
                         }
                     ]
                 },
@@ -174,15 +173,15 @@ module.exports = {
                     children: [
                         {
                             title: "哈希算法",
-                            path: "算法/哈希算法"
+                            path: "/Programming/算法/哈希算法"
                         },
                         {
                             title: "加密算法",
-                            path: "算法/加密算法"
+                            path: "/Programming/算法/加密算法"
                         },
                         {
                             title: "图片相似算法",
-                            path: "算法/图片相似算法"
+                            path: "/Programming/算法/图片相似算法"
                         }
                     ]
                 }
@@ -197,15 +196,15 @@ module.exports = {
                     children: [
                         {
                             title: "Python",
-                            path: "简介/Python"
+                            path: "/Python/简介/Python"
                         },
                         {
                             title: "解释器",
-                            path: "简介/解释器"
+                            path: "/Python/简介/解释器"
                         },
                         {
                             title: "版本",
-                            path: "简介/版本"
+                            path: "/Python/简介/版本"
                         }
                     ]
                 },
@@ -214,11 +213,11 @@ module.exports = {
                     children: [
                         {
                             title: "模块与包",
-                            path: "模块与包/模块与包"
+                            path: "/Python/模块与包/模块与包"
                         },
                         {
                             title: "代码库",
-                            path: "模块与包/代码库"
+                            path: "/Python/模块与包/代码库"
                         }
                     ]
                 },
@@ -227,15 +226,15 @@ module.exports = {
                     children: [
                         {
                             title: "文件对象",
-                            path: "文件处理/文件对象"
+                            path: "/Python/文件处理/文件对象"
                         },
                         {
                             title: "♢ io",
-                            path: "文件处理/io"
+                            path: "/Python/文件处理/io"
                         },
                         {
                             title: "♢ logging",
-                            path: "文件处理/logging"
+                            path: "/Python/文件处理/logging"
                         }
                     ]
                 },
@@ -244,31 +243,31 @@ module.exports = {
                     children: [
                         {
                             title: "文本",
-                            path: "文本处理/文本"
+                            path: "/Python/文本处理/文本"
                         },
                         {
                             title: "字节编码",
-                            path: "文本处理/字节编码"
+                            path: "/Python/文本处理/字节编码"
                         },
                         {
                             title: "字符编码",
-                            path: "文本处理/字符编码"
+                            path: "/Python/文本处理/字符编码"
                         },
                         {
                             title: "INI",
-                            path: "文本处理/INI"
+                            path: "/Python/文本处理/INI"
                         },
                         {
                             title: "XML",
-                            path: "文本处理/XML"
+                            path: "/Python/文本处理/XML"
                         },
                         {
                             title: "Jinja",
-                            path: "文本处理/Jinja"
+                            path: "/Python/文本处理/Jinja"
                         },
                         {
                             title: "字符串匹配",
-                            path: "文本处理/字符串匹配"
+                            path: "/Python/文本处理/字符串匹配"
                         }
                     ]
                 },
@@ -277,19 +276,19 @@ module.exports = {
                     children: [
                         {
                             title: "♢ random",
-                            path: "数学运算/random"
+                            path: "/Python/数学运算/random"
                         },
                         {
                             title: "♢ decimal",
-                            path: "数学运算/decimal"
+                            path: "/Python/数学运算/decimal"
                         },
                         {
                             title: "♢ math",
-                            path: "数学运算/math"
+                            path: "/Python/数学运算/math"
                         },
                         {
                             title: "♢ numpy",
-                            path: "数学运算/numpy"
+                            path: "/Python/数学运算/numpy"
                         }
                     ]
                 },
@@ -298,23 +297,23 @@ module.exports = {
                     children: [
                         {
                             title: "电子图片",
-                            path: "图像处理/电子图片"
+                            path: "/Python/图像处理/电子图片"
                         },
                         {
                             title: "♢ Pillow",
-                            path: "图像处理/Pillow"
+                            path: "/Python/图像处理/Pillow"
                         },
                         {
                             title: "♢ Matplotlib",
-                            path: "图像处理/Matplotlib"
+                            path: "/Python/图像处理/Matplotlib"
                         },
                         {
                             title: "♢ NetworkX",
-                            path: "图像处理/NetworkX"
+                            path: "/Python/图像处理/NetworkX"
                         },
                         {
                             title: "♢ pyecharts",
-                            path: "图像处理/pyecharts"
+                            path: "/Python/图像处理/pyecharts"
                         }
                     ]
                 },
@@ -323,19 +322,19 @@ module.exports = {
                     children: [
                         {
                             title: "Email",
-                            path: "网络通信/Email"
+                            path: "/Python/网络通信/Email"
                         },
                         {
                             title: "♢ http",
-                            path: "网络通信/http"
+                            path: "/Python/网络通信/http"
                         },
                         {
                             title: "♢ urllib",
-                            path: "网络通信/urllib"
+                            path: "/Python/网络通信/urllib"
                         },
                         {
                             title: "♢ requests",
-                            path: "网络通信/requests"
+                            path: "/Python/网络通信/requests"
                         }
                     ]
                 },
@@ -344,23 +343,23 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "混合开发/简介"
+                            path: "/Python/混合开发/简介"
                         },
                         {
                             title: "♢ ctypes",
-                            path: "混合开发/ctypes"
+                            path: "/Python/混合开发/ctypes"
                         },
                         {
                             title: "♢ Cython",
-                            path: "混合开发/Cython"
+                            path: "/Python/混合开发/Cython"
                         },
                         {
                             title: "♢ pybind11",
-                            path: "混合开发/pybind11"
+                            path: "/Python/混合开发/pybind11"
                         },
                         {
                             title: "SWIG",
-                            path: "混合开发/SWIG"
+                            path: "/Python/混合开发/SWIG"
                         }
                     ]
                 }
@@ -375,15 +374,15 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "简介/Linux"
+                            path: "/Linux/简介/Linux"
                         },
                         {
                             title: "发行版",
-                            path: "简介/发行版"
+                            path: "/Linux/简介/发行版"
                         },
                         {
                             title: "相关概念",
-                            path: "简介/相关概念"
+                            path: "/Linux/简介/相关概念"
                         }
                     ]
                 },
@@ -392,19 +391,19 @@ module.exports = {
                     children: [
                         {
                             title: "终端",
-                            path: "终端/终端"
+                            path: "/Linux/终端/终端"
                         },
                         {
                             title: "命令",
-                            path: "终端/命令"
+                            path: "/Linux/终端/命令"
                         },
                         {
                             title: "登录",
-                            path: "终端/登录"
+                            path: "/Linux/终端/登录"
                         },
                         {
                             title: "用户",
-                            path: "终端/用户"
+                            path: "/Linux/终端/用户"
                         }
                     ]
                 },
@@ -413,19 +412,19 @@ module.exports = {
                     children: [
                         {
                             title: "进程",
-                            path: "进程/进程"
+                            path: "/Linux/进程/进程"
                         },
                         {
                             title: "线程",
-                            path: "进程/线程"
+                            path: "/Linux/进程/线程"
                         },
                         {
                             title: "进程通信",
-                            path: "进程/进程通信"
+                            path: "/Linux/进程/进程通信"
                         },
                         {
                             title: "管理进程",
-                            path: "进程/管理进程"
+                            path: "/Linux/进程/管理进程"
                         }
                     ]
                 },
@@ -434,27 +433,27 @@ module.exports = {
                     children: [
                         {
                             title: "文件",
-                            path: "文件/文件"
+                            path: "/Linux/文件/文件"
                         },
                         {
                             title: "文件处理",
-                            path: "文件/文件处理"
+                            path: "/Linux/文件/文件处理"
                         },
                         {
                             title: "文本处理",
-                            path: "文件/文本处理"
+                            path: "/Linux/文件/文本处理"
                         },
                         {
                             title: "文件属性",
-                            path: "文件/文件属性"
+                            path: "/Linux/文件/文件属性"
                         },
                         {
                             title: "文件权限",
-                            path: "文件/文件权限"
+                            path: "/Linux/文件/文件权限"
                         },
                         {
                             title: "目录",
-                            path: "文件/目录"
+                            path: "/Linux/文件/目录"
                         }
                     ]
                 },
@@ -463,23 +462,23 @@ module.exports = {
                     children: [
                         {
                             title: "设备",
-                            path: "设备/设备"
+                            path: "/Linux/设备/设备"
                         },
                         {
                             title: "CPU",
-                            path: "设备/CPU"
+                            path: "/Linux/设备/CPU"
                         },
                         {
                             title: "内存",
-                            path: "设备/内存"
+                            path: "/Linux/设备/内存"
                         },
                         {
                             title: "外存",
-                            path: "设备/外存"
+                            path: "/Linux/设备/外存"
                         },
                         {
                             title: "磁盘分区",
-                            path: "设备/磁盘分区"
+                            path: "/Linux/设备/磁盘分区"
                         }
                     ]
                 },
@@ -488,35 +487,35 @@ module.exports = {
                     children: [
                         {
                             title: "IP",
-                            path: "网络/IP"
+                            path: "/Linux/网络/IP"
                         },
                         {
                             title: "DNS",
-                            path: "网络/DNS"
+                            path: "/Linux/网络/DNS"
                         },
                         {
                             title: "Socket",
-                            path: "网络/Socket"
+                            path: "/Linux/网络/Socket"
                         },
                         {
                             title: "防火墙",
-                            path: "网络/防火墙"
+                            path: "/Linux/网络/防火墙"
                         },
                         {
                             title: "SSH",
-                            path: "网络/SSH"
+                            path: "/Linux/网络/SSH"
                         },
                         {
                             title: "FTP",
-                            path: "网络/FTP"
+                            path: "/Linux/网络/FTP"
                         },
                         {
                             title: "HTTP",
-                            path: "网络/HTTP"
+                            path: "/Linux/网络/HTTP"
                         },
                         {
                             title: "网络代理",
-                            path: "网络/网络代理"
+                            path: "/Linux/网络/网络代理"
                         }
                     ]
                 },
@@ -525,19 +524,19 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "测试/简介"
+                            path: "/Linux/测试/简介"
                         },
                         {
                             title: "进程测试",
-                            path: "测试/进程测试"
+                            path: "/Linux/测试/进程测试"
                         },
                         {
                             title: "网络测试",
-                            path: "测试/网络测试"
+                            path: "/Linux/测试/网络测试"
                         },
                         {
                             title: "综合测试",
-                            path: "测试/综合测试"
+                            path: "/Linux/测试/综合测试"
                         }
                     ]
                 },
@@ -546,15 +545,15 @@ module.exports = {
                     children: [
                         {
                             title: "Shell",
-                            path: "Shell/Shell"
+                            path: "/Linux/Shell/Shell"
                         },
                         {
                             title: "变量",
-                            path: "Shell/变量"
+                            path: "/Linux/Shell/变量"
                         },
                         {
                             title: "流程控制",
-                            path: "Shell/流程控制"
+                            path: "/Linux/Shell/流程控制"
                         }
                     ]
                 },
@@ -563,15 +562,15 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "系统内核/简介"
+                            path: "/Linux/系统内核/简介"
                         },
                         {
                             title: "开机",
-                            path: "系统内核/开机"
+                            path: "/Linux/系统内核/开机"
                         },
                         {
                             title: "内核参数",
-                            path: "系统内核/内核参数"
+                            path: "/Linux/系统内核/内核参数"
                         }
                     ]
                 },
@@ -580,27 +579,27 @@ module.exports = {
                     children: [
                         {
                             title: "系统信息",
-                            path: "其它/系统信息"
+                            path: "/Linux/其它/系统信息"
                         },
                         {
                             title: "安装软件",
-                            path: "其它/安装软件"
+                            path: "/Linux/其它/安装软件"
                         },
                         {
                             title: "日志",
-                            path: "其它/日志"
+                            path: "/Linux/其它/日志"
                         },
                         {
                             title: "时间",
-                            path: "其它/时间"
+                            path: "/Linux/其它/时间"
                         },
                         {
                             title: "定时任务",
-                            path: "其它/定时任务"
+                            path: "/Linux/其它/定时任务"
                         },
                         {
                             title: "OpenWrt",
-                            path: "其它/OpenWrt"
+                            path: "/Linux/其它/OpenWrt"
                         }
                     ]
                 }
@@ -615,23 +614,23 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "计算机网络/简介"
+                            path: "/Network/计算机网络/简介"
                         },
                         {
                             title: "通信线路",
-                            path: "计算机网络/通信线路"
+                            path: "/Network/计算机网络/通信线路"
                         },
                         {
                             title: "数据编码",
-                            path: "计算机网络/数据编码"
+                            path: "/Network/计算机网络/数据编码"
                         },
                         {
                             title: "数据传输",
-                            path: "计算机网络/数据传输"
+                            path: "/Network/计算机网络/数据传输"
                         },
                         {
                             title: "覆盖范围",
-                            path: "计算机网络/覆盖范围"
+                            path: "/Network/计算机网络/覆盖范围"
                         }
                     ]
                 },
@@ -640,15 +639,15 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "网络设备/简介"
+                            path: "/Network/网络设备/简介"
                         },
                         {
                             title: "交换机",
-                            path: "网络设备/交换机"
+                            path: "/Network/网络设备/交换机"
                         },
                         {
                             title: "路由器",
-                            path: "网络设备/路由器"
+                            path: "/Network/网络设备/路由器"
                         }
                     ]
                 },
@@ -657,35 +656,35 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "网络协议/简介"
+                            path: "/Network/网络协议/简介"
                         },
                         {
                             title: "网络体系结构",
-                            path: "网络协议/网络体系结构"
+                            path: "/Network/网络协议/网络体系结构"
                         },
                         {
                             title: "IP",
-                            path: "网络协议/IP"
+                            path: "/Network/网络协议/IP"
                         },
                         {
                             title: "DNS",
-                            path: "网络协议/DNS"
+                            path: "/Network/网络协议/DNS"
                         },
                         {
                             title: "TCP/UDP",
-                            path: "网络协议/TCP-UDP"
+                            path: "/Network/网络协议/TCP-UDP"
                         },
                         {
                             title: "Socket",
-                            path: "网络协议/Socket"
+                            path: "/Network/网络协议/Socket"
                         },
                         {
                             title: "HTTP",
-                            path: "网络协议/HTTP"
+                            path: "/Network/网络协议/HTTP"
                         },
                         {
                             title: "MQTT",
-                            path: "网络协议/MQTT"
+                            path: "/Network/网络协议/MQTT"
                         }
                     ]
                 },
@@ -694,11 +693,11 @@ module.exports = {
                     children: [
                         {
                             title: "恶意代码",
-                            path: "计算机安全/恶意代码"
+                            path: "/Network/计算机安全/恶意代码"
                         },
                         {
                             title: "网络安全",
-                            path: "计算机安全/网络安全"
+                            path: "/Network/计算机安全/网络安全"
                         }
                     ]
                 }
@@ -713,15 +712,15 @@ module.exports = {
                     children: [
                         {
                             title: "Web技术",
-                            path: "简介/Web技术"
+                            path: "/Web/简介/Web技术"
                         },
                         {
                             title: "Web爬虫",
-                            path: "简介/Web爬虫"
+                            path: "/Web/简介/Web爬虫"
                         },
                         {
                             title: "Web安全",
-                            path: "简介/Web安全"
+                            path: "/Web/简介/Web安全"
                         }
                     ]
                 },
@@ -730,35 +729,35 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "前端/简介"
+                            path: "/Web/前端/简介"
                         },
                         {
                             title: "HTML",
-                            path: "前端/HTML"
+                            path: "/Web/前端/HTML"
                         },
                         {
                             title: "CSS",
-                            path: "前端/CSS"
+                            path: "/Web/前端/CSS"
                         },
                         {
                             title: "JavaScript",
-                            path: "前端/JavaScript"
+                            path: "/Web/前端/JavaScript"
                         },
                         {
                             title: "TypeScript",
-                            path: "前端/TypeScript"
+                            path: "/Web/前端/TypeScript"
                         },
                         {
                             title: "前端构建",
-                            path: "前端/前端构建"
+                            path: "/Web/前端/前端构建"
                         },
                         {
                             title: "Bootstrap",
-                            path: "前端/Bootstrap"
+                            path: "/Web/前端/Bootstrap"
                         },
                         {
                             title: "Vue.js",
-                            path: "前端/Vue.js"
+                            path: "/Web/前端/Vue.js"
                         }
                     ]
                 },
@@ -767,19 +766,19 @@ module.exports = {
                     children: [
                         {
                             title: "后端框架",
-                            path: "后端/后端框架"
+                            path: "/Web/后端/后端框架"
                         },
                         {
                             title: "通信协议",
-                            path: "后端/通信协议"
+                            path: "/Web/后端/通信协议"
                         },
                         {
                             title: "cookie",
-                            path: "后端/cookie"
+                            path: "/Web/后端/cookie"
                         },
                         {
                             title: "身份验证",
-                            path: "后端/身份验证"
+                            path: "/Web/后端/身份验证"
                         }
                     ]
                 },
@@ -788,15 +787,15 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "Web服务器/简介"
+                            path: "/Web/Web服务器/简介"
                         },
                         {
                             title: "Nginx",
-                            path: "Web服务器/Nginx"
+                            path: "/Web/Web服务器/Nginx"
                         },
                         {
                             title: "Tomcat",
-                            path: "Web服务器/Tomcat"
+                            path: "/Web/Web服务器/Tomcat"
                         }
                     ]
                 },
@@ -805,27 +804,27 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "CMS/简介"
+                            path: "/Web/CMS/简介"
                         },
                         {
                             title: "Jekyll",
-                            path: "CMS/Jekyll"
+                            path: "/Web/CMS/Jekyll"
                         },
                         {
                             title: "WordPress",
-                            path: "CMS/WordPress"
+                            path: "/Web/CMS/WordPress"
                         },
                         {
                             title: "gitbook",
-                            path: "CMS/gitbook"
+                            path: "/Web/CMS/gitbook"
                         },
                         {
                             title: "docsify",
-                            path: "CMS/docsify"
+                            path: "/Web/CMS/docsify"
                         },
                         {
                             title: "VuePress",
-                            path: "CMS/VuePress"
+                            path: "/Web/CMS/VuePress"
                         }
                     ]
                 }
@@ -840,11 +839,11 @@ module.exports = {
                     children: [
                         {
                             title: "数据库",
-                            path: "简介/数据库"
+                            path: "/Database/简介/数据库"
                         },
                         {
                             title: "事务",
-                            path: "简介/事务"
+                            path: "/Database/简介/事务"
                         }
                     ]
                 },
@@ -853,11 +852,11 @@ module.exports = {
                     children: [
                         {
                             title: "SQLite",
-                            path: "SQLite/SQLite"
+                            path: "/Database/SQLite/SQLite"
                         },
                         {
                             title: "♢ sqlite3",
-                            path: "SQLite/sqlite3"
+                            path: "/Database/SQLite/sqlite3"
                         }
                     ]
                 },
@@ -866,43 +865,43 @@ module.exports = {
                     children: [
                         {
                             title: "MySQL",
-                            path: "MySQL/MySQL"
+                            path: "/Database/MySQL/MySQL"
                         },
                         {
                             title: "部署",
-                            path: "MySQL/部署"
+                            path: "/Database/MySQL/部署"
                         },
                         {
                             title: "配置",
-                            path: "MySQL/配置"
+                            path: "/Database/MySQL/配置"
                         },
                         {
                             title: "管理单元",
-                            path: "MySQL/管理单元"
+                            path: "/Database/MySQL/管理单元"
                         },
                         {
                             title: "数据类型",
-                            path: "MySQL/数据类型"
+                            path: "/Database/MySQL/数据类型"
                         },
                         {
                             title: "函数",
-                            path: "MySQL/函数"
+                            path: "/Database/MySQL/函数"
                         },
                         {
                             title: "存储引擎",
-                            path: "MySQL/存储引擎"
+                            path: "/Database/MySQL/存储引擎"
                         },
                         {
                             title: "性能优化",
-                            path: "MySQL/性能优化"
+                            path: "/Database/MySQL/性能优化"
                         },
                         {
                             title: "♢ PyMySQL",
-                            path: "MySQL/PyMySQL"
+                            path: "/Database/MySQL/PyMySQL"
                         },
                         {
                             title: "♢ SQLAlchemy",
-                            path: "MySQL/SQLAlchemy"
+                            path: "/Database/MySQL/SQLAlchemy"
                         }
                     ]
                 },
@@ -911,27 +910,27 @@ module.exports = {
                     children: [
                         {
                             title: "MongoDB",
-                            path: "MongoDB/MongoDB"
+                            path: "/Database/MongoDB/MongoDB"
                         },
                         {
                             title: "部署",
-                            path: "MongoDB/部署"
+                            path: "/Database/MongoDB/部署"
                         },
                         {
                             title: "配置",
-                            path: "MongoDB/配置"
+                            path: "/Database/MongoDB/配置"
                         },
                         {
                             title: "管理单元",
-                            path: "MongoDB/管理单元"
+                            path: "/Database/MongoDB/管理单元"
                         },
                         {
                             title: "性能优化",
-                            path: "MongoDB/性能优化"
+                            path: "/Database/MongoDB/性能优化"
                         },
                         {
                             title: "♢ pymongo",
-                            path: "MongoDB/pymongo"
+                            path: "/Database/MongoDB/pymongo"
                         }
                     ]
                 },
@@ -940,35 +939,35 @@ module.exports = {
                     children: [
                         {
                             title: "Redis",
-                            path: "Redis/Redis"
+                            path: "/Database/Redis/Redis"
                         },
                         {
                             title: "部署",
-                            path: "Redis/部署"
+                            path: "/Database/Redis/部署"
                         },
                         {
                             title: "配置",
-                            path: "Redis/配置"
+                            path: "/Database/Redis/配置"
                         },
                         {
                             title: "管理单元",
-                            path: "Redis/管理单元"
+                            path: "/Database/Redis/管理单元"
                         },
                         {
                             title: "数据类型",
-                            path: "Redis/数据类型"
+                            path: "/Database/Redis/数据类型"
                         },
                         {
                             title: "其它功能",
-                            path: "Redis/其它功能"
+                            path: "/Database/Redis/其它功能"
                         },
                         {
                             title: "性能优化",
-                            path: "Redis/性能优化"
+                            path: "/Database/Redis/性能优化"
                         },
                         {
                             title: "♢ redis",
-                            path: "Redis/redis-py"
+                            path: "/Database/Redis/redis-py"
                         }
                     ]
                 },
@@ -977,23 +976,23 @@ module.exports = {
                     children: [
                         {
                             title: "ElasticSearch",
-                            path: "ES/ElasticSearch"
+                            path: "/Database/ES/ElasticSearch"
                         },
                         {
                             title: "部署",
-                            path: "ES/部署"
+                            path: "/Database/ES/部署"
                         },
                         {
                             title: "管理单元",
-                            path: "ES/管理单元"
+                            path: "/Database/ES/管理单元"
                         },
                         {
                             title: "查询",
-                            path: "ES/查询"
+                            path: "/Database/ES/查询"
                         },
                         {
                             title: "配置",
-                            path: "ES/配置"
+                            path: "/Database/ES/配置"
                         }
                     ]
                 },
@@ -1002,15 +1001,15 @@ module.exports = {
                     children: [
                         {
                             title: "LDAP",
-                            path: "LDAP/LDAP"
+                            path: "/Database/LDAP/LDAP"
                         },
                         {
                             title: "OpenLDAP",
-                            path: "LDAP/OpenLDAP"
+                            path: "/Database/LDAP/OpenLDAP"
                         },
                         {
                             title: "LdapAdmin",
-                            path: "LDAP/LdapAdmin"
+                            path: "/Database/LDAP/LdapAdmin"
                         }
                     ]
                 }
@@ -1025,23 +1024,23 @@ module.exports = {
                     children: [
                         {
                             title: "Git",
-                            path: "CI/Git"
+                            path: "/DevOps/CI/Git"
                         },
                         {
                             title: "GitLab",
-                            path: "CI/GitLab"
+                            path: "/DevOps/CI/GitLab"
                         },
                         {
                             title: "GitHub",
-                            path: "CI/GitHub"
+                            path: "/DevOps/CI/GitHub"
                         },
                         {
                             title: "Jenkins",
-                            path: "CI/Jenkins"
+                            path: "/DevOps/CI/Jenkins"
                         },
                         {
                             title: "Jenkinsfile",
-                            path: "CI/Jenkinsfile"
+                            path: "/DevOps/CI/Jenkinsfile"
                         }
                     ]
                 },
@@ -1050,27 +1049,27 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "容器/简介"
+                            path: "/DevOps/容器/简介"
                         },
                         {
                             title: "Docker",
-                            path: "容器/Docker"
+                            path: "/DevOps/容器/Docker"
                         },
                         {
                             title: "Docker 容器",
-                            path: "容器/Docker容器"
+                            path: "/DevOps/容器/Docker容器"
                         },
                         {
                             title: "Docker 镜像",
-                            path: "容器/Docker镜像"
+                            path: "/DevOps/容器/Docker镜像"
                         },
                         {
                             title: "Dockerfile",
-                            path: "容器/Dockerfile"
+                            path: "/DevOps/容器/Dockerfile"
                         },
                         {
                             title: "Docker Compose",
-                            path: "容器/Docker-Compose"
+                            path: "/DevOps/容器/Docker-Compose"
                         }
                     ]
                 },
@@ -1079,31 +1078,31 @@ module.exports = {
                     children: [
                         {
                             title: "Kubernetes",
-                            path: "k8s/Kubernetes"
+                            path: "/DevOps/k8s/Kubernetes"
                         },
                         {
                             title: "安装",
-                            path: "k8s/安装"
+                            path: "/DevOps/k8s/安装"
                         },
                         {
                             title: "Pod",
-                            path: "k8s/Pod"
+                            path: "/DevOps/k8s/Pod"
                         },
                         {
                             title: "Network",
-                            path: "k8s/Network"
+                            path: "/DevOps/k8s/Network"
                         },
                         {
                             title: "Volume",
-                            path: "k8s/Volume"
+                            path: "/DevOps/k8s/Volume"
                         },
                         {
                             title: "插件",
-                            path: "k8s/插件"
+                            path: "/DevOps/k8s/插件"
                         },
                         {
                             title: "Rancher",
-                            path: "k8s/Rancher"
+                            path: "/DevOps/k8s/Rancher"
                         }
                     ]
                 },
@@ -1112,31 +1111,31 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "配置管理/简介"
+                            path: "/DevOps/配置管理/简介"
                         },
                         {
                             title: "Ansible",
-                            path: "配置管理/Ansible"
+                            path: "/DevOps/配置管理/Ansible"
                         },
                         {
                             title: "Jumpserver",
-                            path: "配置管理/Jumpserver"
+                            path: "/DevOps/配置管理/Jumpserver"
                         },
                         {
                             title: "Supervisor",
-                            path: "配置管理/Supervisor"
+                            path: "/DevOps/配置管理/Supervisor"
                         },
                         {
                             title: "Nacos",
-                            path: "配置管理/Nacos"
+                            path: "/DevOps/配置管理/Nacos"
                         },
                         {
                             title: "Artifactory",
-                            path: "配置管理/Artifactory"
+                            path: "/DevOps/配置管理/Artifactory"
                         },
                         {
                             title: "Harbor",
-                            path: "配置管理/Harbor"
+                            path: "/DevOps/配置管理/Harbor"
                         }
                     ]
                 },
@@ -1145,15 +1144,15 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "监控告警/简介"
+                            path: "/DevOps/监控告警/简介"
                         },
                         {
                             title: "Grafana",
-                            path: "监控告警/Grafana"
+                            path: "/DevOps/监控告警/Grafana"
                         },
                         {
                             title: "Zabbix",
-                            path: "监控告警/Zabbix"
+                            path: "/DevOps/监控告警/Zabbix"
                         }
                     ]
                 },
@@ -1162,19 +1161,19 @@ module.exports = {
                     children: [
                         {
                             title: "Prometheus",
-                            path: "Prometheus/Prometheus"
+                            path: "/DevOps/Prometheus/Prometheus"
                         },
                         {
                             title: "exporter",
-                            path: "Prometheus/exporter"
+                            path: "/DevOps/Prometheus/exporter"
                         },
                         {
                             title: "Pushgateway",
-                            path: "Prometheus/Pushgateway"
+                            path: "/DevOps/Prometheus/Pushgateway"
                         },
                         {
                             title: "Alertmanager",
-                            path: "Prometheus/Alertmanager"
+                            path: "/DevOps/Prometheus/Alertmanager"
                         }
                     ]
                 },
@@ -1183,23 +1182,23 @@ module.exports = {
                     children: [
                         {
                             title: "ELK",
-                            path: "ELK/ELK"
+                            path: "/DevOps/ELK/ELK"
                         },
                         {
                             title: "Kibana",
-                            path: "ELK/Kibana"
+                            path: "/DevOps/ELK/Kibana"
                         },
                         {
                             title: "Beats",
-                            path: "ELK/Beats"
+                            path: "/DevOps/ELK/Beats"
                         },
                         {
                             title: "Logstash",
-                            path: "ELK/Logstash"
+                            path: "/DevOps/ELK/Logstash"
                         },
                         {
                             title: "Open Distro",
-                            path: "ELK/OpenDistro"
+                            path: "/DevOps/ELK/OpenDistro"
                         }
                     ]
                 },
@@ -1208,11 +1207,11 @@ module.exports = {
                     children: [
                         {
                             title: "VS Code",
-                            path: "其它/VSCode"
+                            path: "/DevOps/其它/VSCode"
                         },
                         {
                             title: "SonarQube",
-                            path: "其它/SonarQube"
+                            path: "/DevOps/其它/SonarQube"
                         }
                     ]
                 }
@@ -1227,15 +1226,15 @@ module.exports = {
                     children: [
                         {
                             title: "云计算",
-                            path: "简介/云计算"
+                            path: "/Distributed/简介/云计算"
                         },
                         {
                             title: "微服务",
-                            path: "简介/微服务"
+                            path: "/Distributed/简介/微服务"
                         },
                         {
                             title: "大数据",
-                            path: "简介/大数据"
+                            path: "/Distributed/简介/大数据"
                         }
                     ]
                 },
@@ -1244,15 +1243,15 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "分布式系统/简介"
+                            path: "/Distributed/分布式系统/简介"
                         },
                         {
                             title: "ZooKeeper",
-                            path: "分布式系统/ZooKeeper"
+                            path: "/Distributed/分布式系统/ZooKeeper"
                         },
                         {
                             title: "Zipkin",
-                            path: "分布式系统/Zipkin"
+                            path: "/Distributed/分布式系统/Zipkin"
                         }
                     ]
                 },
@@ -1261,15 +1260,15 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "消息队列/简介"
+                            path: "/Distributed/消息队列/简介"
                         },
                         {
                             title: "ActiveMQ",
-                            path: "消息队列/ActiveMQ"
+                            path: "/Distributed/消息队列/ActiveMQ"
                         },
                         {
                             title: "Kafka",
-                            path: "消息队列/Kafka"
+                            path: "/Distributed/消息队列/Kafka"
                         }
                     ]
                 },
@@ -1278,27 +1277,27 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "存储/简介"
+                            path: "/Distributed/存储/简介"
                         },
                         {
                             title: "FastDFS",
-                            path: "存储/FastDFS"
+                            path: "/Distributed/存储/FastDFS"
                         },
                         {
                             title: "go-fastdfs",
-                            path: "存储/go-fastdfs"
+                            path: "/Distributed/存储/go-fastdfs"
                         },
                         {
                             title: "MinIO",
-                            path: "存储/MinIO"
+                            path: "/Distributed/存储/MinIO"
                         },
                         {
                             title: "Nextcloud",
-                            path: "存储/Nextcloud"
+                            path: "/Distributed/存储/Nextcloud"
                         },
                         {
                             title: "h5ai",
-                            path: "存储/h5ai"
+                            path: "/Distributed/存储/h5ai"
                         }
                     ]
                 }

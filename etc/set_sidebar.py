@@ -29,7 +29,7 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
     - 用于解析 index.md 中的文档目录，保存到一个 dict 中
     - 函数每次只解析同一层级的文档，通过递归解析子层的文档
     - 文档组默认是可折叠的（collapsable），但除了第一层以外的文档组，全部取消折叠，避免需要经常鼠标点击展开。
-      - 建议可折叠的组，组名不要添加链接，单纯用作折叠组。否则单击一次不会展开，需要单击两次。
+      - 建议可折叠的文档组，组名不要添加链接，只担任分组。否则单击一次不会展开，需要单击两次。
     """
 
     def split_line(line_num):
@@ -65,13 +65,16 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
         # 分别处理下一个文档是同级目录、子级目录、父级目录的情况
         if depth == next_doc_depth:
             doc_list.append(doc)
-        if depth < next_doc_depth:
+        elif depth < next_doc_depth:
             if not collapsable:
                 doc['collapsable'] = False
             doc['children'], line_num = parse_index_md(index_md, line_num, base_url, collapsable=False)
             doc_list.append(doc)
+            # 如果下一个文档属于上层文档组，则结束遍历当前文档组
             next_doc_depth = split_line(line_num)[0]
-        if depth > next_doc_depth:
+            if depth > next_doc_depth:
+                return doc_list, line_num
+        elif depth > next_doc_depth:
             doc_list.append(doc)
             return doc_list, line_num
 

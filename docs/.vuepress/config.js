@@ -1049,17 +1049,6 @@ module.exports = {
                                     path: "/DevOps/CI-CD/Jenkinsfile"
                                 }
                             ]
-                        },
-                        {
-                            title: "Jenkins",
-                            path: "/DevOps/CI-CD/Jenkins",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "Jenkinsfile",
-                                    path: "/DevOps/CI-CD/Jenkinsfile"
-                                }
-                            ]
                         }
                     ]
                 },
@@ -1090,37 +1079,6 @@ module.exports = {
                                 {
                                     title: "Docker Compose",
                                     path: "/DevOps/容器/Docker/Docker-Compose"
-                                }
-                            ]
-                        },
-                        {
-                            title: "Kubernetes",
-                            path: "/DevOps/容器/k8s/Kubernetes",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "部署",
-                                    path: "/DevOps/容器/k8s/部署"
-                                },
-                                {
-                                    title: "Pod",
-                                    path: "/DevOps/容器/k8s/Pod"
-                                },
-                                {
-                                    title: "Network",
-                                    path: "/DevOps/容器/k8s/Network"
-                                },
-                                {
-                                    title: "Volume",
-                                    path: "/DevOps/容器/k8s/Volume"
-                                },
-                                {
-                                    title: "插件",
-                                    path: "/DevOps/容器/k8s/插件"
-                                },
-                                {
-                                    title: "Rancher",
-                                    path: "/DevOps/容器/k8s/Rancher"
                                 }
                             ]
                         },
@@ -1246,29 +1204,6 @@ module.exports = {
                                     path: "/DevOps/监控告警/ELK/OpenDistro"
                                 }
                             ]
-                        },
-                        {
-                            title: "ELK",
-                            path: "/DevOps/监控告警/ELK/ELK",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "Kibana",
-                                    path: "/DevOps/监控告警/ELK/Kibana"
-                                },
-                                {
-                                    title: "Beats",
-                                    path: "/DevOps/监控告警/ELK/Beats"
-                                },
-                                {
-                                    title: "Logstash",
-                                    path: "/DevOps/监控告警/ELK/Logstash"
-                                },
-                                {
-                                    title: "Open Distro",
-                                    path: "/DevOps/监控告警/ELK/OpenDistro"
-                                }
-                            ]
                         }
                     ]
                 },
@@ -1294,6 +1229,88 @@ module.exports = {
                 {
                     title: "简介",
                     children: [
+                        {
+                            title: "云计算",
+                            path: "/Distributed/简介/云计算"
+                        },
+                        {
+                            title: "微服务",
+                            path: "/Distributed/简介/微服务"
+                        },
+                        {
+                            title: "大数据",
+                            path: "/Distributed/简介/大数据"
+                        }
+                    ]
+                },
+                {
+                    title: "分布式系统",
+                    children: [
+                        {
+                            title: "简介",
+                            path: "/Distributed/分布式系统/简介"
+                        },
+                        {
+                            title: "ZooKeeper",
+                            path: "/Distributed/分布式系统/ZooKeeper"
+                        },
+                        {
+                            title: "Zipkin",
+                            path: "/Distributed/分布式系统/Zipkin"
+                        }
+                    ]
+                },
+                {
+                    title: "消息队列",
+                    children: [
+                        {
+                            title: "简介",
+                            path: "/Distributed/消息队列/简介"
+                        },
+                        {
+                            title: "ActiveMQ",
+                            path: "/Distributed/消息队列/ActiveMQ"
+                        },
+                        {
+                            title: "Kafka",
+                            path: "/Distributed/消息队列/Kafka"
+                        }
+                    ]
+                },
+                {
+                    title: "存储",
+                    children: [
+                        {
+                            title: "简介",
+                            path: "/Distributed/存储/简介"
+                        },
+                        {
+                            title: "FastDFS",
+                            path: "/Distributed/存储/FastDFS"
+                        },
+                        {
+                            title: "go-fastdfs",
+                            path: "/Distributed/存储/go-fastdfs"
+                        },
+                        {
+                            title: "MinIO",
+                            path: "/Distributed/存储/MinIO"
+                        },
+                        {
+                            title: "Nextcloud",
+                            path: "/Distributed/存储/Nextcloud"
+                        },
+                        {
+                            title: "h5ai",
+                            path: "/Distributed/存储/h5ai"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
+ldren: [
                         {
                             title: "云计算",
                             path: "/Distributed/简介/云计算"

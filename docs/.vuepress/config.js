@@ -254,16 +254,22 @@ module.exports = {
                             path: "/Python/文本处理/字符编码"
                         },
                         {
-                            title: "INI",
-                            path: "/Python/文本处理/INI"
-                        },
-                        {
-                            title: "XML",
-                            path: "/Python/文本处理/XML"
-                        },
-                        {
-                            title: "Jinja",
-                            path: "/Python/文本处理/Jinja"
+                            title: "序列化",
+                            children: [
+                                {
+                                    title: "INI",
+                                    path: "/Python/文本处理/序列化/INI"
+                                },
+                                {
+                                    title: "XML",
+                                    path: "/Python/文本处理/序列化/XML"
+                                },
+                                {
+                                    title: "Jinja",
+                                    path: "/Python/文本处理/序列化/Jinja"
+                                }
+                            ],
+                            collapsable: false
                         },
                         {
                             title: "字符串匹配",

@@ -5,15 +5,6 @@ import json
 import re
 
 
-"""
-TODO：
-支持嵌套的 sidebar 组，并检查子组的链接是否正确拼接
-支持给组名添加链接，默认没有链接 path 。并调整所有笔记目录，将 简介.md 改为与组同名。如下：
-- [编程语言](编程语言/编程语言.md)
-  - [简介](编程语言/简介.md)
-"""
-
-
 print('获取所有书籍的名称、路径 ...')
 with open('docs/index.md', encoding='utf-8') as f:
     book_list = re.findall(r'\n> - \[(《.+?》)\]\((.+?)/index.md\)', f.read())
@@ -33,10 +24,11 @@ navbar = re.sub(r'\n', '\n'+' '*8, navbar)                  # 整体增加缩进
 navbar = '''        nav: [{}],'''.format(navbar)
 
 
-def parse_index_md(index_md, line_num=0):
+def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
     """
     - 用于解析 index.md 中的文档目录，保存到一个 dict 中
     - 函数每次只解析同一层级的文档，通过递归解析子层的文档
+    - 文档组默认是可折叠的（collapsable），但除了第一层以外的文档组，全部取消折叠，避免需要经常鼠标点击展开。
     """
     doc_list = []
 
@@ -62,6 +54,9 @@ def parse_index_md(index_md, line_num=0):
             if not match:
                 raise ValueError('解析失败：' + content)
             doc['title'], doc['path'] = match.groups()
+            if doc['path'] == 'index':
+                doc['path'] = ''
+            doc['path'] = base_url + doc['path']
         else:
             doc['title'] = content
 
@@ -74,7 +69,9 @@ def parse_index_md(index_md, line_num=0):
         if depth == next_doc_depth:
             doc_list.append(doc)
         elif depth < next_doc_depth:
-            doc['children'], line_num = parse_index_md(index_md, line_num)
+            doc['children'], line_num = parse_index_md(index_md, line_num, base_url, collapsable=False)
+            if not collapsable:
+                doc['collapsable'] = False
             doc_list.append(doc)
         else:
             doc_list.append(doc)
@@ -88,8 +85,7 @@ def get_book_sidebar(book_path):
     with open('docs/{}/index.md'.format(book_path), encoding='utf-8') as f:
         index_md = f.read().split('\n')
 
-    sidebar, _ = parse_index_md(index_md)
-    sidebar[0]['path'] = '/{}/'.format(book_path)    # 将侧边栏中第一个链接指向书籍目录
+    sidebar, _ = parse_index_md(index_md, base_url='/{}/'.format(book_path))
     return sidebar
 
 
@@ -115,7 +111,7 @@ with open('docs/.vuepress/config.js', 'r+', encoding='utf-8') as f:
     # 替换 sidebar
     sidebar_pattern = r'''        sidebar: \{
 .+?
-        \},'''
+        \}'''
     config_js = re.sub(sidebar_pattern, sidebar, config_js, flags=re.S)
 
     # 保存 config.js

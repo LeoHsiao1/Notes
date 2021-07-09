@@ -31,22 +31,23 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
     - 文档组默认是可折叠的（collapsable），但除了第一层以外的文档组，全部取消折叠，避免需要经常鼠标点击展开。
       - 建议可折叠的组，组名不要添加链接，单纯用作折叠组。否则单击一次不会展开，需要单击两次。
     """
+
+    def split_line(line_num):
+        """ 分割指定的一行 """
+        if line_num < len(index_md):
+            line = index_md[line_num]
+            match = re.search(r'^( *)(- )?(.*)$', line)
+            indent, prefix, content = match.groups()
+            return len(indent), content
+        else:
+            return 0,''
+
     doc_list = []
 
     while line_num < len(index_md):
-        # 提取一行
-        line = index_md[line_num]
-        line = line.rstrip()
+        depth, content = split_line(line_num)
         line_num += 1
-
-        # 如果当前行为空，则跳过
-        if not line:
-            continue
-
-        # 获取当前行的缩进，即当前文档的深度
-        match = re.search(r'^( *)(- )?(.*)$', line)
-        indent, prefix, content = match.groups()
-        depth = len(indent)
+        next_doc_depth = split_line(line_num)[0]
 
         # 解析当前行的内容
         doc = {}
@@ -61,20 +62,16 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
         else:
             doc['title'] = content
 
-        # 获取下一个文档的深度
-        match = re.search(r'^( *)(- )?(.*)$', index_md[line_num])
-        next_doc_depth =  len(match.groups()[0])
-
-        # 如果下一个文档的深度更大，则视作子级目录，递归处理
         # 分别处理下一个文档是同级目录、子级目录、父级目录的情况
         if depth == next_doc_depth:
             doc_list.append(doc)
-        elif depth < next_doc_depth:
-            doc['children'], line_num = parse_index_md(index_md, line_num, base_url, collapsable=False)
+        if depth < next_doc_depth:
             if not collapsable:
                 doc['collapsable'] = False
+            doc['children'], line_num = parse_index_md(index_md, line_num, base_url, collapsable=False)
             doc_list.append(doc)
-        else:
+            next_doc_depth = split_line(line_num)[0]
+        if depth > next_doc_depth:
             doc_list.append(doc)
             return doc_list, line_num
 
@@ -84,7 +81,11 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
 def get_book_sidebar(book_path):
     """ 获取一个书籍对应的侧边栏目录 """
     with open('docs/{}/index.md'.format(book_path), encoding='utf-8') as f:
-        index_md = f.read().split('\n')
+        index_md = f.read()
+
+    # 去除空行
+    index_md = re.sub(r'\n\s*\n', '\n', index_md)
+    index_md = index_md.strip('\n').split('\n')
 
     sidebar, _ = parse_index_md(index_md, base_url='/{}/'.format(book_path))
     return sidebar

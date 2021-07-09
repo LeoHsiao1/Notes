@@ -379,16 +379,12 @@ module.exports = {
                     title: "简介",
                     children: [
                         {
-                            title: "简介",
+                            title: "Linux",
                             path: "/Linux/简介/Linux"
                         },
                         {
                             title: "发行版",
                             path: "/Linux/简介/发行版"
-                        },
-                        {
-                            title: "相关概念",
-                            path: "/Linux/简介/相关概念"
                         }
                     ]
                 },
@@ -1030,194 +1026,207 @@ module.exports = {
                     children: [
                         {
                             title: "Git",
-                            path: "/DevOps/CI/Git"
-                        },
-                        {
-                            title: "GitLab",
-                            path: "/DevOps/CI/GitLab"
-                        },
-                        {
-                            title: "GitHub",
-                            path: "/DevOps/CI/GitHub"
+                            path: "/DevOps/CI/Git",
+                            children: [
+                                {
+                                    title: "GitLab",
+                                    path: "/DevOps/CI/GitLab"
+                                },
+                                {
+                                    title: "GitHub",
+                                    path: "/DevOps/CI/GitHub"
+                                }
+                            ],
+                            collapsable: false
                         },
                         {
                             title: "Jenkins",
-                            path: "/DevOps/CI/Jenkins"
+                            path: "/DevOps/CI/Jenkins",
+                            children: [
+                                {
+                                    title: "Jenkinsfile",
+                                    path: "/DevOps/CI/Jenkinsfile"
+                                }
+                            ],
+                            collapsable: false
                         },
                         {
-                            title: "Jenkinsfile",
-                            path: "/DevOps/CI/Jenkinsfile"
-                        }
-                    ]
-                },
-                {
-                    title: "容器",
-                    children: [
-                        {
-                            title: "简介",
-                            path: "/DevOps/容器/简介"
+                            title: "容器",
+                            children: [
+                                {
+                                    title: "简介",
+                                    path: "/DevOps/容器/简介"
+                                },
+                                {
+                                    title: "Docker",
+                                    path: "/DevOps/容器/Docker"
+                                },
+                                {
+                                    title: "Docker 容器",
+                                    path: "/DevOps/容器/Docker容器"
+                                },
+                                {
+                                    title: "Docker 镜像",
+                                    path: "/DevOps/容器/Docker镜像"
+                                },
+                                {
+                                    title: "Dockerfile",
+                                    path: "/DevOps/容器/Dockerfile"
+                                },
+                                {
+                                    title: "Docker Compose",
+                                    path: "/DevOps/容器/Docker-Compose"
+                                }
+                            ],
+                            collapsable: false
                         },
                         {
-                            title: "Docker",
-                            path: "/DevOps/容器/Docker"
+                            title: "k8s",
+                            children: [
+                                {
+                                    title: "Kubernetes",
+                                    path: "/DevOps/k8s/Kubernetes"
+                                },
+                                {
+                                    title: "安装",
+                                    path: "/DevOps/k8s/安装"
+                                },
+                                {
+                                    title: "Pod",
+                                    path: "/DevOps/k8s/Pod"
+                                },
+                                {
+                                    title: "Network",
+                                    path: "/DevOps/k8s/Network"
+                                },
+                                {
+                                    title: "Volume",
+                                    path: "/DevOps/k8s/Volume"
+                                },
+                                {
+                                    title: "插件",
+                                    path: "/DevOps/k8s/插件"
+                                },
+                                {
+                                    title: "Rancher",
+                                    path: "/DevOps/k8s/Rancher"
+                                }
+                            ],
+                            collapsable: false
                         },
                         {
-                            title: "Docker 容器",
-                            path: "/DevOps/容器/Docker容器"
+                            title: "配置管理",
+                            children: [
+                                {
+                                    title: "简介",
+                                    path: "/DevOps/配置管理/简介"
+                                },
+                                {
+                                    title: "Ansible",
+                                    path: "/DevOps/配置管理/Ansible"
+                                },
+                                {
+                                    title: "Jumpserver",
+                                    path: "/DevOps/配置管理/Jumpserver"
+                                },
+                                {
+                                    title: "Supervisor",
+                                    path: "/DevOps/配置管理/Supervisor"
+                                },
+                                {
+                                    title: "Nacos",
+                                    path: "/DevOps/配置管理/Nacos"
+                                },
+                                {
+                                    title: "Artifactory",
+                                    path: "/DevOps/配置管理/Artifactory"
+                                },
+                                {
+                                    title: "Harbor",
+                                    path: "/DevOps/配置管理/Harbor"
+                                }
+                            ],
+                            collapsable: false
                         },
                         {
-                            title: "Docker 镜像",
-                            path: "/DevOps/容器/Docker镜像"
+                            title: "监控告警",
+                            children: [
+                                {
+                                    title: "简介",
+                                    path: "/DevOps/监控告警/简介"
+                                },
+                                {
+                                    title: "Grafana",
+                                    path: "/DevOps/监控告警/Grafana"
+                                },
+                                {
+                                    title: "Zabbix",
+                                    path: "/DevOps/监控告警/Zabbix"
+                                }
+                            ],
+                            collapsable: false
                         },
-                        {
-                            title: "Dockerfile",
-                            path: "/DevOps/容器/Dockerfile"
-                        },
-                        {
-                            title: "Docker Compose",
-                            path: "/DevOps/容器/Docker-Compose"
-                        }
-                    ]
-                },
-                {
-                    title: "k8s",
-                    children: [
-                        {
-                            title: "Kubernetes",
-                            path: "/DevOps/k8s/Kubernetes"
-                        },
-                        {
-                            title: "安装",
-                            path: "/DevOps/k8s/安装"
-                        },
-                        {
-                            title: "Pod",
-                            path: "/DevOps/k8s/Pod"
-                        },
-                        {
-                            title: "Network",
-                            path: "/DevOps/k8s/Network"
-                        },
-                        {
-                            title: "Volume",
-                            path: "/DevOps/k8s/Volume"
-                        },
-                        {
-                            title: "插件",
-                            path: "/DevOps/k8s/插件"
-                        },
-                        {
-                            title: "Rancher",
-                            path: "/DevOps/k8s/Rancher"
-                        }
-                    ]
-                },
-                {
-                    title: "配置管理",
-                    children: [
-                        {
-                            title: "简介",
-                            path: "/DevOps/配置管理/简介"
-                        },
-                        {
-                            title: "Ansible",
-                            path: "/DevOps/配置管理/Ansible"
-                        },
-                        {
-                            title: "Jumpserver",
-                            path: "/DevOps/配置管理/Jumpserver"
-                        },
-                        {
-                            title: "Supervisor",
-                            path: "/DevOps/配置管理/Supervisor"
-                        },
-                        {
-                            title: "Nacos",
-                            path: "/DevOps/配置管理/Nacos"
-                        },
-                        {
-                            title: "Artifactory",
-                            path: "/DevOps/配置管理/Artifactory"
-                        },
-                        {
-                            title: "Harbor",
-                            path: "/DevOps/配置管理/Harbor"
-                        }
-                    ]
-                },
-                {
-                    title: "监控告警",
-                    children: [
-                        {
-                            title: "简介",
-                            path: "/DevOps/监控告警/简介"
-                        },
-                        {
-                            title: "Grafana",
-                            path: "/DevOps/监控告警/Grafana"
-                        },
-                        {
-                            title: "Zabbix",
-                            path: "/DevOps/监控告警/Zabbix"
-                        }
-                    ]
-                },
-                {
-                    title: "Prometheus",
-                    children: [
                         {
                             title: "Prometheus",
-                            path: "/DevOps/Prometheus/Prometheus"
+                            children: [
+                                {
+                                    title: "Prometheus",
+                                    path: "/DevOps/Prometheus/Prometheus"
+                                },
+                                {
+                                    title: "exporter",
+                                    path: "/DevOps/Prometheus/exporter"
+                                },
+                                {
+                                    title: "Pushgateway",
+                                    path: "/DevOps/Prometheus/Pushgateway"
+                                },
+                                {
+                                    title: "Alertmanager",
+                                    path: "/DevOps/Prometheus/Alertmanager"
+                                }
+                            ],
+                            collapsable: false
                         },
-                        {
-                            title: "exporter",
-                            path: "/DevOps/Prometheus/exporter"
-                        },
-                        {
-                            title: "Pushgateway",
-                            path: "/DevOps/Prometheus/Pushgateway"
-                        },
-                        {
-                            title: "Alertmanager",
-                            path: "/DevOps/Prometheus/Alertmanager"
-                        }
-                    ]
-                },
-                {
-                    title: "ELK",
-                    children: [
                         {
                             title: "ELK",
-                            path: "/DevOps/ELK/ELK"
+                            children: [
+                                {
+                                    title: "ELK",
+                                    path: "/DevOps/ELK/ELK"
+                                },
+                                {
+                                    title: "Kibana",
+                                    path: "/DevOps/ELK/Kibana"
+                                },
+                                {
+                                    title: "Beats",
+                                    path: "/DevOps/ELK/Beats"
+                                },
+                                {
+                                    title: "Logstash",
+                                    path: "/DevOps/ELK/Logstash"
+                                },
+                                {
+                                    title: "Open Distro",
+                                    path: "/DevOps/ELK/OpenDistro"
+                                }
+                            ],
+                            collapsable: false
                         },
                         {
-                            title: "Kibana",
-                            path: "/DevOps/ELK/Kibana"
-                        },
-                        {
-                            title: "Beats",
-                            path: "/DevOps/ELK/Beats"
-                        },
-                        {
-                            title: "Logstash",
-                            path: "/DevOps/ELK/Logstash"
-                        },
-                        {
-                            title: "Open Distro",
-                            path: "/DevOps/ELK/OpenDistro"
-                        }
-                    ]
-                },
-                {
-                    title: "其它",
-                    children: [
-                        {
-                            title: "VS Code",
-                            path: "/DevOps/其它/VSCode"
-                        },
-                        {
-                            title: "SonarQube",
-                            path: "/DevOps/其它/SonarQube"
+                            title: "其它",
+                            children: [
+                                {
+                                    title: "VS Code",
+                                    path: "/DevOps/其它/VSCode"
+                                },
+                                {
+                                    title: "SonarQube",
+                                    path: "/DevOps/其它/SonarQube"
+                                }
+                            ],
+                            collapsable: false
                         }
                     ]
                 }

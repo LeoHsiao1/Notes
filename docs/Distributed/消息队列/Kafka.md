@@ -3,7 +3,8 @@
 ：一个消息队列。
 - [官方文档](http://kafka.apache.org/documentation/)
 - 采用 Scala 开发。
-- 由 LinkedIn 公司开源，捐献给了 ASF 。
+- 2011 年由 LinkedIn 公司开源，后来捐献给了 ASF 。
+  - 主要开发者离职后创建了 Confluent 公司，提供功能更多的 Kafka 发行版，分为开源版、企业版。
 - 容易横向扩展，吞吐量的上限很高。
 
 ## 架构
@@ -133,20 +134,17 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   services:
     kafka:
       container_name: kafka
-      image: wurstmeister/kafka:2.12-2.4.1
+      image: bitnami/kafka:2.8.0
       restart: unless-stopped
-      working_dir: /opt/kafka
-      entrypoint:
-        - /bin/sh
-        - -c
-        - /opt/kafka/bin/kafka-server-start.sh  /opt/kafka/config/server.properties
-      network_mode:   # 绑定宿主机的网卡
-        host
       environment:
-        KAFKA_HEAP_OPTS: -Xmx4G -Xms1G
+        KAFKA_BROKER_ID: 1
+        KAFKA_HEAP_OPTS: -Xmx1G -Xms1G
+        ALLOW_PLAINTEXT_LISTENER: 'yes'
+      ports:
+        - 9092:9092
       volumes:
-        - ./config:/opt/kafka/config
-        - ./data:/data
+        - ./config:/bitnami/kafka/config
+        - ./data:/bitnami/kafka/data
   ```
   - Kafka 官方没有提供 Docker 镜像，这里采用社区提供的一个镜像。
     - 该镜像会根据环境变量配置 server.properties 文件，这里直接挂载配置目录，通过 CUSTOM_INIT_SCRIPT 执行命令还原配置文件。
@@ -156,7 +154,6 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
 - [Kafka 版本发布页面](https://kafka.apache.org/downloads)
   - 例如 kafka_2.13-2.6.0.tgz ，前面的 2.13 是指 Scala 编译器的版本，后面的 2.6.0 是指 Kafka 的版本。
   - 使用 Kafka 时，应该尽量让客户端与服务器的版本一致，避免不兼容。
-- v0.7.0 ：于 2012 年发布。
 - v0.10.0.0 ：于 2016 年发布。新增了 Kafka Streams API ，用于流处理。
 - v0.11.0.0 ：于 2017 年发布。改进了消息格式，支持事务、幂等性。
 - v1.0.0 ：于 2017 年发布。
@@ -179,8 +176,8 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
 - server.properties 的配置示例：
   ```sh
   broker.id=0                               # 该 broker 在 Kafka 集群中的唯一标识符，默认为 -1 ，必须赋值为一个非负整数
-  listeners=PLAINTEXT://10.0.0.1:9092       # broker 监听的 Socket 地址
-  # advertised.listeners=PLAINTEXT://10.0.0.1:9092  # 当前 broker 供其它 broker 访问的地址，它会在 zk 中公布，默认采用 listeners 的值
+  listeners=PLAINTEXT://0.0.0.0:9092        # broker 监听的 Socket 地址
+  advertised.listeners=PLAINTEXT://10.0.0.1:9092  # 当前 broker 供其它 broker 访问的地址，它会在 zk 中公布，默认采用 listeners 的值
   inter.broker.listener.name
   security.inter.broker.protocol
 
@@ -199,6 +196,9 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   # default.replication.factor=1            # 默认每个 partition 的副本数
   # replica.fetch.max.bytes=1048576         # 限制 partition 的副本之间拉取消息的最大大小，默认为 1M
   # replica.lag.time.max.ms=30000           # replica 的最大滞后时间
+
+  # offsets.topic.num.partitions=50         # __consumer_offsets 主题的 partition 数
+  # offsets.topic.replication.factor=3      # __consumer_offsets 主题的每个 partition 的副本数。部署单节点时需要减少至 1
 
   # 关于数据日志
   log.dirs=/data/kafka-logs                 # broker 存放数据日志的目录，如果有多个目录则用逗号分隔
@@ -291,8 +291,9 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
   ```sh
   ./kafka-console-consumer.sh \
       --bootstrap-server localhost:9092 \
-      --topic topic-1 \
-      --from-beginning    # 从第一条消息开始消费
+      --topic topic-1
+      # --group test-1      # 指定 consumer group 的 ID ，不指定则随机生成
+      # --from-beginning    # 从第一条消息开始消费
   ```
 
 - 运行生产者的性能测试：
@@ -314,6 +315,10 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
 ：一个管理 Kafka 集群的工具，提供了 Web UI ，由 Yahoo 公司开源。
 - [GitHub 页面](https://github.com/yahoo/CMAK)
 - 2020 年，发布 v3 版本，改名为 Cluster Manager for Apache Kafka ，简称为 CMAK 。
+- 主要用于监控、管理 Topic、Partition ，不支持查看、管理 Kafka 消息。
+
+### 部署
+
 - 用 docker-compose 部署：
   ```yml
   version: '3'

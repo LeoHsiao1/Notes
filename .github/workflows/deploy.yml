@@ -28,14 +28,10 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
         name: dist
-        path: .
+        path: dist
     - name: Copy dist
       run: |
-        pwd
-        ls -al
-
         set -eu
-        unzip   dist.zip
         rm -rf  $DEPLOY_DIR/*
         cp -r   dist/* $DEPLOY_DIR
       env:

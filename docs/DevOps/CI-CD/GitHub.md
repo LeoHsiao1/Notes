@@ -293,7 +293,7 @@ jobs:                             # 该 workflow 的任务列表
   - uses: actions/download-artifact@v2
     with:
       name: my-artifact       # 指定工件名。如果省略，则下载所有工件，并根据工件名分别创建子目录
-      path: .                 # 下载到哪个目录
+      path: .                 # 将下载的 artifact 从 ZIP 包解压到 path 目录
   ```
   - 在 GitHub 网页上可以查看该 workflow 的执行记录，并点击下载 Artifacts 。
 

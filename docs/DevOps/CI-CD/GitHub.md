@@ -9,7 +9,7 @@
 ：GitHub 提供的一种 CI 功能。
 - [官方文档](https://docs.github.com/en/actions/reference)
 - 使用时，需要在 GitHub 仓库的 `.github/workflows/` 目录下创建工作流文件。
-  - 工作流文件采用 YAML 格式声明，描述了要执行的 CI 步骤，相当于 Jenkins 的 pipeline 脚本。
+  - 工作流文件采用 YAML 格式，描述了要执行的 CI 步骤，相当于 Jenkins 的 pipeline 脚本。
 - GitHub 免费提供了一些虚拟机，用户可以直接在其中执行 workflows ，而不必自己准备主机。这是与 GitLab、Jenkins 相比的一大优点。
 
 ## Runner
@@ -77,6 +77,11 @@ jobs:                             # 该 workflow 的任务列表
         - created
 
     workflow_dispatch:    # 允许在 GitHub 网页上手动触发
+      # inputs:           # 可以定义在手动触发时传入的参数
+      #   ref:            # 定义一个名为 refs 的变量，可通过 ${{ github.event.inputs.ref }} 的格式调用
+      #     description: ''
+      #     required: true
+      #     default: master
 
     schedule:             # 作为定时任务触发
       - cron:  '*/15 * * * *'
@@ -245,9 +250,12 @@ jobs:                             # 该 workflow 的任务列表
   ```yml
   steps:
   - name: Check out repository
-    uses: actions/checkout@v2   # 检出该仓库，相当于 git checkout
-    # with:                     # 通过 with 为 action 传入参数
-    #  ref: master              # 切换到哪个 ref 。默认是切换到触发该 workflow 的 commit ，如果不是被 commit 触发则切换到默认分支
+    uses: actions/checkout@v2   # 采用一个拉取代码仓库的 action
+    # with:                     # 通过 with 为该 action 传入参数
+    #   repository: ${{ github.repository }}  # 拉取哪个仓库
+    #   ref: master             # 切换到哪个 ref 。默认是切换到触发该 workflow 的 commit ，如果不是被 commit 触发则切换到默认分支
+    #   path: ''                # 将拉取的仓库保存到哪个路径，默认为当前目录
+    #   submodules: false       # 是否拉取 submodules ，取值为 true 则拉取，取值为 recursive 则递归拉取
   ```
 
 - 安装 Python 解释器：

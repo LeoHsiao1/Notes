@@ -31,6 +31,9 @@ jobs:
         path: .
     - name: Copy dist
       run: |
+        pwd
+        ls -al
+
         set -eu
         unzip   dist.zip
         rm -rf  $DEPLOY_DIR/*

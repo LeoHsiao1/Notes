@@ -6,35 +6,51 @@ on:
 
 jobs:
   build_vuepress:
-    runs-on: self-hosted
+    runs-on: ubuntu-20.04
     steps:
+    - uses: actions/checkout@v2
     - name: Build
-      env:
-        NODE_OPTIONS: --max_old_space_size=512
       run: |
-        cd /home/github/Notes
-        git pull
         yarn
         yarn vuepress build docs
-        rm -rf /data/Notes/*
-        cp -r docs/.vuepress/dist/* /data/Notes/
+        mv docs/.vuepress/dist .
+    - uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: |
+          dist
+        retention-days: 1
+
+  copy_dist:
+    needs: build_vuepress
+    runs-on: self-hosted
+    steps:
+    - uses: actions/upload-artifact@v2
+      with:
+        name: dist
+    - name: Copy dist
+      run: |
+        set -eu
+        unzip   dist.zip
+        rm -rf  $DEPLOY_DIR/*
+        cp -r   dist/* $DEPLOY_DIR
+      env:
+        DEPLOY_DIR: /data/Notes/
 
   test_website:
-    needs: build_vuepress
-    runs-on: ubuntu-18.04
+    needs: copy_dist
+    runs-on: ubuntu-20.04
     steps:
     - name: Test
       run: |
         curl -I http://leohsiao.com/ --connect-timeout 3
         curl http://leohsiao.com:7700/indexes --connect-timeout 3
-  
+
   scrap_docs:
     needs: test_website
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@master
-
+    - uses: actions/checkout@master
     - name: Run docs-scraper
       env:
         API_KEY: ${{ secrets.MEILISEARCH_API_KEY }}

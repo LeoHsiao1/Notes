@@ -6,13 +6,6 @@
 - dotCloud 公司于 2013 年发布 Docker 软件，成为了最流行的容器引擎。
   - 后来公司改名为 Docker 公司。
 
-## 版本
-
-- Docker 提供了用于 Linux、MacOS、Windows 系统的安装包。
-- 2017 年 3 月，Docker 的软件版本号从 v1.13 升级到 17.03 ，从数字编号改为日期格式。并且分为两种发行版：
-  - Docker CE ：社区版（Community Edition），免费提供。
-  - Docker EE ：企业版（Enterprise Edition），增加了一些收费的功能。
-
 ## 安装
 
 - 在 Centos 上安装：
@@ -29,7 +22,14 @@
   curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
   ```
 
-## 配置
+### 版本
+
+- Docker 提供了用于 Linux、MacOS、Windows 系统的安装包。
+- 2017 年 3 月，Docker 的软件版本号从 v1.13 升级到 17.03 ，从数字编号改为日期格式。并且分为两种发行版：
+  - Docker CE ：社区版（Community Edition），免费提供。
+  - Docker EE ：企业版（Enterprise Edition），增加了一些收费的功能。
+
+### 配置
 
 - 配置 dockerd 时，需要创建 `/etc/docker/daemon.json` 文件，写入配置信息，然后重启 dockerd 。
 - 如果想让 dockerd 使用代理，需要在 `/usr/lib/systemd/system/docker.service` 中加入环境变量：

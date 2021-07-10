@@ -1,11 +1,12 @@
 # Linux
 
+：一个流行的操作系统。
 - 发音为 `/ˈlɪnəks/` 。
 - 历史：
   - 1991 年，芬兰人 Linus Torvalds 开发了 Linux 内核，将它按 GPL 协议授权为自由软件。
   - Linux 内核与诸多 GNU 软件组合在一起，构成了一个操作系统，称为 GNU/Linux 。
+    - Linux 在设计上借鉴了 Unix ，属于类 Unix 系统。但在社区的推动下，很快超越了 Unix 。
   - 2007 年，开源发展实验室（Open Source Development Labs ，OSDL）与自由标准组织（Free Standards Group ，FSG）合并，成立 Linux 基金会，负责管理 Linux 社区。
-- Linux 在设计上借鉴了 Unix ，属于类 Unix 系统。但在社区的推动下，很快超越了 Unix 。
 
 ## 内核
 
@@ -15,3 +16,133 @@
   - 2011 年发布 v3.0 版本。
   - 2015 年发布 v4.0 版本。
   - 2019 年发布 v5.0 版本。
+
+## 相关概念
+
+### 操作系统
+
+- 世界上流行的操作系统举例：
+  - Unix ：开源
+  - Linux ：开源
+  - Windows ：闭源，收费
+  - Darwin ：闭源，收费
+  - Android ：开源
+- 一般的程序只能在一种操作系统上运行，而某些编程语言开发的程序可以兼容多种操作系统。
+
+#### Multics
+
+- 1964 年，贝尔实验室、麻省理工学院、通用电气公司开始合作研发一个分时操作系统 Multics 。
+  - 它提出了许多新概念，比如动态链接代码库、分层文件系统、命令行解释器。
+  - 它计划安装在通用电力公司的大型机上，支持 300 个用户同时使用。
+- 1966 年，Ken Thompson 从加州大学伯克利分校毕业，加入贝尔实验室，参与研发 Multics 。
+  - 在此过程中，他发明了 B 语言，并在 Multics 系统中编写了一个名为 “Space Travel” 的小游戏。
+- 1967 年，剑桥大学的 Matin Richards 将 CPL 语言改进成 BCPL 语言（Basic Combined Programming Language ，基本组合编程语言）。
+  - 它是第一种在语法中使用花括号 { } 的语言。
+- 1969 年，由于 Multics 的研发进度缓慢，贝尔实验室决定退出该项目。因此，Ken Thompson 不得不将他的小游戏移植到另一台老机器上。移植过程如下：
+  - 先借鉴 Multics 系统的设计思路，用汇编语言开发一个新操作系统，取名为 Unix 。
+  - 然后在 BCPL 语言的基础上设计出 B 语言，用 B 语言搭配汇编语言在 Unix 系统中开发应用程序。
+
+#### Unix
+
+- 1972 年，因为使用 B 语言移植程序仍然比较麻烦，Ken Thompson 和 Dennis Ritchie 决定改进解释型的 B 语言，发明了编译型的 C 语言，用它重写了 Unix 系统。
+  - Dennis Ritchie 吸取了 Multics 项目的教训，在设计 Unix 系统时采用 “Keep it simple and stupid” 的原则：将复杂的程序拆分成多个小模块分别实现，然后再灵活地组合。
+- 1978 年，Brian Kernighan 和 Dennis Ritchie 出版《The C Programming Language》，将 C 语言介绍给全世界。
+  - 这是第一本介绍 C 语言编程的书籍，书中的第一个示例程序是显示 “hello world” ，成为了众多编程语言教程的传统。
+  - 这本书中描述的 C 语言，此时还没有正式的语法标准，称为 “K&R C” 。
+  - 随着 C 语言的传播，Unix 系统逐渐成为了主流的操作系统。
+- 目前，Unix 系统主要有两个分支：
+  - System V ：由贝尔实验室所在的 AT&T 公司开发，属于商业软件。
+  - BSD ：由加州大学伯克利分校开发，属于自由软件。其中最流行的发行版是 OpenBSD 。
+
+#### Darwin
+
+- 一个开源的类 Unix 系统，其内核称为 XNU （X is Not Unix），混合了 Mach 内核、FreeBSD 组件。
+- 由 Apple 公司开发，用作 MacOS、IOS 系统的底层。
+  - MacOS 系统（原名为 Mac OS X ，缩写为 OS X ）
+    - 用作 Apple 公司生产的 Macintosh （简称为 Mac ）品牌电脑的专用系统。
+  - IOS 系统
+    - 用作 Apple 公司生产的 iPhone 手机、iPad 平板的专用系统。
+- 关于应用程序：
+  - 安装包的扩展名：
+    - .dmg ：一种压缩文件格式，类似于 .iso ，
+    - .pkg ：一种安装包格式。
+  - 包管理工具：
+    - Mac App Store
+    - Homebrew ：提供了命令行工具 brew 。
+  - 开发语言：
+    - Objective-C
+      - 一种编译型语言，在 ANSI C 的基础上增加了 Smalltalk 语言的特性，支持面向对象编程。
+      - 于 1983 年由美国人 Brad Cox 发明。
+    - Swift
+      - 于 2014 年由 Apple 公司发布，目标为取代 Objective-C 。
+    - C++
+      - 可以基于 Qt 开发程序。
+
+#### Android
+
+- 于 2007 年由 Google 公司发布，主要用于智能手机、平板电脑等小型移动设备。
+- 采用 Linux 内核，操作系统的底层用 C 和汇编语言开发，上层用 Java 开发。
+  - 与 Linux 系统的差异较大，比如用 Bionic 库取代了 GNU C 库。
+- 在 Android Open Source Project（AOSP）项目中开源，采用 Apache License 开源协议。
+  - 虽然 Android 系统开源，但安装了该系统的设备，一般还会安装一些专有软件，比如 Google 移动服务（GMS）、Google Play 。
+- 关于应用程序：
+  - 安装包的扩展名：
+    - .apk
+  - 包管理工具：
+    - 各种平台提供的 Appstore ，比如 Google Play 。
+  - 开发语言：
+    - Java
+      - 运行在专为 Android 设计的 JVM 上，称为 dalvik 。
+    - Kotlin
+      - 一种编译型语言，可以编译成 Java 字节码或 JavaScript 。
+      - 于 2011 年由 JetBrains 公司发布。
+      - 2019 年，Google 公司宣布 Kotlin 取代 Java 成为了 Android 的首选开发语言。
+    - C++
+      - 可采用 Qt 或 Android Native Development Kit（NDK）开发程序，但是开发过程比平台原生语言麻烦。
+
+### GNU
+
+：自由软件计划（GNU is Not Unix），1983 年由美国人 Richard Stallman 发起。
+- GNU 旨在推广自由软件（free software）的理念。
+  - 他认为电子软件的一大优点就是容易拷贝，这是用户的基本自由，不能被非自由软件剥夺。
+  - 他希望软件开发者不是靠昂贵的版权费获利，而是靠技术支持等服务获取报酬。简单来说就是 “资源免费，服务收费” 。
+  - 自由软件强调自由，而不是单纯的免费。
+  - 计算机软件的功能、设计原理、编程语言本身没有版权，因此一款软件可以被别人反向编程。比如 Java 语言没有版权，但甲骨文公司拥有 JVM 和一些类库的版权。
+- 1985 年他创建了自由软件基金会（Free Software Foundation ，FSF），作为 GNU 计划的主要赞助组织。
+- GNU 计划的目标是创建一个完全自由的操作系统，从里到外使用的软件都是自由软件。
+  - GNU 计划已经开发了很多流行的自由软件，比如早期的 gcc、make、bash ，后来的 GNOME、git 。
+  - GNU 计划本来打算为这个操作系统开发一个内核，称为 hurd ，但一直没有完成。后来采用 Linux 内核。
+
+#### GPL
+
+：GNU 通用公共许可证（GNU General Public License），是 GNU 运动推广的一种开放授权的版权协议。
+- 1989 年发布 v1 版本，允许 GNU 软件可以被所有人自由地使用、复制、修改和再发布，任何人都不能限制该权利。
+- 1991 年发布 v2 版本，对程序库的许可宽松一些。
+- 2007 年发布 v3 版本，修补了一些法律漏洞。
+
+### 开源
+
+1998 年，自由软件阵营中的部分成员分裂出来，以 “开源” 的名义开展活动。
+- 开源即对外公布软件的源代码，很多公司利用开源的方法来获取社区的支持，提高软件质量。
+- 开源软件不一定是自由软件。
+
+#### ASF
+
+：Apache 软件基金会（Apache Software Foundation）
+- 于 1999 年由 Apache HTTP 服务器的开发者们创立 ，目前已成为世界上最大的开源基金会，管理的开源软件越来越多。
+- 其他个人或团体可以将项目捐赠给 ASF 管理、维护，这需要放弃自己对该项目及其商标的所有权。
+  - 捐赠的项目需要先进入 Apache 孵化器（Incubator），通过一些质量审核、投票之后才可以毕业，正式成为 Apache 顶级项目，或者其它项目的子项目。
+  - [ASF 项目列表](https://projects.apache.org/projects.html)
+
+### POSIX
+
+：可移植的操作系统接口（Portable Operating System Interface of UNIX），定义了操作系统为应用程序提供的接口的标准。
+- 90 年代初，IEEE 协会为了提高应用程序在 Unix 系统上的可移植性，定义了 POSIX 标准。如果两个操作系统都遵循 POSIX 标准，则可以将应用程序直接移植。
+- Unix 系统采用 POSIX 标准。
+- Linux 系统也采用 POSIX 标准，因此 Linux 上运行的程序能与大部分 UNIX 系统兼容。
+- Windows 系统一直沿用 1993 年推出的 Windows NT 系统的接口标准。
+
+### X Window
+
+：一种图形界面系统，又称为 X11 。
+- Linux 常见的图形桌面系统 GNOME、KDE 都是基于 X Window 实现的。

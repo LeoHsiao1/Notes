@@ -29,7 +29,7 @@
   services:
     jenkins:
       container_name: jenkins
-      image: jenkins/jenkins:lts-jdk11
+      image: jenkins/jenkins:2.289.2-lts
       restart: unless-stopped
       environment:
         JAVA_OPTS: -Duser.timezone=Asia/Shanghai
@@ -84,8 +84,8 @@
     - 此时 Job 的全名为 `<folder>/<job>` ，因此不同 Folder 下的 Job 可以重名。
 
 - Job 的名称会用于组成 URL ，还会用于创建工作目录，因此应该避免包含特殊字符。
-  - 可以采用 ` 项目名 _ 模块名 _Job 类型 _ 环境 ` 的命名格式，比如 `mydjango_front_DEPLOY_test`
-  - 也可以创建多层 Folder ，分组管理 Job 。
+  - 可以采用 ` 项目名 _ 模块名 _ Job 类型 _ 环境 ` 的命名格式，比如 `mysite_front_DEPLOY_in_test`
+  - 也可以创建多层 Folder ，分组管理 Job ，比如 `mysite / front / DEPLOY_in_test`
 
 - 点击进入一个 Job 的详情页面，如下：
 

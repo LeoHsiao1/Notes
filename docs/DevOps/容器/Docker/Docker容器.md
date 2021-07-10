@@ -169,6 +169,7 @@ dockerd 会通过日志驱动器（logging driver）保存容器的日志。
     - 将日志按文本格式保存在宿主机的 `/var/lib/docker/containers/{ContainerId}/local-logs/container.log` 文件中。
     - 默认会自动进行日志切割， max-size 为 10m ，max-file 为 5 。
   - json-file
+    - 默认启用这种。
     - 将日志按 JSON 格式保存在宿主机的 `/var/lib/docker/containers/{ContainerId}/{ContainerId}-json.log` 文件中。如下：
       ```sh
       [root@CentOS ~]# tail -n 1 /var/lib/docker/containers/3256c21887f9b110e84f0f4a620a2bf01a8a7b9e3a5c857e5cae53b22c5436d4/3256c21887f9b110e84f0f4a620a2bf01a8a7b9e3a5c857e5cae53b22c5436d4-json.log
@@ -181,8 +182,7 @@ dockerd 会通过日志驱动器（logging driver）保存容器的日志。
   - fluentd ：将日志保存到 fluentd 服务中。
 
 - 每个容器同时只能启用一种日志驱动器。
-  - 默认启用的是 json-file 。
-  - 容器每次重启时并不会清空日志，而是继续写入。
+- 容器每次重启时并不会清空日志文件，而是继续写入。
 
 - 可以在 daemon.json 中配置日志驱动器，但需要重启 dockerd 才会生效，而且只会对新创建的容器生效。如下：
   ```json
@@ -200,7 +200,6 @@ dockerd 会通过日志驱动器（logging driver）保存容器的日志。
         --log-opt max-size=10m  \
         --log-opt max-file=5    \
         nginx
-  ```
   ```
 
 ## 执行命令

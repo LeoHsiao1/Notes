@@ -25,9 +25,10 @@ jobs:
     needs: build_vuepress
     runs-on: self-hosted
     steps:
-    - uses: actions/upload-artifact@v2
+    - uses: actions/download-artifact@v2
       with:
         name: dist
+        path: .
     - name: Copy dist
       run: |
         set -eu

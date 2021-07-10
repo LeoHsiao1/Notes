@@ -284,7 +284,7 @@ jobs:                             # 该 workflow 的任务列表
   - uses: actions/upload-artifact@v2
     with:
       name: my-artifact       # 上传之后，保存的工件名
-      path: |                 # 指定要上传的文件
+      path: |                 # 指定要上传的文件。它们会被打包成一个 ZIP 包再上传
         f1
         test/
         tmp*/
@@ -293,10 +293,9 @@ jobs:                             # 该 workflow 的任务列表
   - uses: actions/download-artifact@v2
     with:
       name: my-artifact       # 指定工件名。如果省略，则下载所有工件，并根据工件名分别创建子目录
-      # path: tmp/            # 指定下载到哪个目录
+      path: .                 # 下载到哪个目录
   ```
-  - path 指定的所有文件会先压缩成一个 ZIP 包，再上传。
-  - 在 GitHub 网页上查看该 workflow 的执行记录，即可看到下载 Artifacts 的链接。
+  - 在 GitHub 网页上可以查看该 workflow 的执行记录，并点击下载 Artifacts 。
 
 ## 相关概念
 

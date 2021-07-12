@@ -1306,16 +1306,3 @@ module.exports = {
         }
     }
 }
-",
-                            path: "/Distributed/存储/h5ai"
-                        }
-                    ]
-                }
-            ]
-        }
-    }
-}
-            ]
-        }
-    }
-}

@@ -563,26 +563,22 @@ module.exports = {
                     title: "系统内核",
                     children: [
                         {
-                            title: "简介",
-                            path: "/Linux/系统内核/简介"
+                            title: "系统信息",
+                            path: "/Linux/系统内核/系统信息"
                         },
                         {
                             title: "开机",
                             path: "/Linux/系统内核/开机"
                         },
                         {
-                            title: "内核参数",
-                            path: "/Linux/系统内核/内核参数"
+                            title: "内核",
+                            path: "/Linux/系统内核/内核"
                         }
                     ]
                 },
                 {
                     title: "其它",
                     children: [
-                        {
-                            title: "系统信息",
-                            path: "/Linux/其它/系统信息"
-                        },
                         {
                             title: "安装软件",
                             path: "/Linux/其它/安装软件"
@@ -1302,6 +1298,15 @@ module.exports = {
                         },
                         {
                             title: "h5ai",
+                            path: "/Distributed/存储/h5ai"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
+",
                             path: "/Distributed/存储/h5ai"
                         }
                     ]

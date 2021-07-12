@@ -54,7 +54,16 @@ docker-compose
 docker-compose 根据 compose 配置文件来创建、管理 docker 容器。
 - compose 文件保存为 yaml 格式，扩展名为 .yaml 或 .yml 。
 - 每个 compose 文件可以定义一种或多种服务，每种服务可以运行一个或多个容器实例。
-- 单个服务运行多个容器实例时可能会因为使用相同的端口、容器名等资源，产生冲突。
+  - 单个服务运行多个容器实例时可能会因为使用相同的端口、容器名等资源，产生冲突。
+
+### 版本
+
+compose 文件的主要版本：
+- v2
+- v3
+  - 移除了 cpu_shares、mem_limit 等限制容器资源使用率的配置，改为通过 deploy 参数配置，但只在部署到 swarm 集群时生效。
+
+### 语法
 
 例：
 
@@ -108,15 +117,17 @@ services:                     # 开始定义服务
       project: "test_1"
       branch: "dev"
 
-    networks:                 # 连接到的 docker 网络
+    networks:                 # 使当前容器连接到一些 docker 网络
       - net
     # network_mode: host      # 网络模式，不能与 networks 同时配置
+    # links:                  # 使当前容器连接到其它容器。不建议使用 links 配置，而应该使用 networks 配置
+    #  - redis
     ports:                    # 映射端口
       - 9000:8000             # 注意这里的每行配置是一个字符串，因此冒号 : 之后不能加空格
       - 9090-9091:8080-8081
 
-    volumes:                  # 挂载目录
-      - /root/data:/root/data # 可以直接挂载目录
+    volumes:                  # 挂载数据卷
+      - /root/data:/root/data # 可以直接挂载目录或文件
       - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）
       - conf:/root/conf       # 可以挂载数据卷
 
@@ -125,6 +136,7 @@ services:                     # 开始定义服务
       nofile:
         soft: 20000
         hard: 40000
+
     healthcheck:              # 健康检查
       test: curl http://localhost || exit 1
       interval: 1m30s

@@ -101,6 +101,7 @@ docker
           --cpus 2
           -m 256m
 
+      top     <container>       # 显式某个容器的进程列表
       stats                     # 显示所有容器的资源使用情况
       inspect <object>          # 显示一个 Docker 对象的详细信息
 ```

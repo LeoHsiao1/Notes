@@ -106,8 +106,8 @@ module.exports = {
                     title: "编程语言",
                     children: [
                         {
-                            title: "编程语言",
-                            path: "/Programming/编程语言/编程语言"
+                            title: "简介",
+                            path: "/Programming/编程语言/简介"
                         },
                         {
                             title: "C",
@@ -1052,8 +1052,8 @@ module.exports = {
                     title: "容器",
                     children: [
                         {
-                            title: "容器",
-                            path: "/DevOps/容器/容器"
+                            title: "简介",
+                            path: "/DevOps/容器/简介"
                         },
                         {
                             title: "Docker",
@@ -1115,8 +1115,8 @@ module.exports = {
                     title: "配置管理",
                     children: [
                         {
-                            title: "配置管理",
-                            path: "/DevOps/配置管理/配置管理"
+                            title: "简介",
+                            path: "/DevOps/配置管理/简介"
                         },
                         {
                             title: "Ansible",
@@ -1148,8 +1148,8 @@ module.exports = {
                     title: "监控告警",
                     children: [
                         {
-                            title: "监控告警",
-                            path: "/DevOps/监控告警/监控告警"
+                            title: "简介",
+                            path: "/DevOps/监控告警/简介"
                         },
                         {
                             title: "Grafana",
@@ -1311,6 +1311,10 @@ module.exports = {
                         }
                     ]
                 }
+            ]
+        }
+    }
+}
             ]
         }
     }

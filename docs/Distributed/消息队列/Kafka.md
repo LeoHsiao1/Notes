@@ -137,8 +137,8 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
       image: bitnami/kafka:2.8.0
       restart: unless-stopped
       environment:
+        # KAFKA_HEAP_OPTS: -Xmx1G -Xms1G
         KAFKA_BROKER_ID: 1
-        KAFKA_HEAP_OPTS: -Xmx1G -Xms1G
         ALLOW_PLAINTEXT_LISTENER: 'yes'
       ports:
         - 9092:9092
@@ -246,9 +246,11 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
     - 如果单个消息大于 batch.size ，依然会作为一批消息发送。但如果大于 max.request.size ，就不能发送。
     - 生产者的 batch.size 不能大于 max.request.size ，也不能大于 broker 的 message.max.bytes 。
 
-### 命令行工具
+## 运维工具
 
-bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
+### shell 脚本
+
+kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 - `kafka-server-stop.sh` 用于停止 broker 进程。
   - 它会查找本机上的所有 broker 进程，发送 SIGTERM 信号。
     - broker 进程收到终止信号后，会将所有数据保存到磁盘中，才退出，该过程需要几秒甚至几十秒。
@@ -267,7 +269,7 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
     ./kafka-topics.sh \
         --zookeeper localhost:2181 \
         --create \
-        --topic topic-1 \
+        --topic topic_1 \
         --partitions 1 \
         --replication-factor 1
     ```
@@ -276,7 +278,7 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
     ./kafka-topics.sh \
         --zookeeper localhost:2181 \
         --delete \
-        --topic topic-1
+        --topic topic_1
     ```
     - 这里将 --delete 选项改为 --describe ，就是查询 topic 的状态。
 
@@ -284,22 +286,22 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
   ```sh
   ./kafka-console-producer.sh \
       --broker-list localhost:9092 \
-      --topic topic-1
+      --topic topic_1
   ```
 
 - 运行消费者终端，读取消息并输出到 stdout ：
   ```sh
   ./kafka-console-consumer.sh \
       --bootstrap-server localhost:9092 \
-      --topic topic-1
-      # --group test-1      # 指定 consumer group 的 ID ，不指定则随机生成
+      --topic topic_1
+      # --group group_1     # 指定 consumer group 的 ID ，不指定则随机生成
       # --from-beginning    # 从第一条消息开始消费
   ```
 
 - 运行生产者的性能测试：
   ```sh
   ./kafka-producer-perf-test.sh \
-      --topic topic-1 \
+      --topic topic_1 \
       --num-records 10000 \         # 发送多少条消息
       --record-size 1024 \          # 每条消息的大小
       --throughput 10000 \          # 限制每秒种发送的消息数
@@ -310,14 +312,14 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
   - 使用 `kafka-reassign-partitions.sh` 脚本，将指定 topic 的所有分区迁移到指定 broker 上。
   - 使用 Kafka Manager ，在网页上迁移 topic ，更方便。
 
-## Kafka Manager
+### Kafka Manager
 
-：一个管理 Kafka 集群的工具，提供了 Web UI ，由 Yahoo 公司开源。
+：一个监控 Kafka 集群的 Web 网站，由 Yahoo 公司开源。
 - [GitHub 页面](https://github.com/yahoo/CMAK)
 - 2020 年，发布 v3 版本，改名为 Cluster Manager for Apache Kafka ，简称为 CMAK 。
-- 主要用于监控、管理 Topic、Partition ，不支持查看、管理 Kafka 消息。
+- 主要用于监控、管理 Topic、Partition ，不支持查看 Kafka 消息。
 
-### 部署
+#### 部署
 
 - 用 docker-compose 部署：
   ```yml
@@ -335,7 +337,7 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
   ```
   - 需要用一个 zk 服务器存储 Kafka Manager 的状态。
 
-### 主要功能
+#### 主要功能
 
 - 连接到 Kafka 集群。
   - 可选通过 JMX 端口监控消费速度。
@@ -382,7 +384,21 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
     - 也可以点击 `Manual Partition Assignments` ，进行手动分配。
   3. 到菜单栏的 `Reassign Partitions` 页面，查看正在执行的分配操作。
 
-## ♢ kafka-Python
+### Kowl
+
+：一个监控 Kafka 集群的 Web 网站。
+- [GitHub 页面](https://github.com/cloudhut/kowl)
+- 只支持连接 v1.0 以上的 Kafka 。
+- 与 Kafka Manager 相似，不过监控信息较少，支持查看 Topic 配置、查看消息。
+
+### Offset Explorer
+
+：旧名为 Kafka Tool ，是一个 GUI 工具。
+- [官网](https://www.kafkatool.com/)
+- 主要用于查看、管理 Topic ，支持查看、添加消息。
+
+
+## ♢ kafka-python
 
 ：Python 的第三方库，提供了 Kafka 客户端的功能。
 - [官方文档](https://kafka-python.readthedocs.io/en/master/index.html)
@@ -396,7 +412,7 @@ bin 目录下提供了多个 shell 脚本，可用于管理 Kafka 。
   producer = KafkaProducer(bootstrap_servers='localhost:9092')
 
   # 发送一个消息到指定的 topic
-  future = producer.send(topic='test666', value='Hello'.encode(), partition=0)
+  future = producer.send(topic='topic_1', value='Hello'.encode(), partition=0)
   # 消息要转换成 bytes 类型才能发送
   # 不指定 partition 时会自动分配一个 partition
 

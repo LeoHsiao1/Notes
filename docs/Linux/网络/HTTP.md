@@ -76,8 +76,8 @@ $ wget <URL>...                 # 访问指定网址（默认为 GET 方法）�
        -O f1.zip                # 保存为指定路径的文件
        -t 10                    # 设置下载失败时的重试次数（0 是无限次）
 
-       --http-user=USER         # 发送用户名
-       --http-passwordPASSWORD  # 发送密码
+       --http-user=xxx          # 发送用户名
+       --http-password=xxx      # 发送密码
        --limit-rate=300k        # 限制下载速度
        --no-check-certificate   # 不检查 HTTPS 网址的证书
        --spider                 # 不下载文件，可用于检测该网址是否有效

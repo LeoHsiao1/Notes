@@ -17,7 +17,7 @@
   - 每个 server 都拥有整个集群的数据副本，客户端连接到任一 server 即可访问集群。
     - 客户端发出读请求时，server 会使用本机的数据副本作出回复。
     - 客户端发出写请求时，server 会转发给 leader 。
-  - 部署的 server 数量建议为奇数，为偶数时可靠性并不会提升。
+  - 部署的 server 数量建议为奇数，为偶数时并不会提高可靠性。
     - 部署 1 个 server 时，不能构成集群，只能工作在 standalone 模式。
     - 部署 2 个 server 时，能组成一个最小的 zk 集群，但存在单点故障的风险。
       - 任一 server 故障时，剩下的 server 不超过集群的半数，不能投票决策。
@@ -55,7 +55,7 @@ c. 如果 zxid 相同，那么就比较 myid，myid 较大的服务器作为 lea
     - znode 的读写操作具有原子性。
   - 支持给单个 znode 设置 ACL 规则，限制访问权限。
 
-<!-- ZooKeeper 也有临时节点的概念。只要创建 znode 的会话处于活动状态，这些 znode 就存在。当会话结束时，znode 被删除。 
+<!-- ZooKeeper 也有临时节点的概念。只要创建 znode 的会话处于活动状态，这些 znode 就存在。当会话结束时，znode 被删除。
 客户端每次连接会建立一个 session -->
 <!-- 支持 watch ，客户端可以在 znode 上设置监视。当 znode 发生变化时，会触发并移除 watch。当 watch 被触发时，客户端会收到一个数据包，说 znode 已经改变了 -->
 
@@ -117,8 +117,8 @@ c. 如果 zxid 相同，那么就比较 myid，myid 较大的服务器作为 lea
 # clientPort=2181               # 监听一个供客户端连接的端口
 # admin.enableServer=true
 # admin.serverPort=8080         # AdminServer 监听的端口
-dataDir=/zk/data                # 数据快照的存储目录
-# dataLogDir=/zk/log            # 事务日志的存储目录。默认与 dataDir 一致，可采用不同的磁盘设备，从而避免竞争磁盘 IO ，提高访问速度
+dataDir=/data                   # 数据快照的存储目录
+# dataLogDir=/datalog           # 事务日志的存储目录，默认与 dataDir 一致。可采用不同的磁盘设备，从而避免竞争磁盘 IO ，提高访问速度
 
 # tickTime=2000                 # 时钟间隔，用作 zk 的基本时间单位，单位为 ms 。也是向其它 server 、client 发送心跳包的时间间隔
 # initLimit=5                   # server 初始化连接到 leader 的超时时间，单位为 tickTime

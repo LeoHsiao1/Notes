@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /tmp
+Allow: /
+
+Sitemap: http://leohsiao.com/sitemap.xml

@@ -1,29 +1,35 @@
 # ZooKeeper
 
-：一个分布式服务框架，简称为 zk 。采用 Java 开发。
+：一个用于协调分布式系统的服务，简称为 zk 。采用 Java 开发。
 - [官方文档](https://zookeeper.apache.org/doc/current/index.html)
-- 原本是 Hadoop 的子项目，现在已成为一个独立的顶级项目。
+- 原本是 Apache Hadoop 的子项目，现在已成为一个独立的 Apache 顶级项目。
   - 取名为 ZooKeeper 是因为 Yahoo 公司的 Pig 等项目都是以动物命名，ZooKeeper 可以协调它们。
-- 主要功能：
-  - 作为注册中心，登记分布式系统中的各个客户端、服务。
-  - 协调各节点之间的通信，维护分布式系统的一致性。
-  - 可以存储少量数据。
+- 常见用途：
+  - 同步分布式系统中各节点的数据，实现一致性。
+  - 作为注册中心，记录分布式系统中的各个服务。
 
 ## 原理
 
-- zk 采用 Zab （Zookeeper atomic broadcast protocol ，与 Raft 类似）协议实现一致性：
-  - 如果超过半数的 server 写入数据成功，则数据为真。
+- zk 采用 Zab （Zookeeper atomic broadcast protocol ，与 Raft 类似）协议实现各 server 的数据一致性：
+  - 每次投票时，如果超过半数的 server 支持某个决策，则采用该决策。
 
-- 部署多个 zk server 实例即可组成集群。
-  - 只部署 1 个 server 时，不能进行 leader 选举。部署 2 个 server 时，会相互通信，开始 leader 选举。
-  - server 数最好为奇数，为偶数时可靠性并不会提升。
-    - 例如 server 数为 3、4 时，都是最多允许 1 个 server 挂掉。
-    - 部署 3 个 server 就可以组成一个最小的 zk 集群。
+- 部署多个 zk server 即可组成集群。
+  - 每个 server 都拥有整个集群的数据副本，客户端连接到任一 server 即可访问集群。
+    - 客户端发出读请求时，server 会使用本机的数据副本作出回复。
+    - 客户端发出写请求时，server 会转发给 leader 。
+  - 部署的 server 数量建议为奇数，为偶数时可靠性并不会提升。
+    - 部署 1 个 server 时，不能构成集群，只能工作在 standalone 模式。
+    - 部署 2 个 server 时，能组成一个最小的 zk 集群，但存在单点故障的风险。
+      - 任一 server 故障时，剩下的 server 不超过集群的半数，不能投票决策。
+    - 部署 3 个 server 时，组成的 zk 集群最多允许 1 个 server 故障，剩下的 server 才超过集群的半数。
+    - 部署 4 个 server 时，也是最多允许 1 个 server 故障。
+    - 部署 5 个 server 时，最多允许 2 个 server 故障。
 
 - server 分为三种角色：
   - leader
-    - ：由 follower 选举产生，负责处理 client 的读请求和写请求，更新系统的状态并推送给 follower、observer 。
-    - 当 leader 不可用时，其它 server 会开始一轮投票，选举出新的 leader 。
+    - ：负责更新集群的数据，并推送给其它 server 。可以处理客户端的读取器、写请求。
+    <!-- - 更新系统的状态并推送给 follower、observer 。 -->
+    - 当 leader 不可用时，其它 server 会开始一轮投票，选举出新的 leader 。选举过程很快，一般低于 1 s 。
 
 <!--
 针对每一次投票，服务器都需要将其他服务器的投票和自己的投票进行对比，对比规则如下：
@@ -36,12 +42,23 @@ c. 如果 zxid 相同，那么就比较 myid，myid 较大的服务器作为 lea
 -->
 
   - follower
-    - ：负责处理 client 的读请求，参与 leader 选举。
+    - ：负责复制 leader 的数据到本机。可以处理客户端的读请求，可以参与 leader 选举。
   - observer
-    - ：负责处理 client 的读请求，扩展系统的读取速度。
+    - ：负责处理客户端的读请求，提高集群的读取速度。不能参与 leader 选举。
 
-- zk 存储数据时，可以按树形结构创建多个命名空间，称为 znode 。
-  - 每个 znode 中可以存储文本格式的数据，通常为键值对格式、JSON 格式。
+
+- zk 的命名空间中可以创建多个存储数据的寄存器，称为 znode 。
+  - zk 将数据存储在内存中，因此读写速度快。同时也会记录到磁盘，实现备份。
+  - 所有 znode 按树形结构相关联，通过以 / 分隔的绝对路径进行定位，类似于标准文件系统。
+  - 每个 znode 可以存储一段文本数据，通常为键值对格式、JSON 格式。
+    - znode 的主要优点是能实现分布式的数据一致性，应该只存储很少量的数据，低于 1 kB 。
+    - znode 的读写操作具有原子性。
+  - 支持给单个 znode 设置 ACL 规则，限制访问权限。
+
+<!-- ZooKeeper 也有临时节点的概念。只要创建 znode 的会话处于活动状态，这些 znode 就存在。当会话结束时，znode 被删除。 
+客户端每次连接会建立一个 session -->
+<!-- 支持 watch ，客户端可以在 znode 上设置监视。当 znode 发生变化时，会触发并移除 watch。当 watch 被触发时，客户端会收到一个数据包，说 znode 已经改变了 -->
+
 
 ## 部署
 
@@ -56,6 +73,7 @@ c. 如果 zxid 相同，那么就比较 myid，myid 较大的服务器作为 lea
                   start-foreground    # 在前台启动
                   stop
                   restart
+
                   status              # 显示状态
                   version             # 显示版本信息
   ```
@@ -84,7 +102,6 @@ c. 如果 zxid 相同，那么就比较 myid，myid 较大的服务器作为 lea
       volumes:
         - ./conf:/conf
         - ./data:/data
-        - ./log:/datalog
   ```
 
 ### 版本
@@ -97,20 +114,20 @@ c. 如果 zxid 相同，那么就比较 myid，myid 较大的服务器作为 lea
 
 配置文件 `conf/zoo.cfg` 示例：
 ```sh
-# clientPort=2181               # 供客户端连接的端口
+# clientPort=2181               # 监听一个供客户端连接的端口
 # admin.enableServer=true
 # admin.serverPort=8080         # AdminServer 监听的端口
-dataDir=/zk/data                # 数据目录
-dataLogDir=/zk/log              # 日志目录
+dataDir=/zk/data                # 数据快照的存储目录
+# dataLogDir=/zk/log            # 事务日志的存储目录。默认与 dataDir 一致，可采用不同的磁盘设备，从而避免竞争磁盘 IO ，提高访问速度
 
-# tickTime=2000                 # 向其它 server 、client 发送心跳包的时间间隔（ms）
+# tickTime=2000                 # 时钟间隔，用作 zk 的基本时间单位，单位为 ms 。也是向其它 server 、client 发送心跳包的时间间隔
 # initLimit=5                   # server 初始化连接到 leader 的超时时间，单位为 tickTime
-# syncLimit=2                   # server 与 leader 之间通信（请求、应答）的超时时间，单位为 tickTime
+# syncLimit=2                   # server 与 leader 之间通信（请求、回复）的超时时间，单位为 tickTime
 
 # 声明 zk 集群的 server 列表，每行的格式为 server.<id>=<host>:<port1>:<port2>[:role];[<external_host>:]<external_port>
 #   - id 是一个数字编号，不可重复
 #   - host 是各个 server 的 IP 地址
-#   - port1 是 server 之间通信的端口，port2 是用于 leader 选举的端口
+#   - port1 是 server 连接到 leader 的目标端口，port2 是用于 server 之间进行 leader 选举的端口
 #   - [<external_host>:]<external_port> 是另一个监听的 Socket ，供客户端访问
 # 例如：当前 server id 为 1 时，会根据 server.1 的配置来监听 Socket ，根据其它 server 的配置去通信
 server.1=10.0.0.1:2888:3888;2181  # 对于当前 server 而言，该 IP 地址会用于绑定 Socket ，可改为 0.0.0.0
@@ -124,20 +141,20 @@ zk 的 bin 目录下自带了多个 shell 脚本。
 - 执行以下脚本可进入 zk 的命令行终端。
   ```sh
   bash bin/zkCli.sh
-          -server localhost
+          -server [host][:port]   # 连接到指定的 zk server 。默认是 localhost:2181
   ```
   常用命令：
   ```sh
-  version           # 显示版本
+  connect [host][:port]   # 连接到指定的 zk server
 
-  ls <path>         # 显示指定路径下的所有 znode
-    -R              # 递归显示子目录
+  ls <path>               # 显示指定路径下的所有 znode
+    -R                    # 递归显示子目录
 
-  get <path>        # 读取 znode 中的数据
-  set <path> <data> # 设置 znode 中的数据
-  stat <path>       # 显示 znode 的状态
+  get <path>              # 读取 znode 中的数据
+  set <path> <data>       # 设置 znode 中的数据
+  stat <path>             # 显示 znode 的状态
 
-  create <path>     # 创建 znode
-  delete <path>     # 删除 znode
+  create <path>           # 创建 znode
+  delete <path>           # 删除 znode
   ```
 

@@ -10,6 +10,7 @@ module.exports = {
         ['sitemap', {
             hostname: 'http://leohsiao.com'
         }],
+        ['seo', {}],
         ['@vuepress/google-analytics', {
             'ga': 'UA-155748502-1'
         }],
@@ -21,7 +22,7 @@ module.exports = {
                 placeholder: '',
                 maxSuggestions: 5,
                 cropLength: 50,
-            },
+            }
         ],
         ['vuepress-plugin-right-anchor',
             {
@@ -32,16 +33,15 @@ module.exports = {
                 customClass: 'right-anchor',
             }
         ],
-        [
-            'vuepress-plugin-zooming',
+        ['vuepress-plugin-zooming',
             {
                 options: {
                     bgColor: 'rgb(0, 0, 0)',
                     bgOpacity: 0.5,
                     scaleBase: 0.9,
                     transitionDuration: 0.2,
-                },
-            },
+                }
+            }
         ],
     ],
     markdown: {

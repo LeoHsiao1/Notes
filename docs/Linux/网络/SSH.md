@@ -82,9 +82,13 @@ in.telnetd:ALL
 
 使用客户端：
 ```sh
-$ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登录指定主机
-                  -p 22      # 指定端口号
-                  [command]  # 不打开远程主机的 shell ，而是以非交互模式执行一条命令
+$ ssh <user>@<host>   # 使用 ssh 协议，以 user 用户（默认为 root ）的身份登录 host 主机
+      -p 22           # 指定端口号
+      [command]       # 不打开远程主机的 shell ，而是以非交互模式执行一条命令
+
+      # 建立 SSH 连接的同时，可以运行一个代理服务器
+      -L [bind_address:]<bind_port>:<host>:<port>   # 让本地的 ssh 进程监听 bind_port 端口，将该端口收到的 TCP 数据包传输到远程主机，由后者转发到任意主机的 <host>:<port>
+      -R [bind_address:]<bind_port>:<host>:<port>   # 让远程主机的 sshd 进程监听 bind_port 端口，将其 TCP 数据包传输到本机，由后者转发到任意主机的 <host>:<port>
 ```
 - 例：
   ```sh
@@ -92,11 +96,17 @@ $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登�
   ssh root@10.0.0.1  "hostname | xargs echo"  # 用引号将待执行的命令标明为一个字符串，以免被特殊字符截断
   ssh root@10.0.0.1  'echo $HOSTNAME'         # 用单引号时，不会在本机读取变量的值，而是直接先将命令发送到远端去执行
   ```
-- ssh 登录成功之后，会在目标主机上打开一个 shell 终端，并将 stdin、stdout 绑定到当前终端。
+- ssh 登录成功之后，会在目标主机上打开一个 shell 终端，并将其 stdin、stdout 绑定到当前终端。
 - ssh 连接 timeout 的可能原因：
   - 与目标主机的网络不通。
   - 目标主机没有运行 sshd 服务器，或者防火墙没有开通 22 端口。
   - 目标主机的负载太大，接近卡死，不能响应 ssh 连接请求。
+- 通过 sshpass 命令可以传递密码给 ssh、scp 命令，如下：
+  ```sh
+  yum install sshpass
+  sshpass -p 123456 ssh root@10.0.0.1
+  ```
+  但这样会将明文密码泄露到终端，比较危险。
 - 采用以下格式可以发送多行命令：
   ```sh
   ssh -tt root@10.0.0.1 << EOL
@@ -109,12 +119,6 @@ $ ssh root@10.0.0.1          # 使用 ssh 服务，以 root 用户的身份登�
   - 这里将 EOF 声明为定界符，将两个定界符之间的所有内容当作 sh 脚本发送到远程终端执行。
     甚至两个定界符之间的缩进空格，也会被一起发送。
   - 最后一条命令应该是 exit ，用于主动退出远程终端。
-- 通过 sshpass 命令可以传递密码给 ssh、scp 命令，如下：
-  ```sh
-  yum install sshpass
-  sshpass -p 123456 ssh root@10.0.0.1
-  ```
-  但这样会将明文密码泄露到终端，比较危险。
 
 ## 相关命令
 

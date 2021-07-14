@@ -405,13 +405,17 @@ scrape_configs:
   time()                    # 返回当前的 Unix 时间戳（标量），单位为秒
   timestamp(vector(1))      # 返回矢量中每个数据点的时间戳（矢量）
 
-  # 以下函数用于从 UTC 时间戳中提取某个信息。可以输入一个时间矢量，不输入时默认采用当前时间，比如 hour( timestamp(vector(1)) )
+  # 以下函数用于获取某个时间信息（注意为 UTC 时区）。可以输入一个时间矢量，不输入时默认采用当前时间，比如 hour( timestamp(vector(1)) )
   minute([vector])          # 分钟，取值为 0~59
-  hour  ([vector])          # 小时，取值为 0~23 ，注意为 UTC 时区
+  hour  ([vector])          # 小时，取值为 0~23
   month ([vector])          # 月份，取值为 1~31
   year  ([vector])          # 年份
   day_of_month([vector])    # 该月中的日期，取值为 1~31
   day_of_week ([vector])    # 周几，取值为 0~6 ，其中 0 表示周日
+  ```
+  例：
+  ```sh
+  hour() == 16 and minute() < 5   # 仅在 UTC+8 时区每天的前 5 分钟，表达式结果不为空，采取第一段的值，即 16
   ```
 
 - 关于排序：

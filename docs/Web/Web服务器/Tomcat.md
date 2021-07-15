@@ -24,7 +24,7 @@
   docker exec tomcat /usr/local/tomcat/bin/shutdown.sh  # 停止
   ```
 
-### 常用脚本
+### 运维工具
 
 - tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
   - startup.sh  ：用于启动 Tomcat ，实际上是调用 `catalina.sh start` 。
@@ -58,7 +58,7 @@
   fi
   ```
 
-## 初始页面
+### 初始页面
 
 启动 Tomcat 之后，访问 `http://localhost:8080/` 即可进入 Tomcat 的初始页面，这里有 Server Status、Manager App、Host Manager 三个内置应用。相关配置如下：
 
@@ -108,7 +108,7 @@
 
 ## server.xml
 
-`tomcat/conf/server.xml` 是 Tomcat 的主要配置文件，内容示例如下：
+`tomcat/conf/server.xml` 是 Tomcat 的主要配置文件，内容示例：
 ```xml
 <Server port="8005" shutdown="SHUTDOWN">
   <Listener ... />
@@ -144,8 +144,13 @@
   - `<Value>` 代表一个处理 HTTP 请求的组件。上例中定义了一个记录日志的组件。
   - `<Context>` 代表一个 URL 。
 
+- Tomcat 有一个默认的配置参数 `server.tomcat.basedir=/tmp` 。
+  - Tomcat 每次启动时，会自动在 basedir 之下创建一个临时目录 `tomcat.xxxxxxxx.<port>` ，用于存储一些运行中产生的临时文件。
+  - Tomcat 不会自动删除临时目录，不过 Linux 系统会定期删除 /tmp 目录下长时间未改动的文件，可能导致 Tomcat 找不到临时目录或文件而报错。
+    - 因此，建议将 basedir 改为 /tmp 之外的目录，比如 . ，并且每次重启 Tomcat 时都删除它。
+
 ## 日志
 
-Tomcat 的日志文件保存在 `tomcat/logs/` 目录下，常用的有以下几种：
-- catalina.out ：记录了 Tomcat 的 stdout、stderr 。
-- localhost_access_log.YYYY-MM-DD.txt ：记录了用户访问 Tomcat 的日志。
+- Tomcat 的日志文件保存在 `tomcat/logs/` 目录下，常用的有以下几种：
+  - catalina.out ：记录了 Tomcat 的 stdout、stderr 。
+  - localhost_access_log.YYYY-MM-DD.txt ：记录了用户访问 Tomcat 的日志。

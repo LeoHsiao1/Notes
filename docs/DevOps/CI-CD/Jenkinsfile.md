@@ -452,13 +452,14 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 
 ### withEnv
 
-：用于插入环境变量到 sh 语句中。
+：用于给 sh 语句添加环境变量。
 - 例：
   ```groovy
   withEnv(['A=Hello', 'B=World']) {
         sh 'echo $A $B'
   }
   ```
+- 执行 pipeline 时，默认会将环境变量、params 字典、env 字典等变量，通过 withEnv 添加到 sh 语句的环境变量中。
 
 ### withCredentials
 

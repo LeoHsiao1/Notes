@@ -23,7 +23,7 @@
 docker-compose
             -f <file>                 # 指定 compose 文件（默认使用当前目录下的 docker-compose.yml）
 
-            up [service]...           # 启动服务（会重新加载 compose 文件，可能会删除容器或重新创建容器）
+            up [service]...           # 启动服务，即创建并启动容器（会检查 compose 文件，如果配置变化则删除容器再重新创建）
                 -d                    # 以 daemon 方式运行（否则会阻塞当前终端）
                 --scale web=2 mysql=1 # 设置服务运行的实例数量
                 --build               # 强制构建镜像（如果镜像已存在，则默认不会再次构建）
@@ -32,7 +32,7 @@ docker-compose
             start   [service]...      # 启动已停止的服务
             restart [service]...      # 重启服务
 
-            down                      # 销毁所有服务，删除用到的容器、网络、日志文件
+            down                      # 停止并删除所有容器，并删除用到的网络
                 -v                    # 再删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
                 --rmi all             # 再删除该服务用到的所有镜像
 

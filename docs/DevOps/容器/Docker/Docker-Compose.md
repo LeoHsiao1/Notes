@@ -12,6 +12,11 @@
   pip3 install docker-compose
   ```
 
+- 用 yum 安装：
+  ```sh
+  yum install docker-compose
+  ```
+
 ## 命令
 
 ```sh

@@ -4,7 +4,6 @@
   - [简介](编程语言/简介.md)
   - C
     - [编译](编程语言/C/编译.md)
-  - [Python](../Python/index.md)
   - [Java](编程语言/Java/Java.md)
     - [构建](编程语言/Java/构建.md)
     - [语法](编程语言/Java/语法.md)

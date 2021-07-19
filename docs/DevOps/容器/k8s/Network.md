@@ -15,7 +15,7 @@ k8s 中主要研究的网络通信：
 
 ## Service
 
-：一种管理逻辑网络的对象，用于对 Pod 进行 TCP、UDP 反向代理，实现服务发现、负载均衡的功能。
+：一个管理逻辑网络的对象，用于对一个或多个 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 - 一个应用可以运行多个 Pod 实例，被一个 Service 反向代理，供用户访问。
   - 用户发到 Service 某个端口的流量，会被转发到 Pod 的相关端口。
@@ -129,7 +129,8 @@ k8s 中主要研究的网络通信：
 
 ## Ingress
 
-：用于对 Service 进行 HTTP、HTTPS 反向代理。
+：一个管理逻辑网络的对象，用于对一个或多个 Service 进行 HTTP、HTTPS 反向代理，常用于实现路由转发。
+- 实现 Ingress 功能的 Controller 有多种，常见的是 Nginx Ingress Controller ，它基于 Nginx 实现 Ingress 功能。
 - 配置示例：
   ```yml
   apiVersion: v1

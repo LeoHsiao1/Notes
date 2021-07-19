@@ -64,19 +64,19 @@ StrictModes yes                   # 在 SSH 认证时检查用户的家目录、
   - 如果包含该 IP ，则拒绝连接。
   - 如果不包含该 IP ，则允许连接。
 
-/etc/hosts.allow 的内容示例：
-```sh
-sshd:192.168.0.1
-sshd:192.168.220.    # 允许一个网段
-in.telnetd:192.168.0.1
-```
+- `/etc/hosts.allow` 的内容示例：
+  ```sh
+  sshd:192.168.0.1
+  sshd:192.168.220.    # 允许一个网段
+  in.telnetd:192.168.0.1
+  ```
 
-/etc/hosts.deny 的内容示例：
-```sh
-sshd:ALL              # 禁止所有 IP
-in.telnetd:ALL
-```
-- 修改了配置文件之后，要重启 sshd、telnet 服务才会生效。
+- `/etc/hosts.deny` 的内容示例：
+  ```sh
+  sshd:ALL              # 禁止所有 IP
+  in.telnetd:ALL
+  ```
+  - 修改了配置文件之后，要重启 sshd、telnet 服务才会生效。
 
 ## 客户端
 
@@ -87,6 +87,7 @@ $ ssh <user>@<host>   # 使用 ssh 协议，以 user 用户（默认为 root ）
       [command]       # 不打开远程主机的 shell ，而是以非交互模式执行一条命令
 
       # 建立 SSH 连接的同时，可以运行一个代理服务器
+      # bind_address 默认为 localhost ，绑定到其它地址时需要在 sshd_config 中启用 GatewayPorts 配置
       -L [bind_address:]<bind_port>:<host>:<port>   # 让本地的 ssh 进程监听 bind_port 端口，将该端口收到的 TCP 数据包传输到远程主机，由后者转发到任意主机的 <host>:<port>
       -R [bind_address:]<bind_port>:<host>:<port>   # 让远程主机的 sshd 进程监听 bind_port 端口，将其 TCP 数据包传输到本机，由后者转发到任意主机的 <host>:<port>
 ```

@@ -62,7 +62,7 @@ pipeline {
 
 ## 变量
 
-- Groovy 支持在字符串中用 `$` 插入变量的值，用 `${}` 插入表达式的值。如下：
+- 例：
   ```groovy
   script {
       ID = "1"            // 创建变量
@@ -70,15 +70,15 @@ pipeline {
       echo NAME           // 直接打印 Groovy 的变量
       echo "$ID"          // 字符串定界符为双引号时，支持用 $ 插入变量或表达式的值
       echo '$ID'          // 字符串定界符为双引号时，不支持用 $ 取值
-      sh "echo $ID"       // 执行 sh 语句，字符串定界符为双引号时， $ 会先读取 Groovy 变量，再作为 Shell 命令执行
-      sh 'echo $ID'       // 执行 sh 语句，字符串定界符为双引号时，会直接作为 Shell 命令执行，因此 $ 会读取 Shell 变量
+      sh "echo $ID"       // 执行 sh 语句，字符串定界符为双引号时，会先在 Groovy 解释器中获取 $ 变量的值，再将字符串作为 Shell 命令执行
+      sh 'echo $ID'       // 执行 sh 语句，字符串定界符为单引号时，会直接作为 Shell 命令执行，因此 $ 会读取 Shell 变量
   }
   ```
-  - 如果只想在字符串中使用 `$` 字符，则需要转义为 `\$` 。
 
-- Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
-  - 如果使用的 Groovy 变量不存在，则报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
-  - 以单引号作为定界符的字符串不会渲染，而是直接使用。
+- Groovy 语言支持在字符串中用 `$` 插入变量的值，用 `${}` 插入表达式的值。
+  - Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
+    - 如果使用的 Groovy 变量不存在，则报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
+  - 如果想让 Groovy 将字符串中的 $ 当作普通字符处理，则需要使用单引号作为定界符，或者使用转义字符 `\$` 。
 
 ### 环境变量
 
@@ -301,8 +301,8 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       echo 'Hello'
   }
   ```
-- echo 语句只能显示 String 类型的值，使用 println 可以显示任意类型的值。
-- 使用字符串时，要用双引号 " 或单引号 ' 包住（除非是纯数字组成的字符串），否则会被当作变量取值。
+- echo 语句只能显示 String 类型的值，而使用 println 可以显示任意类型的值。
+- 打印字符串时，要加上双引号 " 或单引号 ' 作为定界符（除非是纯数字组成的字符串），否则会被当作 Groovy 的变量名。
   - 例如：`echo ID` 会被当作 `echo "$ID"` 执行。
   - 使用三引号 """ 或 ''' 包住时，可以输入换行的字符串。
 

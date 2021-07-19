@@ -120,6 +120,10 @@ module.exports = {
                             ]
                         },
                         {
+                            title: "Python",
+                            path: "/Programming/../Python/index"
+                        },
+                        {
                             title: "Java",
                             path: "/Programming/编程语言/Java/Java",
                             collapsable: false,

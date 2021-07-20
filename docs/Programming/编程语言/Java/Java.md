@@ -24,8 +24,8 @@
 
 ## 相关概念
 
-- Log4j
-  - ：一个用于记录 Java 程序日志的库，支持自动切割日志。
+- JAAS（Java Authentication and Authorization Service，Java 认证和授权服务）
+  - ：一个进行身份认证的 Java 框架，内置在 JRE 中。
 - JSP（Java Server Pages）
   - ：一个动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
   - 例：
@@ -51,6 +51,8 @@
   - 开发 Java Web 项目的常用框架：
     - SSH（Spring + Struts + Hibernate）
     - SSM（Spring + SpringMVC + MyBatis）
+- Log4j
+  - ：一个用于记录 Java 程序日志的库，支持自动切割日志。
 
 ### GC
 

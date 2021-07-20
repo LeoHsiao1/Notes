@@ -775,8 +775,8 @@ module.exports = {
                             path: "/Web/后端/cookie"
                         },
                         {
-                            title: "身份验证",
-                            path: "/Web/后端/身份验证"
+                            title: "身份认证",
+                            path: "/Web/后端/身份认证"
                         }
                     ]
                 },

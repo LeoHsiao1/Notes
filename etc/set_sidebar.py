@@ -121,6 +121,7 @@ with open('docs/.vuepress/config.js', 'r+', encoding='utf-8') as f:
 
     # 保存 config.js
     f.seek(0)
+    f.truncate()
     f.write(config_js)
 
 

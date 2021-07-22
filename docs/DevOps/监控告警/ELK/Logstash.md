@@ -37,10 +37,10 @@
       ports:
         - 5044:5044
       volumes:
-      #  - ./config:/usr/share/logstash/config
+        - ./config:/usr/share/logstash/config
         - ./data:/usr/share/logstash/data
   ```
-  - 容器内以非 root 用户运行服务，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
+  - 容器内以非 root 用户运行服务，需要调整挂载目录的权限：
     ```sh
     mkdir -p  config data
     chown -R  1000 .

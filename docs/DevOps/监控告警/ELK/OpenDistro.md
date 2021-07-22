@@ -7,7 +7,7 @@
   - 功能、配置有些小差异，这是为了回避 Elastic 公司的版权。
 - 2021 年初，Elastic 公司宣布从 v7.11 版本开始，将 ES、Kibana 项目的开源协议从 Apache V2 改为 SSPL 。
   - SSPL 是一种未被 OSI（Open Source Initiative）组织认可的开源协议，禁止用户将该软件作为服务出售，除非购买商业许可证。
-  - 对此，AWS 公司宣布分叉 ES、Kibana 项目并独立维护，采用 Apache V2 开源协议。
+  - 对此，AWS 公司宣布从 ES、Kibana 分叉出 OpenSearch 项目，取代之前的 Open Distro for Elasticsearch 项目，采用 Apache V2 开源协议。
 
 ## 部署
 
@@ -24,7 +24,7 @@
       network_mode:
         host            # 使用宿主机的网卡，以便绑定宿主机的对外 IP
       volumes:
-      #  - ./config:/usr/share/elasticsearch/config
+        - ./config:/usr/share/elasticsearch/config
         - ./data:/usr/share/elasticsearch/data
       ulimits:
         memlock:
@@ -45,15 +45,15 @@
       ports:
         - 5601:5601
       volumes:
-      #  - ./config:/usr/share/kibana/config
+        - ./config:/usr/share/kibana/config
         - ./data:/usr/share/kibana/data
   ```
-  - 容器内以非 root 用户运行服务，对于挂载目录可能没有访问权限，需要先在宿主机上修改文件权限：
+  - 可以先用 docker run 启动一个容器，将其中的 config 目录拷贝出来，修改之后再挂载。
+  - 容器内以非 root 用户运行服务，需要调整挂载目录的权限：
     ```sh
     mkdir -p  config data
     chown -R  1000 .
     ```
-  - 可以先不挂载配置目录，启动一次。然后将容器内的 config 目录拷贝出来，修改之后再挂载配置目录，重新启动容器。
 
 ## 配置
 

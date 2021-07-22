@@ -47,11 +47,10 @@ c. 如果 zxid 相同，那么就比较 myid，myid 较大的服务器作为 lea
 
 
 - zk 的命名空间中可以创建多个存储数据的寄存器，称为 znode 。
-  - 所有 znode 按树形结构相关联，通过以 / 分隔的绝对路径进行定位，类似于标准文件系统。
+  - 所有 znode 按树形结构相关联，通过从 / 开始的绝对路径进行定位。
   - 每个 znode 可以存储一段文本数据，通常为键值对格式、JSON 格式。
     - znode 的主要优点是能实现分布式的数据一致性，应该只存储很少量的数据，低于 1 kB 。
     - znode 的读写操作具有原子性。
-  - 支持给单个 znode 设置 ACL 规则，限制访问权限。
 
 - zk 将 znode 数据存储在内存中，因此读取速度快。
   - 每次对 znode 进行写操作时，会备份写操作到事务日志中。
@@ -128,9 +127,11 @@ dataDir=/data                   # 数据快照的存储目录
 autopurge.purgeInterval=1       # 每隔一段时间，自动清理快照文件、事务日志文件。默认值为 0 ，禁用该功能
 # autopurge.snapRetainCount=3   # autopurge 时，每种文件只保留 Count 数量。默认值、最小值都为 3
 
-# 4lw.commands.whitelist=srvr,stat  # 一个白名单，声明允许使用哪些四字母命令，可通过 telnet 连接发送命令
 # admin.enableServer=true       # 是否启用 AdminServer
 # admin.serverPort=8080         # AdminServer 监听的端口
+# 4lw.commands.whitelist=srvr,stat  # 一个白名单，声明允许使用哪些四字母命令，可通过 telnet 连接发送命令
+metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider # 启用 Prometheus Metrics Provider
+# metricsProvider.httpPort=7000
 
 # tickTime=2000                 # 时钟间隔，用作 zk 的基本时间单位，单位为 ms 。也是向其它 server 、client 发送心跳包的时间间隔
 # initLimit=5                   # 各个 server 初始化连接到 leader 的超时时间，单位为 tickTime
@@ -171,25 +172,74 @@ server.3=10.0.0.3:2888:3888;2181
     ```
   - 当 zk server 启动时，如果 dataDir 目录不存在，它会自动创建该目录，导致使用错误的 myid 、空的 znode ，可能发生脑裂。
 
-## 命令行工具
+## zkCli
 
-zk 的 bin 目录下自带了多个 shell 脚本。
-- 执行以下脚本可进入 zk 的命令行终端。
+- zk 的 bin 目录下自带了多个 shell 脚本。执行以下脚本可进入 zk 的命令行终端：
   ```sh
   bash bin/zkCli.sh
           -server [host][:port]   # 连接到指定的 zk server 。默认是 localhost:2181
   ```
-  常用命令：
+
+- 常用命令：
   ```sh
-  connect [host][:port]   # 连接到指定的 zk server
+  connect [host][:port]       # 连接到指定的 zk server
 
-  ls <path>               # 显示指定路径下的所有 znode
-    -R                    # 递归显示子目录
+  ls <path>                   # 显示指定路径下的所有 znode 。path 中不支持通配符 *
+    -R                        # 递归显示子节点
 
-  get <path>              # 读取 znode 中的数据
-  set <path> <data>       # 设置 znode 中的数据
-  stat <path>             # 显示 znode 的状态
+  create <path> [data] [acl]  # 创建 znode
+  delete <path>               # 删除 znode 。存在子节点时不允许删除，会报错：Node not empty
 
-  create <path>           # 创建 znode
-  delete <path>           # 删除 znode
+  get    <path>               # 读取 znode 中的数据
+  set    <path> <data>        # 设置 znode 中的数据
+  stat   <path>               # 显示 znode 的状态
+
+  getAcl <path>               # 读取 znode 的 ACL 规则
+  setAcl <path>  <acl>        # 设置 znode 的 ACL 规则（只能设置一次，再次设置则不生效）
+        -R                    # 递归处理子节点
+  addauth <scheme> <user:pwd> # 创建用户
   ```
+
+### ACL
+
+- zk 默认允许任何客户端读写。
+  - 支持给 znode 设置 ACL 规则，控制其访问权限。
+
+- ACL 规则的格式为 `scheme:user:permissions`
+  - scheme 表示认证模式，分为以下几种：
+    ```sh
+    world     # 只定义了 anyone 用户，表示所有客户端，包括未登录的
+    auth      # 通过 addauth digest 创建的用户
+    digest    # 与 auth 类似，但需要以哈希值形式输入密码，格式为 digest:<user>:<pwd_hash>:<permissions>
+    ip        # 限制客户端的 IP 地址，比如 ip:10.0.0.0/8:r
+    sasl      # 要求客户端通过 kerberos 的 SASL 认证
+    super     # 超级管理员，需要在 zk server 的启动命令中声明
+    ```
+  - permissions 是一组权限的缩写：
+    ```sh
+    Admin   # 允许设置 ACL
+    Create  # 允许创建子节点
+    Delete  # 允许删除当前节点
+    Read    # 允许读取
+    Write   # 允许写
+    ```
+
+- 例：
+  ```sh
+  [zk: localhost:2181(CONNECTED) 0] create /test    # 命令提示符中的数字编号表示这是当前终端执行的第几条命令，从 0 开始递增
+  Created /test
+  [zk: localhost:2181(CONNECTED) 1] get /test
+  null
+  [zk: localhost:2181(CONNECTED) 2] getAcl /test    # 新建 znode 的 ACL 不会继承父节点，而是默认为 `world:anyone:cdrwa`
+  'world,'anyone
+  : cdrwa
+  [zk: localhost:2181(CONNECTED) 3] setAcl /test world:anyone:a
+  [zk: localhost:2181(CONNECTED) 4] get /test
+  Insufficient permission : /test                   # 报错表示权限不足
+  [zk: localhost:2181(CONNECTED) 5] addauth digest tester:123456    # 创建用户，如果已存在该用户则是登录
+  [zk: localhost:2181(CONNECTED) 6] setAcl /test auth:tester:cdrwa
+  [zk: localhost:2181(CONNECTED) 7] getAcl /test
+  'digest,'tester:Sc9QxOxG72+Wzo/j15TxX5UOqQs=                      # 密码以哈希值形式保存
+  : cdrwa
+  ```
+  - 创建一个新终端时，再次执行 addauth 命令，就会登录指定用户。

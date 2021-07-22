@@ -206,7 +206,7 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   # log.segment.bytes=1073741824            # 单个 LogSegment 的最大大小，超过该值则会创建一个新的 LogSegment 用于写入。默认为 1G
   # log.cleanup.policy=delete               # LogSegment 的清理策略，可以是 delete、compact
   # log.retention.bytes=-1                  # 单个 partition 的最大大小，超过该值则会删除其中最旧的 LogSegment 。默认为 -1 ，即不限制
-  # log.retention.hours=168                 # 单个 LogSegment 的保存时长，超过该值之后就会删除它。默认为 7*24h
+  log.retention.hours=72                    # 单个 LogSegment 的保存时长，超过该值之后就会删除它。默认为 7*24h
   # log.retention.check.interval.ms=300000  # 每隔多久检查一次各个 LogSegment 是否应该清理。默认为 5min
   # log.flush.interval.messages=10000       # 每接收多少个消息，就 flush 一次，即将内存中数据保存到磁盘
   # log.flush.interval.ms=1000              # 每经过多少毫秒，就 flush 一次

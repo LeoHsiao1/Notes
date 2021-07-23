@@ -51,7 +51,7 @@ pipeline {
     }
     post {
         always {            // 任务结束时总是执行以下操作
-            deleteDir()     // 递归地删除当前目录。这里只会删除全局 agent 的 ${env.WORKSPACE} 目录，不会删除局部 agent 的
+            deleteDir()     // 递归地删除当前目录。这里是作用于当前 agent 的 ${env.WORKSPACE} 目录
         }
     }
 }
@@ -329,17 +329,17 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   - 因此会记录下执行的每条 shell 命令及其输出。例如执行以下 sh 语句：
     ```groovy
     sh """
-        echo hello 你好         # 建议不要在 sh 语句中通过 echo 命令添加注释，因为该注释会打印一次，执行命令时又会记录一次，而且命令中包含中文时还会转码
-        comment=测试开始：       # 建议通过给变量赋值的方式加入注释
-        comment=( 测试开始 )     # 赋值为数组类型，则可以加入空格
+        echo Hello 你好         # 建议不要在 sh 语句中通过 echo 命令添加注释，因为该注释会打印一次，执行命令时又会记录一次，而且命令中包含中文时还会转码
+        : 测试开始               # 可通过 : 命令加入注释
+        comment=( 测试开始 )     # 可通过数组加入注释，此时数组内的中文不会转码
     """
     ```
-    执行后记录的 Console Output 为：
+    执行后的 Console Output 为：
     ```sh
-    +echo hello $'\344\275\240\345\245\275'
-    hello 你好
-    +comment=测试开始：
-    +comment=( 测试开始 )
+    + echo Hello $'\344\275\240\345\245\275'
+    Hello 你好
+    + : 测试开始
+    + comment=( 测试开始 )
     ```
 
 ### bat

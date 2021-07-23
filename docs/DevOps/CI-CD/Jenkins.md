@@ -32,8 +32,7 @@
       image: jenkins/jenkins:2.289.2-lts
       restart: unless-stopped
       environment:
-        JAVA_OPTS: -Duser.timezone=Asia/Shanghai
-      #   JENKINS_OPTS: "--prefix=/jenkins"           # 设置 URL 前缀，便于反向代理
+        JAVA_OPTS: -Duser.timezone=GMT+08
       ports:
         - 8080:8080                                   # 供用户访问 Jenkins 的 Web 页面
         # - 50000:50000                               # 供 JNLP 类型的 agent 访问 Jenkins

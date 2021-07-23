@@ -20,6 +20,8 @@
       container_name: artifactory
       image: docker.bintray.io/jfrog/artifactory-oss:7.18.6
       restart: unless-stopped
+      environment:
+        JAVA_OPTS: -Duser.timezone=GMT+08
       ports:
         - 8082:8082
       volumes:
@@ -28,7 +30,7 @@
   - 默认用户名、密码为 admin、password 。
   - 需要先配置挂载目录的权限：
     ```sh
-    chown -R 1030:1030 artifactory/
+    chown -R 1030:1030 artifactory
     ```
 
 ## 用法
@@ -55,6 +57,8 @@ Web 页面如下：
   - 可以主动设置上传路径，比如划分出子目录。
 - 每个文件有一个唯一的 URL ，可供用户上传、下载该文件。
   - 文件的 URL 等于 ` 仓库 URL + 文件上传路径 ` 。可以从网页上拷贝该 URL ，也可以自己拼凑出来。
+- 每个文件会显示其修改时间。
+  - 建议在 General Settings 页面设置 Date Format 为 `yyyy-MM-dd HH:mm:ss ZZ` 。
 - 在浏览器上访问仓库或目录的 URL ，会显示基本的文件列表。如下：
 
   ![](./Artifactory_2.png)

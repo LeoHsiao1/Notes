@@ -28,6 +28,7 @@
 - 现代计算机的各个硬件通常集成在一大块集成电路板上，称为主板。其核心元件为 CPU 。
   - CPU 是一小块芯片，包含了运算器、控制器、寄存器、缓存等元件。
 
+
 ### 总线
 
 - 主板上，CPU 与其它组件之间通过总线进行数据传输。总线根据用途分为三种：
@@ -42,7 +43,21 @@
   - 数据总线（Data Bus）
     - ：用于传输数据，支持双向传输。
 
-## CPU 指令
+## 指令
+
+- 指令：是使 CPU 进行某一操作的命令，由操作码和操作数组成。
+  - 操作码：表示操作符即该操作的类型，比如数据传送、算术运算、逻辑运算、位运算等。
+  - 操作数：表示该操作的对象，或者对象的地址。
+    - 有的指令没有操作数，有的指令有 1 个操作数，有的指令有 2 个操作数。
+  - 8086 CPU 的指令示例：
+    ```nasm
+    MOV   AL, 18H     ; 将源操作数 18H 存入目的操作数中，这里的目的操作数是一个数据寄存器 AL
+    ADD   AL, 1H      ; 加法：计算目的操作数 AL 加上源操作数，结果存入目的操作数所指的寄存器中
+    SUB   AL, 1H      ; 减法：计算目的操作数 AL 减去源操作数，结果存入目的操作数所指的寄存器中
+    INC   AL          ; 增量：使操作数的值加 1
+    MUL   2H          ; 无符号数的乘法：计算 AX 中的值乘以该操作数，结果存入 AX
+    DIV   2H          ; 无符号数的除法：计算 AX 中的值除以该操作数，结果存入 AX
+    ```
 
 - 字长（Word Size）：又称为位元，指 CPU 的算术逻辑单元每次最多能处理多少位二进制数据。
   - 现代 CPU 的字长通常是 32 位、64 位。
@@ -62,18 +77,18 @@
 
 ### 指令集
 
-常见的 CPU 指令集架构（Instruction Set Architecture ，ISA）：
+- 指令集是指某个 CPU 可以识别和执行的所有指令，又称为指令系统。
+- 常见的 CPU 指令集架构（Instruction Set Architecture ，ISA）：
+  - CISC（Complex Instruction Set Computer ，复杂指令集）
 
-- CISC（Complex Instruction Set Computer ，复杂指令集）
+  - RISC（Reduced Instruction Set Computer ，精简指令集）
+    - 精简了指令数，每个时钟周期执行一条指令。
+    - 指令的长度统一。
+    - 精简了寻址方式。
 
-- RISC（Reduced Instruction Set Computer ，精简指令集）
-  - 精简了指令数，每个时钟周期执行一条指令。
-  - 指令的长度统一。
-  - 精简了寻址方式。
+  - EPIC（Explicitly Parallel Instruction Computing ，显式并行指令集）
 
-- EPIC（Explicitly Parallel Instruction Computing ，显式并行指令集）
-
-- VLIW（Very Long Instruction Word ，超长指令集）
+  - VLIW（Very Long Instruction Word ，超长指令集）
 
 ## CPU 型号
 
@@ -82,17 +97,17 @@
 - ：指美国 Intel 公司发布的一系列 CPU 型号。
   - 指令集属于 CISC 。
 - 1987 年，Intel 公司发布了 8086 型号的 CPU ，被 IBM PC 采用而流行起来。此后的 80186、80286、80386 等型号的 CPU 都沿用这种架构，它们都以 86 结尾，因此称为 x86 架构。
-  - 8086 是 16 位元，地址总线的宽度为 20 bits ，数据总线的宽度为 16 bits 。
-  - 80386 是 32 位元。
-- 2003 年，AMD 公司将 x86 架构扩展为 64 位元，命名为 AMD64 ，又称为 x86_64、x64 。
+  - 8086 CPU 的字长为 16 ，地址总线的宽度为 20 bits ，数据总线的宽度为 16 bits 。
+  - 80386 CPU 的字长为 32 。
+- 2003 年，AMD 公司将 x86 架构的字长扩展为 64 ，命名为 AMD64 ，又称为 x86_64、x64 。
 
 ### ARM
 
 - ：进阶精简指令集机器（Advanced RISC Machine），指英国 Arm 公司发布的一系列 CPU 型号。
-  - 采用 32 位元，指令集属于 RISC 。
+  - 字长为 32 ，指令集属于 RISC 。
   - 成本低、功耗低、散热低，因此用于手机、平板等小型电子设备比 x86 更有竞争力。
 - ARM 公司只负责设计 CPU 架构、出售许可证，而 Intel 公司掌握了设计、生产、销售 CPU 的整个流程。
-- 2011 年，Arm 公司发布了 ARMv8-A 架构，采用 64 位元，并且重新实现了 ARM 32 位的指令集。
+- 2011 年，Arm 公司发布了 ARMv8-A 架构，字长为 64 ，并且重新实现了 ARM 32 位的指令集。
   - ARMv8-A 架构划分了 AArch32、AArch64 两种执行状态，分别用于执行 32 位、64 位的指令。
 
 ## CPU 状态

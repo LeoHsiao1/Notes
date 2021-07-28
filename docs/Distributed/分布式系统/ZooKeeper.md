@@ -237,6 +237,31 @@ server.3=10.0.0.3:2888:3888;2181
   addauth <scheme> <user:pwd> # 创建用户
   ```
 
+- 例：创建 znode
+  ```sh
+  [zk: localhost:2181(CONNECTED) 0] create /test
+  Created /test
+  [zk: localhost:2181(CONNECTED) 1] get /test
+  null
+  ```
+  - 命令提示符 `[zk: localhost:2181(CONNECTED) 1]` 中的数字编号表示这是当前终端执行的第几条命令，从 0 开始递增。
+
+- 例：查看 znode 的状态
+  ```sh
+  [zk: localhost:2181(CONNECTED) 0] stat /test
+  cZxid = 0x1bd                           # 创建该节点时的 zxid
+  ctime = Wed Jul 28 10:09:01 UTC 2021    # 创建该节点时的 UTC 时间
+  mZxid = 0x1bd
+  mtime = Wed Jul 28 10:09:01 UTC 2021
+  pZxid = 0x1bd
+  cversion = 0
+  dataVersion = 0                         # 该节点中的数据版本。每次 set 都会递增，即使数据没有变化
+  aclVersion = 0
+  ephemeralOwner = 0x0
+  dataLength = 0                          # 该节点中的数据长度
+  numChildren = 0                         # 子节点的数量
+  ```
+
 ### ACL
 
 - zk 默认允许任何客户端读写。
@@ -263,19 +288,15 @@ server.3=10.0.0.3:2888:3888;2181
 
 - 例：
   ```sh
-  [zk: localhost:2181(CONNECTED) 0] create /test    # 命令提示符中的数字编号表示这是当前终端执行的第几条命令，从 0 开始递增
-  Created /test
-  [zk: localhost:2181(CONNECTED) 1] get /test
-  null
-  [zk: localhost:2181(CONNECTED) 2] getAcl /test    # 新建 znode 的 ACL 不会继承父节点，而是默认为 `world:anyone:cdrwa`
+  [zk: localhost:2181(CONNECTED) 0] getAcl /test    # 新建 znode 的 ACL 不会继承父节点，而是默认为 `world:anyone:cdrwa`
   'world,'anyone
   : cdrwa
-  [zk: localhost:2181(CONNECTED) 3] setAcl /test world:anyone:a
-  [zk: localhost:2181(CONNECTED) 4] get /test
+  [zk: localhost:2181(CONNECTED) 1] setAcl /test world:anyone:a
+  [zk: localhost:2181(CONNECTED) 2] get /test
   Insufficient permission : /test                   # 报错表示权限不足
-  [zk: localhost:2181(CONNECTED) 5] addauth digest tester:123456    # 创建用户，如果已存在该用户则是登录
-  [zk: localhost:2181(CONNECTED) 6] setAcl /test auth:tester:cdrwa
-  [zk: localhost:2181(CONNECTED) 7] getAcl /test
+  [zk: localhost:2181(CONNECTED) 3] addauth digest tester:123456    # 创建用户，如果已存在该用户则是登录
+  [zk: localhost:2181(CONNECTED) 4] setAcl /test auth:tester:cdrwa
+  [zk: localhost:2181(CONNECTED) 5] getAcl /test
   'digest,'tester:Sc9QxOxG72+Wzo/j15TxX5UOqQs=                      # 密码以哈希值形式保存
   : cdrwa
   ```

@@ -21,8 +21,8 @@
       container_name: elasticsearch
       image: amazon/opendistro-for-elasticsearch:1.13.2
       restart: unless-stopped
-      network_mode:
-        host            # 使用宿主机的网卡，以便绑定宿主机的对外 IP
+      ports:
+        - 9200:9200
       volumes:
         - ./config:/usr/share/elasticsearch/config
         - ./data:/usr/share/elasticsearch/data

@@ -13,7 +13,7 @@
     server.host: '0.0.0.0'      # Kibana 监听的 IP
     server.name: kibana         # 服务器显示的名称
 
-    elasticsearch.hosts: ['http://10.0.0.1:9200']   # 连接到 ES ，可以指定多个 host ，如果前一个不能访问则使用后一个
+    elasticsearch.hosts: ['http://10.0.0.1:9200']   # 要连接的 ES 地址。可以指定多个 host ，但必须属于同一集群，如果前一个不能访问则使用后一个
     # elasticsearch.username: 'admin'
     # elasticsearch.password: '123456'
 

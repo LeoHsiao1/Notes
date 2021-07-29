@@ -17,12 +17,17 @@
   - 每个 server 都拥有整个集群的数据副本，客户端连接到任一 server 即可访问集群。
     - 客户端发出读请求时，server 会使用本机的数据副本作出回复。
     - 客户端发出写请求时，server 会转发给 leader 。
-  - 部署 2xF+1 个 server 时，最多允许 F 个 server 故障，从而提高集群的可用性。
-    - 部署 2xF+2 个 server 时，也是最多允许 F 个 server 故障，剩下的 server 才超过集群的半数，可以投票成功。因此部署的 server 数量建议为奇数，为偶数时并不会提高可用性。
+
+  - 假设部署 N 个 zk server ，需要超过半数（不能是等于半数）的节点在线，才能组成集群。
+    - 即集群的必需成员数为 Quorum = (N+1)/2 向上取整。
+
+  - 部署的 server 数量建议为奇数，为偶数时并不会提高可用性。
     - 部署 1 个 server 时，不能组成集群，只能工作在 standalone 模式。
     - 部署 2 个 server 时，能组成一个最小的 zk 集群，但存在单点故障的风险。
       - 任一 server 故障时，剩下的 server 不超过集群的半数，不能投票决策。
     - 部署 3 个 server 时，组成的 zk 集群最多允许 1 个 server 故障。
+    - 部署 4 个 server 时，组成的 zk 集群也是最多允许 1 个 server 故障。
+
   - 增加 F 的数量时，可以提高集群的可用性，但会增加每次投票的耗时。
 
 - 集群中的 server 分为三种角色：
@@ -46,22 +51,35 @@
 
 ### 选举
 
-- zk 采用 ZAB 协议实现各 server 的数据一致性。
-  - ZAB（Zookeeper Atomic Broadcast）协议与 Raft 协议相似，各节点通过投票进行决策。
-    - 每轮投票时，如果超过半数的节点支持某个决策，则采用该决策。
-    - 每轮投票拥有一个递增的 epoch 值，表示这次投票的编号。
-  - 例：每次收到客户端的写请求时，leader 会将它转换成一个事务提议（proposal），广播给所有 follower 。如果超过半数的 follower 回复了 ACK ，则 leader 会提交该事务，并广播 commit 消息给所有 follower 。
+- zk 采用 ZAB 协议实现各 server 的数据一致性。ZAB（Zookeeper Atomic Broadcast）协议与 Raft 协议相似，特点如下：
+  - 有且仅有一个节点作为 Leader ，有权作出决策。其它节点作为 Follower ，只能跟随决策。
+  - 如果 Leader 故障，则其它节点发起一轮投票，选举一个节点担任新 Leader 。
+  - 每选出一个 Leader ，就开始一个任期，称为 epoch 。
+    - 每个 epoch 拥有一个递增的数字编号。
 
-- 当 leader 不可用时，所有 follower 会开始一轮投票，选举出新的 leader 。选举过程很快，一般低于 1 s 。
-  - 例如集群启动时会发起一轮选举，各个 server 会推举自己为 leader 。
+- 当 leader 不可用时，所有 follower 会开始一轮投票，选举出新的 leader 。
+  - 默认采用 FastLeaderElection 选举算法。
+  - 集群启动时、leader 故障时，会触发一轮选举。
+  - 选举过程很快，一般低于 1 s 。
 
-- 选举（election）的流程：
 
-
-<!-- - 默认采用 FastLeaderElection 选举算法。
-如何判断 leader 挂掉，开始选举？
+<!-- - 
+在很短时间内重启 leader ，则不会触发选举？
+默认各个 server 会推举自己为 leader？
  -->
 
+
+- leader 和 follower 之间通信的消息采用以下数据结构：
+  ```java
+  class QuorumPacket {
+      int type;           // 消息的类型。例如取值为 3 时表示 ACK 类型
+      long zxid;
+      byte[] data;        // 消息的内容
+      List<Id> authinfo;
+  }
+  ```
+
+- 选举（election）的流程：
   1. 有权投票的 server 进入 LOOKING 竞选状态。向其它 server 发送自己的投票，包含以下信息：
      - epoch ：本轮投票的编号。
      - zxid ：本机最新的事务编号。
@@ -69,11 +87,47 @@
   2. 每个 server 收到其它 server 的投票时，会与自己的投票对比。
      - 依次比较 epoch、zxid、myid 三种值的大小，取值越大则投票的权重越高。
      - 如果自己投票的权重更大，则发送给对方 server 。否则采用对方的投票作为自己的新投票。
-  3. 如果有一个 server 发现有超过半数的 server 推举自己为 leader ，则将 epoch 加 1 ，向所有 server 广播自己成为 leader 的消息。
+     - 这样会尽量推举拥有最新事务的 server 作为 leader 。
+  3. 如果有一个 server 发现有超过半数的 server 推举自己为 leader ，则将 epoch 加 1 ，向所有 server 发送自己成为 leader 的消息。
      - 投票结束之后，各个 server 会根据自己的角色，进入 LEADING、FOLLOWING 或 OBSERVING 状态。
 
+- zk 节点在运行时会经历以下阶段：
 
-<!-- Quorum -->
+  <!-- - 选举 leader ，各节点被分配 leader、follower 身份。 -->
+
+  - 阶段一：开始新 epoch
+    1. follower 连接到 leader ，发送 FOLLOWERINFO 消息。
+    2. 等 Quorum 数量的 follower 建立连接之后，leader 停止接受新连接。并向已有的 follower 发送 LEADERINFO(e) 消息，提议开始一个新的 epoch ，其 e 值大于这些 follower 的 acceptedEpoch 。
+        - 统计 Quorum 数量时包括了 leader 。
+    3. follower 收到 LEADERINFO(e) 消息，进行判断：
+        - 如果 e > acceptedEpoch ，则设置 acceptedEpoch = e ，并回复 ACKEPOCH(e) ，表示接受新的 epoch 。
+        - 如果 e == acceptedEpoch ，则跳到执行下一步。
+        - 如果 e < acceptedEpoch ，则断开连接，重新开始选举。
+    4. 等 Quorum 数量的 follower 回复 ACKEPOCH 之后，leader 开始下一阶段。
+        - 所有 follower 都必须满足以下两个条件之一，否则 leader 断开连接，重新开始选举：
+          ```sh
+          follower.currentEpoch <  leader.currentEpoch
+          follower.currentEpoch == leader.currentEpoch && follower.lastZxid <= leader.lastZxid
+          ```
+        - 如果上述过程失败或超时，则重新开始选举。
+
+  - 阶段二：同步数据
+    1. follower 连接到 leader 。
+    2. leader 向 follower 发送 DIFF 消息，包含它缺少的事务。
+    3. 当 follower 同步完数据之后，leader 向它发送 NEWLEADER(e) 消息，提议自己作为该 epoch 的 leader 。
+    4. follower 收到 NEWLEADER(e) 消息，停止同步，设置 currentEpoch = e ，然后回复 ACK 消息。
+    5. 等 Quorum 数量的 follower 回复 ACK 之后，leader 正式成为该 epoch 的 leader ，向所有 follower 发送 UPTODATE 消息。
+    6. follower 收到 UPTODATE 消息，开始接受客户端连接。
+
+  - 阶段三：广播事务
+    - 每次开始一个新事务时：
+      1. leader 广播 PROPOSE 消息给所有 follower ，提议该事务。
+      2. follower 接受该事务，回复 ACK(zxid) 消息给 leader ，表示直到该 zxid 的事务都已经被接受。
+      3. 等 Quorum 数量的 follower 回复 ACK 之后， leader 正式提交该事务。然后广播 COMMIT(zxid) 消息给所有 follower ，表示直到该 zxid 的事务都已经被提交。
+          - 所有事务会按 zxid 顺序提交。
+          - 保证超过 Quorum 数量的节点同步了最新事务。
+    - 如果 leader 在一定时间内没有等到 Quorum 数量的 follower 回复 ACK ，则重新选举。
+    - 如果 follower 在一定时间内没有收到 leader 的 PROPOSE 或 ping 消息，则认为 leader 故障，重新选举。
 
 ### 数据结构
 
@@ -189,8 +243,8 @@ server.3=10.0.0.3:2888:3888;2181
   ├── data
   │   ├── myid
   │   └── version-2
-  │       ├── acceptedEpoch       # 该文件记录一个 epoch 值。收到 NEWEPOCH 消息时，其 epoch 必须大于等于该值，才会接受
-  │       ├── currentEpoch        # 该文件记录一个 epoch 值。收到 NEWLEADER 消息时，其 epoch 必须大于等于该值，才会接受
+  │       ├── acceptedEpoch       # 该文件记录上一次接受的 NEWEPOCH 消息的 epoch 编号。下一次收到 NEWEPOCH 消息时，其 epoch 编号必须更大，才会接受
+  │       ├── currentEpoch        # 该文件记录上一次接受的 NEWLEADER 消息的 epoch 编号。下一次收到 NEWLEADER 消息时，其 epoch 编号必须更大，才会接受
   │       ├── log.100000001       # 事务日志
   │       ├── log.200000001
   │       ├── log.2000004b3
@@ -253,7 +307,7 @@ server.3=10.0.0.3:2888:3888;2181
 - 例：查看 znode 的状态
   ```sh
   [zk: localhost:2181(CONNECTED) 0] stat /test
-  cZxid = 0x1bd                           # 创建该节点时的 zxid
+  cZxid = 0x1bd                           # 创建该节点时的事务编号
   ctime = Wed Jul 28 10:09:01 UTC 2021    # 创建该节点时的 UTC 时间
   mZxid = 0x1bd
   mtime = Wed Jul 28 10:09:01 UTC 2021
@@ -261,7 +315,7 @@ server.3=10.0.0.3:2888:3888;2181
   cversion = 0
   dataVersion = 0                         # 该节点中的数据版本。每次 set 都会递增，即使数据没有变化
   aclVersion = 0
-  ephemeralOwner = 0x0
+  ephemeralOwner = 0x0                    # 对于临时节点，该参数用于存储 Session ID
   dataLength = 0                          # 该节点中的数据长度
   numChildren = 0                         # 子节点的数量
   ```

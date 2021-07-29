@@ -47,17 +47,21 @@
 ### 选举
 
 - zk 采用 ZAB 协议实现各 server 的数据一致性。
-  - ZAB（Zookeeper Atomic Broadcast）协议
-    - 与 Raft 协议相似，各节点通过投票进行决策。
-    - 每次投票时，如果超过半数的节点支持某个决策，则采用该决策。
-    - 每次投票拥有一个递增的 epoch 值，表示这次投票的编号。
-  - 例：每次收到客户端的写请求时，leader 会将它转换成一个事务提议（proposal），广播给所有 follower 。
-    - 如果超过半数的 follower 回复了 ACK ，则 leader 会提交该事务，并广播 commit 消息给所有 follower 。
+  - ZAB（Zookeeper Atomic Broadcast）协议与 Raft 协议相似，各节点通过投票进行决策。
+    - 每轮投票时，如果超过半数的节点支持某个决策，则采用该决策。
+    - 每轮投票拥有一个递增的 epoch 值，表示这次投票的编号。
+  - 例：每次收到客户端的写请求时，leader 会将它转换成一个事务提议（proposal），广播给所有 follower 。如果超过半数的 follower 回复了 ACK ，则 leader 会提交该事务，并广播 commit 消息给所有 follower 。
 
 - 当 leader 不可用时，所有 follower 会开始一轮投票，选举出新的 leader 。选举过程很快，一般低于 1 s 。
   - 例如集群启动时会发起一轮选举，各个 server 会推举自己为 leader 。
 
 - 选举（election）的流程：
+
+
+<!-- - 默认采用 FastLeaderElection 选举算法。
+如何判断 leader 挂掉，开始选举？
+ -->
+
   1. 有权投票的 server 进入 LOOKING 竞选状态。向其它 server 发送自己的投票，包含以下信息：
      - epoch ：本轮投票的编号。
      - zxid ：本机最新的事务编号。
@@ -65,7 +69,7 @@
   2. 每个 server 收到其它 server 的投票时，会与自己的投票对比。
      - 依次比较 epoch、zxid、myid 三种值的大小，取值越大则投票的权重越高。
      - 如果自己投票的权重更大，则发送给对方 server 。否则采用对方的投票作为自己的新投票。
-  3. 如果有一个 server 发现有超过半数的 server 推举自己为 leader ，则向所有 server 广播自己成为 leader 的消息。
+  3. 如果有一个 server 发现有超过半数的 server 推举自己为 leader ，则将 epoch 加 1 ，向所有 server 广播自己成为 leader 的消息。
      - 投票结束之后，各个 server 会根据自己的角色，进入 LEADING、FOLLOWING 或 OBSERVING 状态。
 
 
@@ -185,8 +189,8 @@ server.3=10.0.0.3:2888:3888;2181
   ├── data
   │   ├── myid
   │   └── version-2
-  │       ├── acceptedEpoch
-  │       ├── currentEpoch
+  │       ├── acceptedEpoch       # 该文件记录一个 epoch 值。收到 NEWEPOCH 消息时，其 epoch 必须大于等于该值，才会接受
+  │       ├── currentEpoch        # 该文件记录一个 epoch 值。收到 NEWLEADER 消息时，其 epoch 必须大于等于该值，才会接受
   │       ├── log.100000001       # 事务日志
   │       ├── log.200000001
   │       ├── log.2000004b3

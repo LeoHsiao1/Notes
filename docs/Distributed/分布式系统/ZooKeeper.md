@@ -133,7 +133,25 @@ server.3=10.0.0.3:2888:3888;2181
     - znode 的读写操作具有原子性。
   - zk 将 znode 数据存储在内存中，因此读取速度快。每次对 znode 进行写操作时，会备份写操作到事务日志中。
 
-### 命令
+- 用 `create -e` 会创建临时节点（Ephemeral）。
+  - 客户端连接到 zk server 时，会创建一个会话（session）。当 session 过期时，它创建的临时节点就会被删除。
+  - 临时节点不支持创建子节点。
+
+- 用 `create -s` 会自动给 znode 名称添加一个编号作为后缀。
+  - 此编号为 10 位十进制数，从 0 开始递增。
+    - 编号与当前父节点关联，分配给各个子节点使用。
+    - 即使子节点被删除，编号也会继续递增。
+  - 可以与临时节点搭配使用，创建一组按顺序编号的临时节点：
+    ```sh
+    [zk: localhost:2181(CONNECTED) 0] create -e -s /test/f1
+    Created /test/f10000000000
+    [zk: localhost:2181(CONNECTED) 1] create -e -s /test/f1
+    Created /test/f10000000001
+    [zk: localhost:2181(CONNECTED) 2] create -e -s /test/f2
+    Created /test/f20000000002
+    ```
+
+### zkCli
 
 - zk 的 bin 目录下自带了多个 shell 脚本。执行以下脚本可进入 zk 的命令行终端：
   ```sh
@@ -188,25 +206,25 @@ server.3=10.0.0.3:2888:3888;2181
   numChildren = 0                         # 子节点的数量
   ```
 
-#### 临时节点
+### watch
 
-- 用 `create -e` 会创建临时节点（Ephemeral）。
-  - 客户端连接到 zk server 时，会创建一个会话（session）。当 session 过期时，它创建的临时节点就会被删除。
-  - 临时节点不支持创建子节点。
-
-- 用 `create -s` 会自动给 znode 名称添加一个编号作为后缀。
-  - 此编号为 10 位十进制数，从 0 开始递增。
-    - 编号与当前父节点关联，分配给各个子节点使用。
-    - 即使子节点被删除，编号也会继续递增。
-  - 可以与临时节点搭配使用，创建一组按顺序编号的临时节点：
-    ```sh
-    [zk: localhost:2181(CONNECTED) 0] create -e -s /test/f1
-    Created /test/f10000000000
-    [zk: localhost:2181(CONNECTED) 1] create -e -s /test/f1
-    Created /test/f10000000001
-    [zk: localhost:2181(CONNECTED) 2] create -e -s /test/f2
-    Created /test/f20000000002
+- zk 提供了 watch 机制，用于当某个节点发生某种事件时，通知客户端。
+  - 用法：
+    1. 客户端定义一个 watcher 类，注册到 zk ，监听某个事件。
+    2. zk 记录了所有 watcher 。当相应的事件发生时，就通知客户端，并删除 watcher 。
+  - 用 Python 的 kazoo 库注册 watcher 的示例：
+    ```py
+    @client.DataWatch('/test')  # 注册一个 watcher ，当目标节点的数据变化时，调用该函数
+    def fun1(data, stat):
+        print('data changed: {}'.format(data))
     ```
+
+- 一种基于 zk 实现分布式锁的方案：
+  1. 在 zk 中创建一些代表某种资源的 znode ，比如 /mysql/table1/write 。
+  2. 多个业务程序同时申请占用某种资源时，需要分别作为客户端连接到 zk ，在相应的 znode 下创建一个子节点，带顺序编号。比如 create -s /mysql/table1/write 。
+  3. 每个客户端检查目标 znode 下的所有子节点：
+     - 如果自己创建的子节点编号最小，则代表自己获得了锁，有权占用资源。等使用完资源之后，再删除自己的子节点，代表释放锁。
+     - 否则，注册 watcher ，监听前一个编号的子节点，等它被删除时，代表自己获得了锁。
 
 ### ACL
 
@@ -259,7 +277,8 @@ server.3=10.0.0.3:2888:3888;2181
 
   - 假设部署 N 个 zk server ，需要超过半数的节点正常工作，才能组成集群。
     - 即集群的必需成员数为 Quorum = (N+1)/2 ，为小数时向上取整。
-    - Quorum 必须超过半数，不能等于半数。否则集群可能对半分为两个集群，各有一个 leader ，发生脑裂。
+    - 如果允许 Quorum 等于集群半数，甚至小于半数，则集群可能对半分为两个小集群，甚至分为更多小集群。每个小集群各有一个 leader ，就会发生脑裂。
+      - 因此 zk 要求 Quorum 必须超过半数。
 
   - 部署的 server 数量建议为奇数，为偶数时并不会提高可用性。
     - 部署 1 个 server 时，不能组成集群，只能工作在 standalone 模式。
@@ -267,8 +286,6 @@ server.3=10.0.0.3:2888:3888;2181
       - 任一 server 故障时，剩下的 server 不超过集群的半数，不能投票决策。
     - 部署 3 个 server 时，组成的 zk 集群最多允许 1 个 server 故障。
     - 部署 4 个 server 时，组成的 zk 集群也是最多允许 1 个 server 故障。
-
-  - 增加 F 的数量时，可以提高集群的可用性，但会增加每次投票的耗时。
 
 - 集群中的 server 分为三种角色：
   - leader
@@ -373,7 +390,7 @@ server.3=10.0.0.3:2888:3888;2181
   - 如果 follower 与 PROPOSE 消息的 epoch 不同，则不会接受提议，而是先经历 discovery、synchronization 阶段。
 - 如果 follower 在一定时间内没有收到 leader 的 PROPOSE 或 ping 消息，则认为 leader 故障，状态从 FOLLOWING 变为 LOOKING ，重新选举。
   - 此时原 leader 可能依然处于 LEADING 状态，可以被客户端连接，但它没有 Quorum 数量的 follower ，不能提交事务。
-  - 因此，集群中可能存在多个 leader ，但最多只有一个 leader 能拥有 Quorum 数量的 follower ，不会发生脑裂。
+  - 因此，集群中可能同时存在多个 leader ，但最多只有一个 leader 能拥有 Quorum 数量的 follower ，不会发生脑裂。
 - 如果 leader 在一定时间内没有等到 Quorum 数量的 follower 回复 ACK ，则状态从 LEADING 变为 LOOKING ，重新选举。
 
 ### 源代码

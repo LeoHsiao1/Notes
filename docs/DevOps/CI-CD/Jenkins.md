@@ -29,7 +29,7 @@
   services:
     jenkins:
       container_name: jenkins
-      image: jenkins/jenkins:2.289.2-lts
+      image: jenkins/jenkins:2.289.3
       restart: unless-stopped
       environment:
         JAVA_OPTS: -Duser.timezone=GMT+08

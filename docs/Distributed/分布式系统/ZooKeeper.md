@@ -9,9 +9,122 @@
   - 作为注册中心，记录分布式系统中各个服务的信息。
   - 实现分布式锁。
 
-## 原理
+## 部署
 
-### 数据结构
+- 下载二进制版：
+  ```sh
+  wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
+  ```
+  解压后运行：
+  ```sh
+  bin/zkServer.sh
+                  start               # 在后台启动
+                  start-foreground    # 在前台启动
+                  stop
+                  restart
+
+                  status              # 显示状态
+                  version             # 显示版本信息
+  ```
+
+- 或者用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    zookeeper:
+      container_name: zookeeper
+      image: zookeeper:3.6.2
+      restart: unless-stopped
+      environment:
+        # JVMFLAGS: -Xmx1G -Xms1G
+        ZOO_MY_ID: 1
+      ports:
+        - 2181:2181
+        - 2888:2888
+        - 3888:3888
+        # - 8080:8080
+      volumes:
+        - ./conf:/conf
+        - ./data:/data
+  ```
+
+### 版本
+
+- v3.4.0
+  - 增加了 autopurge 配置，用于自动清理数据目录。
+- v3.5.0
+  - 新增了 AdminServer ，通过内置的 Jetty 服务器提供 HTTP API 。
+    - 比如访问 URL `/commands` 可获取可用的命令列表，访问 URL `/commands/stats` 可获取 zk 的状态。
+    - 建议用 AdminServer 代替以前的四字母命令。
+
+### 配置
+
+配置文件 `conf/zoo.cfg` 示例：
+```sh
+# clientPort=2181               # 监听一个供客户端连接的端口
+dataDir=/data                   # 数据快照的存储目录
+# dataLogDir=/datalog           # 事务日志的存储目录，默认与 dataDir 一致。可采用不同的磁盘设备，从而避免竞争磁盘 IO ，提高 zk 的速度、吞吐量
+# snapCount=100000              # 记录多少条事务日志时就保存一次快照。实际上会根据随机数提前保存快照，避免多个 zk 节点同时保存快照
+autopurge.purgeInterval=1       # 每隔一段时间，自动清理快照文件、事务日志文件。默认值为 0 ，禁用该功能
+# autopurge.snapRetainCount=3   # autopurge 时，每种文件只保留 Count 数量。默认值、最小值都为 3
+
+# admin.enableServer=true       # 是否启用 AdminServer
+# admin.serverPort=8080         # AdminServer 监听的端口
+# 4lw.commands.whitelist=srvr,stat  # 一个白名单，声明允许使用哪些四字母命令，可通过 telnet 连接发送命令
+metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider # 启用 Prometheus Metrics Provider
+# metricsProvider.httpPort=7000
+
+# tickTime=2000                 # 时钟间隔，用作 zk 的基本时间单位，单位为 ms 。也是向其它 server 、client 发送心跳包的时间间隔
+# initLimit=5                   # 各个 server 初始化连接到 leader 的超时时间，单位为 tickTime
+# syncLimit=2                   # 各个 server 与 leader 之间通信（请求、回复）的超时时间，单位为 tickTime 。超过该时间则视作失去同步
+
+# 声明 zk 集群的 server 列表，每行的格式为 server.<id>=<host>:<port1>:<port2>[:role];[<external_host>:]<external_port>
+#   - id 是一个数字编号，不可重复
+#   - host 是各个 server 的 IP 地址
+#   - port1 是各个 server 连接到 leader 的目标端口，port2 是各个 server 之间进行 leader 选举的端口
+#   - [<external_host>:]<external_port> 是另一个监听的 Socket ，供客户端访问
+# 例如：当前 server id 为 1 时，会根据 server.1 的配置来监听 Socket ，根据其它 server 的配置去通信
+server.1=10.0.0.1:2888:3888;2181  # 对于当前 server 而言，该 IP 地址会用于绑定 Socket ，可改为 0.0.0.0
+server.2=10.0.0.2:2888:3888;2181
+server.3=10.0.0.3:2888:3888;2181
+```
+- zk server 的目录结构示例：
+  ```sh
+  ├── conf
+  │   ├── configuration.xsl
+  │   ├── log4j.properties
+  │   └── zoo.cfg
+  ├── data
+  │   ├── myid
+  │   └── version-2
+  │       ├── acceptedEpoch       # 该文件记录上一次接受的 NEWEPOCH 消息的 epoch 编号。下一次收到 NEWEPOCH 消息时，其 epoch 编号必须更大，才会接受
+  │       ├── currentEpoch        # 该文件记录上一次接受的 NEWLEADER 消息的 epoch 编号。下一次收到 NEWLEADER 消息时，其 epoch 编号必须更大，才会接受
+  │       ├── log.100000001       # 事务日志
+  │       ├── log.200000001
+  │       ├── log.2000004b3
+  │       ├── snapshot.0          # 数据快照
+  │       ├── snapshot.100000000
+  │       ├── snapshot.100000230
+  │       └── snapshot.2000004b2
+  ```
+  - 每个 zk server 启动时，会根据 `$dataDir/myid` 文件的值确定自己的 server 编号。因此初次部署时需要创建该文件：
+    ```sh
+    echo 1 > $dataDir/myid
+    ```
+  - 当 zk server 启动时，如果 dataDir 目录不存在，它会自动创建该目录，导致使用错误的 myid 、空的 znode ，可能发生脑裂。
+- 如果想将一个 server 声明为 observer 角色，需要在其配置文件中加入：
+  ```sh
+  peerType=observer
+  ```
+  然后在所有 server 的配置文件中声明：
+  ```sh
+  server.1:1=10.0.0.1:2888:3888;2181:observer
+  ```
+
+## 用法
+
+### znode
 
 - zk 的命名空间中可以创建多个存储数据的寄存器，称为 znode 。
   - 所有 znode 按树形结构相关联，通过从 / 开始的绝对路径进行定位。
@@ -37,7 +150,102 @@
 也可以用 watch 保持连接，当 znode 变化时，zk 会通知客户端，并移除该 watch 。-->
 
 
-### 集群架构
+### zkCli
+
+- zk 的 bin 目录下自带了多个 shell 脚本。执行以下脚本可进入 zk 的命令行终端：
+  ```sh
+  bash bin/zkCli.sh
+          -server [host][:port]   # 连接到指定的 zk server 。默认是 localhost:2181
+  ```
+
+- 常用命令：
+  ```sh
+  connect [host][:port]       # 连接到指定的 zk server
+
+  ls <path>                   # 显示指定路径下的所有 znode 。path 中不支持通配符 *
+    -R                        # 递归显示子节点
+
+  create <path> [data] [acl]  # 创建 znode
+  delete <path>               # 删除 znode 。存在子节点时不允许删除，会报错：Node not empty
+
+  get    <path>               # 读取 znode 中的数据
+  set    <path> <data>        # 设置 znode 中的数据
+  stat   <path>               # 显示 znode 的状态
+
+  getAcl <path>               # 读取 znode 的 ACL 规则
+  setAcl <path>  <acl>        # 设置 znode 的 ACL 规则（只能设置一次，再次设置则不生效）
+        -R                    # 递归处理子节点
+  addauth <scheme> <user:pwd> # 创建用户
+  ```
+
+- 例：创建 znode
+  ```sh
+  [zk: localhost:2181(CONNECTED) 0] create /test
+  Created /test
+  [zk: localhost:2181(CONNECTED) 1] get /test
+  null
+  ```
+  - 命令提示符 `[zk: localhost:2181(CONNECTED) 1]` 中的数字编号表示这是当前终端执行的第几条命令，从 0 开始递增。
+
+- 例：查看 znode 的状态
+  ```sh
+  [zk: localhost:2181(CONNECTED) 0] stat /test
+  cZxid = 0x1bd                           # 创建该节点时的事务编号
+  ctime = Wed Jul 28 10:09:01 UTC 2021    # 创建该节点时的 UTC 时间
+  mZxid = 0x1bd
+  mtime = Wed Jul 28 10:09:01 UTC 2021
+  pZxid = 0x1bd
+  cversion = 0
+  dataVersion = 0                         # 该节点中的数据版本。每次 set 都会递增，即使数据没有变化
+  aclVersion = 0
+  ephemeralOwner = 0x0                    # 对于临时节点，该参数用于存储 Session ID
+  dataLength = 0                          # 该节点中的数据长度
+  numChildren = 0                         # 子节点的数量
+  ```
+
+### ACL
+
+- zk 默认允许任何客户端读写。
+  - 支持给 znode 设置 ACL 规则，控制其访问权限。
+
+- ACL 规则的格式为 `scheme:user:permissions`
+  - scheme 表示认证模式，分为以下几种：
+    ```sh
+    world     # 只定义了 anyone 用户，表示所有客户端，包括未登录的
+    auth      # 通过 addauth digest 创建的用户
+    digest    # 与 auth 类似，但需要以哈希值形式输入密码，格式为 digest:<user>:<pwd_hash>:<permissions>
+    ip        # 限制客户端的 IP 地址，比如 ip:10.0.0.0/8:r
+    sasl      # 要求客户端通过 kerberos 的 SASL 认证
+    super     # 超级管理员，需要在 zk server 的启动命令中声明
+    ```
+  - permissions 是一组权限的缩写：
+    ```sh
+    Admin   # 允许设置 ACL
+    Create  # 允许创建子节点
+    Delete  # 允许删除当前节点
+    Read    # 允许读取
+    Write   # 允许写
+    ```
+
+- 例：
+  ```sh
+  [zk: localhost:2181(CONNECTED) 0] getAcl /test    # 新建 znode 的 ACL 不会继承父节点，而是默认为 `world:anyone:cdrwa`
+  'world,'anyone
+  : cdrwa
+  [zk: localhost:2181(CONNECTED) 1] setAcl /test world:anyone:a
+  [zk: localhost:2181(CONNECTED) 2] get /test
+  Insufficient permission : /test                   # 报错表示权限不足
+  [zk: localhost:2181(CONNECTED) 3] addauth digest tester:123456    # 创建用户，如果已存在该用户则是登录
+  [zk: localhost:2181(CONNECTED) 4] setAcl /test auth:tester:cdrwa
+  [zk: localhost:2181(CONNECTED) 5] getAcl /test
+  'digest,'tester:Sc9QxOxG72+Wzo/j15TxX5UOqQs=                      # 密码以哈希值形式保存
+  : cdrwa
+  ```
+  - 创建一个新终端时，再次执行 addauth 命令，就会登录指定用户。
+
+## 集群
+
+### 架构
 
 - zk server 可以只部署单实例，也可以部署多个实例，组成集群。
   - 每个 server 都拥有整个集群的数据副本，客户端连接到任一 server 即可访问集群。
@@ -45,7 +253,7 @@
     - 客户端发出写请求时，server 会转发给 leader 。
 
   - 假设部署 N 个 zk server ，需要超过半数的节点正常工作，才能组成集群。
-    - 即集群的必需成员数为 Quorum = (N+1)/2 向上取整。
+    - 即集群的必需成员数为 Quorum = (N+1)/2 ，为小数时向上取整。
     - Quorum 必须超过半数，不能等于半数。否则集群可能对半分为两个集群，各有一个 leader ，发生脑裂。
 
   - 部署的 server 数量建议为奇数，为偶数时并不会提高可用性。
@@ -78,7 +286,7 @@
 
 ### ZAB
 
-- zk 采用 ZAB 协议实现各 server 的数据一致性。ZAB（Zookeeper Atomic Broadcast）协议与 Raft 协议相似，特点如下：
+- zk 采用 ZAB 协议实现各 server 的分布式一致性。ZAB（Zookeeper Atomic Broadcast）协议与 Raft 协议相似，特点如下：
   - 有且仅有一个节点作为 Leader ，有权作出决策。其它节点作为 Follower ，只能跟随决策。
     - 这里不考虑 observer 节点，因为它们不影响选举过程，只能旁观。
   - 如果 Leader 故障，则其它节点发起一轮投票，选举一个节点担任新 Leader 。
@@ -203,7 +411,7 @@
                           follower.followLeader();
                           ...
                       case LEADING:
-                          LOG.info("LEADING");   
+                          LOG.info("LEADING");
                           setLeader(makeLeader(logFactory));
                           leader.lead();           // LEADING 状态则作为 leader 角色保持运行
                           ...
@@ -284,209 +492,3 @@
   INFO  [QuorumPeer[myid=1](plain=0.0.0.0:2181)(secure=disabled):Learner@661] - Learner received UPTODATE message
   INFO  [QuorumPeer[myid=1](plain=0.0.0.0:2181)(secure=disabled):QuorumPeer@863] - Peer state changed: following - broadcast
   ```
-
-## 部署
-
-- 下载二进制版：
-  ```sh
-  wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
-  ```
-  解压后运行：
-  ```sh
-  bin/zkServer.sh
-                  start               # 在后台启动
-                  start-foreground    # 在前台启动
-                  stop
-                  restart
-
-                  status              # 显示状态
-                  version             # 显示版本信息
-  ```
-
-- 或者用 docker-compose 部署：
-  ```yml
-  version: '3'
-
-  services:
-    zookeeper:
-      container_name: zookeeper
-      image: zookeeper:3.6.2
-      restart: unless-stopped
-      environment:
-        # JVMFLAGS: -Xmx1G -Xms1G
-        ZOO_MY_ID: 1
-      ports:
-        - 2181:2181
-        - 2888:2888
-        - 3888:3888
-        # - 8080:8080
-      volumes:
-        - ./conf:/conf
-        - ./data:/data
-  ```
-
-### 版本
-
-- v3.4.0
-  - 增加了 autopurge 配置，用于自动清理数据目录。
-- v3.5.0
-  - 新增了 AdminServer ，通过内置的 Jetty 服务器提供 HTTP API 。
-    - 比如访问 URL `/commands` 可获取可用的命令列表，访问 URL `/commands/stats` 可获取 zk 的状态。
-    - 建议用 AdminServer 代替以前的四字母命令。
-
-### 配置
-
-配置文件 `conf/zoo.cfg` 示例：
-```sh
-# clientPort=2181               # 监听一个供客户端连接的端口
-dataDir=/data                   # 数据快照的存储目录
-# dataLogDir=/datalog           # 事务日志的存储目录，默认与 dataDir 一致。可采用不同的磁盘设备，从而避免竞争磁盘 IO ，提高 zk 的速度、吞吐量
-# snapCount=100000              # 记录多少条事务日志时就保存一次快照。实际上会根据随机数提前保存快照，避免多个 zk 节点同时保存快照
-autopurge.purgeInterval=1       # 每隔一段时间，自动清理快照文件、事务日志文件。默认值为 0 ，禁用该功能
-# autopurge.snapRetainCount=3   # autopurge 时，每种文件只保留 Count 数量。默认值、最小值都为 3
-
-# admin.enableServer=true       # 是否启用 AdminServer
-# admin.serverPort=8080         # AdminServer 监听的端口
-# 4lw.commands.whitelist=srvr,stat  # 一个白名单，声明允许使用哪些四字母命令，可通过 telnet 连接发送命令
-metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider # 启用 Prometheus Metrics Provider
-# metricsProvider.httpPort=7000
-
-# tickTime=2000                 # 时钟间隔，用作 zk 的基本时间单位，单位为 ms 。也是向其它 server 、client 发送心跳包的时间间隔
-# initLimit=5                   # 各个 server 初始化连接到 leader 的超时时间，单位为 tickTime
-# syncLimit=2                   # 各个 server 与 leader 之间通信（请求、回复）的超时时间，单位为 tickTime 。超过该时间则视作失去同步
-
-# 声明 zk 集群的 server 列表，每行的格式为 server.<id>=<host>:<port1>:<port2>[:role];[<external_host>:]<external_port>
-#   - id 是一个数字编号，不可重复
-#   - host 是各个 server 的 IP 地址
-#   - port1 是各个 server 连接到 leader 的目标端口，port2 是各个 server 之间进行 leader 选举的端口
-#   - [<external_host>:]<external_port> 是另一个监听的 Socket ，供客户端访问
-# 例如：当前 server id 为 1 时，会根据 server.1 的配置来监听 Socket ，根据其它 server 的配置去通信
-server.1=10.0.0.1:2888:3888;2181  # 对于当前 server 而言，该 IP 地址会用于绑定 Socket ，可改为 0.0.0.0
-server.2=10.0.0.2:2888:3888;2181
-server.3=10.0.0.3:2888:3888;2181
-```
-- zk server 的目录结构示例：
-  ```sh
-  ├── conf
-  │   ├── configuration.xsl
-  │   ├── log4j.properties
-  │   └── zoo.cfg
-  ├── data
-  │   ├── myid
-  │   └── version-2
-  │       ├── acceptedEpoch       # 该文件记录上一次接受的 NEWEPOCH 消息的 epoch 编号。下一次收到 NEWEPOCH 消息时，其 epoch 编号必须更大，才会接受
-  │       ├── currentEpoch        # 该文件记录上一次接受的 NEWLEADER 消息的 epoch 编号。下一次收到 NEWLEADER 消息时，其 epoch 编号必须更大，才会接受
-  │       ├── log.100000001       # 事务日志
-  │       ├── log.200000001
-  │       ├── log.2000004b3
-  │       ├── snapshot.0          # 数据快照
-  │       ├── snapshot.100000000
-  │       ├── snapshot.100000230
-  │       └── snapshot.2000004b2
-  ```
-  - 每个 zk server 启动时，会根据 `$dataDir/myid` 文件的值确定自己的 server 编号。因此初次部署时需要创建该文件：
-    ```sh
-    echo 1 > $dataDir/myid
-    ```
-  - 当 zk server 启动时，如果 dataDir 目录不存在，它会自动创建该目录，导致使用错误的 myid 、空的 znode ，可能发生脑裂。
-- 如果想将一个 server 声明为 observer 角色，需要在其配置文件中加入：
-  ```sh
-  peerType=observer
-  ```
-  然后在所有 server 的配置文件中声明：
-  ```sh
-  server.1:1=10.0.0.1:2888:3888;2181:observer
-  ```
-
-## zkCli
-
-- zk 的 bin 目录下自带了多个 shell 脚本。执行以下脚本可进入 zk 的命令行终端：
-  ```sh
-  bash bin/zkCli.sh
-          -server [host][:port]   # 连接到指定的 zk server 。默认是 localhost:2181
-  ```
-
-- 常用命令：
-  ```sh
-  connect [host][:port]       # 连接到指定的 zk server
-
-  ls <path>                   # 显示指定路径下的所有 znode 。path 中不支持通配符 *
-    -R                        # 递归显示子节点
-
-  create <path> [data] [acl]  # 创建 znode
-  delete <path>               # 删除 znode 。存在子节点时不允许删除，会报错：Node not empty
-
-  get    <path>               # 读取 znode 中的数据
-  set    <path> <data>        # 设置 znode 中的数据
-  stat   <path>               # 显示 znode 的状态
-
-  getAcl <path>               # 读取 znode 的 ACL 规则
-  setAcl <path>  <acl>        # 设置 znode 的 ACL 规则（只能设置一次，再次设置则不生效）
-        -R                    # 递归处理子节点
-  addauth <scheme> <user:pwd> # 创建用户
-  ```
-
-- 例：创建 znode
-  ```sh
-  [zk: localhost:2181(CONNECTED) 0] create /test
-  Created /test
-  [zk: localhost:2181(CONNECTED) 1] get /test
-  null
-  ```
-  - 命令提示符 `[zk: localhost:2181(CONNECTED) 1]` 中的数字编号表示这是当前终端执行的第几条命令，从 0 开始递增。
-
-- 例：查看 znode 的状态
-  ```sh
-  [zk: localhost:2181(CONNECTED) 0] stat /test
-  cZxid = 0x1bd                           # 创建该节点时的事务编号
-  ctime = Wed Jul 28 10:09:01 UTC 2021    # 创建该节点时的 UTC 时间
-  mZxid = 0x1bd
-  mtime = Wed Jul 28 10:09:01 UTC 2021
-  pZxid = 0x1bd
-  cversion = 0
-  dataVersion = 0                         # 该节点中的数据版本。每次 set 都会递增，即使数据没有变化
-  aclVersion = 0
-  ephemeralOwner = 0x0                    # 对于临时节点，该参数用于存储 Session ID
-  dataLength = 0                          # 该节点中的数据长度
-  numChildren = 0                         # 子节点的数量
-  ```
-
-### ACL
-
-- zk 默认允许任何客户端读写。
-  - 支持给 znode 设置 ACL 规则，控制其访问权限。
-
-- ACL 规则的格式为 `scheme:user:permissions`
-  - scheme 表示认证模式，分为以下几种：
-    ```sh
-    world     # 只定义了 anyone 用户，表示所有客户端，包括未登录的
-    auth      # 通过 addauth digest 创建的用户
-    digest    # 与 auth 类似，但需要以哈希值形式输入密码，格式为 digest:<user>:<pwd_hash>:<permissions>
-    ip        # 限制客户端的 IP 地址，比如 ip:10.0.0.0/8:r
-    sasl      # 要求客户端通过 kerberos 的 SASL 认证
-    super     # 超级管理员，需要在 zk server 的启动命令中声明
-    ```
-  - permissions 是一组权限的缩写：
-    ```sh
-    Admin   # 允许设置 ACL
-    Create  # 允许创建子节点
-    Delete  # 允许删除当前节点
-    Read    # 允许读取
-    Write   # 允许写
-    ```
-
-- 例：
-  ```sh
-  [zk: localhost:2181(CONNECTED) 0] getAcl /test    # 新建 znode 的 ACL 不会继承父节点，而是默认为 `world:anyone:cdrwa`
-  'world,'anyone
-  : cdrwa
-  [zk: localhost:2181(CONNECTED) 1] setAcl /test world:anyone:a
-  [zk: localhost:2181(CONNECTED) 2] get /test
-  Insufficient permission : /test                   # 报错表示权限不足
-  [zk: localhost:2181(CONNECTED) 3] addauth digest tester:123456    # 创建用户，如果已存在该用户则是登录
-  [zk: localhost:2181(CONNECTED) 4] setAcl /test auth:tester:cdrwa
-  [zk: localhost:2181(CONNECTED) 5] getAcl /test
-  'digest,'tester:Sc9QxOxG72+Wzo/j15TxX5UOqQs=                      # 密码以哈希值形式保存
-  : cdrwa
-  ```
-  - 创建一个新终端时，再次执行 addauth 命令，就会登录指定用户。

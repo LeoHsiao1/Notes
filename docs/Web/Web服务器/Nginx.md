@@ -954,31 +954,10 @@ server {
   auth_basic              "";                 # 只要不设置成 auth_basic off; 就会启用认证
   auth_basic_user_file    /etc/nginx/passwd;  # 使用哪个密码文件
   ```
-- 密码文件用于保存一些用户名、加密后的密码，可通过以下命令生成：
+- 密码文件用于保存一组用户名、哈希密码，可通过 htpasswd 命令生成：
   ```sh
   yum install httpd-tools
   htpasswd -cb  ./passwd leo 123456  # 创建密码文件，添加一个用户及其密码
-  htpasswd      ./passwd admin       # 再添加一个用户，默认通过终端提示输入密码
-  htpasswd -b   ./passwd leo 1234    # 再添加一个用户及其密码。如果该用户名已存在，则会覆盖其密码
-  htpasswd -D   ./passwd leo         # 删除一个用户
-  ```
-  htpasswd 命令用于生成加密后的密码文件，用法如下：
-  ```sh
-  htpasswd [file] [username] [password]
-          -d                # 采用 CRYPT 算法
-          -B                # 采用 BCRYPT 算法
-          -m                # 采用 MD5 算法（默认）
-          -s                # 采用 SHA-1 算法
-          -2                # 采用 SHA-256 算法
-          -5                # 采用 SHA-512 算法
-
-          -c                # 创建加密文件，如果该文件已存在则会被覆盖
-          -D  <username>    # 从文件中删除一个用户
-          -v  <username>    # 验证一个用户的密码
-
-          -b <password>     # 通过命令参数输入明文密码
-          -i                # 从 stdin 读取密码
-          -n                # 将加密结果输出到 stdout ，而不是文件
   ```
 
 ### auth_delay

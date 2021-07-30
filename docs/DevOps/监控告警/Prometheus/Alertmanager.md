@@ -44,12 +44,35 @@
 - 下载后启动：
   ```sh
   ./alertmanager --config.file=alertmanager.yml
+                # --web.config.file=web.yml                   # web 配置
                 # --web.listen-address "0.0.0.0:9093"         # 监听的地址
-                # --web.external-url 'http://10.0.0.1:9093'   # 供外部访问的 URL
+                # --web.external-url "http://10.0.0.1:9093"   # 供外部访问的 URL
                 # --cluster.listen-address "0.0.0.0:9094"     # 集群监听的地址（默认开启）
                 # --data.retention 120h                       # 将数据保存多久
   ```
-  默认的访问地址为 <http://localhost:9093>
+
+- 或者用 docker-compose 部署：
+  ```yml
+  version: "3"
+
+  services:
+    alertmanager:
+      container_name: alertmanager
+      image: prom/alertmanager:v0.22.2
+      restart: unless-stopped
+      command:
+        - --config.file=alertmanager.yml
+        - --web.config.file=web.yml
+      ports:
+        - 9093:9093
+      volumes:
+        - .:/alertmanager
+  ```
+  需要先配置挂载目录的权限：
+  ```sh
+  mkdir data
+  chown -R 65534 .
+  ```
 
 ## 配置
 

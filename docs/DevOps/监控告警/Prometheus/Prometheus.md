@@ -50,6 +50,7 @@
   ```sh
   ./prometheus
               --config.file /etc/prometheus/prometheus.yml  # 使用指定的配置文件
+              # --web.config.file=web.yml                   # web 配置
               # --web.listen-address '0.0.0.0:9090'         # 监听的地址
               # --web.external-url 'http://10.0.0.1:9090'   # 供外部访问的 URL
               # --web.enable-admin-api                      # 启用管理员的 HTTP API .比如删除 tsdb 的数据
@@ -62,6 +63,11 @@
               # - --log.format=json
   ```
   - 配置文件 prometheus.yml 主要用于控制 Prometheus 的监控任务，而 Prometheus 自身的运行状态只能通过命令行参数控制。
+  - 配置文件 web.yml 用于启用身份认证，如下：
+    ```yml
+    basic_auth_users:
+      <username>: <password>   # 这里需要填密码的哈希值，可用命令 htpasswd -nbB <username> <password> 生成
+    ```
 
 - 或者用 docker-compose 部署：
   ```yml
@@ -82,7 +88,6 @@
   需要先配置挂载目录的权限：
   ```sh
   mkdir data
-  touch prometheus.yml
   chown -R 65534 .
   ```
 

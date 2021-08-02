@@ -15,7 +15,7 @@
 
 ### Broker
 
-：代理服务器，是组成 Kafka 集群的节点，负责存储、管理消息。
+：代理服务器，即 Kafka 进程，负责存储、管理消息。
 - broker 会将消息以日志文件的形式存储，存放在 `logs/<topic>-<partition>/` 目录下，因此会受到文件系统的影响。
 - 增加 broker 的数量，就可以提高 Kafka 集群的吞吐量。
 - `Group Coordinator` ：在每个 broker 上都运行的一个进程，主要负责管理 Consumer Group、Consumer Rebalance、消息的 offset 。
@@ -40,7 +40,7 @@
 
 ### Zookeeper
 
-Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如下：
+Kafka 采用 Zookeeper 作为分布式框架，主要用途如下：
 - 注册 broker ：每个 broker 启动时，都会到 zk 登记自己的 IP 和端口。
   - 根据 broker.id 识别每个 broker ，即使 IP、端口变化也会在 zk 中自动发现。
 - 注册 topic ：记录 topic 的每个 partition 存储在哪些 broker 上。
@@ -77,8 +77,8 @@ Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如
 
 ### Replica
 
-每个 partition 会存储多个副本（replica），从而备份数据。
-- Kafka 会选出其中一个副本作为 `leader replica` ，而其它副本称为 `follower replica` 。
+- 每个 partition 会存储多个副本（replica），从而备份数据。
+- Kafka 会自动在每个 partition 的副本中选出一个作为 `leader replica` ，而其它副本称为 `follower replica` 。
   - leader 可以进行读写操作，负责处理用户的访问请求。
   - follower 只能进行读操作，负责与 leader 的数据保持一致，从而备份数据。
   - 用户访问 partition 时看到的总是 leader ，看不到 follower 。
@@ -94,8 +94,8 @@ Kafka 采用 Zookeeper 作为分布式底层框架，它提供的主要功能如
 
 ### Offset
 
-partition 内存储的每个消息都有一个唯一的偏移量（offset），用于索引。
-- offset 的值采用 Long 型变量存储，容量为 64 bit 。
+- partition 内存储的每个消息都有一个唯一的偏移量（offset），用于索引。
+  - offset 的值采用 Long 型变量存储，容量为 64 bit 。
 - `Log Start Offset` ：partition 中第一个消息的偏移量。刚创建一个 topic 时，该值为 0 。每次 broker 清理消息日志之后，该值会增大一截。
 - `Log End Offset`（LEO）：partition 中最新一个消息的偏移量。
 - `High Watemark`（HW）：partition 允许被 consumer 看到的最高偏移量。
@@ -173,80 +173,84 @@ partition 内存储的每个消息都有一个唯一的偏移量（offset），�
   ```
   - 启动 broker 时只需读取 server.properties、log4j.properties 文件。
 
-- server.properties 的配置示例：
+#### server.properties
+
+配置示例：
+```sh
+broker.id=0                               # 该 broker 在 Kafka 集群中的唯一标识符，默认为 -1 ，必须赋值为一个非负整数
+listeners=PLAINTEXT://0.0.0.0:9092        # broker 监听的 Socket 地址
+advertised.listeners=PLAINTEXT://10.0.0.1:9092  # 当前 broker 供其它 broker 访问的地址，它会在 zk 中公布，默认采用 listeners 的值
+inter.broker.listener.name
+security.inter.broker.protocol
+
+# 关于网络
+# num.network.threads=3                   # broker 处理网络请求的线程数
+# num.io.threads=8                        # broker 处理磁盘 IO 的线程数，应该不小于磁盘数
+# socket.send.buffer.bytes=102400         # socket 发送消息的缓冲区大小，默认为 100K
+# socket.receive.buffer.bytes=102400      # socket 接收消息的缓冲区大小
+# socket.request.max.bytes=104857600      # socket 允许接收的单个消息的最大大小，默认为 100M
+
+# 关于 topic
+# auto.create.topics.enable=true          # 如果 producer 向不存在的 topic 生产消息，是否自动创建该 topic
+# delete.topic.enable=false               # 是否允许删除 topic 。默认不允许，在 kafka 中删除 topic 时只是标记为删除状态，需要在 zk 中手动删除
+# num.partitions=1                        # 新建 topic 时默认的 partition 数
+# message.max.bytes=1048576               # 允许接收的生产者的每批消息的最大大小，默认为 1M 。该参数作用于所有 topic ，也可以对每个 topic 分别设置 max.message.bytes
+# default.replication.factor=1            # 默认每个 partition 的副本数
+# replica.fetch.max.bytes=1048576         # 限制 partition 的副本之间拉取消息的最大大小，默认为 1M
+# replica.lag.time.max.ms=30000           # replica 的最大滞后时间
+
+# offsets.topic.num.partitions=50         # __consumer_offsets 主题的 partition 数
+# offsets.topic.replication.factor=3      # __consumer_offsets 主题的每个 partition 的副本数。部署单节点时需要减少至 1
+
+# 关于数据日志
+log.dirs=/data/kafka-logs                 # broker 存放数据日志的目录，如果有多个目录则用逗号分隔
+# log.roll.hours=168                      # 单个 LogSegment 的最长写入时间，超过该值则会创建一个新的 LogSegment 用于写入。默认为 7*24h
+# log.segment.bytes=1073741824            # 单个 LogSegment 的最大大小，超过该值则会创建一个新的 LogSegment 用于写入。默认为 1G
+# log.cleanup.policy=delete               # LogSegment 的清理策略，可以是 delete、compact
+# log.retention.bytes=-1                  # 单个 partition 的最大大小，超过该值则会删除其中最旧的 LogSegment 。默认为 -1 ，即不限制
+log.retention.hours=72                    # 单个 LogSegment 的保存时长，超过该值之后就会删除它。默认为 7*24h
+# log.retention.check.interval.ms=300000  # 每隔多久检查一次各个 LogSegment 是否应该清理。默认为 5min
+# log.flush.interval.messages=10000       # 每接收多少个消息，就 flush 一次，即将内存中数据保存到磁盘
+# log.flush.interval.ms=1000              # 每经过多少毫秒，就 flush 一次
+
+# 关于 zk
+zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
+zookeeper.connection.timeout.ms=6000
+```
+- 通过 listeners 声明访问地址之后， broker 启动时可能依然尝试解析本地主机名对应的 IP ，此时需要先在 `/etc/hosts` 中添加 DNS 记录。如下：
   ```sh
-  broker.id=0                               # 该 broker 在 Kafka 集群中的唯一标识符，默认为 -1 ，必须赋值为一个非负整数
-  listeners=PLAINTEXT://0.0.0.0:9092        # broker 监听的 Socket 地址
-  advertised.listeners=PLAINTEXT://10.0.0.1:9092  # 当前 broker 供其它 broker 访问的地址，它会在 zk 中公布，默认采用 listeners 的值
-  inter.broker.listener.name
-  security.inter.broker.protocol
-
-  # 关于网络
-  # num.network.threads=3                   # broker 处理网络请求的线程数
-  # num.io.threads=8                        # broker 处理磁盘 IO 的线程数，应该不小于磁盘数
-  # socket.send.buffer.bytes=102400         # socket 发送消息的缓冲区大小，默认为 100K
-  # socket.receive.buffer.bytes=102400      # socket 接收消息的缓冲区大小
-  # socket.request.max.bytes=104857600      # socket 允许接收的单个消息的最大大小，默认为 100M
-
-  # 关于 topic
-  # auto.create.topics.enable=true          # 如果 producer 向不存在的 topic 生产消息，是否自动创建该 topic
-  # delete.topic.enable=false               # 是否允许删除 topic 。默认不允许，在 kafka 中删除 topic 时只是标记为删除状态，需要在 zk 中手动删除
-  # num.partitions=1                        # 新建 topic 时默认的 partition 数
-  # message.max.bytes=1048576               # 允许接收的生产者的每批消息的最大大小，默认为 1M 。该参数作用于所有 topic ，也可以对每个 topic 分别设置 max.message.bytes
-  # default.replication.factor=1            # 默认每个 partition 的副本数
-  # replica.fetch.max.bytes=1048576         # 限制 partition 的副本之间拉取消息的最大大小，默认为 1M
-  # replica.lag.time.max.ms=30000           # replica 的最大滞后时间
-
-  # offsets.topic.num.partitions=50         # __consumer_offsets 主题的 partition 数
-  # offsets.topic.replication.factor=3      # __consumer_offsets 主题的每个 partition 的副本数。部署单节点时需要减少至 1
-
-  # 关于数据日志
-  log.dirs=/data/kafka-logs                 # broker 存放数据日志的目录，如果有多个目录则用逗号分隔
-  # log.roll.hours=168                      # 单个 LogSegment 的最长写入时间，超过该值则会创建一个新的 LogSegment 用于写入。默认为 7*24h
-  # log.segment.bytes=1073741824            # 单个 LogSegment 的最大大小，超过该值则会创建一个新的 LogSegment 用于写入。默认为 1G
-  # log.cleanup.policy=delete               # LogSegment 的清理策略，可以是 delete、compact
-  # log.retention.bytes=-1                  # 单个 partition 的最大大小，超过该值则会删除其中最旧的 LogSegment 。默认为 -1 ，即不限制
-  log.retention.hours=72                    # 单个 LogSegment 的保存时长，超过该值之后就会删除它。默认为 7*24h
-  # log.retention.check.interval.ms=300000  # 每隔多久检查一次各个 LogSegment 是否应该清理。默认为 5min
-  # log.flush.interval.messages=10000       # 每接收多少个消息，就 flush 一次，即将内存中数据保存到磁盘
-  # log.flush.interval.ms=1000              # 每经过多少毫秒，就 flush 一次
-
-  # 关于 zk
-  zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
-  zookeeper.connection.timeout.ms=6000
+  127.0.0.1   hostname-1
   ```
-  - 通过 listeners 声明访问地址之后， broker 启动时可能依然尝试解析本地主机名对应的 IP ，此时需要先在 `/etc/hosts` 中添加 DNS 记录。如下：
-    ```sh
-    127.0.0.1   hostname-1
-    ```
-  - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 ISR 中移除。
-    - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
+- 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 ISR 中移除。
+  - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
 
-- producer.properties 的配置示例：
-  ```sh
-  bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址，多个地址之间用逗号分隔
+#### producer.properties
 
-  # request.timeout.ms=30000      # 发送请求时，等待响应的超时时间
-  # linger.ms=0                   # 生产者发送每个消息时，延迟多久才实际发送。调大该值，有助于让每个 batch 包含更多消息。特别是当新增消息的速度，比发送消息的速度更快时
-  # delivery.timeout.ms=120000    # 生产者调用 send() 方法发送消息的超时时间，该值应该不低于 request.timeout.ms + linger.ms
-  # max.block.ms=60000            # 生产者调用 send()、partitionsFor() 等方法时，如果 buffer.memory 不足或 metadata 获取不到，阻塞等待的超时时间
+配置示例：
+```sh
+bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址，多个地址之间用逗号分隔
 
-  # max.request.size=1048576      # 限制生产者向 broker 发送的每个请求的大小
-  # batch.size=16384              # 限制每个 batch 的大小
+# request.timeout.ms=30000      # 发送请求时，等待响应的超时时间
+# linger.ms=0                   # 生产者发送每个消息时，延迟多久才实际发送。调大该值，有助于让每个 batch 包含更多消息。特别是当新增消息的速度，比发送消息的速度更快时
+# delivery.timeout.ms=120000    # 生产者调用 send() 方法发送消息的超时时间，该值应该不低于 request.timeout.ms + linger.ms
+# max.block.ms=60000            # 生产者调用 send()、partitionsFor() 等方法时，如果 buffer.memory 不足或 metadata 获取不到，阻塞等待的超时时间
 
-  # buffer.memory=33554432        # 限制生产者用于发送消息的缓冲区大小，默认为 32M
-  # acks=1                        # 判断消息发送成功的策略
-    # 取值为 0 ，则不等待 broker 的回复，直接认为消息已发送成功
-    # 取值为 1 ，则等待 leader replica 确认接收消息
-    # 取值为 all ，则等待消息被同步到所有 replica 
-  # retries=2147483647            # 发送消息失败时，如果不超过 delivery.timeout.ms 时长，则尝试重发多少次
-  ```
-  - 生产者向每个 partition 发送消息时，会累积多个消息为一批（batch），再一起发送，从而提高效率。
-    - 如果单个消息小于 batch.size ，生产者每批就可能发送多个消息。
-    - 如果单个消息大于 batch.size ，依然会作为一批消息发送。但如果大于 max.request.size ，就不能发送。
-    - 生产者的 batch.size 不能大于 max.request.size ，也不能大于 broker 的 message.max.bytes 。
+# max.request.size=1048576      # 限制生产者向 broker 发送的每个请求的大小
+# batch.size=16384              # 限制每个 batch 的大小
 
-## 运维工具
+# buffer.memory=33554432        # 限制生产者用于发送消息的缓冲区大小，默认为 32M
+# acks=1                        # 判断消息发送成功的策略
+  # 取值为 0 ，则不等待 broker 的回复，直接认为消息已发送成功
+  # 取值为 1 ，则等待 leader replica 确认接收消息
+  # 取值为 all ，则等待消息被同步到所有 replica 
+# retries=2147483647            # 发送消息失败时，如果不超过 delivery.timeout.ms 时长，则尝试重发多少次
+```
+- 生产者向每个 partition 发送消息时，会累积多个消息为一批（batch），再一起发送，从而提高效率。
+  - 如果单个消息小于 batch.size ，生产者每批就可能发送多个消息。
+  - 如果单个消息大于 batch.size ，依然会作为一批消息发送。但如果大于 max.request.size ，就不能发送。
+  - 生产者的 batch.size 不能大于 max.request.size ，也不能大于 broker 的 message.max.bytes 。
+
+## 工具
 
 ### shell 脚本
 
@@ -396,7 +400,6 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 ：旧名为 Kafka Tool ，是一个 GUI 工具。
 - [官网](https://www.kafkatool.com/)
 - 主要用于查看、管理 Topic ，支持查看、添加消息。
-
 
 ## ♢ kafka-python
 

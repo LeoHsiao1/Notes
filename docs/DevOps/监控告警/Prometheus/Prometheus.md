@@ -52,15 +52,15 @@
               --config.file /etc/prometheus/prometheus.yml  # 使用指定的配置文件
               # --web.config.file=web.yml                   # web 配置
               # --web.listen-address '0.0.0.0:9090'         # 监听的地址
-              # --web.external-url 'http://10.0.0.1:9090'   # 供外部访问的 URL
+              # --web.external-url 'http://10.0.0.1:9090/'  # 供外部访问的 URL
               # --web.enable-admin-api                      # 启用管理员的 HTTP API .比如删除 tsdb 的数据
               # --web.enable-lifecycle                      # 启用 reload、quit 等 HTTP API
 
-              # - --storage.tsdb.retention.time=15d         # TSDB 的最大保存时长
-              # - --storage.tsdb.retention.size=500GB       # TSDB 的最大保存体积
-              # - --query.timeout=2m                        # 每次查询的超时时间
-              # - --query.max-samples=50000000              # 每次查询时最多将多少个指标载入内存，如果超过该数量，则查询失败
-              # - --log.format=json
+              # --storage.tsdb.retention.time=15d         # TSDB 的最大保存时长
+              # --storage.tsdb.retention.size=500GB       # TSDB 的最大保存体积
+              # --query.timeout=2m                        # 每次查询的超时时间
+              # --query.max-samples=50000000              # 每次查询时最多将多少个指标载入内存，如果超过该数量，则查询失败
+              --log.format=json
   ```
   - 配置文件 prometheus.yml 主要用于控制 Prometheus 的监控任务，而 Prometheus 自身的运行状态只能通过命令行参数控制。
   - 配置文件 web.yml 用于启用身份认证，如下：

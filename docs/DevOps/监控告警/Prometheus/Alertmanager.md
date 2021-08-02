@@ -46,9 +46,10 @@
   ./alertmanager --config.file=alertmanager.yml
                 # --web.config.file=web.yml                   # web 配置
                 # --web.listen-address "0.0.0.0:9093"         # 监听的地址
-                # --web.external-url "http://10.0.0.1:9093"   # 供外部访问的 URL
+                # --web.external-url "http://10.0.0.1:9093/"  # 供外部访问的 URL
                 # --cluster.listen-address "0.0.0.0:9094"     # 集群监听的地址（默认开启）
                 # --data.retention 120h                       # 将数据保存多久
+                --log.format=json
   ```
 
 - 或者用 docker-compose 部署：

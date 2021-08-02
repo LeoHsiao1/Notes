@@ -18,9 +18,11 @@ jobs:
         issue-lock-inactive-days: 30
         issue-exclude-labels: 'TODO'
         issue-lock-labels: 'outdated'
+        issue-lock-reason: ''
         issue-lock-comment: 'This issue has been automatically closed because there has been no activity for a month.'
 
         pr-lock-inactive-days: 30
         pr-exclude-labels: 'TODO'
-        pr-lock-reason: 'outdated'
+        pr-lock-labels: 'outdated'
+        pr-lock-reason: ''
         pr-lock-comment: 'This pull request has been automatically closed because there has been no activity for a month.'

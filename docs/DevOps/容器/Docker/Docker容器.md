@@ -97,13 +97,14 @@ docker
 
       rename  <container> <new_name>  # 重命名容器
       update  <container>...          # 更改容器的配置
-          --restart no
           --cpus 2
           -m 256m
+          --restart no
 
-      top     <container>       # 显式某个容器的进程列表
+      top     <container>       # 显示某个容器的进程列表
       stats                     # 显示所有容器的资源使用情况
-      inspect <object>          # 显示一个 Docker 对象的详细信息
+      inspect <object>                      # 显示一个 Docker 对象的详细信息
+          -f "{{json .HostConfig.Binds }}"  # --format ，只按照 JSON 格式显示指定信息
 ```
 - 管理容器、镜像、数据卷、网络等对象时，可以以 ID 或 Name 作为标识符，指定某个对象。
   - ID   ：是一串十六进制数，有 64 位长。允许用户只用开头少量几位就指定一个对象，只需要与其它 ID 不重复。
@@ -111,8 +112,8 @@ docker
   - 每个对象在创建之后，不支持修改其 ID 或 Name 。
 - 例：
   ```sh
-  docker ps -a
-  docker stop `docker ps -aq` # 停止所有容器
+  docker ps -a                    # 显示所有容器
+  docker restart `docker ps -aq`  # 重启所有容器
   ```
 - 容器的生命周期：
   ```sh
@@ -122,7 +123,7 @@ docker
   Restart   # 重启。此时容器重新被分配资源，但依然使用之前的文件系统，重新执行启动命令
   Delete    # 被删除。此时容器占用的资源被释放，文件系统也被删除。最终消失不见，在 dockerd 中不能查询到该容器
   ```
-- `docker ps --format 'xx'` 可显示以下字段，注意区分大小写：
+- `docker ps --format xx'` 可显示以下字段，注意区分大小写：
   ```sh
   .ID
   .Image
@@ -136,10 +137,10 @@ docker
   .Label        # 容器的指定标签的值，比如 '{{.Label "maintainer"}}'
 
   .State        # 容器的运行状态，比如 created、running、exited
-  .Status       # 容器的运行状态，以及该状态的持续时间，比如 Up 2 minutes
-  .Size         # 容器占用的磁盘空间
-  .Mounts       # 容器挂载的所有卷
-  .Networks     # 容器关联的所有网络
+  .Status       # 容器的运行状态，以及该状态的持续时间，例如： Up 2 minutes
+  .Size         # 容器占用的磁盘大小，例如：0B (virtual 206MB)
+  .Mounts       # 容器挂载的所有卷，例如：/etc/localtime, /data/mysql
+  .Networks     # 容器关联的网络名
   ```
 - `docker stats` 统计的 MEM USAGE 包含了 Page Cache ，因此比 Resident Memory 偏大。
 

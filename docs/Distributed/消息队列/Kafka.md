@@ -10,15 +10,18 @@
 ## 架构
 
 - 基本架构：
-  - 运行一些 broker 服务器组成 Kafka 集群。
-  - 用户运行客户端程序，连接到 broker ，作为 Producer 生产消息，或者作为 Consumer 消费消息。
+  - 运行一些 Kafka 进程，组成集群。
+  - 用户运行客户端程序，连接到 Kafka 服务器，作为 Producer 生产消息，或者作为 Consumer 消费消息。
 
 ### Broker
 
-：代理服务器，即 Kafka 进程，负责存储、管理消息。
+：Kafka 服务器，负责存储、管理消息。
 - broker 会将消息以日志文件的形式存储，存放在 `logs/<topic>-<partition>/` 目录下，因此会受到文件系统的影响。
 - 增加 broker 的数量，就可以提高 Kafka 集群的吞吐量。
 - `Group Coordinator` ：在每个 broker 上都运行的一个进程，主要负责管理 Consumer Group、Consumer Rebalance、消息的 offset 。
+- Kafka 集群中会选出一个 broker 作为 Controller 。
+  - 每个 broker 在启动之后，都会尝试到 zk 中创建 /controller 节点，创建成功则当选。
+  - Controller 负责管理整个集群，比如会在每个 partition 的所有副本中选出一个作为 leader replica 。
 
 ### Producer
 
@@ -40,14 +43,36 @@
 
 ### Zookeeper
 
-Kafka 采用 Zookeeper 作为分布式框架，主要用途如下：
-- 注册 broker ：每个 broker 启动时，都会到 zk 登记自己的 IP 和端口。
-  - 根据 broker.id 识别每个 broker ，即使 IP、端口变化也会在 zk 中自动发现。
-- 注册 topic ：记录 topic 的每个 partition 存储在哪些 broker 上。
-- 注册 Consumer
-- Producer 的负载均衡：给 Producer 分配 broker 。
-- Consumer 的负载均衡：给 Consumer 分配 partition 。
-- 记录 offset
+- Kafka 采用 Zookeeper 作为分布式框架，记录 broker、topic、consumer 等信息。
+  - 每个 broker 启动时，会到 zk 记录自己的 IP 和端口，供其它 broker 发现和访问。
+  - 根据 broker.id 识别每个 broker ，即使 IP 和端口变化也会自动发现。
+- Kafka 在 zk 中使用了以下 znode ：
+  ```sh
+  /
+  ├── admin               # 用于传递一些管理命令
+  │   └── delete_topics   # 默认为 null
+  ├── cluster
+  ├── brokers
+  │   ├── ids             # 记录 broker 的信息。各个 broker 会在其下创建临时节点，当 broker 下线时会被自动删除
+  │   ├── seqid
+  │   └── topics          # 记录 topic 的信息
+  ├── config
+  ├── consumers
+  ├── controller          # 记录当前的 controller ，这是一个临时节点
+  ├── controller_epoch    # 记录 controller 当选的 epoch
+  ├── isr_change_notification
+  ├── latest_producer_id_block
+  └── log_dir_event_notification
+  ```
+  - 例：
+    ```sh
+    [zk: localhost:2181(CONNECTED) 0] get /brokers/ids/1
+    {"listener_security_protocol_map":{"PLAINTEXT":"PLAINTEXT"},"endpoints":["PLAINTEXT://10.0.0.1:9092"],"jmx_port":-1,"features":{},"host":"10.0.0.1","timestamp":"1627960927890","port":9092,"version":5}
+    [zk: localhost:2181(CONNECTED) 1] get /brokers/topics/__consumer_offsets/partitions/0/state
+    {"controller_epoch":1,"leader":2,"version":1,"leader_epoch":0,"isr":[2,3,1]}
+    [zk: localhost:2181(CONNECTED) 3] get /controller
+    {"version":1,"brokerid":1,"timestamp":"1627960928034"}
+    ```
 
 ## 消息
 
@@ -78,7 +103,7 @@ Kafka 采用 Zookeeper 作为分布式框架，主要用途如下：
 ### Replica
 
 - 每个 partition 会存储多个副本（replica），从而备份数据。
-- Kafka 会自动在每个 partition 的副本中选出一个作为 `leader replica` ，而其它副本称为 `follower replica` 。
+- Kafka 会自动在每个 partition 的所有副本中选出一个作为 `leader replica` ，而其它副本称为 `follower replica` 。
   - leader 可以进行读写操作，负责处理用户的访问请求。
   - follower 只能进行读操作，负责与 leader 的数据保持一致，从而备份数据。
   - 用户访问 partition 时看到的总是 leader ，看不到 follower 。
@@ -180,8 +205,6 @@ Kafka 采用 Zookeeper 作为分布式框架，主要用途如下：
 broker.id=0                               # 该 broker 在 Kafka 集群中的唯一标识符，默认为 -1 ，必须赋值为一个非负整数
 listeners=PLAINTEXT://0.0.0.0:9092        # broker 监听的 Socket 地址
 advertised.listeners=PLAINTEXT://10.0.0.1:9092  # 当前 broker 供其它 broker 访问的地址，它会在 zk 中公布，默认采用 listeners 的值
-inter.broker.listener.name
-security.inter.broker.protocol
 
 # 关于网络
 # num.network.threads=3                   # broker 处理网络请求的线程数
@@ -217,7 +240,7 @@ log.retention.hours=72                    # 单个 LogSegment 的保存时长，
 zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
 zookeeper.connection.timeout.ms=6000
 ```
-- 通过 listeners 声明访问地址之后， broker 启动时可能依然尝试解析本地主机名对应的 IP ，此时需要先在 `/etc/hosts` 中添加 DNS 记录。如下：
+- 通过 listeners 声明访问地址之后， broker 启动时可能依然尝试解析本地主机名对应的 IP ，解析失败则报错。此时需要先在 /etc/hosts 中添加 DNS 记录，如下：
   ```sh
   127.0.0.1   hostname-1
   ```
@@ -242,7 +265,7 @@ bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址�
 # acks=1                        # 判断消息发送成功的策略
   # 取值为 0 ，则不等待 broker 的回复，直接认为消息已发送成功
   # 取值为 1 ，则等待 leader replica 确认接收消息
-  # 取值为 all ，则等待消息被同步到所有 replica 
+  # 取值为 all ，则等待消息被同步到所有 replica
 # retries=2147483647            # 发送消息失败时，如果不超过 delivery.timeout.ms 时长，则尝试重发多少次
 ```
 - 生产者向每个 partition 发送消息时，会累积多个消息为一批（batch），再一起发送，从而提高效率。

@@ -13,7 +13,7 @@
 
 - 下载二进制版：
   ```sh
-  wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
+  wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.7.0/apache-zookeeper-3.7.0-bin.tar.gz
   ```
   解压后运行：
   ```sh
@@ -34,7 +34,7 @@
   services:
     zookeeper:
       container_name: zookeeper
-      image: zookeeper:3.6.2
+      image: zookeeper:3.7.0
       restart: unless-stopped
       environment:
         # JVMFLAGS: -Xmx1G -Xms1G
@@ -52,12 +52,19 @@
 ### 版本
 
 - v3.4.0
-  - 增加了 autopurge 配置，用于自动清理数据目录。
-  - 支持 SASL 认证。
+  - 于 2011 年发布。
+  - 增加 autopurge 配置参数，用于自动清理数据目录。
 - v3.5.0
-  - 新增了 AdminServer ，通过内置的 Jetty 服务器提供 HTTP API 。
+  - 于 2014 年发布。
+  - 增加 AdminServer 模块，通过内置的 Jetty 服务器提供 HTTP API 。
     - 比如访问 URL `/commands` 可获取可用的命令列表，访问 URL `/commands/stats` 可获取 zk 的状态。
     - 建议用 AdminServer 代替以前的四字母命令。
+- v3.6.0
+  - 于 2020 年发布。
+  - 增加 sessionRequireClientSASLAuth 配置参数，强制客户端进行身份认证。
+- v3.7.0
+  - 于 2021 年发布。
+  - 增加 enforeQuota 配置参数，让 quota 具有强制性。
 
 ### 配置
 
@@ -283,6 +290,64 @@ server.3=10.0.0.3:2888:3888;2181
   : cdrwa
   ```
   - 创建一个新终端时，再次执行 addauth 命令，就会登录指定用户。
+
+### SASL
+
+- zk 通过 JAAS 框架对接 SASL 认证框架，支持多种认证机制：
+  - DIGEST-MD5
+  - Kerberos
+  - 默认没启用认证机制，允许被任何客户端访问。
+
+- 例：启用 DIGEST-MD5 认证
+
+  1. 在 zoo.cfg 中加入：
+      ```ini
+      quorum.auth.enableSasl=true           # server 之间是否启用身份认证。默认为 false
+      quorum.auth.learnerRequireSasl=true
+      quorum.auth.serverRequireSasl=true    # 强制要求 server 在建立连接之前进行身份认证。默认为 false
+
+      authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider  # 在客户端连接时启用 SASL 认证机制
+      sessionRequireClientSASLAuth=true     # 强制要求客户端在建立连接之前进行身份认证。默认为 false
+      ```
+      - server 之间通信时、server 与 client 之间通信时可以分别配置认证机制，不过这里是一起配置了。
+      - 如果启用了客户端 SASL 认证，但不强制要求认证，则未通过认证的客户端依然可以访问 zk ，创建节点，读写数据。除非该节点设置了 ACL 规则，只允许 SASL 用户访问。
+
+  2. 创建一个 jaas.conf 文件，配置 SASL 认证：
+      ```sh
+      # 配置 server 之间的认证
+      QuorumServer {
+            org.apache.zookeeper.server.auth.DigestLoginModule required
+            user_server="******";
+      };
+      QuorumLearner {
+            org.apache.zookeeper.server.auth.DigestLoginModule required
+            username="server"
+            password="******";
+      };
+      # 配置 server 与 client 之间的认证
+      Server {
+          org.apache.zookeeper.server.auth.DigestLoginModule required
+          user_client="******";    # 定义一个用户，名为 client ，并配置密码
+      };
+      ```
+
+  3. 将 jaas.conf 拷贝到每个 zk 的配置目录下，并添加 java 启动参数来启用它：
+      ```sh
+      export SERVER_JVMFLAGS="-Djava.security.auth.login.config=/conf/jaas.conf"
+      ```
+
+  4. 客户端连接 zk 时，需要使用以下 JAAS 配置文件：
+      ```sh
+      Client {
+          org.apache.zookeeper.server.auth.DigestLoginModule required
+          username="client"
+          password="******";
+      };
+      ```
+      可以声明以下变量，再执行 zkCli.sh ，试试能否成功连接 zk ：
+      ```sh
+      export CLIENT_JVMFLAGS="-Djava.security.auth.login.config=/conf/jaas.conf"
+      ```
 
 ## 集群
 

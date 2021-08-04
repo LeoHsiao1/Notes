@@ -160,7 +160,8 @@
   - Jenkins 自带的邮件通知功能比较简陋，不推荐使用。
 - Job Configuration History
   - 用于记录各个 Job 以及系统配置的变更历史。
-  - 原理是将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
+  - 原理：将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
+  - 建议在 Jenkins 系统管理页面，限制该插件保留变更历史的数量。
 
 ## ♢ jenkinsapi
 

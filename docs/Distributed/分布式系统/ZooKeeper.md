@@ -53,6 +53,7 @@
 
 - v3.4.0
   - 增加了 autopurge 配置，用于自动清理数据目录。
+  - 支持 SASL 认证。
 - v3.5.0
   - 新增了 AdminServer ，通过内置的 Jetty 服务器提供 HTTP API 。
     - 比如访问 URL `/commands` 可获取可用的命令列表，访问 URL `/commands/stats` 可获取 zk 的状态。
@@ -61,13 +62,13 @@
 ### 配置
 
 配置文件 `conf/zoo.cfg` 示例：
-```sh
+```ini
 # clientPort=2181               # 监听一个供客户端连接的端口
 dataDir=/data                   # 数据快照的存储目录
 # dataLogDir=/datalog           # 事务日志的存储目录，默认与 dataDir 一致。可采用不同的磁盘设备，从而避免竞争磁盘 IO ，提高 zk 的速度、吞吐量
 # snapCount=100000              # 记录多少条事务日志时就保存一次快照。实际上会根据随机数提前保存快照，避免多个 zk 节点同时保存快照
-autopurge.purgeInterval=1       # 每隔一段时间，自动清理快照文件、事务日志文件。默认值为 0 ，禁用该功能
-# autopurge.snapRetainCount=3   # autopurge 时，每种文件只保留 Count 数量。默认值、最小值都为 3
+autopurge.purgeInterval=24      # 每隔 n 小时，自动清理一次快照文件、事务日志文件。默认值为 0 ，禁用该功能
+# autopurge.snapRetainCount=3   # 每次 autopurge 时，每种文件只保留 Count 数量。默认值、最小值都为 3
 
 # admin.enableServer=true       # 是否启用 AdminServer
 # admin.serverPort=8080         # AdminServer 监听的端口
@@ -114,11 +115,11 @@ server.3=10.0.0.3:2888:3888;2181
     ```
   - 当 zk server 启动时，如果 dataDir 目录不存在，它会自动创建该目录，导致使用错误的 myid 、空的 znode ，可能发生脑裂。
 - 如果想将一个 server 声明为 observer 角色，需要在其配置文件中加入：
-  ```sh
+  ```ini
   peerType=observer
   ```
   然后在所有 server 的配置文件中声明：
-  ```sh
+  ```ini
   server.1:1=10.0.0.1:2888:3888;2181:observer
   ```
 
@@ -143,25 +144,32 @@ server.3=10.0.0.3:2888:3888;2181
     - 即使子节点被删除，编号也会继续递增。
   - 可以与临时节点搭配使用，创建一组按顺序编号的临时节点：
     ```sh
-    [zk: localhost:2181(CONNECTED) 0] create -e -s /test/f1
-    Created /test/f10000000000
-    [zk: localhost:2181(CONNECTED) 1] create -e -s /test/f1
-    Created /test/f10000000001
-    [zk: localhost:2181(CONNECTED) 2] create -e -s /test/f2
-    Created /test/f20000000002
+    [zk: localhost:2181(CONNECTED) 0] create -e -s /test/a
+    Created /test/a0000000000
+    [zk: localhost:2181(CONNECTED) 1] create -e -s /test/a
+    Created /test/a0000000001
+    [zk: localhost:2181(CONNECTED) 2] create -e -s /test/b
+    Created /test/b0000000002
     ```
+
+- 支持给 znode 设置配额（quota），限制节点数量、大小。
+  - quota 并不具有强制性，超过限制时只会打印一条 WARN 级别的日志：`Quota exceeded`
+  - 给一个节点设置了 quota 之后，不允许再给它的祖先节点或子孙节点设置 quota 。
+  - 所有节点的 quota 信息都记录在 `/zookeeper/quota/<path>/zookeeper_limits` 中。
+    - 当节点被删除时，其 quota 信息并不会自动删除。
 
 ### zkCli
 
 - zk 的 bin 目录下自带了多个 shell 脚本。执行以下脚本可进入 zk 的命令行终端：
   ```sh
-  bash bin/zkCli.sh
-          -server [host][:port]   # 连接到指定的 zk server 。默认是 localhost:2181
+  bin/zkCli.sh
+      -server [host][:port]   # 连接到指定的 zk server 。默认是 localhost:2181
   ```
 
 - 常用命令：
   ```sh
   connect [host][:port]       # 连接到指定的 zk server
+  version                     # 显示 zkCli 的版本
 
   ls <path>                   # 显示指定路径下的所有 znode 。path 中不支持通配符 *
     -R                        # 递归显示子节点
@@ -170,15 +178,17 @@ server.3=10.0.0.3:2888:3888;2181
         -e                    # 创建临时节点
         -s                    # 给 znode 名称添加一个编号作为后缀
   delete <path>               # 删除 znode 。存在子节点时不允许删除，会报错：Node not empty
+  deleteall <path>            # 删除 znode 及其所有子节点
 
   get    <path>               # 读取 znode 中的数据
   set    <path> <data>        # 设置 znode 中的数据
   stat   <path>               # 显示 znode 的状态
 
-  getAcl <path>               # 读取 znode 的 ACL 规则
-  setAcl <path>  <acl>        # 设置 znode 的 ACL 规则（只能设置一次，再次设置则不生效）
-        -R                    # 递归处理子节点
-  addauth <scheme> <user:pwd> # 创建用户
+  listquota <path>            # 查看某个节点的配额
+  setquota  <path>            # 设置配额
+      -b <bytes>              # 限制该节点及子孙节点的总大小
+      -n <num>                # 限制该节点及子孙节点的总数
+  delquota  <path>            # 删除配额
   ```
 
 - 例：创建 znode
@@ -230,6 +240,14 @@ server.3=10.0.0.3:2888:3888;2181
 
 - zk 默认允许任何客户端读写。
   - 支持给 znode 设置 ACL 规则，控制其访问权限。
+
+- 相关命令：
+  ```sh
+  getAcl <path>               # 读取 znode 的 ACL 规则
+  setAcl <path>  <acl>        # 设置 znode 的 ACL 规则（只能设置一次，再次设置则不生效）
+        -R                    # 递归处理子节点
+  addauth <scheme> <user:pwd> # 创建用户
+  ```
 
 - ACL 规则的格式为 `scheme:user:permissions`
   - scheme 表示认证模式，分为以下几种：

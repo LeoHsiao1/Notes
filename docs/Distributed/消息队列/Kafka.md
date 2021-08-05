@@ -46,7 +46,7 @@
 - Kafka 采用 Zookeeper 作为分布式框架，记录 broker、topic、consumer 等信息。
   - 每个 broker 启动时，会到 zk 记录自己的 IP 和端口，供其它 broker 发现和访问。
   - 根据 broker.id 识别每个 broker ，即使 IP 和端口变化也会自动发现。
-- Kafka 在 zk 中使用了以下 znode ：
+- Kafka 在 zk 中使用的 znode 示例：
   ```sh
   /
   ├── admin               # 用于传递一些管理命令
@@ -60,9 +60,7 @@
   ├── consumers
   ├── controller          # 记录当前的 controller ，这是一个临时节点
   ├── controller_epoch    # 记录 controller 当选的 epoch
-  ├── isr_change_notification
-  ├── latest_producer_id_block
-  └── log_dir_event_notification
+  ...
   ```
   - 例：
     ```sh
@@ -163,7 +161,6 @@
       restart: unless-stopped
       environment:
         # KAFKA_HEAP_OPTS: -Xmx1G -Xms1G
-        KAFKA_BROKER_ID: 1
         ALLOW_PLAINTEXT_LISTENER: 'yes'
       ports:
         - 9092:9092
@@ -201,7 +198,7 @@
 #### server.properties
 
 配置示例：
-```sh
+```ini
 broker.id=0                               # 该 broker 在 Kafka 集群中的唯一标识符，默认为 -1 ，必须赋值为一个非负整数
 listeners=PLAINTEXT://0.0.0.0:9092        # broker 监听的 Socket 地址
 advertised.listeners=PLAINTEXT://10.0.0.1:9092  # 当前 broker 供其它 broker 访问的地址，它会在 zk 中公布，默认采用 listeners 的值
@@ -250,7 +247,7 @@ zookeeper.connection.timeout.ms=6000
 #### producer.properties
 
 配置示例：
-```sh
+```ini
 bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址，多个地址之间用逗号分隔
 
 # request.timeout.ms=30000      # 发送请求时，等待响应的超时时间
@@ -273,6 +270,71 @@ bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址�
   - 如果单个消息大于 batch.size ，依然会作为一批消息发送。但如果大于 max.request.size ，就不能发送。
   - 生产者的 batch.size 不能大于 max.request.size ，也不能大于 broker 的 message.max.bytes 。
 
+#### SASL
+
+- Kafka broker 支持通过 JASS 框架启用 SASL 认证。
+  - 默认不要求身份认证，可以被其它 broker、client 直接连接，因此不安全。
+  - 可启用以下 SASL 认证机制：
+    - PLAIN
+    - GSSAPI (Kerberos)
+    - OAUTHBEARER
+    - SCRAM-SHA-256
+
+- 对于通过身份认证的用户，Kafka 支持配置 ACL 规则，控制用户的访问权限。
+  - 默认的 ACL 规则为空，因此不允许用户访问任何资源，除非是 super 用户。
+
+- Kafka 的通信数据默认为 PLAINTEXT 形式，即未加密。
+  - 可以启用 SSL 加密通信，但会增加通信延迟。
+  - 是否启用 SSL ，与是否启用 SASL 认证无关。
+
+- 例：启用 PLAIN 认证
+
+  1. 修改 server.properties ，将通信协议从默认的 `PLAINTEXT://` 改为 `SASL_PLAINTEXT://` ，即采用 SASL 认证 + 未加密通信。
+      ```ini
+      listeners=SASL_PLAINTEXT://0.0.0.0:9092
+      advertised.listeners=SASL_PLAINTEXT://10.0.0.1:9092
+
+      security.inter.broker.protocol=SASL_PLAINTEXT     # broker 之间的通信协议。默认为 PLAINTEXT ，即不启用 SASL 认证 + 未加密传输
+      sasl.mechanism.inter.broker.protocol=PLAIN        # broker 之间连接时的 SASL 认证机制，默认为 GSSAPI
+      sasl.enabled.mechanisms=PLAIN                     # broker 启用的 SASL 认证机制列表
+      authorizer.class.name=kafka.security.auth.SimpleAclAuthorizer # 开启 ACL
+      super.users=User:broker;User:client               # 将一些用户声明为超级用户
+      ```
+
+  2. 创建一个 jaas.conf 配置文件：
+      ```sh
+      KafkaServer {
+          org.apache.kafka.common.security.plain.PlainLoginModule required
+          # 指定当前 broker 连接其它 broker 时使用的用户
+          username="broker"
+          password="******"
+          # 按 user_<NAME>=<PASSWORD> 的格式定义用户。在当前 broker 被其它 broker 或 client 连接时，允许对方使用这些用户
+          user_broker="******"
+          user_client="******";   # 注意这是一条语句，末尾要加分号
+      };
+      ```
+
+  3. 将 jaas.conf 拷贝到每个 broker 的配置目录下，并添加 java 启动参数来启用它：
+      ```sh
+      export KAFKA_OPTS='-Djava.security.auth.login.config=/kafka/config/jaas.conf'
+      ```
+      执行 kafka-server-start.sh、kafka-console-producer.sh 等脚本时会自动应用该配置。
+
+  4. 客户端连接 broker 时，需要在 producer.properties 或 consumer.properties 中加入配置：
+      ```ini
+      security.protocol=SASL_PLAINTEXT
+      sasl.mechanism=PLAIN
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+          username="client" \
+          password="******";
+      ```
+
+- 上述为 broker 被其它 broker、client 连接时的身份认证。而 broker 连接到 zk 时，也可启用 SASL 认证，配置方法见 zk 文档。
+  - 此时建议在 server.properties 中加入：
+    ```ini
+    zookeeper.set.acl=true  # 将 Kafka 在 zk 中存储的数据设置 ACL 规则：允许被所有用户读取，但只允许 Kafka 编辑
+    ```
+
 ## 工具
 
 ### shell 脚本
@@ -289,11 +351,11 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 - `kafka-topics.sh` 用于管理 topic 。
   - 例：连接到 zk ，查询 topic 列表。
     ```sh
-    ./kafka-topics.sh  --zookeeper localhost:2181  --list
+    bin/kafka-topics.sh  --zookeeper localhost:2181  --list
     ```
   - 例：连接到 zk ，请求创建 topic ，并指定分区数、每个分区的副本数。
     ```sh
-    ./kafka-topics.sh \
+    bin/kafka-topics.sh \
         --zookeeper localhost:2181 \
         --create \
         --topic topic_1 \
@@ -302,7 +364,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
     ```
   - 例：连接到 zk ，请求删除 topic 。
     ```sh
-    ./kafka-topics.sh \
+    bin/kafka-topics.sh \
         --zookeeper localhost:2181 \
         --delete \
         --topic topic_1
@@ -311,28 +373,30 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 
 - 运行生产者终端，从 stdin 读取消息并发送到 broker ：
   ```sh
-  ./kafka-console-producer.sh \
-      --broker-list localhost:9092 \
+  bin/kafka-console-producer.sh \
+      --broker-list localhost:9092
       --topic topic_1
+      # --producer.config config/producer.properties
   ```
 
 - 运行消费者终端，读取消息并输出到 stdout ：
   ```sh
-  ./kafka-console-consumer.sh \
-      --bootstrap-server localhost:9092 \
+  bin/kafka-console-consumer.sh \
+      --bootstrap-server localhost:9092
       --topic topic_1
       # --group group_1     # 指定 consumer group 的 ID ，不指定则随机生成
       # --from-beginning    # 从第一条消息开始消费
+      # --consumer.config config/consumer.properties
   ```
 
 - 运行生产者的性能测试：
   ```sh
-  ./kafka-producer-perf-test.sh \
-      --topic topic_1 \
-      --num-records 10000 \         # 发送多少条消息
-      --record-size 1024 \          # 每条消息的大小
-      --throughput 10000 \          # 限制每秒种发送的消息数
-      --producer.config ../config/producer.properties
+  bin/kafka-producer-perf-test.sh
+      --producer.config config/producer.properties
+      --topic topic_1
+      --num-records 10000   # 发送多少条消息
+      --record-size 1024    # 每条消息的大小
+      --throughput 10000    # 限制每秒种发送的消息数
   ```
 
 - 给 Kafka 集群新增 broker 之后，可能被自动用于存储新创建的 topic ，但不会影响已有的 topic 。可以采取以下两种措施：

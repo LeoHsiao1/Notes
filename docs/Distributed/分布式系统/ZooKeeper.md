@@ -292,7 +292,7 @@ server.3=10.0.0.3:2888:3888;2181
 
 #### SASL
 
-- zk server 支持通过 JASS 框架启用 SASL 认证。
+- zk server 支持通过 JAAS 框架启用 SASL 认证。
   - 默认不要求身份认证，可以被其它 server、client 直接连接，因此不安全。
   - 可启用以下 SASL 认证机制：
     - DIGEST-MD5
@@ -310,6 +310,10 @@ server.3=10.0.0.3:2888:3888;2181
       sessionRequireClientSASLAuth=true     # 强制要求 client 连接到当前 server 时进行 SASL 认证。默认为 false
       ```
       - 如果启用了客户端 SASL 认证，但不强制要求认证，则未通过认证的客户端依然可以访问 zk ，读写数据。除非节点设置了 ACL 规则，只允许 SASL 用户访问。
+      - 如果强制要求认证，而客户端未进行认证，则 zk 会拒绝连接，并记录报错日志：
+        ```sh
+        Client authentication scheme(s) [ip] does not match with any of the expected authentication scheme [sasl], closing session.
+        ```
 
   2. 创建一个 jaas.conf 配置文件：
       ```sh

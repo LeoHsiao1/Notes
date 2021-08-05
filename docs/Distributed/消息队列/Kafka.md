@@ -173,7 +173,7 @@
 
 ### 版本
 
-- [Kafka 版本发布页面](https://kafka.apache.org/downloads)
+- [Kafka 的版本列表](https://kafka.apache.org/downloads)
   - 例如 kafka_2.13-2.6.0.tgz ，前面的 2.13 是指 Scala 编译器的版本，后面的 2.6.0 是指 Kafka 的版本。
   - 使用 Kafka 时，应该尽量让客户端与服务器的版本一致，避免不兼容。
 - v0.10.0.0 ：于 2016 年发布。新增了 Kafka Streams API ，用于流处理。
@@ -272,7 +272,7 @@ bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址�
 
 #### SASL
 
-- Kafka broker 支持通过 JASS 框架启用 SASL 认证。
+- Kafka broker 支持通过 JAAS 框架启用 SASL 认证。
   - 默认不要求身份认证，可以被其它 broker、client 直接连接，因此不安全。
   - 可启用以下 SASL 认证机制：
     - PLAIN
@@ -320,13 +320,21 @@ bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址�
       ```
       执行 kafka-server-start.sh、kafka-console-producer.sh 等脚本时会自动应用该配置。
 
-  4. 客户端连接 broker 时，需要在 producer.properties 或 consumer.properties 中加入配置：
+  4. 客户端连接 broker 时，需要在 producer.properties、consumer.properties 中加入配置：
       ```ini
       security.protocol=SASL_PLAINTEXT
       sasl.mechanism=PLAIN
       sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
           username="client" \
           password="******";
+      ```
+      其中的账号密码也可以配置在 jaas.conf 中：
+      ```sh
+      KafkaClient {
+          org.apache.kafka.common.security.plain.PlainLoginModule required
+          username="client"
+          password="******";
+      };
       ```
 
 - 上述为 broker 被其它 broker、client 连接时的身份认证。而 broker 连接到 zk 时，也可启用 SASL 认证，配置方法见 zk 文档。

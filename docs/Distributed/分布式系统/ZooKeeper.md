@@ -9,127 +9,6 @@
   - 作为注册中心，记录分布式系统中各个服务的信息。
   - 实现分布式锁。
 
-## 部署
-
-- 下载二进制版：
-  ```sh
-  wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.7.0/apache-zookeeper-3.7.0-bin.tar.gz
-  ```
-  解压后运行：
-  ```sh
-  bin/zkServer.sh
-                  start               # 在后台启动
-                  start-foreground    # 在前台启动
-                  stop
-                  restart
-
-                  status              # 显示状态
-                  version             # 显示版本信息
-  ```
-
-- 或者用 docker-compose 部署：
-  ```yml
-  version: '3'
-
-  services:
-    zookeeper:
-      container_name: zookeeper
-      image: zookeeper:3.7.0
-      restart: unless-stopped
-      environment:
-        # JVMFLAGS: -Xmx1G -Xms1G
-        ZOO_MY_ID: 1
-      ports:
-        - 2181:2181
-        - 2888:2888
-        - 3888:3888
-        # - 8080:8080
-      volumes:
-        - ./conf:/conf
-        - ./data:/data
-  ```
-
-### 版本
-
-- v3.4.0
-  - 于 2011 年发布。
-  - 增加 autopurge 配置参数，用于自动清理数据目录。
-- v3.5.0
-  - 于 2014 年发布。
-  - 增加 AdminServer 模块，通过内置的 Jetty 服务器提供 HTTP API 。
-    - 比如访问 URL `/commands` 可获取可用的命令列表，访问 URL `/commands/stats` 可获取 zk 的状态。
-    - 建议用 AdminServer 代替以前的四字母命令。
-- v3.6.0
-  - 于 2020 年发布。
-  - 增加 sessionRequireClientSASLAuth 配置参数，强制客户端进行身份认证。
-- v3.7.0
-  - 于 2021 年发布。
-  - 增加 enforeQuota 配置参数，让 quota 具有强制性。
-
-### 配置
-
-配置文件 `conf/zoo.cfg` 示例：
-```ini
-# clientPort=2181               # 监听一个供客户端连接的端口
-dataDir=/data                   # 数据快照的存储目录
-# dataLogDir=/datalog           # 事务日志的存储目录，默认与 dataDir 一致。可采用不同的磁盘设备，从而避免竞争磁盘 IO ，提高 zk 的速度、吞吐量
-# snapCount=100000              # 记录多少条事务日志时就保存一次快照。实际上会根据随机数提前保存快照，避免多个 zk 节点同时保存快照
-autopurge.purgeInterval=24      # 每隔 n 小时，自动清理一次快照文件、事务日志文件。默认值为 0 ，禁用该功能
-# autopurge.snapRetainCount=3   # 每次 autopurge 时，每种文件只保留 Count 数量。默认值、最小值都为 3
-
-# admin.enableServer=true       # 是否启用 AdminServer
-# admin.serverPort=8080         # AdminServer 监听的端口
-# 4lw.commands.whitelist=srvr,stat  # 一个白名单，声明允许使用哪些四字母命令，可通过 telnet 连接发送命令
-metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider # 启用 Prometheus Metrics Provider
-# metricsProvider.httpPort=7000
-
-# tickTime=2000                 # 时钟间隔，用作 zk 的基本时间单位，单位为 ms 。也是向其它 server 、client 发送心跳包的时间间隔
-# initLimit=5                   # 各个 server 初始化连接到 leader 的超时时间，单位为 tickTime
-# syncLimit=2                   # 各个 server 与 leader 之间通信（请求、回复）的超时时间，单位为 tickTime 。超过该时间则视作失去同步
-
-# 声明 zk 集群的 server 列表，每行的格式为 server.<id>=<host>:<port1>:<port2>[:role];[<external_host>:]<external_port>
-#   - id 是一个数字编号，不可重复
-#   - host 是各个 server 的 IP 地址
-#   - port1 是各个 server 连接到 leader 的目标端口，port2 是各个 server 之间进行 leader 选举的端口
-#   - [<external_host>:]<external_port> 是另一个监听的 Socket ，供客户端访问
-# 例如：当前 server id 为 1 时，会根据 server.1 的配置来监听 Socket ，根据其它 server 的配置去通信
-server.1=10.0.0.1:2888:3888;2181  # 对于当前 server 而言，该 IP 地址会用于绑定 Socket ，可改为 0.0.0.0
-server.2=10.0.0.2:2888:3888;2181
-server.3=10.0.0.3:2888:3888;2181
-```
-- zk server 的目录结构示例：
-  ```sh
-  ├── conf
-  │   ├── configuration.xsl
-  │   ├── log4j.properties
-  │   └── zoo.cfg
-  ├── data
-  │   ├── myid
-  │   └── version-2
-  │       ├── acceptedEpoch       # 该文件记录上一次接受的 NEWEPOCH 消息的 epoch 编号。下一次收到 NEWEPOCH 消息时，其 epoch 编号必须更大，才会接受
-  │       ├── currentEpoch        # 该文件记录上一次接受的 NEWLEADER 消息的 epoch 编号。下一次收到 NEWLEADER 消息时，其 epoch 编号必须更大，才会接受
-  │       ├── log.100000001       # 事务日志
-  │       ├── log.200000001
-  │       ├── log.2000004b3
-  │       ├── snapshot.0          # 数据快照
-  │       ├── snapshot.100000000
-  │       ├── snapshot.100000230
-  │       └── snapshot.2000004b2
-  ```
-  - 每个 zk server 启动时，会根据 `$dataDir/myid` 文件的值确定自己的 server 编号。因此初次部署时需要创建该文件：
-    ```sh
-    echo 1 > $dataDir/myid
-    ```
-  - 当 zk server 启动时，如果 dataDir 目录不存在，它会自动创建该目录，导致使用错误的 myid 、空的 znode ，可能发生脑裂。
-- 如果想将一个 server 声明为 observer 角色，需要在其配置文件中加入：
-  ```ini
-  peerType=observer
-  ```
-  然后在所有 server 的配置文件中声明：
-  ```ini
-  server.1:1=10.0.0.1:2888:3888;2181:observer
-  ```
-
 ## 用法
 
 ### znode
@@ -243,10 +122,130 @@ server.3=10.0.0.3:2888:3888;2181
      - 如果自己创建的子节点编号最小，则代表自己获得了锁，有权占用资源。等使用完资源之后，再删除自己的子节点，代表释放锁。
      - 否则，注册 watcher ，监听前一个编号的子节点，等它被删除时，代表自己获得了锁。
 
-### ACL
+## 部署
 
-- zk 默认允许任何客户端读写。
-  - 支持给 znode 设置 ACL 规则，控制其访问权限。
+- 下载二进制版：
+  ```sh
+  wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.7.0/apache-zookeeper-3.7.0-bin.tar.gz
+  ```
+  解压后运行：
+  ```sh
+  bin/zkServer.sh
+                  start               # 在后台启动
+                  start-foreground    # 在前台启动
+                  stop
+                  restart
+
+                  status              # 显示状态
+                  version             # 显示版本信息
+  ```
+
+- 或者用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    zookeeper:
+      container_name: zookeeper
+      image: zookeeper:3.7.0
+      restart: unless-stopped
+      environment:
+        # JVMFLAGS: -Xmx1G -Xms1G
+        ZOO_MY_ID: 1
+      ports:
+        - 2181:2181
+        - 2888:2888
+        - 3888:3888
+        # - 8080:8080
+      volumes:
+        - ./conf:/conf
+        - ./data:/data
+  ```
+
+### 版本
+
+- v3.4.0
+  - 于 2011 年发布。
+  - 增加 autopurge 配置参数，用于自动清理数据目录。
+- v3.5.0
+  - 于 2014 年发布。
+  - 增加 AdminServer 模块，通过内置的 Jetty 服务器提供 HTTP API 。
+    - 比如访问 URL `/commands` 可获取可用的命令列表，访问 URL `/commands/stats` 可获取 zk 的状态。
+    - 建议用 AdminServer 代替以前的四字母命令。
+- v3.6.0
+  - 于 2020 年发布。
+  - 增加 sessionRequireClientSASLAuth 配置参数，强制客户端进行 SASL 认证。
+- v3.7.0
+  - 于 2021 年发布。
+  - 增加 enforeQuota 配置参数，让 quota 具有强制性。
+
+### 配置
+
+配置文件 `conf/zoo.cfg` 示例：
+```ini
+# clientPort=2181               # 监听一个供客户端连接的端口
+dataDir=/data                   # 数据快照的存储目录
+# dataLogDir=/datalog           # 事务日志的存储目录，默认与 dataDir 一致。可采用不同的磁盘设备，从而避免竞争磁盘 IO ，提高 zk 的速度、吞吐量
+# snapCount=100000              # 记录多少条事务日志时就保存一次快照。实际上会根据随机数提前保存快照，避免多个 zk 节点同时保存快照
+autopurge.purgeInterval=24      # 每隔 n 小时，自动清理一次快照文件、事务日志文件。默认值为 0 ，禁用该功能
+# autopurge.snapRetainCount=3   # 每次 autopurge 时，每种文件只保留 Count 数量。默认值、最小值都为 3
+
+# tickTime=2000                 # 时钟间隔，用作 zk 的基本时间单位，单位为 ms 。也是向其它 server 、client 发送心跳包的时间间隔
+# initLimit=5                   # 各个 server 初始化连接到 leader 的超时时间，单位为 tickTime
+# syncLimit=2                   # 各个 server 与 leader 之间通信（请求、回复）的超时时间，单位为 tickTime 。超过该时间则视作失去同步
+# admin.enableServer=true       # 是否启用 AdminServer
+# admin.serverPort=8080         # AdminServer 监听的端口
+# 4lw.commands.whitelist=srvr,stat  # 一个白名单，声明允许使用哪些四字母命令，可通过 telnet 连接发送命令
+metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider # 启用 Prometheus Metrics Provider
+# metricsProvider.httpPort=7000
+
+# 声明 zk 集群的 server 列表，每行的格式为 server.<id>=<host>:<port1>:<port2>[:role];[<external_host>:]<external_port>
+#   - id 是一个数字编号，不可重复
+#   - host 是各个 server 的 IP 地址
+#   - port1 是各个 server 连接到 leader 的目标端口，port2 是各个 server 之间进行 leader 选举的端口
+#   - [<external_host>:]<external_port> 是另一个监听的 Socket ，供客户端访问
+# 例如：当前 server id 为 1 时，会根据 server.1 的配置来监听 Socket ，根据其它 server 的配置去通信
+server.1=10.0.0.1:2888:3888;2181  # 对于当前 server 而言，该 IP 地址会用于绑定 Socket ，可改为 0.0.0.0
+server.2=10.0.0.2:2888:3888;2181
+server.3=10.0.0.3:2888:3888;2181
+```
+- zk server 的目录结构示例：
+  ```sh
+  ├── conf
+  │   ├── configuration.xsl
+  │   ├── log4j.properties
+  │   └── zoo.cfg
+  ├── data
+  │   ├── myid
+  │   └── version-2
+  │       ├── acceptedEpoch       # 该文件记录上一次接受的 NEWEPOCH 消息的 epoch 编号。下一次收到 NEWEPOCH 消息时，其 epoch 编号必须更大，才会接受
+  │       ├── currentEpoch        # 该文件记录上一次接受的 NEWLEADER 消息的 epoch 编号。下一次收到 NEWLEADER 消息时，其 epoch 编号必须更大，才会接受
+  │       ├── log.100000001       # 事务日志
+  │       ├── log.200000001
+  │       ├── log.2000004b3
+  │       ├── snapshot.0          # 数据快照
+  │       ├── snapshot.100000000
+  │       ├── snapshot.100000230
+  │       └── snapshot.2000004b2
+  ```
+  - 每个 zk server 启动时，会根据 `$dataDir/myid` 文件的值确定自己的 server 编号。因此初次部署时需要创建该文件：
+    ```sh
+    echo 1 > $dataDir/myid
+    ```
+  - 当 zk server 启动时，如果 dataDir 目录不存在，它会自动创建该目录，导致使用错误的 myid 、空的 znode ，可能发生脑裂。
+- 如果想将一个 server 声明为 observer 角色，需要在其配置文件中加入：
+  ```ini
+  peerType=observer
+  ```
+  然后在所有 server 的配置文件中声明：
+  ```ini
+  server.1:1=10.0.0.1:2888:3888;2181:observer
+  ```
+
+#### ACL
+
+- znode 默认允许任何客户端读写。可以给单个 znode 设置 ACL 规则，控制其访问权限。
+  - znode 的 ACL 规则不支持递归设置，也不支持继承，因此并不方便，不建议使用。
 
 - 相关命令：
   ```sh
@@ -268,11 +267,11 @@ server.3=10.0.0.3:2888:3888;2181
     ```
   - permissions 是一组权限的缩写：
     ```sh
-    Admin   # 允许设置 ACL
-    Create  # 允许创建子节点
-    Delete  # 允许删除当前节点
-    Read    # 允许读取
-    Write   # 允许写
+    Admin     # 允许设置 ACL
+    Create    # 允许创建子节点
+    Delete    # 允许删除当前节点
+    Read      # 允许读取
+    Write     # 允许写
     ```
 
 - 例：
@@ -291,43 +290,45 @@ server.3=10.0.0.3:2888:3888;2181
   ```
   - 创建一个新终端时，再次执行 addauth 命令，就会登录指定用户。
 
-### SASL
+#### SASL
 
-- zk 通过 JAAS 框架对接 SASL 认证框架，支持多种认证机制：
-  - DIGEST-MD5
-  - Kerberos
-  - 默认没启用认证机制，允许被任何客户端访问。
+- zk server 支持通过 JASS 框架启用 SASL 认证。
+  - 默认不要求身份认证，可以被其它 server、client 直接连接，因此不安全。
+  - 可启用以下 SASL 认证机制：
+    - DIGEST-MD5
+    - Kerberos
 
 - 例：启用 DIGEST-MD5 认证
 
   1. 在 zoo.cfg 中加入：
       ```ini
-      quorum.auth.enableSasl=true           # server 之间是否启用身份认证。默认为 false
+      quorum.auth.enableSasl=true           # server 之间连接时是否启用 SASL 认证。默认为 false
       quorum.auth.learnerRequireSasl=true
-      quorum.auth.serverRequireSasl=true    # 强制要求 server 在建立连接之前进行身份认证。默认为 false
+      quorum.auth.serverRequireSasl=true    # 强制要求其它 server 连接到当前 server 时进行 SASL 认证。默认为 false
 
-      authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider  # 在客户端连接时启用 SASL 认证机制
-      sessionRequireClientSASLAuth=true     # 强制要求客户端在建立连接之前进行身份认证。默认为 false
+      authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider  # 在被 client 连接时启用 SASL 认证
+      sessionRequireClientSASLAuth=true     # 强制要求 client 连接到当前 server 时进行 SASL 认证。默认为 false
       ```
-      - server 之间通信时、server 与 client 之间通信时可以分别配置认证机制，不过这里是一起配置了。
-      - 如果启用了客户端 SASL 认证，但不强制要求认证，则未通过认证的客户端依然可以访问 zk ，创建节点，读写数据。除非该节点设置了 ACL 规则，只允许 SASL 用户访问。
+      - 如果启用了客户端 SASL 认证，但不强制要求认证，则未通过认证的客户端依然可以访问 zk ，读写数据。除非节点设置了 ACL 规则，只允许 SASL 用户访问。
 
-  2. 创建一个 jaas.conf 文件，配置 SASL 认证：
+  2. 创建一个 jaas.conf 配置文件：
       ```sh
-      # 配置 server 之间的认证
+      # 定义一些用户。在当前 server 被其它 server 连接时，允许对方使用这些用户
       QuorumServer {
             org.apache.zookeeper.server.auth.DigestLoginModule required
+            # user_test="******"    # 按 user_<NAME>=<PASSWORD> 的格式定义用户
             user_server="******";
       };
+      # 指定当前 server 连接其它 server 时使用的用户
       QuorumLearner {
             org.apache.zookeeper.server.auth.DigestLoginModule required
             username="server"
             password="******";
       };
-      # 配置 server 与 client 之间的认证
+      # 定义一些用户。在当前 server 被 client 连接时，允许对方使用这些用户
       Server {
           org.apache.zookeeper.server.auth.DigestLoginModule required
-          user_client="******";    # 定义一个用户，名为 client ，并配置密码
+          user_client="******";
       };
       ```
 
@@ -344,7 +345,7 @@ server.3=10.0.0.3:2888:3888;2181
           password="******";
       };
       ```
-      可以声明以下变量，再执行 zkCli.sh ，试试能否成功连接 zk ：
+      可以声明以下环境变量，再执行 zkCli.sh ，试试能否作为客户端连接 zk ：
       ```sh
       export CLIENT_JVMFLAGS="-Djava.security.auth.login.config=/conf/jaas.conf"
       ```

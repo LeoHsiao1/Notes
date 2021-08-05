@@ -6,6 +6,8 @@
     - [GitHub](CI-CD/GitHub.md)
   - [Jenkins](CI-CD/Jenkins.md)
     - [Jenkinsfile](CI-CD/Jenkinsfile.md)
+- 测试
+  - [SonarQube](测试/SonarQube.md)
 - 容器
   - [简介](容器/简介.md)
   - [Docker](容器/Docker/Docker.md)
@@ -43,4 +45,3 @@
     - [Open Distro](监控告警/ELK/OpenDistro.md)
 - 其它
   - [VS Code](其它/VSCode.md)
-  - [SonarQube](其它/SonarQube.md)

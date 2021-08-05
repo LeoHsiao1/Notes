@@ -1,6 +1,6 @@
 # SonarQube
 
-：一个开源的、检查代码质量的网站，采用 Java 开发。
+：一个检查代码质量的 Web 网站，采用 Java 开发。
 - [官方文档](https://docs.sonarqube.org/latest/)
 - 主要用于扫描静态代码，找出语法错误、漏洞、可优化之处。
 - 支持扫描 C、C++、C#、Java、JavaScrip 等常见编程语言的代码。

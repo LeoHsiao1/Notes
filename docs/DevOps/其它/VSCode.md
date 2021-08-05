@@ -1,7 +1,7 @@
 # VS Code
 
 ：Visual Studio Code
-- 是微软于 2015 年发布的一款开源、轻量级的 IDE 。
+- 是微软公司于 2015 年发布的一款开源、轻量级的 IDE 。
 - 支持运行在 Linux、Mac OS、Windows 上。
 - 它本身像一个轻量级的文本阅读器，但可以通过安装插件扩展很多功能，比如搭建任意编程语言的开发环境、调整出美观的界面、配置各种快捷键。
 - [官网](https://code.visualstudio.com/)

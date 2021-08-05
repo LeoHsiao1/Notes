@@ -1045,6 +1045,15 @@ module.exports = {
                     ]
                 },
                 {
+                    title: "测试",
+                    children: [
+                        {
+                            title: "SonarQube",
+                            path: "/DevOps/测试/SonarQube"
+                        }
+                    ]
+                },
+                {
                     title: "容器",
                     children: [
                         {
@@ -1205,10 +1214,6 @@ module.exports = {
                         {
                             title: "VS Code",
                             path: "/DevOps/其它/VSCode"
-                        },
-                        {
-                            title: "SonarQube",
-                            path: "/DevOps/其它/SonarQube"
                         }
                     ]
                 }

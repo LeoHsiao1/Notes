@@ -60,6 +60,13 @@
   ├── pipelines.yml
   └── startup.options       # 自定义 logstash 的启动命令时的配置，供 systemd 等进程读取
   ```
+  - logstash.yml 默认为空，配置示例：
+    ```yml
+    # path.data: /var/lib/logstash
+    # path.logs: /var/log/logstash
+    # log.level: info
+    # log.format: plain
+    ```
   - pipelines.yml 的内容如下，它会导入 conf.d/ 目录下定义的管道。
     ```yml
     - pipeline.id: main

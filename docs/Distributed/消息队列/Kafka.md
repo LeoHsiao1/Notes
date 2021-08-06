@@ -109,8 +109,11 @@
 - `Preferred replica` ：指 assigned replicas 中的第一个 replica 。
   - 新建一个 partition 时，preferred replica 一般就是 leader replica ，但是之后可能发生选举，改变 leader 。
 - `In Sync Replicas`（ISR）：指一个 partition 中与 leader 保持同步的所有 replicas 。
+  - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者 leader 连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 ISR 中移除。
+    - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
   - leader 本身也属于 ISR 。
   - 只有 ISR 中的 replica 可以被选举为 leader 。
+
 - `Under-replicated Replicas Set` ：指一个 partition 中与 leader 没有同步的 replicas 。
   - 当一个 follower 将 leader 的最后一条消息（Log End Offset）之前的日志全部成功复制之后，则认为该 follower 已经赶上了 leader ，记录此时的时刻作为该 follower 的 `lastCaughtUpTimeMs` 。
   - Kafka 的 ReplicaManager 会定期计算每个 follower 的 lastCaughtUpTimeMs 与当前时刻的差值，作为该 follower 对 leader 的滞后时间。
@@ -147,8 +150,6 @@
   ```
   - 部署 Kafka 集群时，需要先部署 zk 集群，然后让每个 broker 服务器连接到 zk ，即可相互发现，组成集群。
     - Kafka 发行版包含了 zk 的可执行文件，可以同时启动 kafka、zk 服务器，也可以在其它地方启动 zk 服务器。
-  - kafka-server-start.sh 中默认配置了环境变量 `export KAFKA_HEAP_OPTS="-Xmx1G -Xms1G"` ，限制 Kafka 最多使用 1G 内存。
-    - Kafka 会尽快将数据写入磁盘存储，因此占用的内存一般不超过 6G ，占用的 CPU 也少。
 
 - 或者用 docker-compose 部署：
   ```yml
@@ -237,12 +238,20 @@ log.retention.hours=72                    # 单个 LogSegment 的保存时长，
 zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
 zookeeper.connection.timeout.ms=6000
 ```
-- 通过 listeners 声明访问地址之后， broker 启动时可能依然尝试解析本地主机名对应的 IP ，解析失败则报错。此时需要先在 /etc/hosts 中添加 DNS 记录，如下：
+- 老版本的 Kafka 启动时会尝试解析本地主机名对应的 IP ，需要在 /etc/hosts 中添加 DNS 记录：
   ```sh
   127.0.0.1   hostname-1
   ```
-- 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 ISR 中移除。
-  - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
+- kafka-server-start.sh 中默认配置了以下环境变量，限制 Kafka 占用的内存：
+  ```sh
+  export KAFKA_HEAP_OPTS="-Xmx1G -Xms1G"
+  ```
+  - Kafka 会尽快将数据写入磁盘存储，因此占用的内存一般不超过 6G ，占用的 CPU 也少。
+- 声明以下环境变量，即可让 broker 开启 JMX 监控，监听一个端口：
+  ```sh
+  export JMX_PORT=9093
+  # export JMX_OPTS="-Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false"
+  ```
 
 #### producer.properties
 
@@ -413,10 +422,11 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 
 ### Kafka Manager
 
-：一个监控 Kafka 集群的 Web 网站，由 Yahoo 公司开源。
+：一个管理 Kafka 的 Web 网站，由 Yahoo 公司开源。
 - [GitHub 页面](https://github.com/yahoo/CMAK)
-- 2020 年，发布 v3 版本，改名为 Cluster Manager for Apache Kafka ，简称为 CMAK 。
 - 主要用于监控、管理 Topic、Partition ，不支持查看 Kafka 消息。
+- 采用 Java 开发，占用大概 1G 内存。
+- 2020 年，发布 v3 版本。为了避免与 Kafka 版权冲突而改名为 Cluster Manager for Apache Kafka ，简称为 CMAK 。
 
 #### 部署
 
@@ -436,12 +446,14 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
   ```
   - 需要用一个 zk 服务器存储 Kafka Manager 的状态。
 
-#### 主要功能
+#### 用法
 
-- 连接到 Kafka 集群。
-  - 可选通过 JMX 端口监控消费速度。
-- 查看 Broker 的状态。
-- 查看、创建、配置 Topic、Partition 。
+- 访问 Kafka Manager 的 Web 页面，即可创建一个 Cluster ，表示 Kafka 集群。
+  - 需要配置 zk 集群的地址，用于获取 Kafka 的状态。
+  - 可以勾选 "JMX Polling" ，连接到 Kafka 的 JMX 端口，监控消息的传输速度。
+  - 可以勾选 "Poll consumer information"，监控消费者的 offset 。
+
+- 支持查看、创建、配置 Topic、Partition 。
   - Topic 的统计信息示例：
     ```sh
     Replication                 3       # 每个分区的的副本数
@@ -453,7 +465,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
     Brokers Skewed %            0       # 存储的副本过多的 Broker 所占百分比
     Brokers Leader Skewed %     0       # 存储的 Leader replica 过多的 Broker 所占百分比
     Brokers Spread %            66      # 该 Topic 占用的 Kafka 集群的 Broker 百分比，这里等于 2/3 * 100%
-    Under-replicated %          0       # 存在未同步副本的分区，所占百分比
+    Under-replicated %          0       # 存在未同步副本的那些分区，所占百分比
     ```
     - 上例中的 Topic 总共有 3×3 个副本，占用 2 个 Broker 。为了负载均衡，每个 Broker 应该存储 3×3÷2 个副本，取整后可以为 4 或 5 。如果某个 Broker 实际存储的副本数超过该值，则视作 Skewed 。
   - Broker 的统计信息示例：
@@ -470,6 +482,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
     - 存储的各个分区 ID
     - 存储的副本是否过多
     - 存储的 Leader replica 是否过多
+
 - 点击菜单栏的 `Preferred Replica Election` ，可进行一次 leader replica 的选举。
   - 当某个 Topic 的 Leader replica 不是 Preferred replica 时，才可以进行该操作。
 
@@ -483,18 +496,29 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
     - 也可以点击 `Manual Partition Assignments` ，进行手动分配。
   3. 到菜单栏的 `Reassign Partitions` 页面，查看正在执行的分配操作。
 
+### Kafka Eagle
+
+：一个管理 Kafka 的 Web 网站。
+- [GitHub 页面](https://github.com/smartloli/kafka-eagle)
+- 与 Kafka Manager 相比，多了查询消息、生产消息、配置告警的功能，但缺少关于 Preferred Replica 的功能。
+- 采用 Java 开发，占用大概 1G 内存。
+
 ### Kowl
 
-：一个监控 Kafka 集群的 Web 网站。
+：一个管理 Kafka 的 Web 网站。
 - [GitHub 页面](https://github.com/cloudhut/kowl)
-- 只支持连接 v1.0 以上的 Kafka 。
-- 与 Kafka Manager 相似，不过监控信息较少，支持查看 Topic 配置、查看消息。
+- 与 Kafka Manager 相比，页面更整洁，多了查看 Topic 体积、查看消息内容、查看 Consumer 详情的功能，但缺少 Brokers Skewed 等负载均衡的功能。
+- 采用 Golang 开发，只占用几十 MB 内存。
+- 用 Docker 部署：
+  ```sh
+  docker run -d --name kowl -p 8080:8080 -e KAFKA_BROKERS=10.0.0.1:9092 quay.io/cloudhut/kowl:v1.4.0
+  ```
 
 ### Offset Explorer
 
-：旧名为 Kafka Tool ，是一个 GUI 工具。
+：旧名为 Kafka Tool ，是一个 GUI 工具，可用作 Kafka 客户端。
 - [官网](https://www.kafkatool.com/)
-- 主要用于查看、管理 Topic ，支持查看、添加消息。
+- 支持查看、管理 Topic ，支持查看消息、生产消息，缺少关于监控的功能。
 
 ## ♢ kafka-python
 

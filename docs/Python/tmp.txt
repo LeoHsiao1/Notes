@@ -3845,8 +3845,19 @@ def test_1(fun1):
 - pytest-cov：用于统计测试覆盖率，即每个py文件中的源代码被测试用例执行到的百分比。
 - pytest-django：用于执行Django项目目录下的测试用例。
 ##
-##
-##
+
+
+也可通过调用 pytest.main() 来执行 pytest ，支持传入命令参数。
+```py
+import pytest
+
+if __name__ =="__main__":
+    exit(pytest.main(['-v']))
+```
+
+
+
+
  
 关于运行
 ♢ argparse

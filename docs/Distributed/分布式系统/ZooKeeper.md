@@ -614,3 +614,35 @@ server.3=10.0.0.3:2888:3888;2181
   INFO  [QuorumPeer[myid=1](plain=0.0.0.0:2181)(secure=disabled):Learner@661] - Learner received UPTODATE message
   INFO  [QuorumPeer[myid=1](plain=0.0.0.0:2181)(secure=disabled):QuorumPeer@863] - Peer state changed: following - broadcast
   ```
+
+## ♢ kazoo
+
+：Python 的第三方库，提供了 Zookeeper 客户端的功能。
+- [官方文档](https://kazoo.readthedocs.io/en/latest/)
+- 安装：`pip install kazoo`
+- 例：
+  ```py
+  >>> from kazoo.client import KazooClient
+  >>> zk.get_children('/')          # 获取子节点，返回一个 list ，包含各个子节点的名称
+  ['config', 'zookeeper', ...]
+  >>> zk.exists('/test')            # 判断节点是否存在。存在则返回其 stat ，不存在则返回 None
+  >>> zk.create('/test', b'Hello')  # 创建节点，值必须为 bytes 类型
+  '/test'
+  >>> zk.set('/test', b'Hello')     # 设置节点的值，返回其 stat
+  ZnodeStat(czxid=25769805253, mzxid=25769805254, ...)    
+  >>> data, stat = zk.get('/test')  # 读取节点的值和 stat
+  >>> zk.delete('/test')            # 删除节点
+  True
+  >>> zk.delete('/test')            # 操作不存在的节点时会报错
+  kazoo.exceptions.NoNodeError
+  ```
+- 例：连接时进行 SASL 认证，需要安装 `pip install pure-sasl`
+  ```py
+  from kazoo.client import KazooClient
+  sasl_options = {
+      'mechanism': 'DIGEST-MD5',
+      'username': 'client',
+      'password': '******'
+  }
+  zk = KazooClient(hosts='10.0.0.1:2181', timeout=3, sasl_options=sasl_options)
+  ```

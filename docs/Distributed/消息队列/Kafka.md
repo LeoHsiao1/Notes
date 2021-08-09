@@ -46,12 +46,15 @@
 - Kafka 采用 Zookeeper 作为分布式框架，记录 broker、topic、consumer 等信息。
   - 每个 broker 启动时，会到 zk 记录自己的 IP 和端口，供其它 broker 发现和访问。
   - 根据 broker.id 识别每个 broker ，即使 IP 和端口变化也会自动发现。
+  - Kafka 集群第一次启动时会生成一个随机的 cluster ID ，保存到 zk 中。
+    - broker 每次连接 zk 时都会检查 cluster ID 是否一致，因此一个 zk 集群不能供多个 Kafka 集群使用。
 - Kafka 在 zk 中使用的 znode 示例：
   ```sh
   /
   ├── admin               # 用于传递一些管理命令
   │   └── delete_topics   # 默认为 null
   ├── cluster
+  │   └── id              # 记录 Kafka 集群的 id
   ├── brokers
   │   ├── ids             # 记录 broker 的信息。各个 broker 会在其下创建临时节点，当 broker 下线时会被自动删除
   │   ├── seqid
@@ -74,7 +77,8 @@
 
 ## 消息
 
-- Kafka 处理的消息称为 message、record 。
+- Kafka 处理数据的基本单位为消息（message），又称为 record 。
+- 消息采用 Kafka 自定的格式封装，类似于 TCP 报文。
 
 ### Topic
 
@@ -107,7 +111,10 @@
   - 用户访问 partition 时看到的总是 leader ，看不到 follower 。
 - `Assigned Replicas` ：指一个 partition 拥有的所有 replicas 。
 - `Preferred replica` ：指 assigned replicas 中的第一个 replica 。
-  - 新建一个 partition 时，preferred replica 一般就是 leader replica ，但是之后可能发生选举，改变 leader 。
+  - 新建一个 partition 时，一般由 preferred replica 担任 leader replica 。
+    - 当所在的 broker 故障时，会选出其它 replica 担任 leader 。
+    - 当 preferred replica 恢复时，会担任普通的 replica 。但 kafka 会自动尝试让 preferred replica 重新担任 leader ，该过程称为 preferred-replica-election 。
+
 - `In Sync Replicas`（ISR）：指一个 partition 中与 leader 保持同步的所有 replicas 。
   - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者 leader 连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 ISR 中移除。
     - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
@@ -204,6 +211,21 @@ broker.id=0                               # 该 broker 在 Kafka 集群中的唯
 listeners=PLAINTEXT://0.0.0.0:9092        # broker 监听的 Socket 地址
 advertised.listeners=PLAINTEXT://10.0.0.1:9092  # 当前 broker 供其它 broker 访问的地址，它会在 zk 中公布，默认采用 listeners 的值
 
+# 关于 zk
+zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
+zookeeper.connection.timeout.ms=6000
+
+# 关于数据日志
+log.dirs=/data/kafka-logs                 # broker 存放数据日志的目录，如果有多个目录则用逗号分隔
+# log.roll.hours=168                      # 单个 LogSegment 的最长写入时间，超过该值则会创建一个新的 LogSegment 用于写入。默认为 7*24h
+# log.segment.bytes=1073741824            # 单个 LogSegment 的最大大小，超过该值则会创建一个新的 LogSegment 用于写入。默认为 1G
+# log.cleanup.policy=delete               # LogSegment 的清理策略，可以是 delete、compact
+# log.retention.bytes=-1                  # 单个 partition 的最大大小，超过该值则会删除其中最旧的 LogSegment 。默认为 -1 ，即不限制
+log.retention.hours=72                    # 单个 LogSegment 的保存时长，超过该值之后就会删除它。默认为 7*24h
+# log.retention.check.interval.ms=300000  # 每隔多久检查一次各个 LogSegment 是否应该清理。默认为 5min
+# log.flush.interval.messages=10000       # 每接收多少个消息，就 flush 一次，即将内存中数据保存到磁盘
+# log.flush.interval.ms=1000              # 每经过多少毫秒，就 flush 一次
+
 # 关于网络
 # num.network.threads=3                   # broker 处理网络请求的线程数
 # num.io.threads=8                        # broker 处理磁盘 IO 的线程数，应该不小于磁盘数
@@ -217,26 +239,11 @@ advertised.listeners=PLAINTEXT://10.0.0.1:9092  # 当前 broker 供其它 broker
 # num.partitions=1                        # 新建 topic 时默认的 partition 数
 # message.max.bytes=1048576               # 允许接收的生产者的每批消息的最大大小，默认为 1M 。该参数作用于所有 topic ，也可以对每个 topic 分别设置 max.message.bytes
 # default.replication.factor=1            # 默认每个 partition 的副本数
+# auto.leader.rebalance.enable=true       # 是否自动进行 preferred-replica-election
 # replica.fetch.max.bytes=1048576         # 限制 partition 的副本之间拉取消息的最大大小，默认为 1M
 # replica.lag.time.max.ms=30000           # replica 的最大滞后时间
-
 # offsets.topic.num.partitions=50         # __consumer_offsets 主题的 partition 数
 # offsets.topic.replication.factor=3      # __consumer_offsets 主题的每个 partition 的副本数。部署单节点时需要减少至 1
-
-# 关于数据日志
-log.dirs=/data/kafka-logs                 # broker 存放数据日志的目录，如果有多个目录则用逗号分隔
-# log.roll.hours=168                      # 单个 LogSegment 的最长写入时间，超过该值则会创建一个新的 LogSegment 用于写入。默认为 7*24h
-# log.segment.bytes=1073741824            # 单个 LogSegment 的最大大小，超过该值则会创建一个新的 LogSegment 用于写入。默认为 1G
-# log.cleanup.policy=delete               # LogSegment 的清理策略，可以是 delete、compact
-# log.retention.bytes=-1                  # 单个 partition 的最大大小，超过该值则会删除其中最旧的 LogSegment 。默认为 -1 ，即不限制
-log.retention.hours=72                    # 单个 LogSegment 的保存时长，超过该值之后就会删除它。默认为 7*24h
-# log.retention.check.interval.ms=300000  # 每隔多久检查一次各个 LogSegment 是否应该清理。默认为 5min
-# log.flush.interval.messages=10000       # 每接收多少个消息，就 flush 一次，即将内存中数据保存到磁盘
-# log.flush.interval.ms=1000              # 每经过多少毫秒，就 flush 一次
-
-# 关于 zk
-zookeeper.connect=10.0.0.1:2181,10.0.0.2:2181,10.0.0.3:2181   # 要连接的 zk 节点，多个地址之间用逗号分隔
-zookeeper.connection.timeout.ms=6000
 ```
 - 老版本的 Kafka 启动时会尝试解析本地主机名对应的 IP ，需要在 /etc/hosts 中添加 DNS 记录：
   ```sh
@@ -443,13 +450,14 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
         - 9000:9000
       environment:
         ZK_HOSTS: 10.0.0.1:2181
+        # JAVA_OPTS: -Djava.security.auth.login.config=/opt/jaas.conf
   ```
-  - 需要用一个 zk 服务器存储 Kafka Manager 的状态。
+  - Kafka Manager 本身需要使用一个 zk 集群存储数据。
 
 #### 用法
 
 - 访问 Kafka Manager 的 Web 页面，即可创建一个 Cluster ，表示 Kafka 集群。
-  - 需要配置 zk 集群的地址，用于获取 Kafka 的状态。
+  - 需要指定该 Kafka 集群对应的 zk 集群的地址。
   - 可以勾选 "JMX Polling" ，连接到 Kafka 的 JMX 端口，监控消息的传输速度。
   - 可以勾选 "Poll consumer information"，监控消费者的 offset 。
 
@@ -483,11 +491,10 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
     - 存储的副本是否过多
     - 存储的 Leader replica 是否过多
 
-- 点击菜单栏的 `Preferred Replica Election` ，可进行一次 leader replica 的选举。
-  - 当某个 Topic 的 Leader replica 不是 Preferred replica 时，才可以进行该操作。
+- 支持 preferred-replica-election 。
 
-- 在 Topic 详情页面，可设置该 Topic 的分区副本允许被分配到哪些 broker 上。步骤如下：
-  1. 点击 `Generate Partition Assignments` ，设置自动分配的策略。
+- 支持 Reassign Partitions 。用法如下：
+  1. 在 Topic 详情页面，点击 `Generate Partition Assignments` ，设置允许该 Topic 分配到哪些 broker 上的策略。
   2. 点击 `Run Partition Assignments` ，执行自动分配的策略。
     - 如果不满足策略，则自动迁移 replica 到指定的 broker 上，并重新选举 leader 。
       - 迁移 replica 时会导致客户端短暂无法访问。

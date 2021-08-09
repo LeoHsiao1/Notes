@@ -348,7 +348,8 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 
 ### build
 
-：触发一个 Job 。
+：用于执行一个 Job 。
+- 被执行的 job 称为当前 job 的下游。
 - 例：
   ```groovy
   build (
@@ -356,9 +357,11 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       parameters: [
           string(name: 'AGENT', value: 'master'),  // 这里的 string 是指输入值的类型，可输入给大部分类型的 parameters
       ]
+      // wait: true,        // 是否等待下游 job 执行完毕，才继续执行当前 job
+      // propagate: true,   // 是否让下游 job 的构建结果影响当前 job 。需要启用 wait 才生效
+      // quietPeriod: 5,    // 设置静默期，默认为 5 秒
   )
   ```
-- 一个 Job 可以不指定 agent 、不执行具体命令，只是调用另一个 Job 。
 
 ### script
 
@@ -629,10 +632,12 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       timeout(time: 60, unit: 'SECONDS')
       disableConcurrentBuilds()           // 不允许同时执行该 job ，会排队执行
       buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '300')  // 限制构建记录保留的最多天数、最大数量，超过限制则删除。这可以限制其占用的磁盘空间，但会导致统计的总构建次数减少
+      quietPeriod(5)                     // 设置静默期，默认为 5 秒
       parallelsAlwaysFailFast()           // 用 matrix{}、parallel{} 执行并发任务时，如果有某个任务失败，则立即放弃执行其它任务
       lock('resource-1')                  // 获取全局锁（此时不支持附加语句块）
   }
   ```
+  - 通过 API 或上游 job 触发一个 job 时，则会等待一段时间才执行，称为静默期。如果在静默期内多次触发该 job ，则只会执行一次。
 
 ## triggers{}
 

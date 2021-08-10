@@ -11,16 +11,15 @@
 
 - 基本架构：
   - 运行一些 Kafka 进程，组成集群。
-  - 用户运行客户端程序，连接到 Kafka 服务器，作为 Producer 生产消息，或者作为 Consumer 消费消息。
+  - 用户运行客户端程序，连接到 Kafka 服务器，作为 Producer 生产消息，或者作为 consumer 消费消息。
 
 ### Broker
 
 ：Kafka 服务器，负责存储、管理消息。
 - broker 会将消息以日志文件的形式存储，存放在 `logs/<topic>-<partition>/` 目录下，因此会受到文件系统的影响。
 - 增加 broker 的数量，就可以提高 Kafka 集群的吞吐量。
-- `Group Coordinator` ：在每个 broker 上都运行的一个进程，主要负责管理 Consumer Group、Consumer Rebalance、消息的 offset 。
 - Kafka 集群中会选出一个 broker 作为 Controller 。
-  - 每个 broker 在启动之后，都会尝试到 zk 中创建 /controller 节点，创建成功则当选。
+  - 每个 broker 在启动之后，都会尝试到 zk 中创建 `/controller` 节点，创建成功则当选。
   - Controller 负责管理整个集群，比如会在每个 partition 的所有副本中选出一个作为 leader replica 。
 
 ### Producer
@@ -34,12 +33,71 @@
 
 ### Consumer Group
 
-：消费者组，包含多个 Consumer 。
-- 单个 consumer 同时只能消费一个 partition ，因此一般用一组 Consumer 同时消费一个 topic 下的不同 partition ，通过并行消费来提高消费速度。
-- Consumer Group 之间是相互隔离的，可以同时消费同一个 topic 下的同一个 partition ，不会冲突。
-- 当一个 Consumer Group 消费一个 topic 时，如果 partition 的数量小于 Consumer 的数量，就会有 Consumer 空闲。
-  因此，最好将 partition 的数量设置成与 Consumer 的数量相同，或者为 Consumer 的数量的整数倍。
-- 当 group 中有 consumer 新增或退出时，或者当前消费的 topic 的 partition 数量变化时，就会触发一次 Consumer Rebalance ，重新分配每个 consumer 消费的 partition 。
+：消费者组，用于在逻辑上对 consumer 分组管理。
+- 单个 consumer 同时只能消费一个 partition ，因此通常用一组 consumer 同时消费一个 topic 下的不同 partition ，通过并行消费来提高消费速度。
+  - 当一个 group 消费一个 topic 时，如果 partition 的数量小于 consumer 的数量，就会有 consumer 空闲。
+    - 因此，最好将 partition 的数量设置成与 consumer 数量相同，或者为 consumer 数量的整数倍。
+  - 不同 group 之间相互独立，即使同时消费同一个 topic 下的同一个 partition 也互不影响。
+
+- Kafka 会根据 consumer group ID 的哈希值，随机分配 topic: __consumer_offsets 中的一个 partition ，用于存储该 group 的 offset 信息。
+  - 该 partition 的 leader replica 所在的 broker 运行的 GroupCoordinator 类，负责管理该 group 的 consumer、offset 。
+    - 每个 consumer 会定时向 Coordinator 发送 Heartbeat 请求，以维持在线。否则 Coordinator 会从该 group 删除该 consumer 。
+  - Coordinator 管理的 consumer group 分为多个状态（group state）：
+    ```sh
+    PreparingRebalance    # 准备开始 Rebalance
+    CompletingRebalance   # 即将完成 Rebalance ，正在发送分配方案
+    Stable                # 已完成 Rebalance ，稳定运行
+    Empty                 # 组内没有成员
+    Dead                  # 组内没有成员，且 offset 等 metadata 已删除，不能响应请求
+    ```
+
+- 客户端运行一个 consumer 时，需要指定其所属的 consumer group 。
+  - consumer 启动时，会发送带有 UNKNOWN_MEMBER_ID 标志的 JoinGroup 请求给 Coordinator ，请求加入指定的 group ，并请求分配 member id 。
+    - GroupCoordinator 会给每个 consumer 分配一个 member id ，格式为 `client_id-UUID` ，其中 UUID 为随机生成的十六进制编号。
+    - 第一个加入 group 的 consumer 会担任组长（Group Leader）。
+  - 组长负责分配各个 consumer 消费的 partition ，该过程称为 Consumer Rebalance 。流程如下：
+    1. 组长从 Coordinator 获取该组的 consumer 列表，分配各个 consumer 消费的 partition 。
+    2. 组长发送 SyncGroup 请求给 Coordinator ，告知分配方案。
+    3. Coordinator 等收到 consumer 的 Heartbeat 请求时，在响应中告知已发生 Rebalance 。
+    4. consumer 删掉内存中的 UUID 等成员信息，重新加入该 group 。
+  - 每次 Rebalance 时，group 就开始一个新时代（generation），所有 consumer 都要重新加入 group 。
+    - 每个 generation 拥有一个从 0 递增的编号。
+  - 当 group 的 consumer 或 partition 数量变化时，都会自动触发一次 Rebalance 。
+
+- 常见问题：consumer 重启时经常会触发 Rebalance 。
+  - consumer 重启之后，会发送 JoinGroup 请求重新加入 group ，被分配一个新的 UUID ， 触发一次 Rebalance 。
+    - 而旧 UUID 不再使用，等到 Heartbeat 超时，又会触发一次 Rebalance 。
+  - Kafka v2.3 开始，给 consumer 增加了配置参数 `group.instance.id` ，可以赋值一个非空字符串，作为当前 Group 下的 member 的唯一名称。
+    - 此时 consumer 会从默认的 Dynamic Member 变成 Static Member ，重启之后发送 JoinGroup 请求时，Coordinator 会回复之前的 UUID 、分配方案。因此不会触发 Rebalance ，除非 Heartbeat 超时。
+
+- 日志示例：
+  ```sh
+  # broker 1 的 Coordinator 被分配了任务，开始管理 __consumer_offsets partition 对应的 consumer group
+  INFO	[GroupCoordinator 1]: Elected as the group coordinator for partition 28
+  INFO	[GroupCoordinator 1]: Elected as the group coordinator for partition 1
+  # broker 1 的 Coordinator 被取消分配，停止管理一些 consumer group
+  INFO	[GroupCoordinator 1]: Resigned as the group coordinator for partition 3
+  INFO	[GroupCoordinator 1]: Resigned as the group coordinator for partition 0
+  INFO	[GroupCoordinator 1]: Resigned as the group coordinator for partition 24
+  ```
+  ```sh
+  # 一个成员因为 Heartbeat 超时，被移出 group
+  INFO	[GroupCoordinator 1]: Member consumer-1-a8b4257c-47c9-4a04-964c-c0065c792a05 in group test_group_1 has failed, removing it from the group
+  # 一个成员加入 consumer group ，被分配了 member id
+  INFO	[GroupCoordinator 1]: Dynamic Member with unknown member id joins group test_group_1 in Stable state. Created a new member id consumer-1-5ee75316-16c0-474f-9u2d-6e57f4b238b3 for this member and add to the group.
+  # 准备开始 rebalance ，原因是加入一个新成员，其 group instance id 为 None ，说明不是 Static Member
+  INFO	[GroupCoordinator 1]: Preparing to rebalance group test_group_1 in state PreparingRebalance with old generation 38 (__consumer_offsets-21) (reason: Adding new member consumer-1-5ee75316-16c0-474f-9u2d-6e57f4b238b3 with group instance id None)
+  # group 进入 stable 状态，开始一个新 generation ，拥有 3 个成员
+  INFO	[GroupCoordinator 1]: Stabilized group test_group_1 generation 39 (__consumer_offsets-21) with 3 members
+  # Coordinator 收到 leader 发来的分配方案
+  INFO	[GroupCoordinator 1]: Assignment received from leader for group test_group_1 for generation 39. The group has 3 members, 0 of which are static.
+  ```
+  - Preparing to rebalance 的几种 reason 示例：
+    ```sh
+    Adding new member $memberId with group instance id $groupInstanceId     # 加入一个新成员
+    removing member $memberId on LeaveGroup                                 # 一个成员发出 LeaveGroup 请求，主动离开 group
+    removing member $memberId on heartbeat expiration                       # 一个成员因为 Heartbeat 超时，被移出 group
+    ```
 
 ### Zookeeper
 
@@ -82,8 +140,8 @@
 
 ### Topic
 
-：主题，用于在逻辑上对消息进行分组管理。
-- 不同 topic 之间的消息没有联系。
+：主题，用于在逻辑上对消息分组管理。
+- 不同 topic 之间相互独立，它们的消息互不影响。
 
 ### Partition
 
@@ -92,7 +150,7 @@
   - 每个 partition 可以存储多个副本。
   - partition 存储到磁盘时，每隔一定时间或大小就划分出一个日志段（LogSegment）文件。
 - broker 每收到一条新消息时，先看它属于哪个 topic ，然后考虑分配到哪个 partition 中存储。
-  - Kafka 会尽量将同一 Topic 的各个 partition 存储到不同的 broker 上，从而分散负载。
+  - Kafka 会尽量将同一 topic 的各个 partition 存储到不同的 broker 上，从而分散负载。
   - Kafka 会尽量将同一 partition 的各个 replica 存储到不同的 broker 上，从而抵抗单点故障。
   - 客户端只需要连接 broker 就能生产、消费消息，不需要关心消息的实际存储位置。
 
@@ -141,7 +199,7 @@
 
 - partition 中存储的每个消息都有一个唯一的偏移量（offset），用于索引。
   - offset 的值采用 Long 型变量存储，容量为 64 bit 。
-  - 生产者生产消息时、消费者消费消息时，offset 都会自动递增。因此，partition 中的消息采用先入先出的顺序，先生产的消息会先被消费。
+  - 生产者生产消息时、消费者消费消息时，offset 都会自动递增。因此，partition 类似于先入先出的队列，先生产的消息会先被消费。
 
 - `Log Start Offset`
   - ：partition 中第一个消息的偏移量。刚创建一个 topic 时，该值为 0 。每次 broker 清理消息日志之后，该值会增大一截。
@@ -151,18 +209,18 @@
   - ：partition 允许被 consumer 看到的最高偏移量。
   - partition 的 leader 新增一个消息时，会更新 LEO 的值，并传给 follower 进行同步。因此 HW 的值总是小于等于 LEO 。
   - consumer 只能看到 HW ，不知道 LEO 的值。
-- `Consumer Current Offset`
-  - ：某个 consumer 在某个 partition 中下一次希望消费的消息的偏移量。
-  - 由 consumer 自己记录，用于 poll() 方法。
-  - 它可以保证 consumer 在多次 poll 时不会重复消费。
 - `Consumer Committed Offset`
   - ：某个 consumer 在某个 partition 中最后一次消费的消息的偏移量。
-  - 由 broker 记录在 topic ：`__consumer_offsets` 中。
-  - 它可以用于保证 Consumer Rebalance 之后 consumer 不会重复消费。
-  - consumer 每次消费消息之后，必须主动调用 commitAsync() 方法，提交当前的 offset ，否则 Consumer Committed Offset 的值会一直为 0 。
+  - 它由 Coordinator 记录，可以保证在 Rebalance 之后 consumer 不会重复消费。
+    - consumer 每次消费消息之后，应该主动调用 commitAsync() 方法，提交当前的 offset ，否则 Consumer Committed Offset 的值会一直为 0 。
+  - Kafka 能确保一个消息成功生产，但不能确保消息被消费，需要客户端主动提交当前消费的 offset 。
+- `Consumer Current Offset`
+  - ：某个 consumer 在某个 partition 中下一次希望消费的消息的偏移量。
+  - 它由 consumer 自己记录，可以保证在多次调用 poll() 方法时不会重复消费。
+    - 如果记录的 offset 偏小，就会重复消费。如果记录的 offset 偏大，就会遗漏消费。
 - `Consumer Lag`
   - ：consumer 在消费某个 partition 时的滞后量，即还有多少个消息未消费。
-  - 它的值等于 HW - Consumer Committed Offset 。
+  - 它的值等于 `HW - Consumer Committed Offset` 。
 
 ## 部署
 
@@ -456,7 +514,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 
 ：一个管理 Kafka 的 Web 网站，由 Yahoo 公司开源。
 - [GitHub 页面](https://github.com/yahoo/CMAK)
-- 主要用于监控、管理 Topic、Partition ，不支持查看 Kafka 消息。
+- 主要用于监控、管理 topic、partition ，不支持查看 Kafka 消息。
 - 采用 Java 开发，占用大概 1G 内存。
 - 2020 年，发布 v3 版本。为了避免与 Kafka 版权冲突而改名为 Cluster Manager for Apache Kafka ，简称为 CMAK 。
 
@@ -486,21 +544,21 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
   - 可以勾选 "JMX Polling" ，连接到 Kafka 的 JMX 端口，监控消息的传输速度。
   - 可以勾选 "Poll consumer information"，监控消费者的 offset 。
 
-- 支持查看、创建、配置 Topic、Partition 。
-  - Topic 的统计信息示例：
+- 支持查看、创建、配置 topic、partition 。
+  - topic 的统计信息示例：
     ```sh
     Replication                 3       # 每个分区的的副本数
-    Number of Partitions        3       # 该 Topic 的分区数
+    Number of Partitions        3       # 该 topic 的分区数
     Sum of partition offsets    0
     Total number of Brokers     3       # Kafka 集群存在的 Broker 数
-    Number of Brokers for Topic 2       # 该 Topic 存储时占用的 Broker 数
+    Number of Brokers for Topic 2       # 该 topic 存储时占用的 Broker 数
     Preferred Replicas %        100     # Leader replica 为 Preferred replica 的分区，所占百分比
     Brokers Skewed %            0       # 存储的副本过多的 Broker 所占百分比
     Brokers Leader Skewed %     0       # 存储的 Leader replica 过多的 Broker 所占百分比
-    Brokers Spread %            66      # 该 Topic 占用的 Kafka 集群的 Broker 百分比，这里等于 2/3 * 100%
+    Brokers Spread %            66      # 该 topic 占用的 Kafka 集群的 Broker 百分比，这里等于 2/3 * 100%
     Under-replicated %          0       # 存在未同步副本的那些分区，所占百分比
     ```
-    - 上例中的 Topic 总共有 3×3 个副本，占用 2 个 Broker 。为了负载均衡，每个 Broker 应该存储 3×3÷2 个副本，取整后可以为 4 或 5 。如果某个 Broker 实际存储的副本数超过该值，则视作 Skewed 。
+    - 上例中的 topic 总共有 3×3 个副本，占用 2 个 Broker 。为了负载均衡，每个 Broker 应该存储 3×3÷2 个副本，取整后可以为 4 或 5 。如果某个 Broker 实际存储的副本数超过该值，则视作 Skewed 。
   - Broker 的统计信息示例：
     ```sh
     Broker      # of Partitions     # as Leader     Partitions    Skewed?     Leader Skewed?
@@ -519,7 +577,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 - 支持 preferred-replica-election 。
 
 - 支持 Reassign Partitions 。用法如下：
-  1. 在 Topic 详情页面，点击 `Generate Partition Assignments` ，设置允许该 Topic 分配到哪些 broker 上的策略。
+  1. 在 topic 详情页面，点击 `Generate Partition Assignments` ，设置允许该 topic 分配到哪些 broker 上的策略。
   2. 点击 `Run Partition Assignments` ，执行自动分配的策略。
     - 如果不满足策略，则自动迁移 replica 到指定的 broker 上，并重新选举 leader 。
       - 迁移 replica 时会导致客户端短暂无法访问。
@@ -539,7 +597,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 
 ：一个管理 Kafka 的 Web 网站。
 - [GitHub 页面](https://github.com/cloudhut/kowl)
-- 与 Kafka Manager 相比，页面更整洁，多了查看 Topic 体积、查看消息内容、查看 Consumer 详情的功能，但缺少 Brokers Skewed 等负载均衡的功能。
+- 与 Kafka Manager 相比，页面更整洁，多了查看 topic 体积、查看消息内容、查看 consumer 详情的功能，但缺少 Brokers Skewed 等负载均衡的功能。
 - 采用 Golang 开发，只占用几十 MB 内存。
 - 用 Docker 部署：
   ```sh
@@ -550,7 +608,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 
 ：旧名为 Kafka Tool ，是一个 GUI 工具，可用作 Kafka 客户端。
 - [官网](https://www.kafkatool.com/)
-- 支持查看、管理 Topic ，支持查看消息、生产消息，缺少关于监控的功能。
+- 支持查看、管理 topic ，支持查看消息、生产消息，缺少关于监控的功能。
 
 ## ♢ kafka-python
 

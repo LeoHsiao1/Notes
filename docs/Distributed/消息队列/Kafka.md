@@ -82,66 +82,86 @@
 
 ### Topic
 
-：主题，用于对消息进行分组管理。
-- 不同 topic 之间的消息相互独立。
-- Kafka 在逻辑上根据 topic 对消息进行分组，在存储时将每个 topic 分成多个 partition ，并且每个 partition 会存储多个 replica 。
-- Kafka 会尽量将同一 Topic 的各个 partition、同一 partition 的各个 replica 存储到不同的 broker 上，从而抵抗单点故障。
-  - 客户端只需要连接 broker 就能生产、消费消息，不需要关注消息的实际存储位置。
+：主题，用于在逻辑上对消息进行分组管理。
+- 不同 topic 之间的消息没有联系。
 
 ### Partition
 
-：分区，是 broker 存储消息的基本容器。
+：分区。
+- topic 在存储时会拆分成一个或多个 partition 。
+  - 每个 partition 可以存储多个副本。
+  - partition 存储到磁盘时，每隔一定时间或大小就划分出一个日志段（LogSegment）文件。
 - broker 每收到一条新消息时，先看它属于哪个 topic ，然后考虑分配到哪个 partition 中存储。
-- partition 内的消息按先入先出的顺序存储。
-- 当一个 partition 较大时，broker 会将它分成多个 LogSegment（日志段）存储，如下：
+  - Kafka 会尽量将同一 Topic 的各个 partition 存储到不同的 broker 上，从而分散负载。
+  - Kafka 会尽量将同一 partition 的各个 replica 存储到不同的 broker 上，从而抵抗单点故障。
+  - 客户端只需要连接 broker 就能生产、消费消息，不需要关心消息的实际存储位置。
+
+- Kafka 数据目录的结构如下：
   ```sh
-  [root@Centos ~]# ls /data/kafka-logs/quickstart-events-0
-  00000000000000000000.index    # 第一个 LogSegment 的索引文件（采用稀疏索引），其中第一个消息的 offset 为 0
-  00000000000000000000.log      # 第一个 LogSegment 的数据日志文件
-  00000000000000367814.index
-  00000000000000367814.log
+  /data/kafka-logs/                     # 数据日志的存储目录，其下每个子目录的命名格式为 <topic>-<partition id>
+  ├── test-0/                           # 该目录用于存储 test 主题的 0 号分区
+  │   ├── 00000000000000000000.index    # 第一个 LogSegment 的索引文件，其中第一个消息的 offset 为 0
+  │   ├── 00000000000000000000.log      # 第一个 LogSegment 的数据日志文件
+  │   ├── 00000000000000367814.index    # 第二个 LogSegment 的索引文件，其中第一个消息的 offset 为 367814
+  │   ├── 00000000000000367814.log
+  │   ├── leader-epoch-checkpoint       # 记录每一任 leader 当选时的 epoch 和 offset
+  │   └── partition.metadata
+  ├── test-2/
+  └── test-3/
   ```
+  - partition 采用稀疏索引，避免单个索引文件的体积过大。读取某个 offset 的消息时，需要先找到它对应的 LogSegment ，再根据该 LogSegment 的 index 文件找到消息。
 
 ### Replica
 
 - 每个 partition 会存储多个副本（replica），从而备份数据。
 - Kafka 会自动在每个 partition 的所有副本中选出一个作为 `leader replica` ，而其它副本称为 `follower replica` 。
-  - leader 可以进行读写操作，负责处理用户的访问请求。
+  - leader 可以进行读写操作，负责处理客户端的访问请求。
   - follower 只能进行读操作，负责与 leader 的数据保持一致，从而备份数据。
-  - 用户访问 partition 时看到的总是 leader ，看不到 follower 。
-- `Assigned Replicas` ：指一个 partition 拥有的所有 replicas 。
-- `Preferred replica` ：指 assigned replicas 中的第一个 replica 。
+  - 客户端读写 partition 时看到的总是 leader ，看不到 follower 。
+
+- `Assigned Replicas`
+  - ：指一个 partition 拥有的所有 replica 。
+- `Preferred replica`
+  - ：指 assigned replicas 中的第一个 replica 。
   - 新建一个 partition 时，一般由 preferred replica 担任 leader replica 。
     - 当所在的 broker 故障时，会选出其它 replica 担任 leader 。
     - 当 preferred replica 恢复时，会担任普通的 replica 。但 kafka 会自动尝试让 preferred replica 重新担任 leader ，该过程称为 preferred-replica-election 。
-
-- `In Sync Replicas`（ISR）：指一个 partition 中与 leader 保持同步的所有 replicas 。
+- `In Sync Replicas (ISR)`
+  - ：指一个 partition 中与 leader 保持同步的所有 replica 。
   - 如果一个 follower 的滞后时间超过 `replica.lag.time.max.ms` ，或者 leader 连续这么长时间没有收到该 follower 的 fetch 请求，则认为它失去同步，从 ISR 中移除。
     - 例如：IO 速度过慢，使得 follower 从 leader 复制数据的速度，比 leader 新增数据的速度慢，就会导致 lastCaughtUpTimeMs 一直没有更新，最终失去同步。
   - leader 本身也属于 ISR 。
   - 只有 ISR 中的 replica 可以被选举为 leader 。
-
-- `Under-replicated Replicas Set` ：指一个 partition 中与 leader 没有同步的 replicas 。
+- `Under-replicated Replicas Set`
+  - ：指一个 partition 中与 leader 没有同步的 replica 。
   - 当一个 follower 将 leader 的最后一条消息（Log End Offset）之前的日志全部成功复制之后，则认为该 follower 已经赶上了 leader ，记录此时的时刻作为该 follower 的 `lastCaughtUpTimeMs` 。
   - Kafka 的 ReplicaManager 会定期计算每个 follower 的 lastCaughtUpTimeMs 与当前时刻的差值，作为该 follower 对 leader 的滞后时间。
 
 ### Offset
 
-- partition 内存储的每个消息都有一个唯一的偏移量（offset），用于索引。
+- partition 中存储的每个消息都有一个唯一的偏移量（offset），用于索引。
   - offset 的值采用 Long 型变量存储，容量为 64 bit 。
-- `Log Start Offset` ：partition 中第一个消息的偏移量。刚创建一个 topic 时，该值为 0 。每次 broker 清理消息日志之后，该值会增大一截。
-- `Log End Offset`（LEO）：partition 中最新一个消息的偏移量。
-- `High Watemark`（HW）：partition 允许被 consumer 看到的最高偏移量。
+  - 生产者生产消息时、消费者消费消息时，offset 都会自动递增。因此，partition 中的消息采用先入先出的顺序，先生产的消息会先被消费。
+
+- `Log Start Offset`
+  - ：partition 中第一个消息的偏移量。刚创建一个 topic 时，该值为 0 。每次 broker 清理消息日志之后，该值会增大一截。
+- `Log End Offset (LEO)`
+  - ：partition 中最新一个消息的偏移量。
+- `High Watemark (HW)`
+  - ：partition 允许被 consumer 看到的最高偏移量。
   - partition 的 leader 新增一个消息时，会更新 LEO 的值，并传给 follower 进行同步。因此 HW 的值总是小于等于 LEO 。
   - consumer 只能看到 HW ，不知道 LEO 的值。
-- `Consumer Current Offset` ：某个 consumer 在某个 partition 中下一次希望消费的消息的偏移量。
+- `Consumer Current Offset`
+  - ：某个 consumer 在某个 partition 中下一次希望消费的消息的偏移量。
   - 由 consumer 自己记录，用于 poll() 方法。
   - 它可以保证 consumer 在多次 poll 时不会重复消费。
-- `Consumer Committed Offset` ：某个 consumer 在某个 partition 中最后一次消费的消息的偏移量。
+- `Consumer Committed Offset`
+  - ：某个 consumer 在某个 partition 中最后一次消费的消息的偏移量。
   - 由 broker 记录在 topic ：`__consumer_offsets` 中。
   - 它可以用于保证 Consumer Rebalance 之后 consumer 不会重复消费。
   - consumer 每次消费消息之后，必须主动调用 commitAsync() 方法，提交当前的 offset ，否则 Consumer Committed Offset 的值会一直为 0 。
-- `Consumer Lag` ：consumer 在消费某个 partition 时的滞后量，即还有多少个消息未消费。
+- `Consumer Lag`
+  - ：consumer 在消费某个 partition 时的滞后量，即还有多少个消息未消费。
   - 它的值等于 HW - Consumer Committed Offset 。
 
 ## 部署
@@ -184,11 +204,16 @@
 - [Kafka 的版本列表](https://kafka.apache.org/downloads)
   - 例如 kafka_2.13-2.6.0.tgz ，前面的 2.13 是指 Scala 编译器的版本，后面的 2.6.0 是指 Kafka 的版本。
   - 使用 Kafka 时，应该尽量让客户端与服务器的版本一致，避免不兼容。
-- v0.10.0.0 ：于 2016 年发布。新增了 Kafka Streams API ，用于流处理。
-- v0.11.0.0 ：于 2017 年发布。改进了消息格式，支持事务、幂等性。
-- v1.0.0 ：于 2017 年发布。
-- v2.0.0 ：于 2018 年发布。
-  - v2.8.0 ：于 2021 年发布。支持用内置的 KRaft 协议取代 zk 。
+- v0.10.0.0
+  - ：于 2016 年发布。新增了 Kafka Streams API ，用于流处理。
+- v0.11.0.0
+  - ：于 2017 年发布。改进了消息格式。支持事务、幂等性。
+- v1.0.0
+  - ：于 2017 年发布。
+- v2.0.0
+  - ：于 2018 年发布。
+- v2.8.0
+  - ：于 2021 年发布。支持用内置的 KRaft 协议取代 zk 。
 
 ### 配置
 

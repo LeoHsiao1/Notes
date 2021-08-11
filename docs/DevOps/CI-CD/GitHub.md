@@ -120,20 +120,6 @@ jobs:                             # 该 workflow 的任务列表
   ```
   - 这种添加环境变量的方式，比使用 `env` 参数的功能更强。
 
-- 在 GitHub 仓库的 `Settings -> Secrets` 页面可以添加以密文形式存储的环境变量。然后在 workflow 中按如下格式使用：
-  ```yml
-  steps:
-    - name: Test
-      env:
-        password: ${{ secrets.PASSWORD }}
-      run: |
-        echo $password
-  ```
-::: v-pre
-  - 在 workflow 中可以通过 `${{ expression }}` 的格式获取一个表达式的值。
-:::
-  - 定义环境变量时，不能在同一个 env 块中读取它。
-
 - GitHub 会自动加入一些内置的环境变量，例如：
   ```sh
   GITHUB_WORKFLOW     # 当前 workflow 的名称
@@ -143,6 +129,23 @@ jobs:                             # 该 workflow 的任务列表
   GITHUB_SHA          # 触发该 workflow 的版本的哈希值
   ```
   - 不过这些变量只会加入终端的环境变量，不支持在 workflow 中读取。
+
+- 在 GitHub 仓库的 `Settings -> Secrets` 页面可以添加以密文形式存储的环境变量。然后在 workflow 中按如下格式使用：
+  ```yml
+  steps:
+    - name: Test
+      env:
+        password: ${{ secrets.PASSWORD }}
+      run: |
+        echo $password
+  ```
+
+::: v-pre
+- workflow 支持通过 `${{ expression }}` 的格式嵌入一个表达式的值，从而可以获取任意上下文（context）的信息。
+  - [上下文和表达式的语法](https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions)
+  - GitHub 会在读取 workflow 时获取表达式的值，嵌入到 workflow 中，然后才执行 workflow 。
+  - 定义环境变量时，不能在同一个 env 块中读取它。
+:::
 
 ### job
 

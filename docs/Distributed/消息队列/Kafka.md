@@ -34,41 +34,45 @@
 ### Consumer Group
 
 ：消费者组，用于在逻辑上对 consumer 分组管理。
-- 单个 consumer 同时只能消费一个 partition ，因此通常用一组 consumer 同时消费一个 topic 下的不同 partition ，通过并行消费来提高消费速度。
+- 客户端运行 consumer 实例时，可以指定其所属的 consumer group 。
+  - 如果不指定，则该 consumer 的 group 为空，不会被 Coordinator 协调。
+- 一个 consumer 同时只能消费一个 partition ，因此通常用一组 consumer 同时消费一个 topic 下的不同 partition ，通过并行消费来提高消费速度。
   - 当一个 group 消费一个 topic 时，如果 partition 的数量小于 consumer 的数量，就会有 consumer 空闲。
     - 因此，最好将 partition 的数量设置成与 consumer 数量相同，或者为 consumer 数量的整数倍。
   - 不同 group 之间相互独立，即使同时消费同一个 topic 下的同一个 partition 也互不影响。
 
-- Kafka 会根据 consumer group ID 的哈希值，随机分配 topic: __consumer_offsets 中的一个 partition ，用于存储该 group 的 offset 信息。
-  - 该 partition 的 leader replica 所在的 broker 运行的 GroupCoordinator 类，负责管理该 group 的 consumer、offset 。
-    - 每个 consumer 会定时向 Coordinator 发送 Heartbeat 请求，以维持在线。否则 Coordinator 会从该 group 删除该 consumer 。
-  - Coordinator 管理的 consumer group 分为多个状态（group state）：
-    ```sh
-    PreparingRebalance    # 准备开始 Rebalance
-    CompletingRebalance   # 即将完成 Rebalance ，正在发送分配方案
-    Stable                # 已完成 Rebalance ，稳定运行
-    Empty                 # 组内没有成员
-    Dead                  # 组内没有成员，且 offset 等 metadata 已删除，不能响应请求
-    ```
+### Coordinator
 
-- 客户端运行一个 consumer 时，需要指定其所属的 consumer group 。
-  - consumer 启动时，会发送带有 UNKNOWN_MEMBER_ID 标志的 JoinGroup 请求给 Coordinator ，请求加入指定的 group ，并请求分配 member id 。
-    - GroupCoordinator 会给每个 consumer 分配一个 member id ，格式为 `client_id-UUID` ，其中 UUID 为随机生成的十六进制编号。
+- Kafka 会根据 consumer group ID 的哈希值，分配 topic: __consumer_offsets 中的一个 partition ，用于存储该 group 的 offset 信息。
+  - 该 partition 的 leader replica 所在的 broker 运行的 GroupCoordinator 类，负责管理该 group 的 consumer、offset 。
+- Coordinator 管理的 consumer group 分为多个状态（group state）：
+  ```sh
+  PreparingRebalance    # 准备开始 Rebalance
+  CompletingRebalance   # 即将完成 Rebalance ，正在发送分配方案
+  Stable                # 已完成 Rebalance ，可以正常消费
+  Empty                 # 组内没有成员
+  Dead                  # 组内没有成员，且 offset 等 metadata 已删除，不能响应请求
+  ```
+
+- consumer 启动时，如果指定了所属的 consumer group ，则会发送带有 UNKNOWN_MEMBER_ID 标志的 JoinGroup 请求给 Coordinator ，请求加入指定的 group ，并请求分配 member id 。
+  - GroupCoordinator 会给每个 consumer 分配一个 member id ，格式为 `client_id-UUID` ，其中 UUID 为随机生成的十六进制编号。
     - 第一个加入 group 的 consumer 会担任组长（Group Leader）。
+    - 每个 consumer 会定时向 Coordinator 发送 Heartbeat 请求，以维持在线。否则 Coordinator 会从该 group 删除该 consumer 。
   - 组长负责分配各个 consumer 消费的 partition ，该过程称为 Consumer Rebalance 。流程如下：
     1. 组长从 Coordinator 获取该组的 consumer 列表，分配各个 consumer 消费的 partition 。
     2. 组长发送 SyncGroup 请求给 Coordinator ，告知分配方案。
     3. Coordinator 等收到 consumer 的 Heartbeat 请求时，在响应中告知已发生 Rebalance 。
-    4. consumer 删掉内存中的 UUID 等成员信息，重新加入该 group 。
-  - 每次 Rebalance 时，group 就开始一个新时代（generation），所有 consumer 都要重新加入 group 。
+    4. consumer 删掉内存中的 UUID 等成员信息，重新加入该 group ，进入新的 generation 。
+  - 每次 Rebalance 时，group 就开始一个新时代（generation）。
     - 每个 generation 拥有一个从 0 递增的编号。
-  - 当 group 的 consumer 或 partition 数量变化时，都会自动触发一次 Rebalance 。
+  - 每次 Rebalance ，，重新加入 group ，因此开销很大。
 
-- 常见问题：consumer 重启时经常会触发 Rebalance 。
-  - consumer 重启之后，会发送 JoinGroup 请求重新加入 group ，被分配一个新的 UUID ， 触发一次 Rebalance 。
-    - 而旧 UUID 不再使用，等到 Heartbeat 超时，又会触发一次 Rebalance 。
+- Rebalance 期间，所有 consumer 都要暂停消费，因此应该尽量避免触发 Rebalance 。
+  - 当 group 的 consumer 或 partition 数量变化时，都会自动触发一次 Rebalance 。
+  - consumer 重启之后，会发送 JoinGroup 请求重新加入 group ，被分配一个新的 member id ， 触发一次 Rebalance 。
+    - 而旧的 member id 不再使用，等到 Heartbeat 超时，又会触发一次 Rebalance 。
   - Kafka v2.3 开始，给 consumer 增加了配置参数 `group.instance.id` ，可以赋值一个非空字符串，作为当前 Group 下的 member 的唯一名称。
-    - 此时 consumer 会从默认的 Dynamic Member 变成 Static Member ，重启之后发送 JoinGroup 请求时，Coordinator 会回复之前的 UUID 、分配方案。因此不会触发 Rebalance ，除非 Heartbeat 超时。
+    - 此时 consumer 会从默认的 Dynamic Member 变成 Static Member ，重启之后发送 JoinGroup 请求时，Coordinator 会回复之前的 member id 、分配方案。因此不会触发 Rebalance ，除非 Heartbeat 超时。
 
 - 日志示例：
   ```sh
@@ -81,9 +85,7 @@
   INFO	[GroupCoordinator 1]: Resigned as the group coordinator for partition 24
   ```
   ```sh
-  # 一个成员因为 Heartbeat 超时，被移出 group
-  INFO	[GroupCoordinator 1]: Member consumer-1-a8b4257c-47c9-4a04-964c-c0065c792a05 in group test_group_1 has failed, removing it from the group
-  # 一个成员加入 consumer group ，被分配了 member id
+  # 一个成员加入 stable 状态的 consumer group ，被分配了 member id
   INFO	[GroupCoordinator 1]: Dynamic Member with unknown member id joins group test_group_1 in Stable state. Created a new member id consumer-1-5ee75316-16c0-474f-9u2d-6e57f4b238b3 for this member and add to the group.
   # 准备开始 rebalance ，原因是加入一个新成员，其 group instance id 为 None ，说明不是 Static Member
   INFO	[GroupCoordinator 1]: Preparing to rebalance group test_group_1 in state PreparingRebalance with old generation 38 (__consumer_offsets-21) (reason: Adding new member consumer-1-5ee75316-16c0-474f-9u2d-6e57f4b238b3 with group instance id None)
@@ -623,41 +625,105 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
   # 创建一个 Producer ，连接到 broker
   producer = KafkaProducer(bootstrap_servers='localhost:9092')
 
-  # 发送一个消息到指定的 topic
-  future = producer.send(topic='topic_1', value='Hello'.encode(), partition=0)
-  # 消息要转换成 bytes 类型才能发送
-  # 不指定 partition 时会自动分配一个 partition
-
+  # 生产一个消息到指定的 topic
+  msg = 'Hello'
+  future = producer.send(topic='topic_1',
+                         value=msg.encode(),  # 消息的内容，必须为 bytes 类型
+                         # partition=None,    # 指定分区。默认为 None ，会自动分配一个分区
+                         # key=None,          # 指定 key 。用于根据 key 的哈希值分配一个分区
+                        )
   try:
-      record_data = future.get(timeout=10)  # 等待服务器的回复
+      metadata = future.get(timeout=1)  # 等待服务器的回复
   except Exception as e:
       print(str(e))
 
   print('sent: ', msg)
-  print('offset: ', record_data.offset)
+  print('offset: ', metadata.offset)
+  print('topic: ',  metadata.topic)
+  print('partition: ', metadata.partition)
   ```
 
 - 消费消息的代码示例：
   ```py
   from kafka import KafkaConsumer
+
+  # 创建一个 Consumer ，连接到 broker ，订阅指定的 topic
+  consumer = KafkaConsumer('topic_1', bootstrap_servers='localhost:9092')
+
+  # Consumer 对象支持迭代。默认从最新 offset 处开始迭代，当没有收到消息时会一直阻塞，保持迭代，除非设置了 consumer_timeout_ms
+  for msg in consumer:
+      print('got: ', msg.value.decode())
+      print('offset: ', msg.offset)
+  ```
+  ```py
   from kafka import TopicPartition
 
-  # 创建一个 Consumer ，连接到 broker ，并指定 topic
-  consumer = KafkaConsumer('topic_1',                       # topic 名
-                          # bootstrap_servers='localhost:9092',
-                          # sasl_mechanism='PLAIN',
-                          # security_protocol='SASL_PLAINTEXT',
-                          # sasl_plain_username='admin',
-                          # sasl_plain_password='admin-secret123',
-                          # client_id='client_1',          # 客户端的名称，可以自定义
-                          # group_id='test2_g',            # 消费组的名称，没有它就不能提交偏移量
-                          # consumer_timeout_ms=5000,      # 未收到新消息时迭代等待的时间
-                          # enable_auto_commit=True,       # 自动提交偏移量
-                          # auto_commit_interval_ms=5000,  # 自动提交偏移量的间隔时长（单位为 ms ）
-                          )
+  consumer.subscribe('topic_1')
+  consumer.seek(TopicPartition(topic='topic_1', partition=1), 0)    # 调整消费的 offset
+  consumer.seek_to_beginning(TopicPartition(topic='topic_1', partition=0))
+  msg_set = consumer.poll(max_records=10)
+  ```
 
-  # Consumer 对象支持迭代，当队列中没有消息时会阻塞，一直等待读取
-  for i in consumer:
-      print('got : ', i.value.decode())
-      print('offset: ', i.offset)
+- KafkaConsumer 的定义：
+  ```py
+  class KafkaConsumer(six.Iterator):
+      def __init__(self, *topics, **configs)
+          """ 先输入要消费的 topics 。可用的 configs 参数如下：
+          # 关于 broker
+          bootstrap_servers='localhost',  # 可以指定一个列表，例如 ['10.0.0.1:9092', '10.0.0.2:9092']
+
+          # 关于 SASL 认证
+          sasl_mechanism='PLAIN',
+          security_protocol='SASL_PLAINTEXT',
+          sasl_plain_username='admin',
+          sasl_plain_password='******',
+
+          # 关于客户端
+          client_id='client_1',           # 客户端的名称，默认为 kafka-python-$version
+          group_id='group_1',             # 消费者组的名称，默认为 None ，即不加入消费者组
+          fetch_min_bytes=1,              # 每次发出 fetch 请求时，broker 应该至少累积多少数据才返回响应
+          fetch_max_bytes=52428800,       # 每次发出 fetch 请求时，broker 应该最多返回多少数据。默认为 50 MB
+          max_poll_records=500,           # 每次调用 poll() 方法，最多拉取多少个消息
+          consumer_timeout_ms=5000,       # 迭代消息时，持续一定时长未收到新消息则抛出异常 StopIteration 。默认无限制，会保持迭代
+          enable_auto_commit=True,        # 是否自动在后台提交 Consumer Committed Offset
+          auto_commit_interval_ms=5000,   # 每隔多久就自动提交一次 Consumer Committed Offset
+          """
+
+      def close(self, autocommit=True)
+
+      def assign(self, partitions)
+          """ 主动分配当前 consumer 消费的 TopicPartition 。
+          此时不会被 Coordinator 处理，不会触发 Rebalance 。但不能与 subscribe() 同时使用，否则报错。
+          例： consumer.assign([TopicPartition(topic='topic_1', partition=0), TopicPartition(topic='topic_1', partition=1)])
+          """
+
+      def assignment(self)
+          """ 返回一个集合，包含当前 consumer 被分配的所有 TopicPartition """
+
+      def poll(self, timeout_ms=0, max_records=None, update_offsets=True)
+          """ 从当前 consumer 被分配的 partition 拉取消息，组成一个集合并返回。
+          update_offsets：是否自动递增 offset 以便下一次拉取。
+          """
+
+      def seek(self, partition:TopicPartition, offset:int)
+          """ 调整当前消费的 offset ，用于下一次 poll """
+
+      def seek_to_beginning(self, *partitions)
+          """ 将 offset 调整到可见的最老 offset """
+
+      def seek_to_end(self, *partitions)
+          """ 将 offset 调整到可见的最新 offset """
+
+      def subscribe(self, topics=(), pattern=None, listener=None)
+          """ 订阅一组 topics ，或者订阅与正则表达式匹配的 topics 。
+          可以订阅不存在的 topic ，此时不会被分配 partition ，调用 poll() 的结果为空集合 。
+          """
+
+      def subscription(self)
+          """ 返回一个集合，包含当前 consumer 订阅的所有 topic 的名称  """
+
+      def topics(self)
+          """ 返回一个集合，包含当前 consumer 有权访问的所有 topic 的名称 """
+
+      ...
   ```

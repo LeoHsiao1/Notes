@@ -97,8 +97,8 @@
 - Rebalance 期间，所有 consumer 都要暂停消费，因此应该尽量避免触发 Rebalance ，比如重启 consumer 时。
   - consumer 重启之后，会发送 JoinGroup 请求重新加入 group ，被分配一个新的 member id ， 触发一次 Rebalance 。
     - 而旧的 member id 不再使用，等到 Heartbeat 超时，又会触发一次 Rebalance 。
-  - Kafka v2.3 开始，consumer 增加了配置参数 `group.instance.id` ，可以赋值一个非空字符串，作为 client id 。
-    - 此时 consumer 会从默认的 Dynamic Member 变成 Static Member 类型。重启之后发送 JoinGroup 请求时，Coordinator 会识别出它是 Static Member ，在分配一个新 UUID 的同时，删除之前的 member id ，因此不会触发 Rebalance ，除非 Heartbeat 超时。
+  - Kafka v2.3 开始，consumer 增加了配置参数 `group.instance.id` 。启用该参数时，consumer 会从默认的 Dynamic Member 变成 Static Member 类型。
+    - consumer 重启之后发送 JoinGroup 请求时，Coordinator 会识别出它是 Static Member ，会分配一个新 UUID ，并删除之前的 member id 。因此不会触发 Rebalance ，除非 Heartbeat 超时。
     - 日志示例：
       ```sh
       INFO	[GroupCoordinator 1]: Static member Some(static_member_1) of group test_group_1 with unknown member id rejoins, assigning new member id static_member_1-cdf1c4ea-2f1c-4f4d-bc46-bf443e5f7322, while old member id static_member_1-8b5d89b3-0757-4441-aeaa-50e7f9f55cee will be removed.
@@ -353,27 +353,51 @@ log.retention.hours=72                    # 单个 LogSegment 的保存时长，
 
 配置示例：
 ```ini
-bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092     # 要连接的 broker 地址，多个地址之间用逗号分隔
+bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092   # 要连接的 broker 地址，多个地址之间用逗号分隔
+# client.id=''
 
-# request.timeout.ms=30000      # 发送请求时，等待响应的超时时间
-# linger.ms=0                   # 生产者发送每个消息时，延迟多久才实际发送。调大该值，有助于让每个 batch 包含更多消息。特别是当新增消息的速度，比发送消息的速度更快时
-# delivery.timeout.ms=120000    # 生产者调用 send() 方法发送消息的超时时间，该值应该不低于 request.timeout.ms + linger.ms
-# max.block.ms=60000            # 生产者调用 send()、partitionsFor() 等方法时，如果 buffer.memory 不足或 metadata 获取不到，阻塞等待的超时时间
-
-# max.request.size=1048576      # 限制生产者向 broker 发送的每个请求的大小
-# batch.size=16384              # 限制每个 batch 的大小
-
-# buffer.memory=33554432        # 限制生产者用于发送消息的缓冲区大小，默认为 32M
 # acks=1                        # 判断消息发送成功的策略
   # 取值为 0 ，则不等待 broker 的回复，直接认为消息已发送成功
   # 取值为 1 ，则等待 leader replica 确认接收消息
   # 取值为 all ，则等待消息被同步到所有 replica
 # retries=2147483647            # 发送消息失败时，如果不超过 delivery.timeout.ms 时长，则尝试重发多少次
+
+# batch.size=16384              # 限制每个 batch 的大小
+# buffer.memory=33554432        # 限制生产者用于发送消息的缓冲区大小，默认为 32M
+# max.request.size=1048576      # 限制生产者向 broker 发送的每个请求的大小
+# max.block.ms=60000            # 生产者调用 send() 等方法时，如果 buffer.memory 不足或 metadata 获取不到，阻塞等待的超时时间
+
+# linger.ms=0                   # 生产者发送每个消息时，延迟多久才实际发送。调大该值，有助于让每个 batch 包含更多消息。特别是当新增消息的速度，比发送消息的速度更快时
+# request.timeout.ms=30000      # 发送请求时，等待响应的超时时间
+# delivery.timeout.ms=120000    # 生产者调用 send() 方法发送消息的超时时间，该值应该不低于 linger.ms + request.timeout.ms
 ```
 - 生产者向每个 partition 发送消息时，会累积多个消息为一批（batch），再一起发送，从而提高效率。
   - 如果单个消息小于 batch.size ，生产者每批就可能发送多个消息。
   - 如果单个消息大于 batch.size ，依然会作为一批消息发送。但如果大于 max.request.size ，就不能发送。
   - 生产者的 batch.size 不能大于 max.request.size ，也不能大于 broker 的 message.max.bytes 。
+
+#### consumer.properties
+
+配置示例：
+```ini
+bootstrap.servers=10.0.0.1:9092,10.0.0.2:9092
+# client.id=''
+
+# group.id=null                   # 消费者组的名称
+# group.instance.id=null          # 给该参数赋值为非空字符串时， consumer 会声明为 Static Member 类型，并采用该参数的值作为 client id
+# allow.auto.create.topics=false  # 订阅或主动分配 topic 时，如果该 topic 不存在，是否自动创建
+# auto.offset.reset=latest        # 如果 Coordinator 没有记录 Consumer Committed Offset （可能是未创建、已过期删除），则从哪个 offset 处开始消费
+    # 可选的取值：
+    # earliest : 采用 partition 可见范围内最老的 offset
+    # latest   : 采用 partition 最新的 offset ，即 High Watemark
+    # none     ：让 consumer 抛出异常
+# enable.auto.commit=true         # 是否自动在后台提交 Consumer Committed Offset
+# auto.commit.interval.ms=5000    # 每隔多久触发一次 auto.commit
+
+# max.poll.records=500            # consumer 每次调用 poll() 方法，最多拉取多少个消息。但这不会决定向 broker 发送 fetch 请求的数量
+# fetch.min.bytes=1               # 每次发出 fetch 请求时，broker 应该至少累积多少数据才返回响应
+# fetch.max.bytes=52428800        # 每次发出 fetch 请求时，broker 应该最多返回多少数据。默认为 50 MB 。如果获取的第一个消息就超过该限制，则只返回该消息
+```
 
 #### SASL
 
@@ -684,12 +708,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
           # 关于客户端
           client_id='client_1',           # 客户端的名称，默认为 kafka-python-$version
           group_id='group_1',             # 消费者组的名称，默认为 None ，即不加入消费者组
-          fetch_min_bytes=1,              # 每次发出 fetch 请求时，broker 应该至少累积多少数据才返回响应
-          fetch_max_bytes=52428800,       # 每次发出 fetch 请求时，broker 应该最多返回多少数据。默认为 50 MB
-          max_poll_records=500,           # 每次调用 poll() 方法，最多拉取多少个消息
           consumer_timeout_ms=5000,       # 迭代消息时，持续一定时长未收到新消息则抛出异常 StopIteration 。默认无限制，会保持迭代
-          enable_auto_commit=True,        # 是否自动在后台提交 Consumer Committed Offset
-          auto_commit_interval_ms=5000,   # 每隔多久就自动提交一次 Consumer Committed Offset
           """
 
       def close(self, autocommit=True)

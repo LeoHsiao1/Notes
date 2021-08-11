@@ -13,7 +13,10 @@
 - 消息队列
   - [简介](消息队列/简介.md)
   - [ActiveMQ](消息队列/ActiveMQ.md)
-  - [Kafka](消息队列/Kafka.md)
+  - [Kafka](消息队列/Kafka/Kafka.md)
+    - [原理](消息队列/Kafka/原理.md)
+    - [部署](消息队列/Kafka/部署.md)
+    - [工具](消息队列/Kafka/工具.md)
 - 存储
   - [简介](存储/简介.md)
   - [FastDFS](存储/FastDFS.md)

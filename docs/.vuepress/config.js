@@ -1281,7 +1281,22 @@ module.exports = {
                         },
                         {
                             title: "Kafka",
-                            path: "/Distributed/消息队列/Kafka"
+                            path: "/Distributed/消息队列/Kafka/Kafka",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "原理",
+                                    path: "/Distributed/消息队列/Kafka/原理"
+                                },
+                                {
+                                    title: "部署",
+                                    path: "/Distributed/消息队列/Kafka/部署"
+                                },
+                                {
+                                    title: "工具",
+                                    path: "/Distributed/消息队列/Kafka/工具"
+                                }
+                            ]
                         }
                     ]
                 },

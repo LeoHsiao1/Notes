@@ -63,16 +63,9 @@
     2. 组长发送 SyncGroup 请求给 Coordinator ，告知分配方案。
     3. Coordinator 等收到 consumer 的 Heartbeat 请求时，在响应中告知已发生 Rebalance 。
     4. consumer 删掉内存中的 UUID 等成员信息，重新加入该 group ，进入新的 generation 。
+  - 当 group 的 consumer 或 partition 数量变化时，都会自动触发一次 Rebalance 。
   - 每次 Rebalance 时，group 就开始一个新时代（generation）。
     - 每个 generation 拥有一个从 0 递增的编号。
-  - 每次 Rebalance ，，重新加入 group ，因此开销很大。
-
-- Rebalance 期间，所有 consumer 都要暂停消费，因此应该尽量避免触发 Rebalance 。
-  - 当 group 的 consumer 或 partition 数量变化时，都会自动触发一次 Rebalance 。
-  - consumer 重启之后，会发送 JoinGroup 请求重新加入 group ，被分配一个新的 member id ， 触发一次 Rebalance 。
-    - 而旧的 member id 不再使用，等到 Heartbeat 超时，又会触发一次 Rebalance 。
-  - Kafka v2.3 开始，给 consumer 增加了配置参数 `group.instance.id` ，可以赋值一个非空字符串，作为当前 Group 下的 member 的唯一名称。
-    - 此时 consumer 会从默认的 Dynamic Member 变成 Static Member ，重启之后发送 JoinGroup 请求时，Coordinator 会回复之前的 member id 、分配方案。因此不会触发 Rebalance ，除非 Heartbeat 超时。
 
 - 日志示例：
   ```sh
@@ -100,6 +93,17 @@
     removing member $memberId on LeaveGroup                                 # 一个成员发出 LeaveGroup 请求，主动离开 group
     removing member $memberId on heartbeat expiration                       # 一个成员因为 Heartbeat 超时，被移出 group
     ```
+
+- Rebalance 期间，所有 consumer 都要暂停消费，因此应该尽量避免触发 Rebalance ，比如重启 consumer 时。
+  - consumer 重启之后，会发送 JoinGroup 请求重新加入 group ，被分配一个新的 member id ， 触发一次 Rebalance 。
+    - 而旧的 member id 不再使用，等到 Heartbeat 超时，又会触发一次 Rebalance 。
+  - Kafka v2.3 开始，consumer 增加了配置参数 `group.instance.id` ，可以赋值一个非空字符串，作为 client id 。
+    - 此时 consumer 会从默认的 Dynamic Member 变成 Static Member 类型。重启之后发送 JoinGroup 请求时，Coordinator 会识别出它是 Static Member ，在分配一个新 UUID 的同时，删除之前的 member id ，因此不会触发 Rebalance ，除非 Heartbeat 超时。
+    - 日志示例：
+      ```sh
+      INFO	[GroupCoordinator 1]: Static member Some(static_member_1) of group test_group_1 with unknown member id rejoins, assigning new member id static_member_1-cdf1c4ea-2f1c-4f4d-bc46-bf443e5f7322, while old member id static_member_1-8b5d89b3-0757-4441-aeaa-50e7f9f55cee will be removed.
+      INFO	[GroupCoordinator 1]: Static member which joins during Stable stage and doesn't affect selectProtocol will not trigger rebalance.
+      ```
 
 ### Zookeeper
 
@@ -617,8 +621,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
 ：Python 的第三方库，提供了 Kafka 客户端的功能。
 - [官方文档](https://kafka-python.readthedocs.io/en/master/index.html)
 - 安装：`pip install kafka-python`
-
-- 生产消息的代码示例：
+- 例：生产消息
   ```py
   from kafka import KafkaProducer
 
@@ -643,7 +646,7 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
   print('partition: ', metadata.partition)
   ```
 
-- 消费消息的代码示例：
+- 例：消费消息
   ```py
   from kafka import KafkaConsumer
 
@@ -726,4 +729,26 @@ kafka 的 bin 目录下自带了多个 shell 脚本，可用于管理 Kafka 。
           """ 返回一个集合，包含当前 consumer 有权访问的所有 topic 的名称 """
 
       ...
+  ```
+
+## ♢ confluent-kafka
+
+：Python 的第三方库，提供了 Kafka 客户端的功能，比 kafka-python 的功能更多。
+- [GitHub 页面](https://github.com/confluentinc/confluent-kafka-python)
+- 安装：`pip install confluent-kafka`
+- 例：消费消息
+  ```py
+  from confluent_kafka import Consumer
+
+  # 创建消费者，传入配置参数，兼容 Kafka 原生的 properties
+  consumer = Consumer({
+      'bootstrap.servers': '10.0.0.1,10.0.0.2,10.0.0.3',
+      'group.id': 'test_group_1',
+      'group.instance.id': 'static_member_1',
+      'auto.offset.reset': 'earliest'
+  })
+
+  consumer.subscribe(['topic_1'])
+  msg = consumer.poll(timeout=1)    # 消费一条消息。如果超过 timeout 依然未获取到消息，则返回 None
+  consumer.close()
   ```

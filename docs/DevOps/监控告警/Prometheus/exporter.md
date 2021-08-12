@@ -1,11 +1,13 @@
 # exporter
 
 - [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/)
-- 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就提供了 exporter 风格的 HTTP API 。
+- 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就提供了 exporter 格式的 HTTP API 。
 
-## Prometheus
+## 原生类型
 
-- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 `/metrics` 。
+### Prometheus
+
+- 本身提供了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 - 常用指标：
   ```sh
@@ -29,9 +31,9 @@
   ALERTS_FOR_STATE{alertname="xxx"}                               # 警报开始的时间戳（这是 pending 状态的开始时间，不能区分 firing 状态）
   ```
 
-## Alertmanager
+### Alertmanager
 
-- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 `/metrics` 。
+- 本身提供了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
 - 常用指标：
   ```sh
   alertmanager_build_info{branch="HEAD", goversion="go1.13.5", instance="10.0.0.1:9093", job="alertmanager", revision="f74be0400a6243d10bb53812d6fa408ad71ff32d", version="0.20.0"}   # 版本信息
@@ -48,9 +50,9 @@
   ```
   - 如果重启 Alertmanager ，则会使一些计数的指标归零。
 
-## Grafana
+### Grafana
 
-- 本身提供了 exporter 风格的 API ，默认的 metrics_path 为 `/metrics` 。
+- 本身提供了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
   - 访问时不需要身份认证，但只提供了关于 Grafana 运行状态的指标。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
 - 常用指标：
@@ -68,9 +70,9 @@
   increase(grafana_alerting_notification_sent_total[1h])     # 每小时发出的告警次数
   ```
 
-## Jenkins
+### Jenkins
 
-- 安装插件 "Prometheus metrics" 可提供 exporter 风格的 API ，默认的 metrics_path 为 `/prometheus/` 。
+- 安装插件 "Prometheus metrics" 可提供 exporter 格式的 API ，默认的 metrics_path 为 `/prometheus/` 。
   - 在 Jenkins 的 "Configure System" 页面可以对 "Prometheus" 栏进行配置。
   - 不能统计到安装该插件以前的 Jenkins 指标。
 - 常用指标：
@@ -99,7 +101,9 @@
   ```
   - 如果删除某个 Job 的构建记录，则会使其总的构建次数减少。
 
-## node_exporter
+## 通用类型
+
+### node_exporter
 
 ：用于监控类 Unix 主机的状态。
 - [GitHub 页面](https://github.com/prometheus/node_exporter)
@@ -175,7 +179,7 @@
   node_netstat_Udp_OutDatagrams               # 发送的 UDP 包数
   ```
 
-## process-exporter
+### process-exporter
 
 ：用于监控 Linux 主机上的进程、线程的状态。
 - [GitHub 页面](https://github.com/ncabatoff/process-exporter)
@@ -268,7 +272,7 @@
     curl 127.0.0.1:9256/metrics | grep num_procs
     ```
 
-## windows_exporter
+### windows_exporter
 
 ：用于监控 Windows 主机的状态，也可监控其进程的状态。
 - [GitHub 页面](https://github.com/prometheus-community/windows_exporter)
@@ -337,7 +341,7 @@
   - 不能监控进程的网络 IO 。
   - 不能通过启动命令区分相同名字的进程，只能通过 PID 区分。
 
-## cAdvisor
+### cAdvisor
 
 ：用于监控容器的状态。
 - [GitHub 页面](https://github.com/google/cadvisor)
@@ -378,7 +382,7 @@
   container_network_transmit_packets_total  # 网卡发送的累计数据包数
   ```
 
-## blackbox_exporter
+### blackbox_exporter
 
 ：相当于探针（probe），可以监控 DNS、ICMP、TCP、HTTP 状态，以及 SSL 证书过期时间。
 - [GitHub 页面](https://github.com/prometheus/blackbox_exporter)
@@ -432,7 +436,9 @@
   probe_http_content_length       # HTTP 响应报文的长度（bytes）
   ```
 
-## kafka_exporter
+## 专用类型
+
+### kafka_exporter
 
 ：用于监控 Kafka 的状态。
 - [GitHub 页面](https://github.com/danielqsj/kafka_exporter)
@@ -486,7 +492,7 @@
   kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
   ```
 
-## elasticsearch_exporter
+### elasticsearch_exporter
 
 ：用于监控 ES 服务器的状态。
 - [GitHub 页面](https://github.com/justwatchcom/elasticsearch_exporter)

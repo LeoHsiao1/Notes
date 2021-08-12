@@ -436,6 +436,11 @@
   probe_http_content_length       # HTTP 响应报文的长度（bytes）
   ```
 
+### jmx_exporter
+
+：用于从 JMX 端口获取监控指标。
+- [GitHub 页面](https://github.com/prometheus/jmx_exporter)
+
 ## 专用类型
 
 ### kafka_exporter
@@ -462,8 +467,8 @@
   version: '3'
 
   services:
-    kafka:
-      container_name: kafka-exporter
+    kafka_exporter:
+      container_name: kafka_exporter
       image: danielqsj/kafka-exporter:v1.3.1
       restart: unless-stopped
       command:
@@ -487,7 +492,7 @@
   kafka_topic_partition_current_offset{topic="x", partition="x"}             # partition 的当前偏移量
   kafka_topic_partition_oldest_offset{topic="x", partition="x"}              # partition 的最后偏移量
 
-  kafka_consumergroup_members{consumergroup="x"}                                    # 每个 consumergroup 中的成员数
+  kafka_consumergroup_members{consumergroup="x"}                                    # 某个 consumergroup 的成员数
   kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
   kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
   ```

@@ -1249,16 +1249,16 @@ module.exports = {
                         },
                         {
                             title: "ZooKeeper",
-                            path: "/Distributed/分布式系统/zk/ZooKeeper",
+                            path: "/Distributed/分布式系统/ZooKeeper/ZooKeeper",
                             collapsable: false,
                             children: [
                                 {
                                     title: "部署",
-                                    path: "/Distributed/分布式系统/zk/部署"
+                                    path: "/Distributed/分布式系统/ZooKeeper/部署"
                                 },
                                 {
                                     title: "用法",
-                                    path: "/Distributed/分布式系统/zk/用法"
+                                    path: "/Distributed/分布式系统/ZooKeeper/用法"
                                 }
                             ]
                         },

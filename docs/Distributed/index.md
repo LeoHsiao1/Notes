@@ -6,9 +6,9 @@
   - [大数据](简介/大数据.md)
 - 分布式系统
   - [简介](分布式系统/简介.md)
-  - [ZooKeeper](分布式系统/zk/ZooKeeper.md)
-    - [部署](分布式系统/zk/部署.md)
-    - [用法](分布式系统/zk/用法.md)
+  - [ZooKeeper](分布式系统/ZooKeeper/ZooKeeper.md)
+    - [部署](分布式系统/ZooKeeper/部署.md)
+    - [用法](分布式系统/ZooKeeper/用法.md)
   - [Zipkin](分布式系统/Zipkin.md)
 - 消息队列
   - [简介](消息队列/简介.md)

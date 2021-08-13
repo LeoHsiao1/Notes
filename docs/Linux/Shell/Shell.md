@@ -58,6 +58,8 @@
 
 ## 执行脚本
 
+### 脚本路径
+
 - 可以直接在终端输入 shell 脚本的文件路径，执行它：
   ```sh
   [root@Centos ~]# ./1.sh 
@@ -67,7 +69,9 @@
   - 通常会因为没有该文件的可执行权限而报错，需要先执行： `chmod +x 1.sh`
   - 执行 shell 脚本时可以输入参数，比如：`./1.sh arg1 arg2`
 
-- 可以用指定的 shell 解释器来执行 shell 脚本：
+### bash
+
+- 可以用指定的 shell 解释器执行 shell 脚本：
   ```sh
   $ bash
           [xx.sh]       # 启动一个子 shell 来执行 shell 脚本，执行完之后该子 shell 会自动退出
@@ -78,11 +82,15 @@
           -l            # --login ，让 shell 解释器模拟 login shell
   ```
 
+### source
+
 - 可以用 source 命令执行 shell 脚本：
   ```sh
   $ source 1.sh         # 读取文件的每行字符串，放到当前 shell 中执行
   ```
   source 命令又称为点命令，可以用一个点表示，比如：`. 1.sh`
+
+### exec
 
 - 可以用 exec 命令执行 shell 命令：
   ```sh

@@ -97,12 +97,38 @@
   default_jenkins_builds_duration_milliseconds_summary_sum{jenkins_job='xxx'}      # Job 的构建总耗时（包括被阻塞的时长）
   default_jenkins_builds_success_build_count{jenkins_job='xxx'}                    # Job 构建成功的次数
   default_jenkins_builds_failed_build_count{jenkins_job='xxx'}                     # Job 构建失败的次数
-  default_jenkins_builds_last_build_start_time_milliseconds{jenkins_job='xxx'}     # Job 最后一次构建的开始时间
-  default_jenkins_builds_last_build_duration_milliseconds{jenkins_job='xxx'}       # Job 最后一次构建的持续时长
-  default_jenkins_builds_last_build_result{jenkins_job='xxx'}                      # Job 最后一次构建的结果（ 1 代表 success 、0 代表其它状态）
+  default_jenkins_builds_last_build_start_time_milliseconds{jenkins_job='xxx'}     # Job 最近一次构建的开始时间
+  default_jenkins_builds_last_build_duration_milliseconds{jenkins_job='xxx'}       # Job 最近一次构建的持续时长
+  default_jenkins_builds_last_build_result{jenkins_job='xxx'}                      # Job 最近一次构建的结果（ 1 代表 success 、0 代表其它状态）
   ```
   - 如果删除某个 Job 的构建记录，则会使其总的构建次数减少。
 
+### ZooKeeper
+
+- 可启用 exporter API ，默认监听 7000 端口， metrics_path 为 `/metrics` 。
+- 指标示例：
+  ```sh
+  # 关于 zk 集群
+  quorum_size               # 非 observer 的 server 数量。这取决于配置文件，不会监控在线的 server 数
+  synced_observers          # observer 数量
+  election_time_sum         # 最近一次选举的耗时，单位 ms
+  uptime                    # leader 的任期时长，单位 ms
+
+  # 关于 znode
+  znode_count               # 节点的数量
+  ephemerals_count          # 临时节点的数量
+  write_per_namespace_sum{key="brokers"}    # 每个一级节点的写数据量
+  read_per_namespace_sum{key="brokers"}     # 每个一级节点的读数据量
+  readlatency_count         # 读操作的数量。仅统计当前 server 收到的请求
+  readlatency_sum           # 读操作的耗时
+  updatelatency_count       # 读操作的数量
+  updatelatency_sum         # 写操作的耗时，包括等待 quorum 投票
+
+  # 关于客户端
+  connection_request_count  # 客户端发出连接请求的数量
+  global_sessions           # 客户端会话数
+  watch_count               # watch 的数量
+  ```
 
 ## 通用类型
 
@@ -498,7 +524,7 @@
   kafka_topic_partition_leader{topic="x", partition="x"}                     # partition 的 leader 的 ID
   kafka_topic_partition_leader_is_preferred{topic="x", partition="x"}        # partition 的 leader 是否为 preferred replica
   kafka_topic_partition_current_offset{topic="x", partition="x"}             # partition 的当前偏移量
-  kafka_topic_partition_oldest_offset{topic="x", partition="x"}              # partition 的最后偏移量
+  kafka_topic_partition_oldest_offset{topic="x", partition="x"}              # partition 的最早偏移量
 
   kafka_consumergroup_members{consumergroup="x"}                                    # 某个 consumergroup 的成员数
   kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量

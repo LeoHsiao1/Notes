@@ -135,7 +135,7 @@
 ### node_exporter
 
 ：用于监控类 Unix 主机的状态。
-- [GitHub 页面](https://github.com/prometheus/node_exporter)
+- [GitHub](https://github.com/prometheus/node_exporter)
 - 下载后启动：
   ```sh
   ./node_exporter
@@ -216,7 +216,7 @@
 ### process-exporter
 
 ：用于监控 Linux 主机上的进程、线程的状态。
-- [GitHub 页面](https://github.com/ncabatoff/process-exporter)
+- [GitHub](https://github.com/ncabatoff/process-exporter)
 - 它主要通过读取 `/proc/<pid>/` 目录下的信息，来收集进程指标。
 - 下载后启动：
   ```sh
@@ -309,7 +309,7 @@
 ### windows_exporter
 
 ：用于监控 Windows 主机的状态，也可监控其进程的状态。
-- [GitHub 页面](https://github.com/prometheus-community/windows_exporter)
+- [GitHub](https://github.com/prometheus-community/windows_exporter)
 - 下载 exe 版后启动：
   ```sh
   windows_exporter.exe
@@ -378,7 +378,7 @@
 ### cAdvisor
 
 ：用于监控容器的状态。
-- [GitHub 页面](https://github.com/google/cadvisor)
+- [GitHub](https://github.com/google/cadvisor)
 - 该工具由 Google 公司开发，支持将监控数据输出到 Prometheus、InfluxDB、Kafka、ES 等存储服务。
 - 下载后启动：
   ```sh
@@ -419,7 +419,7 @@
 ### blackbox_exporter
 
 ：相当于探针（probe），可以监控 DNS、ICMP、TCP、HTTP 状态，以及 SSL 证书过期时间。
-- [GitHub 页面](https://github.com/prometheus/blackbox_exporter)
+- [GitHub](https://github.com/prometheus/blackbox_exporter)
 - 下载后启动：
   ```sh
   ./blackbox_exporter
@@ -473,14 +473,14 @@
 ### jmx_exporter
 
 ：用于从 JMX 端口获取监控指标。
-- [GitHub 页面](https://github.com/prometheus/jmx_exporter)
+- [GitHub](https://github.com/prometheus/jmx_exporter)
 
 ## 专用类型
 
 ### kafka_exporter
 
 ：用于监控 Kafka 的状态。
-- [GitHub 页面](https://github.com/danielqsj/kafka_exporter)
+- [GitHub](https://github.com/danielqsj/kafka_exporter)
 - 下载后启动：
   ```sh
   ./kafka_exporter
@@ -534,7 +534,7 @@
 ### elasticsearch_exporter
 
 ：用于监控 ES 服务器的状态。
-- [GitHub 页面](https://github.com/justwatchcom/elasticsearch_exporter)
+- [GitHub](https://github.com/justwatchcom/elasticsearch_exporter)
 - 下载后启动：
   ```sh
   ./elasticsearch_exporter

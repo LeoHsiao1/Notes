@@ -81,7 +81,7 @@
 ## ♢ py-zipkin
 
 ：Python 的第三方库，用作 Zipkin 客户端。
-- [GitHub 页面](https://github.com/Yelp/py_zipkin)
+- [GitHub](https://github.com/Yelp/py_zipkin)
 - 安装：`pip install py-zipkin`
 - 例：
   ```py

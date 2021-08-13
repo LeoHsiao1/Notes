@@ -1,7 +1,7 @@
 # Pushgateway
 
 ：作为一个 HTTP 服务器运行，支持推送监控数据到这里并缓存。
-- [GitHub 页面](https://github.com/prometheus/pushgateway)
+- [GitHub](https://github.com/prometheus/pushgateway)
 - Prometheus 只支持主动从 exporter 拉取数据，不支持被 exporter 推送数据。使用 Pushgateway 可以允许 exporter 推送数据到这里，再由 Prometheus 定时拉取。
 - 优点：
   - 解耦了 exporter 与 Prometheus ，允许它们异步工作，允许 exporter 不保持运行。

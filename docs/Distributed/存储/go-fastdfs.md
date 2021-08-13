@@ -1,7 +1,7 @@
 # go-fastdfs
 
 ：一个与 fastdfs 类似的文件服务器，但功能更多。
-- [GitHub 页面](https://github.com/sjqzhang/go-fastdfs)
+- [GitHub](https://github.com/sjqzhang/go-fastdfs)
 - 由国内开发者发布，采用 Golang 开发。
 - 功能：
   - 采用 HTTP 协议通信，支持通过浏览器或 curl 命令上传、下载文件。

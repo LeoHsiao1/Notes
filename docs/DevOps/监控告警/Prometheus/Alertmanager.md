@@ -1,7 +1,7 @@
 # Alertmanager
 
 ：作为一个 HTTP 服务器运行，用于将 Prometheus 产生的警报加工之后转发给用户。
-- [GitHub 页面](https://github.com/prometheus/alertmanager)
+- [GitHub](https://github.com/prometheus/alertmanager)
 - 优点：
   - Prometheus 产生的警报是 JSON 格式的信息，Alertmanager 可以对它们进行分组管理，加工成某种格式的告警消息，再转发给用户。
   - 配置比较麻烦但是很灵活。

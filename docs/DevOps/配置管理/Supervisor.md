@@ -226,7 +226,7 @@ Supervisor 的日志文件默认保存在 `/var/log/supervisor/` 目录下，主
 ## Cesi
 
 ：一个采用 Python3 的 Flask 开发的 Web 管理平台，可以统一管理多台主机上的 Supervisor （需要它们开启 inet_http_server ）。
-- [Github 页面](https://github.com/gamegos/cesi)
+- [GitHub](https://github.com/gamegos/cesi)
 - 安装：
   ```sh
   wget https://github.com/gamegos/cesi/releases/download/v2.6.8/cesi-extended.tar.gz

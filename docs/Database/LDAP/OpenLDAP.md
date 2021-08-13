@@ -24,7 +24,7 @@
         - ./data:/var/lib/ldap        # 挂载存储目录
         - ./conf:/etc/ldap/slapd.d    # 挂载配置目录
   ```
-  - 该 Docker 镜像的 [Github 页面](https://github.com/osixia/docker-openldap)
+  - 该 Docker 镜像的 [GitHub](https://github.com/osixia/docker-openldap)
   - 默认监听两个端口：
     - 389 ：用于非加密通信。
     - 636 ：用于 SSL/TLS 加密通信。

@@ -1,7 +1,7 @@
 # FastDFS
 
 ：一个轻量级的文件服务器。
-- [GitHub 页面](https://github.com/happyfish100/fastdfs)
+- [GitHub](https://github.com/happyfish100/fastdfs)
 - 2008 年，由国内开发者余庆，采用 C 开发。
 - 基于 TCP 通信。
 - 功能：

@@ -9,7 +9,7 @@
 
 - 本身提供了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
-- 常用指标：
+- 指标示例：
   ```sh
   prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息
 
@@ -34,7 +34,7 @@
 ### Alertmanager
 
 - 本身提供了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
-- 常用指标：
+- 指标示例：
   ```sh
   alertmanager_build_info{branch="HEAD", goversion="go1.13.5", instance="10.0.0.1:9093", job="alertmanager", revision="f74be0400a6243d10bb53812d6fa408ad71ff32d", version="0.20.0"}   # 版本信息
 
@@ -55,7 +55,7 @@
 - 本身提供了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
   - 访问时不需要身份认证，但只提供了关于 Grafana 运行状态的指标。
 - 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Grafana metrics" 仪表盘。
-- 常用指标：
+- 指标示例：
   ```sh
   grafana_build_info{branch="HEAD", edition="oss", goversion="go1.14.1", instance="10.0.0.1:3000", job="grafana", revision="aee1438ff2", version="7.0.0"}  # 版本信息
 
@@ -75,7 +75,7 @@
 - 安装插件 "Prometheus metrics" 可提供 exporter 格式的 API ，默认的 metrics_path 为 `/prometheus/` 。
   - 在 Jenkins 的 "Configure System" 页面可以对 "Prometheus" 栏进行配置。
   - 不能统计到安装该插件以前的 Jenkins 指标。
-- 常用指标：
+- 指标示例：
   ```sh
   time() - process_start_time_seconds     # 运行时长（s）
   irate(process_cpu_seconds_total[5m])    # 占用 CPU 核数
@@ -101,6 +101,7 @@
   ```
   - 如果删除某个 Job 的构建记录，则会使其总的构建次数减少。
 
+
 ## 通用类型
 
 ### node_exporter
@@ -117,38 +118,43 @@
   ```
   默认的访问地址为 <http://localhost:9100/metrics>
 
-- 常用指标：
+- 指标示例：
   ```sh
   node_exporter_build_info{branch="HEAD", goversion="go1.15.8", instance="10.0.0.1:9100", job="node_exporter", revision="b597c1244d7bef49e6f3359c87a56dd7707f6719", version="1.1.2"}  # 版本信息
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
 
+  # 关于时间
   node_boot_time_seconds                      # 主机的启动时刻
   node_time_seconds                           # 主机的当前时间（Unix 时间戳）
   node_time_seconds - node_boot_time_seconds  # 主机的运行时长（s）
   node_time_seconds - time() + T              # 主机的时间误差，其中 T 是估计每次抓取及传输的耗时
 
+  # 关于 CPU
   node_load1                                                                    # 每分钟的平均负载
   count(node_cpu_seconds_total{mode='idle'})                                    # CPU 核数
   avg(irate(node_cpu_seconds_total[5m])) without (cpu) * 100                    # CPU 各模式占比（%）
   (1 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) without(cpu)) * 100  # CPU 使用率（%）
 
+  # 关于内存
   node_memory_MemTotal_bytes                  # 内存总量，单位 bytes
   node_memory_MemAvailable_bytes              # 内存可用量，CentOS 7 以上版本才支持该指标
   node_memory_SwapTotal_bytes                 # swap 内存总量
   node_memory_SwapFree_bytes                  # swap 内存可用量
 
+  # 关于磁盘
   sum(node_filesystem_size_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint)  # 磁盘总量
   sum(node_filesystem_avail_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint) # 磁盘可用量
+  sum(irate(node_disk_read_bytes_total[5m]))      # 磁盘每秒读取量
+  sum(irate(node_disk_written_bytes_total[5m]))   # 磁盘每秒写入量
+  node_filefd_maximum                             # 文件描述符的数量上限
+  node_filefd_allocated                           # 文件描述符的使用数量
 
-  sum(irate(node_disk_read_bytes_total[5m]))                         # 磁盘每秒读取量
-  sum(irate(node_disk_written_bytes_total[5m]))                      # 磁盘每秒写入量
-
-  irate(node_network_receive_bytes_total{device!~`lo|docker0`}[5m])  # 网卡每秒接收量
-  irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[5m]) # 网卡每秒发送量
-
+  # 关于网卡
   node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast 是广播地址，duplex 是双工模式，）
-  node_network_up                             # 网卡的状态（取值 1、0 表示是否正在启用）
-  node_network_mtu_bytes                      # MTU 大小
+  node_network_up                                                     # 网卡的状态（取值 1、0 表示是否正在启用）
+  node_network_mtu_bytes                                              # MTU 大小
+  irate(node_network_receive_bytes_total{device!~`lo|docker0`}[5m])   # 网卡每秒接收量
+  irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[5m])  # 网卡每秒发送量
 
   # 关于 IP 协议
   node_network_receive_packets_total          # 网卡接收的数据包数
@@ -241,7 +247,7 @@
     .StartTime    # 进程的启动时刻，比如 2021-01-01 07:40:29.22 +0000 UTC
     ```
 
-- 常用指标：
+- 指标示例：
   ```sh
   process_exporter_build_info{branch="",goversion="go1.15.3",revision="",version="0.7.5"}   # 版本信息
 
@@ -295,7 +301,7 @@
                       EXTRA_FLAGS="--collector.process.whitelist=firefox|chrome"
   ```
 
-- 常用指标：
+- 指标示例：
   ```sh
   windows_exporter_build_info{branch="master", goversion="go1.13.3", instance="10.0.0.1:9182", job="windows_exporter", revision="c62fe4477fb5072e569abb44144b77f1c6154016", version="0.13.0"}  # 版本信息
 
@@ -360,7 +366,7 @@
   ./cadvisor --http_auth_file passwd --http_auth_realm 0.0.0.0
   ```
   访问地址为 `127.0.0.1:8080/containers/` 。
-- 常用指标：
+- 指标示例：
   ```sh
   container_start_time_seconds{container_label_maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>", id="/docker/e2b21f73d372c59a5cc6c5180ae1325c9d8c3e9a211087db036228ffa5b54b43",
   image="nginx:latest", instance="10.0.0.1:8080", job="cadvisor", name="nginx"}   # 容器的创建时刻（不是启动时刻），采用 Unix 时间戳
@@ -426,7 +432,7 @@
   ```
   Prometheus 会将 scrape_timeout 用作探测的超时时间。
 
-- 常用指标：
+- 指标示例：
   ```sh
   probe_success                   # 是否探测成功（取值 1、0 分别表示成功、失败）
   probe_duration_seconds          # 本次探测的耗时
@@ -452,7 +458,7 @@
   ./kafka_exporter
                 # --web.listen-address=:9308
                 # --web.telemetry-path=/metrics
-                
+
                 --kafka.server=10.0.0.1:9092    # kafka 服务器的地址，可以多次使用该选项
                 # - --kafka.server=10.0.0.2:9092
                 --kafka.version=2.2.0
@@ -476,7 +482,7 @@
       ports:
         - 9308:9308
   ```
-- 常用指标：
+- 指标示例：
   ```sh
   kafka_exporter_build_info{goversion="go1.16", instance="10.0.0.1:9308", job="kafka_exporter"} # 版本信息
 
@@ -515,7 +521,7 @@
                 --es.snapshots false            # 是否采集 snapshot 的信息
                 --es.timeout 5s                 # 从 ES 采集信息的超时时间
   ```
-- 常用指标：
+- 指标示例：
   ```sh
   elasticsearch_exporter_build_info{branch="master", goversion="go1.12.3", instance="10.0.0.1:9114", job="elasticsearch_exporter", revision="fe20e499ffdd6053e6153bac15eae494e08931df", version="1.1.0"}  # 版本信息
 

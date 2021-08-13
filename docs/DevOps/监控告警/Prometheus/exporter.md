@@ -59,15 +59,17 @@
   ```sh
   grafana_build_info{branch="HEAD", edition="oss", goversion="go1.14.1", instance="10.0.0.1:3000", job="grafana", revision="aee1438ff2", version="7.0.0"}  # 版本信息
 
-  time() - process_start_time_seconds                        # 运行时长（s）
-  irate(process_cpu_seconds_total[5m])                       # 占用 CPU 核数
-  process_resident_memory_bytes                              # 占用内存
-  sum(increase(http_request_total[1m])) by (statuscode)      # 每分钟收到 HTTP 请求的次数
-  sum(increase(http_request_duration_milliseconds_sum[1m]))  # 每分钟处理 HTTP 请求的耗时（ms）
+  time() - process_start_time_seconds       # 运行时长（s）
+  irate(process_cpu_seconds_total[5m])      # 占用 CPU 核数
+  process_resident_memory_bytes             # 占用内存
 
-  grafana_alerting_active_alerts                             # Alert Rule 的数量
-  increase(grafana_alerting_result_total[1h])                # 每小时的 Alert Rule 状态
-  increase(grafana_alerting_notification_sent_total[1h])     # 每小时发出的告警次数
+  grafana_alerting_active_configurations    # Alert Rule 的总数
+  grafana_alerting_active_alerts            # Alert Rule 的激活数量
+  grafana_emails_sent_total
+  grafana_emails_sent_failed
+
+  increase(grafana_http_request_duration_seconds_count{handler="/",method="GET",status_code="200"}[1m])   # 每分钟收到的 HTTP 请求数
+  increase(grafana_http_request_duration_seconds_sum{handler="/",method="GET",status_code="200"}[1m])     # 每分钟处理 HTTP 请求的耗时
   ```
 
 ### Jenkins

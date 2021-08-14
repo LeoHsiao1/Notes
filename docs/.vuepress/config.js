@@ -1048,6 +1048,10 @@ module.exports = {
                     title: "测试",
                     children: [
                         {
+                            title: "Selenium",
+                            path: "/DevOps/测试/Selenium"
+                        },
+                        {
                             title: "SonarQube",
                             path: "/DevOps/测试/SonarQube"
                         }

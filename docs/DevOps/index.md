@@ -7,6 +7,7 @@
   - [Jenkins](CI-CD/Jenkins.md)
     - [Jenkinsfile](CI-CD/Jenkinsfile.md)
 - 测试
+  - [Selenium](测试/Selenium.md)
   - [SonarQube](测试/SonarQube.md)
 - 容器
   - [简介](容器/简介.md)

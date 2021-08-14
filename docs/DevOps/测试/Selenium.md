@@ -4,7 +4,7 @@
 - [官网](https://www.selenium.dev/)
 - 发音为 `/səˈliːniəm/` 。
 - Selenium 项目提供了多个工具：
-  - WebDriver 
+  - WebDriver
   - IDE ：一个浏览器插件，用于记录用户在浏览器中的操作，记录成 Selenium 命令，便于快速创建测试用例。
   - Grid
 
@@ -61,13 +61,22 @@
 
 - 例：在网页输入信息
   ```py
-  from selenium.webdriver.common.keys import Keys
-
-  e = driver.find_element_by_id('kw')   # 查找 HTML 中的元素
-  e.send_keys('hello')                  # 输入字符串
-  e.send_keys(Keys.RETURN)              # 输入一个键盘快捷键
-  e.click()
+  >>> from selenium.webdriver.common.keys import Keys
+  >>> e = driver.find_element_by_id('kw')   # 查找 HTML 中的元素
+  >>> e.send_keys('hello')                  # 输入字符串
+  >>> e.send_keys(Keys.RETURN)              # 输入一个键盘快捷键
+  >>> e.click()
   ```
+
+- 例：切换浏览器的窗口
+  ```py
+  >>> driver.current_window_handle        # 获取当前窗口的句柄
+  'CDwindow-C88E17197FCFDE3459E9E81F7498A3EA'
+  >>> windows = driver.window_handles     # 获取浏览器所有窗口的句柄，返回一个 list
+  >>> driver.close()                      # 关闭当前窗口
+  >>> driver.switch_to.window(windows[0]) # 切换窗口
+  ```
+  - 浏览器可以打开多个窗口，而 driver 同时只能操纵一个窗口。
 
 ## Grid
 

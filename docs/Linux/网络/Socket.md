@@ -5,6 +5,43 @@
   - Unix Domain Socket ：用于本机的进程之间通信，保存为一个 Socket 文件，比如 /var/lib/mysql/mysql.sock 。
   - Network Socket ：用于不同主机的进程之间通信，基于 TCP/UDP 协议通信，用 host:port 表示通信方。
 
+## 状态
+
+- TCP 建立连接时的 Socket 状态变化：
+
+  ![](./socket_1.png)
+
+  - `LISTEN`      ：server 正在监听该 Socket ，允许接收 TCP 包。
+  - `SYN_SENT`    ：client 已发出 SYN=1 的 TCP 包，还没有收到 SYN=1、ACK=1 的 TCP 包。
+  - `SYN_RECV`    ：server 已收到 SYN=1 的 TCP 包，还没有收到 ACK=1 的 TCP 包。
+  - `ESTABLISHED` ：已建立连接。
+
+- TCP 断开连接时的 Socket 状态变化：
+
+  ![](./socket_2.png)
+
+  - `FIN-WAIT-1`
+  - `FIN-WAIT-2`
+  - `TIME_WAIT`
+    - 主动关闭方在关闭连接之后，还要等待 2*MSL 时间之后才能变成 CLOSED 状态，避免对方来不及关闭连接。此时该端口占用的资源不会被内核释放。
+    - MSL（Maximum Segment Lifetime）：TCP 段在网络传输中的最大生存时间，超过该时间就会被丢弃。它的默认值为 2 分钟。
+    - 一般 HTTP 通信时，服务器发出响应报文之后就会主动关闭连接（除非是长连接），使端口变成 TIME_WAIT 状态。
+    - 如果服务器处理大部分 HTTP 请求的时长，都远低于 TIME_WAIT 时长，就容易产生大量 TIME_WAIT 状态的端口，影响并发性能。
+  - `CLOSE_WAIT`
+    - 例如：HTTP 客户端发送 FIN 包来主动关闭连接时，HTTP 服务器没有马上调用 close() 关闭端口，就会长时间处于 CLOSE_WAIT 状态。
+  - `LAST_ACK`
+  - `CLOSED` ：已关闭连接。
+
+- 作为 server 时，Linux 内核会维护以下 TCP 连接队列：
+  - server 会将 SYN_RECV 状态的连接信息保存到 SYN 队列。
+    - 查看半连接的数量：
+      ```sh
+      netstat | grep SYN_RECV | wc -l
+      ```
+  - 当连接变为 ESTABLISHED 状态时，server 会将它从 SYN 队列取出，存入 accepet 队列，又称为全连接队列。
+    - 进程调用 accept() 函数，就可以从全连接队列中取出连接，完成 TCP 三次握手，相应的 Socket 变为 ESTABLISHED 状态。
+  - 当队列满了时，内核不会接收新连接，而是直接 drop 。
+
 ## 相关 API
 
 - 创建 Socket 的 API ：
@@ -60,7 +97,7 @@
   - 如果主机 B 的防火墙禁用了该端口，则会拒绝通信，导致主机 A 报错：`No route to host`
     - 防火墙也可能丢弃该包，不作出响应，导致主机 A 长时间停留在尝试连接的阶段，显示：`Trying <host>...`
     - 如果主机 A 长时间没有收到回复（连 RST 包都没收到），则超出等待时间之后会报错：`Connection timed out`
-  - 如果主机 B 的防火墙启用了该端口，但没有进程在监听该 socket ，则会回复一个 RST 包，表示拒绝连接，导致主机 A 报错：`Connection refused`
+  - 如果主机 B 的防火墙放通了该端口，但没有进程在监听该 socket ，则会回复一个 RST 包，表示拒绝连接，导致主机 A 报错：`Connection refused`
 
 - 当主机 A 与主机 B 通信过程中，主机 B 突然断开 TCP 连接时：
   - 如果主机 A 继续读取数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
@@ -179,8 +216,15 @@ FRAG: inuse 0 memory 0
     p_raw     # raw packet
     p_dgr     # datagram packet
     ```
-  - Recv-Q、Send-Q ：表示用于接收、发送的队列（即内存缓冲区）中待处理的数据包数。它们最好为 0 ，即没有包堆积。
+  - LISTEN 状态时：
+    - Recv-Q 表示当前全连接队列的长度。
+    - Send-Q 表示全连接队列允许的最大长度。
+  - 非 LISTEN 状态时：
+    - Recv-Q 表示已接收、尚未被进程读取的字节数。
+    - Send-Q 表示已发送、尚未收到对方 ACK 的字节数。
+    - 上述两个值为 0 时最好，说明内核缓冲区没有堆积。
   - 最右端的一列 users 表示监听每个端口的进程。
+
 - 例：查看各种 Socket 的统计数量
   ```sh
   [root@Centos ~]# ss -s

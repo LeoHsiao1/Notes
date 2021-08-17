@@ -1046,14 +1046,12 @@ server {
 
 ### sendfile
 
-：仅当 Nginx 发送本机上的文件时有效，提高发送文件的效率。
+：用于提高发送本机文件的速度。
 - 可用范围：http、server、location
 - 默认值：
   ```sh
   sendfile    off;
   ```
-- 传统进程发送一个文件时，要先从磁盘读取文件内容，载入内核缓冲区，再载入进程的用户缓冲区，最后拷贝到 Socket 缓冲区发送。
-- sendfile 是 Linux 系统提供的一种零拷贝技术，可以将内核缓冲区的指针直接传给 Socket 使用，从而减少发送文件时的负载和耗时。
 
 ### tcp_nodelay
 

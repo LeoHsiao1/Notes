@@ -7,6 +7,7 @@
 - 分布式系统
   - [简介](分布式系统/简介.md)
   - [ZooKeeper](分布式系统/ZooKeeper/ZooKeeper.md)
+    - [原理](分布式系统/ZooKeeper/原理.md)
     - [部署](分布式系统/ZooKeeper/部署.md)
     - [用法](分布式系统/ZooKeeper/用法.md)
   - [Zipkin](分布式系统/Zipkin.md)

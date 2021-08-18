@@ -1257,6 +1257,10 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
+                                    title: "原理",
+                                    path: "/Distributed/分布式系统/ZooKeeper/原理"
+                                },
+                                {
                                     title: "部署",
                                     path: "/Distributed/分布式系统/ZooKeeper/部署"
                                 },

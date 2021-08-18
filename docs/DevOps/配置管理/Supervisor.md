@@ -1,6 +1,6 @@
 # Supervisor
 
-：一个进程管理工具，类似于 systemd 。，
+：一个命令行工具，用于管理进程，类似于 systemd 。，
 - [官方文档](http://supervisord.org/index.html)
 - 采用 Python 开发。
 - 功能：

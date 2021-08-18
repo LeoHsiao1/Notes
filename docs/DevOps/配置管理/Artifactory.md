@@ -1,6 +1,6 @@
 # Artifactory
 
-：一个文件服务器，基于 HTTP 通信，常用于存储构建产物。
+：一个 Web 文件服务器，基于 HTTP 通信，常用于存储构建产物。
 - [官方文档](https://www.jfrog.com/confluence/display/RTF6X)
 - 由 Jfrog 公司推出，社区版可以免费使用，但功能较少。
 - 可以通过浏览器访问，也可以生成文件的下载链接，通过 curl 命令上传、下载文件。

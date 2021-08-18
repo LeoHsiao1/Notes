@@ -1,6 +1,6 @@
 # Jumpserver
 
-：一个跳板机系统，实现了堡垒机的功能，简称为 JMS 。
+：一个 Web 服务器，实现了跳板机、堡垒机的功能，简称为 JMS 。
 - [官方文档](https://docs.jumpserver.org/zh/master/)
 - 由飞致云公司开源，基于 Python 的 Django 框架开发，于 2018 年发布 1.0 版本。
 

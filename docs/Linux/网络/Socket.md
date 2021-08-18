@@ -1,7 +1,7 @@
 # Socket
 
-：套接字。一个在内存中创建的文件描述符，并不会实际存储在磁盘上。
-- 使用 Socket ，程序可以按读写文件的方式进行进程间通信。主要有两种用法：
+：套接字。是一种在内存中创建的文件描述符，并不会实际存储在磁盘上。
+- 使用 Socket ，程序可以用读写文件的方式进行进程间通信。主要有两种用法：
   - Unix Domain Socket ：用于本机的进程之间通信，保存为一个 Socket 文件，比如 /var/lib/mysql/mysql.sock 。
   - Network Socket ：用于不同主机的进程之间通信，基于 TCP/UDP 协议通信，用 host:port 表示通信方。
 
@@ -12,8 +12,9 @@
   ![](./socket_1.png)
 
   - `LISTEN`      ：server 正在监听该 Socket ，允许接收 TCP 包。
-  - `SYN_SENT`    ：client 已发出 SYN=1 的 TCP 包，还没有收到 SYN=1、ACK=1 的 TCP 包。
-  - `SYN_RECV`    ：server 已收到 SYN=1 的 TCP 包，还没有收到 ACK=1 的 TCP 包。
+  - `SYN_SENT`    ：client 已发出 SYN=1 的 TCP 包，还没有收到 SYN+ACK 包。
+  - `SYN_RECV`    ：server 已收到 SYN 包，还没有收到 ACK 包。
+    - 如果 server 一直未收到 ACK 包，则会在超时之后重新发送 SYN+ACK 包，再次等待。多次超时之后，server 会关闭该连接。
   - `ESTABLISHED` ：已建立连接。
 
 - TCP 断开连接时的 Socket 状态变化：
@@ -32,15 +33,18 @@
   - `LAST_ACK`
   - `CLOSED` ：已关闭连接。
 
-- 作为 server 时，Linux 内核会维护以下 TCP 连接队列：
-  - server 会将 SYN_RECV 状态的连接信息保存到 SYN 队列。
+- 对于每个 Socket ，内核会维护 SYN、accepet 两个连接队列。
+  - server 会将 SYN_RECV 状态的连接信息存入 SYN 队列，每个占用 304 bytes 内存。
     - 查看半连接的数量：
       ```sh
       netstat | grep SYN_RECV | wc -l
       ```
   - 当连接变为 ESTABLISHED 状态时，server 会将它从 SYN 队列取出，存入 accepet 队列，又称为全连接队列。
-    - 进程调用 accept() 函数，就可以从全连接队列中取出连接，完成 TCP 三次握手，相应的 Socket 变为 ESTABLISHED 状态。
-  - 当队列满了时，内核不会接收新连接，而是直接 drop 。
+    - 进程调用 accept() 函数，就可以从 accepet 队列中取出连接，完成 TCP 三次握手，相应的 Socket 变为 ESTABLISHED 状态。
+  - 当队列满了时，Socket 不能接收新连接。
+    - 内核默认会在 SYN 队列满了时启用 SYN Cookies 功能，从而抵抗 SYN Flood 攻击。
+      - 原理：将 SYN_RECV 状态的连接信息不存入 SYN 队列，而是在 server 回复的 SYN+ACK 包中包含一个 cookie 信息。client 之后发出 ACK 包时如果包含该 cookie ，则允许建立连接。
+      - 该功能不符合 TCP 协议，与某些服务不兼容。
 
 ## 相关 API
 
@@ -51,13 +55,14 @@
   int socket(int domain, int type, int protocol);                           // 打开一个 Socket ，输入的参数都是用于指定协议、类型
   int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);     // 将一个 Socket 绑定到指定的 IP 地址和 port 端口
 
-  int listen(int sockfd, int backlog);                                      // 监听指定 Socket （常用于作为服务器的进程）
+  int listen(int sockfd, int backlog);                                      // 让 Socket 进入 Listen 状态（常用于作为服务器的进程）
+      // backlog ：accept 队列的最大长度。该值的隐式最大值为 net.core.somaxconn
   int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);  // 连接到指定 Socket（常用于作为客户端的进程）
 
   int shutdown(int sockfd , int how);    // 用于停止 Socket 的通信（但并没有关闭 Socket ）
       // how ：表示操作类型，可以取值如下：
-        // SHUT_RD ：停止接收，并丢弃接收缓冲区中的数据
-        // SHUT_WR ：停止发送，但继续传输发送缓冲区中的数据
+        // SHUT_RD   ：停止接收，并丢弃接收缓冲区中的数据
+        // SHUT_WR   ：停止发送，但继续传输发送缓冲区中的数据
         // SHUT_RDWR ：停止接收和发送
   ```
 - 关闭、读写 Socket 的 API ，与普通文件一致：
@@ -72,13 +77,15 @@
 - 每个 Socket 连接由五元组 protocol、src_addr、src_port、dst_addr、dst_port 确定，只要其中一项元素不同， Socket 的文件描述符就不同。
   - 当服务器监听一个 TCP 端口时，可以被任意 dst_addr、dst_port 连接，因此建立的 Socket 连接有 255^4 * 65535 种可能性。
   - 实际上，一个主机上建立的 Socket 连接数一般最多为几万个，主要受以下因素限制：
-    - 内核允许进程打开的文件描述符总数
+    - 进程允许打开的文件描述符总数
     - 内存总量
+
 - Linux 收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
   - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
   - 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`
   - 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会收到本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
   - 如果一个进程绑定 IP 为 0.0.0.0 并监听，则会收到所有目标 IP 的数据包，只要目标端口一致。
+
 - 关闭 Socket 的几种方式：
   - 等创建该 Socket 的进程主动调用 close() 。
     - 其它进程不允许关闭，即使是 root 用户。
@@ -217,8 +224,8 @@ FRAG: inuse 0 memory 0
     p_dgr     # datagram packet
     ```
   - LISTEN 状态时：
-    - Recv-Q 表示当前全连接队列的长度。
-    - Send-Q 表示全连接队列允许的最大长度。
+    - Recv-Q 表示当前 accepet 队列的长度。
+    - Send-Q 表示 accepet 队列允许的最大长度。
   - 非 LISTEN 状态时：
     - Recv-Q 表示已接收、尚未被进程读取的字节数。
     - Send-Q 表示已发送、尚未收到对方 ACK 的字节数。

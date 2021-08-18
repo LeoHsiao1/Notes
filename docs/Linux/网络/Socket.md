@@ -5,7 +5,7 @@
   - Unix Domain Socket ：用于本机的进程之间通信，保存为一个 Socket 文件，比如 /var/lib/mysql/mysql.sock 。
   - Network Socket ：用于不同主机的进程之间通信，基于 TCP/UDP 协议通信，用 host:port 表示通信方。
 
-## 状态
+## TCP 连接
 
 - TCP 建立连接时的 Socket 状态变化：
 
@@ -33,7 +33,7 @@
   - `LAST_ACK`
   - `CLOSED` ：已关闭连接。
 
-- 对于每个 Socket ，内核会维护 SYN、accepet 两个连接队列。
+- TCP 建立连接时，每个 Socket 拥有 SYN、accepet 两个连接队列。
   - server 会将 SYN_RECV 状态的连接信息存入 SYN 队列，每个占用 304 bytes 内存。
     - 查看半连接的数量：
       ```sh
@@ -60,7 +60,7 @@
   int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);  // 连接到指定 Socket（常用于作为客户端的进程）
 
   int shutdown(int sockfd , int how);    // 用于停止 Socket 的通信（但并没有关闭 Socket ）
-      // how ：表示操作类型，可以取值如下：
+      // how ：表示操作类型，可取值：
         // SHUT_RD   ：停止接收，并丢弃接收缓冲区中的数据
         // SHUT_WR   ：停止发送，但继续传输发送缓冲区中的数据
         // SHUT_RDWR ：停止接收和发送

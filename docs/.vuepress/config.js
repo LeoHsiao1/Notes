@@ -1271,6 +1271,10 @@ module.exports = {
                             ]
                         },
                         {
+                            title: "etcd",
+                            path: "/Distributed/分布式系统/etcd"
+                        },
+                        {
                             title: "Zipkin",
                             path: "/Distributed/分布式系统/Zipkin"
                         }

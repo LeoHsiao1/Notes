@@ -10,6 +10,7 @@
     - [原理](分布式系统/ZooKeeper/原理.md)
     - [部署](分布式系统/ZooKeeper/部署.md)
     - [用法](分布式系统/ZooKeeper/用法.md)
+  - [etcd](分布式系统/etcd.md)
   - [Zipkin](分布式系统/Zipkin.md)
 - 消息队列
   - [简介](消息队列/简介.md)

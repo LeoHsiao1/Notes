@@ -102,7 +102,7 @@ docker
           --restart no
 
       top     <container>       # 显示某个容器的进程列表
-      stats                     # 显示所有容器的资源使用情况
+      stats                     # 显示所有容器的资源使用情况，包括单核 CPU 使用率、分配的内存使用率、网络 IO 量、磁盘 IO 量
       inspect <object>                      # 显示一个 Docker 对象的详细信息
           -f "{{json .HostConfig.Binds }}"  # --format ，只按照 JSON 格式显示指定信息
 ```

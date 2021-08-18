@@ -5,9 +5,11 @@
   - Unix Domain Socket ：用于本机的进程之间通信，保存为一个 Socket 文件，比如 /var/lib/mysql/mysql.sock 。
   - Network Socket ：用于不同主机的进程之间通信，基于 TCP/UDP 协议通信，用 host:port 表示通信方。
 
-## TCP 连接
+## TCP
 
-- TCP 建立连接时的 Socket 状态变化：
+### Socket 状态
+
+- 建立 TCP 连接时的 Socket 状态变化：
 
   ![](./socket_1.png)
 
@@ -17,7 +19,7 @@
     - 如果 server 一直未收到 ACK 包，则会在超时之后重新发送 SYN+ACK 包，再次等待。多次超时之后，server 会关闭该连接。
   - `ESTABLISHED` ：已建立连接。
 
-- TCP 断开连接时的 Socket 状态变化：
+- 断开 TCP 连接时的 Socket 状态变化：
 
   ![](./socket_2.png)
 
@@ -33,7 +35,9 @@
   - `LAST_ACK`
   - `CLOSED` ：已关闭连接。
 
-- TCP 建立连接时，每个 Socket 拥有 SYN、accepet 两个连接队列。
+### 连接队列
+
+- 建立 TCP 连接时，每个 Socket 拥有 SYN、accepet 两个连接队列。
   - server 会将 SYN_RECV 状态的连接信息存入 SYN 队列，每个占用 304 bytes 内存。
     - 查看半连接的数量：
       ```sh
@@ -41,12 +45,26 @@
       ```
   - 当连接变为 ESTABLISHED 状态时，server 会将它从 SYN 队列取出，存入 accepet 队列，又称为全连接队列。
     - 进程调用 accept() 函数，就可以从 accepet 队列中取出连接，完成 TCP 三次握手，相应的 Socket 变为 ESTABLISHED 状态。
-  - 当队列满了时，Socket 不能接收新连接。
-    - 内核默认会在 SYN 队列满了时启用 SYN Cookies 功能，从而抵抗 SYN Flood 攻击。
-      - 原理：将 SYN_RECV 状态的连接信息不存入 SYN 队列，而是在 server 回复的 SYN+ACK 包中包含一个 cookie 信息。client 之后发出 ACK 包时如果包含该 cookie ，则允许建立连接。
-      - 该功能不符合 TCP 协议，与某些服务不兼容。
+- 当队列满了时，Socket 不能接收新连接。
+  - 内核默认会在 SYN 队列满了时启用 SYN Cookies 功能，从而抵抗 SYN Flood 攻击。
+    - 原理：将 SYN_RECV 状态的连接信息不存入 SYN 队列，而是在 server 回复的 SYN+ACK 包中包含一个 cookie 信息。client 之后发出 ACK 包时如果包含该 cookie ，则允许建立连接。
+    - 该功能不符合 TCP 协议，与某些服务不兼容。
+
+### 常见报错
+
+- 当主机 A 向主机 B 的某个端口发送 SYN 包，请求建立 TCP 连接时：
+  - 如果主机 B 的防火墙禁用了该端口，则会拒绝通信，导致主机 A 报错：`No route to host`
+    - 防火墙也可能丢弃该包，不作出响应，导致主机 A 长时间停留在尝试连接的阶段，显示：`Trying <host>...`
+    - 如果主机 A 长时间没有收到回复（连 RST 包都没收到），则超出等待时间之后会报错：`Connection timed out`
+  - 如果主机 B 的防火墙放通了该端口，但没有进程在监听该 socket ，则会回复一个 RST 包，表示拒绝连接，导致主机 A 报错：`Connection refused`
+
+- 当主机 A 与主机 B 通信过程中，主机 B 突然断开 TCP 连接时：
+  - 如果主机 A 继续读取数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
+  - 如果主机 A 继续发送数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer`
 
 ## 相关 API
+
+### 创建 Socket
 
 - 创建 Socket 的 API ：
   ```c
@@ -65,14 +83,6 @@
         // SHUT_WR   ：停止发送，但继续传输发送缓冲区中的数据
         // SHUT_RDWR ：停止接收和发送
   ```
-- 关闭、读写 Socket 的 API ，与普通文件一致：
-  ```c
-  #include <unistd.h>
-
-  int close(int fd);
-  ssize_t read(int fd, void *buf, size_t count);
-  ssize_t write(int fd, const void *buf, size_t count);
-  ```
 - 建立 Network Socket 连接时，进程会以文件的形式打开 Socket 。
 - 每个 Socket 连接由五元组 protocol、src_addr、src_port、dst_addr、dst_port 确定，只要其中一项元素不同， Socket 的文件描述符就不同。
   - 当服务器监听一个 TCP 端口时，可以被任意 dst_addr、dst_port 连接，因此建立的 Socket 连接有 255^4 * 65535 种可能性。
@@ -86,6 +96,17 @@
   - 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会收到本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
   - 如果一个进程绑定 IP 为 0.0.0.0 并监听，则会收到所有目标 IP 的数据包，只要目标端口一致。
 
+### 读写 Socket
+
+- 关闭、读写 Socket 的 API ，与普通文件一致：
+  ```c
+  #include <unistd.h>
+
+  int close(int fd);
+  ssize_t read(int fd, void *buf, size_t count);
+  ssize_t write(int fd, const void *buf, size_t count);
+  ```
+
 - 关闭 Socket 的几种方式：
   - 等创建该 Socket 的进程主动调用 close() 。
     - 其它进程不允许关闭，即使是 root 用户。
@@ -97,18 +118,6 @@
     gdb  -p $PID              # 调试该进程
     call close($FD)           # 关闭 Socket
     ```
-
-## 常见报错
-
-- 当主机 A 向主机 B 的某个端口发送 SYN 包，请求建立 TCP 连接时：
-  - 如果主机 B 的防火墙禁用了该端口，则会拒绝通信，导致主机 A 报错：`No route to host`
-    - 防火墙也可能丢弃该包，不作出响应，导致主机 A 长时间停留在尝试连接的阶段，显示：`Trying <host>...`
-    - 如果主机 A 长时间没有收到回复（连 RST 包都没收到），则超出等待时间之后会报错：`Connection timed out`
-  - 如果主机 B 的防火墙放通了该端口，但没有进程在监听该 socket ，则会回复一个 RST 包，表示拒绝连接，导致主机 A 报错：`Connection refused`
-
-- 当主机 A 与主机 B 通信过程中，主机 B 突然断开 TCP 连接时：
-  - 如果主机 A 继续读取数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
-  - 如果主机 A 继续发送数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer`
 
 ## 相关命令
 

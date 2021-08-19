@@ -1,6 +1,6 @@
 # Docker
 
-：一个用于创建、管理容器的软件。
+：一个命令行工具，用于创建、管理容器。
 - [官方文档](https://docs.docker.com/get-started/overview/)
 - 采用 Golang 开发，在 Moby 项目中开源。
 - dotCloud 公司于 2013 年发布 Docker 软件，成为了最流行的容器引擎。
@@ -366,7 +366,7 @@
 
 #### libcgroup-tools
 
-：一个查看、配置 Cgroup 的工具包。
+：一个用于查看、配置 Cgroup 的工具包。
 - 安装：`yum install -y libcgroup-tools`
 - 命令：
   ```sh

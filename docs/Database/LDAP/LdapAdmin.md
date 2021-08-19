@@ -1,6 +1,6 @@
 # Ldap Admin
 
-：一个 GUI 类型的 LDAP 客户端软件，运行在 Windows 上，无需安装。
+：一个用作 LDAP 客户端的 GUI 软件，运行在 Windows 上，无需安装。
 - [官网](http://ldapadmin.org/)
 - 它会将连接服务器的凭据以明文形式保存在 Windows 的注册表中。
 
@@ -124,6 +124,9 @@
 - [官网](https://ltb-project.org/)
 
 常用工具：
-- `Self Service Password` ：一个采用 PHP 开发的网站，允许用户通过 Web 页面自行修改密码，而不需要 LDAP 管理员修改。
-- `White Pages` ：一个采用 PHP 开发的网站，允许用户搜索、查看 LDAP 中的数据。
-- `Service Desk` ：一个采用 PHP 开发的网站，供 LDAP 管理员锁定、重置用户密码。
+- Self Service Password
+  - ：一个 Web 服务器，采用 PHP 开发。允许用户通过 Web 页面自行修改密码，而不需要 LDAP 管理员修改。
+- White Pages
+  - ：一个 Web 服务器，采用 PHP 开发。允许用户搜索、查看 LDAP 中的数据。
+- Service Desk
+  - ：一个 Web 服务器，采用 PHP 开发。供 LDAP 管理员锁定、重置用户密码。

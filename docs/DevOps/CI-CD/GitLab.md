@@ -1,7 +1,8 @@
 # GitLab
 
-：一个流行的代码托管网站。
+：一个 Web 网站，用于托管 Git 仓库。
 - [官方文档](https://docs.gitlab.com/omnibus/README.html)
+- 可以访问公网上的 GitLab 官方网站，也可以自己部署。
 
 ## 部署
 

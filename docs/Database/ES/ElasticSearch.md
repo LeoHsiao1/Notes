@@ -1,6 +1,6 @@
 # ElasticSearch
 
-：简称为 ES ，一个搜索引擎，也可用作存储 JSON 格式数据的 NoSQL 数据库。
+：简称为 ES ，一个搜索服务器，也可用作存储 JSON 格式数据的 NoSQL 数据库。
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
 - 采用 Java 开发，基于 Lucene 实现。
 - 采用 C/S 架构、TCP 通信。
@@ -118,7 +118,7 @@
 ## 相关概念
 
 - Solr
-  - ：一个采用 Lucene 的搜索引擎，基于 Java 开发。
+  - ：一个采用 Lucene 的搜索服务器，基于 Java 开发。
   - 于 2006 年开源，由 ASF 管理。
   - 基于 zookeeper 运行分布式系统。
   - Solr 比 ES 的功能更丰富，但 ES 的实时性更强。

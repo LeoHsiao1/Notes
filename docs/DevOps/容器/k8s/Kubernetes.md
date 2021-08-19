@@ -1,6 +1,6 @@
 # Kubernetes
 
-：一个流行的容器编排系统。
+：一个大型的容器编排系统，通过 CLI 操作。
 - [官方文档](https://kubernetes.io/docs/concepts/)
 - 简称为 k8s ，8 表示中间的 8 个字母。
 - 擅长管理多主机上的大量容器，实现自动编排。

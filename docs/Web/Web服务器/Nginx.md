@@ -1,6 +1,6 @@
 # Nginx
 
-：一个轻量级的 Web 服务器软件。
+：一个轻量级的 HTTP 服务器。
 - [官方文档](http://nginx.org/en/docs/)
 - 读音相当于 engine x 。
 - 特点：

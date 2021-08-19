@@ -1,6 +1,6 @@
 # Redis
 
-：远程字典服务器（Remote Dictionary Server），一个存储在内存中的数据库，以键值对的形式存储数据。
+：远程字典服务器（Remote Dictionary Server），一个键值对型数据库，存储在内存中。
 - [官方文档](https://redis.io/documentation)
 - 发音为 `/ˈrɛdɪs/` 。
 - 采用 ANSI C 开发。

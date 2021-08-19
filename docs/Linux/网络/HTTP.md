@@ -2,7 +2,8 @@
 
 ## curl
 
-：一个与网络服务器通信的工具，基于 libcurl 库，支持 HTTP、HTTPS、FTP、SMTP 等多种协议，功能丰富。
+：一个命令行工具，常用于访问 HTTP 服务器。
+- 基于 libcurl 库开发，支持 HTTP、HTTPS、FTP、SMTP 等多种通信协议。
 
 命令：
 ```sh
@@ -66,7 +67,7 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
 
 ## wget
 
-：一个从网络服务器下载文件的工具，只支持 HTTP、HTTPS、FTP 协议。
+：一个命令行工具，与 curl 类型，只支持 HTTP、HTTPS、FTP 协议。
 
 命令：
 ```sh

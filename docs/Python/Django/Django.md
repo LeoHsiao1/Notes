@@ -41,7 +41,7 @@
     │   ├── __init__.py
     │   ├── settings.py     # 包含 Django 框架的配置
     │   ├── urls.py         # 包含 Django 项目的 URL 主路由规则
-    │   └── wsgi.py         # 用于让其它 Web 服务器软件通过 WSGI 接口运行该 Django 项目
+    │   └── wsgi.py         # 用于让其它 Web 服务器通过 WSGI 接口运行该 Django 项目
     └── manage.py           # 用于管理 Django 项目、启动测试服务器
     ```
     - 此时该项目中只包含一个主 Web 应用和一些基础的文件，使得该 Django 项目能够运行。

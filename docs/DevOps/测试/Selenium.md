@@ -1,6 +1,6 @@
 # Selenium
 
-：一个用于实现 Web 自动化测试的开源项目。
+：一个用于 Web 自动化测试的开源项目。
 - [官网](https://www.selenium.dev/)
 - 发音为 `/səˈliːniəm/` 。
 - Selenium 项目提供了多个工具：
@@ -10,7 +10,7 @@
 
 ## WebDriver
 
-：一个驱动程序，作为 HTTP 服务器运行，用于调用浏览器的 API 来访问网站。
+：一个 HTTP 服务器，用于调用浏览器的 API 来访问网站。
 - 支持调用 Firefox、Chrome 等浏览器。
 
 ### 安装

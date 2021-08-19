@@ -8,7 +8,7 @@
 
 ## ftp
 
-：一个 FTP 客户端软件。
+：一个命令行工具，用作 FTP 客户端。
 - 安装：`yum install ftp`
 - 通信时，客户端先使用本机随机一个端口创建 Socket ，连接到服务器的 21 端口。登录成功之后有两种通信模式：
   - 主动模式（Acitve mode）
@@ -123,7 +123,7 @@
 
 ## vsftpd
 
-：very secure ftp daemon ，一个加密型 FTP 服务器软件。
+：very secure ftp daemon ，一个加密型的 FTP 服务器。
 - [官方文档](https://security.appspot.com/vsftpd/vsftpd_conf.html)
 - 支持三种登录模式：
   - 匿名用户模式：允许任何客户端登录（用户名为 anonymous ，密码为空），最不安全。

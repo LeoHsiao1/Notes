@@ -10,8 +10,8 @@
   - ：Docker 官方的镜像仓库，地址为 `https://hub.docker.com` 。
   - 公开的镜像不需登录就可以 Pull ，但 Push 镜像时需要登录
 - Docker Registry
-  - ：一个提供私有镜像仓库的服务器软件，由 Docker 官方开源。
-  - 功能比 Harbor 少。
+  - ：一个提供私有镜像仓库的服务器，由 Docker 官方开源。
+  - 功能比 Harbor 少，没有提供 Web UI 。
 
 ## 部署
 

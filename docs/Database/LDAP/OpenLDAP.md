@@ -1,6 +1,6 @@
 # OpenLDAP
 
-：一个开源的 LDAP 服务器软件。
+：一个开源的 LDAP 服务器。
 - [官网](https://www.openldap.org/)
 - 它会运行一个 slapd 进程，作为 LDAP 服务器。
 - 同类产品：

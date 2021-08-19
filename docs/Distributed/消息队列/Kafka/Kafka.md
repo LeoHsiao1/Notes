@@ -1,6 +1,6 @@
 # Kafka
 
-：一个消息队列。
+：一个消息队列服务器。
 - [官方文档](http://kafka.apache.org/documentation/)
 - 采用 Scala 开发。
 - 2011 年由 LinkedIn 公司开源，后来捐献给了 ASF 。

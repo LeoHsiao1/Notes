@@ -1,6 +1,6 @@
 # Jumpserver
 
-：一个 Web 服务器，实现了跳板机、堡垒机的功能，简称为 JMS 。
+：一个 Web 服务器，提供了跳板机、堡垒机的功能，简称为 JMS 。
 - [官方文档](https://docs.jumpserver.org/zh/master/)
 - 由飞致云公司开源，基于 Python 的 Django 框架开发，于 2018 年发布 1.0 版本。
 
@@ -30,8 +30,8 @@
 ### 主要模块
 
 - Core ：核心组件，通过 Restful API 与其它模块交互。
-- Coco ：一个采用 Python 开发的 SSH 客户端。目前已被 Koko 替换。
-- Koko ：一个采用 Golang 开发的 SSH 客户端。
+- Coco ：一个 SSH 客户端，采用 Python 开发。目前已被 Koko 替换。
+- Koko ：一个 SSH 客户端，采用 Golang 开发。
 - Guacamole ：一个无客户端的远程桌面网关，由 Apache 开源。JMS 调用它来实现 RDP 功能。
 - Luna ：用于渲染、输出前端文件。
 - Nginx ：用于反向代理 Luna 。

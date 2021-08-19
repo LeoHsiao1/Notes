@@ -1,6 +1,6 @@
 # Nextcloud
 
-：一个企业级的网盘服务器，基于 HTTP 通信。
+：一个 Web 服务器，提供了企业级的网盘功能，基于 HTTP 通信。
 - [官方文档](https://docs.nextcloud.com/server/10/user_manual/contents.html)
 - 功能：
   - 可以通过浏览器访问，也提供了 Linux、MacOS、Windows、Android、IOS 版的客户端。

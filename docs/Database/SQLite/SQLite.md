@@ -1,6 +1,6 @@
 # SQLite
 
-：一个很轻量级的关系型数据库。
+：一个关系型数据库，很轻量级。
 - [官网](https://www.sqlite.org/index.html)
 - 采用 C 语言开发。
 - 支持 SQL 操作，支持简单的 CRUD 功能，还支持 ACID 事务。

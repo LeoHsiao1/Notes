@@ -1239,10 +1239,6 @@ module.exports = {
                             path: "/Distributed/简介/云计算"
                         },
                         {
-                            title: "微服务",
-                            path: "/Distributed/简介/微服务"
-                        },
-                        {
                             title: "大数据",
                             path: "/Distributed/简介/大数据"
                         }

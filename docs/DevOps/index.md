@@ -29,6 +29,7 @@
   - [Jumpserver](配置管理/Jumpserver.md)
   - [Supervisor](配置管理/Supervisor.md)
   - [Nacos](配置管理/Nacos.md)
+  - [Consul](配置管理/Consul.md)
   - [Artifactory](配置管理/Artifactory.md)
   - [Harbor](配置管理/Harbor.md)
 - 监控告警

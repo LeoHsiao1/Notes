@@ -1144,6 +1144,10 @@ module.exports = {
                             path: "/DevOps/配置管理/Nacos"
                         },
                         {
+                            title: "Consul",
+                            path: "/DevOps/配置管理/Consul"
+                        },
+                        {
                             title: "Artifactory",
                             path: "/DevOps/配置管理/Artifactory"
                         },

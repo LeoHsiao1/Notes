@@ -16,11 +16,12 @@
 - Consul agent 有两种运行模式：
   - client
     - ：负责定时访问本机、本机的服务，进行健康检查。
-    - 轻量级，不储存数据。收到 RPC 请求时会转发给 server 。
+    - 轻量级，不储存数据。收到查询请求时会转发给 server 。
   - server
-    - ：比 client 多了参与分布式投票的资格。负责存储数据，并维护分布式一致性。
+    - ：比 client 多了维护分布式集群的责任。负责存储集群数据，并保证分布式一致性。
     - 采用 Raft 算法。
     - 多个 server 之间会自行选出 leader 。
+    - 建议部署 3 或 5 个 server ，允许 1 或 2 个 server 故障，实现高可用。
 
 - Consul 支持划分多个数据中心（Data Center）。
   - 数据中心表示一个低延迟的子网，包含一组主机。
@@ -32,7 +33,7 @@
 
 ### ACL
 
-Consul 支持设置 ACL 规则，主要概念如下：
+Consul 支持为 HTTP、RPC 通信设置 ACL 规则，主要概念如下：
 
 - Token
   - ：一个格式像 UUID 的十六进制字符串，由 Consul 随机生成，代表一个用户。
@@ -64,18 +65,27 @@ Consul 支持设置 ACL 规则，主要概念如下：
     - policy 有多种取值，从高到低如下：
       ```sh
       deny      # 不允许读、写
-      write     # 允许读、写
+      write     # 允许读、写、list
+      list      # 只对 key 资源有效，允许递归读取当前 key 的子 key
       read      # 只允许读
       ```
       - 在 Web 界面，node、service 资源总是只读的，不支持修改。
 
   - 例：
     ```hcl
-    service_prefix "" {
+    service_prefix "" {     # 允许读取所有服务
       policy = "read"
     }
-    service "service1" {
+    service "service1" {    # 允许读写指定服务
       policy = "write"
+    }
+    ```
+    ```hcl
+    key "" {                          # 允许读取名为空的 key ，从而在 Web 端显示 Key/Value 页面
+      policy = "read"
+    }
+    key_prefix "test_env/project1" {  # 允许读写某个路径开头的 key
+      policy = "read"
     }
     ```
   - 内置了一个名为 Global Management 的策略，赋予对所有资源的访问权限。
@@ -113,7 +123,6 @@ Consul 支持设置 ACL 规则，主要概念如下：
     node_prefix "" {
       policy = "write"
     }
-
     service_prefix "" {
       policy = "read"
     }

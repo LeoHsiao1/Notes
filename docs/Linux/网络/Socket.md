@@ -184,7 +184,7 @@ FRAG: inuse 0 memory 0
 - 命令：
   ```sh
   $ netstat
-          -a  # 显示所有网络连接、socket
+          -a  # 显示所有 socket
           -l  # 只显示被进程 listen 的 socket
           -t  # 只显示 TCP 的 socket
           -u  # 只显示 UDP 的 socket
@@ -202,7 +202,7 @@ FRAG: inuse 0 memory 0
 - 命令：
   ```sh
   $ ss        # 显示 established 状态的 socket
-      -a      # 显示所有 socket
+      -a      # 显示所有状态的 socket
       -l      # 只显示被进程 listen 的 socket
       -t      # 只显示 TCP 的 socket
       -u      # 只显示 UDP 的 socket

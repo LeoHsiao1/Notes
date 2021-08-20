@@ -772,7 +772,29 @@ module.exports = {
                         },
                         {
                             title: "身份认证",
-                            path: "/Web/后端/身份认证"
+                            path: "/Web/后端/身份认证/身份认证",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "OAuth",
+                                    path: "/Web/后端/身份认证/OAuth"
+                                },
+                                {
+                                    title: "LDAP",
+                                    path: "/Web/后端/身份认证/LDAP/LDAP",
+                                    collapsable: false,
+                                    children: [
+                                        {
+                                            title: "OpenLDAP",
+                                            path: "/Web/后端/身份认证/LDAP/OpenLDAP"
+                                        },
+                                        {
+                                            title: "LdapAdmin",
+                                            path: "/Web/后端/身份认证/LDAP/LdapAdmin"
+                                        }
+                                    ]
+                                }
+                            ]
                         }
                     ]
                 },
@@ -987,23 +1009,6 @@ module.exports = {
                         {
                             title: "配置",
                             path: "/Database/ES/配置"
-                        }
-                    ]
-                },
-                {
-                    title: "LDAP",
-                    children: [
-                        {
-                            title: "LDAP",
-                            path: "/Database/LDAP/LDAP"
-                        },
-                        {
-                            title: "OpenLDAP",
-                            path: "/Database/LDAP/OpenLDAP"
-                        },
-                        {
-                            title: "LdapAdmin",
-                            path: "/Database/LDAP/LdapAdmin"
                         }
                     ]
                 }

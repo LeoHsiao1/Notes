@@ -125,7 +125,7 @@
   updatelatency_sum         # 写操作的耗时，包括等待 quorum 投票
 
   # 关于客户端
-  connection_request_count  # 客户端发出连接请求的数量
+  connection_request_count  # 客户端发出连接请求的累计数量
   global_sessions           # 客户端会话数
   watch_count               # watch 的数量
   ```
@@ -134,7 +134,7 @@
 
 ### node_exporter
 
-：用于监控类 Unix 主机的状态。
+：用于监控类 Unix 主机。
 - [GitHub](https://github.com/prometheus/node_exporter)
 - 下载后启动：
   ```sh
@@ -179,7 +179,7 @@
 
   # 关于网卡
   node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast 是广播地址，duplex 是双工模式，）
-  node_network_up                                                     # 网卡的状态（取值 1、0 表示是否正在启用）
+  node_network_up                                                     # 网卡的状态，取值 1、0 表示是否正在启用
   node_network_mtu_bytes                                              # MTU 大小
   irate(node_network_receive_bytes_total{device!~`lo|docker0`}[5m])   # 网卡每秒接收量
   irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[5m])  # 网卡每秒发送量
@@ -215,7 +215,7 @@
 
 ### process-exporter
 
-：用于监控 Linux 主机上的进程、线程的状态。
+：用于监控 Linux 主机上的进程、线程。
 - [GitHub](https://github.com/ncabatoff/process-exporter)
 - 它主要通过读取 `/proc/<pid>/` 目录下的信息，来收集进程指标。
 - 下载后启动：
@@ -308,7 +308,7 @@
 
 ### windows_exporter
 
-：用于监控 Windows 主机的状态，也可监控其进程的状态。
+：用于监控 Windows 主机，也可监控其进程。
 - [GitHub](https://github.com/prometheus-community/windows_exporter)
 - 下载 exe 版后启动：
   ```sh
@@ -377,7 +377,7 @@
 
 ### cAdvisor
 
-：用于监控容器的状态。
+：用于监控容器。
 - [GitHub](https://github.com/google/cadvisor)
 - 该工具由 Google 公司开发，支持将监控数据输出到 Prometheus、InfluxDB、Kafka、ES 等存储服务。
 - 下载后启动：
@@ -477,9 +477,86 @@
 
 ## 专用类型
 
+### mongodb_exporter
+
+：用于监控 MongoDB 服务器。
+- [GitHub](https://github.com/percona/mongodb_exporter)
+- 下载后启动：
+  ```sh
+  ./mongodb_exporter
+                # --web.listen-address :9216
+                # --web.telemetry-path /metrics
+                --mongodb.uri mongodb://127.0.0.1:27017/admin # 指定 MongoDB URI
+                --mongodb.collstats-colls db1.col1,db1.col2   # 监控指定集合
+                --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
+                --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 中数据库的集合
+                --mongodb.global-conn-pool                    # 使用全局连接池，而不是为每个 HTTP 请求创建新连接
+  ```
+  或者用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    mongodb_exporter:
+      container_name: mongodb_exporter
+      image: bitnami/mongodb-exporter:0.20.7
+      command:
+        - --mongodb.uri=mongodb://127.0.0.1:27017/admin
+      restart: unless-stopped
+      ports:
+        - 9216:9216
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+  ```
+- 指标示例：
+  ```sh
+  # 关于 server status
+  mongodb_ss_ok{cl_id="", cl_role="mongod", rs_state="0"} # 服务器是否运行，取值为 1、0 。标签中记录了 Cluster、ReplicaSet 的信息
+  mongodb_ss_uptime                                       # 服务器的运行时长，单位为秒
+  mongodb_ss_connections{conn_type="current"}             # 客户端连接数
+
+  # 关于操作
+  irate(mongodb_ss_opcounters[5m])                        # 执行各种操作的数量
+  irate(mongodb_ss_opLatencies_latency[5m])               # 执行各种操作的延迟，单位为微秒
+  irate(mongodb_ss_metrics_document[5m])                  # 各种文档的变化数量
+
+  # 关于锁
+  irate(mongodb_ss_locks_acquireCount{lock_mode="w"}[5m]) # 新加锁的数量。R 表示共享锁，W 表示独占锁，r 表示意向共享锁，w 表示意向独占锁
+  mongodb_ss_globalLock_currentQueue{count_type="total"}  # 被锁阻塞的操作数
+
+  # 关于主机的状态
+  mongodb_sys_cpu_num_cpus    # 主机的 CPU 核数
+  ```
+
+### elasticsearch_exporter
+
+：用于监控 ES 服务器。
+- [GitHub](https://github.com/justwatchcom/elasticsearch_exporter)
+- 下载后启动：
+  ```sh
+  ./elasticsearch_exporter
+                --web.listen-address :9114
+                --web.telemetry-path /metrics
+                --es.uri http://localhost:9200  # ES 的 URL
+                --es.all false                  # 是否采集 ES 集群中所有节点的信息（默认只采集当前节点）
+                --es.cluster_settings false     # 是否采集集群的设置信息
+                --es.indices false              # 是否采集 index 的信息
+                --es.indices_settings false     # 是否采集 index 的设置信息
+                --es.shards false               # 是否采集 shard 的信息
+                --es.snapshots false            # 是否采集 snapshot 的信息
+                --es.timeout 5s                 # 从 ES 采集信息的超时时间
+  ```
+- 指标示例：
+  ```sh
+  elasticsearch_exporter_build_info{branch="master", goversion="go1.12.3", instance="10.0.0.1:9114", job="elasticsearch_exporter", revision="fe20e499ffdd6053e6153bac15eae494e08931df", version="1.1.0"}  # 版本信息
+
+  elasticsearch_cluster_health_status{color="green"}        # 集群状态是否为 green
+  # 详见 Github 页面上的说明
+  ```
+
 ### kafka_exporter
 
-：用于监控 Kafka 的状态。
+：用于监控 Kafka 。
 - [GitHub](https://github.com/danielqsj/kafka_exporter)
 - 下载后启动：
   ```sh
@@ -509,6 +586,8 @@
         - --kafka.server=10.0.0.1:9092
       ports:
         - 9308:9308
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
   ```
 - 指标示例：
   ```sh
@@ -529,30 +608,4 @@
   kafka_consumergroup_members{consumergroup="x"}                                    # 某个 consumergroup 的成员数
   kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
   kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
-  ```
-
-### elasticsearch_exporter
-
-：用于监控 ES 服务器的状态。
-- [GitHub](https://github.com/justwatchcom/elasticsearch_exporter)
-- 下载后启动：
-  ```sh
-  ./elasticsearch_exporter
-                --web.listen-address :9114
-                --web.telemetry-path /metrics
-                --es.uri http://localhost:9200  # ES 的 URL
-                --es.all false                  # 是否采集 ES 集群中所有节点的信息（默认只采集当前节点）
-                --es.cluster_settings false     # 是否采集集群的设置信息
-                --es.indices false              # 是否采集 index 的信息
-                --es.indices_settings false     # 是否采集 index 的设置信息
-                --es.shards false               # 是否采集 shard 的信息
-                --es.snapshots false            # 是否采集 snapshot 的信息
-                --es.timeout 5s                 # 从 ES 采集信息的超时时间
-  ```
-- 指标示例：
-  ```sh
-  elasticsearch_exporter_build_info{branch="master", goversion="go1.12.3", instance="10.0.0.1:9114", job="elasticsearch_exporter", revision="fe20e499ffdd6053e6153bac15eae494e08931df", version="1.1.0"}  # 版本信息
-
-  elasticsearch_cluster_health_status{color="green"}        # 集群状态是否为 green
-  # 详见 Github 页面上的说明
   ```

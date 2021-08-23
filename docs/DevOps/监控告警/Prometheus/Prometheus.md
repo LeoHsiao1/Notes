@@ -167,7 +167,7 @@ scrape_configs:
   file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
   - files:
     - targets/node_exporter*.json
-    refresh_interval: 1m            # 每隔 1m 重新读取一次
+    # refresh_interval: 5m          # 每隔多久重新读取一次
 ```
 - Prometheus 从每个监控对象处抓取指标数据时，默认会自动加上 `job: "$job_name"`、`instance: "$target"` 两个标签。
   还会自动记录以下指标：

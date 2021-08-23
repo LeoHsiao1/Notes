@@ -242,10 +242,6 @@ module.exports = {
                     title: "文本处理",
                     children: [
                         {
-                            title: "文本",
-                            path: "/Python/文本处理/文本"
-                        },
-                        {
                             title: "字节编码",
                             path: "/Python/文本处理/字节编码"
                         },
@@ -255,6 +251,7 @@ module.exports = {
                         },
                         {
                             title: "序列化",
+                            path: "/Python/文本处理/序列化/序列化",
                             collapsable: false,
                             children: [
                                 {

@@ -273,7 +273,18 @@ module.exports = {
                         },
                         {
                             title: "字符串匹配",
-                            path: "/Python/文本处理/字符串匹配"
+                            path: "/Python/文本处理/字符串匹配/字符串匹配",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "通配符",
+                                    path: "/Python/文本处理/字符串匹配/通配符"
+                                },
+                                {
+                                    title: "正则匹配",
+                                    path: "/Python/文本处理/字符串匹配/正则匹配"
+                                }
+                            ]
                         }
                     ]
                 },

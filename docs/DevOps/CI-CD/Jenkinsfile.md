@@ -193,9 +193,9 @@ pipeline {
   echo currentBuild.fullDisplayName   # Build 的全名，格式为 JOB_NAME #number
   echo currentBuild.description       # Build 的描述，默认为 null
   echo currentBuild.duration          # Build 的持续时长，单位 ms
-  echo currentBuild.result            # Build 的结果，如果构建尚未结束，则返回值为 null
-  echo currentBuild.currentResult     # Build 的当前结果。开始执行时为 SUCCESS ，受每个 stage 影响，不会为 null
+  echo currentBuild.result            # Build 的结果。如果构建尚未结束，则返回值为 null
   ```
+  echo currentBuild.currentResult     # Build 的当前状态。开始执行时为 SUCCESS ，受每个 stage 影响，不会变为 null
   - 只有 displayName、description 变量支持修改。修改其它变量时会报错：`RejectedAccessException: No such field`
   - 例：修改本次构建的名称
     ```groovy
@@ -443,10 +443,10 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 ### timeout
 
 ：用于设置超时时间。
-- 超时之后则放弃执行，并将任务的状态标记成 ABORTED 。
+- 超时之后则立即终止 Job ，变为 ABORTED 状态。
 - 例：
   ```groovy
-  timeout(time: 3, unit: 'SECONDS') {     // 单位可以是 SECONDS、MINUTES、HOURS
+  timeout(time: 3, unit: 'SECONDS') {     // 时间单位可以是 SECONDS、MINUTES、HOURS
       sh 'ping baidu.com'
   }
   ```
@@ -661,10 +661,10 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 
 ## when{}
 
-：用于在满足条件时才执行某个阶段。
+：用于在满足条件时才执行某个 stage 。
 - 可用范围：stage{}
-- 不满足 when{} 的条件时，会跳过执行该阶段，但并不会导致执行结果为 Failure 。
-- 常见的几种定义方式：
+- 不满足 when{} 的条件时，会跳过执行该 stage ，但并不会导致执行状态变为 Failure 。
+- 例：
   ```groovy
   when {
       environment name: 'A', value: '1'  // 当环境变量等于指定值时
@@ -672,13 +672,8 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   ```
   ```groovy
   when {
-      branch 'dev'            // 当分支为 dev 时（仅适用于多分支流水线）
-  }
-  ```
-  ```groovy
-  when {
       expression {            // 当 Groovy 表达式为 true 时
-          return params.A
+          currentBuild.currentResult == 'SUCCESS'
       }
   }
   ```
@@ -695,15 +690,11 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
           environment name: 'A', value: '1'
           environment name: 'B', value: '2'
       }
-      branch 'dev'            // 默认就可以包含多个条件，相当于隐式的 allOf{}
-  }
-  ```
-  ```groovy
-  when {
-      anyOf {                 // 当子条件只要有一个为 true 时
+      anyOf {                 // 当任一子条件为 true 时
           environment name: 'A', value: '1'
           environment name: 'B', value: '2'
       }
+      branch 'dev'            // when{} 子句中的多个条件默认为 allOf{} 的关系
   }
   ```
 

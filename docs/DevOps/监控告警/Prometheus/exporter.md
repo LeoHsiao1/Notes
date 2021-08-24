@@ -481,18 +481,7 @@
 
 ：用于监控 MongoDB 服务器。
 - [GitHub](https://github.com/percona/mongodb_exporter)
-- 下载后启动：
-  ```sh
-  ./mongodb_exporter
-                # --web.listen-address :9216
-                # --web.telemetry-path /metrics
-                --mongodb.uri mongodb://127.0.0.1:27017/admin # 指定 MongoDB URI
-                --mongodb.collstats-colls db1.col1,db1.col2   # 监控指定集合
-                --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
-                --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 中数据库的集合
-                --mongodb.global-conn-pool                    # 使用全局连接池，而不是为每个 HTTP 请求创建新连接
-  ```
-  或者用 docker-compose 部署：
+- 用 docker-compose 部署：
   ```yml
   version: '3'
 
@@ -501,13 +490,19 @@
       container_name: mongodb_exporter
       image: bitnami/mongodb-exporter:0.20.7
       command:
+        # - --web.listen-address :9216
+        # - --web.telemetry-path /metrics
         - --mongodb.uri=mongodb://127.0.0.1:27017/admin
+        # - --mongodb.collstats-colls db1.col1,db1.col2   # 监控指定集合
+        # - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
+        # - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的集合
       restart: unless-stopped
       ports:
         - 9216:9216
       volumes:
         - /etc/localtime:/etc/localtime:ro
   ```
+
 - 指标示例：
   ```sh
   # 关于 server status
@@ -558,22 +553,7 @@
 
 ：用于监控 Kafka 。
 - [GitHub](https://github.com/danielqsj/kafka_exporter)
-- 下载后启动：
-  ```sh
-  ./kafka_exporter
-                # --web.listen-address=:9308
-                # --web.telemetry-path=/metrics
-
-                --kafka.server=10.0.0.1:9092    # kafka 服务器的地址，可以多次使用该选项
-                # - --kafka.server=10.0.0.2:9092
-                --kafka.version=2.2.0
-                # --sasl.enabled=false
-                # --sasl.username=xx
-                # --sasl.password=******
-                # --topic.filter=.*            # 通过正则表达式筛选要监控的 topic ，例如 filter=^[^_].*
-                # --group.filter=.*
-  ```
-  或者用 docker-compose 部署：
+- 用 docker-compose 部署：
   ```yml
   version: '3'
 
@@ -583,7 +563,15 @@
       image: danielqsj/kafka-exporter:v1.3.1
       restart: unless-stopped
       command:
-        - --kafka.server=10.0.0.1:9092
+        # - --web.listen-address=:9308
+        # - --web.telemetry-path=/metrics
+        - --kafka.server=10.0.0.1:9092    # broker 的地址，可以多次使用该选项
+        - --kafka.version=2.2.0
+        # - --sasl.enabled=false
+        # - --sasl.username=xx
+        # - --sasl.password=******
+        # - --topic.filter=.*             # 通过正则表达式筛选要监控的 topic ，例如 filter=^[^_].*
+        # - --group.filter=.*
       ports:
         - 9308:9308
       volumes:

@@ -11,7 +11,7 @@
 - 所有 Pipeline Job 的 Web 页面中都有一个名为 "流水线语法" 的链接，点击之后可以查看一些关于 Pipeline 的帮助文档。
   - 比如可以使用 "片段生成器" ，将 Web 表单中的配置参数转换成流水线代码。
 
-## 例
+## 示例
 
 ```groovy
 pipeline {
@@ -361,6 +361,14 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       // propagate: true,   // 是否让下游 job 的构建结果影响当前 job 。需要启用 wait 才生效
       // quietPeriod: 5,    // 设置静默期，默认为 5 秒
   )
+  ```
+
+### error
+
+：用于让 Job 立即终止，变为 Failure 状态，并显示一行提示文本。
+- 例：
+  ```groovy
+  error '任务执行出错'
   ```
 
 ### script

@@ -92,9 +92,9 @@
   chown -R 65534 .
   ```
 
-### 分布式部署
+### 集群
 
-- Prometheus 支持抓取其它 Prometheus 的数据，因此支持分布式部署。
+- Prometheus 支持抓取其它 Prometheus 的数据，因此可以部署成集群。
 - 在 prometheus.yml 中按如下格式定义一个 job ，即可抓取其它 Prometheus 的数据：
     ```yaml
     scrape_configs:
@@ -110,7 +110,7 @@
           - '10.0.0.2:9090'
           - '10.0.0.3:9090'
     ```
-- 只能抓取目标 Prometheus 最新时刻的指标，就像抓取一般的 exporter 。
+  - 只能抓取目标 Prometheus 最新时刻的指标，就像抓取一般的 exporter 。
   - 如果目标 Prometheus 掉线一段时间，则重新连接之后并不会同步掉线期间的指标。
 
 ## 配置
@@ -431,14 +431,15 @@ scrape_configs:
   ```
   - 在 Promtheus 的 Table 视图中，显示的指标默认是无序的，只能通过 sort() 函数按指标值排序。不支持按 label 进行排序。
   - 在 Graph 视图中，显示的图例是按第一个标签的值进行排序的，且不受 sort() 函数影响。
-一
+
 - 修改矢量的标签：
   ```sh
   label_join(go_goroutines, "new_label", ",", "instance", "job")               # 给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance、job 标签的值的组合，用 , 分隔
   label_replace(go_goroutines, "new_label", "$1-$2", "instance", "(.*):(.*)")  # 给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance 标签的值的正则匹配的结果
   ```
 
-- 如果矢量包含多个时间序列，用算术函数会分别对这些时间序列进行运算，而用聚合函数会将它们合并成一个或多个时间序列。
+#### 算术函数
+
 - 矢量可以使用以下算术函数：
   ```sh
   abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
@@ -447,30 +448,34 @@ scrape_configs:
   absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内矢量一直为空，则返回 1 ，否则返回空值
   changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内的数据点变化的次数
   delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负），适合计算变化量
-  idelta(go_goroutines[5m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负），适合计算瞬时变化量
-  ```
-  以下算术函数适用于计数器类型的矢量：
-  ```sh
+  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
+
+  # 以下算术函数适用于 Counter 类型，即单调递增的矢量
   resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内计数器重置（即数值减少）的次数
-  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（时间间隔越短，曲线高度越低）
-  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的每秒平均增长率（时间间隔越长，曲线越平缓）
-  irate(go_goroutines[5m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的每秒平均增长率（曲线比较尖锐，接近瞬时值）
+  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量
+  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的每秒平均增量（时间间隔越长，曲线越平缓）
+  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的每秒平均增量
   ```
-  - 使用算术函数时，时间间隔 `[t]` 必须要大于矢量的采样间隔，否则计算结果为空。
-  - 例如：正常情况下 node_time_seconds 的值是每秒加 1 ，因此不论 scrape_interval 的取值为多少，
-    - `delta(node_time_seconds[1m])` 计算得到的每个数据点的值都是 60 。
+  - 使用算术函数时，时间间隔 `[t]` 必须要大于 scrape_interval ，否则计算结果为空。
+  - 例：正常情况下 node_time_seconds 的值是每秒加 1 ，因此：
+    - `delta(node_time_seconds[1m])` 计算结果的每个数据点的值都是 60 。
     - `rate(node_time_seconds[1m])` 每个点的值都是 1 。
-    - `irate(node_time_seconds[1m])` 每个点的值也都是 1 。
-      因为 node_time_seconds 匀速增长，所以 irate() 与 rate() 的计算结果近似。
-    - 如果 scrape_interval 为 30s ，则 `idelta(node_time_seconds[1m])` 计算得到的每个数据点的值都是 30 。
-
+    - `irate(node_time_seconds[xx])` 每个点的值也都是 1 。
+    - 如果 scrape_interval 为 30s ，则 `idelta(node_time_seconds[xx])` 每个点的值都是 30 。
   - increase() 实际上是 rate() 乘以时间间隔的语法糖。
-  - 如果矢量为单调递增，则 delta() 与 increase() 的计算结果相同。
-    但是如果时间间隔 `[t]` 不比 scrape_interval 大几倍，则 delta() 和 increase() 的计算结果会比实际值偏大。
-  - 如果矢量的单调性变化，则 delta() 的计算结果可能为负，可以只取 >= 0 部分的值。
-    而 rate() 只会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，最终得到的 increase() 值比 delta() 大。
-  - idelta、irate 应该尽量使用大一些的时间间隔，因为时间间隔过大时不影响计算精度，但时间间隔过小时可能缺少数据点。
+    - 如果矢量为单调递增，
+      - 则 increase() 与 delta() 的计算结果几乎相同，但可能存在轻微的误差，因为要先计算 rate() 。
+    - 如果矢量为非单调递增，
+      - 则 delta() 的计算结果可能为负，可以只取 >= 0 部分的值。
+      - 而 rate() 只会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，最终得到的 increase() 值比 delta() 大。
+    - 综上，计算增量时，使用 delta() 比 increase() 更好。
+  - 关于 idelta()、irate() ：
+    - 应该尽量使用大一些的时间间隔，因为时间间隔过大时不影响计算精度，但时间间隔过小时可能缺少数据点。
+    - 曲线比 delta()、rate() 更尖锐，更接近瞬时值。但是只考虑到最近的两个数据点，更容易产生误差。
 
+#### 聚合函数
+
+- 如果矢量包含多个时间序列，用算术函数会分别对这些时间序列进行运算，而用聚合函数会将它们合并成一个或多个时间序列。
 - 矢量可以使用以下聚合函数：
   ```sh
   # 基本统计
@@ -480,7 +485,7 @@ scrape_configs:
   min(go_goroutines)                    # 返回每个时刻处，数据点的最小值
   max(go_goroutines)                    # 返回每个时刻处，数据点的最大值
   avg(go_goroutines)                    # 返回每个时刻处，数据点的平均值
- 
+
   # 高级统计
   stddev(go_goroutines)                 # 返回每个时刻处，数据点之间的标准差
   stdvar(go_goroutines)                 # 返回每个时刻处，数据点之间的方差

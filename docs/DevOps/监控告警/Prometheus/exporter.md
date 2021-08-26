@@ -2,6 +2,7 @@
 
 - [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/)
 - 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就集成了 exporter 格式的 HTTP API 。
+- 第三方的 exporter 可能功能较少，不如不用，或者自制。
 
 ## 集成类型
 
@@ -14,18 +15,18 @@
   prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息
 
   time() - process_start_time_seconds                             # 运行时长（s）
-  irate(process_cpu_seconds_total[5m])                            # 占用 CPU 核数
+  rate(process_cpu_seconds_total[1m])                             # 占用 CPU 核数
   process_resident_memory_bytes                                   # 占用内存
   prometheus_tsdb_storage_blocks_bytes                            # tsdb block 占用的磁盘空间
-  sum(increase(prometheus_http_requests_total[1m])) by (code)     # 每分钟收到 HTTP 请求的次数
-  sum(increase(prometheus_http_request_duration_seconds_sum[1m])) # 每分钟处理 HTTP 请求的耗时（s）
+  sum(delta(prometheus_http_requests_total[1m])) by (code)        # 每分钟收到 HTTP 请求的次数
+  sum(delta(prometheus_http_request_duration_seconds_sum[1m]))    # 每分钟处理 HTTP 请求的耗时（s）
 
   count(up == 1)                                                  # target 在线数
   sum(scrape_samples_scraped)                                     # scrape 的指标数
   sum(scrape_duration_seconds)                                    # scrape 的耗时（s）
-  sum(increase(prometheus_rule_evaluations_total[1m])) without (rule_group)          # rule 每分钟的执行次数
-  sum(increase(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
-  irate(prometheus_rule_evaluation_duration_seconds_sum[5m])                         # rule 每分钟的执行耗时（s）
+  sum(delta(prometheus_rule_evaluations_total[1m])) without (rule_group)          # rule 每分钟的执行次数
+  sum(delta(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
+  delta(prometheus_rule_evaluation_duration_seconds_sum[1m])                      # rule 每分钟的执行耗时（s）
 
   ALERTS{alertname="xxx", alertstate="pending|firing"}            # 存在的警报
   ALERTS_FOR_STATE{alertname="xxx"}                               # 警报开始的时间戳（这是 pending 状态的开始时间，不能区分 firing 状态）
@@ -41,7 +42,7 @@
   time() - process_start_time_seconds       # 运行时长（s）
   irate(process_cpu_seconds_total[5m])      # 占用 CPU 核数
   process_resident_memory_bytes             # 占用内存
-  sum(increase(alertmanager_http_request_duration_seconds_sum[1m])) # 处理 HTTP 请求的耗时（s）
+  sum(delta(alertmanager_http_request_duration_seconds_sum[1m]))  # 处理 HTTP 请求的耗时（s）
 
   alertmanager_alerts                       # 存在的警报数（包括激活的、被抑制的）
   alertmanager_silences{state="active"}     # Silences 数量
@@ -68,8 +69,8 @@
   grafana_emails_sent_total
   grafana_emails_sent_failed
 
-  increase(grafana_http_request_duration_seconds_count{handler="/",method="GET",status_code="200"}[1m])   # 每分钟收到的 HTTP 请求数
-  increase(grafana_http_request_duration_seconds_sum{handler="/",method="GET",status_code="200"}[1m])     # 每分钟处理 HTTP 请求的耗时
+  delta(grafana_http_request_duration_seconds_count{handler="/",method="GET",status_code="200"}[1m])  # 每分钟收到的 HTTP 请求数
+  delta(grafana_http_request_duration_seconds_sum{handler="/",method="GET",status_code="200"}[1m])    # 每分钟处理 HTTP 请求的耗时
   ```
 
 ### Jenkins
@@ -82,7 +83,7 @@
   time() - process_start_time_seconds     # 运行时长（s）
   irate(process_cpu_seconds_total[5m])    # 占用 CPU 核数
   process_resident_memory_bytes           # 占用内存
-  increase(http_requests_count[1m])       # 每分钟收到 HTTP 请求的次数
+  delta(http_requests_count[1m])          # 每分钟收到 HTTP 请求的次数
   http_requests{quantile=~"0.5|0.99"}     # 每分钟处理 HTTP 请求的耗时（s）
 
   jenkins_node_count_value                # node 总数
@@ -152,10 +153,10 @@
   node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
 
   # 关于时间
-  node_boot_time_seconds                      # 主机的启动时刻
-  node_time_seconds                           # 主机的当前时间（Unix 时间戳）
-  node_time_seconds - node_boot_time_seconds  # 主机的运行时长（s）
-  node_time_seconds - time() + T              # 主机的时间误差，其中 T 是估计每次抓取及传输的耗时
+  node_boot_time_seconds                        # 主机的启动时刻
+  node_time_seconds                             # 主机的当前时间（Unix 时间戳）
+  node_time_seconds - node_boot_time_seconds    # 主机的运行时长（s）
+  node_time_seconds - time() + T                # 主机的时间误差，其中 T 是估计每次抓取及传输的耗时
 
   # 关于 CPU
   node_load1                                                                    # 每分钟的平均负载
@@ -164,53 +165,53 @@
   (1 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) without(cpu)) * 100  # CPU 使用率（%）
 
   # 关于内存
-  node_memory_MemTotal_bytes                  # 内存总量，单位 bytes
-  node_memory_MemAvailable_bytes              # 内存可用量，CentOS 7 以上版本才支持该指标
-  node_memory_SwapTotal_bytes                 # swap 内存总量
-  node_memory_SwapFree_bytes                  # swap 内存可用量
+  node_memory_MemTotal_bytes                    # 内存总量，单位 bytes
+  node_memory_MemAvailable_bytes                # 内存可用量，CentOS 7 以上版本才支持该指标
+  node_memory_SwapTotal_bytes                   # swap 内存总量
+  node_memory_SwapFree_bytes                    # swap 内存可用量
 
   # 关于磁盘
   sum(node_filesystem_size_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint)  # 磁盘总量
   sum(node_filesystem_avail_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint) # 磁盘可用量
-  sum(irate(node_disk_read_bytes_total[5m]))      # 磁盘每秒读取量
-  sum(irate(node_disk_written_bytes_total[5m]))   # 磁盘每秒写入量
-  node_filefd_maximum                             # 文件描述符的数量上限
-  node_filefd_allocated                           # 文件描述符的使用数量
+  sum(rate(node_disk_read_bytes_total[1m]))     # 磁盘每秒读取量
+  sum(rate(node_disk_written_bytes_total[1m]))  # 磁盘每秒写入量
+  node_filefd_maximum                           # 文件描述符的数量上限
+  node_filefd_allocated                         # 文件描述符的使用数量
 
   # 关于网卡
   node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast 是广播地址，duplex 是双工模式，）
   node_network_up                                                     # 网卡的状态，取值 1、0 表示是否正在启用
   node_network_mtu_bytes                                              # MTU 大小
-  irate(node_network_receive_bytes_total{device!~`lo|docker0`}[5m])   # 网卡每秒接收量
-  irate(node_network_transmit_bytes_total{device!~`lo|docker0`}[5m])  # 网卡每秒发送量
+  rate(node_network_receive_bytes_total{device!~`lo|docker0`}[1m])   # 网卡每秒接收量
+  rate(node_network_transmit_bytes_total{device!~`lo|docker0`}[1m])  # 网卡每秒发送量
 
   # 关于 IP 协议
-  node_network_receive_packets_total          # 网卡接收的数据包数
-  node_network_receive_errs_total             # 网卡接收的错误包数
-  node_network_receive_drop_total             # 网卡接收时的丢弃包数
-  node_network_receive_compressed_total       # 网卡接收的压缩包数
-  node_network_receive_multicast_total        # 网卡接收的多播包数
-  node_network_transmit_packets_total         # 网卡发送的数据包数
+  node_network_receive_packets_total        # 网卡接收的数据包数
+  node_network_receive_errs_total           # 网卡接收的错误包数
+  node_network_receive_drop_total           # 网卡接收时的丢弃包数
+  node_network_receive_compressed_total     # 网卡接收的压缩包数
+  node_network_receive_multicast_total      # 网卡接收的多播包数
+  node_network_transmit_packets_total       # 网卡发送的数据包数
   node_network_transmit_errs_total
   node_network_transmit_drop_total
   node_network_transmit_compressed_total
-  node_netstat_Icmp_InMsgs                    # 接收的 ICMP 包数
-  node_netstat_Icmp_InErrors                  # 接收的 ICMP 错误包数
-  node_netstat_Icmp_OutMsgs                   # 发送的 ICMP 包数
+  node_netstat_Icmp_InMsgs                  # 接收的 ICMP 包数
+  node_netstat_Icmp_InErrors                # 接收的 ICMP 错误包数
+  node_netstat_Icmp_OutMsgs                 # 发送的 ICMP 包数
 
   # 关于 Socket
-  node_sockstat_sockets_used                  # 使用的 Socket 数
-  node_sockstat_TCP_inuse                     # 监听的 TCP Socket 数
+  node_sockstat_sockets_used                # 使用的 Socket 数
+  node_sockstat_TCP_inuse                   # 监听的 TCP Socket 数
   node_sockstat_TCP_tw
 
   # 关于 TCP/UDP 协议
-  node_netstat_Tcp_CurrEstab                  # ESTABLISHED 加 CLOSE_WAIT 状态的 TCP 连接数
-  node_netstat_Tcp_InSegs                     # 接收的 TCP 包数（包括错误的）
-  node_netstat_Tcp_InErrs                     # 接收的 TCP 错误包数（比如校验和错误）
-  node_netstat_Tcp_OutSegs                    # 发送的 TCP 包数
-  node_netstat_Udp_InDatagrams                # 接收的 UDP 包数
-  node_netstat_Udp_InErrors                   # 接收的 UDP 错误包数
-  node_netstat_Udp_OutDatagrams               # 发送的 UDP 包数
+  node_netstat_Tcp_CurrEstab                # ESTABLISHED 加 CLOSE_WAIT 状态的 TCP 连接数
+  node_netstat_Tcp_InSegs                   # 接收的 TCP 包数（包括错误的）
+  node_netstat_Tcp_InErrs                   # 接收的 TCP 错误包数（比如校验和错误）
+  node_netstat_Tcp_OutSegs                  # 发送的 TCP 包数
+  node_netstat_Udp_InDatagrams              # 接收的 UDP 包数
+  node_netstat_Udp_InErrors                 # 接收的 UDP 错误包数
+  node_netstat_Udp_OutDatagrams             # 发送的 UDP 包数
   ```
 
 ### process-exporter
@@ -285,8 +286,8 @@
   namedprocess_namegroup_memory_bytes{memtype="virtual"}                          # 进程申请的虚拟内存
   namedprocess_namegroup_memory_bytes{memtype="resident"}                         # 进程占用的 RAM 内存
   namedprocess_namegroup_memory_bytes{memtype="swapped"}                          # 进程占用的 Swap 内存
-  irate(namedprocess_namegroup_read_bytes_total[5m])                              # 进程的磁盘每秒读取量
-  irate(namedprocess_namegroup_write_bytes_total[5m])                             # 进程的磁盘每秒写入量
+  rate(namedprocess_namegroup_read_bytes_total[1m])                               # 进程的磁盘每秒读取量
+  rate(namedprocess_namegroup_write_bytes_total[1m])                              # 进程的磁盘每秒写入量
 
   namedprocess_namegroup_num_threads                                              # 进程包含的线程数
   namedprocess_namegroup_states{state="Sleeping"}                                 # Sleeping 状态的线程数
@@ -294,8 +295,8 @@
 
   namedprocess_namegroup_thread_count{groupname="python", threadname="thread-1"}  # 指定进程包含的，同一名称的线程数
   sum(irate(namedprocess_namegroup_thread_cpu_seconds_total[5m])) without (mode)  # 线程占用的 CPU 核数
-  irate(namedprocess_namegroup_thread_io_bytes_total{iomode="read"}[5m])          # 线程的磁盘每秒读取量
-  irate(namedprocess_namegroup_thread_io_bytes_total{iomode="write"}[5m])         # 线程的磁盘每秒写入量
+  rate(namedprocess_namegroup_thread_io_bytes_total{iomode="read"}[1m])           # 线程的磁盘每秒读取量
+  rate(namedprocess_namegroup_thread_io_bytes_total{iomode="write"}[1m])          # 线程的磁盘每秒写入量
   ```
   - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 停止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。
     - 如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
@@ -356,16 +357,16 @@
   # logical_disk collector 的指标
   sum(windows_logical_disk_size_bytes) without(volume)                    # 磁盘的总量
   windows_logical_disk_free_bytes{volume!~'HarddiskVolume.*'}             # 磁盘的可用量，磁盘分区 HarddiskVolume 一般是系统保留分区
-  irate(windows_logical_disk_read_bytes_total[5m])                        # 磁盘每秒读取量
-  irate(windows_logical_disk_write_bytes_total[5m])                       # 磁盘每秒写入量
+  rate(windows_logical_disk_read_bytes_total[1m])                         # 磁盘每秒读取量
+  rate(windows_logical_disk_write_bytes_total[1m])                        # 磁盘每秒写入量
 
   # net collector
-  irate(windows_net_bytes_received_total{nic="xxx"}[5m])                  # 网卡每秒接收量
-  irate(windows_net_bytes_sent_total{nic="xxx"}[5m])                      # 网卡每秒发送量
+  rate(windows_net_bytes_received_total{nic="xxx"}[1m])                   # 网卡每秒接收量
+  rate(windows_net_bytes_sent_total{nic="xxx"}[1m])                       # 网卡每秒发送量
 
   # process collector
   timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长
-  sum(irate(windows_process_cpu_time_total[5m])) without (mode)           # 进程占用的 CPU 核数
+  sum(rate(windows_process_cpu_time_total[1m])) without (mode)            # 进程占用的 CPU 核数
   windows_process_private_bytes                                           # 进程独占的内存，即进程总共提交的内存，包括物理内存、虚拟内存
   windows_process_working_set                                             # 进程可用的内存，包括独占的内存、与其它进程的共享内存
   windows_process_thread_count                                            # 进程的线程数
@@ -490,10 +491,10 @@
       container_name: mongodb_exporter
       image: bitnami/mongodb-exporter:0.20.7
       command:
-        # - --web.listen-address :9216
-        # - --web.telemetry-path /metrics
+        # - --web.listen-address=:9216
+        # - --web.telemetry-path=/metrics
         - --mongodb.uri=mongodb://127.0.0.1:27017/admin
-        # - --mongodb.collstats-colls db1.col1,db1.col2   # 监控指定集合
+        # - --mongodb.collstats-colls=db1.col1,db1.col2   # 监控指定集合
         # - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
         # - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的集合
       restart: unless-stopped
@@ -511,12 +512,12 @@
   mongodb_ss_connections{conn_type="current"}             # 客户端连接数
 
   # 关于操作
-  irate(mongodb_ss_opcounters[5m])                        # 执行各种操作的数量
-  irate(mongodb_ss_opLatencies_latency[5m])               # 执行各种操作的延迟，单位为微秒
-  irate(mongodb_ss_metrics_document[5m])                  # 各种文档的变化数量
+  delta(mongodb_ss_opcounters[1m])                        # 执行各种操作的数量
+  delta(mongodb_ss_opLatencies_latency[1m])               # 执行各种操作的延迟，单位为微秒
+  delta(mongodb_ss_metrics_document[1m])                  # 各种文档的变化数量
 
   # 关于锁
-  irate(mongodb_ss_locks_acquireCount{lock_mode="w"}[5m]) # 新加锁的数量。R 表示共享锁，W 表示独占锁，r 表示意向共享锁，w 表示意向独占锁
+  delta(mongodb_ss_locks_acquireCount{lock_mode="w"}[1m]) # 新加锁的数量。R 表示共享锁，W 表示独占锁，r 表示意向共享锁，w 表示意向独占锁
   mongodb_ss_globalLock_currentQueue{count_type="total"}  # 被锁阻塞的操作数
 
   # 关于主机的状态

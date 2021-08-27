@@ -24,14 +24,6 @@
 
 ## 相关概念
 
-- JSP（Java Server Pages）
-  - ：一个动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
-  - 例：
-    ```html
-    <p>
-    今天的日期是: <%= (new java.util.Date()).toLocaleString()%>
-    </p>
-    ```
 - JMX（Java Management Extensions）
   - ：一组用于监控、管理 Java 应用的 API ，属于 Java 标准库。
     - 将被管理的对象称为 MBean（Managed Bean）。
@@ -41,9 +33,6 @@
   - ：一个进行身份认证的 Java 框架，内置在 JRE 中。
 - JDBC（Java Database Connectivity）
   - ：Java 程序访问数据库的 API 规范，主要用于关系型数据库。
-- Servlet
-  - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
-  - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
 - Mybatis
   - ：一个 Java 的持久化框架。
   - 用户不需要直接编写 JDBC 代码，而是先在 XML 文件中编写 SQL 语句，然后通过 Java 方法调用。但可读性差。
@@ -89,7 +78,24 @@
     - ：最弱的引用，相当于没有引用。
     - 不能用于获取对象的实例，主要用于判断对象是否被垃圾回收。
 
-### Spring
+### 关于 Web
+
+- JSP（Java Server Pages）
+  - ：一个动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
+  - 例：
+    ```html
+    <p>
+    今天的日期是: <%= (new java.util.Date()).toLocaleString()%>
+    </p>
+    ```
+
+- Servlet
+  - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
+  - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
+
+- Netty
+  - ：一个 Java 的 Socket 通信框架，支持 TCP、UDP 等协议，或自定义协议。
+  - 采用非阻塞 IO （NIO），并发能力强。
 
 - Spring Framework
   - ：一个流行的 Java 应用开发框架，于 2002 年发布。

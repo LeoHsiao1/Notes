@@ -294,7 +294,9 @@ docker network
   - 将容器内端口映射到宿主机的 eth 网卡上的端口。
     - 比如执行 `docker run -p 80:80` ，此时 dockerd 会自动添加 iptables 规则，将宿主机 80 端口收到的 TCP 流量转发到容器的 80 端口。
     - 此时宿主机的防火墙会暴露 80 端口，允许被任意外部 IP 访问。
-    - 这样自动添加的 iptables 规则很复杂，建议不要手动修改，否则可能会出错。如果出错，可以尝试重启 dockerd ，让它重新配置 iptables 。
+    - 这样自动添加的 iptables 规则很复杂，建议不要手动修改，否则可能出错。
+      - 比如启动、停止 firewalld.service 时，会导致 Docker 的 iptables 规则出错。
+      - 如果出错，可以尝试重启 dockerd ，让它重新配置 iptables 。
   - 让容器连接到 host 网络，从而使用宿主机的 eth 网卡，而不是自己的虚拟网卡。
     - 比如执行 `docker run --network host` ，这样当容器内的服务监听端口时，是监听 eth 网卡上的 Socket ，因此可以被外部 IP 访问。
   - 如果几个容器连接到同一个 bridge 类型的网络，就可以在一个容器内访问到其它容器的 IP 、所有端口。

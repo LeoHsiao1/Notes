@@ -478,6 +478,97 @@
 
 ## 专用类型
 
+### elasticsearch_exporter
+
+：用于监控 ES 服务器。
+- [GitHub](https://github.com/prometheus-community/elasticsearch_exporter)
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    elasticsearch_exporter:
+      container_name: elasticsearch_exporter
+      image: quay.io/prometheuscommunity/elasticsearch-exporter:v1.2.1
+      command:
+        # - --web.listen-address=:9114
+        # - --web.telemetry-path=/metrics
+        - --es.uri=http://<user>:<password>@elasticsearch:9200
+        - --es.all                    # 是否监控集群的所有 node 。默认为 false ，只监控当前 node
+        # - --es.cluster_settings     # 是否监控集群的配置
+        # - --es.indices              # 是否监控所有 index
+        # - --es.indices_settings
+        # - --es.indices_mappings
+        - --es.shards
+        # - --es.snapshots
+        # - --es.timeout  5s          # 从 ES 采集信息的超时时间
+      restart: unless-stopped
+      ports:
+        - 9114:9114
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+  ```
+- 指标示例：
+  ```sh
+  elasticsearch_clusterinfo_version_info{build_date="2018-10-30T23:17:19.084789Z",build_hash="fe40335",cluster="cluster-1",lucene_version="8.7.0",version="7.10.2"}  # 版本信息
+
+  # 关于集群
+  elasticsearch_cluster_health_status{color="green"}    # 集群的状态是否为 green
+  elasticsearch_cluster_health_number_of_nodes          # node 数量
+  elasticsearch_cluster_health_number_of_data_nodes     # data node 数量
+  elasticsearch_cluster_health_number_of_pending_tasks  # 等待执行的 task 数量
+  elasticsearch_cluster_health_active_shards            # shard 总数
+  elasticsearch_cluster_health_active_primary_shards    # primary shard 数量
+  elasticsearch_cluster_health_unassigned_shards        # unassigned shard 数量
+  elasticsearch_cluster_health_initializing_shards
+  elasticsearch_cluster_health_relocating_shards
+
+  # 关于 index
+  elasticsearch_indices_docs_total{index=".kibana"}     # index 的可见文档数
+  elasticsearch_indices_deleted_docs_total              # index 的 deleted 文档数
+  elasticsearch_indices_store_size_bytes_total          # index 占用的磁盘空间
+  elasticsearch_index_stats_flush_total                         # index flush 的次数
+  elasticsearch_index_stats_flush_time_seconds_total            # index flush 的耗时
+  elasticsearch_index_stats_get_total                           # index GET 的次数
+  elasticsearch_index_stats_get_time_seconds_total              # index GET 的耗时
+  elasticsearch_index_stats_indexing_delete_total               # index delete 的次数
+  elasticsearch_index_stats_indexing_delete_time_seconds_total
+  elasticsearch_index_stats_indexing_index_total                # index 新增文档的次数
+  elasticsearch_index_stats_indexing_index_time_seconds_total
+  elasticsearch_index_stats_merge_total                         # index merge 的次数
+  elasticsearch_index_stats_merge_time_seconds_total
+  elasticsearch_index_stats_refresh_total                       # index refresh 的次数
+  elasticsearch_index_stats_refresh_time_seconds_total
+  elasticsearch_index_stats_search_fetch_time_seconds_total     # search fetch 的次数
+  elasticsearch_index_stats_search_fetch_total
+  elasticsearch_index_stats_search_query_time_seconds_total     # search query 的次数
+  elasticsearch_index_stats_search_query_total
+
+  # 关于 shard
+  elasticsearch_indices_shards_docs{index=".kibana",node="qA5eXtNpQU6kbVc-lG5IKg",primary="true",shard="0"}   # index shard 的文档数
+
+  # 关于 segment
+  elasticsearch_indices_segment_count_total             # index 的 segment 数量
+
+  # 关于 Node
+  elasticsearch_os_cpu_percent
+  elasticsearch_os_load1
+  elasticsearch_filesystem_data_size_bytes                            # 磁盘总量
+  elasticsearch_filesystem_data_available_bytes{name="node-1", mount="/usr/share/elasticsearch/data (/dev/vdb)"}    # 磁盘可用大小
+  elasticsearch_filesystem_io_stats_device_read_size_kilobytes_sum    # 磁盘累计读，单位为 KB
+  elasticsearch_filesystem_io_stats_device_write_size_kilobytes_sum   # 磁盘累计写
+  elasticsearch_transport_rx_size_bytes_total                         # 网络累计读
+  elasticsearch_transport_tx_size_bytes_total
+  elasticsearch_process_max_files_descriptors
+  elasticsearch_process_open_files_count
+
+  # 关于 JVM
+  elasticsearch_jvm_memory_max_bytes                              # JVM 内存总量
+  elasticsearch_jvm_memory_used_bytes                             # JVM 已用内存
+  sum(elasticsearch_jvm_gc_collection_seconds_count) without(gc)  # GC 累计次数
+  elasticsearch_jvm_gc_collection_seconds_sum                     # GC 累计耗时
+  ```
+
 ### mongodb_exporter
 
 ：用于监控 MongoDB 服务器。
@@ -522,32 +613,6 @@
 
   # 关于主机的状态
   mongodb_sys_cpu_num_cpus    # 主机的 CPU 核数
-  ```
-
-### elasticsearch_exporter
-
-：用于监控 ES 服务器。
-- [GitHub](https://github.com/justwatchcom/elasticsearch_exporter)
-- 下载后启动：
-  ```sh
-  ./elasticsearch_exporter
-                --web.listen-address :9114
-                --web.telemetry-path /metrics
-                --es.uri http://localhost:9200  # ES 的 URL
-                --es.all false                  # 是否采集 ES 集群中所有节点的信息（默认只采集当前节点）
-                --es.cluster_settings false     # 是否采集集群的设置信息
-                --es.indices false              # 是否采集 index 的信息
-                --es.indices_settings false     # 是否采集 index 的设置信息
-                --es.shards false               # 是否采集 shard 的信息
-                --es.snapshots false            # 是否采集 snapshot 的信息
-                --es.timeout 5s                 # 从 ES 采集信息的超时时间
-  ```
-- 指标示例：
-  ```sh
-  elasticsearch_exporter_build_info{branch="master", goversion="go1.12.3", instance="10.0.0.1:9114", job="elasticsearch_exporter", revision="fe20e499ffdd6053e6153bac15eae494e08931df", version="1.1.0"}  # 版本信息
-
-  elasticsearch_cluster_health_status{color="green"}        # 集群状态是否为 green
-  # 详见 Github 页面上的说明
   ```
 
 ### kafka_exporter

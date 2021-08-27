@@ -229,7 +229,7 @@ if (y.nodeType == 1) {
 
 - [ECharts.js](https://echarts.apache.org/examples/zh/index.html)（Enterprise Charts）
   - 2013 年，由百度公司开源。
-  - 2021 年初，成为 ASF 的顶级项目。并发布 v5.0 版本，将项目代码迁移到 TypeScript 。
+  - 2021 年初，毕业成为 Apache 顶级项目。发布 v5.0 版本，将项目代码迁移到 TypeScript 。
   - 支持的图表类型很多，显示样式美观。
   - 支持绘制常规图表的 3D 版。
   - 支持绘制一些特殊图表，比如：K 线图、树形图、仪表盘、地图、3D 地图。

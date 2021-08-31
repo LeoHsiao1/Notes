@@ -1,8 +1,8 @@
 # exporter
 
 - [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/)
-- 主流软件大多提供了自己的 exporter 程序，比如 mysql_exporter、redis_exporter 。有的软件甚至本身就集成了 exporter 格式的 HTTP API 。
-- 第三方的 exporter 可能功能较少，不如不用，或者自制。
+- 主流软件大多提供了自己的 exporter 程序，比如 mysqld_exporter、redis_exporter 。有的软件甚至本身就集成了 exporter 格式的 HTTP API 。
+- 没必要启用所有 exporter ，有的监控指标较少，不如自制。
 
 ## 集成类型
 
@@ -103,6 +103,17 @@
   default_jenkins_builds_last_build_result{jenkins_job='xxx'}                      # Job 最近一次构建的结果（ 1 代表 success 、0 代表其它状态）
   ```
   - 如果删除某个 Job 的构建记录，则会使其总的构建次数减少。
+
+### k8s
+
+- k8s 本身集成了 exporter 格式的 API ，用于监控以下对象：
+  - cluster
+  - nodes
+  - pods
+  - nginx ingress
+
+> TODO: 待记录
+
 
 ### ZooKeeper
 
@@ -569,52 +580,6 @@
   elasticsearch_jvm_gc_collection_seconds_sum                     # GC 累计耗时
   ```
 
-### mongodb_exporter
-
-：用于监控 MongoDB 服务器。
-- [GitHub](https://github.com/percona/mongodb_exporter)
-- 用 docker-compose 部署：
-  ```yml
-  version: '3'
-
-  services:
-    mongodb_exporter:
-      container_name: mongodb_exporter
-      image: bitnami/mongodb-exporter:0.20.7
-      command:
-        # - --web.listen-address=:9216
-        # - --web.telemetry-path=/metrics
-        - --mongodb.uri=mongodb://127.0.0.1:27017/admin
-        # - --mongodb.collstats-colls=db1.col1,db1.col2   # 监控指定集合
-        # - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
-        # - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的集合
-      restart: unless-stopped
-      ports:
-        - 9216:9216
-      volumes:
-        - /etc/localtime:/etc/localtime:ro
-  ```
-
-- 指标示例：
-  ```sh
-  # 关于 server status
-  mongodb_ss_ok{cl_id="", cl_role="mongod", rs_state="0"} # 服务器是否运行，取值为 1、0 。标签中记录了 Cluster、ReplicaSet 的信息
-  mongodb_ss_uptime                                       # 服务器的运行时长，单位为秒
-  mongodb_ss_connections{conn_type="current"}             # 客户端连接数
-
-  # 关于操作
-  delta(mongodb_ss_opcounters[1m])                        # 执行各种操作的数量
-  delta(mongodb_ss_opLatencies_latency[1m])               # 执行各种操作的延迟，单位为微秒
-  delta(mongodb_ss_metrics_document[1m])                  # 各种文档的变化数量
-
-  # 关于锁
-  delta(mongodb_ss_locks_acquireCount{lock_mode="w"}[1m]) # 新加锁的数量。R 表示共享锁，W 表示独占锁，r 表示意向共享锁，w 表示意向独占锁
-  mongodb_ss_globalLock_currentQueue{count_type="total"}  # 被锁阻塞的操作数
-
-  # 关于主机的状态
-  mongodb_sys_cpu_num_cpus    # 主机的 CPU 核数
-  ```
-
 ### kafka_exporter
 
 ：用于监控 Kafka 。
@@ -663,3 +628,55 @@
   kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
   kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
   ```
+
+### mongodb_exporter
+
+：用于监控 MongoDB 服务器。
+- [GitHub](https://github.com/percona/mongodb_exporter)
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    mongodb_exporter:
+      container_name: mongodb_exporter
+      image: bitnami/mongodb-exporter:0.20.7
+      command:
+        # - --web.listen-address=:9216
+        # - --web.telemetry-path=/metrics
+        - --mongodb.uri=mongodb://127.0.0.1:27017/admin
+        # - --mongodb.collstats-colls=db1.col1,db1.col2   # 监控指定集合
+        # - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
+        # - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的集合
+      restart: unless-stopped
+      ports:
+        - 9216:9216
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+  ```
+
+- 指标示例：
+  ```sh
+  # 关于 server status
+  mongodb_ss_ok{cl_id="", cl_role="mongod", rs_state="0"} # 服务器是否运行，取值为 1、0 。标签中记录了 Cluster、ReplicaSet 的信息
+  mongodb_ss_uptime                                       # 服务器的运行时长，单位为秒
+  mongodb_ss_connections{conn_type="current"}             # 客户端连接数
+
+  # 关于操作
+  delta(mongodb_ss_opcounters[1m])                        # 执行各种操作的数量
+  delta(mongodb_ss_opLatencies_latency[1m])               # 执行各种操作的延迟，单位为微秒
+  delta(mongodb_ss_metrics_document[1m])                  # 各种文档的变化数量
+
+  # 关于锁
+  delta(mongodb_ss_locks_acquireCount{lock_mode="w"}[1m]) # 新加锁的数量。R 表示共享锁，W 表示独占锁，r 表示意向共享锁，w 表示意向独占锁
+  mongodb_ss_globalLock_currentQueue{count_type="total"}  # 被锁阻塞的操作数
+
+  # 关于主机的状态
+  mongodb_sys_cpu_num_cpus    # 主机的 CPU 核数
+  ```
+
+### nginx
+
+
+
+

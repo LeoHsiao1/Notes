@@ -535,9 +535,9 @@
   elasticsearch_cluster_health_relocating_shards
 
   # 关于 index
-  elasticsearch_indices_docs_total{index=".kibana"}     # index 的可见文档数
+  elasticsearch_indices_docs_total{index=".kibana"}     # index 的可见文档数，包括主分片、副分片的文档，不包括 delete 文档
   elasticsearch_indices_deleted_docs_total              # index 的 deleted 文档数
-  elasticsearch_indices_store_size_bytes_total          # index 占用的磁盘空间
+  elasticsearch_indices_store_size_bytes_total          # index 占用的磁盘空间，累计所有 node
   elasticsearch_index_stats_flush_total                         # index flush 的次数
   elasticsearch_index_stats_flush_time_seconds_total            # index flush 的耗时
   elasticsearch_index_stats_get_total                           # index GET 的次数
@@ -556,7 +556,7 @@
   elasticsearch_index_stats_search_query_total
 
   # 关于 shard
-  elasticsearch_indices_shards_docs{index=".kibana",node="qA5eXtNpQU6kbVc-lG5IKg",primary="true",shard="0"}   # index shard 的文档数
+  elasticsearch_indices_shards_docs{index=".kibana", node="qA5eXtIwQU6kbVc-ly5IKg", primary="true", shard="0"}   # 某个 index 在某个 nodename 上，某个编号的 shard 的文档数
 
   # 关于 segment
   elasticsearch_indices_segment_count_total             # index 的 segment 数量

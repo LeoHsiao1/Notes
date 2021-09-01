@@ -1,6 +1,6 @@
 # ELK
 
-：一个包括日志采集、存储、展示的系统，又称为 ELK Stack 或 Elastic Stack 。由 Elastic 公司发布。
+：一个对大量数据（通常是日志）进行采集、存储、展示的系统，又称为 ELK Stack 或 Elastic Stack ，由 Elastic 公司发布。
 - [官方文档](https://www.elastic.co/guide/index.html)
 - [下载页面](https://www.elastic.co/cn/downloads/)
 

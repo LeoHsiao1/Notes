@@ -37,14 +37,16 @@
 
 ### 连接队列
 
-- 建立 TCP 连接时，每个 Socket 拥有 SYN、accepet 两个连接队列。
-  - server 会将 SYN_RECV 状态的连接信息存入 SYN 队列，每个占用 304 bytes 内存。
+- 建立 TCP 连接时，server 方的内核会为每个 Socket 维护 SYN、accept 两个连接队列。
+  - 当连接变为 SYN_RECV 状态时，将连接信息存入 SYN 队列，又称为半连接队列。
+    - 此时每个连接占用 304 bytes 内存。
     - 查看半连接的数量：
       ```sh
       netstat | grep SYN_RECV | wc -l
       ```
-  - 当连接变为 ESTABLISHED 状态时，server 会将它从 SYN 队列取出，存入 accepet 队列，又称为全连接队列。
-    - 进程调用 accept() 函数，就可以从 accepet 队列中取出连接，完成 TCP 三次握手，相应的 Socket 变为 ESTABLISHED 状态。
+  - 当连接变为 ESTABLISHED 状态时，将它从 SYN 队列取出，存入 accept 队列，又称为全连接队列。
+    - 然后等待进程主动调用 accept() 函数，取出连接。
+
 - 当队列满了时，Socket 不能接收新连接。
   - 内核默认会在 SYN 队列满了时启用 SYN Cookies 功能，从而抵抗 SYN Flood 攻击。
     - 原理：将 SYN_RECV 状态的连接信息不存入 SYN 队列，而是在 server 回复的 SYN+ACK 包中包含一个 cookie 信息。client 之后发出 ACK 包时如果包含该 cookie ，则允许建立连接。
@@ -70,20 +72,40 @@
   ```c
   #include <sys/socket.h>
 
-  int socket(int domain, int type, int protocol);                           // 打开一个 Socket ，输入的参数都是用于指定协议、类型
-  int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);     // 将一个 Socket 绑定到指定的 IP 地址和 port 端口
+  // 创建一个 Socket ，输入的参数用于指定协议、类型，返回一个文件描述符 sockfd
+  int socket(int domain, int type, int protocol);
 
-  int listen(int sockfd, int backlog);                                      // 让 Socket 进入 Listen 状态（常用于作为服务器的进程）
+  // 将一个 Socket 绑定到指定的 IP 地址和 port 端口
+  int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+
+  // 让 Socket 进入 Listen 状态（常被作为服务器的进程调用）
+  int listen(int sockfd, int backlog);
       // backlog ：accept 队列的最大长度。该值的隐式最大值为 net.core.somaxconn
-  int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);  // 连接到指定 Socket（常用于作为客户端的进程）
 
-  int shutdown(int sockfd , int how);    // 用于停止 Socket 的通信（但并没有关闭 Socket ）
+  // 连接到指定 Socket（常被作为客户端的进程调用）
+  int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+
+  // 从指定 Socket的 accept 队列取出一个 TCP 握手成功的连接，为它创建并绑定一个新 Socket ，返回新的 sockfd
+  // 源 Socket 为 Listen 状态，新 Socket 为 ESTABLISHED 状态
+  // 如果 accept 队列为空，则一直阻塞等待
+  int accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
+    // addr    ：请求连接的客户端地址
+    // addrlen ：客户端地址的长度，即 sizeof(addr)
+
+  // 用于停止 Socket 的通信（但并没有关闭 Socket ）
+  int shutdown(int sockfd , int how);
       // how ：表示操作类型，可取值：
         // SHUT_RD   ：停止接收，并丢弃接收缓冲区中的数据
         // SHUT_WR   ：停止发送，但继续传输发送缓冲区中的数据
         // SHUT_RDWR ：停止接收和发送
   ```
-- 建立 Network Socket 连接时，进程会以文件的形式打开 Socket 。
+
+- TCP 服务器的通信流程示例：
+  1. 调用 socket() 创建 Socket ，然后用 bind() 绑定，用 listen() 监听，等待客户端建立 TCP 连接。
+  2. 调用 accept() ，接收客户端的连接。
+  3. 调用 read()、write() 读写 Socket 。
+  4. 调用 close() 关闭 Socket 。
+
 - 每个 Socket 连接由五元组 protocol、src_addr、src_port、dst_addr、dst_port 确定，只要其中一项元素不同， Socket 的文件描述符就不同。
   - 当服务器监听一个 TCP 端口时，可以被任意 dst_addr、dst_port 连接，因此建立的 Socket 连接有 255^4 * 65535 种可能性。
   - 实际上，一个主机上建立的 Socket 连接数一般最多为几万个，主要受以下因素限制：
@@ -233,8 +255,8 @@ FRAG: inuse 0 memory 0
     p_dgr     # datagram packet
     ```
   - LISTEN 状态时：
-    - Recv-Q 表示当前 accepet 队列的长度。
-    - Send-Q 表示 accepet 队列允许的最大长度。
+    - Recv-Q 表示当前 accept 队列的长度。
+    - Send-Q 表示 accept 队列允许的最大长度。
   - 非 LISTEN 状态时：
     - Recv-Q 表示已接收、尚未被进程读取的字节数。
     - Send-Q 表示已发送、尚未收到对方 ACK 的字节数。

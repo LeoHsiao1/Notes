@@ -75,7 +75,7 @@
   // 创建一个 Socket ，输入的参数用于指定协议、类型，返回一个文件描述符 sockfd
   int socket(int domain, int type, int protocol);
 
-  // 将一个 Socket 绑定到指定的 IP 地址和 port 端口
+  // 将一个 Socket 绑定到指定的 IP:PORT
   int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 
   // 让 Socket 进入 Listen 状态（常被作为服务器的进程调用）
@@ -89,8 +89,8 @@
   // 源 Socket 为 Listen 状态，新 Socket 为 ESTABLISHED 状态
   // 如果 accept 队列为空，则一直阻塞等待
   int accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
-    // addr    ：请求连接的客户端地址
-    // addrlen ：客户端地址的长度，即 sizeof(addr)
+      // addr    ：请求连接的客户端地址
+      // addrlen ：客户端地址的长度，即 sizeof(addr)
 
   // 用于停止 Socket 的通信（但并没有关闭 Socket ）
   int shutdown(int sockfd , int how);
@@ -112,7 +112,7 @@
     - 进程允许打开的文件描述符总数
     - 内存总量
 
-- Linux 收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
+- 内核收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
   - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
   - 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`
   - 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会收到本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
@@ -120,7 +120,7 @@
 
 ### 读写 Socket
 
-- 关闭、读写 Socket 的 API ，与普通文件一致：
+- Socket 支持使用文件的关闭、读写 API ：
   ```c
   #include <unistd.h>
 
@@ -128,6 +128,7 @@
   ssize_t read(int fd, void *buf, size_t count);
   ssize_t write(int fd, const void *buf, size_t count);
   ```
+  - 也可以调用 recv()、send() 等 API 进行通信。
 
 - 关闭 Socket 的几种方式：
   - 等创建该 Socket 的进程主动调用 close() 。
@@ -140,6 +141,140 @@
     gdb  -p $PID              # 调试该进程
     call close($FD)           # 关闭 Socket
     ```
+
+### IO 模型
+
+- 同步通信（Synchronous）
+  - ：指一个程序对外发送消息之后，要等收到回复，才能执行其它任务。
+  - 在等待回复的期间，该程序属于阻塞（Block）状态。
+
+- 异步通信（Asynchronous）
+  - ：指一个程序对外发送消息之后，不必等收到回复，就执行其它任务。
+  - 例如：打电话属于同步通信，需要一边说话一边听对方的回复。而发短信属于异步通信。
+  - CPU 的运行速度远高于磁盘 IO 、网络 IO 速度。因此采用同步 IO 时，程序经常会阻塞，不占用 CPU 。采用异步 IO 可以大幅提高 CPU 的使用率。
+
+- 调用 API 进行网络通信时，Unix 提供了五种 IO 模型：
+  - 阻塞（blocking） IO
+  - 非阻塞（nonblocking） IO
+  - IO 复用（multiplexing）
+  - 信号驱动（signal driven） IO
+  - 异步（asynchronous） IO ：简称为 AIO
+
+#### 阻塞 IO
+
+- ：进程调用 API 接收数据时，要等数据从 Socket 缓冲区拷贝到进程缓冲区，API 才返回。
+  - 发送数据时，也要等数据从进程缓冲区拷贝到 Socket 缓冲区，API 才返回。
+- 优点：阻塞进程时，不会占用 CPU ，可运行其它进程。
+- 缺点：调用 API 时会阻塞进程，耗时较久。
+- 相关 API ：
+  ```c
+  #include <sys/socket.h>
+
+  ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+      // 接收数据。将 Socket 接收缓冲区中的数据，拷贝到 buf ，然后返回实际读取的字节数
+      // sockfd ：指定 Socket 的文件描述符
+      // buf    ：指向一块内存空间的指针，用作读缓冲。内核会从 Socket 接收缓冲区读取数据，写入其中
+      // len    ：声明 buf 缓冲区的长度
+
+  ssize_t recvfrom(int sockfd, void *restrict buf, size_t len, int flags, struct sockaddr *restrict src_addr, socklen_t *restrict addrlen);
+      // 与 recv() 相比，只接收来自指定源地址的数据
+
+  ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+      // 发送数据。将 buf 中的数据，拷贝到 Socket 发送缓冲区，然后返回实际拷贝的字节数
+
+  ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
+      // 与 send() 相比，只发送数据给指定目标地址
+  ```
+  - 调用 `recv(sockfd, buf, len, flags);` 相当于 `recvfrom(sockfd, buf, len, flags, NULL, NULL);` 。
+  - 收发时，如果一个数据包较大，则需要多次调用 recv() 或 send() 。
+  - TCP 通信时，通常使用 recv()、send() ，因为远程主机的地址已经绑定到 Socket 了。
+    - UDP 通信时，通常使用 recvfrom()、sendto() ，从而区分不同地址的远程主机。
+- 进程调用 recv() 的工作流程：
+  1. 进程动态分配一块内存空间，用作缓冲区，用 buf 指针记录。然后开始调用 recv() 。
+  2. 网卡一边接收字节数据，一边写入 Socket 的接收缓冲区。等接收完一个数据包，就通过中断通知内核。
+      - 内核为会每个 Socket 创建 Recv、Send 缓冲区，用于缓冲收、发的数据。
+      - 为了避免缓冲区溢出，可以提高调用 recv() 的频率，或者修改 `net.core.rmem_default` 内核参数来扩大缓冲区。
+  3. 内核将 Recv 缓冲区中的数据，拷贝到进程的 buf 缓冲区。
+  4. recv() 函数返回，进程可以从 buf 读取数据。
+
+#### 非阻塞 IO
+
+- ：进程调用 API 时，API 立即返回一个错误码，然后进程需要轮询 IO 是否完成。
+- 优点：调用 API 的耗时很短。
+- 缺点：需要多次轮询，占用更多 CPU 。
+
+#### IO 复用
+
+- ：进程调用 API 阻塞监视多个 Socket ，等任一 Socket 变为可读或可写时返回。然后进程再调用 recv() 或 send() 。
+- 优点：处理大量连接时，不必为每个 Socket 都创建一个进程或线程。
+- select() 是最老的一种 IO 复用 API ，大部分操作系统都支持：
+  ```c
+  #include <sys/select.h>
+
+  int select(int nfds, fd_set *restrict readfds, fd_set *restrict writefds, fd_set *restrict exceptfds, struct timeval *restrict timeout);
+      // 阻塞监视多个文件描述符，等任一文件描述符满足条件时才返回
+      // nfds       ：取值等于监视的最大一个文件描述符 + 1
+      // readfds    ：一组文件描述符，当任一变为可读时，函数返回
+      // writefds   ：一组文件描述符，当任一变为可写时，函数返回
+      // exceptfds  ：一组文件描述符，当任一发生异常时，函数返回
+      // timeout    ：函数阻塞的超时时间
+  ```
+  - 等待文件描述符变为可读、可写，是指可以立即进行 IO 操作而不会阻塞。
+  - select() 将监视的所有文件描述符记录在一个数组中，数组长度固定为 FD_SETSIZE=1024 。
+
+- poll() 是一种改进的 API ：
+  ```c
+  #include <poll.h>
+
+  int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+      // 阻塞监视多个文件描述符
+      // fds  ：一个指针，记录一组 pollfd 结构体的首地址
+      // nfds ：pollfd 结构体的数量
+
+  struct pollfd {
+      int   fd;         // 文件描述符
+      short events;     // 监视的事件，比如文件可读、可写等
+      short revents;    // 实际发生的事件。调用 poll() 时内核会赋值该变量
+  };
+  ```
+  - poll() 不限制文件描述符的数量，而且监视的事件比 select() 更多。
+
+- Linux 系统独有地，将 poll() 改进为了 epoll 系列 API ：
+  ```c
+  #include <sys/epoll.h>
+
+  int epoll_create(int size);
+      // 创建一个 epoll 实例，返回其文件描述符 epfd
+      // size ：允许 epoll 实例监视的文件描述符总数。Linux 2.6 开始会自动调整 size ，因此传入 size>0 即可
+
+  int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+      // 控制一个 epoll 实例，管理对一个文件描述符 fd 的监视事件
+      // fd    ：一个文件描述符，如果有多个文件描述符需要监视，则需要多次调用 epoll_ctl()
+      // op    ：操作类型。比如添加、删除监视的事件
+      // event ：一组事件。epoll_event 结构体中记录了一个文件描述符、监视的事件
+
+  int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
+      // 阻塞监视一个 epoll 实例，等任一事件发生时，返回满足条件的事件数量
+      // 超时时，函数返回 0
+      // 出错时，函数返回 -1 ，并设置 errno
+      // events    ：一个指针。调用 epoll_wait() 时，内核会将发生的的一组事件的首地址赋值给该指针
+      // maxevents ：最多返回的事件数
+      // timeout   ：阻塞的超时时间，单位 ms 。取值为 0 则立即返回，适合轮询。取值为 -1 则会一直阻塞。
+  ```
+  - epoll 实例以文件形式保存，使用完之后应该 close() 。
+  - epoll 只返回发生的事件，不需要检查所有文件描述符，比 select() 和 poll() 更高效，更适合监视大量文件描述符。
+  - epoll 是线程安全的，而 select() 和 poll() 不是。
+    - 当一个线程阻塞等待 epoll 实例时，其它线程可以向该 epoll 实例添加文件描述符。如果新的文件描述符满足条件，则会解除阻塞。
+
+#### 信号驱动 IO
+
+- ：进程调用 sigaction() ，函数会立即返回。等 Socket 变为可读或可写时，内核会发送 SIGIO 信号通知进程。然后进程再调用 recv() 或 send() 。
+
+#### 异步 IO
+
+- ：进程调用 API 读写 Socket ，函数会立即返回。等内核完成 IO 操作之后，再发送信号通知进程。
+- 相当于另外创建了一个线程，去执行 recv() 或 send() 。
+- 其它四种 IO 模型都属于同步 IO ，进程需要等待 IO 完成，才能执行其它任务。
 
 ## 相关命令
 
@@ -258,8 +393,8 @@ FRAG: inuse 0 memory 0
     - Recv-Q 表示当前 accept 队列的长度。
     - Send-Q 表示 accept 队列允许的最大长度。
   - 非 LISTEN 状态时：
-    - Recv-Q 表示已接收、尚未被进程读取的字节数。
-    - Send-Q 表示已发送、尚未收到对方 ACK 的字节数。
+    - Recv-Q 表示接收队列的长度，即已接收、尚未被进程读取的字节数。
+    - Send-Q 表示发送队列的长度，即已发送、尚未收到对方 ACK 的字节数。
     - 上述两个值为 0 时最好，说明内核缓冲区没有堆积。
   - 最右端的一列 users 表示监听每个端口的进程。
 

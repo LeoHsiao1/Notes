@@ -429,10 +429,6 @@ module.exports = {
                             path: "/Linux/进程/线程"
                         },
                         {
-                            title: "进程通信",
-                            path: "/Linux/进程/进程通信"
-                        },
-                        {
                             title: "管理进程",
                             path: "/Linux/进程/管理进程"
                         }

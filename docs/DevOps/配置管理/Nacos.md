@@ -14,12 +14,18 @@
   ```
 
 - 或者用 Docker 部署：
-  ```sh
-  docker run -d --name nacos \
-          -p 8848:8848 \
-          -e PREFER_HOST_MODE=hostname \
-          -e MODE=standalone \
-          nacos/nacos-server
+  ```yml
+  version: "3"
+
+  services:
+    nacos:
+      container_name: nacos
+      image: nacos/nacos-server:v2.0.3
+      restart: unless-stopped
+      environment:
+        MODE: standalone
+      ports:
+        - 8848:8848
   ```
 
 ## Web 页面

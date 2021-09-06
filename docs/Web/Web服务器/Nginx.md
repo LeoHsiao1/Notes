@@ -889,8 +889,8 @@ server {
   scheme            # 请求采用的协议，取值为 http 或 https
   https             # 如果请求采用了 HTTPS 协议则取值为 on ，否则取值为空
 
-  http_XXX         # headers 中指定参数的值，不区分大小写
-  cookie_XXX       # cookie 中指定参数的值，不区分大小写
+  http_XXX          # headers 中指定参数的值，不区分大小写
+  cookie_XXX        # cookie 中指定参数的值，不区分大小写
 
   request_body      # 请求 body 。只有当 Nginx 执行了 proxy_pass、fastcgi_pass、uwsgi_pass 或 scgi_pass 时才会将请求 body 载入内存，否则该变量取值为空
   ```

@@ -2,6 +2,7 @@
 
 ：一个 Web 网站，用于托管 Git 仓库。
 - [官方文档](https://docs.gitlab.com/omnibus/README.html)
+- 采用 Ruby 开发，基于 Rails 框架。
 - 可以访问公网上的 GitLab 官方网站，也可以自己部署。
 
 ## 部署
@@ -13,18 +14,40 @@
   services:
     gitlab:
       container_name: gitlab
-      image: gitlab/gitlab-ce:latest
-      hostname: 10.0.0.1
+      image: gitlab/gitlab-ce:14.1.5-ce.0
       restart: unless-stopped
       environment:
         GITLAB_OMNIBUS_CONFIG: |
-          external_url 'http://10.0.0.1:80'
+          external_url 'http://10.0.0.1'
       ports:
         - 80:80
       volumes:
-        - ./gitlab/config:/etc/gitlab
-        - ./gitlab/logs:/var/log/gitlab
-        - ./gitlab/data:/var/opt/gitlab
+        - ./config:/etc/gitlab
+        - ./logs:/var/log/gitlab
+        - ./data:/var/opt/gitlab
+  ```
+  - 然后执行 `gitlab-rake "gitlab:password:reset"` ，根据提示输入用户名 root ，即可重置其密码。
+
+## 配置
+
+- 配置文件默认位于 `/etc/gitlab/gitlab.rb` 。
+- 官方 Docker 镜像中集成了多个进程，比如 Prometheus、Grafana 监控系统，比较臃肿。
+- SMTP 的配置示例：
+  ```sh
+  gitlab_rails['smtp_enable']               = true
+  gitlab_rails['smtp_domain']               = "exmail.qq.com"
+  gitlab_rails['smtp_address']              = "smtp.exmail.qq.com"
+  gitlab_rails['smtp_port']                 = 465
+  gitlab_rails['smtp_user_name']            = "test1@qq.com"
+  gitlab_rails['smtp_password']             = "******"
+  gitlab_rails['smtp_authentication']       = "login"
+  gitlab_rails['smtp_enable_starttls_auto'] = true
+  gitlab_rails['smtp_tls']                  = true
+  gitlab_rails['gitlab_email_from']         = 'test1@qq.com'
+  ```
+  然后执行 `gitlab-rails console` 进入 Ruby 终端，测试发送邮件：
+  ```ruby
+  Notify.test_email('test1@qq.com', 'Test Email', 'This is for test.').deliver_now
   ```
 
 ## API

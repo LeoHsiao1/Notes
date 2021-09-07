@@ -4,6 +4,7 @@
 - [官方文档](https://docs.gitlab.com/omnibus/README.html)
 - 采用 Ruby 开发，基于 Rails 框架。
 - 可以访问公网上的 GitLab 官方网站，也可以自己部署。
+- 除了托管 Git 仓库，还提供了 Issue、任务看板、Wiki、CI/CD、WebIDE 等丰富的功能。
 
 ## 部署
 
@@ -38,17 +39,27 @@
   gitlab_rails['smtp_domain']               = "exmail.qq.com"
   gitlab_rails['smtp_address']              = "smtp.exmail.qq.com"
   gitlab_rails['smtp_port']                 = 465
-  gitlab_rails['smtp_user_name']            = "test1@qq.com"
+  gitlab_rails['smtp_user_name']            = "test@qq.com"
   gitlab_rails['smtp_password']             = "******"
   gitlab_rails['smtp_authentication']       = "login"
   gitlab_rails['smtp_enable_starttls_auto'] = true
   gitlab_rails['smtp_tls']                  = true
-  gitlab_rails['gitlab_email_from']         = 'test1@qq.com'
+  gitlab_rails['gitlab_email_from']         = 'test@qq.com'
   ```
   然后执行 `gitlab-rails console` 进入 Ruby 终端，测试发送邮件：
   ```ruby
-  Notify.test_email('test1@qq.com', 'Test Email', 'This is for test.').deliver_now
+  Notify.test_email('test@qq.com', 'Test Email', 'This is for test.').deliver_now
   ```
+
+## 用法
+
+- Project
+  - ：项目，即一个 Git 仓库。
+- Group
+  - ：群组，用于批量管理一组项目，类似于文件夹。
+  - 支持创建嵌套的子群组。
+  - 组名、用户名都属于命名空间，其下项目的 URL 格式为 `<gitlab_url>/<namesapce>/<project>` 。
+  - 用户默认有权创建个人项目、群组，但看不到其他人创建的项目、群组，除非被邀请加入。
 
 ## API
 

@@ -1,7 +1,7 @@
 # GitLab
 
 ：一个 Web 网站，用于托管 Git 仓库。
-- [官方文档](https://docs.gitlab.com/omnibus/README.html)
+- [官方文档](https://docs.gitlab.com/ee/)
 - 采用 Ruby 开发，基于 Rails 框架。
 - 可以访问公网上的 GitLab 官方网站，也可以自己部署。
 - 除了托管 Git 仓库，还提供了 Issue、任务看板、Wiki、CI/CD、WebIDE 等丰富的功能。
@@ -17,6 +17,7 @@
       container_name: gitlab
       image: gitlab/gitlab-ce:14.1.5-ce.0
       restart: unless-stopped
+      hostname: 10.0.0.1
       environment:
         GITLAB_OMNIBUS_CONFIG: |
           external_url 'http://10.0.0.1'
@@ -50,6 +51,11 @@
   ```ruby
   Notify.test_email('test@qq.com', 'Test Email', 'This is for test.').deliver_now
   ```
+- 登录 GitLab 之后，点击网页右上角的头像下拉框 -> Preferences ，可设置语言、每周起始日、时间偏好。
+- 建议在 admin 页面进行如下配置：
+  - 禁止新用户注册。
+  - 设置仓库的默认分支名为 master 。
+  - 禁止在项目中不存在 CI 配置文件时，默认执行 Auto DevOps 任务。
 
 ## 用法
 
@@ -60,6 +66,8 @@
   - 支持创建嵌套的子群组。
   - 组名、用户名都属于命名空间，其下项目的 URL 格式为 `<gitlab_url>/<namesapce>/<project>` 。
   - 用户默认有权创建个人项目、群组，但看不到其他人创建的项目、群组，除非被邀请加入。
+- CI/CD
+  - GitLab 支持在代码仓库中添加一个 .gitlab-ci.yml 文件，声明要执行的 CI/CD 流水线。
 
 ## API
 

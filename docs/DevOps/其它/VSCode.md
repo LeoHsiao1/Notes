@@ -1,10 +1,9 @@
 # VS Code
 
-：Visual Studio Code
-- 是微软公司于 2015 年发布的一款开源、轻量级的 IDE 。
-- 支持运行在 Linux、Mac OS、Windows 上。
-- 它本身像一个轻量级的文本阅读器，但可以通过安装插件扩展很多功能，比如搭建任意编程语言的开发环境、调整出美观的界面、配置各种快捷键。
+：Visual Studio Code ，是微软公司于 2015 年发布的一款开源、轻量级的 IDE 。
 - [官网](https://code.visualstudio.com/)
+- 基于 Electron 框架开发，跨平台。
+- 本身是一个轻量级的代码编辑器，但可以通过安装插件扩展很多功能，比如搭建任意编程语言的开发环境。
 
 ## 用法
 
@@ -33,7 +32,7 @@
   log-($1).log    # 替换表达式，用 $1 的格式引用元素组
   ```
 
-## 设置
+### 设置
 
 - 点击页面左下角的齿轮按钮，即可打开设置页面。
 - 可以进行全局设置，也可以只对某个项目进行设置。
@@ -44,7 +43,7 @@
   - 设置 "Run Selected Text in Active Terminal" 的快捷键为 `Shift + Enter` ，便于快速在当前激活的终端中（没有则自动创建）执行光标所在行或选中的内容。
   - 设置切换行注释的快捷键为 `Ctrl + Q` ，切换块注释的快捷键为 `Ctrl + Shift + Q` ，与 NotePad++ 的注释快捷键一致。
 
-## 常用快捷键
+### 常用快捷键
 
 - `F1` ：打开命令面板，用于快速执行一些命令。例如：
   - `Fold All` ：将代码块全部折叠。
@@ -68,7 +67,7 @@
 - `Ctrl + ←/→ ` ：以单词为单位左右移动光标。
 - `Ctrl + Backspace/Delete` ：以单词为单位删除代码。
 
-## 常用插件
+### 常用插件
 
 - One Dark Pro ：提供几种界面主题。
 - vscode-icon ：给不同类型的文件加上美观的图标。
@@ -79,14 +78,26 @@
 - Code Spell Checker ：检查单词拼写错误。建议将它禁用避免干扰，要检查时再启用。
 - hexdump for VSCode ：用于按十六进制查看文件内容，并且右键某个字节可进行修改。
 
-## 远程开发
+### 远程开发
 
 VS Code 支持远程开发模式。
 - [官方教程](https://code.visualstudio.com/blogs/2019/05/02/remote-development)
 - 可以在本机的 VS Code 界面中打开其它主机上的文件目录，进行编辑、编译、调试等操作。
 - 远程目录可以位于物理机、虚机，甚至 Docker 容器中。
 
-## WSL
+## 相关概念
+
+- Electron
+  - ：一个跨平台的 GUI 应用开发框架。
+  - 原名为 Atom Shel ，于 2013 年由 GitHub 公司发布。
+  - 采用 JavaScript、HTML、CSS 等前端技术开发应用，用 Chromium 显示前端，用 node.js 运行后端。
+- Atom
+  - ：一个代码编辑器，基于 Electron 框架开发。
+  - 于 2014 年由 GitHub 公司发布。
+- Monaco Editor
+  - ：VS Code 的代码编辑器，现已作为一个独立项目开源。
+
+### WSL
 
 ：Windows 的 Linux 子系统（Windows Subsystem for Linux ，WSL），是 Windows 10 提供的一种虚拟机服务。
 - [官方文档](https://docs.microsoft.com/zh-cn/windows/wsl/)

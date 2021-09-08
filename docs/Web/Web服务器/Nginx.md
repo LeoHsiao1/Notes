@@ -473,11 +473,11 @@ server {
           proxy_pass  http://127.0.0.1:79;
           # proxy_pass http://unix:/tmp/backend.socket:/uri/;   # 可以转发给 Unix 套接字
 
-          # proxy_set_header  Host       $host;           # 转发时加入请求头
-          # proxy_set_header  X-Real-IP  $remote_addr;    # 添加 Header ，记录客户端的真实 IP ，供上游服务器识别
+          # proxy_set_header  Host       $host;                           # 转发时加入请求头
+          # proxy_set_header  X-Real-IP  $remote_addr;                    # 添加 Header ，记录客户端的真实 IP ，供上游服务器识别
           # proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 添加 Header ，按顺序记录 HTTP 请求经过的各层代理
-          # proxy_pass_request_body on;                   # 是否转发请求 body ，默认为 on
-          # proxy_set_body    $request_body;              # 设置转发过去的请求 body
+          # proxy_pass_request_body on;                                   # 是否转发请求 body ，默认为 on
+          # proxy_set_body    $request_body;                              # 设置转发过去的请求 body
 
           # proxy_request_buffering on;   # 接收客户端的请求时，缓冲之后再转发给上游服务器
           # proxy_connect_timeout 60s;    # 与上游服务器建立连接的超时时间
@@ -985,18 +985,6 @@ server {
   ```
 - 允许 GET 方法时也会允许 HEAD 方法。
 
-### limit_rate
-
-：限制响应报文的传输速率，单位为 Bytes/s 。
-- 可用范围：http、server、location
-- 例：
-  ```sh
-  location /www/ {
-      limit_rate  10k;
-  }
-  ```
-- 默认值为 0 ，代表不限制。
-
 ### satisfy
 
 ：如果 ngx_http_access_module、ngx_http_auth_basic_module、ngx_http_auth_request_module、ngx_http_auth_jwt_module 模块都允许访问（或任一允许），则最终允许访问。
@@ -1009,6 +997,82 @@ server {
   ```sh
   satisfy all;
   ```
+
+## 关于限流
+
+### limit_rate
+
+：用于限制响应报文的传输速率，单位为 Bytes/s 。
+- 可用范围：http、server、location
+- 例：
+  ```sh
+  location /www/ {
+      limit_rate  10k;
+  }
+  ```
+- 默认值为 0 ，表示不限制。
+
+### limit_req
+
+：用于限制客户端的请求数。
+- 可用范围：http、server、location
+- 例：
+  ```sh
+  http {
+      # 创建一个 zone ，以 binary_remote_addr 作为限流的 key
+      # zone  ：创建一个指定大小的共享内存区域，用于记录 key 信息
+      # rate  ：限制速率。例如 10 r/s 表示每秒 10 个请求，10 r/m 表示每分钟 10 个请求
+      limit_req_zone $binary_remote_addr zone=perip:10m rate=10r/s;
+      # 创建一个 zone ，以 server_name 作为限流的 key
+      limit_req_zone $server_name zone=perserver:10m rate=100r/s;
+
+      server {
+          location / {
+              proxy_pass http://10.0.0.1;
+              limit_req zone=perip;       # 采用 zone ，限制每个 IP 地址的请求数
+              limit_req zone=perserver;
+              # burst 队列的长度默认为 0 ，启用它有利于处理客户端的突发大量请求
+              # limit_req zone=perip burst=20 nodelay;
+
+              # limit_req_status 503;
+              # limit_req_log_level error;
+          }
+      }
+  }
+  ```
+  - rate 不支持小数，且实际工作时会转换成每 100ms 的平均阈值，不能准确限制，建议测试下效果。
+  - limit_req 采用漏斗算法（leaky bucket）：
+    - 每 100ms 为一个处理周期。如果当前周期内，收到的请求数超过 rate 限制，则将请求放入称为 burst 的 FIFO 队列中。
+      - 每隔一个周期，从队列中取出请求，正常处理。
+      - 如果队列溢出，则拒绝新请求：返回 limit_req_status 状态码，并记录报错日志：`limiting requests, excess 0.340 by zone "perip"` ，其中 excess = 根据当前请求估测的每毫秒请求数 - 平均每毫秒允许的 rate 。
+    - 启用 nodelay 策略时，会将超过 rate 限制的请求立即处理，同时将 burst 队列中相应数量的槽位标记为已占用。每隔一个周期，尝试释放一次槽位。
+  - 以 binary_remote_addr 作为限流的 key 时，每个 key 需要 128bytes 来存储状态信息，因此 10MB 内存可以记录 8W 个 key。
+    - 每次记录一个新 key 时，会尝试删除两个最近 60s 未使用的 key 。
+    - 如果 zone 内存耗尽，也会拒绝新请求。
+
+### limit_conn
+
+：用于限制并发连接数。
+- 可用范围：http、server、location
+  ```sh
+  http {
+      limit_conn_zone $binary_remote_addr zone=perip:10m;
+      limit_conn_zone $server_name zone=perserver:10m;
+
+      server {
+          location / {
+              proxy_pass http://10.0.0.1;
+              limit_conn perip 10;        # 采用 zone ，限制每个 IP 地址的并发连接数
+              limit_conn perserver 100;
+
+              # limit_conn_status 503;
+              # limit_conn_log_level error;
+          }
+      }
+  }
+  ```
+  - 当 Nginx 读取完请求的 Headers 之后，才会将该请求计入并发连接数。
+  - 以 binary_remote_addr 作为限流的 key 时，每个 key 需要 64bytes 来存储状态信息，因此 10MB 内存可以记录 16W 个 key。
 
 ## 关于 TCP 通信
 

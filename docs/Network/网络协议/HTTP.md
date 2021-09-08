@@ -106,7 +106,7 @@ cookie: gid=1311812194.1563255462; t=1
 ie=UTF-8&wd=1
 ```
 - 请求行：由请求方法名、请求的 URL 路径（域名之后的部分）、协议版本组成。
-- 多种请求头示例：
+- 请求报文的多种 Headers 示例：
   ```sh
   Content-Encoding: gzip                     # 该报文 body 的编码
   Content-Length: 348                        # 该报文 body 的长度
@@ -139,7 +139,7 @@ Server: Apache/2.4.7 (Ubuntu)
 <html><head><title>Index</html></head><body><h1>Hello world!</h1></body></html>
 ```
 - 状态行：由协议版本、状态码、状态码的简单描述组成。
-- 多种响应头示例：
+- 响应报文的多种 Headers 示例：
   ```sh
   Status Code: 200 OK   # 返回的状态码
   Allow: GET, HEAD      # 服务器允许的 HTTP 请求方法
@@ -172,7 +172,7 @@ Server: Apache/2.4.7 (Ubuntu)
 
 ### 报文 body
 
-报文 body 可以存储多种 MIME 类型的数据，但需要在报文头部声明其 Content-Type 。如下：
+报文 body 可以存储多种 MIME 类型的数据，需要在报文 Headers 中声明其 Content-Type 。如下：
 
 Content-Type|含义
 -|-
@@ -186,7 +186,7 @@ text/javascript                              | js 代码
 image/jpeg, image/png, image/gif             | 图片
 multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 boundary 的值作为分隔符
 
-## 状态码
+### 状态码
 
 服务器返回响应报文时，报文的第一行包含了一个状态码（Status Code），表示对请求报文的处理结果。
 

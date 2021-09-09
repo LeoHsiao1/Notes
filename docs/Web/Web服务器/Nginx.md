@@ -1021,7 +1021,7 @@ server {
   http {
       # 创建一个 zone ，以 binary_remote_addr 作为限流的 key
       # zone  ：创建一个指定大小的共享内存区域，用于记录 key 信息
-      # rate  ：限制速率。例如 10 r/s 表示每秒 10 个请求，10 r/m 表示每分钟 10 个请求
+      # rate  ：限制速率。例如 10r/s 表示每秒 10 个请求，10r/m 表示每分钟 10 个请求
       limit_req_zone $binary_remote_addr zone=perip:10m rate=10r/s;
       # 创建一个 zone ，以 server_name 作为限流的 key
       limit_req_zone $server_name zone=perserver:10m rate=100r/s;
@@ -1040,7 +1040,9 @@ server {
       }
   }
   ```
-  - rate 不支持小数，且实际工作时会转换成每 100ms 的平均阈值，不能准确限制，建议测试下效果。
+  - rate 不支持小数，且实际工作时会转换成每 100ms 的平均阈值，不能准确限制。
+    - 例如 rate=10r/s 时，实际限制大概为 1 r/100ms 。
+    - 例如 rate=1r/m 时，在接收一个请求之后的 1 min 内，拒绝新请求。
   - limit_req 采用漏斗算法（leaky bucket）：
     - 每 100ms 为一个处理周期。如果当前周期内，收到的请求数超过 rate 限制，则将请求放入称为 burst 的 FIFO 队列中。
       - 每隔一个周期，从队列中取出请求，正常处理。

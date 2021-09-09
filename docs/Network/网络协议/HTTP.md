@@ -119,9 +119,8 @@ ie=UTF-8&wd=1
   Cookie: gid=1311812194.1563255462; t=1
 
   User-Agent: Chrome/75.0.3770.100           # 客户端的信息
-  Accept: text/html,application/xml;q=0.8    # 客户端能接受的响应 body 类型
+  Accept: text/html,application/xml;q=0.8    # 客户端能接受的响应 body 的 Content-Type 。可以声明多个方案，用逗号分隔。q 表示选择这种方案的优先级，默认为 1
   Accept-Charset: GB2312,utf-8;q=0.7,*;q=0.7 # 客户端能接受的响应 body 编码格式
-  Accept-Language: zh-CN,zh;q=0.9            # 客户端能接受的响应 body 语言，q 表示选择这种情况的优先级，默认为 1
   Accept-Encoding: gzip, deflate             # 客户端能接受的响应 body 压缩格式
 
   If-Modified-Since: Fri, 5 Jun 2019 12:00:00 GMT  # 如果响应报文 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
@@ -170,21 +169,23 @@ Server: Apache/2.4.7 (Ubuntu)
     public      # 客户端和代理服务器都可以缓存
     ```
 
-### 报文 body
+### Content-Type
 
-报文 body 可以存储多种 MIME 类型的数据，需要在报文 Headers 中声明其 Content-Type 。如下：
+- 报文 Headers 中的 Content-Type 用于声明报文 body 的数据类型，便于解析报文 body 。常见的几种 MIME 类型如下：
 
-Content-Type|含义
--|-
-application/x-www-form-urlencoded            | 默认格式，与 Query String 格式相同，通常用于传输 form 表单
-application/json                             | JSON 格式的文本
-application/javascript                       | js 代码，且会被浏览器自动执行
-application/octet-stream                     | 二进制数据，通常用于传输单个文件
-text/plain                                   | 纯文本
-text/html                                    | HTML 格式的文本
-text/javascript                              | js 代码
-image/jpeg, image/png, image/gif             | 图片
-multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 boundary 的值作为分隔符
+    Content-Type|含义
+    -|-
+    application/x-www-form-urlencoded            | 默认格式，与 Query String 格式相同，通常用于传输 form 表单
+    application/json                             | JSON 格式的文本
+    application/javascript                       | js 代码，且会被浏览器自动执行
+    application/octet-stream                     | 二进制数据，通常用于传输单个文件
+    text/plain                                   | 纯文本
+    text/html                                    | HTML 格式的文本
+    text/javascript                              | js 代码
+    image/jpeg, image/png, image/gif             | 图片
+    multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 boundary 的值作为分隔符
+
+- 可以在 Content-Type 中同时声明 MIME 类型和编码格式，用分号分隔，例如：`Content-Type: text/html; charset=utf-8`
 
 ### 状态码
 

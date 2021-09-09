@@ -1168,10 +1168,30 @@ server {
   ```sh
   add_header name value [always];
   ```
-  - 该指令可以同时定义多条。
+  - 该指令可以多次使用。
   - 如果响应报文的状态码属于 200, 201, 206, 301, 302, 303, 307, 308 ，则在头部末尾添加 header 。
     - 如果声明了 always ，则无论状态码是什么，都会添加 header 。
   - 如果当前级别没有定义任何 add_header 指令，则继承上一级别的 add_header 指令。
+- 例：
+  ```sh
+  location /api {
+      add_header Content-Type 'application/json; charset=utf-8';
+      return  200 '{"code": 200, "msg": "调用接口成功"}';
+  }
+  ```
+
+### charset
+
+：用于在响应报文的 Content-Type 中加入 charset 。
+- 可用范围：http、server、location
+- 默认值：
+  ```sh
+  charset off;
+  ```
+- 例：
+  ```sh
+  charset utf-8;
+  ```
 
 ### expires
 

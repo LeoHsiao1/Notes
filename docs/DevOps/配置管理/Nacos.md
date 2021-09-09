@@ -1,10 +1,12 @@
 # Nacos
 
-：一个 Web 服务器，提供了配置管理、服务发现的功能。
+：一个 Web 服务器，用于配置管理、服务发现。
 - [官方文档](https://nacos.io/zh-cn/docs/quick-start.html)
+- 发音为 `/nɑ:kəʊs/` 。
 - 由阿里巴巴公司开源，采用 Java 开发。
-- 提供了发布配置、获取配置、注册服务、发现服务等 API 。
-- 支持基于 DNS 或 RPC 的服务发现，支持对接 k8s、gRPC/Dubbo、Spring Cloud 等平台的服务。
+- 主要功能：
+  - 提供了发布配置、获取配置、注册服务、发现服务等 HTTP API 。
+  - 支持基于 DNS、RPC 协议的服务发现，支持对接 k8s、gRPC/Dubbo、Spring Cloud 等平台的服务。
 
 ## 部署
 

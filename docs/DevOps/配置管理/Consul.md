@@ -8,25 +8,43 @@
 ## 原理
 
 - 架构：
-  - 在每个主机上部署一个 Consul agent ，组成分布式集群。
-  - 业务程序向本机的 agent 发出请求，注册服务。
+  - 部署多个 Consul agent 进程，组成分布式集群。
+  - 业务程序向一个 agent 发出请求，注册服务。
+    - Consul 的设计是在每个主机上部署一个 agent ，让每个主机上的业务程序访问本机的 agent 进行服务注册。
 
 - Consul 支持划分多个数据中心（Data Center）。
-  - 一个数据中心代表一个低延迟的子网，包含一组主机。
-  - 默认的数据中心名为 dc1 。
+  - 一个数据中心代表一个局域网（LAN），包含一组可以内网互联的主机。
+  - 不同数据中心之间通过 WAN 通信。
 
 - Consul 的 Enterprise 版本支持划分 namespace 。
 
 ### agent
 
-- agent 有两种运行模式：
+- agent 又称为 node ，有两种运行模式：
   - client
     - ：普通的 agent 。
   - server
     - ：比 client 多了维护分布式集群的责任。负责存储集群数据，并保证分布式一致性。
-    - 采用 Raft 算法。
+    - 采用 Raft 算法，每次修改集群数据时需要 quorum 个 server 同意。
     - 多个 server 之间会自行选出 leader 。
     - 建议部署 3 或 5 个 server ，允许 1 或 2 个 server 故障，实现高可用。
+
+- agent 的状态：
+  - agent 进程启动，通过 join 命令加入集群，注册自己的信息，并发现其它 agent 。
+  - 如果一个 agent 不能被其它 agent 访问到，则标记为 failed 状态。
+    - 这可能是因为网络不通，或 agent 崩溃。
+  - 如果一个 agent 主动退出集群，则标记为 left 状态，并且注销该 agent 上注册的所有服务。
+    - 比如 agent 进程正常终止时，会主动退出集群。
+  - 集群会定期从 catalog 删除 failed、left 状态的 agent 。
+
+
+<!--
+- server 之间会同步 Key/Value 数据，
+  - 因为 
+
+- 集群中的 agent 基于 gossip 协议维护自己的在线状态
+- Intention ：用于允许、禁止服务之间的网络连通。 -->
+
 
 - agent 提供了一些 Restful API ：
   ```sh
@@ -47,6 +65,7 @@
   PUT     /v1/kv/<key>              # 创建 key ，如果该 key 已存在则更新它
   DELETE  /v1/kv/<key>              # 删除 key
   ```
+  - 担任 server 的 agent 将数据存储在 catalog 目录下。
 
 ## 配置管理
 
@@ -99,25 +118,68 @@
 
 ## 部署
 
-```sh
-consul agent
-            -server
-            -bootstrap-expect=3   # 当发现指定数量的 server 时，才启动集群，选出 leader 。应该设置成与实际 server 数相同，以避免脑裂
-            -retry-join=10.0.0.1  # 连接到某个 server 的 Serf LAN 端口，加入其所属的集群。如果加入失败，则自动重试
-            -node=node1           # 指定该节点的名称，在集群中唯一。默认采用主机名
-            # -ui                 # 是否提供 Web UI 。默认不提供，监听的 HTTP 端口只提供 Restful API
-            # -client=localhost   # 默认绑定环回地址，供业务程序访问
-            # -config-file <file>         # 指定配置文件，必须为 JSON 或 HCL 格式
-            # -config-dir /consul/config  # 配置目录，加载该目录下的 *.json 和 *.hcl 配置文件
-```
-- Consul 可能监听多个端口：
-  ```sh
-  8300      # 用于 RPC 通信，基于 TCP
-  8301      # 用于 Serf LAN ，基于 TCP、UDP
-  8302      # 用于 Serf WAN ，基于 TCP、UDP
-  8500      # HTTP 端口，提供 Restful API 和 Web UI
-  8600      # 提供 DNS 服务，基于 TCP、UDP
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    consul:
+      container_name: consul
+      image: consul:1.9.8
+      command: agent -server -bootstrap-expect=3 -node=node1 -client=0.0.0.0 -ui
+      restart: unless-stopped
+      environment:
+        CONSUL_BIND_INTERFACE: eth0
+      network_mode:
+        host
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ./config:/consul/config
+        - ./data:/consul/data
   ```
+  - 容器内以非 root 用户运行服务，需要调整挂载目录的权限：
+    ```sh
+    mkdir -p  config data
+    chown -R  100 .
+    ```
+
+- 命令用法：
+  ```sh
+  consul agent                              # 启动 agent 进程，采用 client 运行模式，在前台运行
+              -server                       # 采用 server 运行模式
+              -bootstrap-expect=3           # 当发现指定数量的 server 时，才启动集群，选出 leader 。应该设置成与实际 server 总数相同，以避免脑裂
+              
+              -join=10.0.0.1                # 启动时，连接到另一个 agent 的 Serf LAN 端口，加入其所属的集群。如果加入失败，则启动失败。可以多次使用该选项，连接多个 agent
+              # -retry-join=10.0.0.1        # 代替 -join 方式，如果加入失败，则自动重试
+              # -retry-interval=30s         # 重试的间隔时间
+              # -retry-max=0                # 重试次数。默认为 0 ，即不限制
+              # -join-wan=10.0.0.1          # 启动时，连接到另一个 agent 的 Serf WAN 端口，加入其所属的集群
+              # -retry-join-wan=10.0.0.1
+
+              -node=node1                   # 指定该节点的名称，在集群中唯一。默认采用主机名
+              # -ui                         # 是否让 HTTP 端口提供 Web UI 。默认不提供，只提供 Restful API
+              # -datacenter dc1             # 指定该 agent 所属的数据中心名称，默认为 dc1
+              # -bind 0.0.0.0               # 该 agent 的 LAN 服务绑定的地址，默认为 0.0.0.0
+              # -advertise 10.0.0.1         # 公布一个地址，供其它 agent 访问。默认公布本机的 IPv4 地址，如果本机有多个地址则启动失败
+              # -client 0.0.0.0             # 该 agent 的 HTTP、DNS 服务绑定的地址，供业务程序访问。默认绑定 localhost
+
+              # -config-file <file>         # 指定配置文件
+              # -config-dir /consul/config  # 指定配置目录，加载该目录下的配置文件
+              # -data-dir /consul/data      # 指定数据目录
+              # -log-file /var/log/consul   # 日志文件
+              # -log-level info
+              # -log-json                   # 让日志采用 JSON 格式，默认禁用
+
+              # 可以监听多个端口，取值为 -1 则表示禁用
+              # -server-port 8300       # RPC 端口，基于 TCP 协议
+              # -serf_lan 8301          # Serf LAN 端口，基于 TCP、UDP 协议
+              # -serf_wan 8302          # Serf WAN 端口，基于 TCP、UDP 协议
+              # -http-port 8500         # HTTP 端口，基于 TCP 协议
+              # -https-port -1          # HTTPS 端口。默认为 -1 ，启用时建议为 8501
+              # -grpc-port -1           # gRPC 端口。默认为 -1 ，启用时建议为 8502
+              # -dns-port 8600          # DNS 端口，基于 TCP、UDP 协议
+  ```
+
 - Consul agent 启动时的日志示例：
   ```sh
   ==> Found address '10.0.0.1' for interface 'eth0', setting bind option...   # 发现默认网卡的 IP 地址，绑定它
@@ -128,20 +190,9 @@ consul agent
           Datacenter: 'dc1' (Segment: '<all>')                                # 所属的数据中心名
               Server: true (Bootstrap: false)                                 # 是否工作在 server 模式
         Client Addr: [0.0.0.0] (HTTP: 8500, HTTPS: -1, gRPC: -1, DNS: 8600)   # 供业务程序访问的地址
-        Cluster Addr: 10.0.0.1 (LAN: 8301, WAN: 8302)                         # 供集群其它 agent 访问的地址
+        Cluster Addr: 10.0.0.1 (LAN: 8301, WAN: 8302)                         # 供集群中其它 agent 访问的地址
   ```
 
-
-<!-- agent 启动时，通过 join 命令加入集群，发现其它 agent
-无法被访问的 agent 处于 failed 状态 -->
-
-<!--
-- server 之间会同步 Key/Value 数据，
-  - agent 正常终止时，会声明自己要退出集群，因此会被标记为 left 状态，该节点上注册的所有服务都会被删除
-
-- node 将数据存储在 catalog
-- 集群中的 agent 基于 gossip 协议维护自己的在线状态
-- Intention ：用于允许、禁止服务之间的网络连通。 -->
 
 
 <!-- 支持通过命令行导入、导出配置：
@@ -149,6 +200,11 @@ consul kv import
 consul kv export [PREFIX] -->
 
 ## 配置
+
+- Consul 支持多种配置方式，优先级从高到低如下：
+  - 命令行参数
+  - 配置文件：可以是 JSON 或 HCL 格式，文件扩展名为 .json 或 .hcl 。
+  - 默认配置
 
 ### ACL
 

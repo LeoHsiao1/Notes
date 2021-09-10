@@ -280,7 +280,7 @@
 
 ### sockstat
 
-查看各状态的 socket 数量：
+通过 `/proc/net/sockstat` 文件可查看各种状态的 socket 数量：
 ```sh
 [CentOS ~]# cat /proc/net/sockstat
 sockets: used 1101
@@ -296,44 +296,6 @@ FRAG: inuse 0 memory 0
 - `tw` ：time_wait 。
 - `alloc` ：allocated ，已分配的。
 - `mem` ：内存中缓冲区的大小，单位未知。
-
-### telnet
-
-：一个传统的远程登录工具。
-- 通信内容没有加密，容易被监听。因此现在不适合用于远程登录，常用于测试 TCP 端口能否连通。
-- 命令：
-  ```sh
-  $ telnet <host> [port]    # 连接到某个主机（默认采用 TCP 23 端口）
-  ```
-
-- 例：端口连通
-  ```sh
-  [root@Centos ~]# telnet baidu.com 80
-  Trying 39.156.69.79...
-  Connected to baidu.com.
-  Escape character is '^]'.
-
-  ```
-  - 可见它成功连接到目标主机的 80 端口。此时按 `Ctrl+]` 加 `Ctrl+D` 即可断开连接。
-
-- 例：端口不通
-  ```sh
-  [root@Centos ~]# telnet 127.0.0.1 8000
-  Trying 127.0.0.1...
-  telnet: connect to address 127.0.0.1: Connection refused
-  ```
-
-- 例：无响应
-  ```sh
-  [root@Centos ~]# telnet baidu.com
-  Trying 220.181.38.148...
-
-  ^C
-  ```
-  - 可见它一直尝试连接目标主机的 23 端口，但并没有收到响应。原因可能是：
-    - 与目标主机的网络不通。
-    - 与目标主机的网络连通，但防火墙禁止了该端口的流量。
-    - 与目标主机的端口连通，但是目标主机的 CPU 或内存等资源已经耗尽，不能做出响应。
 
 ### netstat
 
@@ -416,55 +378,3 @@ FRAG: inuse 0 memory 0
   - 这里 closed 状态的 Socket ，不是指被 close() 关闭的 Socket （它们会被内核回收），而是指没有通信的 Socket 。比如：
     - 程序创建 Socket 之后，没有成功调用 connect() ，导致该 Socket 从未进行通信。
     - 程序调用了 shutdown() ，但没有调用 close() ，导致该 Socket 停止通信。
-
-### tcpdump
-
-：一个网络抓包工具，可以抓取主机网卡上收发的所有数据包。
-- 命令：
-  ```sh
-  tcpdump
-          -i lo         # 监听指定网卡（默认是监听第一个网卡，即 eth0）
-          -n            # 将主机名、域名显示成明确的 IP 地址
-          -nn           # 将端口名显示成明确的端口号
-          -v            # 显示数据包的详细信息
-          -vv           # 显示数据包更详细的信息
-
-          # 过滤表达式
-          host 10.0.0.1       # 指定主机
-          net 10.0.0.1/24     # 某个网段
-          src 10.0.0.1        # 指定源地址
-          dst 10.0.0.1        # 指定目的地址
-          tcp                 # 指定协议
-          port 80             # 指定端口
-          tcp and dst port 80 # 过滤出目的端口为 80 的 tcp 数据包
-
-          -c 10               # 抓取指定数量的数据包之后就停止运行
-          -w dumps.pcap       # 将抓取信息保存到一个文件中
-  ```
-  - 监听 eth0 网卡时，会抓取本机与其它主机通信的数据包。监听 lo 网卡时，会抓取本机内部通信的数据包。
-  - 过滤表达式支持使用 and、or、not 运算符。
-  - 可以先用 tcpdump 抓包并保存为文件，然后在 Wireshark 的 GUI 界面中分析。
-
-- 下例是对一次 HTTP 请求的抓包：
-  ```sh
-  [root@Centos ~]# tcpdump -nn tcp and dst port 8000
-  tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-  listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
-  13:46:14.669786 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [S], seq 2920488928, win 29200, options [mss 1424,sackOK,TS val 3983484990 ecr 0,nop,wscale 7], length 0
-  13:46:14.670038 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [.], ack 174830516, win 229, options [nop,nop,TS val 3983484990 ecr 2392282894], length 0
-  13:46:14.670095 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [P.], seq 0:82, ack 1, win 229, options [nop,nop,TS val 3983484990 ecr 2392282894], length 82
-  13:46:14.672466 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [.], ack 18, win 229, options [nop,nop,TS val 3983484992 ecr 2392282896], length 0
-  13:46:14.672591 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [.], ack 378, win 237, options [nop,nop,TS val 3983484992 ecr 2392282897], length 0
-  13:46:14.672667 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [F.], seq 82, ack 378, win 237, options [nop,nop,TS val 3983484993 ecr 2392282897], length 0
-  13:46:14.672805 IP 10.124.128.97.52152 > 10.124.130.12.8000: Flags [.], ack 379, win 237, options [nop,nop,TS val 3983484993 ecr 2392282897], length 0
-  ```
-  - 每行包含多个字段：时间戳 源地址 > 目的地址 Flags ... length
-  - 常见的几种 TCP 数据包标志：
-    ```sh
-    [S]     # SYN 数据包
-    [.]     # ACK 数据包
-    [S.]    # SYN+ACK 数据包
-    [P]     # PUSH 数据包
-    [F]     # FIN 数据包
-    [R]     # RST 数据包
-    ```

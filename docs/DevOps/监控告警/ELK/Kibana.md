@@ -65,20 +65,23 @@
   - 点击搜索栏前端的保存按钮，可以保存当前的 query 配置，包括查询表达式、字段筛选、时间筛选。
   - 点击页面右上角的 Save 按钮，可以会保存当前的搜索页面，包括查询表达式、字段筛选、显示的字段，但不包括时间筛选。
 
-- 搜索时，默认使用 Kibana 自带的查询语言 KQL ，语法如下：
-  - 用 `:` 进行 match_phrase 查询：
+- 搜索时，默认采用 Kibana 自带的查询语言 KQL 。
+  - 例：
     ```sh
-    _index  : "filebeat-0001"
-    agent_* : "filebeat-00*"    # 支持在字段名、值中使用通配符
-    agent_name: *               # agent_name 字段存在
-    not agent_name: *           # agent_name 字段不存在
+    elastic                   # 查询任一字段的值包含该单词的文档。必须是分词之后完全相同的单词，比如 elasticsearch 多了字母就不匹配
+    elastic*                  # 可以使用通配符
+    "elastic search"          # 查询一个包含空格的字符串时，需要加上定界符
+    elastic AND NOT search    # 支持使用 and、or、not 逻辑运算符
     ```
-  - 支持使用 `<`、`>`、`<=`、`>=` 比较运算符。
-  - 支持使用 and、or、not 逻辑运算符：
+  - 支持用 `:` 对指定字段进行查询：
     ```sh
+    agent_* : "filebeat-00*"            # 支持在字段名、值中使用通配符
+    agent_name: *                       # agent_name 字段存在
+    not agent_name: *                   # agent_name 字段不存在
     status_code : (401 or 403 or 404)
     status_code : 200 and not (tags : (success and info))
     ```
+  - 点击页面右上角的 Inspect ，可以查看查询的耗时、对应的 query 语句。
 
 ### Fleet
 

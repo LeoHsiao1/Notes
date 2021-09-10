@@ -12,8 +12,6 @@
   - 业务程序向一个 agent 发出请求，注册服务。
     - Consul 的设计是在每个主机上部署一个 agent ，让每个主机上的业务程序访问本机的 agent 进行服务注册。
 
-- Consul 的 Enterprise 版本支持划分 namespace 。
-
 - agent 又称为 node ，有两种运行模式：
   - client
     - ：普通的 agent 。
@@ -21,9 +19,10 @@
     - ：比 client 多了维护集群的责任。
     - 一个 Consul 集群至少要有 1 个 server 节点，负责存储集群数据。
     - 集群采用 Raft 算法实现分布式一致性。
-      - 需要 quorum 个 server 同意才能选出 leader ，负责引导集群的启动。
+      - server 之间会自行选出一个 server 担任 leader ，负责引导集群。其它 server 则担任 follower 。
       - 每次修改集群数据时需要 quorum 个 server 同意。
-      - 建议部署 3 或 5 个 server ，允许 1 或 2 个 server 故障，实现高可用。
+    - 建议部署 3 或 5 个 server ，此时允许 1 或 2 个 server 故障，实现高可用。
+      - client 数量不影响集群的可用性，可以部署上万节点。
 
 - agent 的状态：
   - agent 进程启动，通过 join 命令加入集群，注册自己的信息，并发现其它 agent 。
@@ -34,18 +33,23 @@
 
 - agent 采用多种通信协议，监听不同的端口：
   - agent 之间通过 RPC 协议进行通信，传输层协议为 TCP 。
-  - agent 之间通过 Gossip 协议进行节点发现、服务发现，传输层协议为 TCP、UDP 。
+  - agent 之间通过 Gossip 协议进行节点发现、服务发现，传输层协议同时采用 TCP、UDP 。
     - Gossip 协议：基于 Serf 库开发，用于在集群广播消息，比如节点状态。
     - agent 分别为 LAN、WAN 监听一个端口，提供 Gossip 服务。
   - agent 可以提供 HTTP、HTTPS、gRPC 端口供业务程序访问，传输层协议为 TCP 。
-  - agent 可以提供 DNS 端口供业务程序访问，传输层协议为 TCP、UDP 。
+  - agent 可以提供 DNS 端口供业务程序访问，传输层协议同时采用 TCP、UDP 。
 
 - Consul 支持在集群中划分多个数据中心（Data Center）。
-  - 一个数据中心代表一个局域网，包含一组 agent ，可以通过 LAN 通信。
+  - 每个数据中心相当于一个子集群，各有一个 leader server 。
+  - 每个数据中心代表一个局域网，包含一组 agent ，可以通过 LAN 通信。
     - 不同数据中心之间的 agent 通过 WAN 通信。
-  - 每个数据中心拥有一个 Gossip LAN 节点池，记录该局域网的所有节点。
+    - 每个数据中心拥有一个 Gossip LAN 节点池，记录该局域网的所有节点。
     - 整个集群拥有一个 Gossip WAN 节点池，记录集群的所有节点。
+  - 用户可以向集群的任一 agent 发出请求，会被自动转发到正确的节点。
+    - 如果 agent 收到指向数据中心的写请求，则会自动转发到 leader 节点。
+    - 如果 agent 收到指向其它数据中心的请求，则会转发到该数据中心的任一节点。
 
+- Consul 的 Enterprise 版本支持划分 namespace 。
 
 <!--
 - server 之间会同步 Key/Value 数据，

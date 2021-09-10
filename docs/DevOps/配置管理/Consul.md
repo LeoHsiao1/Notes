@@ -32,16 +32,16 @@
   - 如果一个 agent 通过 leave 命令退出集群，则标记为 left 状态，并且注销该 agent 上注册的所有服务。
     - 比如 agent 进程正常终止时，会主动退出集群。
 
-- agent 支持多种通信协议，监听不同的端口。
+- agent 采用多种通信协议，监听不同的端口：
   - agent 之间通过 RPC 协议进行通信，传输层协议为 TCP 。
   - agent 之间通过 Gossip 协议进行节点发现、服务发现，传输层协议为 TCP、UDP 。
     - Gossip 协议：基于 Serf 库开发，用于在集群广播消息，比如节点状态。
-    - 根据数据中心的划分，Gossip 节点分为 LAN、WAN 两种。
+    - agent 分别为 LAN、WAN 监听一个端口，提供 Gossip 服务。
   - agent 可以提供 HTTP、HTTPS、gRPC 端口供业务程序访问，传输层协议为 TCP 。
   - agent 可以提供 DNS 端口供业务程序访问，传输层协议为 TCP、UDP 。
 
 - Consul 支持在集群中划分多个数据中心（Data Center）。
-  - 一个数据中心代表一个局域网，包含一组可以通过 LAN 通信的 agent 。
+  - 一个数据中心代表一个局域网，包含一组 agent ，可以通过 LAN 通信。
     - 不同数据中心之间的 agent 通过 WAN 通信。
   - 每个数据中心拥有一个 Gossip LAN 节点池，记录该局域网的所有节点。
     - 整个集群拥有一个 Gossip WAN 节点池，记录集群的所有节点。
@@ -143,14 +143,19 @@ consul kv export [PREFIX] -->
 
   services:
     consul:
-      container_name: consul -config-dir /consul/config
+      container_name: consul
       image: consul:1.9.8
       command: agent
       restart: unless-stopped
-      # environment:
-      #   CONSUL_BIND_INTERFACE: eth0
-      network_mode:
-        host
+      ports:
+        - 8300:8300
+        - 8301:8301
+        - 8301:8301/udp
+        - 8302:8302
+        - 8302:8302/udp
+        - 8500:8500
+        - 8600:8600
+        - 8600:8600/udp
       volumes:
         - /etc/localtime:/etc/localtime:ro
         - ./config:/consul/config
@@ -165,8 +170,9 @@ consul kv export [PREFIX] -->
 - 命令用法：
   ```sh
   consul agent                              # 启动 agent 进程，在前台运行
-              -config-file <file>           # 指定配置文件
-              -config-dir /consul/config    # 指定配置目录，加载该目录下的配置文件
+              # -server                     # 采用 server 运行模式
+              # -config-file <file>         # 指定配置文件
+              # -config-dir /consul/config  # 指定配置目录，加载该目录下的配置文件
   ```
 
 - Consul agent 启动时的日志示例：
@@ -201,10 +207,10 @@ consul kv export [PREFIX] -->
       // 关于节点
       // "datacenter": "dc1",     // 指定该 agent 所属的数据中心名称，默认为 dc1
       "node_name": "node1",       // 指定该节点的名称，在集群中唯一。默认采用主机名
-      // "node_id": "xxx",        // 指定该节点的 UUID 。 node 名称可以修改，但 node_id 不会变
-      "server": true,             // 是否让 agent 采用 server 运行模式。默认采用 client 运行模式
+      // "node_id": "xxxx",       // 指定该节点的 UUID 。 node 名称可以修改，但 node_id 不会变
+      "server": true,             // agent 是否采用 server 运行模式。默认为 false ，采用 client 运行模式
       "ui_config": {
-          "enabled": true,        // 是否让 HTTP 端口提供 Web UI 。默认不提供，只提供 Restful API
+          "enabled": true         // 是否让 HTTP 端口提供 Web UI 。默认不提供，只提供 Restful API
       },
 
       // 关于 IP 地址
@@ -226,8 +232,9 @@ consul kv export [PREFIX] -->
       //     "dns":      8600,
       // },
 
-      // 关于启动
-      "bootstrap_expect": 3,          // 当发现指定数量的 server 时，才启动集群，选出 leader 。应该设置成与实际 server 总数相同，以避免脑裂
+      // 关于加入集群
+      // "bootstrap": false,          // 该 agent 启动之后是否直接担任 leader 。默认为 false ，避免与集群已有的 leader 冲突
+      "bootstrap_expect": 3,          // 当发现指定数量的 server 时，才开始引导集群，选出 leader 。应该设置成与实际 server 总数相同，以避免脑裂
       // "start_join": ["<IP>"],      // agent 启动时，连接到其它 agent 的 LAN 端口，加入其所属的集群。如果加入失败，则启动失败
       // "start_join_wan": ["<IP>"],  // 通过 WAN 端口加入集群
       "retry_join": ["<IP>"],         // 代替 start_join 方式，如果加入失败，则自动重试
@@ -356,6 +363,3 @@ Consul 支持为 HTTP、RPC 通信设置 ACL 规则，主要概念如下：
     }
     ```
     DNS 请求不支持传递 token ，因此建议将该策略分配给 Anonymous token 。
-
-
-

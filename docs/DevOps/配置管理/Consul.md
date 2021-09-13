@@ -1,6 +1,6 @@
 # Consul
 
-：一个 Web 服务器，用于配置管理、服务发现。
+：一个 Web 服务器，提供了配置管理、服务发现、DNS 等功能。
 - [官方文档](https://www.consul.io/docs)
 - 发音为 `/ˈkɒnsl/` 。
 - 由 HashiCorp 公司采用 Golang 开发。
@@ -9,12 +9,12 @@
 
 - 架构：
   - 部署多个 Consul agent 进程，组成分布式集群。
-  - 业务程序向一个 agent 发出请求，注册服务。
-    - Consul 的设计是在每个主机上部署一个 agent ，让每个主机上的业务程序访问本机的 agent 进行服务注册。
+  - 业务程序向一个 agent 发出请求，使用 Consul 的功能。
 
 - agent 又称为 node ，有两种运行模式：
   - client
     - ：普通的 agent 。
+    - 业务程序访问任一 agent ，都能使用 Consul 的功能。
   - server
     - ：比 client 多了维护集群的责任。
     - 一个 Consul 集群至少要有 1 个 server 节点，负责存储集群数据。
@@ -28,7 +28,7 @@
   - agent 进程启动，通过 join 命令加入集群，注册自己的信息，并发现其它 agent 。
   - 如果一个 agent 不能被其它 agent 访问到，则标记为 failed 状态。
     - 这可能是因为网络不通，或 agent 崩溃。
-  - 如果一个 agent 通过 leave 命令退出集群，则标记为 left 状态，并且注销该 agent 上注册的所有服务。
+  - 如果一个 agent 通过 leave 命令退出集群，则标记为 left 状态。
     - 比如 agent 进程正常终止时，会主动退出集群。
 
 - agent 采用多种通信协议，监听不同的端口：
@@ -52,9 +52,7 @@
 - Consul 的 Enterprise 版本支持划分 namespace 。
 
 <!--
-- server 之间会同步 Key/Value 数据，
-
-- Intention ：用于允许、禁止服务之间的网络连通。
+- Intention ：用于允许、禁止服务之间的网络连通。用于 Consul Connect
 -->
 
 
@@ -66,6 +64,7 @@
   - key 如果以 / 结尾，则会创建一个文件夹
   - KV 存储中的值不能大于 512kb
 
+- Consul 集群中的每个 agent 都拥有一份 Key/Value 数据的副本，并自动同步，供用户访问。
 
 <!-- 支持通过命令行导入、导出配置：
 consul kv import
@@ -74,14 +73,23 @@ consul kv export [PREFIX] -->
 
 ### 服务发现
 
-- 可通过 HTTP、DNS 请求实现服务发现
-- service 的信息示例：
+- 服务发现的工作流程：
+  1. 访问 agent ，注册服务。
+  2. 访问 agent ，通过 HTTP 或 DNS 端口查询已注册的服务。
+
+- Consul 集群将已注册的所有节点、服务的信息保存在一个称为 catalog 的命名空间中，可以通过 API 访问。
+  - 注销一个对象，就会从 catalog 删除其存在。
+  - Consul 的设计是在每个主机上部署一个 agent ，让每个主机上的业务程序访问本机的 agent 进行服务注册。
+    - 一个 agent 变为 left 状态时，会自动注销该 agent 上注册的所有服务。
+
+- 一个 service 的信息示例：
   ```json
   {
       "ID": "django",                 // 该服务在当前 agent 上的唯一 ID 。如果未指定，则采用服务名
       "Service": "django",            // 服务名。注册服务时只有该字段是必填的
       "Address": "10.0.0.1",          // 服务的 IP 地址或主机名。如果未指定，则采用当前 agent 的 IP 地址
       "Port": 80,
+      "Datacenter": "dc1",            // 该服务所属的数据中心
       "TaggedAddresses": {            // 可以给服务附加多个地址
           "lan": {                    // LAN 地址，供同一数据中心的其它服务访问。默认为 IPv4 类型
               "Address": "10.0.0.1",
@@ -99,45 +107,94 @@ consul kv export [PREFIX] -->
       "Meta": {                       // 可以给服务加上一些键值对类型的元数据，默认为 false
           "description": "This is for test."
       },
-      "checks": [],
-      "Weights": {                    // 该服务在 DNS SRV 响应中的权重，默认为 1
-        "Passing": 1,
+      "checks": [],                   // 健康检查的任务，默认为空
+      "Weights": {                    // 该服务存在其它实例时，指定其在 DNS SRV 响应中的权重，默认为 1
+          "Passing": 1,
           "Warning": 1
-      },
-      "Datacenter": "dc1"             // 该服务所属的数据中心
+      }
   }
   ```
 
-- DNS
-  - 如果服务未通过健康检查或节点有任何未通过的系统级检查，即为 critical 状态，则 DNS 接口将从任何服务查询中忽略该节点。
+  <!-- - 如果服务未通过健康检查或节点有任何未通过的系统级检查，即为 critical 状态，则 DNS 接口将从任何服务查询中忽略该节点。 -->
 
-- agent 会定时进行健康检查：
-  - 检查该 agent 所在主机的状态。
-  - 检查该 agent 上注册的所有服务的状态。
+#### 健康检查
+
+- 每个 agent 会定期进行健康检查，并更新 catalog 中的信息。
+- 健康检查的对象分为两种：
+  - 节点：该 agent 本身，是否运行、可连接。
+  - 服务：该 agent 上注册的所有服务。
+- 健康检查的结果分为两种：
+  - passing、success ：通过。
+  - warning
+  - failing、critical ：未通过。
+
+- 每个节点默认启用 Serf 类型的监控检查，而每个服务可启用以下类型的健康检查：
+  - Script ：指定一个 shell 命令，定期执行一次。
+    - 如果退出码为 0 则视作 passing ，为 1 则视作 warning ，为其它值则视作 failing 。
+    - 执行时的 stdout、stderr 会被记录到检查结果的 output 字段，可在 Web UI 查看。
+    ```json
+    {
+        "args": ["/usr/bin/curl", "127.0.0.1"],
+        // "id": "xx",
+        // "name": "xx",
+        // "interval": "5s",                    // 每隔 interval 时间执行一次
+        // "timeout": "10s",                    // 每次检查的超时时间
+        // "status": "critical"                 // 在第一次健康检查之前，服务的默认状态
+    }
+    ```
+  - HTTP ：指定一个 URL ，定期发出一个 HTTP 请求。
+    - 如果状态码为 200 则视作 passing ，为 429 则视作 warning ，为其它值则视作 failing 。
+    ```json
+    {
+        "http": "http://localhost/health",
+        "method": "POST",                       // 请求方法，默认为 GET
+        "header": {"Content-Type": ["application/json"]},
+        "body": "{\"check\": \"is_running\"}"
+    }
+    ```
+  - TCP ：指定主机名和端口，定期尝试建立一次 TCP 连接。
+    - 如果连接成功则视作 success ，否则视作 critical 。
+    ```json
+    {
+        "tcp": "localhost:80"
+    }
+    ```
+  - Alias ：指定另一个节点或服务，跟随其状态。
+    ```json
+    {
+        "alias_node": "node1",    // 目标节点。默认为当前节点
+        "alias_service": "web"    // 目标服务。如果不指定则跟随节点的状态
+    }
+    ```
+  - gRPC
+  - TTL
+  - Docker
 
 ### API
 
 - agent 提供了一些 Restful API ：
   ```sh
-  GET   /v1/agent/members           # 获取所有 agent 的信息，这由当前 agent 从 cluster gossip pool 中获取
+  # 关于 agent
+  GET   /v1/agent/members           # 获取所有 agent 的信息
   PUT   /v1/agent/reload            # 让当前 agent 重新加载其配置文件
   PUT   /v1/agent/leave             # 让当前 agent 正常退出集群
+  GET   /v1/agent/checks            # 获取当前 agent 上所有健康检查的结果信息
   GET   /v1/agent/services                        # 获取当前 agent 上注册的所有服务的信息
   GET   /v1/agent/service/<serivce.id>            # 获取当前 agent 上注册的指定服务的信息
   PUT   /v1/agent/service/register                # 注册服务，这会调用 /v1/catalog/register
   PUT   /v1/agent/service/deregister/<serivce.id> # 注销服务，这会调用 /v1/catalog/deregister
 
+  # 关于 catalog
   PUT   /v1/catalog/register        # 在 catalog 中注册对象
   PUT   /v1/catalog/deregister      # 在 catalog 中注销对象
   GET   /v1/catalog/nodes           # 列出所有节点
   GET   /v1/catalog/services        # 列出所有服务
 
-  GET     /v1/kv/<key>              # 获取指定的 key 的信息，包括 value
+  # 关于 Key/Value
+  GET     /v1/kv/<key>              # 获取指定的 key 的信息，包括 key、value
   PUT     /v1/kv/<key>              # 创建 key ，如果该 key 已存在则更新它
   DELETE  /v1/kv/<key>              # 删除 key
   ```
-  - 担任 server 的 agent 将数据存储在 catalog 目录下。
-
 
 ## 部署
 
@@ -257,7 +314,7 @@ consul kv export [PREFIX] -->
       // "dns_config": {
       //     "node_ttl": "0s",        // ttl ，默认为 0 ，即禁用缓存
       //     "service_ttl": "0s",
-      //     "only_passing": false,   // DNS 结果中是否排除是否监控检查为 warning 或 critical 的节点。默认为 false ，只排除 failing 的节点
+      //     "only_passing": false,   // DNS 结果中是否排除是否健康检查为 warning 或 critical 的节点。默认为 false ，只排除 failing 的节点
       // }
       }
   ```

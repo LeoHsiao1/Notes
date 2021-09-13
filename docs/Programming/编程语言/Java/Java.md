@@ -125,4 +125,23 @@
 
 - Spring Cloud
   - ：一个基于 Spring Boot 的开发框架，适合开发分布式应用，比如微服务。
-  - 提供了构建分布式系统的一系列工具，比如配置管理、服务发现、服务网关等。
+  - 包含了多个组件：
+    - Config ：配置管理中心，基于 git 存储配置信息。例：
+      ```java
+      @Value("${test.name}")    // 添加注解，将指定的配置参数赋值给该变量
+      String name = "Hello";
+      ```
+    - Bus ：消息总线，用于动态更新配置。
+      - 每次修改配置时，会自动发送 HTTP 请求通知使用该配置的所有服务，让它们重新从 Config 读取配置。
+    - Eureka ：用于服务发现。
+    - Ribbon ：一个 HTTP 客户端，发出请求时会对服务器进行负载均衡。
+    - Feign ：一个声明式的 Restful 客户端，简化了访问微服务的过程，并基于 Ribbon 进行负载均衡。例：
+      ```java
+      @FeignClient("service1")        // 添加注解，声明要调用的目标服务名
+      static interface TestService {
+          @GetMapping("/name")        // 添加注解，使得调用该方法时，会发送 GET 请求到目标服务的指定 URL
+          public String name();
+      }
+      ```
+    - Hystrix ：断路器，自动进行服务熔断。
+    - Zuul ：API 网关，用于将服务暴露到集群外，并进行负载均衡、鉴权。

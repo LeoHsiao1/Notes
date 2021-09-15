@@ -36,3 +36,27 @@ Linux 系统会读取如下三处 DNS 配置，它们的优先级从高到低：
   - Linux 系统默认不会在本地建立 DNS 缓存，可以安装 nscd、dnsmasq 等工具提供 DNS 缓存。
   - Windows 系统默认将所有 DNS 规则缓存 1 天，可以执行 `ipconfig /flushdns` 命令清除缓存。
   - Chrome 浏览器默认将所有 DNS 规则缓存 1 分钟，可以在 `chrome://net-internals/#dns` 页面清除缓存。
+
+## 相关命令
+
+### dig
+
+：一个命令行工具，用于 DNS 查询。
+- 安装：`yum install bind-utils`
+- 命令：
+  ```sh
+  dig [name] [type]
+      @<ip>     # 指定 DNS 服务器的地址。默认采用 /etc/resolv.conf
+      -p 53     # 指定 DNS 服务器的端口
+      -x <ip>   # 反向查询与一个 IP 关联的域名
+
+      +short    # 只显示查询结果。默认会显示详细信息
+  ```
+  - type 表示 DNS 记录的类型，默认为 A 。
+
+- 例：
+  ```sh
+  [root@CentOS ~]# dig baidu.com +short
+  220.181.38.251
+  220.181.38.148
+  ```

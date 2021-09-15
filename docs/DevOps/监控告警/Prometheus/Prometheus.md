@@ -96,20 +96,20 @@
 
 - Prometheus 支持抓取其它 Prometheus 的数据，因此可以部署成集群。
 - 在 prometheus.yml 中按如下格式定义一个 job ，即可抓取其它 Prometheus 的数据：
-    ```yaml
-    scrape_configs:
-    - job_name: 'federate'
-      honor_labels: true            # 设置 true ，以保存原指标中的 job 、instance 标签
-      metrics_path: '/federate'
-      params:
-        'match[]':                  # 抓取匹配这些表达式的指标
-          - '{__name__=~"go_.*"}'
-          - 'go_goroutines'
-      static_configs:
-        - targets:                  # 目标 Prometheus 的地址
-          - '10.0.0.2:9090'
-          - '10.0.0.3:9090'
-    ```
+  ```yml
+  scrape_configs:
+  - job_name: 'federate'
+    honor_labels: true            # 设置 true ，以保存原指标中的 job 、instance 标签
+    metrics_path: '/federate'
+    params:
+      'match[]':                  # 抓取匹配这些表达式的指标
+        - '{__name__=~"go_.*"}'
+        - 'go_goroutines'
+    static_configs:
+      - targets:                  # 目标 Prometheus 的地址
+        - '10.0.0.2:9090'
+        - '10.0.0.3:9090'
+  ```
   - 只能抓取目标 Prometheus 最新时刻的指标，就像抓取一般的 exporter 。
   - 如果目标 Prometheus 掉线一段时间，则重新连接之后并不会同步掉线期间的指标。
 
@@ -148,9 +148,16 @@ scrape_configs:
 - job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
   # honor_labels: false
   # metrics_path: '/metrics'
-  # scheme: http
+  # follow_redirects: true          # 是否跟随状态码为 3xx 的重定向
+  # scheme: http                    # 通信协议
   # scrape_interval: 30s
   # scrape_timeout: 10s
+  # basic_auth:
+  #   username: <string>
+  #   password: <string>
+  # proxy_url: <string>
+  # tls_config:
+  #   insecure_skip_verify: false   # 是否不认证 HTTPS 证书
   static_configs:
   - targets:                        # 一组监控对象的 IP:Port
     - '10.0.0.1:9090'
@@ -158,10 +165,6 @@ scrape_configs:
     # labels:                       # 为这些监控对象的数据加上额外的标签
     #   nodename: 'CentOS-1'
   - targets: ['10.0.0.2:9090']      # 下一组监控对象
-  # basic_auth:
-  #   username: <string>
-  #   password: <string>
-  # proxy_url: <string>
 
 - job_name: 'node_exporter'
   file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
@@ -181,7 +184,7 @@ scrape_configs:
   - `honor_labels: true` ：保留原指标不变，不添加新标签。
 - 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，应该添加 nodename 等额外的标签便于筛选。
 - 通过 file_sd_configs 方式读取的文件可以是 YAML 或 JSON 格式，如下：
-  ```yaml
+  ```yml
   - targets:
     - '10.0.0.1:9090'
     labels:
@@ -215,7 +218,7 @@ scrape_configs:
   - Recording Rules ：用于将某个查询表达式的结果保存为新指标。这样可以避免在用户查询时才计算，减少开销。
   - Alerting Rules ：用于在满足某个条件时进行告警。（它只是产生警报，需要由 Alertmanager 加工之后转发给用户）
 - 可以在 prometheus.yml 中导入自定义的 rules.yml 文件，格式如下：
-  ```yaml
+  ```yml
   groups:
   - name: recording_rules               # 规则组的名称
     # interval: 15s                     # 每隔多久执行一次该 rules

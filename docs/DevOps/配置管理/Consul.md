@@ -115,14 +115,13 @@ consul kv export [PREFIX] -->
   }
   ```
 
-  <!-- - 如果服务未通过健康检查或节点有任何未通过的系统级检查，即为 critical 状态，则 DNS 接口将从任何服务查询中忽略该节点。 -->
-
 #### 健康检查
 
 - 每个 agent 会定期进行健康检查，并更新 catalog 中的信息。
 - 健康检查的对象分为两种：
   - 节点：该 agent 本身，是否运行、可连接。
-  - 服务：该 agent 上注册的所有服务。
+  - 服务：该 agent 上注册的各个服务。
+
 - 健康检查的结果分为两种：
   - passing、success ：通过。
   - warning
@@ -169,6 +168,31 @@ consul kv export [PREFIX] -->
   - gRPC
   - TTL
   - Docker
+
+- 一个服务要通过自身的健康检查，并且所在 agent 也通过健康检查，才标记为健康状态。
+  - 非健康状态的服务不会被自动删除。
+
+#### DNS
+
+- Consul 支持通过 DNS 请求查询节点、服务的地址。
+- 域名格式如下：
+  ```sh
+  <node>.node[.datacenter].<domain>               # 节点的域名
+  [tag.]<service>.service[.datacenter].<domain>   # 服务的域名
+  ```
+  - 如果不指定数据中心，则默认采用当前 agent 的数据中心。
+  - 查询服务时，可以加上 tag 进行筛选。
+    - 如果有多个健康的服务实例，则根据权重随机选择一个，返回其地址。
+    - 如果不存在健康的服务实例，则查询结果为空。
+  - DNS 记录为 A 类型，查询服务时还支持 SRV 类型。
+  - DNS 记录的 TTL 默认为 0 。
+- 例：
+  ```sh
+  dig @10.0.0.1 -p 8600 +short node1.node.consul          # 查询节点
+  dig @10.0.0.1 -p 8600 +short node1.node.dc2.consul      # 查询其它数据中心的节点
+  dig @10.0.0.1 -p 8600 +short django.service.consul      # 查询服务
+  dig @10.0.0.1 -p 8600 +short django.service.consul  SRV # 查询 DNS SRV 记录
+  ```
 
 ### API
 

@@ -26,13 +26,6 @@
       volumes:
         - ./config:/usr/share/elasticsearch/config
         - ./data:/usr/share/elasticsearch/data
-      ulimits:
-        memlock:
-          soft: -1
-          hard: -1
-        nofile:
-          soft: 65536
-          hard: 65536
   ```
   ```yml
   version: '3'

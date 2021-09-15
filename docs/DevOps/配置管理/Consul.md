@@ -51,10 +51,9 @@
 
 - Consul 的 Enterprise 版本支持划分 namespace 。
 
-<!--
-- Intention ：用于允许、禁止服务之间的网络连通。用于 Consul Connect
--->
-
+- Consul 启用 Connect 功能时，会在服务之间启用 TLS 加密通信。
+  - 支持透明代理服务的流量，实现 Service Mesh 。
+  - 支持用 Intention 功能允许、禁止服务之间的网络连通。
 
 ## 用法
 

@@ -489,6 +489,44 @@
 
 ## 专用类型
 
+### consul_exporter
+
+：用于监控 Consul 服务器。
+- [GitHub](https://github.com/prometheus/consul_exporter)
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    consul_exporter:
+      container_name: consul_exporter
+      image: prom/consul-exporter:v0.7.1
+      command:
+        - --web.listen-address=:9107
+        - --web.telemetry-path=/metrics
+        - --consul.server=http://localhost:8500
+        # - --kv.prefix=""  # 采集前缀匹配的 key 的 value
+      restart: unless-stopped
+      ports:
+        - 9107:9107
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+  ```
+- 指标示例：
+  ```sh
+  # 关于节点
+  consul_up                                       # 当前采集的 agent 是否在线
+  consul_raft_peers                               # 集群的 server 节点数
+  consul_serf_lan_members                         # 集群的节点数
+  consul_serf_lan_member_status{member="node1"}   # 各个节点的 gossip 状态，取值 1、2、3、4 分别表示 Alive、Leaving、Left、Failed
+
+  # 关于服务
+  consul_catalog_services                                                                           # 集群的 service 总数，不考虑 service_id 实例数量
+  consul_catalog_service_node_healthy{node="node1", service_id="xx", service_name="xx"}             # 某个 node 上的某个 service_id 是否健康，取值为 1 或 0
+  consul_health_node_status{check="serfHealth", node="node1", status="passing"}                     # 某个 node 是否为 status 状态，取值为 1 或 0
+  consul_health_service_status{node="node1", service_id="xx", service_name="xx", status="passing"}  # 某个 node 上的 service_id 是否为 status 状态，取值为 1 或 0
+  ```
+
 ### elasticsearch_exporter
 
 ：用于监控 ES 服务器。
@@ -674,9 +712,4 @@
   # 关于主机的状态
   mongodb_sys_cpu_num_cpus    # 主机的 CPU 核数
   ```
-
-### nginx
-
-
-
 

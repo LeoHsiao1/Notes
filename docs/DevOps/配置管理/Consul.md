@@ -109,10 +109,10 @@
   - 节点：该 agent 本身，是否运行、可连接。
   - 服务：该 agent 上注册的各个服务。
 
-- 健康检查的结果分为两种：
-  - passing、success ：通过。
-  - warning
-  - failing、critical ：未通过。
+- 健康检查的结果分为多种：
+  - passing ：健康。
+  - warning ：存在异常，但依然工作。
+  - failing、critical ：不健康。
 
 - 每个节点默认启用 Serf 类型的监控检查，而每个服务可启用以下类型的健康检查：
   - Script ：指定一个 shell 命令，定期执行一次。
@@ -152,9 +152,9 @@
         "alias_service": "web"    // 目标服务。如果不指定则跟随节点的状态
     }
     ```
+  - Docker ：通过 docker exec 执行 shell 脚本。
+  - TTL ：要求服务在一定时间内向 agent 的特定 URL 发送 HTTP 请求，超时则视作异常。
   - gRPC
-  - TTL
-  - Docker
 
 - 一个服务要通过自身的健康检查，并且所在 agent 也通过健康检查，才标记为健康状态。
   - 如果服务不存在健康检查，则视作 passing 。

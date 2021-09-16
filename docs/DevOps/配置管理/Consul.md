@@ -45,7 +45,7 @@
     - 不同数据中心之间的 agent 通过 WAN 通信。
     - 每个数据中心拥有一个 Gossip LAN 节点池，记录该局域网的所有节点。
     - 整个集群拥有一个 Gossip WAN 节点池，记录集群的所有节点。
-  - 用户可以向集群的任一 agent 发出请求，会被自动转发到正确的节点。
+  - 用户可以向集群的任一 agent 发出请求，会被自动转发到正确的节点，基于 RPC 通信。
     - 如果 agent 收到指向数据中心的写请求，则会自动转发到 leader 节点。
     - 如果 agent 收到指向其它数据中心的请求，则会转发到该数据中心的任一节点。
 
@@ -59,11 +59,12 @@
 
 ### 配置管理
 
-- Consul 提供了 Key/Value 形式的存储功能，常用于存储配置信息。
+- Consul 提供了 Key/Value 形式的数据存储功能，常用于存储配置信息。
   - 如果 key 以 / 结尾，则会创建一个文件夹
   - value 的长度不能大于 512kb 。
 
-- Consul 集群中的每个 agent 都拥有一份 KV 数据的副本，并自动同步，供用户访问。
+- Consul 集群的所有节点都拥有一份 KV 数据的副本，供用户访问。
+  - server 节点才有权修改 KV 数据。如果用户向 client 节点发出写请求，则会被转发到 server 节点。
 
 ### 服务发现
 
@@ -219,6 +220,11 @@
             export [prefix]       # 导出前缀匹配的所有 key ，包括子 key 。返回值为 JSON 格式
             import [data]         # 导入 key 。输入必须为 JSON 格式
               -prefix [prefix]    # 只导入前缀匹配的 key
+
+        snapshot                  # 访问 snapshot 功能
+            save    <file>        # 保存一个快照文件，包含集群当前的 catalog、kv、acl 等数据
+            restore <file>        # 导入一个快照文件
+            inspect <file>        # 查看快照的信息
   ```
 
 ### API
@@ -424,6 +430,8 @@ Consul 支持为 HTTP、RPC 通信设置 ACL 规则，主要概念如下：
 
 - Role
   - ：角色。可以给某个角色分配一组 Policy ，然后让一组 token 采用该角色。
+
+#### 示例
 
 启用 ACL 的步骤：
 

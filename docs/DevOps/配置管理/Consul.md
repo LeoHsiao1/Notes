@@ -49,7 +49,7 @@
     - 如果 agent 收到指向数据中心的写请求，则会自动转发到 leader 节点。
     - 如果 agent 收到指向其它数据中心的请求，则会转发到该数据中心的任一节点。
 
-- Consul 的 Enterprise 版本支持划分 namespace 。
+- Consul 的 Enterprise 版本支持划分多个 namespace ，用于隔离 service、KV、ACL 数据。
 
 - Consul 启用 Connect 功能时，会在服务之间启用 TLS 加密通信。
   - 支持透明代理服务的流量，实现 Service Mesh 。
@@ -59,16 +59,11 @@
 
 ### 配置管理
 
-- Consul 提供了 Key/Value 形式的配置管理功能。
-  - key 如果以 / 结尾，则会创建一个文件夹
-  - KV 存储中的值不能大于 512kb
+- Consul 提供了 Key/Value 形式的存储功能，常用于存储配置信息。
+  - 如果 key 以 / 结尾，则会创建一个文件夹
+  - value 的长度不能大于 512kb 。
 
-- Consul 集群中的每个 agent 都拥有一份 Key/Value 数据的副本，并自动同步，供用户访问。
-
-<!-- 支持通过命令行导入、导出配置：
-consul kv import
-consul kv export [PREFIX] -->
-
+- Consul 集群中的每个 agent 都拥有一份 KV 数据的副本，并自动同步，供用户访问。
 
 ### 服务发现
 
@@ -80,6 +75,7 @@ consul kv export [PREFIX] -->
   - 注销一个对象，就会从 catalog 删除其存在。
   - Consul 的设计是在每个主机上部署一个 agent ，让每个主机上的业务程序访问本机的 agent 进行服务注册。
     - 一个 agent 变为 left 状态时，会自动注销该 agent 上注册的所有服务。
+  - agent 会将自己注册为名为 consul 的服务，但不存在健康检查。
 
 - 一个 service 的信息示例：
   ```json
@@ -169,6 +165,7 @@ consul kv export [PREFIX] -->
   - Docker
 
 - 一个服务要通过自身的健康检查，并且所在 agent 也通过健康检查，才标记为健康状态。
+  - 如果服务不存在健康检查，则视作 passing 。
   - 非健康状态的服务不会被自动删除。
 
 #### DNS
@@ -191,6 +188,37 @@ consul kv export [PREFIX] -->
   dig @10.0.0.1 -p 8600 +short node1.node.dc2.consul      # 查询其它数据中心的节点
   dig @10.0.0.1 -p 8600 +short django.service.consul      # 查询服务
   dig @10.0.0.1 -p 8600 +short django.service.consul  SRV # 查询 DNS SRV 记录
+  ```
+
+### CLI
+
+- 使用 consul 命令行工具可以启动 agent 服务器，也可以作为客户端与 agent 交互。用法：
+  ```sh
+  consul
+        agent                           # 启动 agent 进程，在前台运行
+            -server                     # 采用 server 运行模式
+            -config-file <file>         # 指定配置文件
+            -config-dir /consul/config  # 指定配置目录，加载该目录下的配置文件
+
+        members                   # 列出所有节点
+
+        catalog                   # 访问 catalog
+            datacenters           # 列出所有数据中心
+            nodes                 # 列出所有节点
+              -service <service>  # 只显示指定服务所在的节点
+            services              # 列出所有服务
+              -node <node>        # 只显示指定节点上的服务
+              -tags               # 增加显示 tags
+
+        kv                        # 访问 KV 数据
+            get <key>             # 读取一个 key ，返回其 value
+              -keys               # 访问前缀匹配的所有 key ，不包括子 key
+              -recurse            # 递归访问文件夹中的子 key
+            put <key> [value]
+            delete <key>
+            export [prefix]       # 导出前缀匹配的所有 key ，包括子 key 。返回值为 JSON 格式
+            import [data]         # 导入 key 。输入必须为 JSON 格式
+              -prefix [prefix]    # 只导入前缀匹配的 key
   ```
 
 ### API
@@ -251,15 +279,7 @@ consul kv export [PREFIX] -->
     chown -R  100 .
     ```
 
-- 命令用法：
-  ```sh
-  consul agent                              # 启动 agent 进程，在前台运行
-              # -server                     # 采用 server 运行模式
-              # -config-file <file>         # 指定配置文件
-              # -config-dir /consul/config  # 指定配置目录，加载该目录下的配置文件
-  ```
-
-- Consul agent 启动时的日志示例：
+- agent 启动时的日志示例：
   ```sh
   ==> Found address '10.0.0.1' for interface 'eth0', setting bind option...   # 发现网卡的 IP 地址，绑定它
   ==> Starting Consul agent...

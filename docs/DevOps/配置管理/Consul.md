@@ -57,15 +57,6 @@
 
 ## 用法
 
-### 配置管理
-
-- Consul 提供了 Key/Value 形式的数据存储功能，常用于存储配置信息。
-  - 如果 key 以 / 结尾，则会创建一个文件夹
-  - value 的长度不能大于 512kb 。
-
-- Consul 集群的所有节点都拥有一份 KV 数据的副本，供用户访问。
-  - server 节点才有权修改 KV 数据。如果用户向 client 节点发出写请求，则会被转发到 server 节点。
-
 ### 服务发现
 
 - 服务发现的工作流程：
@@ -190,6 +181,25 @@
   dig @10.0.0.1 -p 8600 +short django.service.consul      # 查询服务
   dig @10.0.0.1 -p 8600 +short django.service.consul  SRV # 查询 DNS SRV 记录
   ```
+
+### 配置管理
+
+- Consul 提供了 Key/Value 形式的数据存储功能，常用于存储配置信息。
+  - 如果 key 以 / 结尾，则会创建一个文件夹
+  - value 的长度不能超过 512KB 。
+
+- Consul 集群的所有节点都拥有一份 KV 数据的副本，供用户访问。
+  - server 节点才有权修改 KV 数据。如果用户向 client 节点发出写请求，则会被转发到 server 节点。
+
+- 提供了 acquire、release 功能，用于锁定、解锁与 session 关联的 key 。
+
+### watch
+
+- Consul 提供了 watch 功能，用于监视某些对象，当发生变化时执行 handler 任务。
+  - 对象可以是节点、服务、KV ，或者用户自定义的事件。
+  - handler 有两种类型：
+    - 执行 shell 脚本
+    - 发送 HTTP 请求
 
 ### CLI
 

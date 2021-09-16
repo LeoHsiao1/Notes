@@ -30,8 +30,9 @@
   - [Supervisor](配置管理/Supervisor.md)
   - [Nacos](配置管理/Nacos.md)
   - [Consul](配置管理/Consul.md)
-  - [Artifactory](配置管理/Artifactory.md)
-  - [Harbor](配置管理/Harbor.md)
+- 构件仓库
+  - [Artifactory](构件仓库/Artifactory.md)
+  - [Harbor](构件仓库/Harbor.md)
 - 监控告警
   - [简介](监控告警/简介.md)
   - [Grafana](监控告警/Grafana.md)

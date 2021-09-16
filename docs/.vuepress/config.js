@@ -1155,14 +1155,19 @@ module.exports = {
                         {
                             title: "Consul",
                             path: "/DevOps/配置管理/Consul"
-                        },
+                        }
+                    ]
+                },
+                {
+                    title: "构件仓库",
+                    children: [
                         {
                             title: "Artifactory",
-                            path: "/DevOps/配置管理/Artifactory"
+                            path: "/DevOps/构件仓库/Artifactory"
                         },
                         {
                             title: "Harbor",
-                            path: "/DevOps/配置管理/Harbor"
+                            path: "/DevOps/构件仓库/Harbor"
                         }
                     ]
                 },

@@ -521,7 +521,7 @@
   consul_serf_lan_member_status{member="node1"}   # 各个节点的 gossip 状态，取值 1、2、3、4 分别表示 Alive、Leaving、Left、Failed
 
   # 关于服务
-  consul_catalog_services                                                                           # 集群的 service 总数，不考虑 service_id 实例数量
+  consul_catalog_services                                                                           # 已注册的 service 总数，不考虑 service_id 实例数量
   consul_catalog_service_node_healthy{node="node1", service_id="xx", service_name="xx"}             # 某个 node 上的某个 service_id 是否健康，取值为 1 或 0
   consul_health_node_status{check="serfHealth", node="node1", status="passing"}                     # 某个 node 是否为 status 状态，取值为 1 或 0
   consul_health_service_status{node="node1", service_id="xx", service_name="xx", status="passing"}  # 某个 node 上的 service_id 是否为 status 状态，取值为 1 或 0

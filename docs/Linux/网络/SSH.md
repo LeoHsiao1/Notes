@@ -38,11 +38,12 @@ PasswordAuthentication yes        # 允许使用密码登录（否则只能使�
 PermitEmptyPasswords no           # 不允许使用空密码登录
 
 UseDNS no                         # 不检查目标主机的主机名、 IP 是否与 DNS 一致，否则会增加建立 SSH 连接的耗时
-StrictModes yes                   # 在 SSH 认证时检查用户的家目录、authorized_keys 等文件是否只被该用户拥有写权限
+StrictHostKeyChecking ask         # SSH 登录其它主机时，如果发现其公钥与 known_hosts 中的记录不同，则采取什么措施。默认为询问是否连接
+StrictModes yes                   # 被 SSH 登录时，检查用户的家目录、authorized_keys 等文件是否只被该用户拥有写权限
 ```
 - 修改了配置文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
-- `~/.ssh/authorized_keys` 文件中保存了一些公钥，允许客户端使用对应的私钥进行 SSH 认证，登录到本机。
-- `~/.ssh/known_hosts` 文件中保存了所有与本机成功进行了 SSH 认证的主机的公钥。下次再连接到这些主机时，如果其公钥发生变化，则怀疑是被冒充了。
+- `~/.ssh/authorized_keys` 文件记录了一些公钥，允许客户端使用对应的私钥进行 SSH 认证，登录到本机。
+- `~/.ssh/known_hosts` 文件记录了所有与本机成功进行了 SSH 认证的主机的公钥。
 - 如果 StrictModes 检查不通过，则 sshd 依然会拒绝 SSH 认证，并在 `/var/log/secure` 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` 。此时建议执行：
   ```sh
   chmod 700   ~   ~/.ssh
@@ -141,7 +142,7 @@ $ ssh-keygen                        # 生成一对 SSH 密钥（默认采用 RSA
 ```sh
 $ ssh-copy-id root@10.0.0.1         # 将本机的 SSH 公钥拷贝给目标主机上的指定用户
               -i ~/.ssh/id_rsa.pub  # 指定要拷贝的 SSH 公钥
-``` 
+```
 - 执行该命令时，需要先通过目标主机的 SSH 认证，才有拷贝 SSH 公钥的权限。
 - 该 SSH 公钥会被拷贝到目标主机的指定用户的 ~/.ssh/authorized_keys 文件中，允许以后本机以该用户的 SSH 私钥登录到目标主机。
 

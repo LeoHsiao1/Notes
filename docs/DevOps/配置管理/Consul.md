@@ -25,7 +25,7 @@
       - client 数量不影响集群的可用性，可以部署上万节点。
 
 - agent 的状态：
-  - agent 进程启动，通过 join 命令加入集群，注册自己的信息，并发现其它 agent 。
+  - agent 进程启动，通过 join 命令加入集群，标记为 alive 状态。
   - 如果一个 agent 不能被其它 agent 访问到，则标记为 failed 状态。
     - 这可能是因为网络不通，或 agent 崩溃。
   - 如果一个 agent 通过 leave 命令退出集群，则标记为 left 状态。
@@ -210,12 +210,19 @@
             -config-file <file>         # 指定配置文件
             -config-dir /consul/config  # 指定配置目录，加载该目录下的配置文件
 
-        members                   # 列出所有节点
+        members                         # 列出所有节点
+        force-leave <node>              # 强制让一个节点 leave ，进入 left 状态。但如果它依然运行，则可能重新加入集群
+            --prune                     # 删除节点。默认会等待 reconnect_timeout 长时间无响应才删除
+        operator
+            raft                        # 操作 raft 协议
+                list-peers              # 列出所有 raft 节点
+                remove-peer -address="10.0.0.1:8300" # 删除一个 raft 节点
 
         catalog                   # 访问 catalog
             datacenters           # 列出所有数据中心
             nodes                 # 列出所有节点
               -service <service>  # 只显示指定服务所在的节点
+              -detailed
             services              # 列出所有服务
               -node <node>        # 只显示指定节点上的服务
               -tags               # 增加显示 tags
@@ -276,10 +283,8 @@
       restart: unless-stopped
       ports:
         - 8300:8300
-        - 8301:8301
-        - 8301:8301/udp
-        - 8302:8302
-        - 8302:8302/udp
+        - 8301-8302:8301-8302
+        - 8301-8302:8301-8302/udp
         - 8500:8500
         - 8600:8600
         - 8600:8600/udp
@@ -352,7 +357,7 @@
       // },
 
       // 关于加入集群
-      // "bootstrap": false,          // 该 agent 启动之后是否直接担任 leader 。默认为 false ，避免与集群已有的 leader 冲突
+      // "bootstrap": false,          // 该 agent 启动之后是否直接担任 leader 。默认为 false ，避免与集群已有的 leader 冲突。集群只包含一个节点时，需要启用该参数
       "bootstrap_expect": 3,          // 当发现指定数量的 server 时，才开始引导集群，选出 leader 。应该设置成与实际 server 总数相同，以避免脑裂
       // "start_join": ["<IP>"],      // agent 启动时，连接到其它 agent 的 LAN 端口，加入其所属的集群。如果加入失败，则启动失败
       // "start_join_wan": ["<IP>"],  // 通过 WAN 端口加入集群
@@ -363,8 +368,8 @@
       // "retry_interval_wan": "30s",
       // "retry_max_wan": "0",
       "rejoin_after_leave": true,         // agent 每次启动是否重新 join 。默认为 false ，只要成功 join 一次之后，重启时并不会重新 join ，导致该 agent 可能故障过久而被被集群删除
-      // "reconnect_timeout": "72h",      // 删除集群中故障时长超过阈值的 LAN 节点，包括 failed、left 状态
-      // "reconnect_timeout_wan": "72h",  // 删除集群中故障时长超过阈值的 WAN 节点
+      // "reconnect_timeout": "72h",      // 删除集群中长时间无响应的 LAN 节点，包括 failed、left 状态
+      // "reconnect_timeout_wan": "72h",  // 删除集群中长时间无响应的 WAN 节点
 
       // 关于 DNS
       // "domain": "consul",          // 让 agent 解析指向该域名的 DNS 查询请求，其它请求则转发给上游 DNS 服务器
@@ -389,7 +394,7 @@ Consul 支持为 HTTP、RPC 通信设置 ACL 规则，主要概念如下：
   - 访问 Consul 时，可使用 token 进行身份认证，有以下几种方法：
     - 访问 Web 页面，点击右上角的 Log in 按钮，输入 token 进行登录。
     - 客户端发送 HTTP 请求，在 URL 请求参数中包含 `?token=******` ，或者在 Header 中包含 `Authorization: Bearer ******` 。
-    - 执行 consul 命令，加上参数 `-token=******` ，或者声明环境变量 `CONSUL_HTTP_TOKEN=******` 。
+    - 执行 consul 命令，加上参数 `-token=******` ，或者声明环境变量 `export CONSUL_HTTP_TOKEN=******` 。
 
 - Policy
   - ：访问策略，用于控制某个 token 的访问权限。

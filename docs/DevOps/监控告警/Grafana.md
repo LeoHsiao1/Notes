@@ -24,7 +24,7 @@
   services:
     grafana:
       container_name: grafana
-      image: grafana/grafana:8.0.0-beta2
+      image: grafana/grafana:8.1.5
       restart: unless-stopped
       ports:
         - 3000:3000
@@ -34,7 +34,7 @@
         - ./grafana.db:/var/lib/grafana/grafana.db
         - ./plugins:/var/lib/grafana/plugins
   ```
-  需要先配置挂载目录的权限：
+  需要配置挂载目录的权限：
   ```sh
   chown -R 472 .
   ```
@@ -165,7 +165,7 @@
 ### Share
 
 分享 Dashboard 或 Panel 给他人查看的多种方式：
-- Link 
+- Link
   - ：生成当前内容的 URL 。
   - 还支持在该 Link 后加一些参数，渲染成 PNG 图片。
 - Snapshot
@@ -205,7 +205,7 @@
   ```
   它表示查询最近 5 分钟之内、1 分钟之前的图例 A 的数据，看平均值是否大于 10 。
   如果图例 A 包含多个 Metric ，则只要有一个 Metric 的值符合条件就会告警。
-  截止时间设置成 now-1m 是为了避免最近 1 分钟之内尚未采集到数据，导致报错：NO DATA 
+  截止时间设置成 now-1m 是为了避免最近 1 分钟之内尚未采集到数据，导致报错：NO DATA
 
 - 下例是查询最后一次数据，因此不必担心尚未采集到数据：
   ```
@@ -227,7 +227,36 @@
   ```
 - 常用插件：
   - Zabbix 插件：用于分析 Zabbix 的监控数据，包含 Dashboard 模板。
-  - Pie Chart 插件：允许绘制饼状图。
+  - Pie Chart 插件：支持绘制饼状图。
+  - grafana-image-renderer 插件
+    - ：运行一个 Chromium 无头浏览器，用于生成 Grafana 图表的 PNG 截图，常用于告警邮件。
+    - 建议用 docker-compose 部署：
+      ```yml
+      version: "3"
+
+      services:
+        grafana:
+          networks:
+            - net
+          ...
+
+        renderer:
+          container_name: grafana-image-renderer
+          image: grafana/grafana-image-renderer:3.2.0
+          restart: unless-stopped
+          networks:
+            - net
+
+      networks:
+        net:
+      ```
+    - 需要在 grafana.ini 中配置：
+      ```ini
+      [rendering]
+      server_url   = http://renderer:8081/render
+      callback_url = http://grafana:3000/
+      ```
+  - jdbranham-diagram-panel 插件：支持绘制流程图，可嵌入 panel 的数值、颜色。
 
 ## 配置
 

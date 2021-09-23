@@ -102,9 +102,9 @@
     honor_labels: true            # 设置 true ，以保存原指标中的 job 、instance 标签
     metrics_path: '/federate'
     params:
-      'match[]':                  # 抓取匹配这些表达式的指标
-        - '{__name__=~"go_.*"}'
-        - 'go_goroutines'
+      match[]:                    # 指定筛选表达式。至少指定一个，指定多个时会分别抓取
+        - "{job!=''}"
+        - go_goroutines
     static_configs:
       - targets:                  # 目标 Prometheus 的地址
         - '10.0.0.2:9090'
@@ -121,9 +121,9 @@
 1. 在配置文件 prometheus.yml 中加入监控任务：
     ```yml
     global:
-      scrape_interval: 30s          # 每隔多久采集一次指标（这是全局值，可以被局部值覆盖）
-      scrape_timeout: 10s           # 每次采集的超时时间
-      evaluation_interval: 30s      # 每隔多久执行一次 rules
+      scrape_interval: 30s          # 每隔多久采集一次指标，默认为 1m（这是全局值，可以被局部值覆盖）
+      scrape_timeout: 10s           # 每次采集的超时时间。默认为 10s ，不允许超过 scrape_interval
+      evaluation_interval: 30s      # 每隔多久执行一次 rules ，默认为 1m
       # external_labels:            # 与 Alertmanager 等外部组件通信时，会加上这些标签
       #   monitor: 'codelab-monitor'
 

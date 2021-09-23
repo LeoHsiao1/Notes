@@ -10,17 +10,25 @@
   - 不能控制监控对象生成指标的间隔时间。
   - 只会抓取当前时刻的数据，不会同步历史数据。并且，如果监控对象离线，依然会将最后一次抓取的数据作为当前值。
   - 不能直接判断监控对象是否在线，需要根据 push_time_seconds 进行判断。
-  - Pushgateway 不会保存指标数据，重启后会丢失。
 
 ## 部署
 
-- 下载后启动：
-  ```sh
-  ./pushgateway
-                --web.listen-address 0.0.0.0:9091    # 设置监听的地址
-                --persistence.file  metrics.bak      # 将指标数据备份到该文件中（默认不会备份，因此重启后会丢失）
+- 用 docker-compose 部署：
+  ```yml
+  version: "3"
+
+  services:
+    pushgateway:
+      container_name: pushgateway
+      image: prom/pushgateway:v1.4.1
+      restart: unless-stopped
+      # command:
+      #   - --web.listen-address=:9091
+      #   - --web.telemetry-path=/metrics
+      #   - --persistence.file=metrics.bak     # 将指标数据备份到该文件中（默认不会备份，因此重启后会丢失）
+      ports:
+        - 9091:9091
   ```
-  默认的访问地址为 <http://localhost:9091>
 
 ## 配置
 

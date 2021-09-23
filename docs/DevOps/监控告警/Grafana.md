@@ -246,6 +246,8 @@
           restart: unless-stopped
           networks:
             - net
+          volumes:
+            - /etc/localtime:/etc/localtime:ro
 
       networks:
         net:

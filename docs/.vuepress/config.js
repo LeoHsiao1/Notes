@@ -1149,12 +1149,12 @@ module.exports = {
                             path: "/DevOps/配置管理/Supervisor"
                         },
                         {
-                            title: "Nacos",
-                            path: "/DevOps/配置管理/Nacos"
-                        },
-                        {
                             title: "Consul",
                             path: "/DevOps/配置管理/Consul"
+                        },
+                        {
+                            title: "Nacos",
+                            path: "/DevOps/配置管理/Nacos"
                         }
                     ]
                 },

@@ -28,8 +28,8 @@
   - [Ansible](配置管理/Ansible.md)
   - [Jumpserver](配置管理/Jumpserver.md)
   - [Supervisor](配置管理/Supervisor.md)
-  - [Nacos](配置管理/Nacos.md)
   - [Consul](配置管理/Consul.md)
+  - [Nacos](配置管理/Nacos.md)
 - 构件仓库
   - [Artifactory](构件仓库/Artifactory.md)
   - [Harbor](构件仓库/Harbor.md)

@@ -1,6 +1,6 @@
 # ♢ redis-py
 
-：Python 的第三方库，提供了 Redis 客户端的功能，通过 ORM API 进行操作。
+：Python 的第三方库，提供了 Redis 客户端的功能。
 - [GitHub](https://github.com/andymccurdy/redis-py)
 - 安装：`pip install redis`
 

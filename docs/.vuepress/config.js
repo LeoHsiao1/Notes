@@ -918,10 +918,6 @@ module.exports = {
                         {
                             title: "♢ PyMySQL",
                             path: "/Database/MySQL/PyMySQL"
-                        },
-                        {
-                            title: "♢ SQLAlchemy",
-                            path: "/Database/MySQL/SQLAlchemy"
                         }
                     ]
                 },

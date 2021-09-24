@@ -16,7 +16,6 @@
   - [存储引擎](MySQL/存储引擎.md)
   - [性能优化](MySQL/性能优化.md)
   - [♢ PyMySQL](MySQL/PyMySQL.md)
-  - [♢ SQLAlchemy](MySQL/SQLAlchemy.md)
 - MongoDB
   - [MongoDB](MongoDB/MongoDB.md)
   - [部署](MongoDB/部署.md)

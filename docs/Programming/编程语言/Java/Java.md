@@ -45,8 +45,19 @@
 
 ### GC
 
-：垃圾回收（Garbage Collection），指销毁 Java 程序中不需要保留的对象，回收其内存。
+：垃圾回收（Garbage Collection），指销毁 Java 进程中不需要保留的对象，回收其内存。
 - JVM 规范不包含 GC ，但 JVM 通常提供了 GC 功能，每隔一定时间执行一次垃圾回收。
+- Java 进程占用的内存分为几部分：
+  - Heap
+    - ：堆内存。主要存储 Java 类的实例对象。
+    - 分为 young、old 两个区域。
+      - 新创建的对象会先存储到 young 区域，其中大部分会在短期内停止引用而被销毁。
+      - 当 young 区域变满时，会根据 young GC 算法将存在时间较长的对象移到 old 区域。
+      - 当 old 区域的对象触发 GC 算法时，会被直接删除。
+  - Non-Heap
+    - ：非堆内存。主要存储 Java 类、方法、常量。
+  - Other
+    - ：主要是运行 JVM 本身占用的内存。
 
 - 识别垃圾对象的常见算法：
   - 引用计数（Reference Counting）

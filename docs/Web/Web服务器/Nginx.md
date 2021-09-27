@@ -473,16 +473,13 @@ server {
           proxy_pass  http://127.0.0.1:79;
           # proxy_pass http://unix:/tmp/backend.socket:/uri/;   # 可以转发给 Unix 套接字
 
-          # proxy_set_header  Host       $host;                           # 转发时加入请求头
-          # proxy_set_header  X-Real-IP  $remote_addr;                    # 添加 Header ，记录客户端的真实 IP ，供上游服务器识别
-          # proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 添加 Header ，按顺序记录 HTTP 请求经过的各层代理
-          # proxy_pass_request_body on;                                   # 是否转发请求 body ，默认为 on
-          # proxy_set_body    $request_body;                              # 设置转发过去的请求 body
-
-          # proxy_request_buffering on;   # 接收客户端的请求时，缓冲之后再转发给上游服务器
-          # proxy_connect_timeout 60s;    # 与上游服务器建立连接的超时时间
-          # proxy_send_timeout 60s;       # 限制发送请求给上游服务器时，写操作中断的超时时间
-          # proxy_read_timeout 60s;       # 限制从上游服务器读取响应时，读操作中断的超时时间
+          # proxy_http_version 1.0;         # 转发时的 HTTP 协议版本，默认为 1.0 ，还可取值为 1.1
+          # proxy_pass_request_body on;     # 是否转发请求 body ，默认为 on
+          # proxy_set_body $request_body;   # 设置转发过去的请求 body
+          # proxy_request_buffering on;     # 接收客户端的请求时，缓冲之后再转发给上游服务器
+          # proxy_connect_timeout 60s;      # 与上游服务器建立连接的超时时间
+          # proxy_send_timeout 60s;         # 限制发送请求给上游服务器时，写操作中断的超时时间
+          # proxy_read_timeout 60s;         # 限制从上游服务器读取响应时，读操作中断的超时时间
       }
   }
 
@@ -572,6 +569,37 @@ server {
   - 默认会启用 `proxy_redirect default;` ，其规则为 `proxy_redirect <proxy_pass_url> <location_url>;` 。
     - 在上例中相当于 `proxy_redirect http://127.0.0.1:79/ /www/;` 。
     - 如果 proxy_pass 中调用了变量，则默认规则会失效。
+
+### proxy_set_header
+
+：转发 HTTP 请求给上游服务器时，添加 Header 。
+- 可用范围：http、server、location
+- 默认值：
+  ```sh
+  proxy_set_header Host $proxy_host;
+  proxy_set_header Connection close;    # 转发 HTTP 请求时，不保持长连接
+  ```
+  - 如果设置的值是空字符串 '' ，则会删除该字段。
+- 例：
+  ```sh
+  map $http_upgrade $connection_upgrade {   # 当 $http_upgrade 取值不为空时，设置 $connection_upgrade 取值为 upgrade
+      default  upgrade;
+      ''       close;
+  }
+
+  proxy_set_header Host            $host;                       # 同步请求头的 Host 字段，让上游服务器知道客户端请求的实际域名
+  proxy_set_header X-Real-IP       $remote_addr;                # 添加 Header ，记录客户端的真实 IP ，供上游服务器识别
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 添加 Header ，按顺序记录 HTTP 请求经过的各层代理
+  proxy_set_header Upgrade         $http_upgrade;               # 反向代理 websocket 时，需要该 Header
+  proxy_set_header Connection      $connection_upgrade;         # 反向代理 websocket 时，需要该 Header
+  ```
+
+- 以下变量只支持被 proxy_set_header 指令使用：
+  ```sh
+  proxy_host                  # proxy_pass 指定的上游服务器的 host:port
+  proxy_port
+  proxy_add_x_forwarded_for   # 取值等于请求头的 字段，加上 $remote_addr 值，用逗号分隔
+  ```
 
 ### proxy_buffering
 
@@ -772,7 +800,6 @@ server {
   ```
 
 ## 关于日志
-
 
 ### access_log
 
@@ -1249,7 +1276,7 @@ server {
 - 默认值：
   ```sh
   client_header_buffer_size 1k;   # 读取请求报文头部的缓冲区大小
-  client_body_buffer_size   4k;   # 读取请求报文主体的内存缓冲区大小，默认为一个内存页大小。超出内存缓冲区的部分会写入 client_body_temp_path 目录下的临时文件中
+  client_body_buffer_size   4k;   # 读取请求报文 body 的内存缓冲区大小，默认为一个内存页大小。超出内存缓冲区的部分会写入 client_body_temp_path 目录下的临时文件中，并记录 warn 日志： a client request body is buffered to a temporary file
   client_body_temp_path     /tmp/nginx/client_temp 1 2;
 
   client_header_timeout   60s;    # 读取请求报文头部的超时时间。如果超时，则返回响应报文：408 Request Time-out

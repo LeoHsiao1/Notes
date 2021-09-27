@@ -125,7 +125,8 @@
         // "name": "xx",
         // "interval": "5s",                    // 每隔 interval 时间执行一次
         // "timeout": "10s",                    // 每次检查的超时时间
-        // "status": "critical"                 // 在第一次健康检查之前，服务的默认状态
+        // "status": "critical",                 // 在第一次健康检查之前，服务的默认状态
+        // "deregister_critical_service_after": "30s"  // 如果服务实例变为 critical 状态超过一定时间，则注销。默认禁用该功能
     }
     ```
   - HTTP ：指定一个 URL ，定期发出一个 HTTP 请求。

@@ -41,13 +41,13 @@
 
 ### URL
 
-URL 的一般格式为：`protocol://hostname:port/path/?querystring#fragment`
+URL 的一般格式为：`protocol://host:port/path/?querystring#fragment`
 - protocol ：采用的通信协议，比如 HTTP、HTTPS、FTP 。
-- hostname ：服务器的主机名称，可以是主机名、域名或 IP 地址。
-  - protocol、hostname 不区分大小写，但一般小写。
+- host ：服务器主机，可以是主机名、域名或 IP 地址。
+  - protocol、host 不区分大小写，但一般小写。
 - port ：端口号。
   - 如果省略不填，则使用当前通信协议的默认端口。比如 HTTP 的默认端口为 80 。
-  - 一个主机上可能运行了多个服务器软件，分别监听不同的端口。通过 hostname、port 才能定位一个唯一的服务器。
+  - 一个主机上可能运行了多个服务器软件，分别监听不同的端口。通过 host、port 才能定位一个唯一的服务器。
 - path ：服务器上某个资源的路径。
   - 如果省略不填，则会访问根目录 / 。比如 www.baidu.com 相当于 www.baidu.com/ 。
   - path 是否区分大小写取决于服务器所在的文件系统。比如 Linux 的文件系统区分大小写，Windows 的 NTFS 文件系统不区分大小写。
@@ -108,23 +108,24 @@ ie=UTF-8&wd=1
 - 请求行：由请求方法名、请求的 URL 路径（域名之后的部分）、协议版本组成。
 - 请求报文的多种 Headers 示例：
   ```sh
-  Content-Encoding: gzip                     # 该报文 body 的编码
-  Content-Length: 348                        # 该报文 body 的长度
-  Content-Type: text/html; charset=utf-8     # 该报文 body 的类型
+  Content-Encoding: gzip                      # 该报文 body 的编码
+  Content-Length: 348                         # 该报文 body 的长度
+  Content-Type: text/html; charset=utf-8      # 该报文 body 的类型
 
-  Host: www.baidu.com                        # 请求的服务器域名
-  Connection: keep-alive                     # 申请保持 TCP 长连接
-  X-Requested-With: XMLHTTPRequest           # 说明该请求是 AJAX 异步请求
-  Referer: HTTPS://www.cnblogs.com/          # 说明客户端从哪个 URL 跳转到当前 URL
+  Host: www.baidu.com                         # 请求的服务器域名
+  Connection: keep-alive                      # 表示本次 HTTP 通信之后怎么处理 TCP 连接，默认为 close 。设置成 keep-alive 则保持连接
+  X-Requested-With: XMLHTTPRequest            # 说明该请求是 AJAX 异步请求
+  Referer: HTTPS://www.cnblogs.com/           # 说明客户端从哪个 URL 跳转到当前 URL
   Cookie: gid=1311812194.1563255462; t=1
 
-  User-Agent: Chrome/75.0.3770.100           # 客户端的信息
-  Accept: text/html,application/xml;q=0.8    # 客户端能接受的响应 body 的 Content-Type 。可以声明多个方案，用逗号分隔。q 表示选择这种方案的优先级，默认为 1
-  Accept-Charset: GB2312,utf-8;q=0.7,*;q=0.7 # 客户端能接受的响应 body 编码格式
-  Accept-Encoding: gzip, deflate             # 客户端能接受的响应 body 压缩格式
+  User-Agent: Chrome/75.0.3770.100            # 客户端的信息
+  Accept: text/html,application/xml;q=0.8     # 客户端能接受的响应 body 的 Content-Type 。可以声明多个方案，用逗号分隔。q 表示选择这种方案的优先级，默认为 1
+  Accept-Charset: GB2312,utf-8;q=0.7,*;q=0.7  # 客户端能接受的响应 body 编码格式
+  Accept-Encoding: gzip,deflate               # 客户端能接受的响应 body 压缩格式
+  Upgrade: HTTP/2.0,websocket                 # 仅 HTTP/1.1 支持该字段，表示客户端除了 HTTP/1.1 ，可切换到哪些通信协议。设置了此字段时必须设置 Connection: Upgrade
 
-  If-Modified-Since: Fri, 5 Jun 2019 12:00:00 GMT  # 如果响应报文 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
-  If-None-Match: 5edd15a5-e42                # 如果响应报文 body 的标签值依然为 ETag ，则请服务器返回 304 报文，让客户端使用本地缓存
+  If-Modified-Since: Fri, 5 Jun 2019 12:00:00 GMT # 如果响应报文 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
+  If-None-Match: 5edd15a5-e42                     # 如果响应报文 body 的标签值依然为 ETag ，则请服务器返回 304 报文，让客户端使用本地缓存
   ```
 
 ### 响应报文

@@ -2,7 +2,8 @@
 
 - [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/)
 - 主流软件大多提供了自己的 exporter 程序，比如 mysqld_exporter、redis_exporter 。有的软件甚至本身就集成了 exporter 格式的 HTTP API 。
-- 没必要启用所有 exporter ，有的监控指标较少，不如自制。
+  - 没必要启用所有 exporter ，有的监控指标较少，不如自制。
+- Prometheus 提供了多种编程语言的库，供用户开发 exporter 程序。例如 Python 的第三方库 prometheus-client 。
 
 ## 集成类型
 
@@ -430,15 +431,26 @@
 
 ### blackbox_exporter
 
-：相当于探针（probe），可以监控 DNS、ICMP、TCP、HTTP 状态，以及 SSL 证书过期时间。
+：提供探针（probe）的功能，可以通过 DNS、ICMP、TCP、HTTP 通信监控服务的状态，以及 SSL 证书过期时间。
 - [GitHub](https://github.com/prometheus/blackbox_exporter)
-- 下载后启动：
-  ```sh
-  ./blackbox_exporter
-                # --config.file blackbox.yml
-                # --web.listen-address :9115
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    blackbox_exporter:
+      container_name: blackbox_exporter
+      image: prom/blackbox-exporter:v0.19.0
+      restart: unless-stopped
+      # command:
+      #   - --web.listen-address=:9115
+      #   - --config.file=config.yml
+      ports:
+        - 9115:9115
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
   ```
-- HTTP 请求示例：
+- HTTP 请求示例：\
   使用 icmp 模块，检测目标主机能否 ping 通（同时也会检测出 DNS 耗时）
   ```sh
   curl 'http://localhost:9115/probe?module=icmp&target=baidu.com'
@@ -459,18 +471,17 @@
   - job_name: blackbox_exporter
     metrics_path: /probe
     params:
-      module: [icmp]
-    static_configs:
-      - targets: ['10.0.0.2']
-        labels:
-          instance: '10.0.0.2'
+      module: [http_2xx]
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
       - target_label: __address__
-        replacement: '10.0.0.1:9115'  # 填入 blackbox_exporter 的 IP 和端口
+        replacement: '10.0.0.1:9115'    # blackbox_exporter 的地址
+    static_configs:
+      - targets: ['10.0.0.2']
   ```
-  Prometheus 会将 scrape_timeout 用作探测的超时时间。
 
 - 指标示例：
   ```sh
@@ -692,7 +703,6 @@
       volumes:
         - /etc/localtime:/etc/localtime:ro
   ```
-
 - 指标示例：
   ```sh
   # 关于 server status
@@ -712,4 +722,3 @@
   # 关于主机的状态
   mongodb_sys_cpu_num_cpus    # 主机的 CPU 核数
   ```
-

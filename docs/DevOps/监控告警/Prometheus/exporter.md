@@ -431,7 +431,7 @@
 
 ### blackbox_exporter
 
-：提供探针（probe）的功能，可以通过 DNS、ICMP、TCP、HTTP 通信监控服务的状态，以及 SSL 证书过期时间。
+：提供探针（probe）的功能，可以通过 DNS、ICMP、TCP、HTTP 等通信监控服务的状态，以及 SSL 证书过期时间。
 - [GitHub](https://github.com/prometheus/blackbox_exporter)
 - 用 docker-compose 部署：
   ```yml
@@ -444,34 +444,34 @@
       restart: unless-stopped
       # command:
       #   - --web.listen-address=:9115
-      #   - --config.file=config.yml
+      #   - --config.file=/etc/blackbox_exporter/config.yml
       ports:
         - 9115:9115
       volumes:
         - /etc/localtime:/etc/localtime:ro
-  ```
-- HTTP 请求示例：\
-  使用 icmp 模块，检测目标主机能否 ping 通（同时也会检测出 DNS 耗时）
-  ```sh
-  curl 'http://localhost:9115/probe?module=icmp&target=baidu.com'
+        # - ./config.yml:/etc/blackbox_exporter/config.yml
   ```
 
-  使用 tcp_connect 模块，检测目标主机的 TCP 端口能否连接
-  ```sh
-  curl 'http://localhost:9115/probe?module=tcp_connect&target=baidu.com:80'
-  ```
+- 可以手动发出 HTTP 请求，调用探针：
+  - 使用 icmp 模块，检测目标主机能否 ping 通，也会检测出 DNS 耗时：
+    ```sh
+    curl 'http://localhost:9115/probe?module=icmp&target=baidu.com'
+    ```
+  - 使用 tcp_connect 模块，检测目标主机的 TCP 端口能否连通：
+    ```sh
+    curl 'http://localhost:9115/probe?module=tcp_connect&target=baidu.com:80'
+    ```
+  - 使用 http_2xx 模块，检测目标网站的 HTTP 状态码是否为 2xx ：
+    ```sh
+    curl 'http://localhost:9115/probe?module=http_2xx&target=http://baidu.com'
+    ```
 
-  使用 http_2xx 模块，检测目标网站的 HTTP 响应是否为 200
-  ```sh
-  curl 'http://localhost:9115/probe?module=http_2xx&target=http://baidu.com'
-  ```
-
-- 在 Prometheus 中的配置示例：
+- 在 Prometheus 中加入 job 配置，调用探针：
   ```yml
   - job_name: blackbox_exporter
     metrics_path: /probe
     params:
-      module: [http_2xx]
+      module: [http_2xx]                # 使用的模块
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -481,6 +481,49 @@
         replacement: '10.0.0.1:9115'    # blackbox_exporter 的地址
     static_configs:
       - targets: ['10.0.0.2']
+  ```
+
+- blackbox_exporter 的配置文件中默认定义了一些功能模块，可以在其中加入自定义的模块，如下：
+  ```yml
+  modules:
+    http_2xx_example:                   # 定义一个功能模块
+      prober: http                      # 探针的类型，可以是 dns、icmp、tcp、http
+      timeout: 2m                       # 每次探测的超时时间，超过则放弃。默认为 2 m
+      http:                             # 对应 prober 类型的配置参数
+        # 关于每次探测时发出的 HTTP 请求
+        method: GET                     # 请求方法，默认为 GET
+        headers:
+          <string>: <string>
+        body: <string>
+        basic_auth:
+          username: <string>
+          password: <string>
+        proxy_url: <string>
+
+        # 关于 HTTPS
+        fail_if_ssl: false              # 如果存在 SSL ，是否探测失败
+        fail_if_not_ssl: false          # 如果不存在 SSL ，是否探测失败
+        tls_config:
+          insecure_skip_verify: false   # 是否跳过检验证书
+
+        # 关于每次探测时收到的 HTTP 响应
+        valid_status_codes: <int>,...   # 有效的状态码，默认为 2xx 。如果出现其它值，则探测失败
+        valid_http_versions:            # 有效的 HTTP 协议版本
+          - HTTP/1.1
+          - HTTP/2.0
+        compression: 'gzip'             # 响应 body 的解压算法，默认为 ''
+        follow_redirects: true          # 是否跟随重定向
+        fail_if_body_matches_regexp:    # 如果响应 body 与正则表达式匹配，则探测失败
+          - <regex>
+        fail_if_body_not_matches_regexp:
+          - <regex>
+        fail_if_header_matches:         # 如果响应 header 与正则表达式匹配，则探测失败
+          - header: <string>
+            regexp: <regex>
+            allow_missing: false
+        fail_if_header_not_matches:
+        # - header: Set-Cookie
+        #   regexp: 'Test.*'
   ```
 
 - 指标示例：

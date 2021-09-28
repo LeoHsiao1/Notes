@@ -431,7 +431,7 @@
 
 ### blackbox_exporter
 
-：提供探针（probe）的功能，可以通过 DNS、ICMP、TCP、HTTP 等通信监控服务的状态，以及 SSL 证书过期时间。
+：提供探针（probe）的功能，可以通过 DNS、ICMP、TCP、HTTP 等通信监控服务的状态。
 - [GitHub](https://github.com/prometheus/blackbox_exporter)
 - 用 docker-compose 部署：
   ```yml
@@ -499,10 +499,12 @@
           username: <string>
           password: <string>
         proxy_url: <string>
+        preferred_ip_protocol: ip6      # DNS 解析时，优先采用的 IP 协议，默认为 IPv6
+        ip_protocol_fallback: true      # 当 preferred_ip_protocol 不可用时，是否允许另一种 IP 协议。默认为 true
 
         # 关于 HTTPS
-        fail_if_ssl: false              # 如果存在 SSL ，是否探测失败
-        fail_if_not_ssl: false          # 如果不存在 SSL ，是否探测失败
+        fail_if_ssl: false              # 如果采用 SSL ，是否探测失败
+        fail_if_not_ssl: false          # 如果不采用 SSL ，是否探测失败
         tls_config:
           insecure_skip_verify: false   # 是否跳过检验证书
 
@@ -529,11 +531,19 @@
 - 指标示例：
   ```sh
   probe_success                   # 是否探测成功（取值 1、0 分别表示成功、失败）
-  probe_duration_seconds          # 本次探测的耗时
-  probe_dns_lookup_time_seconds   # 查找 DNS 的耗时
+  probe_duration_seconds          # 探测的耗时
 
-  probe_http_status_code          # HTTP 响应报文的状态码
-  probe_http_content_length       # HTTP 响应报文的长度（bytes）
+  # 关于 DNS
+  probe_dns_lookup_time_seconds   # DNS 解析的耗时
+  probe_ip_protocol               # IP 协议，取值为 4、6
+  probe_ip_addr_hash              # IP 地址的哈希值，用于判断 IP 是否变化
+
+  # 关于 HTTP
+  probe_http_status_code          # HTTP 响应的状态码。如果发生重定向，则取决于最后一次响应
+  probe_http_content_length       # HTTP 响应的 body 长度，单位 bytes
+  probe_http_version              # HTTP 响应的协议版本，比如 1.1
+  probe_http_ssl                  # HTTP 响应是否采用 SSL ，取值为 1、0
+  probe_ssl_earliest_cert_expiry  # SSL 证书的过期时间，为 Unix 时间戳
   ```
 
 ### jmx_exporter

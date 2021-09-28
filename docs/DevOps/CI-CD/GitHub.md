@@ -109,18 +109,6 @@ jobs:                             # 该 workflow 的任务列表
           VAR2: World
   ```
 
-- `$GITHUB_ENV` 指向一个存储环境变量的文件，向该文件中添加变量，就会被加入当前 job 的后续 step 的终端环境变量中。如下：
-  ```yml
-  steps:
-  - name: Test write
-    run: |
-      echo  action_state=yellow  >>  $GITHUB_ENV
-  - name: Test read
-    run: |
-      echo  $action_state
-  ```
-  - 这种添加环境变量的方式，比使用 `env` 参数的功能更强。
-
 - GitHub 会自动加入一些内置的环境变量，例如：
   ```sh
   GITHUB_WORKFLOW     # 当前 workflow 的名称
@@ -147,6 +135,17 @@ jobs:                             # 该 workflow 的任务列表
   - GitHub 会在读取 workflow 时获取表达式的值，嵌入到 workflow 中，然后才执行 workflow 。
   - 定义环境变量时，不能在同一个 env 块中读取它。
 :::
+
+- `$GITHUB_ENV` 指向一个存储环境变量的文件，向该文件中添加变量，就可以被后续步骤调用。如下：
+  ```yml
+  steps:
+  - name: Test write
+    run: |
+      echo  tips=Hello  >>  $GITHUB_ENV
+  - name: Test read
+    run: |
+      echo  $tips  ${{ env.tips }}
+  ```
 
 ### job
 

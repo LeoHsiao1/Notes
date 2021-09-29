@@ -11,6 +11,26 @@
 - 用 `//` 声明单行注释，用 `/*` 和 `*/` 声明多行注释。
 - 支持定义函数，不支持定义类，但可以通过封装函数实现面向对象编程。
 
+## 版本
+
+- 1995 年，Netscape 公司为浏览器发明了 JavaScript 脚本语言。
+  - 之后，由 ECMA International 组织制定 JS 的语言标准，称为 ECMAScript ，简称为 ES 。
+- ES1
+  - 1997 年发布。
+- ES2
+  - 1998 年发布。
+- ES4
+  - 跳过发布。
+- ES3
+  - 1999 年发布。
+  - 支持正则表达式、try-catch 。
+- ES5
+  - 2009 年发布。
+  - 支持 JSON 。
+  - 增加 String.strim()、Array.isArray() 方法。
+- ES6
+  - 2015 年发布。
+
 ## 用法示例
 
 - 可以在标签 `<script>` 之间编写 JS 代码：
@@ -76,7 +96,7 @@
   - 例如，下方表示节点 book 拥有一个属性节点 category、一个元素节点 year ，节点 year 拥有一个值为"2000"的文本节点。
     ```xml
     <book category="web">
-        <year>2000</year> 
+        <year>2000</year>
     </book>
     ```
 

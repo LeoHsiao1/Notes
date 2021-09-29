@@ -775,3 +775,59 @@
   # 关于主机的状态
   mongodb_sys_cpu_num_cpus    # 主机的 CPU 核数
   ```
+
+### mysqld_exporter
+
+：用于监控 MySQL 服务器。
+- [GitHub](https://github.com/prometheus/mysqld_exporter)
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    mysqld_exporter:
+      container_name: mysqld_exporter
+      image: prom/mysqld-exporter:v0.13.0
+      restart: unless-stopped
+      # command:
+      #   - --web.listen-address=:9104
+      #   - --web.telemetry-path=/metrics
+      environment:
+        DATA_SOURCE_NAME: "user:password@(10.0.0.1:3306)/"
+      ports:
+        - 9104:9104
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+  ```
+  - 需要在 MySQL 中创建一个 exporter 用户：
+    ```sql
+    CREATE USER 'exporter'@'%' IDENTIFIED BY '******';
+    GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'exporter'@'%';
+    ```
+
+- 指标示例：
+  ```sh
+  # 关于服务器
+  mysql_global_status_uptime                            # 运行时长，单位 s
+  rate(mysql_global_status_bytes_received[1m])          # 每秒接收的 bytes
+  rate(mysql_global_status_bytes_sent[1m])              # 每秒发送的 bytes
+
+  # 关于客户端
+  mysql_global_status_threads_connected                 # 当前的客户端连接数
+  mysql_global_status_threads_running                   # 正在执行命令的客户端连接数，即非 sleep 状态
+  delta(mysql_global_status_aborted_connects[1m])       # 客户端建立连接失败的连接数，比如登录失败
+  delta(mysql_global_status_aborted_clients[1m])        # 客户端未正常关闭的连接数
+
+  # 关于 InnoDB
+  delta(mysql_global_status_commands_total{command="xx"}[1m]) > 0     # 各种命令的数量
+  delta(mysql_global_status_handlers_total{handler="xx"}[1m]) > 0     # 各种操作的数量
+  delta(mysql_global_status_handlers_total{handler="commit"}[1m]) > 0 # commit 次数
+  rate(mysql_global_status_queries[1m])                 # QPS ，平均每秒的查询数
+  delta(mysql_global_status_slow_queries[1m])           # 慢查询数。如果未启用慢查询日志，则为 0
+  delta(mysql_global_status_table_locks_immediate[1m])  # 请求获取锁，且立即获得的请求数
+  delta(mysql_global_status_table_locks_waited[1m])     # 请求获取锁，但需要等待的请求数。该值越少越好
+  mysql_global_status_innodb_page_size                  # innodb 数据页的大小，单位 bytes
+  mysql_global_variables_innodb_buffer_pool_size        # innodb_buffer_pool 容量上限
+  mysql_global_status_innodb_page_size * on (instance) mysql_global_status_buffer_pool_pages  # innodb_buffer_pool 的实际大小
+  ```
+  - 这些监控指标主要从 MySQL 的 `SHOW GLOBAL STATUS` 和 `SHOW GLOBAL VARIABLES` 获得。

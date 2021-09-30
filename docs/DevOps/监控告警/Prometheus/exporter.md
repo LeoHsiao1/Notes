@@ -809,25 +809,28 @@
   ```sh
   # 关于服务器
   mysql_global_status_uptime                            # 运行时长，单位 s
-  rate(mysql_global_status_bytes_received[1m])          # 每秒接收的 bytes
-  rate(mysql_global_status_bytes_sent[1m])              # 每秒发送的 bytes
+  delta(mysql_global_status_bytes_received[1m])         # 网络接收的 bytes
+  delta(mysql_global_status_bytes_sent[1m])             # 网络发送的 bytes
 
   # 关于客户端
   mysql_global_status_threads_connected                 # 当前的客户端连接数
   mysql_global_status_threads_running                   # 正在执行命令的客户端连接数，即非 sleep 状态
   delta(mysql_global_status_aborted_connects[1m])       # 客户端建立连接失败的连接数，比如登录失败
-  delta(mysql_global_status_aborted_clients[1m])        # 客户端未正常关闭的连接数
+  delta(mysql_global_status_aborted_clients[1m])        # 客户端连接之后，未正常关闭的连接数
 
-  # 关于 InnoDB
+  # 关于命令
   delta(mysql_global_status_commands_total{command="xx"}[1m]) > 0     # 各种命令的数量
   delta(mysql_global_status_handlers_total{handler="xx"}[1m]) > 0     # 各种操作的数量
-  delta(mysql_global_status_handlers_total{handler="commit"}[1m]) > 0 # commit 次数
-  rate(mysql_global_status_queries[1m])                 # QPS ，平均每秒的查询数
-  delta(mysql_global_status_slow_queries[1m])           # 慢查询数。如果未启用慢查询日志，则为 0
+  delta(mysql_global_status_handlers_total{handler="commit"}[1m]) > 0 # commit 的数量
   delta(mysql_global_status_table_locks_immediate[1m])  # 请求获取锁，且立即获得的请求数
   delta(mysql_global_status_table_locks_waited[1m])     # 请求获取锁，但需要等待的请求数。该值越少越好
+
+  # 关于查询
+  delta(mysql_global_status_queries[1m])                # 每分钟的查询数
+  delta(mysql_global_status_slow_queries[1m])           # 慢查询数。如果未启用慢查询日志，则为 0
   mysql_global_status_innodb_page_size                  # innodb 数据页的大小，单位 bytes
-  mysql_global_variables_innodb_buffer_pool_size        # innodb_buffer_pool 容量上限
-  mysql_global_status_innodb_page_size * on (instance) mysql_global_status_buffer_pool_pages  # innodb_buffer_pool 的实际大小
+  mysql_global_variables_innodb_buffer_pool_size        # innodb_buffer_pool 的限制体积
+  mysql_global_status_buffer_pool_pages{state="data"}   # 包含数据的数据页数，包括洁页、脏页
+  mysql_global_status_buffer_pool_dirty_pages           # 脏页数
   ```
   - 这些监控指标主要从 MySQL 的 `SHOW GLOBAL STATUS` 和 `SHOW GLOBAL VARIABLES` 获得。

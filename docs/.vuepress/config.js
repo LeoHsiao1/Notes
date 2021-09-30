@@ -700,6 +700,10 @@ module.exports = {
                         {
                             title: "网络安全",
                             path: "/Network/计算机安全/网络安全"
+                        },
+                        {
+                            title: "Web安全",
+                            path: "/Network/计算机安全/Web安全"
                         }
                     ]
                 }
@@ -719,10 +723,6 @@ module.exports = {
                         {
                             title: "Web爬虫",
                             path: "/Web/简介/Web爬虫"
-                        },
-                        {
-                            title: "Web安全",
-                            path: "/Web/简介/Web安全"
                         }
                     ]
                 },

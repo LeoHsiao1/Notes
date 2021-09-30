@@ -3,7 +3,6 @@
 - 简介
   - [Web技术](简介/Web技术.md)
   - [Web爬虫](简介/Web爬虫.md)
-  - [Web安全](简介/Web安全.md)
 - 前端
   - [简介](前端/简介.md)
   - [HTML](前端/HTML.md)

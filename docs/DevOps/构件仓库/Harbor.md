@@ -60,7 +60,6 @@
   - 支持设置 Tag 的保留规则、项目的磁盘定额，从而限制存储的镜像数量。
     - 推送镜像到 Harbor 时，默认会覆盖 image:tag 相同的 artifact 。可以将一些 tag 声明为不可变的，不允许被覆盖、删除。
   - 支持漏洞扫描。
-    - 通用漏洞披露（Common Vulnerabilities and Exposures ，CVE）：列出了一些已公开的计算机安全漏洞，每个漏洞有一个 CVE ID 编号。
   - 支持设置 Webhook ：当项目发生 push、pull 等事件时，发送一个 JSON 格式的消息到某个 URL 。
 
 - 仓库管理（Registries）

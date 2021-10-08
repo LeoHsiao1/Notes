@@ -75,10 +75,8 @@
 
 - jvm.options 的配置示例：
   ```sh
-  -Xms2g                # JVM 堆内存的初始大小
-  -Xmx2g                # JVM 堆内存的最大大小
-  # JVM 堆内存设置得过小，会经常进行垃圾回收，导致 CPU 使用率偏高。
-  # 建议将 -Xms 与 -Xmx 设置为相同大小，以免在运行时调整堆大小。
+  -Xms2g
+  -Xmx2g
   ```
 
 ## pipeline

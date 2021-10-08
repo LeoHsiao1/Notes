@@ -251,3 +251,6 @@ taskkill /pid 66 /f   :: 杀死一个进程，其 pid 为 66 ，f 代表 force �
   - 在 32 位系统中，它存储为一个 32 位的无符号整型。
 - PowerShell
   - ：微软于 2006 年推出的新一代脚本语言、shell 程序，基于 .NET Framework 运行，能实现强大、丰富的功能。
+- NuGet
+  - ：.NET 平台的代码包管理工具。
+  - .NET 代码包的扩展名为 .nupkg ，默认仓库为 nuget.org 。

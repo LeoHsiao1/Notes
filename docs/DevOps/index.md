@@ -32,6 +32,7 @@
   - [Nacos](配置管理/Nacos.md)
 - 构件仓库
   - [Artifactory](构件仓库/Artifactory.md)
+  - [Nexus](构件仓库/Nexus.md)
   - [Harbor](构件仓库/Harbor.md)
 - 监控告警
   - [简介](监控告警/简介.md)

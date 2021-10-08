@@ -1162,6 +1162,10 @@ module.exports = {
                             path: "/DevOps/构件仓库/Artifactory"
                         },
                         {
+                            title: "Nexus",
+                            path: "/DevOps/构件仓库/Nexus"
+                        },
+                        {
                             title: "Harbor",
                             path: "/DevOps/构件仓库/Harbor"
                         }

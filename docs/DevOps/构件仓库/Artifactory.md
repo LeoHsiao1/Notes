@@ -1,13 +1,13 @@
 # Artifactory
 
-：一个 Web 文件服务器，基于 HTTP 通信，常用于存储构建产物。
+：一个 Web 服务器，提供了工件仓库的功能。
 - [官方文档](https://www.jfrog.com/confluence/display/RTF6X)
-- 由 Jfrog 公司推出，社区版可以免费使用，但功能较少。
-- 可以通过浏览器访问，也可以生成文件的下载链接，通过 curl 命令上传、下载文件。
+- 由 Jfrog 公司发布。分为社区版（OSS）、专业版（PRO）。
+- 可以通过浏览器访问，也可以生成文件的 URL ，通过 curl 命令上传、下载文件。
 - 同类产品：
   - FTP 服务器：采用 FTP 协议传输数据，比 HTTP 协议的通用性低，且没有 Web UI 。
   - Nextcloud ：网盘，访问时需要使用浏览器或专用客户端。
-  - Nexus ：主要用作 Maven 仓库，用途较窄。
+  - Nexus ：主要用作 Maven 仓库。
 
 ## 部署
 
@@ -27,11 +27,11 @@
       volumes:
         - ./artifactory:/var/opt/jfrog/artifactory
   ```
-  - 默认用户名、密码为 admin、password 。
-  - 需要先配置挂载目录的权限：
+  - 需要调整挂载目录的权限：
     ```sh
-    chown -R 1030:1030 artifactory
+    chown -R 1030 .
     ```
+  - 默认用户名、密码为 admin、password 。
 
 ## 用法
 

@@ -2,23 +2,11 @@
 
 ：一个流行的版本控制工具。
 - [官方文档](https://git-scm.com/docs)
-- 于 2005 年，由 Linus Torvalds 采用 C 语言开发。
+- 采用 C 语言开发。2005 年由 Linus Torvalds 发布。
 - 特点：
   - 分布式管理。每个服务器、客户端都存储一份完整的代码仓库，可以相互同步。
   - 支持将每次修改后的文件提交为一个版本，允许用户将文件回滚到任意历史版本。
   - 支持创建多个分支，进行分支切换、合并，便于多人合作开发同一个项目。
-- 属于软件配置管理（Source Code Management ，SCM）工具，同类产品包括：
-  - Subversion ：简称为 svn 。
-    - 集中式管理。代码仓库存储在服务器上，用户需要通过客户端连接服务器，才能拉取代码或提交代码。
-    - 以多个子目录的形式管理代码仓库，目录结构如下：
-      ```sh
-      repository/
-      ├── branches  # 存放各个分支的项目代码
-      ├── tags      # 存放各个版本的项目代码
-      └── trunk     # 存放主干分支的项目代码
-      ```
-    - 支持只拉取或提交指定路径的目录、文件，而不必拉取整个代码仓库。
-  - Mercurial ：采用 Python 开发。
 
 ## 安装
 
@@ -39,9 +27,6 @@
 
 1. 用户进入项目根目录，执行 `git init` 命令进行初始化。
     - 这默认会在当前目录下创建一个 .git 子目录，作为 git 仓库，存储 git 的相关文件。
-    - 执行 `git init --bare` 会创建一个裸仓库。
-      - 它不会创建 .git 子目录，而是将 git 仓库中的文件直接存储到项目根目录。并且通常将项目根目录加上扩展名 .git 。
-      - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远端仓库，供多人推送修改。
 
 2. 用户执行 `git commit` 命令，将项目文件提交为一个版本，让 git 记录。
     - git 默认会记录项目目录下的所有文件，可以在 .gitignore 文件中声明不想被 git 记录的文件。
@@ -54,7 +39,7 @@
 4. 用户执行 `git checkout xxx` 命令，切换到历史版本。
     - git 会找到该版本对应的所有文件的哈希值，根据哈希值将这些文件从 git 仓库拷贝到项目目录下，从而将项目目录还原到历史时刻。
 
-## 查看仓库
+### 查看仓库
 
 ```sh
 git status              # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
@@ -70,7 +55,7 @@ git diff                # 比较当前仓库与上一次 add 或 commit 的差�
         <file>          # 只比较某个文件的差异
 ```
 
-## 版本
+## 版本控制
 
 ### 修改文件
 
@@ -90,10 +75,10 @@ git rev-parse --show-toplevel   # 返回 Git 项目的顶级目录
 ### 提交版本
 
 ```sh
-git commit                        # 将当前缓存区的所有文件提交为一个版本
-            -m "initial version"  # 加上备注信息（该选项为强制要求）
-            -a                    # 提交从上一个版本以来被改动的所有文件
-            --amend               # 将当前的缓存区合并到上一个版本（不过时间戳依然是上一个版本的）
+git commit                      # 将当前缓存区的所有文件提交为一个版本
+          -m "initial version"  # 加上备注信息（该选项为强制要求）
+          -a                    # 提交从上一个版本以来被改动的所有文件
+          --amend               # 将当前的缓存区合并到上一个版本（不过时间戳依然是上一个版本的）
 ```
 - 每次提交一个版本时，会自动生成一个 SHA-1 哈希值，作为 commit ID、version name 。如下：
 	```sh
@@ -152,14 +137,17 @@ __pycache__/    # 忽略所有目录下的指定目录
 
 ## branch
 
-命令：
 ```sh
 git branch          # 显示所有本地分支
         -a          # 增加显示远端分支
         -v          # 显示每个分支所在的版本
         <branch>    # 新建一个分支
         -d <branch> # 删除一个分支
+```
 
+### checkout
+
+```sh
 git checkout
         <refs>      # 切换到某个 refs 指向的版本
           -b        # 声明 refs 是一个分支，如果它不存在则自动创建它，再切换过去
@@ -169,7 +157,6 @@ git checkout
 
 ### merge
 
-命令：
 ```sh
 git merge <branch>  # 将指定分支的所有版本合并到当前分支
 ```
@@ -198,13 +185,6 @@ git merge <branch>  # 将指定分支的所有版本合并到当前分支
 
 ### rebase
 
-如下图，通过变基（rebase）方式将 C3 合并到 master 时，会先找到 C3 与 C4 的共同祖先 C2；然后删除 C3 ，将从 C2 到 C3 之间的所有变动应用到 C4 上，生成一个新版本 C3'；最后将 master 分支快进到 C3'处。
-
-![](./git_rebase.png)
-
-merge 方式与 rebase 方式最终生成的版本都一样，但是 rebase 方式会删除次分支，将版本图简化成一条线。
-
-命令：
 ```sh
 git rebae
         <branch>          # 将当前分支以变基方式合并到指定分支（这会产生一个新版本）
@@ -212,43 +192,20 @@ git rebae
         branch1 branch2 --onto branch3  # 将 branch2 相对于 branch1 的变基应用到 branch3 上
 ```
 
-## tag
+- 如下图，通过变基（rebase）方式将 C3 合并到 master 时，会先找到 C3 与 C4 的共同祖先 C2；然后删除 C3 ，将从 C2 到 C3 之间的所有变动应用到 C4 上，生成一个新版本 C3'；最后将 master 分支快进到 C3'处。
 
-命令：
+  ![](./git_rebase.png)
+
+- merge 方式与 rebase 方式最终生成的版本都一样，但是 rebase 方式会删除次分支，将版本图简化成一条线。
+
+### tag
+
 ```sh
 git tag                 # 显示已有的所有标签
         -a v1.0 9fceb02 # 给版本 9fceb02 加上标签 v1.0
         -d <tagName>    # 删除一个标签
 ```
 - 执行 `git checkout <tagName>` 之后，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
-
-## submodule
-
-：子模块，用于在当前 git 仓库中以子目录的形式引用其它 git 仓库。
-- 相关命令：
-  ```sh
-  git submodule
-                add <repository_url> [<path>] [--name <name>] [-b <branch>]   # 添加 submodule
-                update        # 更新 submodule ，这会从远端仓库 pull 它的最新版本
-                sync          # 将 .gitmodules 文件中的配置同步到 .git/config 中（默认不会自动同步）
-                status        # 显示所有 submodule 的 commit、path、branch 信息
-  ```
-- 添加了 submodule 之后，会在项目根目录生成一个 .gitmodules 文件，用于保存其配置信息。如下：
-  ```ini
-  [submodule "python_utils"]                            # submodule 的名称
-    url = https://github.com/LeoHsiao1/python_utils.git # submodule 的仓库地址，会通过 git clone 命令下载
-    path = submodules/python_utils                      # 将该 submodule 下载到哪个目录
-    branch = master                                     # 引用的分支
-  ```
-  还会在 `.git/config` 中记录 submodule 的信息，如下：
-  ```ini
-  [submodule "python_utils"]
-    active = true
-    url = https://github.com/LeoHsiao1/python_utils.git
-  ```
-  - 如果想移除一个 submodule ，需要在上述两个配置文件中删除它。
-  - 当前 git 仓库不会对 submodule 的文件进行版本管理，只会记录其配置信息。
-  - 进入 submodule 的目录之后，就相当于处于其 git 仓库下，可以执行 git checkout 等命令。
 
 ## 配置
 
@@ -288,13 +245,41 @@ git config
           <key> <value> # 设置配置文件中某项参数的值
 ```
 
+### submodule
+
+：子模块，用于在当前 git 仓库中以子目录的形式引用其它 git 仓库。
+- 相关命令：
+  ```sh
+  git submodule
+                add <repository_url> [<path>] [--name <name>] [-b <branch>]   # 添加 submodule
+                update        # 更新 submodule ，这会从远端仓库 pull 它的最新版本
+                sync          # 将 .gitmodules 文件中的配置同步到 .git/config 中（默认不会自动同步）
+                status        # 显示所有 submodule 的 commit、path、branch 信息
+  ```
+- 添加了 submodule 之后，会在项目根目录生成一个 .gitmodules 文件，用于保存其配置信息。如下：
+  ```ini
+  [submodule "python_utils"]                            # submodule 的名称
+    url = https://github.com/LeoHsiao1/python_utils.git # submodule 的仓库地址，会通过 git clone 命令下载
+    path = submodules/python_utils                      # 将该 submodule 下载到哪个目录
+    branch = master                                     # 引用的分支
+  ```
+  还会在 `.git/config` 中记录 submodule 的信息，如下：
+  ```ini
+  [submodule "python_utils"]
+    active = true
+    url = https://github.com/LeoHsiao1/python_utils.git
+  ```
+  - 如果想移除一个 submodule ，需要在上述两个配置文件中删除它。
+  - 当前 git 仓库不会对 submodule 的文件进行版本管理，只会记录其配置信息。
+  - 进入 submodule 的目录之后，就相当于处于其 git 仓库下，可以执行 git checkout 等命令。
+
 ## 远端仓库
 
 拥有一个 git 服务器之后，就可以将本地的 git 仓库推送到服务器存储，或从服务器拉取 git 仓库。
 - 一个本地仓库可以配置 0 个或任意个远端仓库。
   - 配置之后，通过 URL 或 name 即可指定远端仓库。
 - 将本地仓库推送到远端时，会自动推送所有分支，并让本地分支与远端分支建立一对一的关系（称为跟踪）。
-  - 如果已有被跟踪的远端分支，则让本地分支与它合并。（如果发生冲突就不能直接推送）
+  - 如果已有被跟踪的远端分支，则让本地分支与它合并。（如果发生冲突则不能直接推送）
   - 如果不存在被跟踪的远端分支，则自动创建它。
   - 如果选择强制推送，则相当于清空远端仓库后再上传本地仓库。
   - 默认不会推送标签，要手动推送。
@@ -386,7 +371,40 @@ git push [name 或 URL]          # 推送本地仓库到远端仓库
     remotes/origin/test
   ```
 
-## git flow
+### 裸仓库
+
+- 执行 `git init --bare` 会创建一个裸仓库。
+  - 它不会创建 .git 子目录，而是将 git 仓库中的文件直接存储到项目根目录。并且通常将项目根目录加上扩展名 .git 。
+  - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远端仓库，供多人推送修改。
+
+### LFS
+
+- Git LFS（Large File Storage）：Git 的一种插件，用于存储大文件。
+  - 原理：将一些大文件存储在 Git 仓库外部（位于 `.git/lfs/` 目录下），只在 Git 仓库内通过指针引用。在 pull 远端仓库时，默认只拉取当前版本的大文件。
+  - 相关命令：
+    ```sh
+    yum install git-lfs     # 安装 lfs
+    git lfs track "*.jpg"   # 将文件标记为大文件，被 lfs 跟踪
+    ```
+
+## 相关概念
+
+### SCM
+
+Git 属于软件配置管理（Source Code Management ，SCM）工具，同类产品包括：
+- Subversion ：简称为 svn 。
+  - 集中式管理。代码仓库存储在服务器上，用户需要通过客户端连接服务器，才能拉取代码或提交代码。
+  - 以多个子目录的形式管理代码仓库，目录结构如下：
+    ```sh
+    repository/
+    ├── branches  # 存放各个分支的项目代码
+    ├── tags      # 存放各个版本的项目代码
+    └── trunk     # 存放主干分支的项目代码
+    ```
+  - 支持只拉取或提交指定路径的目录、文件，而不必拉取整个代码仓库。
+- Mercurial ：采用 Python 开发。
+
+### git flow
 
 ：一种流行的 git 使用策略，适合管理复杂的项目。
 - 在 git 仓库中至少使用以下两个分支：
@@ -405,7 +423,7 @@ git push [name 或 URL]          # 推送本地仓库到远端仓库
   Add       function test1()
   Delete    ...
   Modify    ...
-  
+
   # 更准确的分类
   Update    ...     # 少许改进、增加内容
   Optimize  ...     # 明显优化
@@ -418,4 +436,3 @@ git push [name 或 URL]          # 推送本地仓库到远端仓库
   [DOC]  ...
   [TEST] ...
   ```
-

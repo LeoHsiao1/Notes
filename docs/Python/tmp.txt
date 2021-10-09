@@ -771,8 +771,9 @@ TypeError: 'tuple' object does not support item assignment
 str、bytes
 ## Python中没有字符类型，只有字符串类型。一个字符就是一个长度为1的字符串。
 ## Python3中，解释器在内存中处理字符串时默认采用str类型，与外部交互时才转换成bytes类型。
-- str：字符串类型，采用Unicode编码，以字符为单位处理字符串。
+- str：字符串类型，以字符为单位处理字符串。
   - str相当于只能存储字符的tuple。
+  - 采用 Unicode 编码，每个字符占用 8 字节。
 - bytes：字节类型，与str的用法相同，但采用更底层的编码格式（比如utf-8、ASCII），以字节为单位处理字符串。
 - bytearray：相当于列表类型的bytes，可以被修改。
   - 例：

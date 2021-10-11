@@ -133,8 +133,8 @@ ie=UTF-8&wd=1
 例：
 ```
 HTTP/1.1 200 OK
-content-type: text/html; charset=utf-8
-Server: Apache/2.4.7 (Ubuntu)
+Server: nginx/1.20.1
+Content-Type: text/html; charset=utf-8
 
 <html><head><title>Index</html></head><body><h1>Hello world!</h1></body></html>
 ```
@@ -249,25 +249,50 @@ Server: Apache/2.4.7 (Ubuntu)
 
 ：安全超文本传输协议（Secure Hypertext Transfer Protocol），是基于 SSL/TLS 协议加密通信的 HTTP 协议。
 - HTTP 协议采用明文传输报文，不安全，可能被泄露、篡改。而 HTTPS 协议是在加密信道中传输 HTTP 报文，很安全。
-- HTTP 服务器默认支持 HTTP 协议，而启用 HTTPS 需要先完成一些麻烦的准备工作。如下：
-  1. 首先，server 用 OpenSSL 生成一个 .csr 文件（用于申请证书，包含 SSL 公钥、网站所有者等信息）和一个 .key 文件（配套的 SSL 私钥）。
-  2. 然后，server 将 .csr 文件提交到一个 CA(Certificate Authority ，证书授权中心)，被 CA 的私钥加密生成数字证书（.crt 文件或.pem 文件）。
-  3. 最后，server 将数字证书和 .key 文件保存到服务器上，当有客户端来访问时，就将数字证书发给它。
-  4. 客户端要用 CA 的公钥解密该数字证书，查看其内容。
-- 单向认证：client 验证 server 的数字证书，或反之。
-- 双向认证：client 和 server 互相验证对方的数字证书。
+- HTTPS 协议的工作流程：
+  1. client 访问 server 的 TCP 端口，进行 TCP 握手。
+  2. 进行 SSL 握手，建立加密的通信信道。
+  3. 在加密信道中传输 HTTP 报文。
+- HTTP 服务器默认支持 HTTP 协议，而启用 HTTPS 需要进行一些准备工作：
+  1. 用 OpenSSL 生成一个 .key 文件（包含 SSL 私钥）和一个 .csr 文件（包含 SSL 公钥）。
+  2. 将 .csr 文件提交到 CA ，被 CA 的私钥加密生成数字证书。
+  3. 将数字证书和 .key 文件保存到 server 上，用于 SSL 握手。
 
-## SSL
+### SSL
 
-90 年代，网景公司推出了 SSL(Secure Sockets Layer ，安全套接层)协议，用于加密 HTTP 的通信过程。
-- SSL 工作在传输层与应用层之间。工作时，先基于 TCP 建立加密的通信信道，然后在该信道中传输 HTTP 报文。
-- 当 SSL 更新到 3.0 版本时，演化出了更安全的 TLS（Transport Layer Security ，安全传输层）协议，但有时也统称为 SSL 。
-- HTTPS 开始通信时，要先按以下步骤建立 SSL 加密信道：
-  1. client 向 server 发出请求，索要 SSL 公钥。
-  2. server 将自己的 SSL 公钥（通常放在数字证书中，证明它是真的、没有被篡改）回复给 client 。
-  3. client 收到 SSL 公钥，用它加密一个随机数发送给 server 。
-  4. server 收到加密的消息后，用自己的 SSL 私钥解密它，得到随机数。然后把该随机数回复给 client ，表示自己能解开该公钥，证明自己的身份。
-     - 同时，server 随机生成一个对称加密的密钥，然后把该密钥用 SSL 公钥加密，发送给 client 。以后双方的 HTTP 通信报文都使用该密钥加密。
-    - 这四次握手的通信过程是明文传输的，不怕泄露。
-- OpenSSL ：一个开源的 SSL 库，提供了一些 SSL 签名算法。
+- 90 年代，网景公司发布了 SSL（Secure Sockets Layer ，安全套接字层）协议，用于加密传输 HTTP 报文。
+  - SSL 工作在传输层与应用层之间。
+  - SSL 更新到 v3.0 版本时，演化出了更安全的 TLS（Transport Layer Security ，安全传输层）协议，有时也统称为 SSL 协议。
+- TLS 1.2 握手的流程：
+  1. client 发送 Client Hello 消息，包含支持的 TLS 版本、加密算法、一个临时生成的随机数。
+  2. server 回复 Server Hello 消息，包含采纳的 TLS 版本、加密算法、一个临时生成的随机数。
+      - 再发送 Server Key Exchange 消息，包含 server 的 SSL 公钥。
+      - 再发送 Certificate 消息，包含由 CA 签发的数字证书，用于证明身份。
+      - 可选发送 CertificateRequest 消息，索要 client 的数字证书，实现双向认证。
+      - 最后发送 Server Hello Done 消息，表示 Hello 阶段的消息已发送完。
+  3. client 收到 server 的数字证书，验证其身份。
+      - 再生成一个随机字符串，称为 premaster secret 。用 SSL 公钥加密，放在 Server Key Exchange 消息中，发送给 server 。
+      - 再采用某个加密算法，根据两个随机数和 premaster secret ，生成一个对称加密的会话密钥。然后发送 Change Cipher Spec 消息，表示已生成会话密钥，以后的消息都将加密传输。
+      - 再发送 Finished 消息，表示握手完成。
+  4. server 收到加密字符串，用 SSL 私钥解密。
+      - 再采用同一个加密算法，生成的相同会话密钥。然后发送 Change Cipher Spec 消息。
+      - 再发送 Finished 消息，表示握手完成。
+- TLS 1.3 握手的流程：
+  1. client 发送 Client Hello 消息。
+  2. server 发送数字证书，并生成会话密钥。
+  3. client 验证数字证书，生成会话密钥，发送 Finished 消息。
+- SSL 的缺点：
+  - 每次传输 HTTP 报文时需要加密、解密，消耗更多 CPU 和时间。
+  - 需要 TLS 握手，在网络延迟较大时有明显耗时，导致 HTTPS 网页加载缓慢。
+    - TLS 1.3 握手的步骤比 TLS 1.2 少，因此耗时更短。
 
+### CA
+
+- CA（Certificate Authority，证书授权中心）：一些负责签发、管理数字证书的机构，也可以自己部署 CA 服务器。
+- SSL 数字证书：一个由可信任的 CA 提供的文件。用于证明某个 SSL 公钥，属于某个实体。
+  - 主要包含以下信息：
+    - 证书的签发者，即 CA 机构。
+    - 证书的所有者，包括域名、机构名、联系方式等。
+    - SSL 公钥
+    - 证书的有效期，包括开始时间、截止时间。
+  - 数字证书由 CA 的私钥加密，用户可以用 CA 的公钥解读。

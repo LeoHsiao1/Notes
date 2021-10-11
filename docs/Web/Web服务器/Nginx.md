@@ -1294,16 +1294,40 @@ server {
       listen    443  ssl;                     # 监听时采用 ssl 协议
       server_name localhost;
 
-      ssl_certificate /etc/nginx/conf.d/cert.pem;       # 指明.crt 文件的路径
-      ssl_certificate_key /etc/nginx/conf.d/cert.key;   # 指明.key 文件的路径
+      ssl_certificate /etc/nginx/cert.crt;       # 数字证书
+      ssl_certificate_key /etc/nginx/cert.key;   # SSL 私钥
 
-      ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;  # 设置 ssl 加密套件
-      ssl_protocols TLSv1 TLSv1.1 TLSv1.2;    # 设置可用的 ssl 协议版本
-      ssl_prefer_server_ciphers on;           # 在 ssl 握手时使用 server 的密码
+      ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;  # 设置 SSL 加密套件
+      ssl_protocols TLSv1 TLSv1.1 TLSv1.2;    # 设置可用的 SSL 协议版本
+      ssl_prefer_server_ciphers on;           # 在 SSL 握手时使用 server 的密码
 
-      # 在一段时间内复用一个 ssl 会话，以节省 ssl 握手的时间
-      ssl_session_cache   shared:SSL:10m;     # 设置 ssl 缓存的大小，10M 大概可以存储 40000 个 ssl 会话
+      # 在一段时间内复用一个 ssSSLl 会话，以节省 SSL 握手的时间
+      ssl_session_cache   shared:SSL:10m;     # 设置 SSL 缓存的大小，10M 大概可以存储 40000 个 SSL 会话
       ssl_session_timeout 10m;                # 设置缓存的失效时间
       ...
   }
   ```
+- HTTP、HTTPS 协议分别默认采用 TCP 80、443 端口，互不兼容。
+  ```sh
+  [root@CentOS ~]# curl  https://127.0.0.1:80/    # 不支持向 HTTP 端口发送 HTTPS 请求
+  curl: (35) SSL received a record that exceeded the maximum permissible length.
+  [root@CentOS ~]# http://127.0.0.1:443/          # 不支持向 HTTPS 端口发送 HTTP 请求
+  <html>
+  <head><title>400 The plain HTTP request was sent to HTTPS port</title></head>
+  <body bgcolor="white">
+  <center><h1>400 Bad Request</h1></center>
+  ```
+- 如果 Nginx 的某个 SSL 端口被多个 server 监听，则会采用默认 server 的 SSL 证书进行 SSL 握手。
+  - 因为在 SSL 握手时，还没有开始 HTTP 通信，所以 Nginx 不能根据 server_name 进行路由。
+- OpenSSL ：一个关于 SSL 的开源工具包。
+  - 例：生成 SSL 私钥和自签名证书：
+    ```sh
+    openssl
+            req -x509           # 生成自签名的数字证书，采用 X.509 标准
+            -days 365           # 证书的有效期
+            -newkey rsa:2048    # 使用新生成的密钥
+            -nodes              # no DES ，生成 key 文件时不加密
+            -keyout cert.key    # 保存私钥的文件
+            -out cert.crt       # 保存证书的文件
+    ```
+

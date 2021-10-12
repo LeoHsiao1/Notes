@@ -1155,19 +1155,19 @@ module.exports = {
                     ]
                 },
                 {
-                    title: "构件仓库",
+                    title: "工件仓库",
                     children: [
                         {
                             title: "Artifactory",
-                            path: "/DevOps/构件仓库/Artifactory"
+                            path: "/DevOps/工件仓库/Artifactory"
                         },
                         {
                             title: "Nexus",
-                            path: "/DevOps/构件仓库/Nexus"
+                            path: "/DevOps/工件仓库/Nexus"
                         },
                         {
                             title: "Harbor",
-                            path: "/DevOps/构件仓库/Harbor"
+                            path: "/DevOps/工件仓库/Harbor"
                         }
                     ]
                 },

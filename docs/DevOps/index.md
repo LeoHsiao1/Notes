@@ -30,10 +30,10 @@
   - [Supervisor](配置管理/Supervisor.md)
   - [Consul](配置管理/Consul.md)
   - [Nacos](配置管理/Nacos.md)
-- 构件仓库
-  - [Artifactory](构件仓库/Artifactory.md)
-  - [Nexus](构件仓库/Nexus.md)
-  - [Harbor](构件仓库/Harbor.md)
+- 工件仓库
+  - [Artifactory](工件仓库/Artifactory.md)
+  - [Nexus](工件仓库/Nexus.md)
+  - [Harbor](工件仓库/Harbor.md)
 - 监控告警
   - [简介](监控告警/简介.md)
   - [Grafana](监控告警/Grafana.md)

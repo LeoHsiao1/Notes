@@ -2,7 +2,8 @@
 
 ：一个 Web 服务器，提供了多种格式的工件仓库。
 - [官方文档](https://www.jfrog.com/confluence/display/RTF6X)
-- 由美国 Jfrog 公司发布。分为社区版（OSS）、专业版（PRO）。
+- 采用 Java 开发，由美国 Jfrog 公司发布。
+  - 分为社区版（OSS）、专业版（PRO）。
   - OSS 版只支持创建少数几种仓库。
 - 特点：
   - 可以通过浏览器访问，也可以生成文件的 URL ，通过 HTTP API 上传、下载文件。

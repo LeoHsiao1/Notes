@@ -48,13 +48,34 @@
 
 ## 原理
 
-- Jenkins 默认将自己的所有数据保存在 `~/.jenkins/` 目录下，因此拷贝该目录就可以备份、迁移 Jenkins 。
-  - 在启动 Jenkins 之前，可以通过设置环境变量 `JENKINS_HOME=/opt/jenkins/` ，改变 Jenkins 的主目录。
+- Jenkins 的主目录称为 JENKINS_HOME ，拷贝该目录就可以备份、迁移 Jenkins 。
+  - 在启动 Jenkins 之前，可以声明环境变量 `JENKINS_HOME=/opt/jenkins/` ，改变 Jenkins 主目录。
+  - Jenkins 在每个节点上都会创建 JENKINS_HOME 目录。
+    - master 节点的 JENKINS_HOME 目录用于保存 Jenkins 的主要数据。
+    - slave 节点的 JENKINS_HOME 目录主要包含 workspace 。
+- master 节点的 JENKINS_HOME 目录结构：
+  ```sh
+  jenkins_home
+  ├── config.xml                # Jenkins 的配置文件
+  ├── jobs/                     # 保存各个 Job 的信息
+  │   ├── job1/
+  │   │   ├── builds/           # 保存每次 build 的信息，包括配置文件、日志
+  │   │   ├── config.xml        # 该 Job 的配置文件
+  │   │   └── nextBuildNumber   # 记录下一次 build 的编号
+  │   ├── job2/
+  │   └── job3/
+  ├── nodes/                    # 保存各个节点的信息
+  ├── plugins/
+  └── workspace/                # 包含在当前节点执行过的 Job 的工作目录
+  ```
+
 - Jenkins 每次执行 Job 时：
-  - 会先将该 Job 加入构建队列，如果相应的 node 上有空闲的执行器，则用它执行该 Job ；否则在构建队列中阻塞该 Job ，等待出现空闲的执行器。（阻塞的时间会计入 Job 的持续时长）
-  - 默认会将 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ），且执行 Job 之前、之后都不会自动清空工作目录。
-  - 会在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。\
-    在 shell 中设置环境变量 `JENKINS_NODE_COOKIE=dontkillme` 可以阻止 Jenkins 杀死当前 shell 创建的进程。
+  - 先将该 Job 加入构建队列，等待分配某个 node 上的一个执行器（executor）。
+    - 如果没有可用的 executor ，则在构建队列中阻塞该 Job 。
+  - 默认将当前节点的 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
+    - 执行 Job 之前、之后都不会自动清空工作目录，建议用户主动清理。
+  - 默认在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。
+    - 可以在 shell 中声明环境变量 `JENKINS_NODE_COOKIE=dontkillme` ，阻止 Jenkins 杀死当前 shell 创建的进程。
 
 ## 用法
 
@@ -105,7 +126,7 @@
 
 ### 管理节点
 
-- 用户可以添加一些主机、Docker 容器作为 Jenkins 的运行环境，称为节点（Node）、代理（agent）、slave 。
+- 用户可以添加一些主机、Docker 容器作为 Jenkins 的运行环境，称为节点（node）、代理（agent）、slave 。
   - Jenkins 服务器所在的节点称为 master ，而其它节点称为 slave ，这些节点都可以用于运行 Job 。
   - 在每个节点上，Jenkins 都需要使用一个目录存储数据。可以指定 `/opt/jenkins/` 目录，或者创建 jenkins 用户，然后使用 `/home/jenkins/` 目录。
   - 增加节点有利于实现 Jenkins 的横向扩容。
@@ -174,36 +195,36 @@
 - 创建客户端：
   ```py
   from jenkinsapi.jenkins import Jenkins
-  
+
   jk = Jenkins('http://10.0.0.1:8080', username=None, password=None, timeout=10, useCrumb=True)
   ```
   - Jenkins 要求在 POST 请求中包含 Crumb 参数，避免 CSRF 攻击
-  
+
 - 查询 job ：
   ```py
   job_names = jk.keys()             # 返回一个包含所有 job 名字的列表
   jk.get_jobs()                     # 返回一个可迭代对象，每次迭代返回一个二元组（job 名字，job 对象）
-  
+
   job = jk.get_job('test1')         # 根据名字，获取指定的 job 对象，如果不存在则抛出异常
   job.url                           # 返回 job 的 URL
   jk.delete_job('test1')            # 删除一个 job
   ```
-  
+
 - job 的配置：
   ```py
   xml = job.get_config()            # 导出 job 的 XML 配置
   job = jk.create_job(jobname, xml) # 创建一个 job
   job.update_config(xml)            # 修改 job 的 XML 配置
   ```
-  
+
 - job 的构建：
   ```py
   jk.build_job('test_job', params={'tag': 'v1.0.0'})  # 构建一个 job（按需要发送参数）
-  
+
   b = job.get_build(20)             # 返回指定编号的 build 对象
   b = job.get_last_build()          # 返回最后一次构建的 build 对象
   job.get_next_build_number()       # 返回下一次构建的编号（如果为 1 则说明还没有构建）
-  
+
   b.job.name                        # 返回这次构建所属 job 的名字
   b.get_number()                    # 返回这次构建的编号
   b.get_params()                    # 返回一个字典，包含这次构建的所有参数

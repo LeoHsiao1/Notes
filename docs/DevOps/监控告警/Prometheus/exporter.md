@@ -313,6 +313,7 @@
   - 当 process-exporter 发现进程 A 之后，就会一直记录它的指标。即使进程 A 停止，也会记录它的 namedprocess_namegroup_num_procs 为 0 。
     - 如果重启 process-exporter ，则只会发现此时存在的进程，不会再记录进程 A 。
     - 如果主机重启之后，进程没有启动，则它不能发现进程没有恢复，不会发出警报。
+  - xx_total 之类的指标是累计值，当 process-exporter 重启时会清零，重新累计。
   - 不能监控进程的网络 IO 。
   - 启动 process-exporter 之后，可尝试执行以下命令，查看当前监控的进程：
     ```sh

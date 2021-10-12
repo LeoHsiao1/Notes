@@ -1,6 +1,6 @@
 # Nexus
 
-：NXRM（Nexus Repository Manager），一个 Web 服务器，提供了工件仓库的功能。
+：NXRM（Nexus Repository Manager），一个 Web 服务器，提供了多种格式的工件仓库。
 - [官方文档](https://help.sonatype.com/repomanager3)
 - 由 Sonatype 公司开源。分为社区版（OSS）、专业版（PRO）。
 
@@ -58,7 +58,7 @@
 
 ### 仓库
 
-- Nexus 支持创建多种格式的仓库（Repository），用于存储工件（Component）。
+- 根据存储的工件（Component）格式对仓库（Repository）分类：
   - 关于软件包：
     - apt
     - conda
@@ -72,7 +72,7 @@
     - r
     - rubygems
   - 关于 Docker 镜像：
-    - docker
+    - docker ：在 Docker 仓库的场景，Nexus 比 Harbor 少了很多功能。
     - helm
   - 关于文件：
     - gitlfs

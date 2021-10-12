@@ -1,6 +1,6 @@
 # Harbor
 
-：一个 Web 服务器，提供了 Docker 镜像仓库的功能，由 VMware 公司开源。
+：一个 Web 服务器，提供了 Docker 镜像仓库，由 VMware 公司开源。
 - [官方文档](https://goharbor.io/docs/2.2.0/)
 - 支持存储 Docker Image 和 Helm Chart 。
 

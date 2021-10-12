@@ -3,6 +3,7 @@
 ：一个 Web 服务器，提供了多种格式的工件仓库。
 - [官方文档](https://www.jfrog.com/confluence/display/RTF6X)
 - 由美国 Jfrog 公司发布。分为社区版（OSS）、专业版（PRO）。
+  - OSS 版只支持创建少数几种仓库。
 - 特点：
   - 可以通过浏览器访问，也可以生成文件的 URL ，通过 HTTP API 上传、下载文件。
 - 同类产品：
@@ -61,7 +62,7 @@ Web 页面示例：
   - 本地仓库(Local)
   - 远程仓库(Remote)：通过 URL 拉取其它仓库的内容，缓存到本地。
   - 虚拟仓库(Virtual)
-- 可以根据存储的文件格式对仓库分类，但 Artifactory OSS 版只支持创建少数几种仓库：
+- 根据存储的文件格式对仓库分类：
   - Generic ：按二进制格式保存文件。
   - Gradle
   - Maven

@@ -292,6 +292,65 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 在 steps{} 中可以使用多种 DSL 语句。
 - [官方文档](https://www.jenkins.io/doc/pipeline/steps/)
 
+### bat
+
+：用于在 Windows 系统上执行 CMD 命令。
+
+### build
+
+：用于执行一个 Job 。
+- 在流水线上，被执行的 job 位于当前 job 的下游。
+- 例：
+  ```groovy
+  build (
+      job: 'job1',
+      parameters: [
+          string(name: 'AGENT', value: 'master'),  // 这里的 string 是指输入值的类型，可输入给大部分类型的 parameters
+      ]
+      // wait: true,        // 是否等待下游 job 执行完毕，才继续执行当前 job
+      // propagate: true,   // 是否让下游 job 的构建结果影响当前 job 。需要启用 wait 才生效
+      // quietPeriod: 5,    // 设置静默期，默认为 5 秒
+  )
+  ```
+
+### checkout
+
+：用于拉取代码。
+- 例：从 Git 仓库拉取代码
+  ```groovy
+  script {
+      checkout([
+          $class: 'GitSCM',
+          branches: [[name: "$BRANCH"]],                    // 切换到指定的分支，也可以填 tag 或 commit ID
+          extensions: [
+                        [$class: 'CleanBeforeCheckout'],    // 清理项目文件，默认启用。相当于 git clean -dfx 加 git reset --hard
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: '.'] // 本地仓库的保存目录，默认为 .
+                      ],
+          userRemoteConfigs: [[
+                      credentialsId: "credential_for_git",  // 登录 git 服务器的凭据，为 Username With Password 类型
+                      url: "$repository_url"                // git 远程仓库的地址
+                      ]]
+      ])
+  }
+  ```
+
+- 例：从 SVN 仓库拉取代码
+  ```groovy
+  script {
+      checkout([
+          $class: 'SubversionSCM',
+          locations: [[
+              remote: "$repository_url"
+              credentialsId: 'credential_for_svn',
+              local: '.',                               // 本地仓库的保存目录，默认是创建一个与 SVN 最后一段路径同名的子目录
+              // depthOption: 'infinity',               // 拉取的目录深度，默认是无限深
+          ]],
+          quietOperation: true,                         // 不显示拉取代码的过程
+          workspaceUpdater: [$class: 'UpdateUpdater']   // 使本地目录更新到最新版本
+      ])
+  }
+  ```
+
 ### echo
 
 ：用于显示字符串。
@@ -306,60 +365,23 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   - 例如：`echo ID` 会被当作 `echo "$ID"` 执行。
   - 使用三引号 """ 或 ''' 包住时，可以输入换行的字符串。
 
-### sh
+### emailext
 
-：用于执行 shell 命令。
+：用于发送邮件。
+- 需要先在 Jenkins 系统配置中配置 SMTP 服务器。
 - 例：
   ```groovy
-  steps {
-      sh "echo Hello"
-      sh 'echo World'
-      sh """
-          A=1
-          echo $A     // 这会读取 Groovy 解释器中的变量 A
+  emailext (
+      subject: "[${currentBuild.fullDisplayName}]的构建结果为${currentBuild.currentResult}",
+      to: '123456@email.com',
+      from: "Jenkins <123456@email.com>",
+      body: """
+          任务名：${env.JOB_NAME}
+          任务链接：${env.JOB_URL}
+          构建编号：${env.BUILD_NUMBER}
+          构建链接：${env.BUILD_URL}
+          构建耗时：${currentBuild.duration} ms
       """
-      sh '''
-          A=1
-          echo $A     // 这会读取 shell 中的变量 A
-      '''
-  }
-  ```
-- 每个 sh 语句会被 Jenkins 保存为一个临时的 x.sh 文件，用 `/bin/bash -ex x.sh` 的方式执行，且切换到该 Job 的工作目录。
-  - 因此各个 sh 语句之间比较独立、解耦。
-  - 因此会记录下执行的每条 shell 命令及其输出。例如执行以下 sh 语句：
-    ```groovy
-    sh """
-        echo Hello 你好         # 建议不要在 sh 语句中通过 echo 命令添加注释，因为该注释会打印一次，执行命令时又会记录一次，而且命令中包含中文时还会转码
-        : 测试开始               # 可通过 : 命令加入注释
-        comment=( 测试开始 )     # 可通过数组加入注释，此时数组内的中文不会转码
-    """
-    ```
-    执行后的 Console Output 为：
-    ```sh
-    + echo Hello $'\344\275\240\345\245\275'
-    Hello 你好
-    + : 测试开始
-    + comment=( 测试开始 )
-    ```
-
-### bat
-
-：用于在 Windows 系统上执行 CMD 命令。
-
-### build
-
-：用于执行一个 Job 。
-- 被执行的 job 称为当前 job 的下游。
-- 例：
-  ```groovy
-  build (
-      job: 'job1',
-      parameters: [
-          string(name: 'AGENT', value: 'master'),  // 这里的 string 是指输入值的类型，可输入给大部分类型的 parameters
-      ]
-      // wait: true,        // 是否等待下游 job 执行完毕，才继续执行当前 job
-      // propagate: true,   // 是否让下游 job 的构建结果影响当前 job 。需要启用 wait 才生效
-      // quietPeriod: 5,    // 设置静默期，默认为 5 秒
   )
   ```
 
@@ -369,6 +391,41 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 - 例：
   ```groovy
   error '任务执行出错'
+  ```
+
+### lock
+
+：用于获取一个全局锁，可避免并发任务同时执行时冲突。
+- 可用范围：steps{}、options{}
+- 该功能由插件 Lockable Resources 提供。
+- 例：
+  ```groovy
+  lock('resource_1') {    // 锁定一个名为 resource-1 的资源。如果该资源不存在则自动创建（任务结束之后会删除）。如果该资源已经被锁定，则一直等待获取
+      sleep 10            // 获取锁之后，执行一些语句
+      echo 'done'
+  }                       // 执行完之后，会自动释放锁定的资源
+  ```
+- lock 函数的可用参数如下：
+  ```groovy
+  lock(resource: 'resource_1',        // 要锁定的资源名
+        // label: 'my_resource',      // 通过标签筛选锁定多个资源
+        // quantity: 0,               // 至少要锁定的资源数量、默认为 0 ，表示锁定所有
+        // variable: 'LOCK',          // 将资源名赋值给一个变量
+        // inversePrecedence: false,  // 如果有多个任务在等待获取锁，是否插队到第一个
+        // skipIfLocked: false        // 如果需要等待获取锁，是否跳过执行
+        ) {
+      ...
+  }
+  ```
+
+### retry
+
+：用于当某段任务执行失败时（不包括语法错误、超时的情况），自动重试。
+- 例：
+  ```groovy
+      sh 'ls /tmp/f1'
+  retry(3) {       // 加上第一次失败的次数，最多执行 3 次
+  }
   ```
 
 ### script
@@ -430,15 +487,41 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   - 执行时可能报错：`RejectedAccessException: Scripts not permitted to use method xxx` \
     需要到 Jenkins 管理页面，点击 `Script Approval` ，批准该方法被脚本调用。
 
-### retry
+### sh
 
-：用于当某段任务执行失败时（不包括语法错误、超时的情况），自动重试。
+：用于执行 shell 命令。
 - 例：
   ```groovy
-      sh 'ls /tmp/f1'
-  retry(3) {       // 加上第一次失败的次数，最多执行 3 次
+  steps {
+      sh "echo Hello"
+      sh 'echo World'
+      sh """
+          A=1
+          echo $A     // 这会读取 Groovy 解释器中的变量 A
+      """
+      sh '''
+          A=1
+          echo $A     // 这会读取 shell 中的变量 A
+      '''
   }
   ```
+- 每个 sh 语句会被 Jenkins 保存为一个临时的 x.sh 文件，用 `/bin/bash -ex x.sh` 的方式执行，且切换到该 Job 的工作目录。
+  - 因此各个 sh 语句之间比较独立、解耦。
+  - 因此会记录下执行的每条 shell 命令及其输出。例如执行以下 sh 语句：
+    ```groovy
+    sh """
+        echo Hello 你好         # 建议不要在 sh 语句中通过 echo 命令添加注释，因为该注释会打印一次，执行命令时又会记录一次，而且命令中包含中文时还会转码
+        : 测试开始               # 可通过 : 命令加入注释
+        comment=( 测试开始 )     # 可通过数组加入注释，此时数组内的中文不会转码
+    """
+    ```
+    执行后的 Console Output 为：
+    ```sh
+    + echo Hello $'\344\275\240\345\245\275'
+    Hello 你好
+    + : 测试开始
+    + comment=( 测试开始 )
+    ```
 
 ### timeout
 
@@ -461,17 +544,6 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   }
   ```
 
-### withEnv
-
-：用于给 sh 语句添加环境变量。
-- 例：
-  ```groovy
-  withEnv(['A=Hello', 'B=World']) {
-        sh 'echo $A $B'
-  }
-  ```
-- 执行 pipeline 时，默认会将环境变量、params 字典、env 字典等变量，通过 withEnv 添加到 sh 语句的环境变量中。
-
 ### withCredentials
 
 ：用于调用 Jenkins 的凭据。
@@ -489,88 +561,16 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   }
   ```
 
-### emailext
+### withEnv
 
-：用于发送邮件。
-- 需要先在 Jenkins 系统配置中配置 SMTP 服务器。
+：用于给 sh 语句添加环境变量。
 - 例：
   ```groovy
-  emailext (
-      subject: "[${currentBuild.fullDisplayName}]的构建结果为${currentBuild.currentResult}",
-      to: '123456@email.com',
-      from: "Jenkins <123456@email.com>",
-      body: """
-          任务名：${env.JOB_NAME}
-          任务链接：${env.JOB_URL}
-          构建编号：${env.BUILD_NUMBER}
-          构建链接：${env.BUILD_URL}
-          构建耗时：${currentBuild.duration} ms
-      """
-  )
-  ```
-
-### checkout
-
-：用于拉取代码。
-- 例：从 Git 仓库拉取代码
-  ```groovy
-  script {
-      checkout([
-          $class: 'GitSCM',
-          branches: [[name: "$BRANCH"]],                    // 切换到指定的分支，也可以填 tag 或 commit ID
-          extensions: [
-                        [$class: 'CleanBeforeCheckout'],    // 清理项目文件，默认启用。相当于 git clean -dfx 加 git reset --hard
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: '.'] // 本地仓库的保存目录，默认为 .
-                      ],
-          userRemoteConfigs: [[
-                      credentialsId: "credential_for_git",  // 登录 git 服务器的凭据，为 Username With Password 类型
-                      url: "$repository_url"                // git 远程仓库的地址
-                      ]]
-      ])
+  withEnv(['A=Hello', 'B=World']) {
+        sh 'echo $A $B'
   }
   ```
-
-- 例：从 SVN 仓库拉取代码
-  ```groovy
-  script {
-      checkout([
-          $class: 'SubversionSCM',
-          locations: [[
-              remote: "$repository_url"
-              credentialsId: 'credential_for_svn',
-              local: '.',                               // 本地仓库的保存目录，默认是创建一个与 SVN 最后一段路径同名的子目录
-              // depthOption: 'infinity',               // 拉取的目录深度，默认是无限深
-          ]],
-          quietOperation: true,                         // 不显示拉取代码的过程
-          workspaceUpdater: [$class: 'UpdateUpdater']   // 使本地目录更新到最新版本
-      ])
-  }
-  ```
-
-### lock
-
-：用于获取一个全局锁，可避免并发任务同时执行时冲突。
-- 可用范围：steps{}、options{}
-- 该功能由插件 Lockable Resources 提供。
-- 例：
-  ```groovy
-  lock('resource_1') {    // 锁定一个名为 resource-1 的资源。如果该资源不存在则自动创建（任务结束之后会删除）。如果该资源已经被锁定，则一直等待获取
-      sleep 10            // 获取锁之后，执行一些语句
-      echo 'done'
-  }                       // 执行完之后，会自动释放锁定的资源
-  ```
-- lock 函数的可用参数如下：
-  ```groovy
-  lock(resource: 'resource_1',        // 要锁定的资源名
-        // label: 'my_resource',      // 通过标签筛选锁定多个资源
-        // quantity: 0,               // 至少要锁定的资源数量、默认为 0 ，表示锁定所有
-        // variable: 'LOCK',          // 将资源名赋值给一个变量
-        // inversePrecedence: false,  // 如果有多个任务在等待获取锁，是否插队到第一个
-        // skipIfLocked: false        // 如果需要等待获取锁，是否跳过执行
-        ) {
-      ...
-  }
-  ```
+- 执行 pipeline 时，默认会将环境变量、params 字典、env 字典等变量，通过 withEnv 添加到 sh 语句的环境变量中。
 
 ## matrix{}
 

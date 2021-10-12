@@ -72,6 +72,7 @@
 - Jenkins 每次执行 Job 时：
   - 先将该 Job 加入构建队列，等待分配某个 node 上的一个执行器（executor）。
     - 如果没有可用的 executor ，则在构建队列中阻塞该 Job 。
+    - 如果构建队列中已存在相同的 build 任务（配置、构建参数相同），则不会将当前任务加入构建队列，甚至不会占用 Build ID 。
   - 默认将当前节点的 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
     - 执行 Job 之前、之后都不会自动清空工作目录，建议用户主动清理。
   - 默认在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。

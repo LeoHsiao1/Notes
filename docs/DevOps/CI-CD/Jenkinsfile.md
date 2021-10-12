@@ -292,6 +292,21 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 在 steps{} 中可以使用多种 DSL 语句。
 - [官方文档](https://www.jenkins.io/doc/pipeline/steps/)
 
+### archiveArtifacts
+
+：用于将指定路径的文件归档。
+- 归档文件会被保存到 master 节点的 `$JENKINS_HOME/jobs/$JOB_NAME/builds/$BUILD_ID/archive/` 目录下。
+  - 可以在 Jenkins 的 job 页面查看、下载归档文件。
+- 例：
+  ```groovy
+  archiveArtifacts artifacts: 'dist.zip'
+  ```
+  - 目标文件的路径可以使用通配符：
+    ```
+    target/*.jar
+    **/*.log
+    ```
+
 ### bat
 
 ：用于在 Windows 系统上执行 CMD 命令。
@@ -635,14 +650,18 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 - 例：
   ```groovy
   options {
-      retry(3)
-      timestamps()                        // 输出信息到终端时，加上时间戳
-      timeout(time: 60, unit: 'SECONDS')
+      buildDiscarder logRotator(daysToKeepStr: '30',          // 限制 build 记录的保留天数
+                                numToKeepStr: '100',          // 限制 build 记录的保留数量
+                                artifactDaysToKeepStr: '10',  // 限制 build 归档文件的保留天数。删除一次 build 记录时，也会删除其包含的 archive
+                                artifactNumToKeepStr: '10')   // 限制 build 归档文件的保留数量
+
       disableConcurrentBuilds()           // 不允许同时执行该 job ，会排队执行
-      buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '300')  // 限制构建记录保留的最多天数、最大数量，超过限制则删除。这可以限制其占用的磁盘空间，但会导致统计的总构建次数减少
-      quietPeriod(5)                     // 设置静默期，默认为 5 秒
-      parallelsAlwaysFailFast()           // 用 matrix{}、parallel{} 执行并发任务时，如果有某个任务失败，则立即放弃执行其它任务
       lock('resource-1')                  // 获取全局锁（此时不支持附加语句块）
+      parallelsAlwaysFailFast()           // 用 matrix{}、parallel{} 执行并发任务时，如果有某个任务失败，则立即放弃执行其它任务
+      quietPeriod(5)                      // 设置静默期，默认为 5 秒
+      retry(3)
+      timeout(time: 60, unit: 'SECONDS')
+      timestamps()                        // 输出内容到终端时，加上时间戳
   }
   ```
   - 通过 API 或上游 job 触发一个 job 时，则会等待一段时间才执行，称为静默期。如果在静默期内多次触发该 job ，则只会执行一次。

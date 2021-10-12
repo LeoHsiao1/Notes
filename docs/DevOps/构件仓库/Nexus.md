@@ -28,12 +28,33 @@
     ```
   - 默认用户名为 admin ，密码记录在 admin.password 文件中。
 
-
 ## 用法
+
+### Web UI
 
 - Nexus 的 Web 页面分为两大区域：
   - Browse ：浏览页面，可以对工件进行浏览（呈树形图）、搜索、上传、删除。
   - Administration ：后台管理。
+
+- 浏览仓库列表：
+
+  ![](./Nexus.png)
+
+### 后台管理
+
+- 在 Repositories 页面可以管理仓库。
+
+- 在 Cleanup Policy 页面可以创建自动清理策略。
+  - 创建策略之后，需要在某个仓库的配置页面采用。
+
+- 在 Capabilities 页面可以启用一些次要功能。
+
+- 在 Task 页面可以创建多种类型的定时任务，例如：
+  ```sh
+  Admin  - Compact blob store                   # 压缩 Blob ，这会释放 deleted 文件的存储空间
+  Docker - Delete unused manifests and images   # 删除未使用的镜像
+  Maven  - Delete SNAPSHOT                      # 删除快照
+  ```
 
 ### 仓库
 
@@ -72,25 +93,9 @@
     - File ：存储在本机的文件系统中。
     - AWS S3
 
-### 配置
-
-- 在 Repositories 页面可以管理仓库。
-
-- 在 Cleanup Policy 页面可以创建自动清理策略。
-  - 创建策略之后，需要在某个仓库的配置页面采用。
-
-- 在 Capabilities 页面可以启用一些次要功能。
-
-- 在 Task 页面可以创建多种类型的定时任务，例如：
-  ```sh
-  Admin  - Compact blob store                   # 压缩 Blob ，这会释放 deleted 文件的存储空间
-  Docker - Delete unused manifests and images   # 删除未使用的镜像
-  Maven  - Delete SNAPSHOT                      # 删除快照
-  ```
-
 ### 访问控制
 
-- Nexus 采用基于角色的访问控制。
+- 采用基于角色的访问控制。
   - 默认禁止匿名用户访问。
   - 每个用户（User）可以分配多个角色（Role），每个角色可以分配多种权限（Privilege）。
 - 权限示例：
@@ -109,4 +114,24 @@
   add       # 通过 HTTP 请求添加工件
   edit
   delete
+  ```
+
+### Restful API
+
+- 关于工件的 API ：
+  ```sh
+  GET     /service/rest/repository/browse/$repository/        # 以 HTML 基本视图显示文件列表
+
+  GET     /service/rest/v1/components?repository=$repository  # 列出某个仓库的工件信息，默认只显示第一页
+  POST    /service/rest/v1/components?repository=$repository  # 上传工件到指定仓库。上传成功时的响应为空
+  GET     /service/rest/v1/components/$component_id           # 获取指定工件的信息，需要指定工件在所有仓库中的唯一 ID
+  DELETE  /service/rest/v1/components/$component_id           # 删除工件
+  ```
+- 例：上传一个二进制文件
+  ```sh
+  curl -X POST 'http://localhost:8081/service/rest/v1/components?repository=test'
+        -u admin:******
+        -F raw.assetN=@f1         # 要上传的文件
+        -F raw.assetN.filename=f1 # 上传之后的文件名
+        -F raw.directory=/        # 上传之后的保存目录
   ```

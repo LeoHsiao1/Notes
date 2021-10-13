@@ -1103,7 +1103,7 @@ server {
   - 当 Nginx 读取完请求的 Headers 之后，才会将该请求计入并发连接数。
   - 以 binary_remote_addr 作为限流的 key 时，每个 key 需要 64bytes 来存储状态信息，因此 10MB 内存可以记录 16W 个 key。
 
-## 关于 TCP 通信
+## 关于 TCP
 
 ### keepalive_requests
 
@@ -1168,7 +1168,7 @@ server {
 - 仅在 sendfile 模式中有效。这样能降低网络 I/O 量，不容易阻塞网络。
 - 如果同时启用 tcp_nodelay ，tcp_nopush ，则最后一个 TCP 包采用 tcp_nodelay ，其它 TCP 包采用 tcp_nopush 。
 
-## 关于 HTTP 通信
+## 关于 HTTP
 
 ### gzip
 
@@ -1284,7 +1284,9 @@ server {
   client_max_body_size    1m;     # 限制请求报文 body 的最大体积。如果超过限制，则返回响应报文：413 Request Entity Too Large 。设置成 0 则取消限制
   ```
 
-### ssl_protocols
+## 关于 HTTPS
+
+### ssl_*
 
 ：关于 HTTPS 协议的配置参数。
 - 可用范围：http、server
@@ -1307,6 +1309,8 @@ server {
       ...
   }
   ```
+- 如果 Nginx 的某个 SSL 端口被多个 server 监听，则会采用默认 server 的 SSL 证书进行 SSL 握手。
+  - 因为在 SSL 握手时，还没有开始 HTTP 通信，所以 Nginx 不能根据 server_name 进行路由。
 - HTTP、HTTPS 协议分别默认采用 TCP 80、443 端口，互不兼容。
   ```sh
   [root@CentOS ~]# curl  https://127.0.0.1:80/    # 不支持向 HTTP 端口发送 HTTPS 请求
@@ -1317,17 +1321,18 @@ server {
   <body bgcolor="white">
   <center><h1>400 Bad Request</h1></center>
   ```
-- 如果 Nginx 的某个 SSL 端口被多个 server 监听，则会采用默认 server 的 SSL 证书进行 SSL 握手。
-  - 因为在 SSL 握手时，还没有开始 HTTP 通信，所以 Nginx 不能根据 server_name 进行路由。
-- OpenSSL ：一个关于 SSL 的开源工具包。
-  - 例：生成 SSL 私钥和自签名证书：
-    ```sh
-    openssl
-            req -x509           # 生成自签名的数字证书，采用 X.509 标准
-            -days 365           # 证书的有效期
-            -newkey rsa:2048    # 使用新生成的密钥
-            -nodes              # no DES ，生成 key 文件时不加密
-            -keyout cert.key    # 保存私钥的文件
-            -out cert.crt       # 保存证书的文件
-    ```
 
+### OpenSSL
+
+：一个关于 SSL 的开源工具包。
+- 例：生成 SSL 私钥和自签名证书：
+  ```sh
+  openssl
+          req -x509           # 生成自签名的数字证书，采用 X.509 标准
+          -days 365           # 证书的有效期
+          -newkey rsa:2048    # 使用新生成的密钥
+          -nodes              # no DES ，生成 key 文件时不加密
+          -keyout cert.key    # 保存私钥的文件
+          -out cert.crt       # 保存证书的文件
+  ```
+- 一般的浏览器不会承认自签名证书，会警告该网站不安全。

@@ -982,11 +982,7 @@ server {
   auth_basic              "";                 # 只要不设置成 auth_basic off; 就会启用认证
   auth_basic_user_file    /etc/nginx/passwd;  # 使用哪个密码文件
   ```
-- 密码文件用于保存一组用户名、哈希密码，可通过 htpasswd 命令生成：
-  ```sh
-  yum install httpd-tools
-  htpasswd -cb  ./passwd leo 123456  # 创建密码文件，添加一个用户及其密码
-  ```
+  - 密码文件用于保存一组用户名、哈希密码，可通过 htpasswd 命令生成。
 
 ### auth_delay
 
@@ -1284,8 +1280,6 @@ server {
   client_max_body_size    1m;     # 限制请求报文 body 的最大体积。如果超过限制，则返回响应报文：413 Request Entity Too Large 。设置成 0 则取消限制
   ```
 
-## 关于 HTTPS
-
 ### ssl_*
 
 ：关于 HTTPS 协议的配置参数。
@@ -1321,18 +1315,3 @@ server {
   <body bgcolor="white">
   <center><h1>400 Bad Request</h1></center>
   ```
-
-### OpenSSL
-
-：一个关于 SSL 的开源工具包。
-- 例：生成 SSL 私钥和自签名证书：
-  ```sh
-  openssl
-          req -x509           # 生成自签名的数字证书，采用 X.509 标准
-          -days 365           # 证书的有效期
-          -newkey rsa:2048    # 使用新生成的密钥
-          -nodes              # no DES ，生成 key 文件时不加密
-          -keyout cert.key    # 保存私钥的文件
-          -out cert.crt       # 保存证书的文件
-  ```
-- 一般的浏览器不会承认自签名证书，会警告该网站不安全。

@@ -811,7 +811,14 @@ module.exports = {
                         },
                         {
                             title: "Nginx",
-                            path: "/Web/Web服务器/Nginx"
+                            path: "/Web/Web服务器/Nginx/Nginx",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "相关命令",
+                                    path: "/Web/Web服务器/Nginx/相关命令"
+                                }
+                            ]
                         },
                         {
                             title: "Tomcat",

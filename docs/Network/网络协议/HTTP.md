@@ -267,7 +267,7 @@ Content-Type: text/html; charset=utf-8
   1. client 发送 Client Hello 消息，包含支持的 TLS 版本、加密算法、一个临时生成的随机数。
   2. server 回复 Server Hello 消息，包含采纳的 TLS 版本、加密算法、一个临时生成的随机数。
       - 再发送 Server Key Exchange 消息，包含 server 的 SSL 公钥。
-      - 再发送 Certificate 消息，包含由 CA 签发的数字证书，用于证明身份。
+      - 再发送 Certificate 消息，包含由 CA 颁发的数字证书，用于证明身份。
       - 可选发送 CertificateRequest 消息，索要 client 的数字证书，实现双向认证。
       - 最后发送 Server Hello Done 消息，表示 Hello 阶段的消息已发送完。
   3. client 收到 server 的数字证书，验证其身份。
@@ -288,12 +288,13 @@ Content-Type: text/html; charset=utf-8
 
 ### CA
 
-- CA（Certificate Authority，证书授权中心）：一些负责签发、管理数字证书的机构，也可以自己部署 CA 服务器。
+- CA（Certificate Authority，证书授权中心）：一些负责颁发、管理数字证书的机构，也可以自己部署 CA 服务器。
 - SSL 数字证书：一个由可信任的 CA 提供的文件。用于证明某个 SSL 公钥，属于某个实体。
   - 主要包含以下信息：
-    - 证书的签发者，即 CA 机构。
-    - 证书的所有者，包括域名、机构名、联系方式等。
-      - 域名中可以使用通配符，比如 *.test.com ，表示所有子级域名都可以使用该证书。
+    - 证书的颁发者，即 CA 机构。
+    - 证书的使用者，包括域名、机构名、联系方式等。
+      - 可以允许多个域名使用同一个证书。
+      - 域名中可以使用通配符，比如 *.test.com ，表示所有子级域名都可以使用该证书，但不会匹配上级域名 test.com 。
     - SSL 公钥
     - 证书的有效期，包括开始时间、截止时间。
   - 数字证书由 CA 的私钥加密，避免伪造。用户可以将证书分享给任何人，后者可以用 CA 的公钥解密，查看其内容。

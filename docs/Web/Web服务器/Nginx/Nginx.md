@@ -1290,8 +1290,8 @@ server {
       listen    443  ssl;                     # 监听时采用 ssl 协议
       server_name localhost;
 
-      ssl_certificate /etc/nginx/cert.crt;       # 数字证书
-      ssl_certificate_key /etc/nginx/cert.key;   # SSL 私钥
+      ssl_certificate /ssl/cert.crt;          # 数字证书
+      ssl_certificate_key /ssl/cert.key;      # SSL 私钥
 
       ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;  # 设置 SSL 加密套件
       ssl_protocols TLSv1 TLSv1.1 TLSv1.2;    # 设置可用的 SSL 协议版本

@@ -23,7 +23,7 @@
 - Web服务器
   - [简介](Web服务器/简介.md)
   - [Nginx](Web服务器/Nginx/Nginx.md)
-    - [相关命令](Web服务器/Nginx/相关命令.md)
+    - [相关概念](Web服务器/Nginx/相关概念.md)
   - [Tomcat](Web服务器/Tomcat.md)
 - CMS
   - [简介](CMS/简介.md)

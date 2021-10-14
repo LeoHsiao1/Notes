@@ -43,8 +43,8 @@ jobs:
     steps:
     - name: Test
       run: |
-        curl https://leohsiao.com/ --connect-timeout 5
-        curl http://leohsiao.com:7700/health --connect-timeout 5
+        curl https://leohsiao.com --connect-timeout 5
+        curl https://meilisearch.leohsiao.com/health --connect-timeout 5
 
   scrap_docs:
     needs: test_website
@@ -56,7 +56,7 @@ jobs:
         API_KEY: ${{ secrets.MEILISEARCH_API_KEY }}
       run: |
         docker run -t --rm \
-          -e MEILISEARCH_HOST_URL='http://leohsiao.com:7700' \
+          -e MEILISEARCH_HOST_URL=https://meilisearch.leohsiao.com \
           -e MEILISEARCH_API_KEY=$API_KEY \
           -v $PWD/etc/docs-scraper.json:/docs-scraper/config.json \
           getmeili/docs-scraper:v0.11.0 pipenv run ./docs_scraper config.json

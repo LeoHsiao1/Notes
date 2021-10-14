@@ -1316,3 +1316,4 @@ server {
   <body bgcolor="white">
   <center><h1>400 Bad Request</h1></center>
   ```
+  - 当用户访问 HTTPS 网站时，浏览器通常会禁止发出 HTTP 请求，比如 chrome 浏览器会报错：`blocked:mixed-content`

@@ -16,11 +16,11 @@ module.exports = {
         }],
         ['vuepress-plugin-meilisearch',
             {
-                hostUrl: 'http://leohsiao.com:7700',
+                hostUrl: 'https://meilisearch.leohsiao.com',
                 apiKey: '57557c7907388a064d88e127e15ac43ce01f9fcb2fb07321d3f3c4ff14d66f92',
                 indexUid: 'docs',
                 placeholder: '',
-                maxSuggestions: 5,
+                maxSuggestions: 6,
                 cropLength: 50,
             }
         ],

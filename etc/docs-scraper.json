@@ -1,7 +1,7 @@
 {
     "index_uid": "docs",
-    "sitemap_urls": ["http://leohsiao.com/sitemap.xml"],
-    "start_urls": ["http://leohsiao.com"],
+    "sitemap_urls": ["https://leohsiao.com/sitemap.xml"],
+    "start_urls": ["https://leohsiao.com"],
     "selectors": {
         "lvl0": {
             "selector": ".sidebar-heading.open",

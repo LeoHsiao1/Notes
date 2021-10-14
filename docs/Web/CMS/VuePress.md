@@ -283,7 +283,7 @@ module.exports = {
     module.exports = {
         plugins: [
             ['sitemap', {
-                hostname: 'http://leohsiao.com'
+                hostname: 'http://test.com'
             }],
         ],
     }
@@ -327,7 +327,7 @@ meilisearch 是一个开源的搜索引擎，采用 Rust 语言开发，借鉴�
     ```sh
     docker run -it --rm \
         --network=host \
-        -e MEILISEARCH_HOST_URL='http://leohsiao.com:7700' \
+        -e MEILISEARCH_HOST_URL='http://test.com:7700' \
         -e MEILISEARCH_API_KEY='$private_key' \
         -v $PWD/etc/docs-scraper.json:/docs-scraper/config.json \
         getmeili/docs-scraper pipenv run ./docs_scraper config.json
@@ -335,9 +335,9 @@ meilisearch 是一个开源的搜索引擎，采用 Rust 语言开发，借鉴�
     这里需要创建 scrape 的配置文件 docs-scraper.json ，如下：
     ```json
     {
-        "index_uid": "docs",                                    // 索引 ID ，用于区分不同的抓取结果
-        "sitemap_urls": ["http://leohsiao.com/sitemap.xml"],
-        "start_urls": ["http://leohsiao.com"],                  // 待抓取的目标网站
+        "index_uid": "docs",                                // 索引 ID ，用于区分不同的抓取结果
+        "sitemap_urls": ["http://test.com/sitemap.xml"],
+        "start_urls": ["http://test.com"],                  // 待抓取的目标网站
         "selectors": {
             "lvl0": {
                 "selector": ".sidebar-heading.open",
@@ -364,12 +364,12 @@ meilisearch 是一个开源的搜索引擎，采用 Rust 语言开发，借鉴�
         plugins: [
             ['vuepress-plugin-meilisearch',
                 {
-                    hostUrl: 'http://leohsiao.com:7700',        // 该 URL 应该能在用户的浏览器上被访问，不能为 localhost
-                    apiKey: '57557c7907388a064d88e127e15a',     // 这里应该使用 public key
+                    hostUrl: 'http://test.com:7700',        // 该 URL 应该能在用户的浏览器上被访问，不能为 localhost
+                    apiKey: '57557c7907388a064d88e127e15a', // 这里应该使用 public key
                     indexUid: 'docs',
-                    placeholder: 'Search as you type...',       // 在搜索栏中显示的占位符
-                    maxSuggestions: 5,                          // 最多显示几个搜索结果
-                    cropLength: 30,                             // 每个搜索结果最多显示多少个字符
+                    placeholder: 'Search as you type...',   // 在搜索栏中显示的占位符
+                    maxSuggestions: 5,                      // 最多显示几个搜索结果
+                    cropLength: 30,                         // 每个搜索结果最多显示多少个字符
                 },
             ],
         ],

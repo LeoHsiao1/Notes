@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /tmp
 Allow: /
 
-Sitemap: http://leohsiao.com/sitemap.xml
+Sitemap: https://leohsiao.com/sitemap.xml

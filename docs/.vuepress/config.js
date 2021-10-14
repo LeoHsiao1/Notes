@@ -8,7 +8,7 @@ module.exports = {
     lang: 'zh-CN',
     plugins: [
         ['sitemap', {
-            hostname: 'http://leohsiao.com'
+            hostname: 'https://leohsiao.com'
         }],
         ['seo', {}],
         ['@vuepress/google-analytics', {
@@ -16,7 +16,7 @@ module.exports = {
         }],
         ['vuepress-plugin-meilisearch',
             {
-                hostUrl: 'http://leohsiao.com:7700',
+                hostUrl: 'https://leohsiao.com:7700',
                 apiKey: '57557c7907388a064d88e127e15ac43ce01f9fcb2fb07321d3f3c4ff14d66f92',
                 indexUid: 'docs',
                 placeholder: '',

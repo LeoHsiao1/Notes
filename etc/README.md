@@ -1,6 +1,6 @@
 # 管理
 
-## 部署方法
+## 部署
 
 - 调试时，只需启动开发环境的服务器：
   ```sh
@@ -15,16 +15,20 @@
   ```
   此时生成的静态文件会保存到 `docs/.vuepress/dist/` 目录下，用 Nginx 代理它们即可。
 
-- 另外，还需要部署 meilisearch 服务器、执行 scrape ，才能使用网站的搜索栏。
+- 另外还需要:
+  - 部署 meilisearch 服务器、执行 scrape ，从而启用网站的搜索栏。
+  - 申请 SSL 证书，供 Nginx 使用。
 
-## 生成目录
+## 配置
+
+### 书籍目录
 
 执行以下命令，会根据 `docs/index.md` 及各书籍目录下的 index.md 文件中的目录，生成 `docs/.vuepress/config.js` 文件中的 nav、sidebar 配置。
 ```sh
 python3 etc/set_sidebar.py
 ```
 
-## 调整字符间距
+### 字符间距
 
 在 Linux 终端执行以下命令，在 `*.md` 文件的中文、英文字符之间插入空格：
 ```sh

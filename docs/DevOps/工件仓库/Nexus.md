@@ -46,15 +46,17 @@
 - 在 Repositories 页面可以管理仓库。
 
 - 在 Cleanup Policy 页面可以创建自动清理策略。
+  - 比如 Last Downloaded Before 策略是删除最后下载日期在 n 天以前的工件，但忽略从未下载的工件。
   - 创建策略之后，需要在某个仓库的配置页面采用。
 
 - 在 Capabilities 页面可以启用一些次要功能。
 
 - 在 Task 页面可以创建多种类型的定时任务，例如：
   ```sh
-  Admin  - Compact blob store                   # 压缩 Blob ，这会释放 deleted 文件的存储空间
-  Docker - Delete unused manifests and images   # 删除未使用的镜像
-  Maven  - Delete SNAPSHOT                      # 删除快照
+  Admin - Cleanup repositories using their associated policies   # 根据 Cleanup Policy 清理各个仓库。默认添加了该任务，每天执行一次
+  Admin - Compact blob store        # 压缩 Blob ，这会释放 deleted 文件的存储空间。建议添加该任务
+  Maven - Delete SNAPSHOT           # 同一快照至少保留 m 个，并根据包名中的时间戳，删除早于 n 天的快照
+  Maven - Delete unused SNAPSHOT    # 删除超过 n 天未使用（包括上传、下载）的快照
   ```
 
 ### 仓库
@@ -83,7 +85,8 @@
   - hosts ：普通仓库。
   - proxy ：对远程仓库的代理和缓存。当用户请求下载一个工件时，先尝试从本地缓存获取。如果不存在，则从远程仓库获取并缓存。
   - group ：组，可以包含多个任意类型的仓库，合并它们的工件。
-    - 例如默认创建了 hosts 类型的 maven-releases、maven-snapshots 仓库， proxy 类型的 maven-central 仓库，并包含于 group 类型的 maven-public 仓库。
+    - 默认创建了 hosts 类型的 maven-releases、maven-snapshots 仓库，proxy 类型的 maven-central 仓库，三者都包含于 group 类型的 maven-public 仓库。
+    - 从 maven-public 仓库下载工件时，会自动到 3 个成员仓库中寻找。但上传工件时，必须区分 maven-releases 和 maven-snapshots 仓库。
 
 - 在 Nexus 底层，仓库需要存储在 Blob 中。
   - Blob 是在本机或云端创建的存储空间。

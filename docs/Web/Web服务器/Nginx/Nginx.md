@@ -21,6 +21,7 @@
         -c /root/nginx.conf # 使用指定的配置文件。默认使用 /etc/nginx/nginx.conf
         -g 'daemon off;'    # 加上指令，这里是要求在前台运行
         -t                  # 不启动，而是测试配置文件的语法是否正确
+        -T                  # 测试配置文件，并打印当前配置
         -s quit             # 让 Nginx 优雅地退出。这会等处理完当前的 HTTP 请求才终止
         -s exit             # 让 Nginx 立即终止
         -s reload           # 重新加载配置文件。这会创建一组新的 worker 进程，而旧的 worker 进程会等处理完旧的 HTTP 请求才终止
@@ -88,8 +89,8 @@
 ```sh
 user  nginx;                                # 启动 Nginx 主进程的用户名，可能需要给该用户分配权限
 worker_processes  1;                        # 启动的 worker 进程数，设置成 auto 则会自动与 CPU 核数相等
-#daemon off;                                # 是否以 daemon 方式运行，默认为 on
-error_log  /var/log/nginx/error.log warn;
+# daemon off;                               # 是否以 daemon 方式运行，默认为 on
+error_log  /var/log/nginx/error.log notice;
 pid        /var/run/nginx.pid;              # 将 Nginx 主进程的 PID 记录到该文件中
 
 events {

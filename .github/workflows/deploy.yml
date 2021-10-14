@@ -56,7 +56,7 @@ jobs:
         API_KEY: ${{ secrets.MEILISEARCH_API_KEY }}
       run: |
         docker run -t --rm \
-          -e MEILISEARCH_HOST_URL='https://leohsiao.com:7700' \
+          -e MEILISEARCH_HOST_URL='http://leohsiao.com:7700' \
           -e MEILISEARCH_API_KEY=$API_KEY \
           -v $PWD/etc/docs-scraper.json:/docs-scraper/config.json \
           getmeili/docs-scraper:v0.11.0 pipenv run ./docs_scraper config.json

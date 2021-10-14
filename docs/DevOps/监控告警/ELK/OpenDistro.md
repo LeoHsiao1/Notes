@@ -84,7 +84,7 @@
   ...
   ```
 
-## Security 插件
+### Security 插件
 
 默认启用了 Security 插件。
 - 它会在初始化 ES 时读取一次 `/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/` 目录下的各个配置文件，随后一直将自身的数据存储在 ES 中名为 .opendistro_security 的索引中。

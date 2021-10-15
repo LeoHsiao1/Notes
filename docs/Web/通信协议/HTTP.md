@@ -226,6 +226,7 @@ Content-Type: text/html; charset=utf-8
 - 3××：表示资源重定向。
   - 301 ：Moved Permanently ，资源被永久移动位置，请客户端重新发送请求到新 URI ，并且以后的请求都这样。
     - 例：客户端访问的 URI 为 /home/login 时，服务器访问 301 响应，并在响应报文的 Headers 中声明新地址 `Location: /home/login/` ，请客户端访问它。
+    - 浏览器会自动处理重定向请求，访问新 URI 。
   - 302 ：Moved Temporarily ，资源被临时移动位置，请客户端重新发送请求到新 URI ，但以后的请求不必使用新 URI 。
   - 303 ：See Other ，资源已找到，但请客户端继续向另一个 URI 发出 GET 请求。
     - 例：当客户端向 /home/login/ 发出 POST 请求进行登录之后，服务器返回 303 报文，让客户端继续向 /home/index.html 发出 GET 请求。

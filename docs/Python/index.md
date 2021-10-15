@@ -37,6 +37,12 @@
   - [♢ http](网络通信/http.md)
   - [♢ urllib](网络通信/urllib.md)
   - [♢ requests](网络通信/requests.md)
+- Django
+  - [Django](Django/Django.md)
+  - [部署](Django/部署.md)
+  - [静态文件](Django/静态文件.md)
+  - [缓存](Django/缓存.md)
+  - [插件](Django/插件.md)
 - 混合开发
   - [简介](混合开发/简介.md)
   - [♢ ctypes](混合开发/ctypes.md)

@@ -353,6 +353,31 @@ module.exports = {
                     ]
                 },
                 {
+                    title: "Django",
+                    children: [
+                        {
+                            title: "Django",
+                            path: "/Python/Django/Django"
+                        },
+                        {
+                            title: "部署",
+                            path: "/Python/Django/部署"
+                        },
+                        {
+                            title: "静态文件",
+                            path: "/Python/Django/静态文件"
+                        },
+                        {
+                            title: "缓存",
+                            path: "/Python/Django/缓存"
+                        },
+                        {
+                            title: "插件",
+                            path: "/Python/Django/插件"
+                        }
+                    ]
+                },
+                {
                     title: "混合开发",
                     children: [
                         {

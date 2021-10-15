@@ -203,7 +203,8 @@ server {
 ### location
 
 ：用于定义 URI 路由规则。
-- 可用范围：server、location ，支持嵌套
+- 可用范围：server、location
+  - location 语句可以嵌套到 location 内，但不支持写在 if 语句内。
 - 语法：
   ```sh
   location [type] URI {
@@ -524,7 +525,7 @@ server {
       proxy_pass  http://127.0.0.1:79/$1;       # 可行，转发到 /1.html
   }
   ```
-- 如果在 `rewrite ... ... break;` 之后使用 proxy_pass ，则将被 rewrite 重写之后的 URI 作为转发结果。
+- 如果在 `rewrite ... ... break;` 之后使用 proxy_pass ，则会将被 rewrite 重写之后的 URI 作为转发结果。
   ```sh
   location /www/ {
       rewrite     1.html  /index.html     break;
@@ -535,22 +536,12 @@ server {
 - 反向代理多个后端服务器时，需要区分发向不同后端服务器的 HTTP 请求。可以通过 URL 的差异进行区分：
   ```sh
   location /www/ {
-      proxy_pass  http://127.0.0.1:79/;         # 转发到 /1.html
+      proxy_pass  http://127.0.0.1:79/;
   }
   location /www2/ {
       proxy_pass  http://127.0.0.1:78/;
   }
   ```
-  或者：
-  ```sh
-  location /www/ {
-      proxy_pass  http://127.0.0.1:79/www/;     # 转发到 /www/1.html
-  }
-  location /www2/ {
-      proxy_pass  http://127.0.0.1:78/www2/;
-  }
-  ```
-  - 此时，可能需要修改 HTML 文件里的所有静态链接，使得客户端向正确的 URL 发出 HTTP 请求。
 
 ### proxy_redirect
 
@@ -581,21 +572,24 @@ server {
   proxy_set_header Connection close;    # 转发 HTTP 请求时，不保持长连接
   ```
   - 如果设置的值是空字符串 '' ，则会删除该字段。
-- 例：
+- 反向代理时的一般设置：
+  ```sh
+  proxy_http_version 1.1;
+  proxy_set_header Host            $host;                       # 同步请求头的 Host 字段，让上游服务器知道客户端请求的实际域名
+  proxy_set_header X-Real-IP       $remote_addr;                # 添加 Header ，记录客户端的真实 IP ，供上游服务器识别
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 添加 Header ，按顺序记录 HTTP 请求经过的各层代理
+  ```
+- 反向代理 websocket 时，需要以下配置：
   ```sh
   map $http_upgrade $connection_upgrade {   # 当 $http_upgrade 取值不为空时，设置 $connection_upgrade 取值为 upgrade
       default  upgrade;
       ''       close;
   }
-
-  proxy_set_header Host            $host;                       # 同步请求头的 Host 字段，让上游服务器知道客户端请求的实际域名
-  proxy_set_header X-Real-IP       $remote_addr;                # 添加 Header ，记录客户端的真实 IP ，供上游服务器识别
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 添加 Header ，按顺序记录 HTTP 请求经过的各层代理
-  proxy_set_header Upgrade         $http_upgrade;               # 反向代理 websocket 时，需要该 Header
-  proxy_set_header Connection      $connection_upgrade;         # 反向代理 websocket 时，需要该 Header
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade    $http_upgrade;
+  proxy_set_header Connection $connection_upgrade;
   ```
-
-- 以下变量只支持被 proxy_set_header 指令使用：
+- 以下变量只支持被 proxy_set_header 指令调用：
   ```sh
   proxy_host                  # proxy_pass 指定的上游服务器的 host:port
   proxy_port

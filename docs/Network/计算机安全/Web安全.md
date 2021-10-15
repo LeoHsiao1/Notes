@@ -22,11 +22,11 @@
 - 原理：
   - 用户访问网站 A 时，一般会保持 session 或留下 cookies 。此时攻击者诱使用户点击网站 B 中的一个链接，该链接是向网站 A 发送一个 HTTP 请求，这样就能冒用用户的身份访问网站 A ，执行冒名操作。
 - 对策：
-  - 服务器检查每个 HTTP 请求的 Referer 字段，如果是跨站发来的请求就拒绝。
-    - 不过这可能拦截从搜索引擎跳转过来的正常用户请求，也无法防御来自同一个域名的伪造请求。
+  - 服务器检查每个 HTTP 请求的 Origin 或 Referer 字段，如果是跨站发来的请求就拒绝。
+    - 不过这可能拦截从搜索引擎跳转过来的正常用户请求，也无法防御客户端故意伪造的请求。
   - 向网页源代码中加入一个随机 token ，当用户发出 HTTP 请求时都要带上该 token ，证明请求是从该网页发出的。
     - 例如在请求的 URL 中加入 token ：`http://www.test.com?csrftoken=123456`
-    - 例如在 POST 表单里加入 token ：`<input type=”hidden” name=”csrftoken” value=”123456”/>`
+    - 例如在 POST 表单里加入 token ：`<input type="hidden" name="csrftoken" value="123456"/>`
 
 ## 关于后端
 

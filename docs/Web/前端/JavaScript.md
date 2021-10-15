@@ -1,3 +1,4 @@
+[toc]
 # JavaScript
 
 ：一个脚本语言，简称为 JS ，主要用于前端开发。
@@ -31,7 +32,7 @@
 - ES6
   - 2015 年发布。
 
-## 用法示例
+## 例
 
 - 可以在标签 `<script>` 之间编写 JS 代码：
   ```html
@@ -200,6 +201,69 @@ if (y.nodeType == 1) {
     document.write(y.nodeName + "<br>");
 }
 ```
+
+## AJAX
+
+：异步 JS 和 XML（Asynchronous JavaScript and XML）
+- 传统的网页是静态网页，每次改变网页内容时都要重新生成一个 HTML 文件，让浏览器重新加载网页。
+  - 使用 AJAX 技术，可以让浏览器在后台向服务器发出请求，然后改变网页的某些内容，实现动态网页。
+  - 使用 AJAX 技术，可以实现异步请求，让 JS 不用等待服务器的响应就继续执行。
+- XMLHttpRequest() 是常用的 JS 异步请求 API ，大部分浏览器都支持。如下：
+    ```js
+    var xhr = new XMLHttpRequest();      // 创建一个 XHR 对象
+    xhr.open("GET", "/tmp/1.txt", true); // 创建一个 GET 请求，true 表示异步请求
+    xhr.send();                          // 发送请求
+
+    xhr.open("POST", "/reply", true);    // 创建一个 POST 请求
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");  // 设置一个 header
+    xhr.send("id=1&name=one");           // 设置 body 并发送请求
+    ```
+
+### CORS
+
+：跨域资源共享（Cross-origin resource sharing），是 W3C 标准定义的一种浏览器功能。
+- 它允许浏览器在访问一个网站时，向其它域名的网站发送 XMLHttpRequest 请求。
+  - 大部分浏览器都支持 CORS 请求。而服务器可能会拒绝接收 CORS 请求，以免用户被 CSRF 攻击。
+- 浏览器将 CORS 请求分为两类：
+  - 简单请求
+    - ：请求方法为 GET、HEAD 或 POST ，并且请求头只能使用以下 Headers ：
+      ```sh
+      Accept
+      Accept-Language
+      Content-Language
+      Last-Event-ID
+      Content-Type      # 只能取值为 application/x-www-form-urlencoded、multipart/form-data、text/plain
+      ```
+    - 工作流程：
+      1. JS 脚本发送一个 XMLHttpRequest 请求。如果浏览器发现它属于 CORS 请求，就自动在请求报文中添加以下形式的 Header ：
+          ```sh
+          Origin: http://test.com    # 说明客户端从哪个网站发出 HTTP 请求
+          ```
+      2. 服务器收到请求报文，根据 Origin 决定是否允许请求。如果允许，则在响应报文中添加以下形式的 Header ：
+          ```sh
+          Access-Control-Allow-Origin: http://test.com      # 允许哪些 Origin ，可以填通配符 *
+          Access-Control-Allow-Credentials: true            # 是否允许发送 cookie ，默认为 false
+          ```
+          如果浏览器发现响应报文中没有包含 Access-Control-Allow-Origin 字段，则认为 CORS 请求失败，不管响应状态码。
+
+  - 非简单请求
+    - 工作流程：
+      1. 先发送一个预检请求（preflight request），申请向服务器发送 CORS 请求。例：
+          ```sh
+          OPTIONS / HTTP/1.1                                # 使用 OPTIONS 请求方法
+          Origin: http://test.com
+          Access-Control-Request-Method: PUT                # 申请额外使用的 CORS 请求方法
+          Access-Control-Request-Headers: Content-Type      # 申请额外使用的 CORS 请求头
+          ```
+      2. 如果服务器通过预检请求，则返回 HTTP 204 响应报文，并添加以下形式的 Header ：
+          ```sh
+          Access-Control-Allow-Origin: http://test.com
+          Access-Control-Allow-Methods: GET, POST, PUT      # 允许额外使用的 CORS 请求方法
+          Access-Control-Allow-Headers: Content-Type        # 允许额外使用的 CORS 请求头
+          Access-Control-Max-Age: 86400                     # 该预检结果的有效时长，单位 s 。在此期间，不用再发送预检请求
+          ```
+      3. 浏览器发现预检通过，才发送 CORS 请求。
+      4. 服务器收到 CORS 请求，返回响应。
 
 ## 绘制图表
 

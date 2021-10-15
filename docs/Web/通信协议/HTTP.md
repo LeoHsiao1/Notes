@@ -138,7 +138,8 @@ ie=UTF-8&wd=1
   Host: www.baidu.com                         # 请求的服务器域名
   Connection: keep-alive                      # 表示本次 HTTP 通信之后怎么处理 TCP 连接，默认为 close 。设置成 keep-alive 则保持连接
   X-Requested-With: XMLHTTPRequest            # 说明该请求是 AJAX 异步请求
-  Referer: HTTPS://www.cnblogs.com/           # 说明客户端从哪个 URL 跳转到当前 URL
+  Origin: http://test.com                     # 说明客户端从哪个网站发出 HTTP 请求
+  Referer: HTTPS://test.com/                  # 说明客户端从哪个 URL 跳转到当前 URL
   Cookie: gid=1311812194.1563255462; t=1
 
   User-Agent: Chrome/75.0.3770.100            # 客户端的信息

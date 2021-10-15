@@ -3,7 +3,7 @@
 - [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/)
 - 主流软件大多提供了自己的 exporter 程序，比如 mysqld_exporter、redis_exporter 。有的软件甚至本身就集成了 exporter 格式的 HTTP API 。
   - 没必要启用所有 exporter ，有的监控指标较少，不如自制。
-- Prometheus 提供了多种编程语言的库，供用户开发 exporter 程序。例如 Python 的第三方库 prometheus-client 。
+  - Prometheus 提供了多种编程语言的库，供用户开发 exporter 程序。例如 Python 的第三方库 prometheus-client 。
 
 ## 集成类型
 
@@ -748,9 +748,9 @@
         # - --web.listen-address=:9216
         # - --web.telemetry-path=/metrics
         - --mongodb.uri=mongodb://127.0.0.1:27017/admin
-        # - --mongodb.collstats-colls=db1.col1,db1.col2   # 监控指定集合
+        - --mongodb.collstats-colls=db1.col1,db1.col2     # 监控指定集合
         # - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
-        # - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的集合
+        # - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的其它集合
       restart: unless-stopped
       ports:
         - 9216:9216
@@ -763,6 +763,12 @@
   mongodb_ss_ok{cl_id="", cl_role="mongod", rs_state="0"} # 服务器是否运行，取值为 1、0 。标签中记录了 Cluster、ReplicaSet 的信息
   mongodb_ss_uptime                                       # 服务器的运行时长，单位为秒
   mongodb_ss_connections{conn_type="current"}             # 客户端连接数
+
+  # 关于 collection
+  {__name__=~'mongodb_.*_storageStats_count'         , database="xx", collection="xx"}  # 文档数
+  {__name__=~'mongodb_.*_storageStats_size'          , database="xx", collection="xx"}  # 体积，单位 bytes
+  {__name__=~'mongodb_.*_storageStats_storageSize'   , database="xx", collection="xx"}  # 占用的磁盘空间
+  {__name__=~'mongodb_.*_storageStats_totalIndexSize', database="xx", collection="xx"}  # 索引的体积
 
   # 关于操作
   delta(mongodb_ss_opcounters[1m])                        # 执行各种操作的数量

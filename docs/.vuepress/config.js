@@ -719,17 +719,23 @@ module.exports = {
                         {
                             title: "Web爬虫",
                             path: "/Web/简介/Web爬虫"
+                        }
+                    ]
+                },
+                {
+                    title: "通信协议",
+                    children: [
+                        {
+                            title: "HTTP",
+                            path: "/Web/通信协议/HTTP"
                         },
                         {
-                            title: "通信协议",
-                            path: "/Web/简介/通信协议/通信协议",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "HTTP",
-                                    path: "/Web/简介/通信协议/HTTP"
-                                }
-                            ]
+                            title: "HTTPS",
+                            path: "/Web/通信协议/HTTPS"
+                        },
+                        {
+                            title: "WebSocket",
+                            path: "/Web/通信协议/WebSocket"
                         }
                     ]
                 },

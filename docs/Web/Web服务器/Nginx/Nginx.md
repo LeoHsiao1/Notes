@@ -113,8 +113,7 @@ http {
     include /etc/nginx/conf.d/*.conf;
 }
 ```
-- 用 `include` 可导入指定文件的内容作为配置。
-- keepalive_timeout 表示客户端 TCP 连接的最大时长（单位为秒），超过该时间之后，Nginx 会关闭连接。
+- 用 `include` 可导入指定文件的内容，加入当前配置。
 
 ### default.conf
 
@@ -569,7 +568,7 @@ server {
 - 默认值：
   ```sh
   proxy_set_header Host $proxy_host;
-  proxy_set_header Connection close;    # 转发 HTTP 请求时，不保持长连接
+  proxy_set_header Connection close;    # 默认对上游服务器禁用 TCP 长连接
   ```
   - 如果设置的值是空字符串 '' ，则会删除该字段。
 - 反向代理时的一般设置：
@@ -684,21 +683,20 @@ server {
 ：用于定义一组上游服务器，按某种策略将请求转发给这些 server 处理，实现负载均衡，高可用。
 - 可用范围：http
 - 例：
-  1. 定义 upstream 。
-      ```sh
-      upstream my_cluster {           # 定义一个 upstream ，名为 my_cluster
-          server 127.0.0.1:81;        # 添加一个 server
-          server 127.0.0.1:82   down;
-          server test.backend.com;
-          server unix:/tmp/backend;
-      }
-      ```
-  2. 将请求转发给 my_cluster 。
-      ```sh
+  ```sh
+  upstream my_cluster {           # 定义一个 upstream ，名为 my_cluster
+      server 127.0.0.1:81;        # 添加一个 server
+      server 127.0.0.1:82   down;
+      server test.backend.com;
+      server unix:/tmp/backend;
+  }
+  server {
+      listen 80;
       location / {
-          proxy_pass    http://my_cluster;
+          proxy_pass  http://my_cluster;  # 将请求转发给上游服务器
       }
-      ```
+  }
+  ```
 - server 的可用参数：
   ```sh
   weight=1          # 权重，默认为 1
@@ -708,20 +706,6 @@ server {
   backup            # 将该 server 标记为备份服务器，当所有非 backup 服务器不可用时才使用它
   down              # 将该 server 标记为不可用
   ```
-
-- 可以配置 Nginx 与上游服务器之间的 TCP 长连接：
-  ```sh
-  upstream my_cluster {
-      server 127.0.0.1:81;
-      server 127.0.0.1:82;
-
-      keepalive 0;              # 限制 Nginx 的每个 worker 进程可以与 upstream 保持的长连接数，默认为 0
-      keepalive_timeout 60s;    # 限制每个长连接的持续时间
-      keepalive_requests 100;   # 限制每个长连接可以传递的请求数，超过该数量时会关闭连接
-  }
-  ```
-  - 默认采用短连接。上游发出响应报文之后，就会主动关闭连接，让 Socket 变成 TIME_WAIT 状态。
-  - 如果启用 keepalive 参数，则实际长连接数超过该值时，Nginx 会关闭最少使用的连接。但由于是 Nginx 主动关闭，会让 Nginx 上的 Socket 变成 TIME_WAIT 状态。
 - 安装第三方模块 lua-nginx-module 之后，可以通过 lua 脚本动态生成 upstream 配置，实现动态路由。
 
 常见的分配策略：
@@ -1096,27 +1080,36 @@ server {
 
 ## 关于 TCP
 
-### keepalive_requests
+### keepalive
 
-：限制每个 TCP 长连接最多可以发送的请求数。（从而限制每个连接占用的最大内存）
-- 可用范围：http、server、location
-- 默认值：
+：用于启用到上游服务器的 TCP 长连接。
+- 可用范围：upstream
+- 例：
   ```sh
-  keepalive_requests 100;
+  keepalive 16;               # 启用长连接，并限制每个 worker 保持的空闲连接数。这并不能控制长连接总数
+  # keepalive_requests 1000;  # 限制每个长连接可以发送的请求数。如果超过，则关闭 TCP 连接
+  # keepalive_time 1h;        # 限制每个长连接的存在时间。如果超过，则在当前 HTTP 请求结束后关闭 TCP 连接
+  # keepalive_timeout 60s;    # 限制每个长连接的空闲时间。如果超过，则关闭 TCP 连接
   ```
-- 如果超过该数量，Nginx 会关闭该 TCP 连接。
+  - 保留的 TCP 长连接较多时，会占用较多内存。
 
-### keepalive_timeout
-
-：限制每个 TCP 长连接的最长持续时间。
-- 可用范围：http、server、location
-- 默认值：
+- 例：启用到上游服务器的长连接
   ```sh
-  keepalive_timeout 75s;
+  upstream my_cluster {
+      server 127.0.0.1:81;
+      server 127.0.0.1:82;
+      keepalive 16;
+  }
+  server {
+      listen 80;
+      location / {
+          proxy_pass  http://my_cluster;
+          proxy_http_version 1.1;
+      }
+  }
   ```
-- 如果超过该时间，Nginx 会关闭该 TCP 连接。
-- 如果该参数设置得过大，则容易遗留大量无用的 HTTP 连接占用资源。
-- 如果需要延长持续时间，比如传输大文件，则建议划分出多个 location 分别设置 keepalive_timeout 。
+  - 默认禁用长连接。上游服务器发出响应报文之后，就会主动关闭连接，让 Socket 变成 TIME_WAIT 状态。
+  - 如果由 Nginx 主动关闭 TCP 连接，则会让 Nginx 上的 Socket 变成 TIME_WAIT 状态。
 
 ### send_timeout
 

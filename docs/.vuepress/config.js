@@ -719,6 +719,17 @@ module.exports = {
                         {
                             title: "Web爬虫",
                             path: "/Web/简介/Web爬虫"
+                        },
+                        {
+                            title: "通信协议",
+                            path: "/Web/简介/通信协议/通信协议",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "HTTP",
+                                    path: "/Web/简介/通信协议/HTTP"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -765,17 +776,6 @@ module.exports = {
                         {
                             title: "后端框架",
                             path: "/Web/后端/后端框架"
-                        },
-                        {
-                            title: "通信协议",
-                            path: "/Web/后端/通信协议/通信协议",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "HTTP",
-                                    path: "/Web/后端/通信协议/HTTP"
-                                }
-                            ]
                         },
                         {
                             title: "身份认证",

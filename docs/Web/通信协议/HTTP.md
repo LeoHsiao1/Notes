@@ -2,34 +2,48 @@
 
 ：超文本传输协议（Hyper Text Transfer Protocol），可以传输文本或文件，是 Web 服务器的核心通信协议。
 
-## 特点
+## 原理
 
 - 属于应用层协议，基于 TCP 通信。
-- 采用 C/S 架构。
-  - 一般的工作流程：客户端发出一个 HTTP 请求报文给服务器，然后服务器返回一个 HTTP 响应报文给客户端。
-- 无连接
-  - ：客户端与服务器通信时不会保持连接，每次通信都要重新建立连接。
-  - 每次通信时，客户端首先与服务器建立 TCP 连接，然后发送 HTTP 请求报文，等服务器返回 HTTP 响应报文之后就断开 TCP 连接。
-  - HTTP1.1 开始支持长连接。
-- 无状态
-  - ：HTTP 协议不会记录通信过程中的任何信息，每次通信都是独立的。
-  - 尽管如此，服务器或客户端的程序可以自己记录通信过程中的一些信息。
-  - 虽然 HTTP 协议不会记录客户端的身份，但服务器可以通过 IP 地址、cookie 辨认不同的客户端。
+- 采用 C/S 架构，工作流程如下：
+  1. client 访问 server 的 TCP 端口，进行 TCP 握手。
+  2. client 发送 HTTP 请求报文。
+  3. server 回复 HTTP 响应报文。
 
 ## 版本
 
-- HTTP 1.0
-  - 版本较老的浏览器可能只支持 HTTP 1.0 。
-- HTTP 1.1
-  - 向下兼容 HTTP 1.0 。
-  - 支持 TCP 长连接，允许客户端使用同一个 TCP 连接多次发送 HTTP 请求报文。
-    - 长连接适用于客户端频繁发出请求的情况，节省服务器反复建立 TCP 连接的耗时。
-    - 服务器应该要限制同时保持的长连接的最大数量。
-- HTTP 2.0
-  - 采用二进制格式传输报文。
-  - 支持 TCP 连接的多路复用，即同一个 TCP 连接中可以发出多个 HTTP 请求。
-  - 支持压缩报文 header 。
-  - 支持服务器主动推送报文到客户端。
+- HTTP 协议存在多个版本，服务器、客户端程序不一定兼容该协议的所有版本、特性。
+
+### HTTP/1.0
+
+- 1996 年发布。
+- 特点：无连接。
+  - ：server 每次回复响应报文之后，server 和 client 就可以断开 TCP 连接。
+  - 因此每次 client 发出请求报文时，都要重新建立 TCP 连接，在网络延迟较大时有明显耗时。
+  - 如果在报文 Headers 中添加 `Connection: keep-alive` ，则会保持 TCP 连接，直到 server 或 client 主动断开连接。
+    - 使用长连接时，可通过一个 TCP 连接先后传输多个 HTTP 报文，避免了 TCP 握手的耗时。
+    - 服务器通常会限制长连接的数量、存在时间。
+
+- 特点：无状态。
+  - ：HTTP 协议不会记录通信过程中的任何信息，每次通信都是独立的。
+  - 尽管如此，server 或 client 的程序可以自己记录通信过程中的一些信息。
+    - 比如 server 可以通过 IP 地址、cookie 记录 client 的身份。
+
+### HTTP/1.1
+
+- 1997 年发布。是目前最常用的版本。
+- 向下兼容 HTTP/1.0 。
+- 默认启用 TCP 长连接，除非在报文 Headers 中添加 `Connection: close` 。
+- 增加 PUT、DELETE 等请求方法。
+- 增加 Host、Upgrade、If-Modified-Since、Cache-Control 等 Headers 。
+
+### HTTP/2.0
+
+- 2015 年发布。
+- 采用二进制格式传输报文。
+- 支持 TCP 连接的多路复用，即同一个 TCP 连接中可以发出多个 HTTP 请求。
+- 支持压缩报文 header 。
+- 支持服务器主动推送报文到客户端。
 
 ## URI
 
@@ -62,26 +76,34 @@ URL 的一般格式为：`protocol://host:port/path/?querystring#fragment`
 
 ## 请求方法
 
-HTTP 1.0 定义了 GET、POST、HEAD 三种请求方法，HTTP 1.1 增加了五种请求方法。
+HTTP/1.0 定义了 GET、HEAD、POST 三种请求方法，HTTP/1.1 增加了六种请求方法。
 
 - GET
   - ：用于请求获得（根据 URL 指定的）资源。
   - 客户端发送 GET 请求报文时，报文的第一行包含了请求的 URL 。服务器一般会将回复的内容放在响应报文的 body 中，发给客户端。
-
+- HEAD
+  - ：与 GET 相似，但要求服务器不返回报文 body 。
 - POST
   - ：用于向（根据 URL 指定的）资源提交数据。比如上传 HTML 表单数据、上传文件。
   - 客户端发送 POST 请求报文时，通常将要提交的数据放在报文 body 中，发给服务器。服务器一般会回复一个状态码为 200 的报文，表示已成功收到。
   - GET 方法常用于只读操作，而 POST 方法常用于写操作。
 
-- HEAD
-  - ：与 GET 相似，但要求服务器不返回报文 body 。
 - PUT
-  - ：与 POST 相似，但常用于更新数据。
-  - 常用于具有幂等性的操作。
+  - ：用于更新资源。
+  - POST 偏向于上传整个资源，而 PUT 偏向于上传资源中的部分数据，覆盖原数据。
 - DELETE
+  - ：用于删除资源。
 - CONNECT
-- TRACE
+  - ：用于与代理服务器建立连接。
 - OPTIONS
+  - ：用于询问指定的 URL 允许使用哪些请求方法。
+  - 服务器可以在响应报文中加入 `Allow: GET, HEAD` 形式的 Header ，作为答复。
+- TRACE
+  - ：用于测试网络连通性。
+  - 要求服务器将 request body 作为 response body 。
+- PATCH
+  - ：用于给资源添加数据。
+  - PUT 偏向于覆盖式更新，通常具有幂等性。而 PATCH 偏向于追加式更新。
 
 ## 报文
 
@@ -229,7 +251,9 @@ Content-Type: text/html; charset=utf-8
   - 504 ：Gateway Timeout ，通常是因为作为网关或代理的服务器，没有及时从上游服务器收到 HTTP 响应报文。
   - 505 ：HTTP Version Not Supported ，服务器不支持该请求报文采用的 HTTP 版本。
 
-## Basic Auth
+## 相关概念
+
+### Basic Auth
 
 ：HTTP 协议定义的一种简单的身份认证方式。
 - 原理：HTTP 客户端将用户名、密码以明文方式发送给 HTTP 服务器，如果服务器认证通过则允许客户端访问，否则返回 HTTP 401 报文。
@@ -246,61 +270,31 @@ Content-Type: text/html; charset=utf-8
 - 优点：过程简单，容易实现。
 - 缺点：将用户名、密码以明文方式传输，容易泄露。
 
-## HTTPS
+### REST
 
-：安全超文本传输协议（Secure Hypertext Transfer Protocol），是基于 SSL/TLS 协议加密通信的 HTTP 协议。
-- HTTP 协议采用明文传输报文，不安全，可能被泄露、篡改。而 HTTPS 协议是在加密信道中传输 HTTP 报文，很安全。
-- HTTPS 协议的工作流程：
-  1. client 访问 server 的 TCP 端口，进行 TCP 握手。
-  2. 进行 SSL 握手，建立加密的通信信道。
-  3. 在加密信道中传输 HTTP 报文。
-- HTTP 服务器默认支持 HTTP 协议，而启用 HTTPS 需要进行一些准备工作：
-  1. 用 OpenSSL 生成一个 .key 文件（包含 SSL 私钥）和一个 .csr 文件（包含 SSL 公钥）。
-  2. 将 .csr 文件提交到 CA ，被 CA 的私钥加密生成数字证书。
-  3. 将数字证书和 .key 文件保存到 server 上，用于 SSL 握手。
+：表述性状态转移（Representational State Transfer）
+- 一种与 HTTP 协议类似的 HTTP API 规范，大致如下：
+  - 将每个资源用一个唯一的 URL 标识。
+  - URL 应该是名词性的，且区分单复数。比如 /students/names 要优于 /students/getName 。
+  - 主要使用 GET、POST、PUT、DELETE 四种 HTTP 方法，实现 CRUD 操作。
+  - 报文 body 通常采用 JSON 格式。
+  - 客户端与服务器之间采用无状态通信，所以客户端的每个请求都应该自带上下文信息。
+- 符合 REST 规范的 API 称为 RESTful API 。
+  - 还有其它的 API 规范，比如模仿数据库的 CRUD 操作。
+- 优点：
+  - 简单易懂，了解 HTTP 协议即可理解 REST 规范。
+  - 服务器与客户端基本解耦。
+- 缺点：
+  - 操作对象不一定是一个具体的资源，不一定适合用 URL 表示。
+  - 只有少数几种 HTTP 方法，不能体现某些特别的操作，比如既需要读、又需要写的操作。
 
-### SSL
+### RPC
 
-- 90 年代，网景公司发布了 SSL（Secure Sockets Layer ，安全套接字层）协议，用于加密传输 HTTP 报文。
-  - SSL 工作在传输层与应用层之间。
-  - SSL 更新到 v3.0 版本时，演化出了更安全的 TLS（Transport Layer Security ，安全传输层）协议，有时也统称为 SSL 协议。
-- TLS 1.2 握手的流程：
-  1. client 发送 Client Hello 消息，包含支持的 TLS 版本、加密算法、一个临时生成的随机数。
-  2. server 回复 Server Hello 消息，包含采纳的 TLS 版本、加密算法、一个临时生成的随机数。
-      - 再发送 Server Key Exchange 消息，包含 server 的 SSL 公钥。
-      - 再发送 Certificate 消息，包含由 CA 颁发的数字证书，用于证明身份。
-      - 可选发送 CertificateRequest 消息，索要 client 的数字证书，实现双向认证。
-      - 最后发送 Server Hello Done 消息，表示 Hello 阶段的消息已发送完。
-  3. client 收到 server 的数字证书，验证其身份。
-      - 再生成一个随机字符串，称为 premaster secret 。用 SSL 公钥加密，放在 Server Key Exchange 消息中，发送给 server 。
-      - 再采用某个加密算法，根据两个随机数和 premaster secret ，生成一个对称加密的会话密钥。然后发送 Change Cipher Spec 消息，表示已生成会话密钥，以后的消息都将加密传输。
-      - 再发送 Finished 消息，表示握手完成。
-  4. server 收到加密字符串，用 SSL 私钥解密。
-      - 再采用同一个加密算法，生成的相同会话密钥。然后发送 Change Cipher Spec 消息。
-      - 再发送 Finished 消息，表示握手完成。
-- TLS 1.3 握手的流程：
-  1. client 发送 Client Hello 消息。
-  2. server 发送数字证书，并生成会话密钥。
-  3. client 验证数字证书，生成会话密钥，发送 Finished 消息。
-- SSL 的缺点：
-  - 每次传输 HTTP 报文时需要加密、解密，消耗更多 CPU 和时间。
-  - 需要 TLS 握手，在网络延迟较大时有明显耗时，导致 HTTPS 网页加载缓慢。
-    - TLS 1.3 握手的步骤比 TLS 1.2 少，因此耗时更短。
-
-### CA
-
-- CA（Certificate Authority，证书授权中心）：一些负责颁发、管理数字证书的机构，也可以自己部署 CA 服务器。
-- SSL 数字证书：一个由可信任的 CA 提供的文件。用于证明某个 SSL 公钥，属于某个实体。
-  - 主要包含以下信息：
-    - 证书的颁发者，即 CA 机构。
-    - 证书的使用者，包括域名、机构名、联系方式等。
-      - 可以允许多个域名使用同一个证书。
-      - 域名中可以使用通配符，比如 *.test.com ，表示所有子级域名都可以使用该证书。
-    - SSL 公钥
-    - 证书的有效期，包括开始时间、截止时间。
-  - 证书由 CA 的私钥加密，避免伪造。用户可以将证书分享给任何人，后者可以用 CA 的公钥解密，查看其内容。
-  - 用浏览器访问 HTTPS 网站时会检查证书，如果请求的域名与证书使用者不匹配，则警告该网站不安全。
-    - 例如通过 IP 访问网站，就不匹配证书。
-  - 证书也可以颁发给 IP 地址，一般的 CA 机构会拒绝颁发给私有 IP 。
-    - 可以用 openssl 创建自签名证书，绑定到私有 IP 。
-    - 可以修改 hosts 文件，将域名解析到私有 IP ，然后访问域名。
+：远程过程调用（Remote Procedure Call）
+- 一种 API 规范，用于在本机代码中调用其它主机上的进程的方法。
+- 常用于分布式系统中，实现不同主机的进程之间的相互调用。
+- RPC 与 REST 的区别：
+  - 两者不是同一层级的概念。
+  - 基于 TCP、UDP、HTTP 等协议都可以实现 RPC 。
+  - 实现 RESTful API 只需要修改 HTTP 服务器的 API 格式 ，而实现 RPC 需要使用一个分布式框架。
+- gRPC ：一个 RPC 框架，基于 HTTP/2 协议，由 Google 公司发布。

@@ -231,7 +231,7 @@ Content-Type: text/html; charset=utf-8
 
 ## Basic Auth
 
-：HTTP 协议定义的一种简单的认证方式。
+：HTTP 协议定义的一种简单的身份认证方式。
 - 原理：HTTP 客户端将用户名、密码以明文方式发送给 HTTP 服务器，如果服务器认证通过则允许客户端访问，否则返回 HTTP 401 报文。
   - 例如，当用户使用 Web 浏览器访问该 HTTP 服务器时，通常会显示一个对话框，要求输入用户名、密码即可。
   - 实际上，HTTP 客户端会将 `username:password` 经过 Base64 编码之后，放在 HTTP header 中发送给 HTTP 服务器。如下：
@@ -243,7 +243,7 @@ Content-Type: text/html; charset=utf-8
     curl http://username:password@127.0.0.1:80
     ```
   - Basic Auth 没有通过 Cookie 记录用户登录状态，因此浏览器重启之后，用户需要重新登录。
-- 优点：认证过程简单，容易实现。
+- 优点：过程简单，容易实现。
 - 缺点：将用户名、密码以明文方式传输，容易泄露。
 
 ## HTTPS

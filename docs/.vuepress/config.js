@@ -681,10 +681,6 @@ module.exports = {
                             path: "/Network/网络协议/Socket"
                         },
                         {
-                            title: "HTTP",
-                            path: "/Network/网络协议/HTTP"
-                        },
-                        {
                             title: "MQTT",
                             path: "/Network/网络协议/MQTT"
                         }
@@ -772,7 +768,14 @@ module.exports = {
                         },
                         {
                             title: "通信协议",
-                            path: "/Web/后端/通信协议"
+                            path: "/Web/后端/通信协议/通信协议",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "HTTP",
+                                    path: "/Web/后端/通信协议/HTTP"
+                                }
+                            ]
                         },
                         {
                             title: "身份认证",

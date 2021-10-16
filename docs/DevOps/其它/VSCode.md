@@ -35,9 +35,10 @@
 ### 设置
 
 - 点击页面左下角的齿轮按钮，即可打开设置页面。
-- 可以进行全局设置，也可以只对某个项目进行设置。
-- 如果对某个项目进行了个性化设置，则会在该项目的根目录下创建一个 .vscode 目录，用于保存设置信息。
+  - 可以进行全局设置，也可以只对某个项目进行设置。
+  - 如果对某个项目进行了个性化设置，则会在该项目的根目录下创建一个 .vscode 目录，用于保存设置信息。
 - 建议的设置：
+  - 启用 Settings Sync 功能，将 VS Code 的主题、快捷键、插件等配置信息备份到云端，跟 GitHub 账号绑定。
   - 在输入代码时时会自动弹出补全窗口，默认可以按 Tab 或 Enter 键进行补全，也可以按 Esc 键忽略。建议在设置中关闭 "Accept Suggestion On Enter" 选项，这样按 Enter 键的作用总是换行。
   - 启用 "Format On Type" 选项，允许在输入换行符时自动格式化代码。再设置手动格式化的快捷键为 `Alt + F` 。
   - 设置 "Run Selected Text in Active Terminal" 的快捷键为 `Shift + Enter` ，便于快速在当前激活的终端中（没有则自动创建）执行光标所在行或选中的内容。
@@ -74,7 +75,6 @@
 - Align by RegEx ：用于自动添加空格以对齐多行中的某个字符，比如对齐注释符号 # 。
 - Beautify ：用于格式化 JS、CSS、HTML 代码。
 - Markdown Preview Enhance ：一个增强型的 Markdown 阅读器，支持实时预览、显示目录、导出成 HTML、PDF 等格式。
-- Settings Sync ：通过 GitHub Gist 备份 VS Code 的主题、快捷键、插件等配置信息。
 - Code Spell Checker ：检查单词拼写错误。建议将它禁用避免干扰，要检查时再启用。
 - hexdump for VSCode ：用于按十六进制查看文件内容，并且右键某个字节可进行修改。
 

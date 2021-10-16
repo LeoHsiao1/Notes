@@ -123,10 +123,10 @@ $ ip
   4 packets transmitted, 4 received, 0% packet loss, time 3003ms
   rtt min/avg/max/mdev = 37.008/37.022/37.044/0.136 ms
   ```
-  - 可见它成功连接到目标主机，显示出 ping 的测试结果。
   - icmp_seq ：表示这是第几个 ICMP 报文。
   - ttl ：ICMP 报文剩下的生存期。
   - time ：发出 ICMP 报文之后，隔了多久才收到回复。
+  - RTT ：往返时间（Round Trip Time），表示从发出数据包到收到回复的耗时。是端到端延迟的两倍。
   - Linux 的 ping 命令默认每隔一秒向目标主机发送一个 ICMP 报文，并且会一直发送，要按 `Ctrl+C` 终止。
 
 - 例：

@@ -333,19 +333,28 @@
   ```
   - 这些参数可以配置全局的，也可以给某个日志源单独配置。
 
-- 可以配置 processors ，在输出日志事件之前进行加工处理：
+- 可以配置 processors ，在输出日志事件之前进行处理：
   ```yml
   processors:
     - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
         when.not.contains.tags: forwarded # 如果该日志不属于转发的
     - add_docker_metadata: ~              # 如果存在 Docker 环境，则自动添加容器、镜像的信息。默认将 labels 中的点 . 替换成下划线 _
     - add_kubernetes_metadata: ~          # 如果存在 k8s 环境，则则自动添加 Pod 等信息
-  #   - drop_event:                       # 丢弃日志事件，如果它满足条件
-  #       when:
-  #         regexp:
-  #           message: "^DEBUG"
-  #   - drop_fields:
-  #       fields: ["cpu.user", "cpu.system"]
+    - drop_event:                         # 丢弃日志事件，如果它满足条件
+        when:
+          regexp:
+            message: "^DEBUG"
+    - drop_fields:                        # 丢弃一些字段
+        ignore_missing: true              # 是否忽略指定字段不存在的错误，默认为 false
+        fields:
+          - cpu.user
+          - cpu.system
+        # when:
+        #     <condition>
+    - rate_limit:
+        limit: 1000/m                     # 限制发送日志事件的速率，时间单位可以是 s、m、h
+        # fields:                         # 设置 fields 时，则考虑指定的所有字段的组合值，对每组不同的值分别限制速率
+        #   - message            
   ```
   - processors 的详细语法见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/defining-processors.html) 。
   - 可以配置全局的 processors ，作用于采集的所有日志事件，也可以给某个日志源单独配置。

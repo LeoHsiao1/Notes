@@ -154,7 +154,7 @@ pipeline {
         string(name: 'file')
     }
     environment {
-        file = file.replaceAll('[^0-9A-Za-z /._-]', '_')  // 替换构建参数中的特殊字符
+        file = file.replaceAll('[^0-9A-Za-z \n/,._-]', '_')     // 替换构建参数中的特殊字符
     }
     ```
 

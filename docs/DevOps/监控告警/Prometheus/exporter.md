@@ -731,6 +731,7 @@
   kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
   kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
   ```
+  - 不支持监控 Topic 占用的磁盘空间。
 
 ### mongodb_exporter
 

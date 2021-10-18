@@ -3908,10 +3908,15 @@ test.py: error: argument --level/-l: expected one argument
 D:\1\test_Python>python test.py --level 1
 False
 1
-##
-##
-##
- 
+
+
+还可以直接获取命令行参数列表：
+import sys
+print(sys.argv)
+
+注意argv[0]是执行的文件名
+
+
 ♢ pyinstaller
 ## pyinstaller：Python的第三方库，用于将Python脚本打包成可执行文件。
 - 安装：pip install pyinstaller

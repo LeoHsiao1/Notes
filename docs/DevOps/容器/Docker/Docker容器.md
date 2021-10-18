@@ -12,19 +12,21 @@ docker run <image> [command]    # 实例化某个镜像，从而创建并运行�
 
             --name <name>       # 设置容器的名字
             -l <key>[=<value>]  # --label ，给容器添加键值对格式的标签，比如 branch=dev 。如果不指定 value ，则默认赋值为 "" 。可以多次使用该选项
+            --privileged        # 特权模式，允许在容器内访问所有设备文件，比如挂载磁盘，甚至可以在容器内运行嵌套的容器
 
             -u <UID>            # 在容器内使用指定的用户（默认为 root）
             -w <path>           # --workdir ，指定容器的工作目录
             --entrypoint 'xx'   # 覆盖 Dockerfile 中的 ENTRYPOINT
+            -e PATH=$PATH:/root       # --env ，设置环境变量（可重复使用该命令选项）
 
-            -p 80:8000               # 将宿主机的 80 端口映射到容器的 8000 端口（可重复使用该命令选项），默认是指 TCP 端口
+            # 关于网络
+            -p 80:8000                # 将宿主机的 80 端口映射到容器的 8000 端口（可重复使用该命令选项），默认是指 TCP 端口
             -p 80:8000/udp            # 映射 UDP 端口
             -p 127.0.0.1:80:8000      # 将宿主机指定网卡的端口 80 映射到容器的端口 8000
             -P                        # 从宿主机上随机选取端口映射到容器暴露的所有端口
             --network <network>       # 将容器连接到指定的 docker 网络（启用该命令选项时，-p 选项会失效）
 
-            -e PATH=$PATH:/root       # --env ，设置环境变量（可重复使用该命令选项）
-
+            # 关于数据卷
             -v /root:/root            # --volume ，将宿主机的 /root 路径挂载到容器的 /root 路径（可重复使用该命令选项）
             -v volume_1:/root         # 将宿主机的 volume_1 数据卷挂载到容器的 /root 路径
 
@@ -34,12 +36,17 @@ docker run <image> [command]    # 实例化某个镜像，从而创建并运行�
             --restart unless-stopped  # 当容器终止时，就自动重启，除非容器是被 docker stop 了
             --restart always          # 当容器终止时，总是会自动重启（即使被 docker stop 了，当 dockerd 重启时又会自动重启该容器）
 
-            # 限制容器占用的 CPU、内存
-            --cpus 2                  # 限制该容器最多使用 2 个 CPU（平均值）
+            # 限制容器占用的系统资源
+            --cpus 1.5                # 限制同时占用 CPU 的核数（平均值）
+            --cpuset-cpus 0,1         # 限制可用的 CPU 核的编号
             --cpu-shares 1024         # 与其它容器抢占 CPU 时的权重（取值为 1~1024）
-            -m 256m                   # 限制最多使用的内存量（超过该值的 2 倍时就会被 OOM 杀死）
+            -m 256m                   # 限制占用的 RAM 内存大小，单位可以是 b、k、m、g 。默认不限制
+            --memory-swap 0           # 限制占用的 RAM + swap 大小。默认取值为 0 ，相当于为 -m 的两倍。为 -1 时，不限制。与 -m 相等时，会禁用 swap
+            --device-read-bps 1kb     # 限制每秒读磁盘的数据量
+            --device-write-bps 1kb    # 限制每秒写磁盘的数据量
+            --device-read-iops 10     # 限制每秒读磁盘的次数
+            --device-write-iops 10    # 限制每秒读磁盘的次数
 
-            --privileged              # 特权模式，允许在容器内访问所有设备文件，比如挂载磁盘，甚至可以在容器内运行嵌套的容器
 ```
 - 例：
   ```sh

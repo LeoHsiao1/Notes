@@ -574,9 +574,10 @@ server {
 - 反向代理时的一般设置：
   ```sh
   proxy_http_version 1.1;
-  proxy_set_header Host            $host;                       # 同步请求头的 Host 字段，让上游服务器知道客户端请求的实际域名
-  proxy_set_header X-Real-IP       $remote_addr;                # 添加 Header ，记录客户端的真实 IP ，供上游服务器识别
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 添加 Header ，按顺序记录 HTTP 请求经过的各层代理
+  proxy_set_header Host              $host;                       # 同步请求头的 Host 字段，让上游服务器知道客户端请求的实际域名
+  proxy_set_header X-Real-IP         $remote_addr;                # 记录客户端的真实 IP
+  proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;  # 按顺序记录该请求经过的每层代理服务器的 IP ，第一个地址是客户端的真实 IP
+  proxy_set_header X-Forwarded-Proto $scheme;                     # 记录该请求与代理服务器之间，采用 http 还是 https 协议
   ```
 - 反向代理 websocket 时，需要以下配置：
   ```sh

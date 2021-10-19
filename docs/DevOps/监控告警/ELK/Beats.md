@@ -266,9 +266,9 @@
 
 ### 部署
 
-1. 下载二进制版：
+1. 用 yum 安装：
     ```sh
-    wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.10.0-linux-x86_64.tar.gz
+    yum install https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.14.0-x86_64.rpm
     ```
 
 2. 启动：
@@ -349,16 +349,32 @@
         fields:
           - cpu.user
           - cpu.system
-        # when:
-        #     <condition>
     - rate_limit:
         limit: 1000/m                     # 限制发送日志事件的速率，时间单位可以是 s、m、h
         # fields:                         # 设置 fields 时，则考虑指定的所有字段的组合值，对每组不同的值分别限制速率
-        #   - message            
+        #   - message
   ```
   - processors 的详细语法见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/defining-processors.html) 。
   - 可以配置全局的 processors ，作用于采集的所有日志事件，也可以给某个日志源单独配置。
   - 配置了多个 processors 时，会按顺序执行。
+  - 支持声明 processors 的触发条件：
+    ```yml
+    processors:
+      - <processor_name>:
+          <parameters>
+          when:
+            <condition>
+      - if:
+          <condition>
+        then:
+          - <processor>:
+              <parameters>
+          - <processor>:
+              <parameters>
+        else:
+          - <processor>:
+              <parameters>
+    ```
 
 ### 采集日志文件
 
@@ -418,7 +434,7 @@
     # clean_removed: true           # 如果日志文件在磁盘中被删除，则从 registry 中删除它
     # clean_inactive: 0s            # 如果日志文件长时间未活动，则从 registry 中删除它。默认不限制时间。其值应该大于 scan_frequency + ignore_older
 
-    # 可以给该日志源单独配置 processors
+    # 给该日志源单独配置 processors
     # processors:
     # - drop_event: ...
   ```

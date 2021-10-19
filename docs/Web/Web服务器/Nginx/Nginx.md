@@ -1082,7 +1082,7 @@ server {
 
 ### keepalive
 
-：用于启用到上游服务器的 TCP 长连接。
+：用于配置到上游服务器的 TCP 长连接。
 - 可用范围：upstream
 - 例：
   ```sh
@@ -1091,6 +1091,10 @@ server {
   # keepalive_time 1h;        # 限制每个长连接的存在时间。如果超过，则在当前 HTTP 请求结束后关闭 TCP 连接
   # keepalive_timeout 60s;    # 限制每个长连接的空闲时间。如果超过，则关闭 TCP 连接
   ```
+
+- Nginx 默认支持长连接。但反向代理时，与上游服务器之间默认不用长连接。
+  - 因此，上游服务器发出响应报文之后，就会主动关闭连接，让 Socket 变成 TIME_WAIT 状态。
+  - 如果由 Nginx 主动关闭 TCP 连接，则会让 Nginx 上的 Socket 变成 TIME_WAIT 状态。
   - 保留的 TCP 长连接较多时，会占用较多内存。
 
 - 例：启用到上游服务器的长连接
@@ -1108,8 +1112,6 @@ server {
       }
   }
   ```
-  - 默认禁用长连接。上游服务器发出响应报文之后，就会主动关闭连接，让 Socket 变成 TIME_WAIT 状态。
-  - 如果由 Nginx 主动关闭 TCP 连接，则会让 Nginx 上的 Socket 变成 TIME_WAIT 状态。
 
 ### send_timeout
 
@@ -1292,14 +1294,13 @@ server {
       ssl_certificate /ssl/cert.crt;          # 数字证书
       ssl_certificate_key /ssl/cert.key;      # SSL 私钥
 
-      ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;  # 设置 SSL 加密套件
-      ssl_protocols TLSv1 TLSv1.1 TLSv1.2;    # 设置可用的 SSL 协议版本
-      ssl_prefer_server_ciphers on;           # 在 SSL 握手时使用 server 的密码
+      # ssl_ciphers HIGH:!aNULL:!MD5;         # 设置 SSL 加密算法
+      # ssl_protocols TLSv1 TLSv1.1 TLSv1.2;  # 设置可用的 SSL 协议版本
+      ssl_prefer_server_ciphers on;           # 在 SSL 握手时使用 server 的加密算法
 
-      # 在一段时间内复用一个 ssSSLl 会话，以节省 SSL 握手的时间
+      # 在一段时间内复用一个 SSL 会话，以节省 SSL 握手的时间
       ssl_session_cache   shared:SSL:10m;     # 设置 SSL 缓存的大小，10M 大概可以存储 40000 个 SSL 会话
       ssl_session_timeout 10m;                # 设置缓存的失效时间
-      ...
   }
   ```
 - 如果 Nginx 的某个 SSL 端口被多个 server 监听，则会采用默认 server 的 SSL 证书进行 SSL 握手。

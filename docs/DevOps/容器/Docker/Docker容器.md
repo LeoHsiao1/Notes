@@ -30,9 +30,10 @@ docker run <image> [command]    # 实例化某个镜像，从而创建并运行�
             -v /root:/root            # --volume ，将宿主机的 /root 路径挂载到容器的 /root 路径（可重复使用该命令选项）
             -v volume_1:/root         # 将宿主机的 volume_1 数据卷挂载到容器的 /root 路径
 
-            # 设置容器的重启策略，即当容器处于 stopped 状态时，是否通过 docker start 重启
-            --restart no              # 总是不会自动重启
-            --restart on-failure      # 当容器异常终止时（不包括 dockerd 重启的情况），才会自动重启
+            # 设置容器的重启策略，即当容器变为 stopped 状态时，是否通过 docker start 重启。
+            # 如果在 10 秒内连续重启，则重启间隔从 100ms 开始，每次增加一倍，最多增加到 1min
+            --restart no              # 不要自动重启，默认这种策略
+            --restart on-failure      # 当容器异常终止时（不包括 dockerd 重启的情况），才会自动重启。该策略还可限制连续重启次数，比如 on-failure:3
             --restart unless-stopped  # 当容器终止时，就自动重启，除非容器是被 docker stop 了
             --restart always          # 当容器终止时，总是会自动重启（即使被 docker stop 了，当 dockerd 重启时又会自动重启该容器）
 

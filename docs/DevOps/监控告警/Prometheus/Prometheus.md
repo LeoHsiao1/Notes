@@ -52,15 +52,15 @@
   ./prometheus
               --config.file /etc/prometheus/prometheus.yml  # 使用指定的配置文件
               # --web.config.file=web.yml                   # web 配置
-              # --web.listen-address '0.0.0.0:9090'         # 监听的地址
-              # --web.external-url 'http://10.0.0.1:9090/'  # 供外部访问的 URL
+              # --web.listen-address 0.0.0.0:9090           # 监听的地址
+              # --web.external-url http://10.0.0.1:9090/    # 供外部访问的 URL
               # --web.enable-admin-api                      # 启用管理员的 HTTP API .比如删除 tsdb 的数据
               # --web.enable-lifecycle                      # 启用 reload、quit 等 HTTP API
 
-              # --storage.tsdb.retention.time=15d         # TSDB 的最大保存时长
-              # --storage.tsdb.retention.size=500GB       # TSDB 的最大保存体积
-              # --query.timeout=2m                        # 每次查询的超时时间
-              # --query.max-samples=50000000              # 每次查询时最多将多少个指标载入内存，如果超过该数量，则查询失败
+              # --storage.tsdb.retention.time=15d           # TSDB 的最大保存时长
+              # --storage.tsdb.retention.size=500GB         # TSDB 的最大保存体积
+              # --query.timeout=2m                          # 每次查询的超时时间
+              # --query.max-samples=50000000                # 每次查询时最多将多少个指标载入内存，如果超过该数量，则查询失败
               --log.format=json
   ```
   - 配置文件 prometheus.yml 主要用于控制 Prometheus 的监控任务，而 Prometheus 自身的运行状态只能通过命令行参数控制。
@@ -98,17 +98,17 @@
 - 在 prometheus.yml 中按如下格式定义一个 job ，即可抓取其它 Prometheus 的数据：
   ```yml
   scrape_configs:
-  - job_name: 'federate'
+  - job_name: federate
     honor_labels: true            # 设置 true ，以保存原指标中的 job 、instance 标签
-    metrics_path: '/federate'
+    metrics_path: /federate
     params:
       match[]:                    # 指定筛选表达式。至少指定一个，指定多个时会分别抓取
         - "{job!=''}"
         - go_goroutines
     static_configs:
       - targets:                  # 目标 Prometheus 的地址
-        - '10.0.0.2:9090'
-        - '10.0.0.3:9090'
+        - 10.0.0.2:9090
+        - 10.0.0.3:9090
   ```
   - 只能抓取目标 Prometheus 最新时刻的指标，就像抓取一般的 exporter 。
   - 如果目标 Prometheus 掉线一段时间，则重新连接之后并不会同步掉线期间的指标。
@@ -125,15 +125,16 @@
       scrape_timeout: 10s           # 每次采集的超时时间。默认为 10s ，不允许超过 scrape_interval
       evaluation_interval: 30s      # 每隔多久执行一次 rules ，默认为 1m
       # external_labels:            # 与 Alertmanager 等外部组件通信时，会加上这些标签
-      #   monitor: 'codelab-monitor'
+      #   monitor: codelab-monitor
 
     # rule_files:                   # 导入 rules 文件
     # - rules_1.yml
 
     scrape_configs:
-    - job_name: 'prometheus'
+    - job_name: prometheus
       static_configs:
-      - targets: ['10.0.0.1:9090']
+      - targets:
+        - 10.0.0.1:9090
     ```
 
 2. 重启 Prometheus 以重新加载配置文件，然后访问其 Web 页面。
@@ -145,9 +146,9 @@
 在 prometheus.yml 中配置需要监控的对象（称为 targets ），格式如下：
 ```yml
 scrape_configs:
-- job_name: 'prometheus'            # 一项监控任务的名字（可以包含多组监控对象）
+- job_name: prometheus              # 一项监控任务的名字（可以包含多组监控对象）
   # honor_labels: false
-  # metrics_path: '/metrics'
+  # metrics_path: /metrics
   # follow_redirects: true          # 是否跟随状态码为 3xx 的重定向
   # scheme: http                    # 通信协议
   # scrape_interval: 30s
@@ -160,13 +161,13 @@ scrape_configs:
   #   insecure_skip_verify: false   # 是否不认证 HTTPS 证书
   static_configs:
   - targets:                        # 一组监控对象的 IP:Port
-    - '10.0.0.1:9090'
-    - '10.0.0.1:9091'
+    - 10.0.0.1:9090
+    - 10.0.0.1:9091
     # labels:                       # 为这些监控对象的数据加上额外的标签
-    #   nodename: 'CentOS-1'
+    #   nodename: CentOS-1
   - targets: ['10.0.0.2:9090']      # 下一组监控对象
 
-- job_name: 'node_exporter'
+- job_name: node_exporter
   file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
   - files:
     - targets/node_exporter*.json
@@ -186,13 +187,13 @@ scrape_configs:
 - 通过 file_sd_configs 方式读取的文件可以是 YAML 或 JSON 格式，如下：
   ```yml
   - targets:
-    - '10.0.0.1:9090'
+    - 10.0.0.1:9090
     labels:
-      nodename: 'CentOS-1'
+      nodename: CentOS-1
   - targets:
-    - '10.0.0.2:9090'
+    - 10.0.0.2:9090
     labels:
-      nodename: 'CentOS-2'
+      nodename: CentOS-2
   ```
   ```json
   [{

@@ -36,11 +36,11 @@
 - 在 Prometheus 的配置文件中加入如下配置，使其抓取 Pushgateway ：
   ```yaml
   scrape_configs:
-  - job_name: 'pushgateway'
+  - job_name: pushgateway
     honor_labels: true
     static_configs:
     - targets:
-      - '10.0.0.1:9091'
+      - 10.0.0.1:9091
   ```
 
 ## 用法

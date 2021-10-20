@@ -83,36 +83,42 @@ alerting:
   alertmanagers:
   - static_configs:
     - targets:
-      - '10.0.0.1:9093'
+      - 10.0.0.1:9093
 ```
 
 alertmanager.yml 的配置示例：
 ```yaml
 global:                           # 配置一些全局参数
   # resolve_timeout: 5m           # 如果 Alertmanager 收到的警报 JSON 中不包含 EndsAt ，则超过该时间之后就认为该警报已解决
-  smtp_smarthost: 'smtp.exmail.qq.com:465'
-  smtp_from: '123456@qq.com'
-  smtp_auth_username: '123456@qq.com'
-  smtp_auth_password: '******'
+  smtp_smarthost: smtp.exmail.qq.com:465
+  smtp_from: 123456@qq.com
+  smtp_auth_username: 123456@qq.com
+  smtp_auth_password: ******
   smtp_require_tls: false
 
-receivers:                        # 定义告警消息的接受者
-- name: 'email_to_leo'
-  email_configs:                  # 只配置少量 smtp 参数，其余的参数则继承全局配置
-  - to: '123456@qq.com'
-    send_resolved: true           # 是否在警报消失时发送 resolved 状态的消息
-  # - to: '123456@163.com'        # 可以指定多个发送目标
-- name: 'webhook_to_leo'
-  webhook_configs:
-  - url: 'http://localhost:80/'
-
-route:
-  receiver: 'email_to_leo'
-
-# templates:                      # 从文件中导入自定义的消息模板
+# templates:                      # 从文件中导入自定义的告警消息模板
 #   - templates/*.tmpl
 
-# inhibit_rules:
+receivers:                        # 定义告警消息的接受者
+- name: email_to_leo
+  email_configs:                  # 只配置少量 smtp 参数，其余的参数则继承全局配置
+  - to: 123456@qq.com
+    # send_resolved: true         # 是否在警报消失时发送 resolved 状态的消息
+    # html: '{{ template "email.default.html" . }}'   # 设置 HTML 格式的邮件 body
+    # text: <template>            # 设置 text 格式的邮件 body
+
+  # - to: 123456@test.com         # 可以指定多个发送地址
+- name: webhook_to_leo
+  webhook_configs:
+  - url: http://localhost:80/
+
+route:
+  receiver: email_to_leo
+
+# inhibit_rules:                  # 设置一些警报之间的抑制关系
+#   - ...
+
+# mute_time_intervals:            # 在某些时间段关闭告警
 #   - ...
 ```
 
@@ -121,14 +127,14 @@ route:
 route 块定义了分组处理警报的规则，如下：
 ```yaml
 route:
-  receiver: 'email_to_leo'        # 只能指定一个接收方
+  receiver: email_to_leo          # 只能指定一个接收方
   group_wait: 1m
   group_interval: 1m
   repeat_interval: 24h
   group_by:                       # 根据标签的值对已匹配的警报进行分组（默认不会分组）
     - alertname
   routes:
-  - receiver: 'webhook_to_leo'
+  - receiver: webhook_to_leo
     # group_by:
     #   - alertname
     match:                        # 符合这些 label:value 条件的警报才算匹配
@@ -137,13 +143,13 @@ route:
       job: prometheus|grafana
       instance: 10.0.0.*
     # continue: false
-  - receiver: 'xxx'
+  - receiver: xxx
     ...
 ```
 - 上例中的大部分参数都不是必填项，最简单的 route 块如下：
   ```yaml
   route:
-    receiver: 'email_to_leo'
+    receiver: email_to_leo
   ```
 - 配置文件中必须要定义 route 块，其中至少要定义一个 route 节点，称为根节点。
   - 在根节点之下可以定义任意个嵌套的 route 块，构成一个树形结构的路由表。

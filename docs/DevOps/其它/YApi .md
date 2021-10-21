@@ -3,12 +3,82 @@
 ：一个 API 管理网站，兼容 swagger 文档，且功能更多。
 - [GitHub](https://github.com/YMFE/yapi)
 - 2018 年由去哪儿网开源。
-- 在开发项目时，可用它管理大量 API 的文档，方便前后端开发人员联调。
-- 支持搜索 API 、分组管理。
-- 支持创建项目、配置环境。
-- 支持创建用户，划分权限。
+- 可用于管理大量 API 的文档，方便前后端开发人员联调。
 
+## 部署
 
+- 用 docker-compose 部署：
+  ```yml
+  version: "3"
+
+  services:
+    mongo:
+      container_name: mongo
+      image: mongo:4.4.10
+      restart: unless-stopped
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: root
+        MONGO_INITDB_ROOT_PASSWORD: ******
+      networks:
+        - net
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ./data:/data/db
+
+    yapi:
+      container_name: yapi
+      image: yapipro/yapi:1.9.5
+      init: true
+      restart: unless-stopped
+      command:
+        - server/app.js
+      networks:
+        - net
+      ports:
+        - 80:80
+      volumes:
+        - ./config.json:/yapi/config.json
+
+  networks:
+    net:
+  ```
+  - 需要调整挂载目录的权限：
+    ```sh
+    chown -R 999 data
+    ```
+  - yapi 的配置文件 config.json 示例：
+    ```json
+    {
+      "port": "80",
+      "closeRegister": true,              // 是否禁止新用户注册。目前 yapi 不支持管理员创建用户
+      "adminAccount": "admin@test.com",   // 管理员的邮箱地址，默认密码为 ymfe.org
+      "db": {
+        "connectString": "mongodb://mongo:27017/yapi?authSource=yapi?authSource=admin",
+        "user": "root",
+        "pass": "******"
+      },
+      "mail": {
+        "enable": true,
+        "host": "smtp.gmail.com",
+        "port": 465,
+        "from": "*",
+        "auth": {
+          "user": "xxx@test.com",
+          "pass": "******"
+        }
+      }
+    }
+    ```
+    - 初次部署时，需要初始化数据库：
+      ```sh
+      docker exec -it yapi node server/install.js
+      ```
+    - 忘记管理员密码时，需要到 MongoDB 中修改密码：
+      ```sh
+      docker exec -it mongo -u root -p
+      use yapi
+      db.user.update({'username':'admin'},{$set:{'password':'******'}});
+      ```
 
 ## Swagger
 

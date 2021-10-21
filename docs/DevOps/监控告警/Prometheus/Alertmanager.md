@@ -96,16 +96,17 @@ global:                           # 配置一些全局参数
   smtp_auth_password: ******
   smtp_require_tls: false
 
-# templates:                      # 从文件中导入自定义的告警消息模板
-#   - templates/*.tmpl
+# templates:                      # 从文件中导入告警消息模板
+#   - templates/*
 
 receivers:                        # 定义告警消息的接受者
 - name: email_to_leo
   email_configs:                  # 只配置少量 smtp 参数，其余的参数则继承全局配置
   - to: 123456@qq.com
-    # send_resolved: true         # 是否在警报消失时发送 resolved 状态的消息
+    # send_resolved: false        # 是否在警报消失时发送 resolved 状态的消息
     # html: '{{ template "email.default.html" . }}'   # 设置 HTML 格式的邮件 body
-    # text: <template>            # 设置 text 格式的邮件 body
+    # headers:
+    #   subject: '[{{.GroupLabels.severity}}] {{.GroupLabels.alertname}}'       # 设置邮件标题
 
   # - to: 123456@test.com         # 可以指定多个发送地址
 - name: webhook_to_leo
@@ -120,6 +121,32 @@ route:
 
 # mute_time_intervals:            # 在某些时间段关闭告警
 #   - ...
+```
+
+### templates
+
+告警消息模板的示例：
+```sh
+{{ define "custom_email" }}                   # 定义一个模板，指定名称
+<!DOCTYPE html>
+<html>
+
+<body>
+<b>目前有 {{ .Alerts | len }} 个警报，其中 {{ .Alerts.Firing | len }} 个为 firing 状态，{{ .Alerts.Resolved | len }} 个为 Resolved 状态。警报列表如下：</b>
+
+{{ range .Alerts.Firing }}                    # 遍历每个 Firing 状态的警报
+<hr style="opacity: 0.5;"/>
+    StartsAt : {{ .StartsAt }}<br />
+    instance : {{ .Labels.instance }}<br />
+    {{ range .Annotations.SortedPairs }}
+        {{ .Name }} : {{ .Value }}<br />
+    {{ end }}
+{{ end }}
+
+</body>
+
+</html>
+{{ end }}                                     # 模板定义结束
 ```
 
 ### route
@@ -139,7 +166,7 @@ route:
     #   - alertname
     match:                        # 符合这些 label:value 条件的警报才算匹配
       job: prometheus
-    match_re:                     # value 采用正则匹配
+    match_re:                     # 采用正则匹配。不过需要完全匹配，而不是部分匹配
       job: prometheus|grafana
       instance: 10.0.0.*
     # continue: false

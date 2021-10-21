@@ -400,10 +400,11 @@ scrape_configs:
   go_goroutines{instance="10.0.0.1:9100"} - go_goroutines{instance="10.0.0.2:9100"}  # 两个矢量中不存在匹配的时间序列，因此运算结果为空
   go_goroutines{instance="10.0.0.1:9100"} - go_gc_duration_seconds_sum{instance="10.0.0.1:9100"}  # 指标名不同，但标签列表相同，依然可以运算
   ```
-  可以按以下格式，对只有部分标签匹配的时间序列进行运算：
+  可以按以下格式，将两个只有部分标签匹配的时间序列进行运算：
   ```sh
   go_goroutines{instance="10.0.0.1:9100"} - on(job) go_goroutines{instance="10.0.0.2:9100"}             # 只考虑 job 标签，则能找到匹配的时间序列
   go_goroutines{instance="10.0.0.1:9100"} - ignoring(instance) go_goroutines{instance="10.0.0.2:9100"}  # 忽略 instance 标签，则能找到匹配的时间序列
+  go_goroutines{instance="10.0.0.1:9100"} and on() hour() == 8                                          # 只获取 8 点时的时间序列
   ```
   以上只是对时间序列进行一对一匹配，可以按下格式进行一对多的匹配：
   ```sh

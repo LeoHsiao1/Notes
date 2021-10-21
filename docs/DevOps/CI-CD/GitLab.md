@@ -17,10 +17,9 @@
       container_name: gitlab
       image: gitlab/gitlab-ce:14.1.5-ce.0
       restart: unless-stopped
-      hostname: 10.0.0.1
+      hostname: gitlab.example.com
       ports:
         - 80:80
-        # - 443:443
       volumes:
         - ./config:/etc/gitlab
         - ./logs:/var/log/gitlab

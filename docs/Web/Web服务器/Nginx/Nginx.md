@@ -532,7 +532,7 @@ server {
   }
   ```
 
-- 反向代理多个后端服务器时，需要区分发向不同后端服务器的 HTTP 请求。可以通过 URL 的差异进行区分：
+- 反向代理多个后端服务器时，可以通过 URL 的差异，区分发向不同后端服务器的 HTTP 请求：
   ```sh
   location /www/ {
       proxy_pass  http://127.0.0.1:79/;
@@ -541,6 +541,7 @@ server {
       proxy_pass  http://127.0.0.1:78/;
   }
   ```
+  - 也可以给多个后端服务器分配不同的子域名，通过 server_name 区分。
 
 ### proxy_redirect
 

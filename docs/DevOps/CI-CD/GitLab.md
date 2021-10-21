@@ -18,24 +18,26 @@
       image: gitlab/gitlab-ce:14.1.5-ce.0
       restart: unless-stopped
       hostname: 10.0.0.1
-      environment:
-        GITLAB_OMNIBUS_CONFIG: |
-          external_url 'http://10.0.0.1'
       ports:
         - 80:80
+        # - 443:443
       volumes:
         - ./config:/etc/gitlab
         - ./logs:/var/log/gitlab
         - ./data:/var/opt/gitlab
   ```
-  - 然后执行 `gitlab-rake "gitlab:password:reset"` ，根据提示输入用户名 root ，即可重置其密码。
+  - 执行 `gitlab-rake "gitlab:password:reset"` ，根据提示输入用户名 root ，即可设置其密码。
+  - 官方 Docker 镜像中集成了多个进程，比如 Nginx、Prometheus、Grafana ，比较臃肿。
 
 ## 配置
 
-- 配置文件默认位于 `/etc/gitlab/gitlab.rb` 。
-- 官方 Docker 镜像中集成了多个进程，比如 Prometheus、Grafana 监控系统，比较臃肿。
-- SMTP 的配置示例：
+- 配置文件默认位于 `/etc/gitlab/gitlab.rb` ，配置示例：
   ```sh
+  external_url "http://gitlab.example.com"
+  # nginx['listen_port'] = 80                 # GitLab 监听的端口。默认会根据 external_url 选择监听的端口、协议
+  # nginx['listen_https'] = false             # 监听的端口是否采用 HTTPS 协议
+
+  # SMTP 配置
   gitlab_rails['smtp_enable']               = true
   gitlab_rails['smtp_domain']               = "exmail.qq.com"
   gitlab_rails['smtp_address']              = "smtp.exmail.qq.com"
@@ -47,10 +49,11 @@
   gitlab_rails['smtp_tls']                  = true
   gitlab_rails['gitlab_email_from']         = 'test@qq.com'
   ```
-  然后执行 `gitlab-rails console` 进入 Ruby 终端，测试发送邮件：
-  ```ruby
-  Notify.test_email('test@qq.com', 'Test Email', 'This is for test.').deliver_now
-  ```
+  - 修改配置文件之后，需要执行 `gitlab-ctl reconfigure` 才能生效，而重启不一定生效。
+  - 可以执行 `gitlab-rails console` 进入 Ruby 终端，测试发送邮件：
+    ```ruby
+    Notify.test_email('test@qq.com', 'Test Email', 'This is for test.').deliver_now
+    ```
 - 登录 GitLab 之后，点击网页右上角的头像下拉框 -> Preferences ，可设置语言、每周起始日、时间偏好。
 - 建议在 admin 页面进行如下配置：
   - 禁止新用户注册。

@@ -51,9 +51,9 @@
     {
       "port": "80",
       "closeRegister": true,              // 是否禁止新用户注册。目前 yapi 不支持管理员创建用户
-      "adminAccount": "admin@test.com",   // 管理员的邮箱地址，默认密码为 ymfe.org
+      "adminAccount": "admin@test.com",   // 管理员的邮箱地址
       "db": {
-        "connectString": "mongodb://mongo:27017/yapi?authSource=yapi?authSource=admin",
+        "connectString": "mongodb://mongo:27017/yapi?authSource=admin",
         "user": "root",
         "pass": "******"
       },
@@ -69,22 +69,33 @@
       }
     }
     ```
-    - 初次部署时，需要初始化数据库：
-      ```sh
-      docker exec -it yapi node server/install.js
-      ```
-    - 忘记管理员密码时，需要到 MongoDB 中修改密码：
-      ```sh
-      docker exec -it mongo -u root -p
-      use yapi
-      db.user.update({'username':'admin'},{$set:{'password':'******'}});
-      ```
+  - 初次部署时，需要初始化数据库：
+    ```sh
+    docker exec -it yapi node server/install.js
+    ```
+  - 忘记管理员密码时，需要到 MongoDB 中修改密码：
+    ```sh
+    docker exec -it mongo -u root -p
+    use yapi
+    db.user.update({'username':'admin'},{$set:{'password':'******'}});
+    ```
+
+## 用法
+
+- 支持搜索 API 。
+- 支持自动生成 Mock 接口。
+  - 当用户调用 Mock 接口时，yapi 会返回一个模拟响应，其中的响应参数是基于 Mock.js 生成的随机值。
+  - 用户可以通过两种方式配置 Mock 响应：
+    - Mock.js 模板
+    - JS 脚本
+- 支持创建多个项目。
+- 支持给一个项目定义多个配置环境，包括域名、Headers、全局变量。
 
 ## Swagger
 
 - Swagger 项目定义了一种接口描述语言，用于编写 HTTP API 的描述文档。
-  - 该文档容易被程序解析，但不方便供人阅读。
   - 该文档采用 JSON 或 YAML 格式。
+  - 该文档容易被程序解析，但不方便供人阅读。
   - 2016 年，Swagger API 规范独立为一个项目，改名为 OpenAPI 。
 - Swagger 项目包含多个工具，比如：
   - [swagger-editor](https://github.com/swagger-api/swagger-editor)
@@ -97,7 +108,7 @@
     - 支持构造 API 的输入参数，测试调用。
   - [swagger-codegen](https://github.com/swagger-api/swagger-codegen)
     - ：一个 Java 程序，用于根据 Swagger 文档，自动生成符合描述的服务器、客户端代码，支持 Java(Spring)、Python(Flask) 等多种语言、框架。
-  - Swagger 提供了多种编程语言的代码库，支持根据项目代码中符合 swagger 规范的注释，自动生成 Swagger 文档。
+  - Swagger 提供了多种编程语言的插件，支持根据项目代码中符合 swagger 规范的注释，自动生成 Swagger 文档。
 - Swagger 文档的部分示例：
   ```yml
   paths:
@@ -120,12 +131,5 @@
             description: "success"
           "405":
             description: "Invalid input"
-        # security:
-        # - user_auth:
-        #   - "write:user"
   ```
-
-
-
-
 

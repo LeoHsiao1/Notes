@@ -582,13 +582,9 @@ server {
   - 如果设置的值是空字符串 '' ，则会删除该字段。
 - 反向代理 websocket 时，需要以下配置：
   ```sh
-  map $http_upgrade $connection_upgrade {   # 当 $http_upgrade 取值不为空时，设置 $connection_upgrade 取值为 upgrade
-      default  Upgrade;
-      ''       close;
-  }
   proxy_http_version 1.1;
   proxy_set_header Upgrade    $http_upgrade;
-  proxy_set_header Connection $connection_upgrade;
+  proxy_set_header Connection Upgrade;
   ```
 - 以下变量只支持被 proxy_set_header 指令调用：
   ```sh
@@ -596,6 +592,11 @@ server {
   proxy_port
   proxy_add_x_forwarded_for   # 取值等于请求头的 字段，加上 $remote_addr 值，用逗号分隔
   ```
+- 如下，Nginx 有些指令支持多次配置，但不支持部分继承。如果当前作用域没有配置该指令，则继承自上级作用域，否则不继承。
+  - proxy_set_header
+  - add_header
+  - limit_req
+  - limit_conn
 
 ### proxy_buffering
 

@@ -132,4 +132,3 @@
           "405":
             description: "Invalid input"
   ```
-

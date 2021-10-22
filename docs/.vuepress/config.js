@@ -1277,6 +1277,10 @@ module.exports = {
                         {
                             title: "VS Code",
                             path: "/DevOps/其它/VSCode"
+                        },
+                        {
+                            title: "YApi",
+                            path: "/DevOps/其它/YApi"
                         }
                     ]
                 }

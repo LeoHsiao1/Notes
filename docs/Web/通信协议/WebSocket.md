@@ -6,7 +6,7 @@
 
 - 属于应用层协议，基于 TCP 通信。
 - 通过 HTTP 协议握手，步骤如下：
-  1. 客户端发出一个 HTTP/1.1 请求，请求头包含 `Upgrade: websocket` 和 `Connection: Upgrade` ，表示切换到 WebSocket 协议。
+  1. 客户端发出一个 GET 请求，采用 HTTP/1.1 协议，请求头包含 `Upgrade: websocket` 和 `Connection: Upgrade` ，表示切换到 WebSocket 协议。
   2. 服务器返回一个响应报文，状态码为 101 (Switching Protocols) 。
   3. 双方通过该 HTTP 端口建立 TCP 长连接，进行全双工通信。
 - URL 分为两种格式：

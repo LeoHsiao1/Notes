@@ -1,13 +1,13 @@
 # Open Distro
 
-- ELK 系统的普通发行版称为 OSS ，收费版本称为 X-Pack 。
+- ELK 系统分为社区版 OSS ，和收费版 X-Pack 。
   - Elastic 公司加大了商业化的程度，逐渐对软件的部分功能收费，导致 OSS 版缺少一些重要功能，比如身份认证、用户权限控制、告警。
 - 2019 年，AWS 公司创建了 Open Distro for Elasticsearch 项目，通过给 ES、Kibana 软件安装一些插件，以完全开源的方式扩展其功能。
   - [官方文档](https://opendistro.github.io/for-elasticsearch-docs/)
   - 功能、配置有些小差异，这是为了回避 Elastic 公司的版权。
 - 2021 年初，Elastic 公司宣布从 v7.11 版本开始，将 ES、Kibana 项目的开源协议从 Apache V2 改为 SSPL 。
   - SSPL 是一种未被 OSI（Open Source Initiative）组织认可的开源协议，禁止用户将该软件作为服务出售，除非购买商业许可证。
-  - 对此，AWS 公司宣布从 ES、Kibana 分叉出 OpenSearch 项目，取代之前的 Open Distro for Elasticsearch 项目，采用 Apache V2 开源协议。
+  - 对此，AWS 公司宣布从 ES、Kibana 分叉出 [OpenSearch](https://opensearch.org) 项目，取代之前的 Open Distro for Elasticsearch 项目，采用 Apache V2 开源协议。
 
 ## 部署
 

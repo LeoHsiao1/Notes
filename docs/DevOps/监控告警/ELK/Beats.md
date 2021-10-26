@@ -11,7 +11,6 @@
   - ES
   - Logstash
   - Kafka
-    - 比如日志的并发量太大时，可以将采集的数据先发送到 Kafka 消息队列，然后让 Logstash 从中拿取数据。
   - Redis
   - File
   - Console
@@ -300,7 +299,7 @@
     path: ${path.config}/modules.d/*.yml
   ```
 
-- 可以将日志事件输出到多种目标：
+- 日志事件支持多种输出端：
   ```yml
   # 输出到终端，便于调试
   # output.console:
@@ -317,9 +316,16 @@
   #   password: '******'
   #   index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
 
-  # 如果直接连接到 Kibana ，则需要以下配置
-  # setup.kibana:
-  #   host: '10.0.0.1:5601'
+  # 输出到 kafka
+  # output.kafka:
+  #   hosts:
+  #     - 10.0.0.1:9092
+  #   topic: '%{[fields.project]}_log'
+  #   partition.random:             # 随机选择每个消息输出的 kafka 分区
+  #     reachable_only: true        # 是否只输出到可访问的分区。默认为 false ，可能输出到所有分区，如果分区不可访问则阻塞
+  #   compression: none             # 消息的压缩格式，默认为 gzip
+  #   keep_alive: 10                # 保持 TCP 连接的时长，默认为 0 秒
+  #   max_message_bytes: 10485760   # 限制单个消息的大小为 10M ，超过则丢弃
   ```
   - 同时只能启用一种输出端。
 

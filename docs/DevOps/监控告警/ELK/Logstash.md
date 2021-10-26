@@ -128,8 +128,16 @@
         # client_inactivity_timeout => 60       # 如果 beats 连续多久未活动，则关闭 TCP 连接，单位为秒
         # codec => "plain"                      # 设置处理输入数据的格式。默认为 plain
         # include_codec_tag => true             # 是否给数据添加一个 tag ，记录 codec 信息。默认为 true ，使得每个日志事件都有一个 beats_input_codec_plain_applied 标签
-
       }
+      # kafka {             # 从 kafka 获取消息
+      #   bootstrap_servers       => "localhost:9092"
+      #   auto_commit_interval_ms => 5000
+      #   auto_offset_reset       => "latest"
+      #   codec                   => "json"
+      #   consumer_threads        => 1
+      #   group_id                => "logstash"
+      #   topics_pattern          => "logstash.*"  # 根据正则表达式，订阅一些 topic
+      # }
     }
 
     # filter {

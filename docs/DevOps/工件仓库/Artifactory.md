@@ -28,7 +28,7 @@
       ports:
         - 8082:8082
       volumes:
-        - ./artifactory:/var/opt/jfrog/artifactory
+        - ./data:/var/opt/jfrog/artifactory
   ```
   - 需要调整挂载目录的权限：
     ```sh

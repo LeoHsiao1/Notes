@@ -38,15 +38,18 @@ ELK 系统还可以选择加入以下软件：
 
 ### 工作流程
 
-ELK 的主要工作流程如下：
-1. Beats 采集日志，然后发送到 Logstash 。
-2. Logstash 将日志解析成结构化数据，然后发送到 ES 中存储。
-3. 用户使用 Kibana ，从 ES 中查询日志数据并展示。
+- ELK 的主要工作流程：
+  1. 在每个主机上部署 Beats 进程，自动采集日志，然后发送到 Logstash 。
+  2. Logstash 将日志解析成 JSON 格式，然后发送到 ES 中存储。
+  3. 用户使用 Kibana ，从 ES 中查询日志数据并展示。
 
-关于 Logstash 与 Beats ：
-- 早期，是用 Logstash 采集日志然后发送到 ES 中存储。
-- 后来，由于 Logstash 消耗内存较多，采集日志的效率较低，因此开发了轻量级的 Beats 程序来取代 Logstash 。
-- 但是，Beats 不擅长解析日志文本。因此虽然 Beats 可以直接将原始日志发送到 ES ，但通常还是先发送到 Logstash 进行解析。
+- 考虑到整个工作流程的耗时，用户查看最新日志时存在大概 2s 的延迟。而且 Kibana 本身刷新网页需要几秒耗时。
+
+- 关于 Logstash 与 Beats ：
+  - 早期，是用 Logstash 采集日志然后发送到 ES 中存储。
+  - 后来，由于 Logstash 消耗内存较多，采集日志的效率较低，因此开发了轻量级的 Beats 程序来取代 Logstash 。
+    - Beats 不擅长解析日志文本。因此通常不会让 Beats 直接将原始日志发送到 ES ，而是先发送到 Logstash 进行解析，再由 Logstash 发送到 ES 。
+    - 如果日志的并发量太大，可以让 Beats 将采集的日志先发送到 Kafka 缓冲，然后让 Logstash 从 Kafka 获取数据。
 
 ## 相关概念
 

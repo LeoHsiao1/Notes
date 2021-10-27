@@ -323,7 +323,7 @@
   #   topic: '%{[fields.project]}_log'
   #   partition.random:             # 随机选择每个消息输出的 kafka 分区
   #     reachable_only: true        # 是否只输出到可访问的分区。默认为 false ，可能输出到所有分区，如果分区不可访问则阻塞
-  #   compression: none             # 消息的压缩格式，默认为 gzip
+  #   compression: gzip             # 消息的压缩格式，默认为 gzip 。设置为 none 则不压缩
   #   keep_alive: 10                # 保持 TCP 连接的时长，默认为 0 秒
   #   max_message_bytes: 10485760   # 限制单个消息的大小为 10M ，超过则丢弃
   ```

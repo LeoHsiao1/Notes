@@ -358,10 +358,11 @@ pipeline 的语法与 Ruby 相似，特点如下：
   ```sh
   if [timestamp] {
     date {
-      match => ["timestamp", "UNIX", "UNIX_MS", "ISO8601", "yyyy-MM-dd HH:mm:ss.SSSZ"]   # 指定源字段，然后可以指定多个尝试匹配的时间字符串格式
+      match => ["timestamp", "ISO8601", "yyyy-MM-dd HH:mm:ss.SSSZ", "UNIX", "UNIX_MS"]   # 指定源字段，然后可以指定多个尝试匹配的时间字符串格式
       remove_field => ["timestamp"]
       # target => "@timestamp"                      # 将解析之后的时间保存到该字段。如果该字段已存在，则覆盖它
       # tag_on_failure => ["_dateparsefailure"]
+      timezone => "Asia/Shanghai"                   # 如果没有从源字段解析出时区，则采用该默认时区
     }
   }
   ```

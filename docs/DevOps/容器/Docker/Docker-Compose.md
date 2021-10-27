@@ -21,7 +21,7 @@
 
 ```sh
 docker-compose
-            -f <file>                 # 指定 compose 文件（默认使用当前目录下的 docker-compose.yml）
+            -f <file>                 # 指定 compose 文件。默认会在当前目录及祖父目录寻找 docker-compose.yml 文件
 
             up [service]...           # 启动服务，即创建并启动容器（会检查 compose 文件，如果配置变化则删除容器再重新创建）
                 -d                    # 以 daemon 方式运行（否则会阻塞当前终端）

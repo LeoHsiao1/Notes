@@ -3,7 +3,7 @@
 ：一个 Web 网站，用于托管 Git 仓库。
 - [官方文档](https://docs.gitlab.com/ee/)
 - 采用 Ruby 开发，基于 Rails 框架。
-- 可以访问公网上的 GitLab 官方网站，也可以自己部署。
+- 可以访问公网上的 GitLab 官方网站，也可以自己部署社区版（CE）或企业版（EE）。
 - 除了托管 Git 仓库，还提供了 Issue、任务看板、Wiki、CI/CD、WebIDE 等丰富的功能。
 
 ## 部署
@@ -15,18 +15,25 @@
   services:
     gitlab:
       container_name: gitlab
-      image: gitlab/gitlab-ce:14.1.5-ce.0
+      image: gitlab/gitlab-ee:14.3.3-ee.0
       restart: unless-stopped
       hostname: gitlab.example.com
       ports:
         - 80:80
       volumes:
         - ./config:/etc/gitlab
-        - ./logs:/var/log/gitlab
         - ./data:/var/opt/gitlab
+        - ./logs:/var/log/gitlab
   ```
   - 执行 `gitlab-rake "gitlab:password:reset"` ，根据提示输入用户名 root ，即可设置其密码。
-  - 官方 Docker 镜像中集成了多个进程，比如 Nginx、Prometheus、Grafana ，比较臃肿。
+  - 官方 Docker 镜像中集成了多个进程，比如 Nginx、Prometheus、Grafana ，比较臃肿，启动时需要几分钟。
+
+- GitLab 企业版增加了少许功能。
+  - 与社区版兼容。部署企业版时，如果未激活，则只能使用社区版的功能。
+  - 激活步骤：
+    1. 部署 gitlab-ee 。
+    2. 进入 admin 页面，点击 Subscription ，输入激活码，或者上传许可证文件。
+  - [破解教程](https://conf.top/post/506/)
 
 ## 配置
 

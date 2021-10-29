@@ -69,15 +69,16 @@ Web 页面示例：
   - Maven
 
 - 节省存储空间的措施：
-  - Maven、Gradle 等类型的仓库，可以设置 “Max Unique Snapshots” 参数，只保留每个工件版本最大的 n 个快照（SNAPSHOT）。
+  - Maven、Gradle 等类型的仓库，可以设置 "Max Unique Snapshots" 参数，只保留每个工件版本最大的 n 个快照（SNAPSHOT）。
   - Artifactory Pro 版可以安装 artifactCleanup 插件，定时删除本地仓库中未使用的文件。
-  - Remote 类型的仓库可以设置 “Unused Artifacts Cleanup Period” 参数，将 n 小时未使用的缓存标记为 Unused 。然后在高级设置 Advanced -> Maintenance 页面，设置定时执行 “Cleanup Unused Cached Artifacts” 。
+  - Remote 类型的仓库可以设置 "Unused Artifacts Cleanup Period" 参数，将 n 小时未使用的缓存标记为 Unused 。然后在高级设置 Advanced -> Maintenance 页面，设置定时执行 "Cleanup Unused Cached Artifacts" 。
+  - 默认启用了 Backup 任务，每日备份所有数据库，可在设置页面取消。
 
 ### 访问控制
 
 - 采用基于角色的访问控制。
 - 默认定义了一个匿名用户（anonymous），代表没有登录的用户。
-  - 可以在 Security -> Settings 页面中允许 “Allow Anonymous Access” 。
+  - 可以在 Security -> Settings 页面中允许 "Allow Anonymous Access" 。
 
 ### Restful API
 

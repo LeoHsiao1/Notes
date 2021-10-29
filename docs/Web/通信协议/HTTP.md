@@ -259,14 +259,12 @@ Content-Type: text/html; charset=utf-8
   - 504 ：Gateway Timeout ，通常是因为作为网关或代理的服务器，没有及时从上游服务器收到 HTTP 响应报文。
   - 505 ：HTTP Version Not Supported ，服务器不支持该请求报文采用的 HTTP 版本。
 
-## 相关概念
-
-### Basic Auth
+## Basic Auth
 
 ：HTTP 协议定义的一种简单的身份认证方式。
 - 原理：HTTP 客户端将用户名、密码以明文方式发送给 HTTP 服务器，如果服务器认证通过则允许客户端访问，否则返回 HTTP 401 报文。
   - 例如，当用户使用 Web 浏览器访问该 HTTP 服务器时，通常会显示一个对话框，要求输入用户名、密码即可。
-  - 实际上，HTTP 客户端会将 `username:password` 经过 Base64 编码之后，放在 HTTP header 中发送给 HTTP 服务器。如下：
+  - 实际上，HTTP 客户端会将 `username:password` 经过 Base64 编码之后，放在 HTTP Header 中发送给 HTTP 服务器。如下：
     ```sh
     curl 127.0.0.1 -H "Authorization: Basic YWRtaW46MTIzNA=="
     ```
@@ -276,33 +274,4 @@ Content-Type: text/html; charset=utf-8
     ```
   - Basic Auth 没有通过 Cookie 记录用户登录状态，因此浏览器重启之后，用户需要重新登录。
 - 优点：过程简单，容易实现。
-- 缺点：将用户名、密码以明文方式传输，容易泄露。
-
-### REST
-
-：表述性状态转移（Representational State Transfer）
-- 一种与 HTTP 协议类似的 HTTP API 规范，大致如下：
-  - 将每个资源用一个唯一的 URL 标识。
-  - URL 应该是名词性的，且区分单复数。比如 /students/names 要优于 /students/getName 。
-  - 主要使用 GET、POST、PUT、DELETE 四种 HTTP 方法，实现 CRUD 操作。
-  - 报文 body 通常采用 JSON 格式。
-  - 客户端与服务器之间采用无状态通信，所以客户端的每个请求都应该自带上下文信息。
-- 符合 REST 规范的 API 称为 RESTful API 。
-  - 还有其它的 API 规范，比如模仿数据库的 CRUD 操作。
-- 优点：
-  - 简单易懂，了解 HTTP 协议即可理解 REST 规范。
-  - 服务器与客户端基本解耦。
-- 缺点：
-  - 操作对象不一定是一个具体的资源，不一定适合用 URL 表示。
-  - 只有少数几种 HTTP 方法，不能体现某些特别的操作，比如既需要读、又需要写的操作。
-
-### RPC
-
-：远程过程调用（Remote Procedure Call）
-- 一种 API 规范，用于在本机代码中调用其它主机上的进程的方法。
-- 常用于分布式系统中，实现不同主机的进程之间的相互调用。
-- RPC 与 REST 的区别：
-  - 两者不是同一层级的概念。
-  - 基于 TCP、UDP、HTTP 等协议都可以实现 RPC 。
-  - 实现 RESTful API 只需要修改 HTTP 服务器的 API 格式 ，而实现 RPC 需要使用一个分布式框架。
-- gRPC ：一个 RPC 框架，基于 HTTP/2 协议，由 Google 公司发布。
+- 缺点：通过 HTTP Header 将用户名、密码以明文方式传输，容易泄露。

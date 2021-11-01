@@ -23,7 +23,7 @@
   services:
     grafana:
       container_name: grafana
-      image: grafana/grafana:8.1.5
+      image: grafana/grafana:8.2.2
       restart: unless-stopped
       ports:
         - 3000:3000
@@ -56,7 +56,7 @@
 ：面板，是 Grafana 的基本显示模块。每个 Panel 显示一个图表。
 - 当 Panel 进入浏览器的显示范围时，Grafana 才开始加载它，从而节省开销。
 - 一个 Panel 中存在多个图例（legend）的曲线时，用鼠标单击某个图例的名字，就会只显示该图例的曲线。按住 Ctrl 再单击，就可以同时选择多个图例。
-- 修改 Panel 时，是以 Dashboard 为单位进行修改，要点击"Save Dashboard"才会保存。
+- 修改 Panel 时，是以 Dashboard 为单位进行修改，要点击 Save 才会保存。
   - 比如调整一个 Dashboard 显示的时间范围（time range）时，会影响到该 Dashboard 中的所有 Panel 。
 - 用鼠标横向拖动选中 Panel 中的一块区域，可以缩小 time range ；按 Ctrl+Z 可以放大 time range 。
   - 注意 time range 过大时，可能显示不出曲线的瞬时变化，需要缩小 time range 进行查看，即放大局部曲线。
@@ -85,15 +85,23 @@
 ### Visualization
 
 ：Panel 的显示样式。主要包括：
-- Graph ：曲线图。适用于显示时间序列形式的数据，可以方便地看出数据的变化历史。
+- Graph ：曲线图。
+  - 适合显示呈时间序列的数据，方便看出数据的变化历史。
   - 输入的数据包含多个图例时，会显示成多条曲线。
   - 启用 Stack 选项，会将多个曲线堆叠显示。再启用 Percent 选项，则会将它们按百分比显示。
-- Stat ：显示单个字段的值，可以选择在背景中显示其变化曲线。
-  - 输入的数据包含多个图例时，会显示成多行值。
-- Gauge ：显示单个字段的值，并在背景中显示其取值范围。
+- Time Series ：时间序列。
+  - v8 版本新增的图表，用于取代 Graph 图表。
+- Stat ：数值。适合显示单个图例的值，还可以选择在背景中显示其变化曲线。
+- Gauge ：度量。适合显示单个图例的值，并在背景中显示其取值范围。
 - Bar Gauge ：条形图。
+- Pie Chart ：饼状图。
 - Table ：表格。
-- Heatmap ：热图。适用于显示大量同类型数据，可以方便地看出各种数值的分布位置。
+- Heatmap ：热图。适合显示大量同类型数据，方便看出各种数值的分布位置。
+- Geomap ：地图。
+  - v8.1 版本新增的图表。
+  - 支持根据经纬度坐标，在地图上给每个 ip 描点。
+  - 当用户浏览时，会向第三方网站发出 GET 请求，获取地图图片。
+- Text ：显示一段文本，支持 Markdown 格式。
 
 ### Axes
 
@@ -220,7 +228,6 @@
   ```
 - 常用插件：
   - Zabbix 插件：用于分析 Zabbix 的监控数据，包含 Dashboard 模板。
-  - Pie Chart 插件：支持绘制饼状图。
   - grafana-image-renderer 插件
     - ：运行一个 Chromium 无头浏览器，用于生成 Grafana 图表的 PNG 截图，常用于告警邮件。
     - 建议用 docker-compose 部署：

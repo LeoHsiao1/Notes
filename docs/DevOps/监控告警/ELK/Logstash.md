@@ -409,7 +409,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
   geoip {
     source => "client_ip"                         # 存储 IP 地址的字段
     target => "geoip"                             # 存储查询结果的字段
-    # database => "xx/xx/GeoLite2-City.mmdb"      # 用于查询的数据库文件
+    # database => "xx/xx/GeoLite2-City.mmdb"      # 用于查询的数据库文件。默认使用自带的免费 GeoLite2 数据库，并每天自动更新
     # cache_size => 1000                          # 缓存区的大小。查询一些重复 IP 或相邻 IP 时，使用缓存可以提高效率
     # tag_on_failure => ["_geoip_lookup_failure"]
   }

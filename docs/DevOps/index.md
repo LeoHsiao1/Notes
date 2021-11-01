@@ -46,7 +46,7 @@
     - [Kibana](监控告警/ELK/Kibana.md)
     - [Beats](监控告警/ELK/Beats.md)
     - [Logstash](监控告警/ELK/Logstash.md)
-    - [Open Distro](监控告警/ELK/OpenDistro.md)
+    - [OpenSearch](监控告警/ELK/OpenSearch.md)
 - 其它
   - [VS Code](其它/VSCode.md)
   - [YApi](其它/YApi.md)

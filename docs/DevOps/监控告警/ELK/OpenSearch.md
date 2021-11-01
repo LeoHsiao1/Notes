@@ -1,130 +1,178 @@
-# Open Distro
+# OpenSearch
 
-- ELK 系统分为社区版 OSS ，和收费版 X-Pack 。
+## 历史
+
+- ELK 软件分为社区版（OSS）、收费版（X-Pack）。
   - Elastic 公司加大了商业化的程度，逐渐对软件的部分功能收费，导致 OSS 版缺少一些重要功能，比如身份认证、用户权限控制、告警。
-- 2019 年，AWS 公司创建了 Open Distro for Elasticsearch 项目，通过给 ES、Kibana 软件安装一些插件，以完全开源的方式扩展其功能。
-  - [官方文档](https://opendistro.github.io/for-elasticsearch-docs/)
+- 2019 年，AWS 公司创建了 Open Distro for Elasticsearch 项目，通过给 ES、Kibana 的 OSS 版安装一些插件，扩展出 X-Pack 版的功能。
   - 功能、配置有些小差异，这是为了回避 Elastic 公司的版权。
 - 2021 年初，Elastic 公司宣布从 v7.11 版本开始，将 ES、Kibana 项目的开源协议从 Apache V2 改为 SSPL 。
   - SSPL 是一种未被 OSI（Open Source Initiative）组织认可的开源协议，禁止用户将该软件作为服务出售，除非购买商业许可证。
-  - 对此，AWS 公司宣布从 ES、Kibana 分叉出 [OpenSearch](https://opensearch.org) 项目，取代之前的 Open Distro for Elasticsearch 项目，采用 Apache V2 开源协议。
+  - 对此，AWS 公司宣布从 ES、Kibana 分叉出 [OpenSearch](https://opensearch.org) 项目，取代之前的 Open Distro for Elasticsearch 项目，采用 Apache V2 开源协议。主要发布了以下软件：
+    - [OpenSearch](https://github.com/opensearch-project/OpenSearch) ：对标 ES 。
+    - [OpenSearch-Dashboards](https://github.com/opensearch-project/OpenSearch-Dashboards) ：对标 Kibana 。
 
 ## 部署
 
-- 可以部署 Open Distro 整合版，也可以给普通的 ES、Kibana 软件安装一些 Open Distro 插件（这需要考虑版本兼容性）。
-- 用 docker-compose 部署整合版的 ES、Kibana ：
+- 用 docker-compose 部署：
   ```yml
   version: '3'
 
   services:
-    elasticsearch:
-      container_name: elasticsearch
-      image: amazon/opendistro-for-elasticsearch:1.13.2
+    opensearch:
+      container_name: opensearch
+      image: opensearchproject/opensearch:1.1.0
       restart: unless-stopped
       ports:
         - 9200:9200
       volumes:
-        - ./config:/usr/share/elasticsearch/config
-        - ./data:/usr/share/elasticsearch/data
+        - ./config:/usr/share/opensearch/config
+        - ./data:/usr/share/opensearch/data
   ```
   ```yml
   version: '3'
 
   services:
-    kibana:
-      container_name: kibana
-      image: amazon/opendistro-for-elasticsearch-kibana:1.13.2
+    opensearch_dashboards:
+      container_name: opensearch_dashboards
+      image: opensearchproject/opensearch-dashboards:1.1.0
       restart: unless-stopped
       ports:
         - 5601:5601
       volumes:
-        - ./config:/usr/share/kibana/config
-        - ./data:/usr/share/kibana/data
+        - ./config:/usr/share/opensearch-dashboards/config
+        - ./data:/usr/share/opensearch-dashboards/data
   ```
   - 可以先用 docker run 启动一个容器，将其中的 config 目录拷贝出来，修改之后再挂载。
   - 容器内以非 root 用户运行服务，需要调整挂载目录的权限：
     ```sh
     mkdir -p  config data
-    chown -R  1000 .
+    chown -R  1000  .
     ```
 
 ## 配置
 
 - elasticsearch.yml 的配置示例：
   ```yml
-  cluster.name: log-cluster
+  cluster.name: test
+  discovery.type: single-node
   node.name: node-1
+  network.host: 0.0.0.0
+  network.publish_host: 10.0.0.1
 
-  network.host: 10.0.0.1
-  http.port: 9200
-  transport.port: 9300
-
-  discovery.seed_hosts:
-    - localhost:9300
-
-  cluster.initial_master_nodes:
-    - node-1
-
-  opendistro_security.ssl.http.enabled: true      # HTTP 通信时是否启用 SSL（TCP 通信时必须启用，不支持关闭）
-  ...
+  compatibility.override_main_response_version: true  # 提供 version.number ，且固定为 7.10.2 ，从而与其它客户端软件兼容
   ```
 
-- kibana.yml 的配置示例：
+- opensearch_dashboards.yml 的配置示例：
   ```yml
   server.port: 5601
-  server.host: '0.0.0.0'
-  server.name: 'kibana'
+  server.host: 0.0.0.0
+  server.name: opensearch_dashboards
 
   elasticsearch.hosts: ['https://10.0.0.1:9200']  # 连接 ES 时采用 HTTPS 协议
   elasticsearch.ssl.verificationMode: none        # 不验证 ES 的 SSL 证书是否有效
   elasticsearch.username: kibanaserver
-  elasticsearch.password: kibanaserver
-  elasticsearch.requestHeadersWhitelist: ["securitytenant","Authorization"]
+  elasticsearch.password: ******
+  elasticsearch.requestHeadersWhitelist: [securitytenant,Authorization]
 
-  ...
+  opensearch_security.cookie.secure: false        # 前端是否启用 SSL
   ```
+
+- 让 Logstash 输出到 OpenSearch 的方法：
+  1. 在 Logstash 中安装插件：
+      ```sh
+      logstash-plugin install logstash-output-opensearch
+      ```
+  2. 将 Logstash 的输出端从 elasticsearch 改名为 opensearch ：
+      ```ruby
+      opensearch {
+          hosts => ["http://10.0.0.1:9200"]
+          ...
+      }
+      ```
 
 ### Security 插件
 
-默认启用了 Security 插件。
-- 它会在初始化 ES 时读取一次 `/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/` 目录下的各个配置文件，随后一直将自身的数据存储在 ES 中名为 .opendistro_security 的索引中。
-- 如果想修改 Security 插件的配置，应该先使用 securityadmin.sh 从 ES 下载运行时的配置信息，修改之后再上传。如下：
+- 默认启用了 Security 插件，但还需要在 elasticsearch.yml 中加入配置：
+  ```yml
+  # plugins.security.disabled: false
+  plugins.security.ssl.transport.pemcert_filepath: admin.pem            # SSL 证书文件。必须在 config 目录下，使用相对路径
+  plugins.security.ssl.transport.pemkey_filepath: admin-key.pem         # SSL 私钥
+  plugins.security.ssl.transport.pemtrustedcas_filepath: root-ca.pem    # SSL 根证书
+  plugins.security.ssl.transport.enforce_hostname_verification: false   # 是否验证主机名
+  plugins.security.ssl.http.enabled: true                               # 是否让 ES 监听 HTTPS 端口
+  plugins.security.ssl.http.pemcert_filepath: admin.pem
+  plugins.security.ssl.http.pemkey_filepath: admin-key.pem
+  plugins.security.ssl.http.pemtrustedcas_filepath: root-ca.pem
+  plugins.security.allow_unsafe_democertificates: true
+  plugins.security.allow_default_init_securityindex: true
+  plugins.security.authcz.admin_dn:               # 将使用指定证书的客户端视作管理员
+    - CN=ADMIN,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA
+  plugins.security.audit.type: internal_opensearch
+  plugins.security.enable_snapshot_restore_privilege: true
+  plugins.security.check_snapshot_restore_write_privileges: true
+  plugins.security.restapi.roles_enabled: ["all_access", "security_rest_api_access"]
+  plugins.security.system_indices.enabled: true
+  plugins.security.system_indices.indices: [".opendistro-alerting-config", ".opendistro-alerting-alert*", ".opendistro-anomaly-results*", ".opendistro-anomaly-detector*", ".opendistro-anomaly-checkpoints", ".opendistro-anomaly-detection-state", ".opendistro-reports-*", ".opendistro-notifications-*", ".opendistro-notebooks", ".opendistro-asynchronous-search-response*"]
+  ```
+  - 需要用 openssl 生成 SSL 自签名证书：
+    ```sh
+    # 为网站生成 SSL 自签名证书
+    openssl genrsa -out root-ca-key.pem 2048
+    openssl req -new -x509 -sha256 -key root-ca-key.pem -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=ROOT" -out root-ca.pem -days 730
+
+    # 为管理员生成证书
+    openssl genrsa -out admin-key-temp.pem 2048
+    openssl pkcs8 -inform PEM -outform PEM -in admin-key-temp.pem -topk8 -nocrypt -v1 PBE-SHA1-3DES -out admin-key.pem
+    openssl req -new -key admin-key.pem -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=ADMIN" -out admin.csr
+    openssl x509 -req -in admin.csr -CA root-ca.pem -CAkey root-ca-key.pem -CAcreateserial -sha256 -out admin.pem -days 730
+
+    # 删除不用的文件
+    rm -f root-ca-key.pem root-ca.srl
+    rm -f admin.csr admin-key-temp.pem
+    ```
+
+- 当 ES 初次启动时，Security 插件会进行初始化：
+  - 读取 `/usr/share/opensearch/plugins/opensearch-security/securityconfig/` 目录下的各个配置文件，随后一直将自身的数据存储在 ES 的名为 .opendistro_security 的索引中。
+  - 根据 internal_users.yml 文件创建内部用户数据库，包含多个用户。
+
+- 如果想修改 Security 插件的配置，需要先使用 securityadmin.sh 从 ES 下载运行时的配置信息，修改之后再上传。如下：
   ```sh
-  bash plugins/opendistro_security/tools/securityadmin.sh \
-      # -h localhost \              # ES 的 IP 地址
+  bash plugins/opensearch-security/tools/securityadmin.sh \
+      # -h localhost \              # ES 的地址
       -backup tmp/ \                # 下载配置文件到该目录（会下载全部类型的配置文件）
       # -cd tmp/ \                  # 上传该目录下的配置文件（该目录下必须包含全部类型的配置文件）
       -icl \                        # 忽略 ES 集群的名称
       -nhnv \                       # 不验证 SSL 证书是否有效
-      -cacert config/root-ca.pem \  # 使用 root 用户的 SSL 证书
-      -cert config/kirk.pem \
-      -key config/kirk-key.pem
+      -cacert config/root-ca.pem \
+      -cert config/admin.pem \
+      -key config/admin-key.pem
   ```
 
 ### 用户
 
 - Security 插件支持多种认证后端，比如内部用户数据库（Internal users Database）、LDAP、Kerberos 等。
   - 如果启用了多个后端，当用户登录时，会依次尝试用各个后端进行身份认证，直到有一个认证成功，或者全部认证失败。
-- 初始化 ES 时，Security 插件会根据 internal_users.yml 文件创建内部用户数据库，包含多个用户。
-- 每个用户的初始密码等于用户名。
-- 可以按 HTTP Basic Auth 的方式进行用户认证，如下：
+
+- 可以通过 HTTP Basic Auth 方式进行身份认证：
   ```sh
   curl -u admin:admin --insecure https://127.0.0.1:9200/_cat/indices
   ```
-- admin、kibanaserver 两个用户是保留的（Reserved），不允许修改，只能在 internal_users.yml 中修改。步骤如下：
+
+- admin、kibanaserver 两个用户是保留的（Reserved），不允许在网页上修改，只能在 internal_users.yml 中修改。步骤如下：
   1. 使用 ES 自带的脚本，生成密码的哈希值：
       ```sh
-      docker exec -it elasticsearch bash plugins/opendistro_security/tools/hash.sh
+      docker exec -it elasticsearch bash plugins/opensearch-security/tools/hash.sh
       ```
   2. 修改 internal_users.yml 中的用户密码哈希值：
   3. 让 Security 插件应用新的配置：
       - 可以清空 ES 挂载的 data 目录，再重新启动容器，让 Security 插件重新初始化。
       - 或者使用 securityadmin.sh 脚本上传配置文件。
-  4. 更新 kibana.yml 等文件中使用的用户密码。
+  4. 更新 opensearch_dashboards.yml 等文件中使用的用户密码。
 
-- 其他用户，比如 kibanaro、logstash ，都可以在 Kibana 的网页上修改自己的密码。
-  - 为了安全，首次部署时应该都更新密码。
-  - admin 用户才有权限在 Kibana 上查看 Security 插件的配置页面，管理所有用户。
+- 其他用户，比如 kibanaro、logstash ，都可以在网页上修改自己的密码。
+  - 每个用户的初始密码与用户名相同。为了安全，应该都更新密码。
+  - admin 用户有权限查看 Security 插件的配置页面，管理所有用户。
 
 ### 角色
 
@@ -154,11 +202,12 @@
 - 默认创建了两个特殊租户：
   - Global ：一个全局唯一的租户，被所有用户共享，可以同时修改。
   - Private ：每个用户都会创建一个私有租户，不会被其它用户看到。
-- 为了简化用户的操作，建议在 kibana.yml 中修改配置，只使用 Global 租户：
+- opensearch_dashboards.yml 的相关配置：
   ```yml
-  opendistro_security.multitenancy.enabled: true                    # 启用租户功能
-  opendistro_security.multitenancy.tenants.enable_global: true      # 启用 Global 租户
-  opendistro_security.multitenancy.tenants.enable_private: false    # 禁用 Private 租户
+  opensearch_security.multitenancy.enabled: true                            # 是否启用多租户功能
+  opensearch_security.multitenancy.tenants.preferred: ["Private", "Global"] # 默认显示的租户顺序
+  # opensearch_security.multitenancy.tenants.enable_global: true            # 是否启用 Global 租户
+  # opensearch_security.multitenancy.tenants.enable_private: true
   ```
 
 ### ISM

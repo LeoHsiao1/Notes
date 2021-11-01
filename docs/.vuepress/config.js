@@ -1264,8 +1264,8 @@ module.exports = {
                                     path: "/DevOps/监控告警/ELK/Logstash"
                                 },
                                 {
-                                    title: "Open Distro",
-                                    path: "/DevOps/监控告警/ELK/OpenDistro"
+                                    title: "OpenSearch",
+                                    path: "/DevOps/监控告警/ELK/OpenSearch"
                                 }
                             ]
                         }

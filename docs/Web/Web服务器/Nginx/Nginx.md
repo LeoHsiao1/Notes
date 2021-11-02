@@ -1297,12 +1297,12 @@ server {
       ssl_certificate /ssl/cert.crt;          # 数字证书
       ssl_certificate_key /ssl/cert.key;      # SSL 私钥
 
-      # ssl_ciphers HIGH:!aNULL:!MD5;         # 设置 SSL 加密算法
-      # ssl_protocols TLSv1 TLSv1.1 TLSv1.2;  # 设置可用的 SSL 协议版本
-      ssl_prefer_server_ciphers on;           # 在 SSL 握手时使用 server 的加密算法
+      ssl_protocols TLSv1.2 TLSv1.3;          # 设置可用的 SSL 协议版本，默认为 TLSv1 TLSv1.1 TLSv1.2
+      ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';  # 设置 SSL 加密算法
+      ssl_prefer_server_ciphers on;           # 在 SSL 握手时优先采用服务器的加密算法
 
       # 在一段时间内复用一个 SSL 会话，以节省 SSL 握手的时间
-      ssl_session_cache   shared:SSL:10m;     # 设置 SSL 缓存的大小，10M 大概可以存储 40000 个 SSL 会话
+      ssl_session_cache shared:SSL:10m;       # 设置 SSL 缓存的大小，10M 大概可以存储 40000 个 SSL 会话
       ssl_session_timeout 10m;                # 设置缓存的失效时间
   }
   ```

@@ -19,8 +19,16 @@
 - 90 年代，网景公司发布了 SSL（Secure Sockets Layer ，安全套接字层）协议，用于加密传输 HTTP 报文。
   - SSL 工作在传输层与应用层之间。
   - SSL 更新到 v3.0 版本时，演化出了更安全的 TLS（Transport Layer Security ，安全传输层）协议，有时也统称为 SSL 协议。
-- TLS 1.2 握手的流程：
-  1. client 发送 Client Hello 消息，包含支持的 TLS 版本、加密算法、一个临时生成的随机数。
+- SSL 的缺点：
+  - 每次传输 HTTP 报文时需要加密、解密，消耗更多 CPU 和时间。
+  - 需要 TLS 握手，在网络延迟较大时有明显耗时。
+    - TLS 1.3 的握手流程比 TLS 1.2 简化，因此耗时更短。
+
+### TLS 1.2
+
+- 2008 年发布。
+- 握手流程：
+  1. client 发送 Client Hello 消息，包含支持的 TLS 版本、加密算法（ciphers）、一个临时生成的随机数。
   2. server 回复 Server Hello 消息，包含采纳的 TLS 版本、加密算法、一个临时生成的随机数。
       - 再发送 Server Key Exchange 消息，包含 server 的 SSL 公钥。
       - 再发送 Certificate 消息，包含由 CA 颁发的数字证书，用于证明身份。
@@ -33,14 +41,19 @@
   4. server 收到加密字符串，用 SSL 私钥解密。
       - 再采用同一个加密算法，生成的相同会话密钥。然后发送 Change Cipher Spec 消息。
       - 再发送 Finished 消息，表示握手完成。
-- TLS 1.3 握手的流程：
+
+### TLS 1.3
+
+- 2018 年发布。
+- 握手流程：
   1. client 发送 Client Hello 消息。
   2. server 发送数字证书，并生成会话密钥。
   3. client 验证数字证书，生成会话密钥，发送 Finished 消息。
-- SSL 的缺点：
-  - 每次传输 HTTP 报文时需要加密、解密，消耗更多 CPU 和时间。
-  - 需要 TLS 握手，在网络延迟较大时有明显耗时。
-    - TLS 1.3 握手的步骤比 TLS 1.2 少，因此耗时更短。
+- 启用 TLS 1.3 时，需要 HTTP 服务器、客户端同时支持该功能。而 SSL 证书与使用的 SSL 版本无关。
+  - 例如 OpenSSL 从 1.1.1 版本开始支持 TLS 1.3 ，而 Nginx 从 1.13 版本开始将构建时依赖的 OpenSSL 升级到 1.1.1 ，从而支持 TLS 1.3 。
+  - TLS 1.3 采用一些新的加密算法，与 TLS 1.2 不兼容。
+  - 可访问网站 howsmyssl.com 测试浏览器支持的 SSL 版本、加密算法。
+  - 访问一个网站时，在 Chrome 浏览器的开发者工具 -> 安全页面，可查看当前采用的 SSL 版本、加密算法。
 
 ## CA
 

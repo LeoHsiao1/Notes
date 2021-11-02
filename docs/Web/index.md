@@ -26,6 +26,10 @@
 - Web服务器
   - [简介](Web服务器/简介.md)
   - [Nginx](Web服务器/Nginx/Nginx.md)
+    - [配置](Web服务器/Nginx/配置.md)
+    - [路由转发](Web服务器/Nginx/路由转发.md)
+    - [访问控制](Web服务器/Nginx/访问控制.md)
+    - [通信协议](Web服务器/Nginx/通信协议.md)
     - [相关命令](Web服务器/Nginx/相关命令.md)
   - [Tomcat](Web服务器/Tomcat.md)
 - CMS

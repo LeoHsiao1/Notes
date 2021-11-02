@@ -849,6 +849,22 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
+                                    title: "配置",
+                                    path: "/Web/Web服务器/Nginx/配置"
+                                },
+                                {
+                                    title: "路由转发",
+                                    path: "/Web/Web服务器/Nginx/路由转发"
+                                },
+                                {
+                                    title: "访问控制",
+                                    path: "/Web/Web服务器/Nginx/访问控制"
+                                },
+                                {
+                                    title: "通信协议",
+                                    path: "/Web/Web服务器/Nginx/通信协议"
+                                },
+                                {
                                     title: "相关命令",
                                     path: "/Web/Web服务器/Nginx/相关命令"
                                 }

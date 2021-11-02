@@ -474,7 +474,7 @@ server {
           proxy_pass  http://127.0.0.1:79;
           # proxy_pass http://unix:/tmp/backend.socket:/uri/;   # 可以转发给 Unix 套接字
 
-          # proxy_http_version 1.0;         # 转发时的 HTTP 协议版本，默认为 1.0 ，还可取值为 1.1
+          # proxy_http_version 1.0;         # 转发时的 HTTP 协议版本，默认为 1.0
           # proxy_pass_request_body on;     # 是否转发请求 body ，默认为 on
           # proxy_set_body $request_body;   # 设置转发过去的请求 body
           # proxy_request_buffering on;     # 接收客户端的请求时，缓冲之后再转发给上游服务器
@@ -1319,3 +1319,20 @@ server {
   <center><h1>400 Bad Request</h1></center>
   ```
   - 当用户访问 HTTPS 网站时，浏览器通常会禁止发出 HTTP 请求，比如 chrome 浏览器会报错：`blocked:mixed-content`
+
+### http2
+
+- 例：
+  ```sh
+  server {
+      listen    443  ssl http2;   # 监听时采用 ssl 和 http2 协议
+  }
+  ```
+  - 一般的浏览器只支持在 HTTPS 端口启用 HTTP/2 ，因此需要服务器同时启用 ssl 和 http2 。
+
+- Nginx 端口启用了 http2 协议时，依然允许接收 http1 请求。可加入以下配置，拒绝 http1 请求：
+  ```sh
+  if ($server_protocol ~* "HTTP/1*") {
+      return 444;
+  }
+  ```

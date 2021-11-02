@@ -31,8 +31,7 @@
 
 ### HTTP/1.1
 
-- 1997 年发布。是目前最常用的版本。
-- 向下兼容 HTTP/1.0 。
+- 1997 年发布。向下兼容 HTTP/1.0 。
 - 默认启用 TCP 长连接，除非在报文 Headers 中添加 `Connection: close` 。
 - 增加 PUT、DELETE 等请求方法。
 - 增加 Host、Upgrade、If-Modified-Since、Cache-Control 等 Headers 。
@@ -42,7 +41,7 @@
 - 2015 年发布。
 - 采用二进制格式传输报文。
 - 支持 TCP 连接的多路复用，即同一个 TCP 连接中可以发出多个 HTTP 请求。
-- 支持压缩报文 header 。
+- 压缩报文 header 。
 - 支持服务器主动推送报文到客户端。
 
 ## URI

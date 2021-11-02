@@ -19,18 +19,20 @@
 - 下载官方发行版，用脚本部署：
   ```sh
   sh install.sh
-                --with-notary         # 启用 notary ，检查镜像的数字签名。这需要 Harbor 采用 HTTPS
+                # --with-notary       # 启用 notary ，检查镜像的数字签名。这需要 Harbor 采用 HTTPS
                 --with-trivy          # 启用 trivy 漏洞扫描器
                 --with-chartmuseum    # 启用 Chart 仓库
   ```
-  - 部署时至少需要 4G 内存。
-  - 包含多个模块，基于 docker-compose 启动。
-
-- dockerd 默认以 HTTPS 方式访问镜像仓库服务器。因此，如果 Harbor 以 HTTP 方式部署，则需要将其 URL 加入 dockerd 的 daemon.json 中的白名单：
-  ```json
-  "insecure-registries" : ["10.0.0.1:8080"]
-  ```
-- 在 Harbor 网页上的操作失败时，可能缺乏详细的报错信息，此时建议看终端日志。
+  - 包含 harbor-core、harbor-db、registry、Nginx、Redis 等多个组件，基于 docker-compose 启动。
+    - 部署时至少需要 4G 内存。
+    - 不会将日志输出到 docker 容器，而是保存到日志目录。
+  - 修改配置之后需要执行：
+    ```sh
+    ./prepare --with-trivy  --with-chartmuseum
+    docker-compose down
+    docker-compose up -d
+    ```
+- 用启用 HTTPS 的 Nginx 反向代理 Harbor 时，需要在 Nginx 中加入 `proxy_set_header X-Forwarded-Proto $scheme;` ，并在 `harbor/common/config/nginx/nginx.conf` 中删除相同配置。
 
 ## 功能
 

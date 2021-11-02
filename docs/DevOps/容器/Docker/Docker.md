@@ -32,6 +32,10 @@
 ### 配置
 
 - 配置 dockerd 时，需要创建 `/etc/docker/daemon.json` 文件，写入配置信息，然后重启 dockerd 。
+  - dockerd 默认以 HTTPS 方式访问镜像仓库服务器。如果服务器不支持 SSL 认证，则需要将其地址加入白名单：
+    ```json
+    "insecure-registries" : ["10.0.0.1:8080"]
+    ```
 - 如果想让 dockerd 使用代理，需要在 `/usr/lib/systemd/system/docker.service` 中加入环境变量：
   ```sh
   [Service]

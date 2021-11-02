@@ -849,8 +849,8 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
-                                    title: "相关概念",
-                                    path: "/Web/Web服务器/Nginx/相关概念"
+                                    title: "相关命令",
+                                    path: "/Web/Web服务器/Nginx/相关命令"
                                 }
                             ]
                         },

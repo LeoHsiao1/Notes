@@ -238,19 +238,19 @@ pipeline 的语法与 Ruby 相似，特点如下：
 ### codec
 
 - codec 类型的插件用于按特定的文本格式编码、解码数据，可以用于 pipeline 的 input 或 output 阶段。
-- 常见的几种 codec 插件：
+- codec 插件举例：
   ```sh
-  plain       # 纯文本，即不进行处理
-  line        # 用于解码输入时，将每行文本视作一条日志。用于编码输出时，将每条日志保存成一行文本
-  multiline   # 将连续的多行文本记录成同一条日志。不过该操作可以由 Beats 完成，减轻 Logstash 的工作量
-  json        # 按 JSON 格式处理，忽略换行符、缩进
-  json_lines  # 根据换行符 `\n` 将文本分成多行，每行视作一条 JSON 格式的日志
-  rubydebug   # 按 Ruby 调试信息的格式处理
+  plain         # 纯文本，即不进行处理
+  line          # 用于解码输入时，将每行文本视作一条日志。用于编码输出时，将每条日志保存成一行文本
+  multiline     # 将连续的多行文本记录成同一条日志。不过该操作可以由 Beats 完成，减轻 Logstash 的工作量
+  json          # 按 JSON 格式处理，忽略换行符、缩进
+  json_lines    # 根据换行符 `\n` 将文本分成多行，每行视作一条 JSON 格式的日志
+  rubydebug     # 按 Ruby 调试信息的格式处理
   ```
 
 ### grok
 
-- grok 是一个 filter 插件，用于解析纯文本格式的日志数据，通过正则表达式提取一些字段，存储为 JSON 格式的日志事件中的顶级字段。
+：一个 filter 插件，用于解析纯文本格式的日志数据，通过正则表达式提取一些字段，存储为 JSON 格式的日志事件中的顶级字段。
 - Kibana 网页上提供的开发工具包含了 grok Debugger ，便于调试 grok pattern 。
 - 例：
   1. 假设原始日志为：
@@ -340,7 +340,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ### json
 
-- json 是一个 filter 插件，用于按 JSON 格式解析日志事件的一个字段。
+：一个 filter 插件，用于按 JSON 格式解析日志事件的一个字段。
 - 例：
   ```sh
   json {
@@ -353,7 +353,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ### date
 
-- date 是一个 filter 插件，用于解析日志事件的一个字段，获取时间。
+：一个 filter 插件，用于解析日志事件的一个字段，获取时间。
 - 例：
   ```sh
   if [timestamp] {
@@ -369,7 +369,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ### drop
 
-- drop 是一个 filter 插件，用于丢弃一些日志。
+：一个 filter 插件，用于丢弃一些日志。
 - 例：
   ```sh
   if [level] == "DEBUG" {
@@ -381,7 +381,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ### mutate
 
-- mutate 是一个 filter 插件，用于修改日志事件的一些字段。
+：一个 filter 插件，用于修改日志事件的一些字段。
 - 例：
   ```sh
   mutate {
@@ -402,7 +402,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ### geoip
 
-- geoip 是一个 filter 插件，用于查询 IP 地址对应地理位置，包括经纬度坐标、国家名、城市名等。
+：一个 filter 插件，用于查询 IP 地址对应地理位置，包括经纬度坐标、国家名、城市名等。
 - 查询时的开销比较大。
 - 例：
   ```sh
@@ -417,7 +417,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ### ruby
 
-- ruby 是一个 filter 插件，用于嵌入 Ruby 代码。
+：一个 filter 插件，用于嵌入 Ruby 代码。
 - 例：
   ```sh
   ruby {

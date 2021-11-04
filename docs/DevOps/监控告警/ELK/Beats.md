@@ -404,6 +404,7 @@
 
     # 如果启用任何一个以 json 开头的配置项，则会将每行日志文本按 JSON 格式解析，解析的字段默认保存到一个名为 json 的字段的子字典中
     # 解析 JSON 的操作会在 multiline 之前执行。因此建议让 filebeat 只执行 multiline 操作，将日志发送到 Logstash 时才解析 JSON
+    # 如果 JSON 解析失败，则会将日志文本保存在 message 字段，然后输出
     # json.add_error_key: true      # 如果解析出错，则加入 error.message 等字段
     # json.message_key: log         # 指定存储日志内容的字段名。如果指定了该字段，当该字段为顶级字段、取值为字符串类型时，会进行 multiline、include、exclude 操作
     # json.keys_under_root: false   # 是否将解析的字典保存为日志的顶级字段

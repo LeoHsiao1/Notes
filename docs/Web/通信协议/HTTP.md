@@ -140,7 +140,7 @@ ie=UTF-8&wd=1
   Content-Length: 348                         # 该报文 body 的长度
   Content-Type: text/html; charset=utf-8      # 该报文 body 的类型
 
-  Host: www.baidu.com                         # 请求的服务器域名
+  Host: www.baidu.com                         # 请求的服务器地址，可以包含端口号
   Connection: keep-alive                      # 表示本次 HTTP 通信之后怎么处理 TCP 连接，默认为 close 。设置成 keep-alive 则保持连接
   X-Requested-With: XMLHTTPRequest            # 说明该请求是 AJAX 异步请求
   Origin: http://test.com                     # 说明客户端从哪个网站发出 HTTP 请求

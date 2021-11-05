@@ -92,20 +92,40 @@
   // 显示：Hello 3 !
   ```
 
-- 字符串的正则匹配：
+- 关于正则表达式：
   ```groovy
-  println x.matches('He')
-  // 显示：false
-  println x.matches('He.*')
+  pattern = ~'\\w'                    // 用 ~ 将一个字符串声明为正则表达式
+  matcher = pattern.matcher('Hello')  // 执行正则匹配（只需部分匹配）
+  println matcher
+  // 显示：java.util.regex.Matcher[pattern=\w region=0,5 lastmatch=]
+  println matcher ? true : false      // matcher 对象可用于条件判断，如果部分匹配，则视作 true
+  // 显示：true
+  println matcher.size()              // 返回匹配的元组数
+  // 显示：5
+  println matcher[0..4]               // 根据索引获取元组
+  // 显示：[H, e, l, l, o]
+  println matcher.findAll()           // 返回匹配的所有元组
+  // 显示：[H, e, l, l, o]
+  println matcher.matches()           // 判断是否完全正则匹配
   // 显示：true
   ```
-
-- 字符串的替换：
   ```groovy
-  x.replaceAll('Hello', 'Hi')   // 字符串替换，返回替换之后的字符串
-  x.replaceAll('Hello.*', 'Hi') // 正则替换
+  println 'Hello'.findAll('\\w')            // String.findAll() 用于找出所有正则匹配的元组
+  // 显示：[H, e, l, l, o]
+  println 'Hello'.replaceAll('He.*', 'Hi')  // 正则替换，返回替换之后的字符串
+  // 显示：Hi
+  println 'Hello'.matches('He')             // 判断是否完全正则匹配
+  // 显示：false
+  println 'Hello' =~ 'He'                   // =~ 运算符相当于 pattern.matcher()
+  // 显示：java.util.regex.Matcher[pattern=He region=0,5 lastmatch=]
+  println 'Hello' ==~ 'He.*'                // ==~ 运算符相当于 String.matches()
+  // 显示：true
+  println !('Hello' ==~ 'He.*')             // 否定整个表达式
+  // 显示：false
+  println "Hello    World".split('\\s+')    // 用正则表达式分割字符串
+  // 显示：[Hello, World]
   ```
-  - 在 Groovy 的正则表达式中，使用 `\\\\` 才能匹配普通字符 `\` 。
+  - Groovy 的正则表达式中，转义符 `\` 本身也需要转义，因此转义字符 `\n` 要写作 `\\n` ，转义字符 `\\` 要写作 `\\\\` 。
 
 - 字符串的类型转换：
   ```groovy

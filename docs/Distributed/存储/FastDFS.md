@@ -67,10 +67,6 @@ FastDFS 的服务器分为两种角色：
         location ~ /group[0-9]/ {
             ngx_fastdfs_module;     # 该模块用于对 storage 进行代理，其配置文件是 /etc/fdfs/mod_fastdfs.conf
         }
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root html;
-        }
     }
     ```
 

@@ -371,7 +371,10 @@
       "rejoin_after_leave": true,         // agent 每次启动是否重新 join 。默认为 false ，只要成功 join 一次之后，重启时并不会重新 join ，导致该 agent 可能故障过久而被被集群删除
       // "reconnect_timeout": "72h",      // 删除集群中长时间无响应的 LAN 节点，包括 failed、left 状态
       // "reconnect_timeout_wan": "72h",  // 删除集群中长时间无响应的 WAN 节点
-
+      // "limits": {
+      //     "http_max_conns_per_client": 200  // 限制每个客户端 IP 的并发连接数
+      // }
+//
       // 关于 DNS
       // "domain": "consul",          // 让 agent 解析指向该域名的 DNS 查询请求，其它请求则转发给上游 DNS 服务器
       // "recursors": "<IP>",         // 添加上游 DNS 服务器

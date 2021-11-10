@@ -15,21 +15,21 @@
   ```sh
   yum install nginx
   ```
-  然后启动：
+  然后用 systemctl 启动：
+  ```sh
+  systemctl start nginx
+  systemctl enable nginx
+  ```
+  或者手动启动：
   ```sh
   nginx                     # 启动 nginx 服务器。默认作为守护进程运行
         -c /root/nginx.conf # 使用指定的配置文件。默认使用 /etc/nginx/nginx.conf
         -g 'daemon off;'    # 加上指令，这里是要求在前台运行
         -t                  # 不启动，而是测试配置文件的语法是否正确
         -T                  # 测试配置文件，并打印当前配置
-        -s quit             # 让 Nginx 优雅地退出。这会等处理完当前的 HTTP 请求才终止
-        -s exit             # 让 Nginx 立即终止
-        -s reload           # 重新加载配置文件。这会创建一组新的 worker 进程，而旧的 worker 进程会等处理完旧的 HTTP 请求才终止
-  ```
-  或者用 systemctl 启动：
-  ```sh
-  systemctl start nginx
-  systemctl enable nginx
+        -s stop             # 让 Nginx 立即终止
+        -s quit             # 让 Nginx 优雅地终止。这会等 worker 进程处理完当前的 HTTP 请求，即没有正在使用的 TCP 连接，才终止 worker
+        -s reload           # 重新加载配置文件。这会先创建新 worker 进程，而旧 worker 进程会优雅地终止
   ```
 
 - 或者用 docker-compose 部署：

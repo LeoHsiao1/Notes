@@ -33,6 +33,14 @@
   - ：一个进行身份认证的 Java 框架，内置在 JRE 中。
 - JDBC（Java Database Connectivity）
   - ：Java 程序访问数据库的 API 规范，主要用于关系型数据库。
+  - JDBC 通过特定格式的 URL 连接到数据库，配置示例：
+    ```yml
+    datasource:
+      driverClassName: com.mysql.jdbc.Driver
+      url: jdbc:mysql://10.0.0.1:3306/test?characterEncoding=utf8&connectionCollation=utf8mb4_general_ci&autoReconnect=true&useSSL=false
+      username: root
+      password: ******
+    ```
 - Mybatis
   - ：一个 Java 的持久化框架。
   - 用户不需要直接编写 JDBC 代码，而是先在 XML 文件中编写 SQL 语句，然后通过 Java 方法调用。但可读性差。

@@ -1,6 +1,6 @@
 # Ceph
 
-：一个分布式存储系统。可以将多个主机的磁盘合并成一个资源池，提供块存储、文件存储、对象存储服务。
+：一个复杂的分布式存储系统。可以将多个主机的磁盘合并成一个资源池，提供块存储、文件存储、对象存储服务。
 - [官方文档](https://docs.ceph.com/)
 - 读音为 `/ˈsɛf/`
 - 采用 C++ 开发。
@@ -31,6 +31,7 @@
 - RADOS ：Ceph 的存储层，以对象存储的形式存储所有数据，因此存储数据的基本单位为 object 。
   - 每个 object 的默认大小为 4MB ，拥有一个在集群内唯一的 object id 。
   - Ceph 会将 object 根据哈希值分配到一些 pg（Placement Group） 中，从而方便分组管理。
+  - Ceph 还支持创建多个 Pool ，对 pg 进行分组管理。
 
 - 应用程序可通过 librados 库访问 RADOS 。librados 库提供了三种常用的存储接口：
   - librbd
@@ -137,9 +138,9 @@ python3 cephadm
 - fsid 表示 CephFS 集群的 ID 。
 - cephadm 将日志保存到 journalctl ，也可以直接看容器日志。
 
+## 命令
 
-### ceph 命令
-
+### 管理集群
 
 ```sh
 # 查看集群
@@ -158,59 +159,63 @@ ceph orch upgrade start --ceph-version 16.2.6   # 升级到指定版本
 ceph orch upgrade status                        # 查看升级任务的状态。执行 ceph status 还会显示升级的进度条
 ceph orch upgrade stop                          # 停止升级任务
 ```
-- 每种服务可能运行多个进程实例。
-  - 服务的名称采用小写的服务类型，例如 mon 。
-  - 服务进程以守护进程的形式运行，称为 daemon 。
-    - daemon 的命名格式为 `<service_name>.<hostname>` ，例如 mon.host1 。
-    - daemon 的容器命名格式为 `ceph-<fsid>-<process_name>` 。
-  - 同种服务的 daemon 采用同一份配置（Specification，spec）。mon 服务的配置示例：
-    ```yml
-    service_type: mon
-    service_name: mon
-    placement:              # 关于部署的配置
-      count: 5              # 指定需要部署的实例数
-      # count_per_host: 1   # 每个主机上部署的实例数
-      # hosts:              # 或者指定用于部署的主机名
-      # - host-1
-      # label: null         # 根据标签筛选用于部署的主机名
-    # unmanaged: false      # 是否禁止 Orchestrator 管理该服务
-    ```
+- 没有提供重启集群的命令。
 
+### 管理主机
 
 
 ```sh
-# 管理主机
 ceph orch host add <hostname> [addr] [label]... # 添加一个主机，指定名称和 IP 地址，还可以附加标签
+ceph orch host rm  <hostname>
+ceph orch host ls
 ceph orch host set-addr  <hostname> <addr>      # 更新主机的地址
 ceph orch host label add <hostname> <label>     # 给一个主机添加标签
 ceph orch host label rm  <hostname> <label>
-ceph orch host ls
-ceph orch host rm <hostname>
+```
 
-# 关于 OSD
-ceph osd ls                                   # 列出所有 OSD
-ceph osd tree                                 # 以树形结构列出所有 OSD
+### 管理服务
 
-# 管理服务
+```sh
 ceph orch status                              # 显示编排器的状态，比如 cephadm
 ceph orch ls [service_type] [service_name]    # 列出集群中的服务
               --export                        # 导出 spec 配置
 ceph orch ps [hostname] [service_name]        # 列出主机上的服务进程
 ceph orch rm <service_name>                   # 删除一个服务，这会终止其所有进程实例
 ceph orch apply -i <xx.yml>                   # 导入服务的 spec 配置
-ceph orch apply osd --all-available-devices   # 添加 spec 配置：自动为所有可用的存储设备部署 OSD 进程
-                    --unmanaged=true          # 禁止编排 OSD 进程，不允许自动部署、手动部署
+```
+- 每种服务可能运行多个进程实例。
+  - 服务的名称采用小写的服务类型，例如 mon 。
+  - 服务进程以守护进程的形式运行，称为 daemon 。
+    - daemon 的命名格式为 `<service_name>.<hostname>` ，例如 mon.host1 。
+    - daemon 的容器命名格式为 `ceph-<fsid>-<process_name>` 。
+- 同种服务的 daemon 采用同一份配置（Specification，spec）。例如 mon 服务的配置如下：
+  ```yml
+  service_type: mon
+  service_name: mon
+  placement:              # 关于部署的配置
+    count: 5              # 指定需要部署的实例数
+    # count_per_host: 1   # 每个主机上部署的实例数
+    # hosts:              # 或者指定用于部署的主机名
+    # - host-1
+    # label: null         # 根据标签筛选用于部署的主机名
+  # unmanaged: false      # 是否禁止 Orchestrator 管理该服务
+  ```
 
+### 管理 OSD
 
+```sh
+ceph osd ls                                   # 列出所有 OSD
+ceph osd tree                                 # 以树形结构列出所有 OSD
 ceph orch device ls [hostname]                # 列出主机上的存储设备
                     --wide                    # 显示详细信息
 ceph orch daemon add osd <hostname>:<device>  # 创建 OSD 进程，管理指定的存储设备
+ceph orch apply osd --all-available-devices   # 添加 spec 配置：自动为所有可用的存储设备部署 OSD 进程
+                    --unmanaged=true          # 禁止编排 OSD 进程，不允许自动部署、手动部署
 ceph orch osd rm <osd_id>...                  # 移除 OSD 进程，这会添加一个计划任务
 ceph orch osd rm status                       # 查看移除任务的状态
 ceph orch osd rm stop <osd_id>...             # 停止移除任务
 
-
-# ceph-volume 命令用于为存储设备部署 OSD 进程
+# ceph-volume 命令更底层
 ceph-volume lvm list                          # 列出所有已关联 OSD 的 logical volume
 ceph-volume lvm zap <device>...               # 擦除一个 device 的内容。这会通过 dd if=/dev/zero of=<device> 命令销毁其中的分区表
                     --destroy                 # 擦除一个 raw device 时，销毁其中的 volume group 和 logical volume
@@ -219,11 +224,7 @@ ceph-volume lvm activate
                         <osd_id> <uuid>       # 启动 OSD 进程，需要指定其编号和 uuid
                         --all                 # 自动发现所有 device 已关联的 OSD ，并启动
 ceph-volume lvm deactivate <osd_id> <uuid>    # 停止 OSD 进程
-
-# 文件存储
-ceph fs volume create <fs_name> --placement="<placement spec>"
 ```
-
 - ceph-volume 会自动发现主机上的存储设备，满足以下条件才视作可用，允许创建 OSD ：
   - 大于 5 GB 。
   - 没有挂载。
@@ -231,11 +232,18 @@ ceph fs volume create <fs_name> --placement="<placement spec>"
   - 没有磁盘分区（partition）。因此通常使用以下两种存储设备：
     - raw device ：原始存储设备，比如一个磁盘。
     - logical volume ：LVM 逻辑卷。
-
 - ceph-volume lvm 部署 OSD 的工作流程：
   1. 分配一个在集群内唯一的 OSD ID ，编号从 0 开始。
   2. 格式化存储设备，创建 LVM 逻辑卷。
   3. 在当前主机部署一个 OSD 进程，并将 OSD 元数据以 LVM 标签的形式添加到逻辑卷，方便发现与逻辑卷关联的 OSD 。
 
+### 文件存储
 
+```sh
+ceph fs ls                                    # 列出已创建的 CephFS 文件系统
 
+# 关于 CephFS 卷
+ceph fs volume ls
+ceph fs volume create <fs_name> --placement=3
+ceph fs volume rm <volume> --yes-i-really-mean-it
+```

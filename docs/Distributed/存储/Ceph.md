@@ -8,48 +8,45 @@
 
 ## 原理
 
-- Ceph 集群中会运行多种服务进程：
-  - 监控进程（Monitor，MON）
-    - 负责存储、维护集群的主要数据。
+- Ceph 集群分布式部署在多个主机上，运行多种服务进程：
+  - Monitor（MON）
+    - 负责存储、维护 Cluster Map ，比如各个服务的地址、配置、状态等信息。
     - 支持部署多个实例，基于 Paxos 算法实现一致性。
-  - 管理进程（Manager，MGR）
-    - 负责管理其它模块，比如 Dashboard 。
-    - 每个 Manager 进程都会运行 Dashboard 模块，提供 Web 管理页面。集成了一套 grafana、prometheus、node_exporter、alertmanager 监控进程。
-  - 存储守护进程（Object Storage Daemon，OSD）
-    - 负责主机上存储数据。
-  - 元数据服务器（Meta Data Server，MDS）
-    - 负责存储文件系统的元数据。
-    - 启用文件存储时，才需要 MDS 。
+    - 每个实例占用 1GB 以上内存。
+  - Manager（MGR）
+    - 负责管理一些功能模块，比如 Dashboard 。
+    - 每个实例都会运行 Dashboard 模块，提供 Web 管理页面。集成了一套 grafana、prometheus、node_exporter、alertmanager 监控进程。
+  - Object Storage Daemon（OSD）
+    - 负责将数据存储到设备中，供用户读写。
+    - 通常在每个主机上，为每个存储设备部署一个 OSD 进程。
   - Crash
     - 负责收集其它服务的崩溃信息。
+  - Meta Data Server（MDS）
+    - 负责存储 CephFS 文件系统的元数据，比如文件权限、属性。
+    - 启用文件存储时才需要。将文件的内容存储在 OSD ，而元数据存储在 MDS 服务器。
+  - RADOS Gateway（RGW）
+    - 通过 RESTful API 提供对象存储功能。
+    - 启用对象存储时才需要。
 
-- Ceph 的底层是 RADOS
-- 应用程序可通过 LIBRADOS 库访问 RADOS
+- RADOS ：Ceph 的存储层，以对象存储的形式存储所有数据，因此存储数据的基本单位为 object 。
+  - 每个 object 的默认大小为 4MB ，拥有一个在集群内唯一的 object id 。
+  - Ceph 会将 object 根据哈希值分配到一些 pg（Placement Group） 中，从而方便分组管理。
 
-- LIBRADOS 库提供了三种常用的接口：
+- 应用程序可通过 librados 库访问 RADOS 。librados 库提供了三种常用的存储接口：
   - librbd
     - ：用于块存储。
     - Ceph 不依赖其它文件系统，可以用自带的存储后端 BlueStore 直接管理 HDD、SSD 硬盘。
   - MDS
-    - ：用于文件存储，兼容 POSIX 系统。
-  - RADOSGW
-    - ：RESTful 接口，对接 S3、Swift 等对象存储。
-
-- Ceph 分布式部署在多个主机上，每个主机称为一个节点。
-  - 通常每个节点的每个硬盘提供一个 OSD 存储服务。
-  - 节点存储数据的基本单位称为 object 。
-    - 每个 object 拥有一个 object id ，默认大小为 4MB 。
-  - 节点会将 object 根据哈希值分配到一些 pg（Placement Group） 中，从而方便分组管理。
+    - ：用于文件存储，兼容 POSIX 文件系统。
+  - RADOS Gateway
+    - ：用于对象存储，兼容 S3、Swift 。
 
 - Ceph 新增数据的流程：
-  1. 应用程序调用 LIBRADOS 库，将块、文件或对象发送给存储节点。
-  2. 存储节点将数据分割成一系列 object ，再分配到一些 pg 。
-  3. 存储节点将 pg 根据 CRUSH 算法分配到一些 OSD 中存储。
-
-
-- 支持多副本
-  - 数据具有强一致，确保所有副本写入完成才返回确认
-
+  1. 应用程序访问 Monitor ，获知所有 OSD 的信息。
+  2. 将数据分割为以 object 为单位，再以 pg 为单位分组。
+  3. 将 pg 分配到一些 OSD 中存储。
+      - 应用程序直接与 OSD 进程通信，不需要经过 Monitor 中转，因此分散了负载压力。
+      - 应用程序和 OSD 进程都能根据 CRUSH 算法计算出每个 pg 应该分配到哪个 OSD 的哪个存储位置，不需要查表，因此效率更高。
 
 ## 部署
 
@@ -82,7 +79,11 @@ Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接�
     ```
     该命令会：
     - 采用指定 IP 作为当前主机的 IP 。
-    - 自动发现本机已安装的 Docker 或 Podman 容器引擎，用它拉取 Ceph 镜像。
+    - 检查本机是否安装了依赖软件，没有则自动安装：
+      - docker 或 podman 容器引擎
+      - systemctl
+      - lvcreate ：用于创建 LVM 逻辑卷。
+      - chronyd ：用于同步时间。
     - 以容器形式运行一个 Monitor 和 Manager 进程，并在防火墙开通相应端口。
     - 为 Ceph 集群生成一个新的 SSH 密钥。
       - 密钥保存到 /etc/ceph/ceph.client.admin.keyring 文件。
@@ -106,7 +107,7 @@ Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接�
     ceph status
     ```
 
-4. 添加其它主机：
+4. 添加其它主机
     ```sh
     ceph orch host add host2 10.0.0.2
     ```
@@ -115,9 +116,10 @@ Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接�
       ssh-copy-id -f -i /etc/ceph/ceph.pub root@10.0.0.2
       ```
 
-4. 创建 OSD 进程：
+5. 部署 OSD 进程：
     ```sh
-    ceph orch apply osd --all-available-devices
+    ceph-volume lvm zap /dev/vdb --destroy    # 擦除一个磁盘
+    ceph orch daemon add osd host1:/dev/vdb   # 创建 OSD 进程，管理磁盘
     ```
 
 #### 命令
@@ -125,6 +127,7 @@ Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接�
 ```sh
 python3 cephadm
                 version
+                check-host                        # 检查本机是否安装了 cephadm 依赖
                 bootstrap --mon-ip <ip>           # 引导启动一个集群
                 rm-cluster --fsid <fsid> --force  # 删除集群
                 shell                             # 打开 ceph shell ，这会创建一个临时的 ceph 容器
@@ -195,31 +198,44 @@ ceph orch ls [service_type] [service_name]    # 列出集群中的服务
 ceph orch ps [hostname] [service_name]        # 列出主机上的服务进程
 ceph orch rm <service_name>                   # 删除一个服务，这会终止其所有进程实例
 ceph orch apply -i <xx.yml>                   # 导入服务的 spec 配置
-ceph orch apply osd --all-available-devices   # 添加 spec 配置：自动为所有可用的存储设备创建 OSD 进程
-                    --unmanaged=true          # 禁止编排 OSD 进程，不允许自动创建、手动创建
+ceph orch apply osd --all-available-devices   # 添加 spec 配置：自动为所有可用的存储设备部署 OSD 进程
+                    --unmanaged=true          # 禁止编排 OSD 进程，不允许自动部署、手动部署
 
 
 ceph orch device ls [hostname]                # 列出主机上的存储设备
                     --wide                    # 显示详细信息
-ceph orch device zap <hostname> <device> --force      # 擦除一个存储设备的内容（基于 dd 命令），可供继续使用
-ceph orch daemon add osd <hostname>:<device>  # 为指定的存储设备创建 OSD 进程
-ceph orch osd rm <osd_id>...                  # 移除 OSD 进程，这会添加计划任务
+ceph orch daemon add osd <hostname>:<device>  # 创建 OSD 进程，管理指定的存储设备
+ceph orch osd rm <osd_id>...                  # 移除 OSD 进程，这会添加一个计划任务
 ceph orch osd rm status                       # 查看移除任务的状态
 ceph orch osd rm stop <osd_id>...             # 停止移除任务
 
-ceph-volume lvm activate <osd_id> <fsid>
 
-
-
-
+# ceph-volume 命令用于为存储设备部署 OSD 进程
+ceph-volume lvm list                          # 列出所有已关联 OSD 的 logical volume
+ceph-volume lvm zap <device>...               # 擦除一个 device 的内容。这会通过 dd if=/dev/zero of=<device> 命令销毁其中的分区表
+                    --destroy                 # 擦除一个 raw device 时，销毁其中的 volume group 和 logical volume
+ceph-volume lvm prepare --data <device>       # 为一个 device 创建 OSD
+ceph-volume lvm activate
+                        <osd_id> <uuid>       # 启动 OSD 进程，需要指定其编号和 uuid
+                        --all                 # 自动发现所有 device 已关联的 OSD ，并启动
+ceph-volume lvm deactivate <osd_id> <uuid>    # 停止 OSD 进程
 
 # 文件存储
 ceph fs volume create <fs_name> --placement="<placement spec>"
 ```
-<!-- - Ceph 会自动发现主机上的存储设备，满足以下条件才视作可用，允许创建 OSD 进程：
+
+- ceph-volume 会自动发现主机上的存储设备，满足以下条件才视作可用，允许创建 OSD ：
   - 大于 5 GB 。
   - 没有挂载。
-  - 没有磁盘分区或 LVM 。
-  - 不包含文件系统。 -->
+  - 不包含文件系统。
+  - 没有磁盘分区（partition）。因此通常使用以下两种存储设备：
+    - raw device ：原始存储设备，比如一个磁盘。
+    - logical volume ：LVM 逻辑卷。
+
+- ceph-volume lvm 部署 OSD 的工作流程：
+  1. 分配一个在集群内唯一的 OSD ID ，编号从 0 开始。
+  2. 格式化存储设备，创建 LVM 逻辑卷。
+  3. 在当前主机部署一个 OSD 进程，并将 OSD 元数据以 LVM 标签的形式添加到逻辑卷，方便发现与逻辑卷关联的 OSD 。
+
 
 

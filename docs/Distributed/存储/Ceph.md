@@ -13,6 +13,7 @@
     - 负责存储、维护 Cluster Map ，比如各个服务的地址、配置、状态等信息。
     - 支持部署多个实例，基于 Paxos 算法实现一致性。
     - 每个实例占用 1GB 以上内存。
+    - 客户端一般通过访问 Monitor 来与 Ceph 集群交互，采用 CephX 协议进行身份认证。
   - Manager（MGR）
     - 负责管理一些功能模块，比如 Dashboard 。
     - 每个实例都会运行 Dashboard 模块，提供 Web 管理页面。集成了一套 grafana、prometheus、node_exporter、alertmanager 监控进程。
@@ -108,6 +109,7 @@ Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接�
     python3 cephadm shell
     ceph status
     ```
+    - 也可以执行 `yum install ceph-common` ，在宿主机上安装 ceph 命令。
 
 4. 添加其它主机
     ```sh
@@ -262,4 +264,73 @@ ceph osd pool set <pool> <key> <value>
 - 默认禁止删除 pool ，需要允许：
   ```sh
   ceph config set mon mon_allow_pool_delete true
+  ```
+
+### CephFS
+
+```sh
+ceph fs ls                                    # 列出已创建的 CephFS 实例
+ceph fs status
+ceph fs new <fs_name> <metadata> <data>       # 创建一个 CephFS 实例，指定其用于存储元数据、数据的 pool
+ceph fs add_data_pool <fs_name> <pool>        # 给 CephFS 增加数据池
+ceph fs fs get <fs_name>                      # 读取配置参数
+ceph fs fs set <fs_name> <key> <value>
+```
+- 可以创建多个 CephFS 文件系统实例：
+  - 每个 CephFS 实例需要使用至少两个 pool ，分别用于存储数据、元数据。
+  - 每个 CephFS 实例需要使用至少一个 MDS 服务器。
+
+- 例：创建 CephFS 实例
+  ```sh
+  ceph osd pool create cephfs1.data
+  ceph osd pool create cephfs1.metadata
+  ceph fs new cephfs1 cephfs1.metadata cephfs1.data
+  ```
+
+- Linux 内核已经内置了 ceph 模块，因此可以直接用 mount 命令挂载 CephFS 文件系统：
+  ```sh
+  mount -t ceph <mon_ip:port>:<src_dir> <dst_dir>  # 访问 mon 服务器，将 CephFS 文件系统的 src_dir 挂载到当前主机的 dst_dir
+          -o  options               # 可加上一些逗号分隔的选项，如下：
+              mount_timeout=60      # 挂载的超时时间，单位为 s
+              name=guest            # 用于 CephX 身份认证的用户名
+              secretfile=...        # 用于 CephX 身份认证的密码文件
+  ```
+  - 例：
+    ```sh
+    mkdir /mnt/cephfs
+    mount -t ceph   :/  /mnt/cephfs   -o fs=cephfs1    # 通过 -o 选项指定 CephFS 实例
+
+    echo ':/   /mnt/ceph    ceph    fs=cephfs1    0   0' >> /etc/fstab
+
+    umount /mnt/myfs    # 卸载
+    ```
+
+### volume
+
+```sh
+ceph fs volume ls                             # 列出已创建的 volume
+ceph fs volume create <volume>                # 创建一个 volume
+ceph fs volume rm <volume> --yes-i-really-mean-it
+
+ceph fs subvolume ls
+ceph fs subvolume create <vol_name> <sub_name> [group_name]
+ceph fs subvolume rm     <vol_name> <sub_name> [group_name]
+
+ceph fs subvolumegroup ls
+ceph fs subvolumegroup create <vol_name> <group_name>
+ceph fs subvolumegroup rm     <vol_name> <group_name>
+```
+- CephFS volume 是一种快速创建 CephFS 实例的方式。
+  - 创建一个 volume 时，会自动创建两个 pool ，命名格式为 `cephfs.<volume>.data` 和 `cephfs.<volume>.meta` 。
+    - 还会默认创建两个 MDS 服务器。
+    - 删除一个 volume 时会自动删除关联的 pool 和 MDS 。
+  - 每个 volume 中可以创建多个子卷（subvolume）或子卷组（subvolume group），相当于文件夹。
+- 例：查看 mds.volume1 的配置
+  ```sh
+  [ceph: root@CentOS /]# ceph orch ls mds mds.volume1 --export
+  service_type: mds
+  service_id: volume1
+  service_name: mds.volume1
+  placement:
+    count: 2
   ```

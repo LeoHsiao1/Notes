@@ -580,7 +580,7 @@
 - 指标示例：
   ```sh
   # 关于节点
-  consul_up                                       # 当前采集的 agent 是否在线
+  consul_up                                       # 当前 agent 节点是否在线
   consul_raft_peers                               # 集群的 server 节点数
   consul_serf_lan_members                         # 集群的节点数
   consul_serf_lan_member_status{member="node1"}   # 各个节点的 gossip 状态，取值 1、2、3、4 分别表示 Alive、Leaving、Left、Failed
@@ -627,6 +627,7 @@
   elasticsearch_clusterinfo_version_info{build_date="2018-10-30T23:17:19.084789Z",build_hash="fe40335",cluster="cluster-1",lucene_version="8.7.0",version="7.10.2"}  # 版本信息
 
   # 关于集群
+  elasticsearch_clusterinfo_up                          # 服务器是否在线，可以采集监控指标
   elasticsearch_cluster_health_status{color="green"}    # 集群的状态是否为 green
   elasticsearch_cluster_health_number_of_nodes          # node 数量
   elasticsearch_cluster_health_number_of_data_nodes     # data node 数量
@@ -714,7 +715,6 @@
 - 指标示例：
   ```sh
   kafka_exporter_build_info{goversion="go1.16", instance="10.0.0.1:9308", job="kafka_exporter"} # 版本信息
-
   kafka_brokers                                                              # Kafka 集群的 broker 数量
 
   kafka_topic_partitions{topic="x"}                                          # 某个 topic 的 partition 数量
@@ -761,7 +761,8 @@
 - 指标示例：
   ```sh
   # 关于 server status
-  mongodb_ss_ok{cl_id="", cl_role="mongod", rs_state="0"} # 服务器是否运行，取值为 1、0 。标签中记录了 Cluster、ReplicaSet 的信息
+  mongodb_up                                              # 服务器是否在线
+  mongodb_ss_ok{cl_id="", cl_role="mongod", rs_state="0"} # 服务器是否正常运行，取值为 1、0 。标签中记录了 Cluster、ReplicaSet 的信息
   mongodb_ss_uptime                                       # 服务器的运行时长，单位为秒
   mongodb_ss_connections{conn_type="current"}             # 客户端连接数
 
@@ -816,6 +817,7 @@
 - 指标示例：
   ```sh
   # 关于服务器
+  mysql_up                                              # 服务器是否在线
   mysql_global_status_uptime                            # 运行时长，单位 s
   delta(mysql_global_status_bytes_received[1m])         # 网络接收的 bytes
   delta(mysql_global_status_bytes_sent[1m])             # 网络发送的 bytes

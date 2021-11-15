@@ -20,8 +20,9 @@
     - [工具](消息队列/Kafka/工具.md)
 - 存储
   - [简介](存储/简介.md)
+  - [Ceph](存储/Ceph.md)
   - [FastDFS](存储/FastDFS.md)
   - [go-fastdfs](存储/go-fastdfs.md)
+  - [h5ai](存储/h5ai.md)
   - [MinIO](存储/MinIO.md)
   - [Nextcloud](存储/Nextcloud.md)
-  - [h5ai](存储/h5ai.md)

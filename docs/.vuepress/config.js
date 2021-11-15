@@ -1395,6 +1395,10 @@ module.exports = {
                             path: "/Distributed/存储/简介"
                         },
                         {
+                            title: "Ceph",
+                            path: "/Distributed/存储/Ceph"
+                        },
+                        {
                             title: "FastDFS",
                             path: "/Distributed/存储/FastDFS"
                         },
@@ -1403,16 +1407,16 @@ module.exports = {
                             path: "/Distributed/存储/go-fastdfs"
                         },
                         {
+                            title: "h5ai",
+                            path: "/Distributed/存储/h5ai"
+                        },
+                        {
                             title: "MinIO",
                             path: "/Distributed/存储/MinIO"
                         },
                         {
                             title: "Nextcloud",
                             path: "/Distributed/存储/Nextcloud"
-                        },
-                        {
-                            title: "h5ai",
-                            path: "/Distributed/存储/h5ai"
                         }
                     ]
                 }

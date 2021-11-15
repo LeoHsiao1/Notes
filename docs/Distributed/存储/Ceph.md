@@ -38,7 +38,8 @@
     - ：用于块存储。
     - Ceph 不依赖其它文件系统，可以用自带的存储后端 BlueStore 直接管理 HDD、SSD 硬盘。
   - MDS
-    - ：用于文件存储，兼容 POSIX 文件系统。
+    - ：用于文件存储。
+    - 提供了一种网络文件系统 CephFS ，兼容 POSIX 文件系统。
   - RADOS Gateway
     - ：用于对象存储，兼容 S3、Swift 。
 
@@ -130,12 +131,11 @@ python3 cephadm
                 version
                 check-host                        # 检查本机是否安装了 cephadm 依赖
                 bootstrap --mon-ip <ip>           # 引导启动一个新集群，重复执行则会部署多个集群
-                rm-cluster --fsid <fsid> --force  # 删除集群
+                rm-cluster --fsid <fsid> --force  # 删除集群，需要指定集群 ID
                 shell                             # 打开 ceph shell ，这会创建一个临时的 ceph 容器
                 ls                                # 列出当前主机上的服务进程
                 logs --name <name>                # 查看指定服务进程的日志
 ```
-- fsid 表示 CephFS 集群的 ID 。
 - cephadm 将日志保存到 journalctl ，也可以直接看容器日志。
 
 ## 管理命令
@@ -148,11 +148,11 @@ ceph -v
 ceph status
 
 # 配置集群
-ceph config dump                  # 输出集群的配置参数，不包括默认的配置参数
-config ls                         # 列出所有可用的配置参数
-config log [n]                    # 查看配置参数最近 n 次的变更记录
-config get <who> [key]            # 读取配置参数，who 表示服务类型
-config set <who> <key> <value>    # 设置配置参数
+ceph config dump                    # 输出集群的配置参数，不包括默认的配置参数
+ceph config ls                      # 列出所有可用的配置参数
+ceph config log [n]                 # 查看配置参数最近 n 次的变更记录
+ceph config get <who> [key]         # 读取配置参数，who 表示服务类型
+ceph config set <who> <key> <value> # 设置配置参数
 
 # 升级集群
 ceph orch upgrade start --ceph-version 16.2.6   # 升级到指定版本
@@ -178,7 +178,7 @@ ceph orch host label rm  <hostname> <label>
 ceph orch status                              # 显示编排器的状态，比如 cephadm
 ceph orch ls [service_type] [service_name]    # 列出集群中的服务
               --export                        # 导出 spec 配置
-ceph orch ps [hostname] [service_name]        # 列出主机上的服务进程
+ceph orch ps [hostname] [service_name]        # 列出主机上的服务进程实例
 ceph orch rm <service_name>                   # 删除一个服务，这会终止其所有进程实例
 ceph orch apply -i <xx.yml>                   # 导入服务的 spec 配置
 ```
@@ -241,25 +241,25 @@ ceph-volume lvm deactivate <osd_id> <uuid>    # 停止 OSD 进程
 ```sh
 ceph osd pool ls                        # 列出所有 pool
 ceph osd pool create <pool>             # 创建一个 pool ，指定名称
-ceph osd pool rm <pool>
+                    [pg_num] [pgp_num]
+                    [replicated|erasure]
+ceph osd pool rm  <pool> <pool> --yes-i-really-really-mean-it   # 删除一个 pool ，需要两次指定其名称
 ceph osd pool get <pool> <key>          # 读取配置参数
 ceph osd pool set <pool> <key> <value>
 ```
-- 常见的配置参数及其默认值：
+- pool 分为两种类型：
+  - replicated ：复制池，默认采用。将 object 保存多份，从而实现数据备份。
+  - erasure ：纠错码池。通过占用大概 1.5 倍的存储空间来实现数据备份。
+    - 比复制池占用的存储空间更少，但是读取时占用更多 CPU 和内存来解码，读取延迟较大，适合冷备份。
+- 常见的配置参数：
   ```sh
-  size      3     # 该 pool 中每个 object 的副本数，即将所有数据保存 size 份
-  min_size  2     # 读写 object 时需要的最小副本数
-  pg_num    32    # 该 pool 包含的 pg 数
-  crush_rule  replicated_rule # 采用的 CRUSH 规则
+  size          # 该 pool 中每个 object 的副本数，即将所有数据保存 size 份。默认为 3
+  min_size      # 读写 object 时需要的最小副本数。默认为 2
+  pg_num        # 该 pool 包含的 pg 数，应该根据 osd_count*100/pool_size 估算，并取最近的一个 2^n 幂值
+  pgp_num       # 用于 CRUSH 计算的 pg 数，取值应该等于 pg_num
+  crush_rule    # 采用的 CRUSH 规则。默认为 replicated_rule
   ```
-
-### 文件存储
-
-```sh
-ceph fs ls                                    # 列出已创建的 CephFS 文件系统
-
-# 关于 CephFS 卷
-ceph fs volume ls
-ceph fs volume create <fs_name> --placement=3
-ceph fs volume rm <volume> --yes-i-really-mean-it
-```
+- 默认禁止删除 pool ，需要允许：
+  ```sh
+  ceph config set mon mon_allow_pool_delete true
+  ```

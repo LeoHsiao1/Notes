@@ -57,7 +57,7 @@ k8s 中主要研究的网络通信：
 
 ### NodePort
 
-：从 Node 的 30000~32767 端口中随机选取或指定一个端口，映射到容器端口。
+：使用 Node 主机的 IP ，并从 Node 的 30000~32767 端口中随机选取或指定一个端口。
 - 访问 `NodeIP:Port` 的流量会被转发到 EndPoint 。
   - 不过 Pod 迁移到其它 Node 上时，NodeIP 会变化。
 - 例：
@@ -79,7 +79,7 @@ k8s 中主要研究的网络通信：
 
 ：给 Service 分配一个负载均衡 IP 。
 - 访问 `loadBalancerIP:Port` 的流量会被转发到 EndPoint 。
-- 云平台通常为此提供了负载均衡器。
+- 需要创建负载均衡器，公有云通常会提供，还可能收费。
   - loadBalancerIP 可以是集群内 IP 或集群外 IP 、公网 IP 。
 - 例：
   ```yml

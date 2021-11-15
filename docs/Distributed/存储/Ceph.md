@@ -30,8 +30,8 @@
 
 - RADOS ：Ceph 的存储层，以对象存储的形式存储所有数据，因此存储数据的基本单位为 object 。
   - 每个 object 的默认大小为 4MB ，拥有一个在集群内唯一的 object id 。
-  - Ceph 会将 object 根据哈希值分配到一些 pg（Placement Group） 中，从而方便分组管理。
-  - Ceph 还支持创建多个 Pool ，对 pg 进行分组管理。
+  - Ceph 会将 object 根据哈希值分配到一些 pg（Placement Group） 中，从而方便分组管理大量 object 。
+  - 支持创建多个存储池（Pool），对 pg 进行分组管理。
 
 - 应用程序可通过 librados 库访问 RADOS 。librados 库提供了三种常用的存储接口：
   - librbd
@@ -129,7 +129,7 @@ Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接�
 python3 cephadm
                 version
                 check-host                        # 检查本机是否安装了 cephadm 依赖
-                bootstrap --mon-ip <ip>           # 引导启动一个集群
+                bootstrap --mon-ip <ip>           # 引导启动一个新集群，重复执行则会部署多个集群
                 rm-cluster --fsid <fsid> --force  # 删除集群
                 shell                             # 打开 ceph shell ，这会创建一个临时的 ceph 容器
                 ls                                # 列出当前主机上的服务进程
@@ -138,9 +138,9 @@ python3 cephadm
 - fsid 表示 CephFS 集群的 ID 。
 - cephadm 将日志保存到 journalctl ，也可以直接看容器日志。
 
-## 命令
+## 管理命令
 
-### 管理集群
+### 集群
 
 ```sh
 # 查看集群
@@ -151,8 +151,8 @@ ceph status
 ceph config dump                  # 输出集群的配置参数，不包括默认的配置参数
 config ls                         # 列出所有可用的配置参数
 config log [n]                    # 查看配置参数最近 n 次的变更记录
-config set <who> <key> <value>    # 设置一个配置参数，who 表示服务类型
-config get <who> [key]            # 读取配置参数
+config get <who> [key]            # 读取配置参数，who 表示服务类型
+config set <who> <key> <value>    # 设置配置参数
 
 # 升级集群
 ceph orch upgrade start --ceph-version 16.2.6   # 升级到指定版本
@@ -161,8 +161,7 @@ ceph orch upgrade stop                          # 停止升级任务
 ```
 - 没有提供重启集群的命令。
 
-### 管理主机
-
+### 主机
 
 ```sh
 ceph orch host add <hostname> [addr] [label]... # 添加一个主机，指定名称和 IP 地址，还可以附加标签
@@ -173,7 +172,7 @@ ceph orch host label add <hostname> <label>     # 给一个主机添加标签
 ceph orch host label rm  <hostname> <label>
 ```
 
-### 管理服务
+### 服务
 
 ```sh
 ceph orch status                              # 显示编排器的状态，比如 cephadm
@@ -201,7 +200,7 @@ ceph orch apply -i <xx.yml>                   # 导入服务的 spec 配置
   # unmanaged: false      # 是否禁止 Orchestrator 管理该服务
   ```
 
-### 管理 OSD
+### OSD
 
 ```sh
 ceph osd ls                                   # 列出所有 OSD
@@ -215,14 +214,14 @@ ceph orch osd rm <osd_id>...                  # 移除 OSD 进程，这会添加
 ceph orch osd rm status                       # 查看移除任务的状态
 ceph orch osd rm stop <osd_id>...             # 停止移除任务
 
-# ceph-volume 命令更底层
+# ceph-volume 是一个更底层的命令
 ceph-volume lvm list                          # 列出所有已关联 OSD 的 logical volume
 ceph-volume lvm zap <device>...               # 擦除一个 device 的内容。这会通过 dd if=/dev/zero of=<device> 命令销毁其中的分区表
                     --destroy                 # 擦除一个 raw device 时，销毁其中的 volume group 和 logical volume
 ceph-volume lvm prepare --data <device>       # 为一个 device 创建 OSD
 ceph-volume lvm activate
-                        <osd_id> <uuid>       # 启动 OSD 进程，需要指定其编号和 uuid
-                        --all                 # 自动发现所有 device 已关联的 OSD ，并启动
+                    <osd_id> <uuid>           # 启动 OSD 进程，需要指定其编号和 uuid
+                    --all                     # 自动发现所有 device 已关联的 OSD ，并启动
 ceph-volume lvm deactivate <osd_id> <uuid>    # 停止 OSD 进程
 ```
 - ceph-volume 会自动发现主机上的存储设备，满足以下条件才视作可用，允许创建 OSD ：
@@ -236,6 +235,23 @@ ceph-volume lvm deactivate <osd_id> <uuid>    # 停止 OSD 进程
   1. 分配一个在集群内唯一的 OSD ID ，编号从 0 开始。
   2. 格式化存储设备，创建 LVM 逻辑卷。
   3. 在当前主机部署一个 OSD 进程，并将 OSD 元数据以 LVM 标签的形式添加到逻辑卷，方便发现与逻辑卷关联的 OSD 。
+
+### Pool
+
+```sh
+ceph osd pool ls                        # 列出所有 pool
+ceph osd pool create <pool>             # 创建一个 pool ，指定名称
+ceph osd pool rm <pool>
+ceph osd pool get <pool> <key>          # 读取配置参数
+ceph osd pool set <pool> <key> <value>
+```
+- 常见的配置参数及其默认值：
+  ```sh
+  size      3     # 该 pool 中每个 object 的副本数，即将所有数据保存 size 份
+  min_size  2     # 读写 object 时需要的最小副本数
+  pg_num    32    # 该 pool 包含的 pg 数
+  crush_rule  replicated_rule # 采用的 CRUSH 规则
+  ```
 
 ### 文件存储
 

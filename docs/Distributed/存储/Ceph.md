@@ -53,9 +53,10 @@
 
 ## 部署
 
-Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接口控制 Ceph 。
-- Cephadm
+Ceph 有多种部署方式：
 - ceph-ansible ：基于 ansible playbook 部署 Ceph 集群。
+- ceph-deploy ：一个命令行工具，已停止维护。
+- Cephadm ：一个 Python3 脚本，用于以容器形式部署 Ceph 集群，通过编排（Orchestrator，orch）接口控制 Ceph 。
 - Rook ：用于在 k8s 中部署 Ceph 集群。
 
 ### 版本
@@ -67,10 +68,7 @@ Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接�
 
 ### Cephadm
 
-：一个 Python3 脚本，用于以容器形式部署 Ceph 集群。
-
-#### 部署步骤
-
+部署步骤：
 1. 下载 Cephadm 脚本：
     ```sh
     version=pacific
@@ -126,8 +124,7 @@ Ceph 存在多种部署方式，大多通过编排（Orchestrator，orch）接�
     ceph orch daemon add osd host1:/dev/vdb   # 创建 OSD 进程，管理磁盘
     ```
 
-#### 命令
-
+命令：
 ```sh
 python3 cephadm
                 version
@@ -236,6 +233,7 @@ ceph-volume lvm deactivate <osd_id> <uuid>    # 停止 OSD 进程
 - ceph-volume lvm 部署 OSD 的工作流程：
   1. 分配一个在集群内唯一的 OSD ID ，编号从 0 开始。
   2. 格式化存储设备，创建 LVM 逻辑卷。
+      - 此后执行 fdisk -l 可以同时看到原存储设备和 OSD 设备。如果用 mount 挂载原存储设备，则会报错：`xx is already mounted` 。
   3. 在当前主机部署一个 OSD 进程，并将 OSD 元数据以 LVM 标签的形式添加到逻辑卷，方便发现与逻辑卷关联的 OSD 。
 
 ### Pool
@@ -327,8 +325,10 @@ ceph mds stat                                 # 显示 mds 的状态
           [-o options]              # 可加上一些逗号分隔的选项，如下：
               name=guest            # CephX 用户
               secret=xxx            # CephX 密钥
-              fs=cephfs1            # 默认挂载第一个 fs ，可以指定其它 fs
+              secretfile=xxx        # CephX 密钥文件
+              fs=cephfs1            # 默认挂载第一个 fs
   ```
+  - secretfile、fs 选项需要安装 ceph 软件包才能使用，其提供了功能更多的 mount.ceph 命令。
   - 例：
     ```sh
     mkdir /mnt/cephfs
@@ -338,7 +338,7 @@ ceph mds stat                                 # 显示 mds 的状态
     dmesg | tail          # 查看挂载日志
     umount /mnt/cephfs    # 卸载
     ```
-  - 停止 fs 时，客户端访问已挂载的 fs 时会出错，比如无响应。
+  - 如果停止 fs ，则客户端访问已挂载的 fs 时会出错，比如无响应、umount 失败。
 
 ### volume
 

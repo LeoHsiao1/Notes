@@ -1,6 +1,6 @@
 # Ceph
 
-：一个复杂的分布式存储系统。可以将多个主机的磁盘合并成一个资源池，提供块存储、文件存储、对象存储服务。
+：一个分布式存储系统。可以将多个主机的磁盘联网组合成一个资源池，提供块存储、文件存储、对象存储服务。
 - [官方文档](https://docs.ceph.com/)
 - 读音为 `/ˈsɛf/`
 - 采用 C++ 开发。
@@ -13,7 +13,7 @@
     - 负责存储、维护 Cluster Map ，比如各个服务的地址、配置、状态等信息。
     - 支持部署多个实例，基于 Paxos 算法实现一致性。
     - 每个实例占用 1GB 以上内存。
-    - 客户端一般通过访问 Monitor 来与 Ceph 集群交互，采用 CephX 协议进行身份认证。
+    - 客户端一般通过访问 Monitor 来与 Ceph 集群交互。
   - Manager（MGR）
     - 负责管理一些功能模块，比如 Dashboard 。
     - 每个实例都会运行 Dashboard 模块，提供 Web 管理页面。集成了一套 grafana、prometheus、node_exporter、alertmanager 监控进程。
@@ -49,7 +49,7 @@
   2. 将数据分割为以 object 为单位，再以 pg 为单位分组。
   3. 将 pg 分配到一些 OSD 中存储。
       - 应用程序直接与 OSD 进程通信，不需要经过 Monitor 中转，因此分散了负载压力。
-      - 应用程序和 OSD 进程都能根据 CRUSH 算法计算出每个 pg 应该分配到哪个 OSD 的哪个存储位置，不需要查表，因此效率更高。
+      - 应用程序和 OSD 进程都能根据 CRUSH 算法计算出每个 pg 应该存储到哪个 OSD 的哪个位置，不需要查表，因此效率更高。
 
 ## 部署
 
@@ -149,19 +149,18 @@ python3 cephadm
 ceph -v
 ceph status
 
+# 升级集群
+ceph orch upgrade start --ceph-version 16.2.6   # 升级到指定版本
+ceph orch upgrade status                        # 查看升级任务的状态。执行 ceph status 还会显示升级的进度条
+ceph orch upgrade stop                          # 停止升级任务
+
 # 配置集群
 ceph config dump                    # 输出集群的配置参数，不包括默认的配置参数
 ceph config ls                      # 列出所有可用的配置参数
 ceph config log [n]                 # 查看配置参数最近 n 次的变更记录
 ceph config get <who> [key]         # 读取配置参数，who 表示服务类型
 ceph config set <who> <key> <value> # 设置配置参数
-
-# 升级集群
-ceph orch upgrade start --ceph-version 16.2.6   # 升级到指定版本
-ceph orch upgrade status                        # 查看升级任务的状态。执行 ceph status 还会显示升级的进度条
-ceph orch upgrade stop                          # 停止升级任务
 ```
-- 没有提供重启集群的命令。
 
 ### 主机
 
@@ -189,6 +188,7 @@ ceph orch apply -i <xx.yml>                   # 导入服务的 spec 配置
   - 服务进程以守护进程的形式运行，称为 daemon 。
     - daemon 的命名格式为 `<service_name>.<hostname>` ，例如 mon.host1 。
     - daemon 的容器命名格式为 `ceph-<fsid>-<process_name>` 。
+  - 没有直接重启服务的命令，管理不方便。
 - 同种服务的 daemon 采用同一份配置（Specification，spec）。例如 mon 服务的配置如下：
   ```yml
   service_type: mon
@@ -251,59 +251,94 @@ ceph osd pool set <pool> <key> <value>
 ```
 - pool 分为两种类型：
   - replicated ：复制池，默认采用。将 object 保存多份，从而实现数据备份。
+    - 假设全部 OSD 的磁盘容量为 100G ，存储的 pool size 为 3 ，则 pool 最多允许写入 33G 数据。
   - erasure ：纠错码池。通过占用大概 1.5 倍的存储空间来实现数据备份。
     - 比复制池占用的存储空间更少，但是读取时占用更多 CPU 和内存来解码，读取延迟较大，适合冷备份。
-- 常见的配置参数：
+- pool 常见的配置参数：
   ```sh
-  size          # 该 pool 中每个 object 的副本数，即将所有数据保存 size 份。默认为 3
-  min_size      # 读写 object 时需要的最小副本数。默认为 2
-  pg_num        # 该 pool 包含的 pg 数，应该根据 osd_count*100/pool_size 估算，并取最近的一个 2^n 幂值
-  pgp_num       # 用于 CRUSH 计算的 pg 数，取值应该等于 pg_num
-  crush_rule    # 采用的 CRUSH 规则。默认为 replicated_rule
+  size              # 该 pool 中每个 object 的副本数，即将所有数据保存 size 份。默认为 3
+  min_size          # 读写 object 时需要的最小副本数。默认为 2
+  pg_num            # 该 pool 包含的 pg 数，默认为 32 。应该根据 osd_count*100/pool_size 估算，并取最近的一个 2^n 幂值
+  pgp_num           # 用于 CRUSH 计算的 pg 数，取值应该等于 pg_num
+  crush_rule        # 采用的 CRUSH 规则。默认为 replicated_rule
+  quota_max_bytes   # 存储容量。默认为 0 ，不限制
+  quota_max_objects # 存储的 object 数。默认为 0 ，不限制
   ```
-- 默认禁止删除 pool ，需要允许：
+- mon 服务关于 pool 的配置参数：
   ```sh
-  ceph config set mon mon_allow_pool_delete true
+  mon_allow_pool_delete       # 是否允许删除 pool ，默认为 false
+  mon_allow_pool_size_one     # 是否允许 pool size 设置为 1 。默认为 false ，因此 size 至少要为 2
+
+  # pool 配置参数的默认值
+  osd_pool_default_size
+  osd_pool_default_min_size
+  osd_pool_default_pg_num
+  osd_pool_default_pgp_num
+  ```
+- pool 中 pg 的常见状态：
+  ```sh
+  # 正常状态
+  active        # 可以读写
+  clean         # pg 不存在故障的 object
+
+  # 异常状态
+  down          # pg 离线
+  undersized    # pg 实际运行的副本数少于 pool size
+  degraded      # 降级了，pg 中存在一些 object ，其副本数少于 pool size
+  stale         # pg 的状态没有更新到 Monitor ，可能是存储该 pg 的所有 OSD 都故障了
+
+  # 关于检查、恢复
+  deep          # 根据 checksum 检查 pg 的数据是否一致
+  peer          # 存储该 pg 的所有 OSD 互相通信，将该 pg 的状态同步一致
+  recovery      # 根据操作日志找出 pg 中与其它副本不一致的 object ，进行同步。常见于 OSD 重启时
+  backfill      # 检查并同步 pg 中的全部 object ，常见于新增 pg、OSD 时
   ```
 
 ### CephFS
 
 ```sh
-ceph fs ls                                    # 列出已创建的 CephFS 实例
+ceph fs ls                                    # 列出已创建的 fs
 ceph fs status
-ceph fs new <fs_name> <metadata> <data>       # 创建一个 CephFS 实例，指定其用于存储元数据、数据的 pool
+ceph fs new <fs_name> <meta> <data>           # 创建一个 fs，指定其用于存储元数据、数据的 pool
+ceph fs rm  <fs_name> --yes-i-really-mean-it  # 删除一个 fs
 ceph fs add_data_pool <fs_name> <pool>        # 给 CephFS 增加数据池
-ceph fs fs get <fs_name>                      # 读取配置参数
-ceph fs fs set <fs_name> <key> <value>
-```
-- 可以创建多个 CephFS 文件系统实例：
-  - 每个 CephFS 实例需要使用至少两个 pool ，分别用于存储数据、元数据。
-  - 每个 CephFS 实例需要使用至少一个 MDS 服务器。
+ceph fs get <fs_name>                         # 读取全部配置参数
+ceph fs set <fs_name> <key> <value>           # 修改一个配置参数
 
-- 例：创建 CephFS 实例
+ceph mds stat                                 # 显示 mds 的状态
+```
+- Ceph 集群中可以创建多个 CephFS 文件系统实例，简称为 fs 。
+  - 每个 fs 需要使用至少两个 pool ，分别用于存储数据、元数据。
+  - 每个 fs 需要使用至少一个 MDS 服务器。
+- fs 常见的配置参数：
+  ```sh
+  max_file_size   # 单个文件的最大体积，默认为 1024^4
+  down            # 是否停止服务。通过设置该参数为 true 或 false ，可以停止或启动 fs
+  ```
+- 例：创建 fs
   ```sh
   ceph osd pool create cephfs1.data
-  ceph osd pool create cephfs1.metadata
-  ceph fs new cephfs1 cephfs1.metadata cephfs1.data
+  ceph osd pool create cephfs1.meta
+  ceph fs new cephfs1 cephfs1.meta cephfs1.data
   ```
-
 - Linux 内核已经内置了 ceph 模块，因此可以直接用 mount 命令挂载 CephFS 文件系统：
   ```sh
   mount -t ceph <mon_ip:port>:<src_dir> <dst_dir>  # 访问 mon 服务器，将 CephFS 文件系统的 src_dir 挂载到当前主机的 dst_dir
-          -o  options               # 可加上一些逗号分隔的选项，如下：
-              mount_timeout=60      # 挂载的超时时间，单位为 s
-              name=guest            # 用于 CephX 身份认证的用户名
-              secretfile=...        # 用于 CephX 身份认证的密码文件
+          [-o options]              # 可加上一些逗号分隔的选项，如下：
+              name=guest            # CephX 用户
+              secret=xxx            # CephX 密钥
+              fs=cephfs1            # 默认挂载第一个 fs ，可以指定其它 fs
   ```
   - 例：
     ```sh
     mkdir /mnt/cephfs
-    mount -t ceph   :/  /mnt/cephfs   -o fs=cephfs1    # 通过 -o 选项指定 CephFS 实例
+    mount -t ceph   10.0.0.1:/  /mnt/cephfs   -o name=admin,secret=xxx
+    echo '10.0.0.1:/  /mnt/cephfs    ceph    name=admin,secret=xxx    0   0' >> /etc/fstab
 
-    echo ':/   /mnt/ceph    ceph    fs=cephfs1    0   0' >> /etc/fstab
-
-    umount /mnt/myfs    # 卸载
+    dmesg | tail          # 查看挂载日志
+    umount /mnt/cephfs    # 卸载
     ```
+  - 停止 fs 时，客户端访问已挂载的 fs 时会出错，比如无响应。
 
 ### volume
 
@@ -320,10 +355,12 @@ ceph fs subvolumegroup ls
 ceph fs subvolumegroup create <vol_name> <group_name>
 ceph fs subvolumegroup rm     <vol_name> <group_name>
 ```
-- CephFS volume 是一种快速创建 CephFS 实例的方式。
-  - 创建一个 volume 时，会自动创建两个 pool ，命名格式为 `cephfs.<volume>.data` 和 `cephfs.<volume>.meta` 。
-    - 还会默认创建两个 MDS 服务器。
-    - 删除一个 volume 时会自动删除关联的 pool 和 MDS 。
+- CephFS volume 是对一种快速创建 fs 的方式。
+  - 创建一个 volume 时，会自动创建：
+    - 一个同名的 fs 。
+    - 两个 pool ，命名格式为 `cephfs.<volume>.data` 和 `cephfs.<volume>.meta` 。
+    - 两个 MDS 服务器。
+  - 删除一个 volume 时，会自动删除关联的 fs、pool 和 MDS 。
   - 每个 volume 中可以创建多个子卷（subvolume）或子卷组（subvolume group），相当于文件夹。
 - 例：查看 mds.volume1 的配置
   ```sh
@@ -333,4 +370,22 @@ ceph fs subvolumegroup rm     <vol_name> <group_name>
   service_name: mds.volume1
   placement:
     count: 2
+  ```
+
+### CephX
+
+```sh
+ceph auth ls            # 列出已创建的凭证
+ceph auth get <name>    # 读取指定的凭证
+ceph auth rm  <name>
+```
+- Ceph 集群采用 CephX 协议进行身份认证。
+- 凭证示例：
+  ```sh
+  client.admin                                            # 用户名
+          key: AQD9O45hiBQrDBAAsMYpN0ddCF/apJpYIoLokg==   # 密钥，采用 base64 编码
+          caps: [mds] allow *                             # 权限
+          caps: [mgr] allow *
+          caps: [mon] allow *
+          caps: [osd] allow *
   ```

@@ -172,7 +172,7 @@
 - Localization: Chinese (Simplified)
   - 用于对 Jenkins 的页面进行汉化。
 - Blue Ocean
-  - 提供了对于流水线的一种更美观的操作页面。
+  - 提供了一个更美观的流水线执行页面，但功能少。
 - Extended Choice Parameter
   - 提供了单选框、复选框、单选按钮、多选按钮类型的输入参数。
 - Generic Webhook Trigger

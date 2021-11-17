@@ -83,8 +83,8 @@ Ceph 有多种部署方式：
     - 检查本机是否安装了依赖软件，没有则自动安装：
       - docker 或 podman 容器引擎
       - systemctl
-      - lvcreate ：用于创建 LVM 逻辑卷。
-      - chronyd ：用于同步时间。
+      - lvcreate
+      - chronyd
     - 以容器形式运行一个 Monitor 和 Manager 进程，并在防火墙开通相应端口。
     - 为 Ceph 集群生成一个新的 SSH 密钥。
       - 密钥保存到 /etc/ceph/ceph.client.admin.keyring 文件。
@@ -232,8 +232,8 @@ ceph-volume lvm deactivate <osd_id> <uuid>    # 停止 OSD 进程
     - logical volume ：LVM 逻辑卷。
 - ceph-volume lvm 部署 OSD 的工作流程：
   1. 分配一个在集群内唯一的 OSD ID ，编号从 0 开始。
-  2. 格式化存储设备，创建 LVM 逻辑卷。
-      - 此后执行 fdisk -l 可以同时看到原存储设备和 OSD 设备。如果用 mount 挂载原存储设备，则会报错：`xx is already mounted` 。
+  2. 格式化存储设备，为 OSD 创建 LVM 逻辑卷。
+      - 此后执行 fdisk -l 可以同时看到原存储设备和 OSD 设备。如果用 mount 挂载原存储设备，则会报错：`xx is already mounted` ，因为已被 OSD 占用。
   3. 在当前主机部署一个 OSD 进程，并将 OSD 元数据以 LVM 标签的形式添加到逻辑卷，方便发现与逻辑卷关联的 OSD 。
 
 ### Pool

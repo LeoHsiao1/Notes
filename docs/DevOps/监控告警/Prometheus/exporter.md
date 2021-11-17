@@ -695,7 +695,7 @@
   services:
     kafka_exporter:
       container_name: kafka_exporter
-      image: danielqsj/kafka-exporter:v1.3.1
+      image: danielqsj/kafka-exporter:v1.4.2
       restart: unless-stopped
       command:
         # - --web.listen-address=:9308

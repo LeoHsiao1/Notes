@@ -19,7 +19,8 @@
     - 每个实例都会运行 Dashboard 模块，提供 Web 管理页面。集成了一套 grafana、prometheus、node_exporter、alertmanager 监控进程。
   - Object Storage Daemon（OSD）
     - 负责将数据存储到设备中，供用户读写。
-    - 通常在每个主机上，为每个存储设备部署一个 OSD 进程。
+    - 通常在每个主机上，将存储设备格式化为 LVM 逻辑卷，并部署一个 OSD 进程来管理。
+      - 将 OSD 元数据保存在 LVM label 中，方便发现与逻辑卷关联的 OSD 。
   - Crash
     - 负责收集其它服务的崩溃信息。
   - Meta Data Server（MDS）
@@ -228,13 +229,8 @@ ceph-volume lvm deactivate <osd_id> <uuid>    # 停止 OSD 进程
   - 没有挂载。
   - 不包含文件系统。
   - 没有磁盘分区（partition）。因此通常使用以下两种存储设备：
-    - raw device ：原始存储设备，比如一个磁盘。
+    - raw device ：原始存储设备，比如磁盘。
     - logical volume ：LVM 逻辑卷。
-- ceph-volume lvm 部署 OSD 的工作流程：
-  1. 分配一个在集群内唯一的 OSD ID ，编号从 0 开始。
-  2. 格式化存储设备，为 OSD 创建 LVM 逻辑卷。
-      - 此后执行 fdisk -l 可以同时看到原存储设备和 OSD 设备。如果用 mount 挂载原存储设备，则会报错：`xx is already mounted` ，因为已被 OSD 占用。
-  3. 在当前主机部署一个 OSD 进程，并将 OSD 元数据以 LVM 标签的形式添加到逻辑卷，方便发现与逻辑卷关联的 OSD 。
 
 ### Pool
 

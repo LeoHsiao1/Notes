@@ -23,7 +23,7 @@
 
 - 例：创建表
   ```sql
-  CREATE TABLE tutorial.visits_v1
+  CREATE TABLE table1
   (
       name String,
       number UInt32,
@@ -49,7 +49,7 @@
 
 - ClickHouse 提供了多种数据表引擎：
   - MergeTree
-    - ：适合存储海量数据。
+    - ：适合低频率（大概每秒一次）写入大量数据，在后台异步合并、压缩，比逐行写入数据更快。
   - Log
     - ：适合快速写入大量小表并同时读取，每个表在 100 万行以内。
     - 写入的数据被顺序 append 到磁盘，不支持 update、delete 。

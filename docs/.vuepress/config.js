@@ -1068,6 +1068,19 @@ module.exports = {
                             path: "/Database/ES/配置"
                         }
                     ]
+                },
+                {
+                    title: "ClickHouse",
+                    children: [
+                        {
+                            title: "ClickHouse",
+                            path: "/Database/ClickHouse/ClickHouse"
+                        },
+                        {
+                            title: "部署",
+                            path: "/Database/ClickHouse/部署"
+                        }
+                    ]
                 }
             ],
             "/DevOps/": [

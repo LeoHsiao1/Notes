@@ -28,7 +28,10 @@ MySQL 存在多个分支：
     - 2018 年发布，跳过了 v6、v7 版本。
     - 默认字符集从 latin1 改为 utf8mb4 。utf8mb4 的默认字符序从 utf8mb4_general_ci 改为更新版本的 utf8mb4_0900_ai_ci 。
     - 实现 DDL 操作的原子性。
-    - 密码的存储方式从 mysql_native_password 改为 caching_sha2_password ，老版本的客户端可能不兼容，导致不能登录。
+    - 密码的存储方式从 mysql_native_password 改为 caching_sha2_password 。老版本的客户端可能不兼容，导致不能登录。可以修改存储方式：
+      ```sh
+      ALTER USER 'test'@'%' IDENTIFIED WITH mysql_native_password BY '******';
+      ```
 
 - MariaDB
   - 2010 年，因为抗议 Oracle 公司的收购，MySQL 的创始人之一 Monty Widenius 从 MySQL v5.5 分叉出 MariaDB ，作为开源项目。

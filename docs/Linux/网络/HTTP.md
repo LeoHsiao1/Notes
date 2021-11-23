@@ -17,6 +17,7 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
       # 关于下载
       -o <PATH>                   # --output ，将 URL 指向的资源保存为指定路径的文件
       -O                          # 保存为当前目录下的同名文件
+      -C <offset>                 # --continue-at ，从 offset 处继续下载，offset 为 - 则会自动计算。这需要响应报文包含 Content-Range 字段，声明数据片段的起始、结束位置
 
       # 关于身份认证
       -k                          # --insecure ，不验证网站的 SSL 证书是否有效，但依然会建立 SSL 连接

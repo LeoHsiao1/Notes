@@ -102,7 +102,7 @@ global:                           # 配置一些全局参数
 receivers:                        # 定义告警消息的接受者
 - name: email_to_leo
   email_configs:                  # 只配置少量 smtp 参数，其余的参数则继承全局配置
-  - to: 123456@qq.com
+  - to: 123456@qq.com             # 收件人，如果有多个邮箱地址则用逗号分隔
     # send_resolved: false        # 是否在警报消失时发送 resolved 状态的消息
     # html: '{{ template "email.default.html" . }}'   # 设置 HTML 格式的邮件 body
     # headers:

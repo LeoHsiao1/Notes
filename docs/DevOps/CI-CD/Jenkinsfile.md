@@ -388,8 +388,8 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   ```groovy
   emailext (
       subject: "[${currentBuild.fullDisplayName}]的构建结果为${currentBuild.currentResult}",
+      from: "123456@email.com",
       to: '123456@email.com',
-      from: "Jenkins <123456@email.com>",
       body: """
           任务名：${env.JOB_NAME}
           任务链接：${env.JOB_URL}

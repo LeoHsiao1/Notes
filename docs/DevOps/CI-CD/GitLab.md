@@ -6,6 +6,21 @@
 - 可以访问公网上的 GitLab 官方网站，也可以自己部署社区版（CE）或企业版（EE）。
 - 除了托管 Git 仓库，还提供了 Issue、任务看板、Wiki、CI/CD、WebIDE 等丰富的功能。
 
+## 架构
+
+GitLab 内置的主要服务：
+- puma ：一个 HTTP 服务器。
+- workhorse ：反向代理 puma ，用于加速体积较大的 HTTP 请求，比如静态文件、上传文件。
+- sidekiq ：负责在后台执行任务。
+- gitaly ：负责处理 git 请求。收到用户访问 Git 仓库的请求时，会去访问磁盘中的 Git 仓库。
+
+依赖的外部服务：
+- redis
+- postgreSQL
+- nginx ：用于反向代理各个内部服务，作为用户访问 GitLab 的入口。
+- grafana、prometheus、exporter ：用于监控 Gitlab 自身。
+
+
 ## 部署
 
 - 用 docker-compose 部署：
@@ -26,7 +41,7 @@
         - ./logs:/var/log/gitlab
   ```
   - 执行 `gitlab-rake "gitlab:password:reset"` ，根据提示输入用户名 root ，即可设置其密码。
-  - 官方 Docker 镜像中集成了多个进程，比如 Nginx、Prometheus、Grafana ，比较臃肿，启动时需要几分钟。
+  - 官方 Docker 镜像中集成了多个进程，因此比较臃肿，启动时需要几分钟。
 
 - GitLab 企业版增加了少许功能。
   - 与社区版兼容。部署企业版时，如果未激活，则只能使用社区版的功能。
@@ -54,6 +69,12 @@
   gitlab_rails['smtp_enable_starttls_auto'] = true
   gitlab_rails['smtp_tls']                  = true
   gitlab_rails['gitlab_email_from']         = 'test@qq.com'
+
+  # 配置容器集成的其它服务
+  # grafana['enable'] = true
+  # prometheus['enable'] = true
+  # prometheus_monitoring['enable'] = true  # 与 prometheus 相关的 exporter
+  # puma['worker_processes'] = 2            # puma 的 worker 进程数，每个 worker 可能占用 1G 内存，但多个 worker 之间会共享内存
   ```
   - 修改配置文件之后，需要执行 `gitlab-ctl reconfigure` 才能生效，而重启不一定生效。
   - 可以执行 `gitlab-rails console` 进入 Ruby 终端，测试发送邮件：

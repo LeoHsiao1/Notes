@@ -1093,18 +1093,15 @@ module.exports = {
                     children: [
                         {
                             title: "Git",
-                            path: "/DevOps/CI-CD/Git",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "GitLab",
-                                    path: "/DevOps/CI-CD/GitLab"
-                                },
-                                {
-                                    title: "GitHub",
-                                    path: "/DevOps/CI-CD/GitHub"
-                                }
-                            ]
+                            path: "/DevOps/CI-CD/Git"
+                        },
+                        {
+                            title: "GitLab",
+                            path: "/DevOps/CI-CD/GitLab"
+                        },
+                        {
+                            title: "GitHub",
+                            path: "/DevOps/CI-CD/GitHub"
                         },
                         {
                             title: "Jenkins",

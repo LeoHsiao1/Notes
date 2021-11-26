@@ -2,8 +2,8 @@
 
 - CI/CD
   - [Git](CI-CD/Git.md)
-    - [GitLab](CI-CD/GitLab.md)
-    - [GitHub](CI-CD/GitHub.md)
+  - [GitLab](CI-CD/GitLab.md)
+  - [GitHub](CI-CD/GitHub.md)
   - [Jenkins](CI-CD/Jenkins.md)
     - [Jenkinsfile](CI-CD/Jenkinsfile.md)
 - 测试

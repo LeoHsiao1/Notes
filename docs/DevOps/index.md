@@ -12,8 +12,9 @@
 - 容器
   - [简介](容器/简介.md)
   - [Docker](容器/Docker/Docker.md)
-    - [Docker 容器](容器/Docker/Docker容器.md)
-    - [Docker 镜像](容器/Docker/Docker镜像.md)
+    - [原理](容器/Docker/原理.md)
+    - [管理容器](容器/Docker/管理容器.md)
+    - [管理镜像](容器/Docker/管理镜像.md)
     - [Dockerfile](容器/Docker/Dockerfile.md)
     - [Docker Compose](容器/Docker/Docker-Compose.md)
   - [Kubernetes](容器/k8s/Kubernetes.md)

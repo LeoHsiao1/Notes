@@ -1145,12 +1145,16 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
-                                    title: "Docker 容器",
-                                    path: "/DevOps/容器/Docker/Docker容器"
+                                    title: "原理",
+                                    path: "/DevOps/容器/Docker/原理"
                                 },
                                 {
-                                    title: "Docker 镜像",
-                                    path: "/DevOps/容器/Docker/Docker镜像"
+                                    title: "管理容器",
+                                    path: "/DevOps/容器/Docker/管理容器"
+                                },
+                                {
+                                    title: "管理镜像",
+                                    path: "/DevOps/容器/Docker/管理镜像"
                                 },
                                 {
                                     title: "Dockerfile",

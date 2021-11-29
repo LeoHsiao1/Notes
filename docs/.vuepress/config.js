@@ -416,8 +416,8 @@ module.exports = {
                             path: "/Linux/简介/Linux"
                         },
                         {
-                            title: "发行版",
-                            path: "/Linux/简介/发行版"
+                            title: "相关概念",
+                            path: "/Linux/简介/相关概念"
                         }
                     ]
                 },

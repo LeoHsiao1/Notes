@@ -33,8 +33,8 @@ docker-compose
             restart [service]...      # 重启服务
 
             down                      # 停止并删除所有容器，并删除用到的网络
-                -v                    # 再删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
-                --rmi all             # 再删除该服务用到的所有镜像
+                -v                    # 同时删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
+                --rmi all             # 同时删除该服务用到的所有镜像
 
             exec <service> <command>  # 在服务的容器中执行一条命令
                 -d                    # 在后台执行命令

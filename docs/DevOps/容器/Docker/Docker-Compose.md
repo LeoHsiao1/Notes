@@ -131,10 +131,10 @@ services:                     # 开始定义服务
       - 9000:8000             # 注意这里的每行配置是一个字符串，因此冒号 : 之后不能加空格
       - 9090-9091:8080-8081
 
-    volumes:                  # 挂载数据卷
-      - /root/data:/root/data # 可以直接挂载目录或文件
-      - ./log:/root/log       # 可以挂载相对路径（必须以 ./ 或 ../ 开头，否则会被视作数据卷名）
-      - conf:/root/conf       # 可以挂载数据卷
+    volumes:                  # 挂载
+      - /root/data:/root/data # 挂载文件或目录
+      - ./log:/root/log       # 支持挂载相对路径（必须以 ./ 或 ../ 开头，省略的话则会视作数据卷的名称）
+      - conf:/root/conf       # 挂载数据卷
 
     ulimits:                  # 设置 ulimit 参数
       nproc: 65535

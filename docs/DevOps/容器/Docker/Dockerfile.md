@@ -8,8 +8,8 @@
 ```dockerfile
 FROM nginx                      # Dockerfile 中的第一条非注释命令，表示以某个镜像为基础开始构建
 
-MAINTAINER "..."                # 注明镜像的作者
-LABEL maintainer="..."          # 给镜像添加键值对格式的标签
+LABEL maintainer=test \         # 给镜像添加键值对格式的标签（该指令可重复使用，可同时声明多个标签）
+      git_refs=master
 
 ENV var1=value1 var2=value2 ... # 设置环境变量
 ARG var1                        # 设置构建参数（可以在 docker build 时传入该参数的值）

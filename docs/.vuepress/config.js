@@ -1146,12 +1146,12 @@ module.exports = {
                                     path: "/DevOps/容器/Docker/原理"
                                 },
                                 {
-                                    title: "管理容器",
-                                    path: "/DevOps/容器/Docker/管理容器"
+                                    title: "容器",
+                                    path: "/DevOps/容器/Docker/容器"
                                 },
                                 {
-                                    title: "管理镜像",
-                                    path: "/DevOps/容器/Docker/管理镜像"
+                                    title: "镜像",
+                                    path: "/DevOps/容器/Docker/镜像"
                                 },
                                 {
                                     title: "Dockerfile",

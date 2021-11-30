@@ -2,7 +2,8 @@
 
 ：Visual Studio Code ，是微软公司于 2015 年发布的一款开源、轻量级的 IDE 。
 - [官网](https://code.visualstudio.com/)
-- 基于 Electron 框架开发，跨平台。
+- 基于 Electron 框架开发，跨平台，支持 Web IDE 。
+- 支持远程终端。
 - 本身是一个轻量级的代码编辑器，但可以通过安装插件扩展很多功能，比如搭建任意编程语言的开发环境。
 
 ## 用法
@@ -96,6 +97,16 @@ VS Code 支持远程开发模式。
   - 于 2014 年由 GitHub 公司发布。
 - Monaco Editor
   - ：VS Code 的代码编辑器，现已作为一个独立项目开源。
+- [github1s](https://github.com/conwnet/github1s)
+  - ：一个 2021 年发布的开源项目，用于通过 Web IDE 查看任意 GitHub 项目的文件。
+  - 用法：在浏览器中访问任意 GitHub 项目，将域名 github.com 改为 github1s.com ，即可进入基于 VS Code 构建的 Web IDE 页面。
+- Jupyter Notebook
+  - ：一个 Web 服务器，提供了 Web IDE 。
+  - 2014 年，IPython 解释器的 Notebook 改名为 Jupyter Notebook ，成为一个独立项目，扩展支持几十种编程语言。
+  - 可以创建、编辑 Notebook 文档：
+    - 支持多种编程语言的交互式编程。
+    - 支持显示像 MarkDown 的富文本，方便绘制数学公式、编写教程文档。
+    - 文档保存为 JSON 格式，扩展名为 .ipynb 。
 
 ### WSL
 

@@ -9,13 +9,13 @@
 
 ## 安装
 
-- 在 Centos 上安装：
+- 在 CentOS 上安装：
   ```sh
   yum install -y yum-utils       # 安装 yum-config-manager
   yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo   # 添加 docker 的官方镜像源
   yum install -y docker-ce      # 下载 docker 社区版
   systemctl start docker        # 启动 dockerd
-  systemctl enable docker       # 使 docker 开机自启
+  systemctl enable docker       # 使 dockerd 开机自启
   ```
 
 - 在 ubuntu 上，可以用官方脚本自动安装：
@@ -29,13 +29,47 @@
   - Docker CE ：社区版（Community Edition），免费提供。
   - Docker EE ：企业版（Enterprise Edition），增加了一些收费的功能。
 
-### 配置
+## 配置
 
-- 配置 dockerd 时，需要创建 `/etc/docker/daemon.json` 文件，写入配置信息，然后重启 dockerd 。
-  - dockerd 默认以 HTTPS 方式访问镜像仓库服务器。如果服务器不支持 SSL 认证，则需要将其地址加入白名单：
-    ```json
-    "insecure-registries" : ["10.0.0.1:8080"]
-    ```
+- dockerd 的配置文件默认位于 `/etc/docker/daemon.json` ，且默认未创建。内容示例：
+  ```json
+  {
+    "containerd": "/run/containerd/containerd.sock",
+    "containerd-namespace": "docker",
+    "data-root": "/var/lib/docker",           // dockerd 的数据目录
+    "debug": false,                           // 是否开启调试模式
+    "exec-root": "/var/run/docker",           // dockerd 的工作目录
+    "insecure-registries" : ["10.0.0.1:80"],  // dockerd 默认以 HTTPS 方式访问镜像仓库服务器。如果服务器不支持 SSL 认证，则需要将其地址加入白名单
+    "live-restore": false,                    // 当 dockerd 终止时，是否保持容器运行。建议启用，方便重启 dockerd
+    "oom-score-adjust": -500,                 // dockerd 的 oom_score_adj
+    "selinux-enabled": false,
+    "shutdown-timeout": 15,                   // 停止容器时的超时时间
+
+    // 创建容器时的默认配置
+    "default-address-pools": [
+      {
+        "base": "172.30.0.0/16",
+        "size": 24
+      },
+      {
+        "base": "172.31.0.0/16",
+        "size": 24
+      }
+    ],
+    "default-runtime": "runc",
+    "default-shm-size": "64M",
+    "default-ulimits": {
+      "nofile": {
+        "Name": "nofile",
+        "Hard": 64000,
+        "Soft": 64000
+      }
+    },
+    "dns": ["8.8.8.8"],                       // 容器默认的 DNS 服务器
+  }
+  ```
+  - 修改配置之后，需要重启 dockerd 。
+
 - 如果想让 dockerd 使用代理，需要在 `/usr/lib/systemd/system/docker.service` 中加入环境变量：
   ```sh
   [Service]

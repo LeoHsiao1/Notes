@@ -508,8 +508,8 @@ module.exports = {
                             path: "/Linux/设备/外存"
                         },
                         {
-                            title: "磁盘分区",
-                            path: "/Linux/设备/磁盘分区"
+                            title: "磁盘",
+                            path: "/Linux/设备/磁盘"
                         }
                     ]
                 },

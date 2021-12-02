@@ -150,7 +150,7 @@ services:                     # 开始定义服务
       start_period: 40s
 
 networks:                     # 定义网络
-  # default:                  # 如果没有自定义网络，则默认创建一个名为 default 的网络
+  # default:                  # 如果没有自定义网络，则默认创建一个名为 <project>_default 的网络，让上述所有容器连接到它
   net:
     driver: bridge
 

@@ -8,19 +8,20 @@
 - Dockerfile 中可以包含多行指令（instruction）。
   - 指令名不区分大小写，但一般大写。
   - 一般在每行以指令名开头，允许添加前置空格。
-  - 第一条非注释的指令，必须是 FROM 。
+  - 第一条非注释的指令应该是 FROM ，否则报错：`no build stage in current context`
+
+- dockerd 构建镜像时，会依次执行 Dockerfile 中的指令。
+  - 每个指令划分为一个构建步骤（build step）
+  - 从 FROM 指令开始的一组指令划分为一个构建阶段（build stage）。
 
 - Dockerfile 中的以下指令只可使用一次：
   ```sh
   FROM
-  EXPOSE
-  VOLUME
   ENTRYPOINT
   CMD
   ...
   ```
   - 如果存在多个，则可能只有最后一个会生效。
-  - 其它指令可使用多次。
 
 ### 注释
 
@@ -49,16 +50,60 @@
   - alpine ：一个专为容器设计的 Linux 系统，体积很小，但可能遇到兼容性问题。比如它用 musl 库代替了 glibc 库。
   - slim ：一种后缀，表示某种镜像的精简版，体积较小。通常是去掉了一些文件，只保留运行时环境。
 
+## 关于变量
+
+- Dockerfile 中可通过 ARG、ENV 指令定义变量，可在大部分指令中引用。
+  - 例：
+    ```dockerfile
+    ARG     A=10
+    ENV     B=$A
+
+    EXPOSE  ${A:-80}
+    WORKDIR ${A:+'/tmp'}
+    ```
+  - 支持多种读取变量的语法：
+    ```sh
+    $var
+    ${var}
+    ${var:-default}      # 如果变量存在且不为空，则返回其值，否则返回默认值
+    ${var:+default}      # 如果变量存在且不为空，则返回默认值，否则返回空
+    ```
+  - 允许在第一条 FROM 指令之前插入 ARG 指令：
+    ```dockerfile
+    ARG     A=10
+    FROM    nginx:1.$A
+
+    # 开始 FROM 构建阶段之后，不会保留 FROM 之前的 ARG 变量，因此这里 $A 的值为空
+    ENV     B=$A
+
+    # 如果声明一个同名变量并赋值为空，就可以获得之前的值，因此这里 $A 的值为 10
+    ARG     A
+    EXPOSE  $A
+    ```
+- ARG 变量只影响构建过程，生成镜像之后不会保留。而 ENV 变量会添加到容器内 shell 中。
+  - 构建镜像时，可通过 `docker build --build-arg` 传入构建参数。
+
 ### ARG
 
 ：声明一个或多个键值对格式的构建参数。
-- 属于 Dockerfile 文件内的变量，只影响构建过程，生成镜像之后不会保留。
 - 例：
   ```dockerfile
   ARG var1  \
       var2=value2
   ```
-  - 构建参数可以声明默认值，也可以不声明，需要通过 `docker build --build-arg` 传入。
+  - 可以赋值为空。
+
+### ENV
+
+：给容器内 shell 添加一个或多个键值对格式的环境变量。
+- 例：
+  ```dockerfile
+  ENV var1 \
+      var2=value2
+  ```
+  - 可以赋值为空。
+
+## 其它
 
 ### LABEL
 
@@ -68,15 +113,6 @@
   ```dockerfile
   LABEL maintainer=test \
         git_refs=master
-  ```
-
-### ENV
-
-：给容器内 shell 添加一个或多个键值对格式的环境变量。
-- 例：
-  ```dockerfile
-  ENV var1=value1 \
-      var2=value2
   ```
 
 ### USER
@@ -189,18 +225,22 @@
 
   可见，当 ENTRYPOINT 指令采用 shell 格式时，不会被 CMD 指令影响，可以忽略 CMD 指令。
 
-### 多阶段构建
+## 多阶段构建
 
-：在一个 Dockerfile 中使用多个 FROM 指令，相当于拼接多个 Dockerfile ，每个 FROM 指令表示一个构建阶段的开始。
-- 后一个阶段可以拷贝之前任一阶段生成的文件，而不必拷贝冗余文件，从而减少最终镜像的大小。
+- 一个 Dockerfile 可以包含多个 FROM 指令，每个 FROM 指令表示一个构建阶段的开始。
+- 使用多阶段构建的好处：
+  - 将复杂的 Dockerfile 划分成多个独立的部分。
+  - 减小镜像体积。
+    - 一个构建步骤 step ，会使用之前 step 的中间镜像，不得不继承 layer 中的全部文件，因此镜像容易包含无用文件。
+    - 而一个构建阶段 stage ，会使用一个独立的基础镜像，但可以选择性地 COPY 之前 stage 的文件。
 - 例：
   ```dockerfile
-  FROM centos as stage1                           # 给该阶段命名
-  COPY . /root/
+  FROM nginx as stage1                             # 开始一个节点，并用 as 命名
+  RUN touch /root/f1
 
-  FROM centos as result
-  COPY --from=stage1 /root/ /root/                # 从指定阶段的最终容器内拷贝文件
-  COPY --from=nginx /etc/nginx/nginx.conf /root/  # 从其它镜像中拷贝文件
+  FROM nginx as stage2
+  COPY --from=stage1  /root/f1  /tmp/              # 从指定阶段的最终镜像中拷贝文件
+  COPY --from=nginx   /etc/nginx/nginx.conf /tmp/  # 从其它镜像中拷贝文件
   ```
 
 ## 构建
@@ -251,7 +291,7 @@ docker build <dir_to_Dockerfile>
     Successfully built d4c94f7870ad                 # 构建完成
     Successfully tagged nginx:v1                    # 加上镜像名和标签
     ```
-    - 构建镜像时，dockerd 会依次执行 Dockerfile 中的指令。分为多个步骤，每个步骤的主要内容为：
+    - 构建镜像时，每个步骤的主要内容为：
       1. 使用上一步骤的镜像，创建一个临时的中间容器（intermediate container），用于执行 Dockerfile 中的一个指令。
       2. 将中间容器提交为一个中间镜像，用于创建下一步骤的中间容器。
       3. 删除当前的中间容器，开始下一步骤。

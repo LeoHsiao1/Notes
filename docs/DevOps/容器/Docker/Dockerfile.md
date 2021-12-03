@@ -1,12 +1,14 @@
 # Dockerfile
 
-：一个文本文件，用于构建 Docker 镜像。
+：一个文本文件，用于描述构建一个 Docker 镜像的步骤。
 - [官方文档](https://docs.docker.com/engine/reference/builder/)
 
-## 示例
+## 语法
+
+### 示例
 
 ```dockerfile
-FROM nginx                      # Dockerfile 中的第一条非注释命令，表示以某个镜像为基础开始构建
+FROM nginx                      # 表示以某个镜像为基础开始构建
 
 LABEL maintainer=test \         # 给镜像添加键值对格式的标签（该指令可重复使用，可同时声明多个标签）
       git_refs=master
@@ -20,7 +22,7 @@ WORKDIR <dir>                   # 切换工作目录（相当于 cd 命令，此
 
 COPY <src_path>... <dst_path>   # 将 Dockerfile 所在目录下的文件拷贝到镜像中
 # 源路径只能是相对路径，且不能使用 .. 指向超出 Dockerfile 所在目录的路径
-# 目标路径可以是绝对路径，也可以是相对路径（起点为 WORKDIR ，不会受到 RUN 命令中的 cd 命令的影响）
+# 目标路径可以是绝对路径，也可以是相对路径（起点为 WORKDIR ，不会受到 RUN 指令中的 cd 命令的影响）
 # 例：COPY . /root/
 
 RUN set -eu; \
@@ -35,20 +37,23 @@ EXPOSE 80                       # 暴露容器的一个端口
 # 主要是提示用户在启动容器时应该映射该端口，如果用户没有主动映射，则默认会映射到宿主机的一个随机端口
 ```
 
-- 用 # 声明单行注释。
-- Dockerfile 中的命令名不区分大小写，但一般大写。
+- Dockerfile 中包含多行指令（instruction）。
+  - 指令名不区分大小写，但一般大写。
+  - 一般在每行以指令名开头，允许添加前置空格。
+  - 第一条非注释的指令，必须是 FROM 。
+
 - 常见的基础镜像：
   - scratch ：一个空镜像。以它作为基础镜像，将可执行文件拷贝进去，就可以构建出体积最小的镜像。
   - alpine ：一个专为容器设计的 Linux 系统，体积很小，但可能遇到兼容性问题。比如它用 musl 库代替了 glibc 库。
   - slim ：一种后缀，表示某种镜像的精简版，体积较小。通常是去掉了一些文件，只保留运行时环境。
 
-## 可执行命令
+### 可执行指令
 
-Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
+Dockerfile 中有三种可执行指令：RUN、ENTRYPOINT、CMD 。
 
-### RUN
+#### RUN
 
-：用于在构建镜像的过程中，在中间容器内执行一些命令。
+：用于在构建镜像的过程中，在中间容器内执行一些 shell 命令。
 - 有两种写法：
   ```dockerfile
   RUN <command> <param1> <param1>...        # shell 格式
@@ -60,9 +65,9 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
   RUN ["/bin/echo", "hello"]
   ```
 
-### ENTRYPOINT
+#### ENTRYPOINT
 
-：用于设置容器启动时首先执行的命令。
+：用于设置容器启动时首先执行的 shell 命令。
 - 有两种写法：
   ```dockerfile
   ENTRYPOINT <command> <param1> <param1>...      # shell 格式
@@ -78,25 +83,26 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
   ]
   ```
 
-### CMD
+#### CMD
 
-：用于设置容器启动时首先执行的命令。
-- 如果用户执行 docker run 命令时设置了启动命令，则会覆盖镜像中的 CMD 命令。
+：用于设置容器启动时首先执行的 shell 命令。
 - 有三种写法：
   ```dockerfile
   CMD <command> <param1> <param1>...        # shell 格式
   CMD ["command", "param1", "param2"...]    # exec 格式
   CMD ["param1", "param2"...]               # 只有参数的 exec 格式
   ```
-- Dockerfile 中的 ENTRYPOINT、CMD 命令最多只能各写一个，否则只有最后一个会生效。
-- ENTRYPOINT 命令一般写在 CMD 命令之前，不过写在后面也没关系。
+- Dockerfile 中的 ENTRYPOINT、CMD 指令最多只能各写一个，否则只有最后一个会生效。
+  - ENTRYPOINT 命令一般写在 CMD 命令之前，不过写在后面也没关系。
 
-### 比较 ENTRYPOINT 与 CMD
+
+#### 比较 ENTRYPOINT 与 CMD
 
 - 构建镜像时，dockerd 会将 ENTRYPOINT、CMD 命令都保存为 exec 格式。
-- 启动容器时，dockerd 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
+- 创建容器时，dockerd 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
   - 因此，ENTRYPOINT 命令是容器启动时的真正入口端点。
-- 下表统计不同写法时，一个 ENTRYPOINT 命令与一个 CMD 命令组合的结果（即最终的容器启动命令是什么）：
+  - 如果用户创建容器时声明了启动命令，则会覆盖镜像中的 CMD 指令。
+- 下表统计不同写法时，一个 ENTRYPOINT 指令与一个 CMD 指令组合的结果（即最终的容器启动命令是什么）：
 
   -|`ENTRYPOINT echo 1`|`ENTRYPOINT ["echo", "1"]`
   -|-|-
@@ -104,11 +110,11 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
   `CMD ["echo", "2"]`   |/bin/sh -c 'echo 1' echo 2               |echo 1 echo 2
   `CMD ["2"]`           |/bin/sh -c 'echo 1' 2                    |echo 1 2
 
-  可见，当 ENTRYPOINT 命令采用 shell 格式时，不会被 CMD 命令影响，可以忽略 CMD 命令。
+  可见，当 ENTRYPOINT 指令采用 shell 格式时，不会被 CMD 指令影响，可以忽略 CMD 指令。
 
-## 多阶段构建
+### 多阶段构建
 
-：在一个 Dockerfile 中使用多个 FROM 命令，相当于拼接多个 Dockerfile ，每个 FROM 命令表示一个构建阶段的开始。
+：在一个 Dockerfile 中使用多个 FROM 指令，相当于拼接多个 Dockerfile ，每个 FROM 指令表示一个构建阶段的开始。
 - 后一个阶段可以拷贝之前任一阶段生成的文件，而不必拷贝冗余文件，从而减少最终镜像的大小。
 - 例：
   ```dockerfile
@@ -120,7 +126,23 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
   COPY --from=nginx /etc/nginx/nginx.conf /root/  # 从其它镜像中拷贝文件
   ```
 
-## 构建示例
+## 构建
+
+### 命令
+
+```sh
+docker build <dir_to_Dockerfile>
+            -t <image:tag>              # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
+            --build-arg VERSION="1.0"   # 传入构建参数给 Dockerfile
+            --target  <stage>           # 构建到某个阶段就停止
+            --network <name>            # 设置中间容器使用的网络
+            --no-cache                  # 构建时不使用缓存
+            --force-rm                  # 即使构建失败，也强制删除中间容器
+```
+- 执行 docker build 时，会将 Dockerfile 所在目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
+  - 可以在 `.dockerignore` 文件中声明不想被发送的文件或目录。
+
+### 示例
 
 1. 编写一个 Dockerfile ：
     ```dockerfile
@@ -154,18 +176,18 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
     Successfully built d4c94f7870ad                 # 构建完成
     Successfully tagged nginx:v1                    # 加上镜像名和标签
     ```
-    - 构建镜像时，dockerd 会依次执行 Dockerfile 中的命令，分为多个步骤，每个步骤的主要内容为：
-      1. 创建一个临时的中间容器（intermediate container），用于执行 Dockerfile 中的一个命令。
+    - 构建镜像时，dockerd 会依次执行 Dockerfile 中的指令。分为多个步骤，每个步骤的主要内容为：
+      1. 使用上一步骤的镜像，创建一个临时的中间容器（intermediate container），用于执行 Dockerfile 中的一个指令。
       2. 将中间容器提交为一个中间镜像，用于创建下一步骤的中间容器。
       3. 删除当前的中间容器，开始下一步骤。
           - 如果构建步骤出错，则不会删除中间容器。
     - 中间镜像会作为悬空镜像一直保留在本机，用于缓存，默认隐藏显示。
       - 如果删除构建的最终镜像，则会自动删除它调用的所有中间镜像。
       - 用 docker push 推送最终镜像时，不会推送中间镜像。
-    - 大部分 Dockerfile 命令不会生成新的 layer ，只是修改了配置而生成新的中间镜像。
-      - ADD、COPY、RUN 命令可能修改文件，添加一层新的非空 layer ，保存到镜像配置的 rootfs.diff_ids 列表。
-        - 在构建时使用 bash 的 rm 命令并不能实际删除文件，只是添加一层新的 layer ，覆盖原 layer 中的文件。
-        - 因此应该尽量减少这些命令的数量，避免增加大量 layer 。比如将多条 RUN 命令合并成一条。
+    - 大部分 Dockerfile 指令不会生成新的 layer ，只是修改了配置而生成新的中间镜像。
+      - ADD、COPY、RUN 指令可能修改文件，添加一层新的非空 layer ，保存到镜像配置的 rootfs.diff_ids 列表。
+        - 在构建时使用 shell 的 rm 命令并不能实际删除文件，只是添加一层新的 layer ，覆盖原 layer 中的文件。
+        - 因此应该尽量减少这些指令的数量，避免增加大量 layer 。比如将多条 RUN 指令合并成一条。
 
 3. 再次构建镜像：
     ```sh
@@ -189,4 +211,4 @@ Dockerfile 中有三种可执行命令：RUN、ENTRYPOINT、CMD 。
       - 如果某个构建步骤不使用缓存，则之后的所有步骤都不会再使用缓存。
       - 重复执行 RUN 指令时，如果指令的内容相同，则会使用缓存。
       - 重复执行 ADD、COPY 指令时，如果指令的内容相同，拷贝的文件的哈希值也相同，才会使用缓存。
-      - 使用缓存不一定合适，例如重复执行 `RUN date > build_time` 时，得到的时间不会变，此时可通过 `docker build --no-cache` 命令禁用缓存。
+      - 使用缓存不一定合适，例如重复执行 `RUN date > build_time` 时，得到的时间不会变，此时可通过 `docker build --no-cache` 禁用缓存。

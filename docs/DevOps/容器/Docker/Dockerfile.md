@@ -142,8 +142,6 @@
   - src_path 只能是相对路径，且不能使用 .. 指向超出构建上下文的路径。
   - dst_path 可以是相对路径或绝对路径。
     - 为相对路径时，起点为 WORKDIR 。不会受到 RUN 指令中的 cd 命令的影响，因为每个构建步骤都是创建一个新的中间容器，工作目录复位为 WORKDIR 。
-- 执行 docker build 时，会将 Dockerfile 所在目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
-  - 可以在 `.dockerignore` 文件中声明不想被发送的文件或目录。
 
 ### EXPOSE
 
@@ -256,6 +254,15 @@ docker build <dir_to_Dockerfile>
             --no-cache                  # 构建时不使用缓存
             --force-rm                  # 即使构建失败，也强制删除中间容器
 ```
+- 执行 docker build 时，会将 Dockerfile 所在目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
+- 可以在 .dockerignore 文件中声明不想被发送的文件或目录。如下：
+  ```sh
+  *.log     # 匹配当前目录下的文件
+  !*.md     # ! 表示反向匹配
+  */tmp*    # 匹配子目录下的文件
+  **/tmp*   # ** 匹配任意数量的目录
+  ```
+  - Dockerfile 和 .dockerignore 文件总是会被发送给 dockerd ，即使声明了也没用。
 
 ### 示例
 

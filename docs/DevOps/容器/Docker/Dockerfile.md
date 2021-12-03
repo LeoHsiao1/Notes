@@ -5,55 +5,132 @@
 
 ## 语法
 
-### 示例
-
-```dockerfile
-FROM nginx                      # 表示以某个镜像为基础开始构建
-
-LABEL maintainer=test \         # 给镜像添加键值对格式的标签（该指令可重复使用，可同时声明多个标签）
-      git_refs=master
-
-ENV var1=value1 var2=value2 ... # 设置环境变量
-ARG var1                        # 设置构建参数（可以在 docker build 时传入该参数的值）
-ARG var2=value2                 # 可以给构建参数设置默认值
-
-USER <user>                     # 切换用户（构建过程中、容器启动后都会使用该用户）
-WORKDIR <dir>                   # 切换工作目录（相当于 cd 命令，此后的相对路径就会以它为起点）
-
-COPY <src_path>... <dst_path>   # 将 Dockerfile 所在目录下的文件拷贝到镜像中
-# 源路径只能是相对路径，且不能使用 .. 指向超出 Dockerfile 所在目录的路径
-# 目标路径可以是绝对路径，也可以是相对路径（起点为 WORKDIR ，不会受到 RUN 指令中的 cd 命令的影响）
-# 例：COPY . /root/
-
-RUN set -eu; \
-    echo "Hello World!"; \
-    touch f1
-
-VOLUME ["/root", "/var/log"]    # 将容器内的这些目录设置成挂载点
-# 主要是提示用户在启动容器时应该挂载这些目录，如果用户没有主动挂载，则默认会自动创建一些匿名的数据卷来挂载
-# 用 docker inspect 命令查看容器信息，可以看到各个挂载点的实际路径
-
-EXPOSE 80                       # 暴露容器的一个端口
-# 主要是提示用户在启动容器时应该映射该端口，如果用户没有主动映射，则默认会映射到宿主机的一个随机端口
-```
-
-- Dockerfile 中包含多行指令（instruction）。
+- Dockerfile 中可以包含多行指令（instruction）。
   - 指令名不区分大小写，但一般大写。
   - 一般在每行以指令名开头，允许添加前置空格。
   - 第一条非注释的指令，必须是 FROM 。
 
+- Dockerfile 中的以下指令只可使用一次：
+  ```sh
+  FROM
+  EXPOSE
+  VOLUME
+  ENTRYPOINT
+  CMD
+  ...
+  ```
+  - 如果存在多个，则可能只有最后一个会生效。
+  - 其它指令可使用多次。
+
+### 注释
+
+- 用 # 声明单行注释，且必须在行首声明。
+- 执行 Dockerfile 之前，注释行会被删除。因此：
+  ```dockerfile
+  RUN echo hello \
+      # comment
+      world
+  ```
+  会变成：
+  ```dockerfile
+  RUN echo hello \
+      world
+  ```
+
+### FROM
+
+：表示以某个镜像为基础开始构建。
+- 例：
+  ```dockerfile
+  FROM nginx
+  ```
 - 常见的基础镜像：
   - scratch ：一个空镜像。以它作为基础镜像，将可执行文件拷贝进去，就可以构建出体积最小的镜像。
   - alpine ：一个专为容器设计的 Linux 系统，体积很小，但可能遇到兼容性问题。比如它用 musl 库代替了 glibc 库。
   - slim ：一种后缀，表示某种镜像的精简版，体积较小。通常是去掉了一些文件，只保留运行时环境。
 
-### 可执行指令
+### ARG
 
-Dockerfile 中有三种可执行指令：RUN、ENTRYPOINT、CMD 。
+：声明一个或多个键值对格式的构建参数。
+- 属于 Dockerfile 文件内的变量，只影响构建过程，生成镜像之后不会保留。
+- 例：
+  ```dockerfile
+  ARG var1  \
+      var2=value2
+  ```
+  - 构建参数可以声明默认值，也可以不声明，需要通过 `docker build --build-arg` 传入。
 
-#### RUN
+### LABEL
 
-：用于在构建镜像的过程中，在中间容器内执行一些 shell 命令。
+：给镜像添加一个或多个键值对格式的标签。
+- 标签属于 docker 对象的元数据，不会影响容器内进程。
+- 例：
+  ```dockerfile
+  LABEL maintainer=test \
+        git_refs=master
+  ```
+
+### ENV
+
+：给容器内 shell 添加一个或多个键值对格式的环境变量。
+- 例：
+  ```dockerfile
+  ENV var1=value1 \
+      var2=value2
+  ```
+
+### USER
+
+：切换容器内 shell 用户。
+- 构建镜像时、容器启动后都会使用该用户。
+- 语法：
+  ```dockerfile
+  USER <user>
+  ```
+
+### WORKDIR
+
+：切换容器内 shell 工作目录，相当于 cd 命令。
+- 语法：
+  ```dockerfile
+  WORKDIR <dir>
+  ```
+
+### COPY
+
+：将构建上下文中的文件拷贝到镜像中。
+- 语法：
+  ```dockerfile
+  COPY <src_path>...  <dst_path>
+  ```
+  - src_path 只能是相对路径，且不能使用 .. 指向超出构建上下文的路径。
+  - dst_path 可以是相对路径或绝对路径。
+    - 为相对路径时，起点为 WORKDIR 。不会受到 RUN 指令中的 cd 命令的影响，因为每个构建步骤都是创建一个新的中间容器，工作目录复位为 WORKDIR 。
+- 执行 docker build 时，会将 Dockerfile 所在目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
+  - 可以在 `.dockerignore` 文件中声明不想被发送的文件或目录。
+
+### EXPOSE
+
+：声明容器内进程监听的端口，建议用户对外映射。
+- 如果用户创建容器时，没有主动映射该端口，则并不会自动映射。
+- 例：
+  ```dockerfile
+  EXPOSE 80
+  ```
+
+### VOLUME
+
+：将容器内的目录声明为挂载点。
+- 如果用户创建容器时，没有主动覆盖该挂载点，则默认会自动创建匿名的数据卷来挂载。
+- 例：
+  ```dockerfile
+  VOLUME /data
+  VOLUME ["/root", "/var/log"]
+  ```
+
+### RUN
+
+：用于在构建镜像时，在中间容器内执行一些 shell 命令。
 - 有两种写法：
   ```dockerfile
   RUN <command> <param1> <param1>...        # shell 格式
@@ -61,11 +138,13 @@ Dockerfile 中有三种可执行指令：RUN、ENTRYPOINT、CMD 。
   ```
 - 例：
   ```dockerfile
-  RUN echo hello
+  RUN set -eu; \
+      echo "Hello World!"; \
+      touch f1
   RUN ["/bin/echo", "hello"]
   ```
 
-#### ENTRYPOINT
+### ENTRYPOINT
 
 ：用于设置容器启动时首先执行的 shell 命令。
 - 有两种写法：
@@ -83,7 +162,7 @@ Dockerfile 中有三种可执行指令：RUN、ENTRYPOINT、CMD 。
   ]
   ```
 
-#### CMD
+### CMD
 
 ：用于设置容器启动时首先执行的 shell 命令。
 - 有三种写法：
@@ -92,16 +171,14 @@ Dockerfile 中有三种可执行指令：RUN、ENTRYPOINT、CMD 。
   CMD ["command", "param1", "param2"...]    # exec 格式
   CMD ["param1", "param2"...]               # 只有参数的 exec 格式
   ```
-- Dockerfile 中的 ENTRYPOINT、CMD 指令最多只能各写一个，否则只有最后一个会生效。
-  - ENTRYPOINT 命令一般写在 CMD 命令之前，不过写在后面也没关系。
 
+### 比较 ENTRYPOINT 与 CMD
 
-#### 比较 ENTRYPOINT 与 CMD
-
-- 构建镜像时，dockerd 会将 ENTRYPOINT、CMD 命令都保存为 exec 格式。
-- 创建容器时，dockerd 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
-  - 因此，ENTRYPOINT 命令是容器启动时的真正入口端点。
-  - 如果用户创建容器时声明了启动命令，则会覆盖镜像中的 CMD 指令。
+- ENTRYPOINT 命令一般写在 CMD 命令之前，不过写在后面也无影响。
+  - 构建镜像时，dockerd 会将 ENTRYPOINT、CMD 命令都保存为 exec 格式。
+  - 创建容器时，dockerd 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
+    - 因此，ENTRYPOINT 命令是容器启动时的真正入口端点。
+    - 如果用户创建容器时声明了启动命令，则会覆盖镜像中的 CMD 指令。
 - 下表统计不同写法时，一个 ENTRYPOINT 指令与一个 CMD 指令组合的结果（即最终的容器启动命令是什么）：
 
   -|`ENTRYPOINT echo 1`|`ENTRYPOINT ["echo", "1"]`
@@ -133,14 +210,12 @@ Dockerfile 中有三种可执行指令：RUN、ENTRYPOINT、CMD 。
 ```sh
 docker build <dir_to_Dockerfile>
             -t <image:tag>              # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
-            --build-arg VERSION="1.0"   # 传入构建参数给 Dockerfile
+            --build-arg VERSION="1.0"   # 传入构建参数
             --target  <stage>           # 构建到某个阶段就停止
             --network <name>            # 设置中间容器使用的网络
             --no-cache                  # 构建时不使用缓存
             --force-rm                  # 即使构建失败，也强制删除中间容器
 ```
-- 执行 docker build 时，会将 Dockerfile 所在目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
-  - 可以在 `.dockerignore` 文件中声明不想被发送的文件或目录。
 
 ### 示例
 

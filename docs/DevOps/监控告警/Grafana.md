@@ -96,6 +96,7 @@
 - Bar Gauge ：条形图。
 - Pie Chart ：饼状图。
 - Table ：表格。
+- Diagram ：流程图。
 - Heatmap ：热图。适合显示大量同类型数据，方便看出各种数值的分布位置。
 - Geomap ：地图。
   - v8.1 版本新增的图表。
@@ -258,7 +259,6 @@
       server_url   = http://renderer:8081/render
       callback_url = http://grafana:3000/
       ```
-  - jdbranham-diagram-panel 插件：支持绘制流程图，可嵌入 panel 的数值、颜色。
 
 ## 配置
 

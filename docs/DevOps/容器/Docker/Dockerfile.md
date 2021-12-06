@@ -195,6 +195,14 @@
 
   - ENTRYPOINT 指令应该采用 exec 格式，因为采用 shell 格式时，CMD 指令不会被执行，而且容器内由 shell 解释器担任 1 号进程。
 
+### SHELL
+
+：声明执行 shell 格式的命令时，采用的 shell 解释器。
+- 默认值：
+  ```sh
+  SHELL ["/bin/sh", "-c"]
+  ```
+
 ### ONBUILD
 
 ：用于声明触发器（build trigger），托管一条普通的 Dockerfile 命令。当其它镜像通过 FROM 继承当前镜像时，就会执行所有触发器。

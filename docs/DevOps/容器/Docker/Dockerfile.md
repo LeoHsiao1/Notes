@@ -59,7 +59,7 @@
   - alpine ：一个专为容器设计的 Linux 系统，体积很小，但可能遇到兼容性问题。比如它用 musl 库代替了 glibc 库。
   - slim ：一种后缀，表示某种镜像的精简版，体积较小。通常是去掉了一些文件，只保留运行时环境。
 
-## 关于变量
+## 变量
 
 - Dockerfile 中可通过 ARG、ENV 指令定义变量，可在大部分指令中引用。
   - 例：
@@ -171,14 +171,20 @@
   VOLUME ["/root", "/var/log"]
   ```
 
+## 执行命令
+
 ### RUN
 
 ：用于在构建镜像时，在中间容器内执行一些 shell 命令。
 - 有两种写法：
   ```dockerfile
-  RUN <command> <param1> <param1>...        # shell 格式
-  RUN ["command", "param1", "param2"...]    # exec 格式
+  RUN <command> <param1> <param2>...        # shell 格式
+  RUN ["command", "param1", "param2"...]    # exec 格式，即 JSON array
   ```
+  - shell 格式是在 shell 解释器中执行命令。而 exec 格式是直接执行命令，因此不支持 shell 语法，比如管道符、用 $ 读取变量。
+  - 制作镜像时，dockerd 会将所有命令都从 shell 格式转换成 exec 格式 `["/bin/sh", "-c", "<command> <param1> <param2>..."]` ，然后保存 。
+    - 在 Windows 平台上，前缀为 `["cmd", "/S", "/C"]` 。
+  - 在容器中，dockerd 会将所有命令都从 exec 格式转换成 shell 格式，然后执行。
 - 例：
   ```dockerfile
   RUN set -eu; \
@@ -187,42 +193,18 @@
   RUN ["/bin/echo", "hello"]
   ```
 
-### ENTRYPOINT
+### ENTRYPOINT、CMD
 
-：用于设置容器启动时首先执行的 shell 命令。
-- 有两种写法：
-  ```dockerfile
-  ENTRYPOINT <command> <param1> <param1>...      # shell 格式
-  ENTRYPOINT ["command", "param1", "param2"...]  # exec 格式
-  ```
-- 构建镜像时，dockerd 会将 shell 格式的命令转换成 exec 格式再保存，并且转换时会加上前缀 "/bin/sh" 和 "-c" 。
-- 例如，如果在 Dockerfile 中编写“Entrypoint echo hello”，在保存会被转换成：
-  ```dockerfile
-  "Entrypoint": [
-      "/bin/sh",
-      "-c",
-      "echo hello"
-  ]
-  ```
-
-### CMD
-
-：用于设置容器启动时首先执行的 shell 命令。
-- 有三种写法：
-  ```dockerfile
-  CMD <command> <param1> <param1>...        # shell 格式
-  CMD ["command", "param1", "param2"...]    # exec 格式
-  CMD ["param1", "param2"...]               # 只有参数的 exec 格式
-  ```
-
-### 比较 ENTRYPOINT 与 CMD
-
-- ENTRYPOINT 命令一般写在 CMD 命令之前，不过写在后面也无影响。
-  - 构建镜像时，dockerd 会将 ENTRYPOINT、CMD 命令都保存为 exec 格式。
-  - 创建容器时，dockerd 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后才执行。
-    - 因此，ENTRYPOINT 命令是容器启动时的真正入口端点。
-    - 如果用户创建容器时声明了启动命令，则会覆盖镜像中的 CMD 指令。
-- 下表统计不同写法时，一个 ENTRYPOINT 指令与一个 CMD 指令组合的结果（即最终的容器启动命令是什么）：
+- ENTRYPOINT、CMD 指令都用于设置容器的启动命令，前者的优先级更高。
+  - 如果在 Dockerfile 中未指定，则会继承基础镜像的配置。
+  - 都支持 shell 格式、exec 格式两种写法。CMD 指令还支持第三种写法：
+    ```dockerfile
+    CMD ["param1", "param2"...]   # 只有参数的 exec 格式
+    ```
+  - 创建容器时，dockerd 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后执行。
+    - 如果执行 `docker run <image> [command]` 时声明了启动命令，则会覆盖镜像中的 CMD 指令。
+    - 还可通过 `docker run --entrypoint` 覆盖镜像中的 ENTRYPOINT 指令。
+- 下表统计不同写法时， ENTRYPOINT 指令与 CMD 指令组合的结果，即容器的启动命令是什么：
 
   -|`ENTRYPOINT echo 1`|`ENTRYPOINT ["echo", "1"]`
   -|-|-
@@ -230,7 +212,7 @@
   `CMD ["echo", "2"]`   |/bin/sh -c 'echo 1' echo 2               |echo 1 echo 2
   `CMD ["2"]`           |/bin/sh -c 'echo 1' 2                    |echo 1 2
 
-  可见，当 ENTRYPOINT 指令采用 shell 格式时，不会被 CMD 指令影响，可以忽略 CMD 指令。
+  - ENTRYPOINT 指令应该采用 exec 格式，因为采用 shell 格式时，CMD 指令不会被执行，而且容器内由 shell 解释器担任 1 号进程。
 
 ## 多阶段构建
 

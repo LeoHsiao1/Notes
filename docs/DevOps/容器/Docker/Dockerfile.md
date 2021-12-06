@@ -21,22 +21,22 @@
 
 - 用 # 声明单行注释，且必须在行首声明。
 - 执行 Dockerfile 之前，注释行会被删除。因此：
-  ```dockerfile
+  ```sh
   RUN echo hello \
       # comment
       world
   ```
   会变成：
-  ```dockerfile
+  ```sh
   RUN echo hello \
       world
   ```
 
 ### FROM
 
-：表示以某个镜像为基础开始构建。
+：表示以某个镜像为基础开始构建。使用其 layer ，继承其大部分指令的配置。
 - 语法：
-  ```dockerfile
+  ```sh
   FROM [--platform=<platform>] <image>[:<tag>] [AS <name>]
   ```
   - FROM 指令表示一个构建阶段的开始，可用 AS 给该阶段命名。
@@ -50,7 +50,7 @@
     - 默认根据本机的操作系统、CPU 架构，指定 --platform 的值。
 
 - 例：
-  ```dockerfile
+  ```sh
   FROM nginx
   FROM nginx AS stage1
   ```
@@ -63,7 +63,7 @@
 
 - Dockerfile 中可通过 ARG、ENV 指令定义变量，可在大部分指令中引用。
   - 例：
-    ```dockerfile
+    ```sh
     ARG     A=10
     ENV     B=$A
 
@@ -78,7 +78,7 @@
     ${var:+default}      # 如果变量存在且不为空，则返回默认值，否则返回空
     ```
 - 允许在第一条 FROM 指令之前插入 ARG 指令：
-  ```dockerfile
+  ```sh
   ARG     A=10
   FROM    nginx:1.$A
 
@@ -94,7 +94,7 @@
 
 ：声明一个或多个键值对格式的构建参数。
 - 例：
-  ```dockerfile
+  ```sh
   ARG var1  \
       var2=value2
   ```
@@ -107,6 +107,31 @@
 - 语法与 ARG 指令相同。
 - ARG 变量只影响构建过程，不会保留。而 ENV 变量会保存到镜像中，并添加到容器内 shell 中。
 
+## 文件
+
+### COPY
+
+：从构建上下文拷贝文件到镜像中。
+- 语法：
+  ```sh
+  COPY <src_path>...  <dst_path>
+      --from=<name>               # 从某个构建阶段或镜像拷贝
+      --chown=<user>:<group>      # 拷贝之后修改文件权限
+  ```
+  - src_path 只能是相对路径，且不能使用 .. 指向超出构建上下文的路径。
+    - src_path 可以包含通配符 ? 和 * 。
+    - src_path 为目录时，会递归拷贝所有文件，以及文件元数据。
+  - dst_path 可以是相对路径或绝对路径。
+    - 为相对路径时，起点为 WORKDIR 。不会受到 RUN 指令中的 cd 命令的影响，因为每个构建步骤都是创建一个新的中间容器，工作目录复位为 WORKDIR 。
+- 例：
+  ```sh
+  COPY hom* /tmp/
+  ```
+
+### ADD
+
+：用法与 COPY 相似，但支持 src_path 为 URL 。
+
 ## 其它
 
 ### LABEL
@@ -114,7 +139,7 @@
 ：给镜像添加一个或多个键值对格式的标签。
 - 标签属于 docker 对象的元数据，不会影响容器内进程。
 - 例：
-  ```dockerfile
+  ```sh
   LABEL maintainer=test \
         git_refs=master
   ```
@@ -125,7 +150,7 @@
 ：切换容器内 shell 用户。
 - 构建镜像时、容器启动后都会使用该用户。
 - 语法：
-  ```dockerfile
+  ```sh
   USER <user>
   ```
 
@@ -133,27 +158,16 @@
 
 ：切换容器内 shell 工作目录，相当于 cd 命令。
 - 语法：
-  ```dockerfile
+  ```sh
   WORKDIR <dir>
   ```
-
-### COPY
-
-：将构建上下文中的文件拷贝到镜像中。
-- 语法：
-  ```dockerfile
-  COPY <src_path>...  <dst_path>
-  ```
-  - src_path 只能是相对路径，且不能使用 .. 指向超出构建上下文的路径。
-  - dst_path 可以是相对路径或绝对路径。
-    - 为相对路径时，起点为 WORKDIR 。不会受到 RUN 指令中的 cd 命令的影响，因为每个构建步骤都是创建一个新的中间容器，工作目录复位为 WORKDIR 。
 
 ### EXPOSE
 
 ：声明容器内进程监听的端口。
 - 如果用户创建容器时，没有主动映射该端口，则并不会自动映射。
 - 例：
-  ```dockerfile
+  ```sh
   EXPOSE 80
   EXPOSE 80/tcp 80/udp
   ```
@@ -164,7 +178,7 @@
 ：将容器内的目录声明为挂载点。
 - 如果用户创建容器时，没有主动覆盖该挂载点，则默认会自动创建匿名的数据卷来挂载。
 - 例：
-  ```dockerfile
+  ```sh
   VOLUME /data
   VOLUME ["/root", "/var/log"]
   ```
@@ -175,7 +189,7 @@
 
 ：用于在构建镜像时，在中间容器内执行一些 shell 命令。
 - 有两种写法：
-  ```dockerfile
+  ```sh
   RUN <command> <param1> <param2>...        # shell 格式
   RUN ["command", "param1", "param2"...]    # exec 格式，即 JSON array
   ```
@@ -184,7 +198,7 @@
     - 在 Windows 平台上，前缀为 `["cmd", "/S", "/C"]` 。
   - 在容器中，dockerd 会将所有命令都从 exec 格式转换成 shell 格式，然后执行。
 - 例：
-  ```dockerfile
+  ```sh
   RUN set -eu; \
       echo "Hello World!"; \
       touch f1
@@ -194,9 +208,8 @@
 ### ENTRYPOINT、CMD
 
 - ENTRYPOINT、CMD 指令都用于设置容器的启动命令，前者的优先级更高。
-  - 如果在 Dockerfile 中未指定，则会继承基础镜像的配置。
   - 都支持 shell 格式、exec 格式两种写法。CMD 指令还支持第三种写法：
-    ```dockerfile
+    ```sh
     CMD ["param1", "param2"...]   # 只有参数的 exec 格式
     ```
   - 创建容器时，dockerd 会将 ENTRYPOINT、CMD 命令都从 exec 格式转换成 shell 格式，再将 CMD 命令附加到 ENTRYPOINT 命令之后，然后执行。
@@ -221,7 +234,7 @@
     - 一个构建步骤 step ，会使用之前 step 的中间镜像，不得不继承 layer 中的全部文件，因此镜像容易包含无用文件。
     - 而一个构建阶段 stage ，会使用一个独立的基础镜像，但可以选择性地 COPY 之前 stage 的文件。
 - 例：
-  ```dockerfile
+  ```sh
   FROM nginx AS stage1                             # 开始一个阶段，并用 AS 命名
   RUN touch /root/f1
 
@@ -244,6 +257,7 @@ docker build <dir_to_Dockerfile>
             --force-rm                  # 即使构建失败，也强制删除中间容器
 ```
 - 执行 docker build 时，会将 Dockerfile 所在目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
+  - 执行 `docker build - < Dockerfile` ，则只会发送 Dockerfile 作为构建上下文。
 - 可以在 .dockerignore 文件中声明不想被发送的文件或目录。如下：
   ```sh
   *.log     # 匹配当前目录下的文件
@@ -251,7 +265,7 @@ docker build <dir_to_Dockerfile>
   */tmp*    # 匹配子目录下的文件
   **/tmp*   # ** 匹配任意数量的目录
   ```
-  - Dockerfile 和 .dockerignore 文件总是会被发送给 dockerd ，即使声明了也没用。
+  - Dockerfile 和 .dockerignore 文件总是会被发送给 dockerd ，即使在这声明了也没用。
 
 ### 示例
 

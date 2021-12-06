@@ -44,6 +44,7 @@
     docker pull <harbor_url>/<project>/<REPOSITORY>[:tag]
     ```
     - 每个镜像 Image 划分一个镜像仓库（repository），其下可以存储多个 tag 的镜像。
+    - 网页上显示的镜像大小是压缩之后的。
   - 每个项目可以添加多个用户作为成员，担任某种角色。角色按权限从高到低如下：
     ```sh
     项目管理员  # 可以管理该项目的其他成员

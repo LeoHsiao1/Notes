@@ -169,8 +169,8 @@
   - 在容器中，dockerd 会将所有命令都从 exec 格式转换成 shell 格式，然后执行。
 - 例：
   ```sh
-  RUN set -eu; \
-      echo "Hello World!"; \
+  RUN set -eu   ;\
+      echo "Hello World!" ;\
       touch f1
   RUN ["/bin/echo", "hello"]
   ```
@@ -194,6 +194,11 @@
   `CMD ["2"]`           |/bin/sh -c 'echo 1' 2                    |echo 1 2
 
   - ENTRYPOINT 指令应该采用 exec 格式，因为采用 shell 格式时，CMD 指令不会被执行，而且容器内由 shell 解释器担任 1 号进程。
+  - 对于简单的容器，一般 ENTRYPOINT 指令填程序的启动命令，CMD 指令填程序的启动参数。例如：
+    ```dockerfile
+    ENTRYPOINT ["java"]
+    CMD ["-jar", "test.jar"]
+    ```
 
 ### SHELL
 
@@ -325,7 +330,7 @@ docker build <dir>
     FROM nginx
 
     LABEL maintainer=test
-    RUN set -eu; \
+    RUN set -eu   ;\
         echo Hello
 
     CMD ["nginx"]
@@ -363,8 +368,14 @@ docker build <dir>
     - 大部分 Dockerfile 指令不会生成新的 layer ，只是修改了配置而生成新的中间镜像。
       - 执行 ADD、RUN 指令时，不会创建中间容器，而是直接修改 layer 。
       - 执行 RUN 指令时，可能修改文件，添加一层新的非空 layer ，保存到镜像配置的 rootfs.diff_ids 列表。
-        - 在构建时使用 shell 的 rm 命令并不能实际删除文件，只是添加一层新的 layer ，覆盖原 layer 中的文件。
         - 因此应该尽量减少 RUN 指令的数量，避免增加大量 layer 。比如将多条 RUN 指令合并成一条。
+        - 安装软件时，记得删除缓存。例如：
+          ```dockerfile
+          RUN yum install -y vim && \
+              yum clean all && \
+              rm -rf /var/cache/yum
+          ```
+        - 在构建时，使用 shell 的 rm 命令只能删除当前 layer 的文件。不能删除之前 layer 的文件，只是添加一层新的 layer ，覆盖原 layer 中的文件。
 
 3. 再次构建镜像：
     ```sh
@@ -385,7 +396,7 @@ docker build <dir>
     Successfully tagged nginx:v1
     ```
     - 执行一个构建步骤时，如果 dockerd 发现已有的某个镜像执行过相同的构建步骤，则跳过执行当前步骤，直接采用该镜像作为中间镜像，实现缓存，减少构建耗时。
-      - 如果某个构建步骤不使用缓存，则之后的所有步骤都不会再使用缓存。
+      - 如果某个构建步骤未命中缓存，则之后的所有步骤都会禁用缓存。
       - 重复执行 RUN 指令时，如果指令的内容相同，则会使用缓存。
       - 重复执行 ADD、COPY 指令时，如果指令的内容相同，拷贝的文件的哈希值也相同，才会使用缓存。
       - 使用缓存不一定合适，例如重复执行 `RUN date > build_time` 时，得到的时间不会变，此时可通过 `docker build --no-cache` 禁用缓存。

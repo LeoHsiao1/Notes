@@ -14,14 +14,8 @@
   - 每个指令划分为一个构建步骤（build step）
   - 从 FROM 指令开始的一组指令划分为一个构建阶段（build stage）。
 
-- Dockerfile 中的以下指令只可使用一次：
-  ```sh
-  FROM
-  ENTRYPOINT
-  CMD
-  ...
-  ```
-  - 如果存在多个，则可能只有最后一个会生效。
+- Dockerfile 中的大部分指令可使用多次。
+  - ENTRYPOINT、CMD 指令如果存在多个，则只有最后一个会生效。
 
 ### 注释
 
@@ -41,9 +35,24 @@
 ### FROM
 
 ：表示以某个镜像为基础开始构建。
+- 语法：
+  ```dockerfile
+  FROM [--platform=<platform>] <image>[:<tag>] [AS <name>]
+  ```
+  - FROM 指令表示一个构建阶段的开始，可用 AS 给该阶段命名。
+  - 有的程序不支持跨平台运行，因此需要指定不同的 --platform ，对不同平台分别构建镜像。常见的几种平台（OS/Architecture）：
+    ```sh
+    windows/amd64     # 常用于 Windows 主机
+    linux/amd64       # 常用于 Linux 主机
+    linux/arm64
+    linux/arm64/v8    # 常用于 Apple M1 CPU
+    ```
+    - 默认根据本机的操作系统、CPU 架构，指定 --platform 的值。
+
 - 例：
   ```dockerfile
   FROM nginx
+  FROM nginx AS stage1
   ```
 - 常见的基础镜像：
   - scratch ：一个空镜像。以它作为基础镜像，将可执行文件拷贝进去，就可以构建出体积最小的镜像。
@@ -233,10 +242,10 @@
     - 而一个构建阶段 stage ，会使用一个独立的基础镜像，但可以选择性地 COPY 之前 stage 的文件。
 - 例：
   ```dockerfile
-  FROM nginx as stage1                             # 开始一个节点，并用 as 命名
+  FROM nginx AS stage1                             # 开始一个阶段，并用 AS 命名
   RUN touch /root/f1
 
-  FROM nginx as stage2
+  FROM nginx AS stage2
   COPY --from=stage1  /root/f1  /tmp/              # 从指定阶段的最终镜像中拷贝文件
   COPY --from=nginx   /etc/nginx/nginx.conf /tmp/  # 从其它镜像中拷贝文件
   ```

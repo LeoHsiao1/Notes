@@ -12,12 +12,25 @@
 
 ## 服务器
 
-运行 sshd 服务器：
-```sh
-yum install ssh
-systemctl start sshd
-systemctl enable sshd
-```
+### 部署
+
+- 运行 sshd 服务器：
+  ```sh
+  yum install ssh
+  systemctl start sshd
+  systemctl enable sshd
+  ```
+
+- 或者运行 docker 镜像：
+  ```sh
+  docker run -d -p 10022:22 --name sshd \
+      -e SSH_ENABLE_ROOT=true \
+      -e SSH_ENABLE_ROOT_PASSWORD_AUTH=true \
+      panubo/sshd:1.5.0
+  ```
+  - 需要进入容器，手动修改 root 密码。
+
+### 配置
 
 sshd 的主配置文件是 `/etc/ssh/sshd_config` ，内容示例：
 ```sh
@@ -57,7 +70,7 @@ StrictModes yes                   # 被 SSH 登录时，检查用户的家目录
   - 禁止 root 用户远程登录，这样暴力破解时还需要猜测有效的用户名。
   - 禁止公网 IP 登录，甚至只允许白名单的 IP 登录。
 
-### 白名单和黑名单
+### 白名单、黑名单
 
 当 Linux 收到一个 ssh 或 telnet 的连接请求时，会先查看 `/etc/hosts.allow` 文件：
 - 如果包含该 IP ，则建立 TCP 连接，开始身份认证。

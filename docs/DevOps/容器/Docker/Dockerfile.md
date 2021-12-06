@@ -228,6 +228,37 @@
 
   - ENTRYPOINT 指令应该采用 exec 格式，因为采用 shell 格式时，CMD 指令不会被执行，而且容器内由 shell 解释器担任 1 号进程。
 
+### ONBUILD
+
+：用于声明触发器（build trigger），托管一条普通的 Dockerfile 命令。当其它镜像通过 FROM 继承当前镜像时，就会执行所有触发器。
+- 例：
+  ```sh
+  ONBUILD EXPOSE 80
+  ONBUILD RUN ls -l
+  ```
+  - 不支持嵌套 ONBUILD 。
+
+- 例：
+  ```sh
+  [root@CentOS ~]# docker build . -t nginx:v2
+  Sending build context to Docker daemon  2.048kB
+  Step 1/2 : FROM  nginx:v1
+  # Executing 3 build triggers      # 在 FROM 步骤，依次执行所有触发器，每个触发器都会创建一个中间容器
+  ---> Running in ba646d1c9824
+  Removing intermediate container ba646d1c9824
+  ---> Running in 09ba6f8a6933
+  Removing intermediate container 09ba6f8a6933
+  ---> Running in 25573aa14e17
+  Removing intermediate container 25573aa14e17
+  ---> 8f66dce6bb3c
+  Step 2/2 : EXPOSE 80
+  ---> Running in 1f6182a06031
+  Removing intermediate container 1f6182a06031
+  ---> 2b4beb4d379a
+  Successfully built 2b4beb4d379a
+  Successfully tagged nginx:v2
+  ```
+
 ## 多阶段构建
 
 - 一个 Dockerfile 可以包含多个 FROM 指令，每个 FROM 指令表示一个构建阶段的开始。
@@ -251,7 +282,8 @@
 ### 命令
 
 ```sh
-docker build <dir_to_Dockerfile>
+docker build <dir>
+            -f <file>                   # Dockerfile 的路径，默认为 <dir>/Dockerfile
             -t <image:tag>              # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
             --build-arg VERSION="1.0"   # 传入构建参数
             --target  <stage>           # 构建到某个阶段就停止
@@ -259,7 +291,7 @@ docker build <dir_to_Dockerfile>
             --no-cache                  # 构建时不使用缓存
             --force-rm                  # 即使构建失败，也强制删除中间容器
 ```
-- 执行 docker build 时，会将 Dockerfile 所在目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
+- 执行 docker build 时，会将目标目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
   - 执行 `docker build - < Dockerfile` ，则只会发送 Dockerfile 作为构建上下文。
 - 可以在 .dockerignore 文件中声明不想被发送的文件或目录。如下：
   ```sh

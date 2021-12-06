@@ -77,20 +77,18 @@
     ${var:-default}      # 如果变量存在且不为空，则返回其值，否则返回默认值
     ${var:+default}      # 如果变量存在且不为空，则返回默认值，否则返回空
     ```
-  - 允许在第一条 FROM 指令之前插入 ARG 指令：
-    ```dockerfile
-    ARG     A=10
-    FROM    nginx:1.$A
+- 允许在第一条 FROM 指令之前插入 ARG 指令：
+  ```dockerfile
+  ARG     A=10
+  FROM    nginx:1.$A
 
-    # 开始 FROM 构建阶段之后，不会保留 FROM 之前的 ARG 变量，因此这里 $A 的值为空
-    ENV     B=$A
+  # 开始 FROM 构建阶段之后，不会保留 FROM 之前的 ARG 变量，因此这里 $A 的值为空
+  ENV     B=$A
 
-    # 如果声明一个同名变量并赋值为空，就可以获得之前的值，因此这里 $A 的值为 10
-    ARG     A
-    EXPOSE  $A
-    ```
-- ARG 变量只影响构建过程，生成镜像之后不会保留。而 ENV 变量会添加到容器内 shell 中。
-  - 构建镜像时，可通过 `docker build --build-arg` 传入构建参数。
+  # 如果声明一个同名变量并赋值为空，就可以获得之前的值，因此这里 $A 的值为 10
+  ARG     A
+  EXPOSE  $A
+  ```
 
 ### ARG
 
@@ -101,16 +99,13 @@
       var2=value2
   ```
   - 可以赋值为空。
+- 构建镜像时，可通过 `docker build --build-arg` 传入构建参数。
 
 ### ENV
 
 ：给容器内 shell 添加一个或多个键值对格式的环境变量。
-- 例：
-  ```dockerfile
-  ENV var1 \
-      var2=value2
-  ```
-  - 可以赋值为空。
+- 语法与 ARG 指令相同。
+- ARG 变量只影响构建过程，不会保留。而 ENV 变量会保存到镜像中，并添加到容器内 shell 中。
 
 ## 其它
 
@@ -123,6 +118,7 @@
   LABEL maintainer=test \
         git_refs=master
   ```
+  - 可以赋值为空。
 
 ### USER
 
@@ -154,12 +150,14 @@
 
 ### EXPOSE
 
-：声明容器内进程监听的端口，建议用户对外映射。
+：声明容器内进程监听的端口。
 - 如果用户创建容器时，没有主动映射该端口，则并不会自动映射。
 - 例：
   ```dockerfile
   EXPOSE 80
+  EXPOSE 80/tcp 80/udp
   ```
+  - 默认为 TCP 协议。
 
 ### VOLUME
 

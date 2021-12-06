@@ -198,14 +198,14 @@
 ### ONBUILD
 
 ：用于声明触发器（build trigger），托管一条普通的 Dockerfile 命令。当其它镜像通过 FROM 继承当前镜像时，就会执行所有触发器。
-- 例：
+- 不支持嵌套 ONBUILD 。
+- 例：在构建 nginx:v1 的 Dockerfile 中加入 ONBUILD ：
   ```sh
-  ONBUILD EXPOSE 80
-  ONBUILD RUN ls -l
+  ONBUILD RUN mkdir -p /data
+  ONBUILD COPY . /data
+  ONBUILD RUN ls /data
   ```
-  - 不支持嵌套 ONBUILD 。
-
-- 例：
+  使用 nginx:v1 作为基础镜像，构建另一个镜像：
   ```sh
   [root@CentOS ~]# docker build . -t nginx:v2
   Sending build context to Docker daemon  2.048kB
@@ -214,9 +214,8 @@
   ---> Running in ba646d1c9824
   Removing intermediate container ba646d1c9824
   ---> Running in 09ba6f8a6933
+  Dockerfile
   Removing intermediate container 09ba6f8a6933
-  ---> Running in 25573aa14e17
-  Removing intermediate container 25573aa14e17
   ---> 8f66dce6bb3c
   Step 2/2 : EXPOSE 80
   ---> Running in 1f6182a06031
@@ -354,9 +353,10 @@ docker build <dir>
       - 如果删除构建的最终镜像，则会自动删除它调用的所有中间镜像。
       - 用 docker push 推送最终镜像时，不会推送中间镜像。
     - 大部分 Dockerfile 指令不会生成新的 layer ，只是修改了配置而生成新的中间镜像。
-      - ADD、COPY、RUN 指令可能修改文件，添加一层新的非空 layer ，保存到镜像配置的 rootfs.diff_ids 列表。
+      - 执行 ADD、RUN 指令时，不会创建中间容器，而是直接修改 layer 。
+      - 执行 RUN 指令时，可能修改文件，添加一层新的非空 layer ，保存到镜像配置的 rootfs.diff_ids 列表。
         - 在构建时使用 shell 的 rm 命令并不能实际删除文件，只是添加一层新的 layer ，覆盖原 layer 中的文件。
-        - 因此应该尽量减少这些指令的数量，避免增加大量 layer 。比如将多条 RUN 指令合并成一条。
+        - 因此应该尽量减少 RUN 指令的数量，避免增加大量 layer 。比如将多条 RUN 指令合并成一条。
 
 3. 再次构建镜像：
     ```sh

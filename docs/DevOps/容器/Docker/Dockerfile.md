@@ -186,6 +186,14 @@
   VOLUME /root  /var/log
   ```
 
+### STOPSIGNAL
+
+：声明 `docker stop` 停止容器时，应该给 1 号进程发送的信号。
+- 默认值：
+  ```sh
+  STOPSIGNAL  SIGTERM
+  ```
+
 ## 执行命令
 
 ### RUN

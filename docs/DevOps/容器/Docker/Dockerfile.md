@@ -1,6 +1,6 @@
 # Dockerfile
 
-：一个文本文件，用于描述构建一个 Docker 镜像的步骤。
+：一个文本文件，用于描述构建 Docker 镜像时需要执行的指令。
 - [官方文档](https://docs.docker.com/engine/reference/builder/)
 
 ## 语法
@@ -10,31 +10,32 @@
   - 一般在每行以指令名开头，允许添加前置空格。
   - 第一条非注释的指令应该是 FROM ，否则报错：`no build stage in current context`
 
+- Dockerfile 中的大部分指令可使用多次。
+  - ENTRYPOINT、CMD 指令如果存在多个，则只有最后一个会生效。
+
+- 用 # 声明单行注释，且必须在行首声明。
+  - 执行 Dockerfile 之前，注释行会被删除。因此：
+    ```sh
+    RUN echo hello \
+        # comment
+        world
+    ```
+    会变成：
+    ```sh
+    RUN echo hello \
+        world
+    ```
+
+## 构建阶段
+
 - dockerd 构建镜像时，会依次执行 Dockerfile 中的指令。
   - 每个指令划分为一个构建步骤（build step）
   - 从 FROM 指令开始的一组指令划分为一个构建阶段（build stage）。
 
-- Dockerfile 中的大部分指令可使用多次。
-  - ENTRYPOINT、CMD 指令如果存在多个，则只有最后一个会生效。
-
-### 注释
-
-- 用 # 声明单行注释，且必须在行首声明。
-- 执行 Dockerfile 之前，注释行会被删除。因此：
-  ```sh
-  RUN echo hello \
-      # comment
-      world
-  ```
-  会变成：
-  ```sh
-  RUN echo hello \
-      world
-  ```
-
 ### FROM
 
-：表示以某个镜像为基础开始构建。使用其 layer ，继承其大部分指令的配置。
+：表示以某个镜像为基础镜像，开始一个构建阶段。
+- 会沿用基础镜像的 layer ，继承其大部分指令的配置。
 - 语法：
   ```sh
   FROM [--platform=<platform>] <image>[:<tag>] [AS <name>]
@@ -58,6 +59,24 @@
   - scratch ：一个空镜像。以它作为基础镜像，将可执行文件拷贝进去，就可以构建出体积最小的镜像。
   - alpine ：一个专为容器设计的 Linux 系统，体积很小，但可能遇到兼容性问题。比如它用 musl 库代替了 glibc 库。
   - slim ：一种后缀，表示某种镜像的精简版，体积较小。通常是去掉了一些文件，只保留运行时环境。
+
+### 多阶段
+
+- 一个 Dockerfile 可以包含多个 FROM 指令，即多个构建阶段。
+- 使用多阶段构建的好处：
+  - 将复杂的 Dockerfile 划分成多个独立的部分。
+  - 减小镜像体积。
+    - 一个构建步骤 step ，会使用之前 step 的中间镜像，不得不继承 layer 中的全部文件，因此镜像容易包含无用文件。
+    - 而一个构建阶段 stage ，会使用一个独立的基础镜像，但可以选择性地 COPY 之前 stage 的文件。
+- 例：
+  ```sh
+  FROM nginx AS stage1                             # 开始一个阶段，并用 AS 命名
+  RUN touch /root/f1
+
+  FROM nginx AS stage2
+  COPY --from=stage1  /root/f1  /tmp/              # 从指定阶段的最终镜像中拷贝文件
+  COPY --from=nginx   /etc/nginx/nginx.conf /tmp/  # 从其它镜像中拷贝文件
+  ```
 
 ## 变量
 
@@ -134,66 +153,6 @@
 
 ：用法与 COPY 相似，但支持 src_path 为 URL 。
 
-## 其它
-
-### LABEL
-
-：给镜像添加一个或多个键值对格式的标签。
-- 标签属于 docker 对象的元数据，不会影响容器内进程。
-- 例：
-  ```sh
-  LABEL maintainer=test \
-        git_refs=master
-  ```
-  - 可以赋值为空。
-
-### USER
-
-：切换容器内的 shell 用户。
-- 镜像构建时、构建之后都会使用该配置。
-- 语法：
-  ```sh
-  USER <user>[:<group>]
-  ```
-
-### WORKDIR
-
-：切换容器内的 shell 工作目录。
-- 镜像构建时、构建之后都会使用该配置。
-- 语法：
-  ```sh
-  WORKDIR <dir>
-  ```
-
-### EXPOSE
-
-：声明容器内进程监听的端口。
-- 如果用户创建容器时，没有主动映射该端口，则并不会自动映射。
-- 例：
-  ```sh
-  EXPOSE 80
-  EXPOSE 80/tcp 80/udp
-  ```
-  - 默认为 TCP 协议。
-
-### VOLUME
-
-：将容器内的目录声明为挂载点。
-- 如果用户创建容器时，没有主动覆盖该挂载点，则默认会自动创建匿名的数据卷来挂载。
-- 例：
-  ```sh
-  VOLUME /data
-  VOLUME /root  /var/log
-  ```
-
-### STOPSIGNAL
-
-：声明 `docker stop` 停止容器时，应该给 1 号进程发送的信号。
-- 默认值：
-  ```sh
-  STOPSIGNAL  SIGTERM
-  ```
-
 ## 执行命令
 
 ### RUN
@@ -267,25 +226,67 @@
   Successfully tagged nginx:v2
   ```
 
-## 多阶段构建
+## 其它
 
-- 一个 Dockerfile 可以包含多个 FROM 指令，每个 FROM 指令表示一个构建阶段的开始。
-- 使用多阶段构建的好处：
-  - 将复杂的 Dockerfile 划分成多个独立的部分。
-  - 减小镜像体积。
-    - 一个构建步骤 step ，会使用之前 step 的中间镜像，不得不继承 layer 中的全部文件，因此镜像容易包含无用文件。
-    - 而一个构建阶段 stage ，会使用一个独立的基础镜像，但可以选择性地 COPY 之前 stage 的文件。
+### LABEL
+
+：给镜像添加一个或多个键值对格式的标签。
+- 标签属于 docker 对象的元数据，不会影响容器内进程。
 - 例：
   ```sh
-  FROM nginx AS stage1                             # 开始一个阶段，并用 AS 命名
-  RUN touch /root/f1
+  LABEL maintainer=test \
+        git_refs=master
+  ```
+  - 可以赋值为空。
 
-  FROM nginx AS stage2
-  COPY --from=stage1  /root/f1  /tmp/              # 从指定阶段的最终镜像中拷贝文件
-  COPY --from=nginx   /etc/nginx/nginx.conf /tmp/  # 从其它镜像中拷贝文件
+### USER
+
+：切换容器内的 shell 用户。
+- 镜像构建时、构建之后都会使用该配置。
+- 语法：
+  ```sh
+  USER <user>[:<group>]
   ```
 
-## 构建
+### WORKDIR
+
+：切换容器内的 shell 工作目录。
+- 镜像构建时、构建之后都会使用该配置。
+- 语法：
+  ```sh
+  WORKDIR <dir>
+  ```
+
+### EXPOSE
+
+：声明容器内进程监听的端口。
+- 如果用户创建容器时，没有主动映射该端口，则并不会自动映射。
+- 例：
+  ```sh
+  EXPOSE 80
+  EXPOSE 80/tcp 80/udp
+  ```
+  - 默认为 TCP 协议。
+
+### VOLUME
+
+：将容器内的目录声明为挂载点。
+- 如果用户创建容器时，没有主动覆盖该挂载点，则默认会自动创建匿名的数据卷来挂载。
+- 例：
+  ```sh
+  VOLUME /data
+  VOLUME /root  /var/log
+  ```
+
+### STOPSIGNAL
+
+：声明 `docker stop` 停止容器时，应该给 1 号进程发送的信号。
+- 默认值：
+  ```sh
+  STOPSIGNAL  SIGTERM
+  ```
+
+## 构建镜像
 
 ### 命令
 

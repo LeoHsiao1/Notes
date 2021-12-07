@@ -17,7 +17,7 @@
 - shell 脚本的示例：
   ```sh
   #!/bin/bash
-  
+
   if [ $# -ge 2 ];then
       echo "The input are:"$*
   else
@@ -60,40 +60,41 @@
 
 ### 脚本路径
 
-- 可以直接在终端输入 shell 脚本的文件路径，执行它：
-  ```sh
-  [root@Centos ~]# ./1.sh 
-  -bash: ./1.sh: Permission denied
-  ```
-  - 此时系统会自动选择一个 shell 解释器来执行它。
-  - 通常会因为没有该文件的可执行权限而报错，需要先执行： `chmod +x 1.sh`
-  - 执行 shell 脚本时可以输入参数，比如：`./1.sh arg1 arg2`
+可以直接在终端输入 shell 脚本的文件路径，执行它：
+```sh
+[root@Centos ~]# ./1.sh
+-bash: ./1.sh: Permission denied
+```
+- 此时系统会自动选择一个 shell 解释器来执行它。
+- 通常会因为没有该文件的可执行权限而报错，需要先执行： `chmod +x 1.sh`
+- 执行 shell 脚本时可以输入参数，比如：`./1.sh arg1 arg2`
 
 ### bash
 
-- 可以用指定的 shell 解释器执行 shell 脚本：
-  ```sh
-  $ bash
-          [xx.sh]       # 启动一个子 shell 来执行 shell 脚本，执行完之后该子 shell 会自动退出
-          -x            # 打印出执行的每条命令（每行开头会显示加号 + ）
-          -n            # 不执行脚本，而是检查是否有语法错误
-          -c <comman>   # 不执行脚本，而是执行一条命令
-          -i            # 让 shell 解释器采用交互模式
-          -l            # --login ，让 shell 解释器模拟 login shell
-  ```
+可以用指定的 shell 解释器执行 shell 脚本，例如 bash ：
+```sh
+$ bash
+      [xx.sh]       # 创建一个子 shell 来执行 shell 脚本，执行完之后该子 shell 会自动退出
+      -x            # 打印出执行的每条命令（每行开头会显示加号 + ）
+      -n            # 不执行脚本，而是检查是否有语法错误
+      -c <comman>   # 不执行脚本，而是执行一条命令
+      -i            # 让 shell 解释器采用交互模式
+      -l            # --login ，让 shell 解释器模拟 login shell
+```
 
 ### source
 
-- 可以用 source 命令执行 shell 脚本：
-  ```sh
-  $ source 1.sh         # 读取文件的每行字符串，放到当前 shell 中执行
-  ```
-  source 命令又称为点命令，可以用一个点表示，比如：`. 1.sh`
+```sh
+$ source <xx.sh>      # 读取 shell 脚本的内容，放到当前 shell 中执行
+```
+- source 命令又称为点命令，可以用一个点表示，比如：`. 1.sh`
 
 ### exec
 
-- 可以用 exec 命令执行 shell 命令：
-  ```sh
-  $ exec <command>...   # 执行一条命令
-  ```
-  exec 执行完命令之后会退出当前 shell ，除非是对文件描述符进行操作，比如：`exec 1> stdout.txt`
+```sh
+$ exec <command>...   # 执行一条命令
+```
+- 关于子进程：
+  - 用 bash 等 shell 解释器执行脚本时，会 fork 一个子 shell 进程来执行脚本，每执行一个命令就 fork 一个子进程，因此有两层子进程。
+  - 用 source 执行脚本时，会在当前 shell 中执行脚本，每执行一个命令就 fork 一个子进程。
+  - 用 exec 执行命令时，会用该命令进程替换当前 shell 进程，因此执行完命令之后就会退出终端。

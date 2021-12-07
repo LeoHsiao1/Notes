@@ -199,6 +199,38 @@
     ENTRYPOINT ["java"]
     CMD ["-jar", "test.jar"]
     ```
+  - 对于复杂的容器，可以加入一个启动脚本。例如：
+    ```dockerfile
+    COPY ./entrypoint.sh /
+    ENTRYPOINT ["/entrypoint.sh"]
+    CMD ["postgres"]
+    ```
+    脚本的内容示例：
+    ```sh
+    #!/bin/bash
+    set -e
+
+    # 如果传入的 CMD 命令即 $@ 中，第一个参数为 postgres ，则进行处理
+    if [ "$1" = 'postgres' ]; then
+        # 分配数据目录的权限
+        chown -R postgres "$DATA_DIR"
+
+        # 如果数据目录为空，则进行初始化
+        if [ -z "$(ls -A "$DATA_DIR")" ]; then
+            gosu postgres initdb
+        fi
+
+        # 以普通用户运行进程，用 $@ 作为进程的启动命令
+        exec gosu postgres "$@"
+    fi
+
+    # 如果 $@ 不匹配以上条件，则直接执行
+    exec "$@"
+    ```
+    - 这里容器会以 root 用户运行 entrypoint.sh 脚本，而脚本以 postgres 用户运行进程，并分配目录权限。
+    - 通过 exec 方式执行命令，会让该命令进程替换当前 shell 进程，作为 1 号进程，且该命令结束时当前 shell 也会退出。
+    - gosu 命令与 sudo 类似，用于以指定用户的身份执行一条命令。
+      - 但 sudo 命令会创建一个子进程去执行，而 gosu 会通过 exec 方式执行。
 
 ### SHELL
 

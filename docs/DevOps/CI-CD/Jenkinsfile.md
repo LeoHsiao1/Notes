@@ -236,25 +236,56 @@ pipeline {
       }
   }
   ```
+
+### docker
+
 - 可以创建临时的 docker 容器作为 agent ：
   ```groovy
   agent {
       docker {
           // label 'master'
+          // customWorkspace "/opt/jenkins_home/workspace/test1"
           image 'centos:7'
           // args  '-v /tmp:/tmp'
       }
   }
   ```
-  - 这会在指定节点（默认是 master 节点）上创建一个 docker 容器，执行 pipeline ，然后自动删除该容器。
-  - 该容器的启动命令的格式如下：
+  - 这会在指定节点上创建一个 docker 容器，执行 pipeline ，然后自动删除该容器。
+  - 该容器默认的启动命令如下：
     ```sh
-    docker run -t -d -u 1000:1000 \
-        -w /opt/.jenkins/workspace/test_pipeline@2 \    # 因为宿主机上已存在该项目的工作目录了，所以加上后缀 @2 避免同名
-        -v /opt/.jenkins/workspace/test_pipeline@2:/opt/.jenkins/workspace/test_pipeline@2:rw,z \
-        -e ********                                     # 传入 Jenkins 的环境变量
+    docker run -t -d \
+        -u 0:0 \                                    # 默认会设置容器内用户为 root
+        -w /opt/jenkins/workspace/test_pipeline \   # 默认会自动挂载 workspace 目录，并将其设置为容器的工作目录
+        -v /opt/jenkins/workspace/test_pipeline:/opt/jenkins/workspace/test_pipeline:rw,z \
+        -e ******** -e ******** -e ******** \       # 默认会传入 Jenkins 的环境变量
         centos:7 cat
     ```
+
+- 也可以在 script{} 中运行容器：
+  ```groovy
+  script{
+      // 运行一个容器，在 Groovy 中保存为 container1 对象
+      docker.image('mysql:5.7').withRun('-p 3306:3306') { container1 ->
+          // 等待服务启动
+          sh """
+              while ! curl 127.0.0.1:3306
+              do
+                  echo 'Wait until service is up...'
+                  sleep 1
+              done
+          """
+
+          // 支持嵌套，从而同时运行多个容器
+          docker.image('centos:7').inside("--link ${container1.id}:db") {
+              sh """
+                  sh test.sh
+              """
+          }
+      }
+  }
+  ```
+  - withRun() 方法执行完之后会自动删除容器。
+  - inside() 方法启动容器时，会加上像 agent.docker 的默认配置。
 
 ## stages{}
 

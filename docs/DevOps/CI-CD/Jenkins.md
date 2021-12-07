@@ -75,6 +75,7 @@
     - 如果构建队列中已存在相同的 build 任务（配置、构建参数相同），则不会将当前任务加入构建队列，甚至不会占用 Build ID 。
   - 默认将当前节点的 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
     - 执行 Job 之前、之后都不会自动清空工作目录，建议用户主动清理。
+    - 如果将一个 Job 并发执行多个实例，则生成的工作目录会自动添加 @1、@2 格式的后缀。
   - 默认在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。
     - 可以在 shell 中声明环境变量 `JENKINS_NODE_COOKIE=dontkillme` ，阻止 Jenkins 杀死当前 shell 创建的进程。
 

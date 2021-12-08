@@ -359,14 +359,17 @@ docker build <dir>
 
 ### BuildKit
 
-- Docker 的 18.09 版本增加了一个构建工具 BuildKit 。特点如下：
-  - 兼容旧版的 Dockerfile 。
-  - 会自行读取 Dockerfile 并进行构建，不需要与 dockerd 交互。
+- Docker 的 18.09 版本增加了一个构建工具 BuildKit 。
+
+- 特点：
+  - 采用一种更低级的格式来定义构建过程，称为（Low Level Builder，LLB）。
+    - 兼容 Dockerfile ，通过前端组件自动将其转换成 LLB 。
   - 优化了构建过程，减少耗时。
     - 会显示每个 step 的耗时。
     - 会并行构建所有 stage ，除非存在 FROM 依赖关系。因此适合同时构建多个平台的镜像。
+  - 构建时，由 dockerd 进程创建基于 runc 的中间容器，不是由 containerd-shim 管理，因此不能通过 docker ps 命令查看。
 
-- 启用 BuildKit 的命令：
+- 可通过 buildx 插件启用 BuildKit ：
   ```sh
   docker buildx
             build <dir>             # 构建，兼容 docker build 的命令选项

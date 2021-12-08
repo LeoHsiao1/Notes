@@ -8,7 +8,8 @@
 - Dockerfile 中可以包含多行指令（instruction）。
   - 指令名不区分大小写，但一般大写。
   - 一般在每行以指令名开头，允许添加前置空格。
-  - 第一条非注释的指令应该是 FROM ，否则报错：`no build stage in current context`
+  - 第一个非注释的指令应该是 FROM ，否则报错：`no build stage in current context`
+    - Dockerfile 至少需要包含一个 FROM 指令，其它指令都可以省略。
 
 - Dockerfile 中的大部分指令可使用多次。
   - ENTRYPOINT、CMD 指令如果存在多个，则只有最后一个会生效。
@@ -76,6 +77,7 @@
   FROM nginx AS stage2
   COPY --from=stage1  /root/f1  /tmp/              # 从指定阶段的最终镜像中拷贝文件
   COPY --from=nginx   /etc/nginx/nginx.conf /tmp/  # 从其它镜像中拷贝文件
+  RUN  ls /tmp
   ```
 
 ## 变量
@@ -96,7 +98,7 @@
     ${var:-default}      # 如果变量存在且不为空，则返回其值，否则返回默认值
     ${var:+default}      # 如果变量存在且不为空，则返回默认值，否则返回空
     ```
-- 允许在第一条 FROM 指令之前插入 ARG 指令：
+- 允许在第一个 FROM 指令之前插入 ARG 指令：
   ```sh
   ARG     A=10
   FROM    nginx:1.$A
@@ -136,8 +138,8 @@
 - 语法：
   ```sh
   COPY <src_path>...  <dst_path>
-      --from=<name>               # 从某个构建阶段或镜像拷贝
-      --chown=<user>:<group>      # 拷贝之后修改文件权限
+      --chown=<user>:<group>    # 拷贝之后的文件权限
+      --from=<name>             # 表示拷贝的源对象，默认是 build context ，可以指定其它构建阶段或镜像
   ```
   - src_path 只能是相对路径，且不能使用 .. 指向超出构建上下文的路径。
     - src_path 可以包含通配符 ? 和 * 。
@@ -229,7 +231,7 @@
     ```
     - 这里容器会以 root 用户运行 entrypoint.sh 脚本，而脚本以 postgres 用户运行进程，并分配目录权限。
     - 通过 exec 方式执行命令，会让该命令进程替换当前 shell 进程，作为 1 号进程，且该命令结束时当前 shell 也会退出。
-    - gosu 命令与 sudo 类似，用于以指定用户的身份执行一条命令。
+    - gosu 命令与 sudo 类似，用于以指定用户的身份执行一个命令。
       - 但 sudo 命令会创建一个子进程去执行，而 gosu 会通过 exec 方式执行。
 
 ### SHELL
@@ -242,7 +244,7 @@
 
 ### ONBUILD
 
-：用于声明触发器（build trigger），托管一条普通的 Dockerfile 命令。当其它镜像通过 FROM 继承当前镜像时，就会执行所有触发器。
+：用于声明触发器（build trigger），托管一个普通的 Dockerfile 命令。当其它镜像通过 FROM 继承当前镜像时，就会执行所有触发器。
 - 不支持嵌套 ONBUILD 。
 - 例：在构建 nginx:v1 的 Dockerfile 中加入 ONBUILD ：
   ```sh
@@ -332,14 +334,14 @@
 
 ## 构建镜像
 
-### 命令
+### build 命令
 
 ```sh
 docker build <dir>
             -f <file>                   # Dockerfile 的路径，默认为 <dir>/Dockerfile
             -t <image:tag>              # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
             --build-arg VERSION="1.0"   # 传入构建参数
-            --target  <stage>           # 构建到某个阶段就停止
+            --target <stage>            # 执行完某个阶段就停止构建
             --network <name>            # 设置中间容器使用的网络
             --no-cache                  # 构建时不使用缓存
             --force-rm                  # 即使构建失败，也强制删除中间容器
@@ -354,6 +356,68 @@ docker build <dir>
   **/tmp*   # ** 匹配任意数量的目录
   ```
   - Dockerfile 和 .dockerignore 文件总是会被发送给 dockerd ，即使在这声明了也没用。
+
+### BuildKit
+
+- Docker 的 18.09 版本增加了一个构建工具 BuildKit 。特点如下：
+  - 兼容旧版的 Dockerfile 。
+  - 会自行读取 Dockerfile 并进行构建，不需要与 dockerd 交互。
+  - 优化了构建过程，减少耗时。
+    - 会显示每个 step 的耗时。
+    - 会并行构建所有 stage ，除非存在 FROM 依赖关系。因此适合同时构建多个平台的镜像。
+
+- 启用 BuildKit 的命令：
+  ```sh
+  docker buildx
+            build <dir>             # 构建，兼容 docker build 的命令选项
+                --progress plain    # 构建过程的输出类型。默认为 auto ，设置为 plain 则会显示终端输出
+                --secret id=mysecret,src=/root/secret # 将宿主机上的文件声明为一个私密文件，指定 id ，可供 RUN 命令挂载
+                --platform=linux/arm64,...            # 指定构建的目标平台，默认采用本机平台
+            ls                      # 列出所有 builder 实例
+            du                      # 显示 buildx 占用的磁盘
+            prune                   # 清空 buildx cache
+  ```
+  - 可以修改 daemon.json 的配置，使得 docker build 也启用 BuildKit 。
+
+启用 Buildkit 时的新语法：
+- 支持在 Dockerfile 中声明语法版本：
+  ```sh
+  # syntax=docker/dockerfile:1.2
+  ```
+- RUN 命令支持使用 `--mount` 选项，可多次使用，有多种挂载类型：
+  - bind ：默认挂载类型。
+    ```sh
+    RUN --mount=type=bind,src=./dist,dst=/dist \
+        --mount=type=bind,from=stage1,src=/root,dst=/root \
+        ls /root
+    ```
+    - from 表示挂载的源对象，用法与 COPY --from 相同。
+    - src 表示源路径，默认为 from 的顶级目录。
+    - dst 表示目标路径，如果不存在则会自动创建。
+    - 挂载时默认的访问模式为 rw ，可以改为 ro 。
+    - 使用 RUN --mount 方式获取文件，可以避免像 COPY 命令那样将文件保存到镜像中。
+  - cache ：用于挂载缓存目录，类似于数据卷。
+    ```sh
+    RUN --mount=type=cache,target=/app/node_modules,id=/app/node_modules \
+        cd /app   ;\
+        npm install
+
+    RUN --mount=type=cache,target=/app/node_modules,sharing=locked \
+        cd /app   ;\
+        npm run build
+    ```
+    - cache 会在第一次挂载时自动创建。当构建结束，且不存在引用它的镜像时，自动删除。
+      - 挂载 cache 的好处：可以让多个构建步骤共享文件。
+    - cache 的 id 默认等于 target 。
+    - sharing 表示并行构建时，对 cache 的访问模式。可取值如下：
+      - shared ：默认值，允许并行读写。
+      - locked ：同时只能有一方绑定该 cache 。
+      - private ：如果 cache 已被绑定，则创建新的 cache 实例。
+  - secret ：用于挂载一个私密文件。该文件不是来自 build context ，而是由用户指定的任意宿主机文件。
+    ```sh
+    RUN --mount=type=secret,id=mysecret,dst=/secret \
+        cat /secret
+    ```
 
 ### 示例
 
@@ -403,7 +467,8 @@ docker build <dir>
         - 因此应该尽量减少 RUN 指令的数量，避免增加大量 layer 。比如将多条 RUN 指令合并成一条。
         - 安装软件时，记得删除缓存。例如：
           ```dockerfile
-          RUN yum install -y vim && \
+          RUN yum update && \
+              yum install -y vim && \
               yum clean all && \
               rm -rf /var/cache/yum
           ```

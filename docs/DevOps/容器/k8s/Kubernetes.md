@@ -13,10 +13,10 @@
 - 2014 年，Google 开源了 k8s 项目，它源于 Google 内部的大规模集群管理系统 Borg 。
 - 2015 年，Google 将 k8s 项目捐赠给 Linux 基金会下属的云原生计算基金会（CNCF）托管。
 - 2020 年底，发布 v1.2 版本。
-  - 容器运行时接口（Container Runtime Interface ， CRI）弃用了 Docker ，建议改用 containerd 或 CRI-O 。
+  - CRI 不再支持 Docker 引擎，建议改用 containerd 或 CRI-O 。效率更高，但不能再通过 docker 命令查看容器。
     - 这是因为 Docker 没有直接支持 CRI 接口，导致 k8s 只能通过 Dockershim 模块间接与 Docker 通信，但维护该模块比较麻烦，现在停止维护该模块。
-    - 如果用户继续使用 Docker 运行镜像，则启动 kubelet 时会显示一条警告。
     - 使用 Docker 构建出的镜像符合 OCI 标准，因此依然可以被 containerd 或 CRI-O 运行。
+    - 如果用户继续使用 Docker 运行镜像，则启动 kubelet 时会显示一条警告。
 
 ## 架构
 
@@ -31,6 +31,11 @@
     - kube-proxy ：为 Service 提供访问 Pod 的网络代理以及负载均衡。
 - 通常使用 Docker 作为容器引擎。
 - 用 etcd 数据库存储 k8s 集群的各种数据。
+
+- 容器运行时接口（Container Runtime Interface，CRI）：kubelet 调用容器运行时的 API 。
+  - 大部分容器运行时并不兼容 CRI ，因此 k8s 还开发了一些 shim 模块，用于将各种容器运行时对接到 CRI 。
+    - 后来改为通过 containerd 或 CRI-O 来调用底层的容器运行时。
+  - CRI 使得 k8s 与容器运行时解耦，允许 k8s 同时使用多种容器运行时。
 
 ## 管理对象
 

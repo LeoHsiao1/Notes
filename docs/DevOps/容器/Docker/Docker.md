@@ -4,8 +4,6 @@
 - [官方文档](https://docs.docker.com/reference/)
 - 采用 Golang 开发，在 Moby 项目中开源。
 - 提供了用于 Linux、MacOS、Windows 系统的软件安装包。
-- dotCloud 公司于 2013 年发布 Docker 软件，成为了最流行的容器引擎。
-  - 后来公司改名为 Docker 公司。
 
 ## 安装
 

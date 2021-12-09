@@ -623,10 +623,6 @@ module.exports = {
                         {
                             title: "定时任务",
                             path: "/Linux/其它/定时任务"
-                        },
-                        {
-                            title: "OpenWrt",
-                            path: "/Linux/其它/OpenWrt"
                         }
                     ]
                 }

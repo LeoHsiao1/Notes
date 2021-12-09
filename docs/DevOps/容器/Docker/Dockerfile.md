@@ -56,10 +56,13 @@
   FROM nginx
   FROM nginx AS stage1
   ```
-- 常见的基础镜像：
+- 基础镜像举例：
   - scratch ：一个空镜像。以它作为基础镜像，将可执行文件拷贝进去，就可以构建出体积最小的镜像。
-  - alpine ：一个专为容器设计的 Linux 系统，体积很小，但可能遇到兼容性问题。比如它用 musl 库代替了 glibc 库。
-  - slim ：一种后缀，表示某种镜像的精简版，体积较小。通常是去掉了一些文件，只保留运行时环境。
+  - *-slim ：一种后缀，表示某种镜像的精简版，体积较小。通常是去掉了一些文件，只保留运行时环境。
+  - busybox ：集成了许多常用的 Unix 命令，体积只有 2MB ，相当于一个小巧的工具箱。
+  - debian
+  - alpine ：一个专为容器设计的轻量级 Linux 系统，体积只有 5MB 。包含了 busybox ，用 musl libc 库代替了 glibc 库，可能遇到兼容性问题。
+  - Container Linux ：一个专为容器设计的轻量级 Linux 系统，由 CoreOS 团队发布。2020 年停止开发，被 Fedora CoreOS 替代。
 
 ### 多阶段
 
@@ -367,7 +370,7 @@ docker build <dir>
   - 优化了构建过程，减少耗时。
     - 会显示每个 step 的耗时。
     - 会并行构建所有 stage ，除非存在 FROM 依赖关系。因此适合同时构建多个平台的镜像。
-  - 构建时，由 dockerd 进程创建基于 runc 的中间容器，不是由 containerd-shim 管理，因此不能通过 docker ps 命令查看。
+  - 构建时，由 dockerd 进程创建基于 runc 的中间容器，不是由 containerd-shim 管理，因此不能通过 docker 命令查看容器。
 
 - 可通过 buildx 插件启用 BuildKit ：
   ```sh

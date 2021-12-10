@@ -48,8 +48,11 @@
   - 开发 Java Web 项目的常用框架：
     - SSH（Spring + Struts + Hibernate）
     - SSM（Spring + SpringMVC + MyBatis）
-- Log4j
-  - ：一个用于记录 Java 程序日志的库，支持自动切割日志。
+- 日志框架
+  - java.util.logging ：Java 的标准库，是 JDK 内置的日志框架。
+  - Log4j ：一个 Apache 开源项目，已停止开发。使用一个配置文件 log4j.properties ，支持自动切割日志。
+  - LogBack ：重新实现了 Log4j ，大幅优化。
+  - Log4j2 ：对 Log4j 进行了重构优化。
 
 ### GC
 

@@ -347,16 +347,16 @@
 ### build 命令
 
 ```sh
-docker build <dir>
+docker build <PATH>|<URL>
             -f <file>                   # Dockerfile 的路径，默认为 <dir>/Dockerfile
-            -t <image:tag>              # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
+            -t <image>[:tag]            # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
             --build-arg VERSION="1.0"   # 传入构建参数
             --target <stage>            # 执行完某个阶段就停止构建
             --network <name>            # 设置中间容器使用的网络
             --no-cache                  # 构建时不使用缓存
             --force-rm                  # 即使构建失败，也强制删除中间容器
 ```
-- 执行 docker build 时，会将目标目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
+- 执行 `docker build <PATH>` 时，会将目标目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
   - 执行 `docker build - < Dockerfile` ，则只会发送 Dockerfile 作为构建上下文。
 - 可以在 .dockerignore 文件中声明不想被发送的文件或目录。如下：
   ```sh
@@ -383,9 +383,10 @@ docker build <dir>
   ```sh
   docker buildx
             build <dir>             # 构建，兼容 docker build 的命令选项
-                --progress plain    # 构建过程的输出类型。默认为 auto ，设置为 plain 则会显示终端输出
+                --cache-from <image>                  # 采用某个镜像作为缓存源
+                --platform linux/arm64,...            # 指定构建的目标平台，默认采用本机平台，可指定多个平台
+                --progress plain                      # 构建过程的输出类型。默认为 auto ，设置为 plain 则会显示终端输出
                 --secret id=mysecret,src=/root/secret # 将宿主机上的文件声明为一个私密文件，指定 id ，可供 RUN 命令挂载
-                --platform=linux/arm64,...            # 指定构建的目标平台，默认采用本机平台
             ls                      # 列出所有 builder 实例
             du                      # 显示 buildx 占用的磁盘
             prune                   # 清空 buildx cache

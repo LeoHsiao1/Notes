@@ -79,6 +79,8 @@
   ```
   - 修改配置之后，需要重启 dockerd 。
 
+- docker 命令的配置文件存放在 `$HOME/.docker/` 目录下。
+
 - 如果想让 dockerd 使用代理，需要在 `/usr/lib/systemd/system/docker.service` 中加入环境变量：
   ```sh
   [Service]

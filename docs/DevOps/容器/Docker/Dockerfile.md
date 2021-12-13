@@ -166,7 +166,7 @@
 - 有两种写法：
   ```sh
   RUN <command> <param1> <param2>...        # shell 格式
-  RUN ["command", "param1", "param2"...]    # exec 格式，即 JSON array
+  RUN ["command", "param1", "param2"...]    # exec 格式，即 JSON array 。注意使用双引号，否则使用单引号会被视作 shell 格式
   ```
   - shell 格式是在 shell 解释器中执行命令。而 exec 格式是直接执行命令，因此不支持 shell 语法，比如管道符、用 $ 读取变量。
   - 制作镜像时，dockerd 会将所有命令都从 shell 格式转换成 exec 格式 `["/bin/sh", "-c", "<command> <param1> <param2>..."]` ，然后保存 。
@@ -199,43 +199,50 @@
   `CMD ["2"]`           |/bin/sh -c 'echo 1' 2                    |echo 1 2
 
   - ENTRYPOINT 指令应该采用 exec 格式，因为采用 shell 格式时，CMD 指令不会被执行，而且容器内由 shell 解释器担任 1 号进程。
-  - 对于简单的容器，一般 ENTRYPOINT 指令填程序的启动命令，CMD 指令填程序的启动参数。例如：
+  - 一般 ENTRYPOINT 指令填程序的启动命令，CMD 指令填程序的启动参数。例如：
     ```dockerfile
     ENTRYPOINT ["java"]
     CMD ["-jar", "test.jar"]
     ```
-  - 对于复杂的容器，可以加入一个启动脚本。例如：
-    ```dockerfile
-    COPY ./entrypoint.sh /
-    ENTRYPOINT ["/entrypoint.sh"]
-    CMD ["postgres"]
-    ```
-    脚本的内容示例：
-    ```sh
-    #!/bin/bash
-    set -e
+- 例：给容器编写一个 entrypoint.sh 脚本，可实现复杂的启动过程
+  ```dockerfile
+  COPY ./entrypoint.sh /
+  ENTRYPOINT ["/entrypoint.sh"]
+  CMD ["postgres"]
+  ```
+  脚本的内容示例：
+  ```sh
+  #!/bin/bash
+  set -e
 
-    # 如果传入的 CMD 命令即 $@ 中，第一个参数为 postgres ，则进行处理
-    if [ "$1" = 'postgres' ]; then
-        # 分配数据目录的权限
-        chown -R postgres "$DATA_DIR"
+  # 如果传入的 CMD 命令即 $@ 中，第一个参数为 postgres ，则进行处理
+  if [ "$1" = 'postgres' ]; then
+      # 分配数据目录的权限
+      chown -R postgres "$DATA_DIR"
 
-        # 如果数据目录为空，则进行初始化
-        if [ -z "$(ls -A "$DATA_DIR")" ]; then
-            gosu postgres initdb
-        fi
+      # 如果数据目录为空，则进行初始化
+      if [ -z "$(ls -A "$DATA_DIR")" ]; then
+          gosu postgres initdb
+      fi
 
-        # 以普通用户运行进程，用 $@ 作为进程的启动命令
-        exec gosu postgres "$@"
-    fi
+      # 以普通用户运行进程，用 $@ 作为进程的启动命令
+      exec gosu postgres "$@"
+  fi
 
-    # 如果 $@ 不匹配以上条件，则直接执行
-    exec "$@"
-    ```
-    - 这里容器会以 root 用户运行 entrypoint.sh 脚本，而脚本以 postgres 用户运行进程，并分配目录权限。
-    - 通过 exec 方式执行命令，会让该命令进程替换当前 shell 进程，作为 1 号进程，且该命令结束时当前 shell 也会退出。
-    - gosu 命令与 sudo 类似，用于以指定用户的身份执行一个命令。
-      - 但 sudo 命令会创建一个子进程去执行，而 gosu 会通过 exec 方式执行。
+  # 如果 $@ 不匹配以上条件，则直接执行
+  exec "$@"
+  ```
+  - 这里容器会以 root 用户运行 entrypoint.sh 脚本，而脚本以 postgres 用户运行进程，并分配目录权限。
+  - 通过 exec 方式执行命令，会让该命令进程替换当前 shell 进程，作为 1 号进程，且该命令结束时当前 shell 也会退出。
+  - gosu 命令与 sudo 类似，用于以指定用户的身份执行一个命令。
+    - 但 sudo 命令会创建一个子进程去执行，而 gosu 会通过 exec 方式执行。
+
+- 例：在容器内使用 tini 托管进程
+  ```dockerfile
+  RUN wget https://github.com/krallin/tini/releases/download/v0.19.0/tini -O /usr/bin/tini ;\
+      chmod +x /usr/bin/tini
+  ENTRYPOINT ["tini", "--" , "/docker-entrypoint.sh"]
+  ```
 
 ### SHELL
 
@@ -477,6 +484,12 @@ docker build <dir>
               yum install -y vim && \
               yum clean all && \
               rm -rf /var/cache/yum
+          ```
+          ```dockerfile
+          RUN apt update && \
+              apt install -y vim && \
+              apt clean && \
+              rm -rf /var/lib/apt/lists
           ```
         - 在构建时，使用 shell 的 rm 命令只能删除当前 layer 的文件。不能删除之前 layer 的文件，只是添加一层新的 layer ，覆盖原 layer 中的文件。
 

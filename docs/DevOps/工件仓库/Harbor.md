@@ -16,16 +16,21 @@
 
 ## 部署
 
-- 下载官方发行版，用脚本部署：
+- 下载官方发行版：
+  ```sh
+  wget https://github.com/goharbor/harbor/releases/download/v2.4.0/harbor-online-installer-v2.4.0.tgz
+  ```
+  解压后，使用其中的脚本：
   ```sh
   sh install.sh
                 # --with-notary       # 启用 notary ，检查镜像的数字签名。这需要 Harbor 采用 HTTPS
                 --with-trivy          # 启用 trivy 漏洞扫描器
                 --with-chartmuseum    # 启用 Chart 仓库
   ```
-  - 包含 harbor-core、harbor-db、registry、Nginx、Redis 等多个组件，基于 docker-compose 启动。
-    - 部署时至少需要 4G 内存。
+  - 部署之后，会生成一个配置文件 harbor.yml 。
+  - Harbor 包含 harbor-core、harbor-db、registry、Nginx、Redis 等多个服务，基于 docker-compose 启动。
     - 不会将日志输出到 docker 容器，而是保存到日志目录。
+    - 部署时至少需要 4G 内存。
   - 修改配置之后需要执行：
     ```sh
     ./prepare --with-trivy  --with-chartmuseum
@@ -84,11 +89,11 @@
     {library,amazon}/**       # 匹配多个字符串，用逗号分隔
     ```
   - 触发复制规则时，会创建一个复制任务，在队列中执行。
-    - 可以手动触发，也可以定时自动触发。
+    - 可以手动触发，也可以定时自动触发，或通过事件触发。
     - 如果任务执行失败，则会在几分钟之后重试。
 
 - 机器人账户（Robot）
-  - ：供自动化脚本使用，可以用于 docker login ，然后拉取、推送镜像。但不能用于访问 Harbor Web 页面。
+  - ：供自动化脚本使用，可用于 docker login 命令，但不能用于访问 Harbor Web 页面。
 
 - 垃圾清理
   - 当用户删除镜像时，Harbor 并不会在磁盘中实际删除其使用的 layer 。

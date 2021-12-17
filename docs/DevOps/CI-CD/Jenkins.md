@@ -185,6 +185,9 @@
   - 用于记录各个 Job 以及系统配置的变更历史。
   - 原理：将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
   - 建议在 Jenkins 系统管理页面，限制该插件保留变更历史的数量。
+- Folder Properties
+  - 用于在 Folder 中定义一些环境变量，称为属性，供其下的 Job 调用。
+  - 需要在 Pipeline 的 options 中加入 withFolderProperties() ，才会载入 Folder 变量。
 
 ## ♢ jenkinsapi
 

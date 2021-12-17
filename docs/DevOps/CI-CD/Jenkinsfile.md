@@ -94,7 +94,8 @@ pipeline {
       }
   }
   ```
-  - 定义在 pipeline.environment{} 中的环境变量会作用于全局，而定义在 stage.environment{} 中的只作用于该阶段。
+  - 定义在 pipeline.environment{} 中的环境变量会作用于该 pipeline 全局，而定义在 stage.environment{} 中的只作用于该阶段。
+  - 还可以在 Jenkins 系统配置页面，定义作用于所有 Job 的环境变量。或者通过 Folder Properties 插件，在文件夹中定义环境变量。
 
 - 在 environment{} 中可以导入 Jenkins 的凭据作为环境变量：
   ```groovy
@@ -497,7 +498,6 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       echo "$EXIT_CODE"
   }
   ```
-  - .trim() 方法用于去掉字符串末尾的空字符、换行符。
 
 - 例：从 shell 中获得数组并遍历它
   ```groovy

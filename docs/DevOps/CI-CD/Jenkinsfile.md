@@ -77,7 +77,8 @@ pipeline {
 
 - Groovy 语言支持在字符串中用 `$` 插入变量的值，用 `${}` 插入表达式的值。
   - Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
-    - 如果使用的 Groovy 变量不存在，则报出 Groovy 的语法错误 `groovy.lang.MissingPropertyException: No such property` 。
+    - 如果通过 $ 读取的变量不存在，则会抛出 Groovy 的语法异常：`groovy.lang.MissingPropertyException: No such property`
+    - 如果通过 ${env.A} 方式读取的变量不存在，则会返回 null ，不会报错。
   - 如果想让 Groovy 将字符串中的 $ 当作普通字符处理，则需要使用单引号作为定界符，或者使用转义字符 `\$` 。
 
 ### 环境变量
@@ -94,6 +95,7 @@ pipeline {
       }
   }
   ```
+  - 如果给环境变量赋值为空，则会删除该变量。
   - 定义在 pipeline.environment{} 中的环境变量会作用于该 pipeline 全局，而定义在 stage.environment{} 中的只作用于该阶段。
   - 还可以在 Jenkins 系统配置页面，定义作用于所有 Job 的环境变量。或者通过 Folder Properties 插件，在文件夹中定义环境变量。
 
@@ -155,13 +157,19 @@ pipeline {
         string(name: 'file')
     }
     environment {
-        file = file.replaceAll('[^0-9A-Za-z \n/,._-]', '_')     // 替换构建参数中的特殊字符
+        file = file.replaceAll('[^\\w /:,.*_-]', '_').trim()    // 将构建参数赋值给一个环境变量，替换特殊字符
     }
     ```
 
 ### 内置变量
 
-- 可以通过 env 字典访问 Pipeline 内置的环境变量。如下：
+- 可以通过 params 字典读取 Pipeline 的构建参数。如下：
+  ```sh
+  params.A
+  params.B
+  ```
+
+- 可以通过 env 字典读取 Pipeline 的环境变量。除了用户添加的环境变量，还有 Jenkins 内置的环境变量，比如：
   ```sh
   env.JENKINS_HOME    # Jenkins 部署的主目录
   env.NODE_NAME       # 节点名
@@ -204,12 +212,6 @@ pipeline {
         currentBuild.displayName = "#${env.BUILD_NUMBER} branch=${env.BRANCH}"
     }
     ```
-
-- 可以通过 params 字典获取 Pipeline 的构建参数。如下：
-  ```sh
-  params.A
-  params.B
-  ```
 
 ## agent{}
 

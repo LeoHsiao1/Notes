@@ -70,7 +70,7 @@
 - 字符串的常见用法：
   ```groovy
   String x = 'Hello'
-  x += ' World'       // 字符串之间可以直接拼接
+  x += ' World'       // 字符串之间可以用 + 或 .plus() 方法拼接
   x += 123            // 其它类型的值与字符串拼接时，会自动转换成字符串类型
   println x
   // 显示：Hello World123
@@ -80,7 +80,9 @@
   // 显示：H
   println x[0..3]     // 获取切片
   // 显示：Hell
-  println '_' + " Hello\t\n\r".trim()+ '_'  // trim() 方法可去掉字符串开头、末尾的空白字符
+  ```
+  ```groovy
+  println '_' + " Hello\t\n\r".trim()+ '_'  // .trim() 方法可去掉字符串开头、末尾的空白字符
   // 显示：_Hello_
   ```
 

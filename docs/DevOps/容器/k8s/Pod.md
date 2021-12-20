@@ -2,7 +2,8 @@
 
 ## Controller
 
-：控制器，用于控制 Pod 。
+：控制器，用于管理 Pod 。
+- 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 管理 Pod 。
 - k8s 设计了多种 Controller ，用不同的配置文件进行管理。
 
 ### Deployment

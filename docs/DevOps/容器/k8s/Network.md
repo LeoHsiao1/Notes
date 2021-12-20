@@ -3,7 +3,8 @@
 k8s 中常用的几种 IP 地址：
 - Node IP ：集群中一个主机节点的 IP 地址。
 - Pod IP ：一个 Pod 的 IP 地址。
-  - Pod IP 每次重新部署时会变化，因此建议通过 Service、Ingress 来访问 Pod 。
+  - k8s 创建每个 Pod 时，会给它分配一个独立的虚拟 IP ，用于定位该 Pod 。
+  - Pod IP 在重新部署时会变化，而且一个应用可能部署了多个 Pod 实例，因此建议创建 Service、Ingress 来反向代理 Pod IP ，供用户访问。
 - Service IP
 - Ingress IP
 

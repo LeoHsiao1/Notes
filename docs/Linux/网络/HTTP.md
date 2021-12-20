@@ -11,7 +11,7 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
       -X POST                     # 使用指定类型的 HTTP 方法
       -H "Connection: Keep-Alive" # 加上 header（可以重复使用该命令选项）
       -b "name=leo"               # 加上 cookies
-      -I                          # 只显示 response header
+      -I                          # 只显示 response header ，这会发出 HEAD 请求
       -L                          # 如果 HTTP 响应报文是重定向，则自动跟随
 
       # 关于下载
@@ -90,7 +90,7 @@ $ wget <URL>...                 # 访问指定网址（默认为 GET 方法）�
        --no-check-certificate   # 不检查 HTTPS 网址的证书
        --spider                 # 不下载文件，可用于检测该网址是否有效
 ```
-- `wget URL` 相当于 `curl -O URL` 。
+- wget 相当于 curl -LO 。
 - 例：爬取网页
   ```sh
   wget -e robots=off -r -np -p -k <网址>

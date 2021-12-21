@@ -21,16 +21,21 @@
 
 ## 架构
 
-- k8s 部署成一个分布式集群，以一个主机为主节点（记作 master），其它主机为工作节点（记作 Node）。
-  - master 负责管理整个集群，控制所有 Node 。运行以下进程：
-    - apiserver ：提供整个 k8s 系统对外的 RESTful API 。
-    - scheduler ：负责调度集群的资源，将 Pod 分配到某个节点上。
-    - controller-manager ：负责管理 Pod ，比如滚动更新、健康检查等。
-    - etcd ：数据库。
-  - Node 负责部署 Pod 。运行以下进程：
-    - kubelet ：创建、管理 Pod ，并上报 Pod 的状态到 master 。
+- k8s 部署在多个主机上，组成分布式集群。
+- 每个主机称为节点（Node），分为两类：
+  - 主节点（master node）：又称为控制平面节点（control plane node），负责管理整个集群。运行以下进程：
+    - kube-apiserver ：提供整个 k8s 系统对外的 RESTful API 。
+    - kube-scheduler ：负责调度集群的资源，将 Pod 分配到某个节点上。默认监听 6443 端口，供工作节点、客户端访问。
+    - kube-controller-manager ：负责管理 Pod ，比如滚动更新、健康检查等。
+    - etcd ：数据库，只被本机的 kube-apiserver 访问。
+  - 工作节点（worker node）：负责部署 Pod 。运行以下进程：
+    - kubelet ：创建、管理 Pod ，并上报 Pod 的状态到 master 。默认监听 10250 端口，供 kube-apiserver 访问。
     - kube-proxy ：提供访问 Pod 的网络代理。
+    <!-- - coredns -->
+    <!-- - storage-provisioner -->
+    <!-- pause -->
 - 用户使用 kubectl 命令，作为客户端与 apiserver 交互，从而管理 k8s 。
+- k8s 采用基于角色的访问控制（RBAC），控制内部组件之间、用户对组件的访问权限。
 
 ### 资源
 
@@ -43,9 +48,11 @@
 - Node
   - ：节点，k8s 集群中的一个主机。
 - Namespace
-  - ：命名空间，用于隔离 Service 。
-  - 一个 k8s 中可以创建多个命名空间，一个命名空间下可以创建多个服务。
-  - k8s 初始有两个命名空间：default、kube-system 。
+  - ：命名空间。
+  - 一个 k8s 中可以创建多个命名空间，一个命名空间下可以部署多个 Pod 。
+  - k8s 初始有两个命名空间：
+    - default ：供用户使用。
+    - kube-system ：用于部署 k8s 系统服务，比如 apiserver、etcd 等。
 - Pod
   - ：容器组，是 k8s 的最小管理单元。
   - Docker 以容器形式部署应用，而 k8s 以 Pod 形式部署应用。
@@ -58,10 +65,10 @@
   - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP ，而且重新部署时 Pod IP 还会变化，因此不方便访问。
     - 用户可以创建一个 Service ，反向代理某些 Pod 。向 Service IP 发送的网络流量，会被自动转发到对应的 Pod IP 。
 
-## API
+## 相关概念
 
-- 容器运行时接口（Container Runtime Interface，CRI）
-  - ：kubelet 调用容器运行时的 API 。
-  - 大部分容器运行时并不兼容 CRI ，因此 k8s 还开发了一些 shim 模块，用于将各种容器运行时对接到 CRI 。
-    - 后来改为通过 containerd 或 CRI-O 来调用底层的容器运行时。
-  - CRI 使得 k8s 与容器运行时解耦，允许 k8s 同时使用多种容器运行时。
+一些 k8s 发行版，基于 k8s ，并封装了其它组件，比如 Web UI、网络插件。
+- Rancher ：由 Rancher Labs 公司发布。
+- OpenShift ：由 Red Hat 公司发布。
+- kubesphere ：由青云公司开源。
+- KubeOperator ：由飞致云公司开源。

@@ -151,5 +151,5 @@ k8s 中主要研究的网络通信：
 ## 访问控制
 
 - Service Account
-- RBAC ：基于角色的访问控制
+- RBAC
 - NetWorkPolicy ：管控 Pod 之间的网络流量，相当于第四层的 ACL 。

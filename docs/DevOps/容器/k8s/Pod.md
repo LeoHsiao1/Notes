@@ -1,18 +1,28 @@
 # Pod
 
+## 原理
+
+- 一个 Pod 由一个或多个容器组成，它们会被部署到同一个 Node 上。而且：
+  - 共享一个网络空间，可以相互通信。对外映射的访问 IP 都是 Pod IP ，因此不能暴露同样的端口号。
+  - 共享所有存储卷。
+- 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 管理 Pod 。
+  - 用户需要编写 Controller 配置文件，描述如何部署一个应用的 Pod 。然后创建该 Controller ，k8s 就会自动部署其 Pod 。
+- 一些 k8s 对象之间存在上下级的关系，上级称为 Owner ，下级称为 Dependent 。
+  - 删除一个 Owner 时，默认会级联删除它的所有 Dependent ，反之没有影响。
+  - 比如一个 Deployment 是多个 Pod 的 Owner 。如果删除这些 Pod ，但保留 Deployment ，则会自动重新创建这些 Pod 。
+
 ## Controller
 
 ：控制器，用于管理 Pod 。
-- 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 管理 Pod 。
-- k8s 设计了多种 Controller ，用不同的配置文件进行管理。
+- Controller 分为 Deployment、StatefulSet 等多种类型。
 
 ### Deployment
 
-：描述一个 Pod 的部署状态，让 k8s 据此部署 Pod 。
-- Deployment 部署的是无状态应用：同一个应用的不同 Pod 实例没有差异，可以随时创建、销毁 Pod ，可以共享资源、配置文件。
+：默认的 Controller 类型，用于部署无状态的 Pod 。
+- 无状态应用：不需要保持连续运行，可以随时销毁并从镜像重新创建。
 
-Deployment 的配置文件通常命名为 deployment.yaml ，内容示例如下：
-```yaml
+配置文件示例：
+```yml
 apiVersion: apps/v1
 kind: Deployment            # 该 Controller 的类型
 metadata:                   # 该 Controller 的元数据
@@ -51,7 +61,7 @@ spec:                       # Controller 的规格
   - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
   - 当 selector 中没有设置筛选条件时，会选中所有对象。
   - 例：
-    ```yaml
+    ```yml
     selector:
       matchLabels:
         app: redis-1    # 要求 labels 中存在该键值对
@@ -65,19 +75,22 @@ spec:                       # Controller 的规格
   - k8s 默认会保存最近两个版本的 Deployment ，便于将 Pod 回滚（rollback）到以前的部署状态。
   - 当用户删除一个 Deployment 时，k8s 会自动销毁对应的 Pod 。当用户修改一个 Deployment 时，k8s 会滚动更新，依然会销毁旧 Pod 。
 
-- 一些 k8s 对象之间存在上下级的关系，上级称为 Owner ，下级称为 Dependent 。
-  - 例如：一个 ReplicaSet 是多个 Pod 的 Owner 。
-  - 删除一个 Owner 对象时，默认会级联删除它的所有 Dependent 。
+- 当用户修改一个 Deployment 的配置时，k8s 自动采用滚动更新（Rolling Update）的方式，保证在更新过程中不中断服务。流程如下：
+  1. 创建一个新的 ReplicaSet 资源，部署需要的 Pod 数。
+  2. 将旧 Pod 的流量迁移到新 Pod 。
+  3. 将旧 Pod 数减至 0 ，然后删除旧的 Deployment 。
 
 ### ReplicaSet
 
-：副本集（RC），用于控制、维持一个应用的 Pod 数量。
-- 取代了以前的副本控制器（Replication Controller ，RS）。
-- 通常在 Deployment 的 spec 部分中配置。
-- 当用户指定运行 n 个 Pod 时，如果 Pod 数少于 n ，ReplicaSet 就会自动创建新的副本；如果 Pod 数多于 n ，ReplicaSet 就会终止多余的副本。
-- 改变 ReplicaSet 的数量就可以方便地缩容、扩容，当 ReplicaSet 为 0 时就会删除所有 Pod 。
-- 滚动更新一个应用时，k8s 会先创建一个新的 ReplicaSet ，启动需要的 Pod 数，然后迁移流量到新的 Pod ，最后把旧的 ReplicaSet 的 Pod 数减至 0 。从而保证在更新过程中不中断服务。
-- 如果 Pod 出现故障、Pod 需要的资源不足、或者 Pod 所在 Node 出现故障，ReplicaSet 不会进行修复，而是直接创建新的 Pod 。
+：副本集（RC），用于控制一个应用的 Pod 实例数量。
+- 取代了 k8s 早期版本的副本控制器（Replication Controller，RS），会被 Deployment 调用。
+- 假设用户指定运行 n 个 Pod ，ReplicaSet 会自动控制可用的 Pod 数量，使其等于 n 。
+  - 通过健康检查的 Pod 才计入可用数量。
+  - 如果可用的 Pod 数多于 n ，则停止多余的 Pod 。
+  - 如果可用的 Pod 数少于 n ，则增加部署 Pod 。包括以下情况：
+    - 已有的 Pod 故障，比如部署失败、部署之后未通过健康检查。
+    - 已有的 Pod 需要的部署资源不足，比如 Pod 所在 Node 故障。
+- 通过 ReplicaSet ，可以方便地调整 Pod 数量，实现横向扩容、缩容。
 
 ### StatefulSet
 
@@ -130,7 +143,7 @@ spec:                       # Controller 的规格
   - RequiredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则重新部署。（硬性要求）
   - IgnoredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则忽略该问题，继续运行 Pod 。（软性要求）
 - 例：
-```yaml
+```yml
 spec:
   affinity:
     nodeAffinity:
@@ -174,7 +187,7 @@ spec:
     kubectl taint nodes node1 k1=v1:NoSchedule
     ```
 - 在 Pod spec 中配置容忍度：
-    ```yaml
+    ```yml
     spec:
       containers:
         ...
@@ -214,7 +227,7 @@ Pod 被 kubelet 启动、终止的大致流程：
 ### 状态
 
 以下是一个 Pod 对象的状态示例：
-```yaml
+```yml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -298,7 +311,7 @@ status:
   - HTTPGetAction ：向容器的指定 URL 发出 HTTP GET 请求，如果收到响应报文，且状态码为 2xx 或 3xx ，则检查结果为 Success 。
 
 例：
-```yaml
+```yml
 contaienrs:
 - name: redis-1
   livenessProbe:            # 定义 livenessProbe 用途、ExecAction 方式的探针
@@ -328,7 +341,7 @@ contaienrs:
 ### postStart、preStop
 
 可以给 Pod 中的单个容器定义 postStart、preStop 钩子，在启动、终止过程中增加操作。如下：
-  ```yaml
+  ```yml
   contaienrs:
   - name: redis-1
     lifecycle:

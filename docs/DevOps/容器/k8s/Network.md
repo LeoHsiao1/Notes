@@ -1,14 +1,21 @@
 # Network
 
-k8s 中常用的几种 IP 地址：
-- Node IP ：集群中一个主机节点的 IP 地址。
-- Pod IP ：一个 Pod 的 IP 地址。
-  - k8s 创建每个 Pod 时，会给它分配一个独立的虚拟 IP ，用于定位该 Pod 。
-  - Pod IP 在重新部署时会变化，而且一个应用可能部署了多个 Pod 实例，因此建议创建 Service、Ingress 来反向代理 Pod IP ，供用户访问。
+## 原理
+
+k8s 常见的几种 IP 地址：
+- Node IP
+  - ：集群中一个主机节点的 IP 地址。
+  - Node IP 一般绑定在物理机或虚拟机的 eth 网卡上，固定不变。
+- Pod IP
+  - ：一个 Pod 的 IP 地址。
+  - k8s 创建每个 Pod 时，会给它分配一个独立的虚拟 IP 。
+  - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP ，而且重新部署时 Pod IP 还会变化。因此使用 Pod IP 不方便访问，建议用 Service IP 或 Ingress IP 。
 - Service IP
+  - 用户可以创建一个 Service ，反向代理某些 Pod 。向 Service IP 发送的网络流量，会被自动转发到对应的 Pod IP 。
+    - 此时，外部访问应用时，目的地址是 Service IP 。而应用访问外部时，源地址是 Pod IP 。
 - Ingress IP
 
-k8s 中主要研究的网络通信：
+k8s 常见的几种网络通信：
 - 同一个 Pod 内，容器之间的通信
 - 同一个服务内，Pod 之间的通信
 - 同一个集群内，Pod 到服务的通信
@@ -16,18 +23,14 @@ k8s 中主要研究的网络通信：
 
 ## Service
 
-：一个管理逻辑网络的对象，用于对一个或多个 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
+：一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
-- 一个应用可以运行多个 Pod 实例，被一个 Service 反向代理，供用户访问。
-  - 用户发到 Service 某个端口的流量，会被转发到 Pod 的相关端口。
-  - Pod 访问外部时，源地址是 Pod IP 。
-  - 外部访问一个 Pod 时，目的地址是 Service IP 。
 
 ### ClusterIP
 
-：默认的 Service 类型。是给 Service 分配一个集群内的虚拟 IP 。
+：默认的 Service 类型，是给 Service 分配一个集群内的虚拟 IP 。
 - 访问 ClusterIP:Port 的流量会被转发到 EndPoint 。
-  - 只有在集群内节点上，才能访问 ClusterIP 。在集群外节点上，则访问不到，应该使用 LoadBalancer 等类型的 Service 。
+  - 在集群内节点上，才能访问 ClusterIP 。在集群外节点上，则访问不到，需要使用 LoadBalancer 等类型的 Service 。
 - Service 的配置文件通常命名为 service.yml ，内容示例如下：
   ```yml
   apiVersion: v1
@@ -130,7 +133,7 @@ k8s 中主要研究的网络通信：
 
 ## Ingress
 
-：一个管理逻辑网络的对象，用于对一个或多个 Service 进行 HTTP、HTTPS 反向代理，常用于实现路由转发。
+：一种管理逻辑网络的对象，用于对某些 Service 进行 HTTP、HTTPS 反向代理，常用于实现路由转发。
 - 实现 Ingress 功能的 Controller 有多种，常见的是 Nginx Ingress Controller ，它基于 Nginx 实现 Ingress 功能。
 - 配置示例：
   ```yml

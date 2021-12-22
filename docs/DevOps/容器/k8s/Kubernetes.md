@@ -5,7 +5,7 @@
 - 简称为 k8s ，8 表示中间的 8 个字母。
 - 用于管理大量主机上的大量容器，进行自动编排。
   - 传统部署方式中，每个主机专用于部署某个项目，且项目暂时停用时也不能收回主机，因此资源冗余大。
-  - 使用 k8s 部署时，可以自动寻找空闲的主机，部署项目的容器，提高资源使用率。。
+  - 使用 k8s 部署时，可以自动寻找空闲的主机，部署容器化的应用，提高资源使用率。。
 - 支持 Linux、MacOS、Windows 系统。
 - 提供了滚动部署、一键回滚、服务发现、负载均衡、自动伸缩等功能，提高部署效率。
 
@@ -23,17 +23,30 @@
 
 - k8s 部署在多个主机上，组成分布式集群。
 - 每个主机称为节点（Node），分为两类：
-  - 主节点（master node）：又称为控制平面节点（control plane node），负责管理整个集群。运行以下进程：
-    - kube-apiserver ：提供整个 k8s 系统对外的 RESTful API 。
-    - kube-scheduler ：负责调度集群的资源，将 Pod 分配到某个节点上。默认监听 6443 端口，供工作节点、客户端访问。
-    - kube-controller-manager ：负责管理 Pod ，比如滚动更新、健康检查等。
-    - etcd ：数据库，只被本机的 kube-apiserver 访问。
-  - 工作节点（worker node）：负责部署 Pod 。运行以下进程：
-    - kubelet ：创建、管理 Pod ，并上报 Pod 的状态到 master 。默认监听 10250 端口，供 kube-apiserver 访问。
-    - kube-proxy ：提供访问 Pod 的网络代理。
-    <!-- - coredns -->
-    <!-- - storage-provisioner -->
-    <!-- pause -->
+  - 主节点（master node）：又称为控制平面节点（control plane node），负责管理整个集群。
+  - 工作节点（worker node）：负责部署 Pod 。
+
+- 主节点运行以下进程：
+  - kube-apiserver
+    - ：提供 k8s 集群的 API 。
+    - 默认监听 6443 端口，会被其它 kube 服务访问。
+  - kube-scheduler
+    - ：负责调度集群的资源，将 Pod 分配到某个节点上部署。
+  - kube-controller-manager
+    - ：负责管理 Pod ，比如滚动更新、健康检查等。
+  - etcd
+    - ：数据库。默认监听 2379、2380 端口，只被本机的 kube-apiserver 访问。
+
+- 工作节点运行以下进程：
+  - kubelet
+    - ：创建、管理 Pod ，并上报 Pod 的状态到 master 。
+    - 默认监听 10250 端口。
+  - kube-proxy
+    - ：提供访问 Pod 的网络代理。
+  <!-- - coredns -->
+  <!-- - storage-provisioner -->
+  <!-- pause -->
+
 - 用户使用 kubectl 命令，作为客户端与 apiserver 交互，从而管理 k8s 。
 - k8s 采用基于角色的访问控制（RBAC），控制内部组件之间、用户对组件的访问权限。
 

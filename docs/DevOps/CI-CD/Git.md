@@ -42,17 +42,18 @@
 ### 查看仓库
 
 ```sh
-git status              # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
+git status                # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
 
-git log                 # 显示 git 仓库的 commit 日志（按时间倒序），这会打开一个文本阅读器
-        -n              # 只显示 n 个 commit
+git log                   # 显示 git 仓库的 commit 日志（按时间倒序），这会打开一个文本阅读器
+        -n                # 只显示 n 个 commit
+        --show-signature  # 增加显示 GPG 签名
 
-git diff                # 比较当前仓库与上一次 add 或 commit 的差异
-        --cached        # 比较上一次 add 与上一次 commit 的差异
-        branch1         # 比较当前仓库与某个分支的差异
-        branch1 branch2 # 比较两个分支的差异
-        --stat          # 只显示统计信息
-        <file>          # 只比较某个文件的差异
+git diff                  # 比较当前仓库与上一次 add 或 commit 的差异
+        --cached          # 比较上一次 add 与上一次 commit 的差异
+        branch1           # 比较当前仓库与某个分支的差异
+        branch1 branch2   # 比较两个分支的差异
+        --stat            # 只显示统计信息
+        <file>            # 只比较某个文件的差异
 ```
 
 ## 版本控制
@@ -79,6 +80,7 @@ git commit                      # 将当前缓存区的所有文件提交为一�
           -m "initial version"  # 加上备注信息（该选项为强制要求）
           -a                    # 提交从上一个版本以来被改动的所有文件
           --amend               # 将当前的缓存区合并到上一个版本（不过时间戳依然是上一个版本的）
+          -S                    # 添加 GPG 签名
 ```
 - 每次提交一个版本时，会自动生成一个 SHA-1 哈希值，作为 commit ID、version name 。如下：
 	```sh
@@ -436,3 +438,16 @@ Git 属于软件配置管理（Source Code Management ，SCM）工具，同类�
   [DOC]  ...
   [TEST] ...
   ```
+
+### GPG 签名
+
+GitHub、GitLab 等平台支持生成 commit ID 的数字签名，保存在 commit comment 中。步骤如下：
+1. 用户生成一对 GPG 私钥、公钥，在其中记录自己的用户名、邮箱地址。
+2. 用户使用私钥签署每个 commit 。
+    ```sh
+    git config --global user.signingkey ******
+    git commit -S -m "..."
+    git push
+    ```
+3. 用户在平台的设置页面登记 GPG 公钥，平台会自动验证各个 commit 的签名是否有效。
+    - 如果有效，则显示一个 Verified 标志，证明该 commit 是由该用户提交的，并且 commit 内容没有被篡改。

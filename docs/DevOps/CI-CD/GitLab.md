@@ -99,7 +99,7 @@ GitLab 内置的主要服务：
   - 禁止在项目中不存在 CI 配置文件时，默认使用 Auto DevOps 流水线。
 - 建议对 group 进行以下配置：
   - 配置推送规则，比如限制单个文件的体积。
-  - 设置 Default branch protection 策略，默认为部分保护：Developer 和 Maintainer 都可以推送，但禁止强制推送。
+  - 将 Default branch protection 策略设置为完全保护：Developer 不能 git push 该分支，Maintainer 才可以。
 
 ## 用法
 
@@ -114,9 +114,9 @@ GitLab 内置的主要服务：
 - GitLab 不支持创建用户组，而是以 Group 成员的方式批量管理用户。Group 成员分为几种预设的角色，权限从高到低如下：
   - Owner ：拥有当前 Group 的所有权限，接近于管理员。
   - Maintainer ：维护人员，拥有大部分权限。
-  - Developer ：开发人员，拥有一般的编辑权限。
-  - Reporter ：测试人员，不能编辑 Git 仓库，可以编辑任务看板。
-  - Guest ：只能读取信息。
+  - Developer ：开发人员，拥有一般的编辑权限，不能 git push 主分支。
+  - Reporter ：测试人员，有 Git 仓库的只读权限，可以编辑任务看板。
+  - Guest ：只能读取 issue、wiki、CI/CD 等信息。不能读取 Git 仓库，除非该项目是公开的。
 - CI/CD
   - GitLab 支持在代码仓库中添加一个 .gitlab-ci.yml 文件，配置要执行的 CI/CD 流水线。
 

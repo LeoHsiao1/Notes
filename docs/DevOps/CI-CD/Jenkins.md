@@ -187,7 +187,7 @@
   - 建议在 Jenkins 系统管理页面，限制该插件保留变更历史的数量。
 - Folder Properties
   - 用于在 Folder 中定义一些环境变量，称为属性，供其下的 Job 调用。
-  - 需要在 Pipeline 的 options 中加入 withFolderProperties() ，才会载入 Folder 变量。
+  - 需要在 Pipeline 的 options 中加入 withFolderProperties() ，才会在 stages 阶段载入 Folder 变量。
 
 ## ♢ jenkinsapi
 

@@ -46,7 +46,7 @@ spec:
 
 例：在 Deployment 中挂载 PVC
 ```yaml
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 spec:
   template:
@@ -87,7 +87,7 @@ data:
 
 例：引用 ConfigMap 中的参数，生成环境变量
 ```yaml
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 spec:
   template:
@@ -114,7 +114,7 @@ spec:
 
 例：引用 ConfigMap 中的参数，生成 Volume 并挂载
 ```yaml
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 spec:
   template:
@@ -141,7 +141,7 @@ spec:
 
 ## Secret
 
-：与 ConfigMap 类似，但用于保存密码等私密信息，以密文形式保存。
+：与 ConfigMap 类似，但用于保存密码等私密信息，转换成 Base64 编码再保存。
 
 配置示例：
 ```yaml
@@ -158,7 +158,7 @@ data:
 
 例：引用 secret 中的参数，生成环境变量、Volume
 ```yaml
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 spec:
   template:

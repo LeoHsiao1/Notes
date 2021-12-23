@@ -26,6 +26,8 @@ k8s 常见的几种网络通信：
 ：一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
+<!-- 当您创建一个服务时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。 -->
+
 ### ClusterIP
 
 ：默认的 Service 类型，是给 Service 分配一个集群内的虚拟 IP 。

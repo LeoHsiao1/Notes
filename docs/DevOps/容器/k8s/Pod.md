@@ -7,9 +7,6 @@
   - 共享所有存储卷。
 - 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 管理 Pod 。
   - 用户需要编写 Controller 配置文件，描述如何部署一个应用的 Pod 。然后创建该 Controller ，k8s 就会自动部署其 Pod 。
-- 一些 k8s 对象之间存在上下级的关系，上级称为 Owner ，下级称为 Dependent 。
-  - 删除一个 Owner 时，默认会级联删除它的所有 Dependent ，反之没有影响。
-  - 比如一个 Deployment 是多个 Pod 的 Owner 。如果删除这些 Pod ，但保留 Deployment ，则会自动重新创建这些 Pod 。
 
 ## Controller
 
@@ -19,11 +16,10 @@
 ### Deployment
 
 ：默认的 Controller 类型，用于部署无状态的 Pod 。
-- 无状态应用：不需要保持连续运行，可以随时销毁并从镜像重新创建。
 
 配置文件示例：
 ```yml
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment            # 该 Controller 的类型
 metadata:                   # 该 Controller 的元数据
   annotations:
@@ -49,15 +45,7 @@ spec:                       # Controller 的规格
         ports:
         - containerPort: 6379   # 相当于 Dockerfile 中的 export 8080
 ```
-- metadata ：对象的元数据，包含多种字段。
-  - annotations ：注释，采用键值对格式。
-    - key、value 可以写入任意内容，可以包含字母、数字、下划线、横杆、小数点。
-    - key 可以加上 xx.xx.io/ 格式的 DNS 子域作为前缀。前缀 kubernetes.io/ 、k8s.io/ 被保留给 k8s 核心组件使用。
-  - labels ：标签，采用键值对的格式。
-    - 与 Annotation 类似，但是可以用于筛选对象。
-    - 同一个对象的 labels 中不能存在重复的 key ，不同对象的 labels 之间可以存在重复的 key-value 。
-- spec ：规格，描述了期望中的对象状态。
-- selector ：选择器，根据 labels 筛选对象。匹配的对象可能有 0 个、1 个或多个。
+- selector ：选择器，根据 labels 筛选对象。匹配的对象可能有任意个（包括 0 个）。
   - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
   - 当 selector 中没有设置筛选条件时，会选中所有对象。
   - 例：
@@ -76,7 +64,7 @@ spec:                       # Controller 的规格
   - 当用户删除一个 Deployment 时，k8s 会自动销毁对应的 Pod 。当用户修改一个 Deployment 时，k8s 会滚动更新，依然会销毁旧 Pod 。
 
 - 当用户修改一个 Deployment 的配置时，k8s 自动采用滚动更新（Rolling Update）的方式，保证在更新过程中不中断服务。流程如下：
-  1. 创建一个新的 ReplicaSet 资源，部署需要的 Pod 数。
+  1. 创建一个新的 ReplicaSet 对象，部署需要的 Pod 数。
   2. 将旧 Pod 的流量迁移到新 Pod 。
   3. 将旧 Pod 数减至 0 ，然后删除旧的 Deployment 。
 
@@ -95,8 +83,10 @@ spec:                       # Controller 的规格
 ### StatefulSet
 
 ：与 Deployment 类似，但部署的是有状态服务。
+<!-- - 无状态应用：不需要保持连续运行，可以随时销毁并从镜像重新创建。
+使用数据卷
 - 一个有状态服务的每个 Pod 实例使用独立的资源、配置文件，不能随时创建、销毁 Pod ，甚至连 Pod 名都不能改变。
-- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。
+- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。 -->
 
 ### DaemonSet
 

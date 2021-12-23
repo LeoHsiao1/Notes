@@ -1,6 +1,6 @@
 # Kubernetes
 
-：一个大型的容器编排系统。
+：一个大型的容器编排系统，采用 Golang 开发。
 - [官方文档](https://kubernetes.io/docs)
 - 简称为 k8s ，8 表示中间的 8 个字母。
 - 用于管理大量主机上的大量容器，进行自动编排。
@@ -114,11 +114,3 @@
     - key 只能包含 `[a-zA-Z0-9._-]` 字符，必须以字母、数字开头和结尾。
     - 可以给 key 加上一个 `<dns_domain>/` 格式的前缀。
       - 前缀 kubernetes.io/ 、k8s.io/ 保留，供 k8s 系统内部使用。
-
-## 相关概念
-
-除了直接使用 k8s ，用户也可以使用一些 k8s 发行版。它们基于 k8s ，并封装了其它组件，比如 Web UI、网络插件。
-- Rancher ：由 Rancher Labs 公司发布。
-- OpenShift ：由 Red Hat 公司发布。
-- kubesphere ：由青云公司开源。
-- KubeOperator ：由飞致云公司开源。

@@ -8,18 +8,17 @@
 
 ## 架构
 
-GitLab 内置的主要服务：
-- puma ：一个 HTTP 服务器。
-- workhorse ：反向代理 puma ，用于加速体积较大的 HTTP 请求，比如静态文件、上传文件。
-- sidekiq ：负责在后台执行任务。
-- gitaly ：负责处理 git 请求。收到用户访问 Git 仓库的请求时，会去访问磁盘中的 Git 仓库。
+- GitLab 内置的主要服务：
+  - puma ：一个 HTTP 服务器。
+  - workhorse ：反向代理 puma ，用于加速体积较大的 HTTP 请求，比如静态文件、上传文件。
+  - sidekiq ：负责在后台执行任务。
+  - gitaly ：负责处理 git 请求。收到用户访问 Git 仓库的请求时，会去访问磁盘中的 Git 仓库。
 
-依赖的外部服务：
-- redis
-- postgreSQL
-- nginx ：用于反向代理各个内部服务，作为用户访问 GitLab 的入口。
-- grafana、prometheus、exporter ：用于监控 Gitlab 自身。
-
+- GitLab 依赖的外部服务：
+  - redis
+  - postgreSQL
+  - nginx ：用于反向代理各个内部服务，作为用户访问 GitLab 的入口。
+  - grafana、prometheus、exporter ：用于监控 Gitlab 自身。
 
 ## 部署
 
@@ -35,6 +34,7 @@ GitLab 内置的主要服务：
       hostname: gitlab.example.com
       ports:
         - 80:80
+        - '1022:22'   # YAML 的一个特别语法：如果冒号 : 右侧的数小于 60 ，则视作 60 进制数，此时需要声明为字符串
       volumes:
         - ./config:/etc/gitlab
         - ./data:/var/opt/gitlab
@@ -55,9 +55,10 @@ GitLab 内置的主要服务：
 - 配置文件默认位于 `/etc/gitlab/gitlab.rb` ，配置示例：
   ```sh
   # GitLab 地址
-  external_url "http://gitlab.example.com"
-  # nginx['listen_port'] = 80                 # GitLab 监听的端口。默认会根据 external_url 选择监听的端口、协议
-  # nginx['listen_https'] = false             # 监听的端口是否采用 HTTPS 协议
+  external_url "https://gitlab.example.com"     # GitLab 供用户访问的地址，会影响 git clone 地址
+  nginx['listen_port']  = 80                    # GitLab 实际监听的端口。默认会根据 external_url 选择监听的端口、协议
+  nginx['listen_https'] = false                 # 监听的端口是否采用 HTTPS 协议
+  gitlab_rails['gitlab_shell_ssh_port'] = 1022  # SSH 端口，会影响 git clone 地址，不过 GitLab 实际监听的依然是 22 端口
 
   # SMTP 配置
   gitlab_rails['smtp_enable']               = true

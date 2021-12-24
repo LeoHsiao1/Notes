@@ -103,6 +103,7 @@ services:                     # 开始定义服务
     hostname: CentOS          # 主机名
     user: root                # 覆盖 Dockerfile 中的 USER
     working_dir: /opt         # 覆盖 Dockerfile 中的 WORKDIR
+    privileged: false         # 是否开启特权模式
     entrypoint:               # 覆盖 Dockerfile 中的 ENTRYPOINT ，取值可以为字符串类型或列表类型
       - /bin/sh
       - -c

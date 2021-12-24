@@ -26,7 +26,7 @@
 ### 架构
 
 - k8s 包含多个系统进程，通常部署多个主机上，组成分布式集群。
-  - 用户可以与 k8s 系统交互，部署自定义的应用。
+  - 用户可以与 k8s 系统交互，部署自定义的应用，称为工作负载（workload）。
 - 每个主机称为节点（Node），分为两种：
   - 主节点（master node）：又称为控制平面节点（control plane node），负责控制整个集群、管理所有节点。
   - 工作节点（worker node）：负责部署 Pod 。
@@ -68,7 +68,7 @@
   - Node
     - ：节点，k8s 集群中的一个主机。
   - Namespace
-    - ：命名空间，用于隔离某些资源。
+    - ：命名空间，用于隔离某些资源，又称为项目（project）。
       - 不同命名空间下的 Pod、Service 相互隔离。
       - Node、StorageClass、PersistentVolumes 不受命名空间影响。
       - 可执行 `kubectl api-resources --namespaced=true` 查看所有被命名空间影响的资源。

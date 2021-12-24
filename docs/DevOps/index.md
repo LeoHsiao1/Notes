@@ -23,7 +23,6 @@
     - [Network](容器/k8s/Network.md)
     - [Volume](容器/k8s/Volume.md)
     - [插件](容器/k8s/插件.md)
-    - [Rancher](容器/k8s/Rancher.md)
 - 配置管理
   - [简介](配置管理/简介.md)
   - [Ansible](配置管理/Ansible.md)

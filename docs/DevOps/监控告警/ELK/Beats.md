@@ -85,27 +85,35 @@
 
 - Filebeat 每采集一条日志文本，都会保存为 JSON 对象，称为日志事件（event）。
   - 日志事件保存在内存中，经过处理之后会发送到输出端，不会保存到磁盘中。
-  - 一个日志事件的示例：
-    ```json
-    {
-        "agent": {                                // Beats 的信息
-            "type": "filebeat",
-            "version": "7.10.0",
-            "name": "CentOS-1",
-            "hostname": "CentOS-1",
-        },
-        "log": {
-          "file": {                               // 采集的日志文件的路径
-              "path": "/var/log/nginx/access.log"
-          },
-          "offset": 765072                        // 采集的偏移量
-        },
-        "message": "127.0.0.1 - [2/Feb/2021:12:02:34 +0000] GET /static/bg.jpg HTTP/1.1 200 0", // 日志的原始内容，之后可以进行解析
-        "fields": {},                             // 可以给日志事件加上一些字段
-        "tags": [],                               // 可以给日志事件加上一些标签，便于筛选
-        ...
-    }
-    ```
+- 一个日志事件的示例：
+  ```json
+  {
+    "@timestamp":"2021-02-02T12:03:21.027Z",  // 当前时间戳
+    "@metadata":{
+      "beat": "filebeat",
+      "type": "_doc",
+      "version": "7.14.0"
+    },
+    "agent": {                                // Beats 的信息
+      "type": "filebeat",
+      "version": "7.14.0",
+      "name": "CentOS-1",
+      "hostname": "CentOS-1",
+      "ephemeral_id": "ed02583b-0823-4e25-bed3-e8af69ad7d82",
+      "id": "49f74a3e-bfec-452c-b119-32c8014b19b2"
+    },
+    "log": {
+      "file": {                               // 采集的日志文件的路径
+          "path": "/var/log/nginx/access.log"
+      },
+      "offset": 765072                        // 采集的偏移量
+    },
+    "message": "127.0.0.1 - [2/Feb/2021:12:02:34 +0000] GET /static/bg.jpg HTTP/1.1 200 0", // 日志的原始内容，之后可以进行解析
+    "fields": {},                             // 可以给日志事件加上一些字段
+    "tags": [],                               // 可以给日志事件加上一些标签，便于筛选
+    ...
+  }
+  ```
 
 - Filebeat 每次发送日志事件到输出端时，都会记录其发送状态。
   - 该操作称为发布事件（publish event）。

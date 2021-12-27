@@ -1,6 +1,8 @@
 # Logstash
 
-- 2009 年，Jordan Sissel 发布了 Logstash ，成为了流行的日志采集工具。
+：一个数据处理程序。可以收集多种格式的数据，加工处理之后，写入多种数据库。
+- 采用 Ruby 开发，通过 JRuby 解释器运行在 JVM 上。
+- 2009 年，Jordan Sissel 发布了 Logstash ，成为了流行的日志采集工具，也可处理其它类型的数据。
 - 2013 年，Logstash 被 Elastic 公司收购，组成了 ELK 系统。
 
 ## 部署
@@ -55,7 +57,7 @@
   |   ├── a.conf
   |   └── b.conf
   ├── jvm.options           # JVM 的配置
-  ├── log4j2.properties     # 日志的配置
+  ├── log4j2.properties     # Java 日志的配置
   ├── logstash.yml          # logstash 本身的配置
   ├── pipelines.yml
   └── startup.options       # 自定义 logstash 的启动命令时的配置，供 systemd 等进程读取
@@ -83,18 +85,11 @@
 
 ### 原理
 
-- Linux 系统上通常通过管道符筛选日志，比如 `cat test.log | grep DEBUG'` 。而 Logstash 处理日志数据的机制也称为管道（pipeline）。
-- Logstash 每个管道分为三个阶段：
-  - input
-    - ：输入项，用于接收数据。
-  - filter
-    - ：过滤器，用于过滤、修改数据。是可选阶段。
-    - 通常使用 grok 插件将纯文本格式的日志数据转换成 JSON 格式的结构化数据。
-    - 默认会给每个日志事件添加一个 `@timestamp` 字段。
-      - 它采用 UTC 时区，默认取值为当前时刻。
-      - 也可以从原始日志解析出时间。即使超过当前时间，也会生效。
-  - output
-    - ：输出项，用于输出数据。
+- Linux 系统上通常通过管道符筛选日志，比如 `cat test.log | grep ERROR'` 。而 Logstash 处理数据的机制也称为管道（pipeline），每条数据称为一个事件（event）。
+- Logstash 可以运行多个管道，每个管道分为三个阶段：
+  - input ：输入数据。
+  - filter ：过滤、修改数据。该阶段可以省略。
+  - output ：输出数据。
 
 ### 示例
 
@@ -103,9 +98,9 @@
     ```sh
     bin/logstash -e 'input { stdin { } } output { stdout {} }'
     ```
-    这里接收 stdin 输入的数据，转换成日志输出到 stdout 。
+    这里接收 stdin 输入的数据，没有 filter ，直接输出到 stdout 。
 
-2. 此时在终端输入一个字符串 Hello ，按下回车，就会转换成一条日志。如下：
+2. 此时在终端输入一个字符串 Hello ，按下回车，显示的输出如下：
     ```sh
     {
         "@timestamp" => 2020-01-12T07:37:00.045Z,
@@ -127,7 +122,7 @@
         host => "0.0.0.0"
         # client_inactivity_timeout => 60       # 如果 beats 连续多久未活动，则关闭 TCP 连接，单位为秒
         # codec => "plain"                      # 设置处理输入数据的格式。默认为 plain
-        # include_codec_tag => true             # 是否给数据添加一个 tag ，记录 codec 信息。默认为 true ，使得每个日志事件都有一个 beats_input_codec_plain_applied 标签
+        # include_codec_tag => true             # 是否给数据添加一个 tag ，记录 codec 信息。默认为 true ，使得每个 event 都有一个 beats_input_codec_plain_applied 标签
       }
       # kafka {             # 从 kafka 获取消息
       #   bootstrap_servers       => "localhost:9092"
@@ -156,12 +151,12 @@
         # user                => "admin"
         # password            => "123456"
         # ssl_certificate_verification => true                            # 使用 HTTPS 连接时，是否验证 SSL 证书
-        # document_id         => "%{[@metadata][_id]}"                    # 用于存储日志事件的文档 id 。如果重复保存相同 id 的文档，则会覆盖旧的文档
-        # index               => "logstash-%{+yyyy.MM.dd}-%{index_num}"   # 索引名
-        # manage_template     => true                                     # 在 Logstash 启动时，是否在 ES 中创建索引模板
-        # template            => "/path/to/logstash/logstash-apache.json" # 指定模板的定义文件，默认使用内置的模板
-        # template_name       => "logstash"                               # 模板的名称
-        # template_overwrite  => false                                    # 如果模板在 ES 中已存在，是否覆盖它。如果不覆盖，可能会一直使用老版本的内置模板
+        # index               => "logstash-%{+yyyy.MM.dd}-%{index_num}"   # 指定写入的索引名
+        # document_id         => "%{[@metadata][_id]}"                    # 指定写入的文档 id 。如果已存在相同 id 的文档，则会覆盖它
+        # manage_template     => true                                     # Logstash 启动时，是否自动在 ES 中创建索引模板
+        # template            => "/path/to/logstash/logstash-apache.json" # template 的配置文件，默认使用内置的模板
+        # template_name       => "logstash"                               # template 的名称
+        # template_overwrite  => false                                    # 如果 ES 中已存在同名 template ，是否覆盖它
       }
     }
     ```
@@ -176,7 +171,7 @@
 pipeline 的语法与 Ruby 相似，特点如下：
 - Hash 字典的键值对之间通过空格分隔，比如 `{"field1" => "A" "field2" => "B"}` 。
 - 支持引用变量：
-  - 用 `filed` 或 `[filed]` 的格式引用日志事件的顶级字段。
+  - 用 `filed` 或 `[filed]` 的格式引用 event 的顶级字段。
   - 用 `[filed][sub_filed]...` 的格式引用子字段。
     - 引用子字段时，如果父字段不存在，则会自动创建它，因此应该先检查父字段是否存在。如下：
       ```sh
@@ -241,23 +236,23 @@ pipeline 的语法与 Ruby 相似，特点如下：
 - codec 插件举例：
   ```sh
   plain         # 纯文本，即不进行处理
-  line          # 用于解码输入时，将每行文本视作一条日志。用于编码输出时，将每条日志保存成一行文本
-  multiline     # 将连续的多行文本记录成同一条日志。不过该操作可以由 Beats 完成，减轻 Logstash 的工作量
+  line          # 用于解码输入时，将每行文本视作一个 event 。用于编码输出时，将每个 event 保存成一行文本
+  multiline     # 将连续的多行文本视作同一个 event 。不过该操作可以由 Beats 完成，减轻 Logstash 的工作量
   json          # 按 JSON 格式处理，忽略换行符、缩进
-  json_lines    # 根据换行符 `\n` 将文本分成多行，每行视作一条 JSON 格式的日志
+  json_lines    # 根据换行符 `\n` 将文本分成多行，每行视作一个 JSON 格式的 event
   rubydebug     # 按 Ruby 调试信息的格式处理
   ```
 
 ### grok
 
-：一个 filter 插件，用于解析纯文本格式的日志数据，通过正则表达式提取一些字段，存储为 JSON 格式的日志事件中的顶级字段。
-- Kibana 网页上提供的开发工具包含了 grok Debugger ，便于调试 grok pattern 。
+：一个 filter 插件，用于按正则表达式解析 event 中的某些字段。
+- Kibana 网页上提供的开发工具包含了 grok debugger ，便于调试 grok pattern 。
 - 例：
-  1. 假设原始日志为：
+  1. 假设输入数据是一行纯文本格式的日志：
       ```sh
       2020-01-12 07:24:43.659+0000  INFO  10.0.0.1 User login successfully
       ```
-  2. 编写一个 grok 表达式来匹配日志：
+  2. 编写一个 grok 表达式来解析：
       ```sh
       %{TIMESTAMP_ISO8601:timestamp}\s+(?<level>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$
       ```
@@ -294,11 +289,11 @@ pipeline 的语法与 Ruby 相似，特点如下：
   filter {
     grok {
       match => { "message" => "%{TIMESTAMP_ISO8601:timestamp}\s+(?<level>\S+)\s+(?<client_ip>\S+)\s+(?<message>.*)$" }  # 解析 message 字段，通过正则匹配提取内容另存为字段
-      overwrite => [ "message" ]                        # 允许提取的这些字段覆盖日志事件中已存在的字段
+      overwrite => [ "message" ]                        # 允许提取的这些字段覆盖 event 中已存在的字段
       # patterns_dir => ["config/patterns"]             # 加载 patterns 的定义文件
       # keep_empty_captures => false                    # 如果匹配到的字段为空，是否依然保留该字段
-      # tag_on_failure => ["_grokparsefailure"]         # 如果匹配失败，则给日志添加这些 tag
-      # tag_on_timeout => ["_groktimeout"]              # 如果匹配超时，则给日志添加这些 tag
+      # tag_on_failure => ["_grokparsefailure"]         # 如果匹配失败，则给 event 添加这些 tag
+      # tag_on_timeout => ["_groktimeout"]              # 如果匹配超时，则给 event 添加这些 tag
       # timeout_millis => 30000                         # 匹配的超时时间，单位 ms
 
       # 以下是所有 filter 插件通用的配置参数
@@ -323,7 +318,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
       }
     }
     ```
-  - 如果原始日志的每行格式可能不同，则可以在 match 中指定多个表达式用于尝试匹配：
+  - 如果输入数据的每行格式可能不同，则可以在 match 中指定多个表达式用于尝试匹配：
     ```sh
     match => {
       "message" => [
@@ -335,12 +330,9 @@ pipeline 的语法与 Ruby 相似，特点如下：
     ```
     不过这样会多次执行正则表达式，比如第一个正则表达式总是会被执行，开销较大。不如通过 if 语句选择性地执行 grok 。
 
-- 如果原始日志已经是 JSON 格式，则不必配置 grok 规则，比较方便。
-  - 但需要避免 JSON 字段经常变化，不方便在 Kibana 展示。
-
 ### json
 
-：一个 filter 插件，用于按 JSON 格式解析日志事件的一个字段。
+：一个 filter 插件，用于按 JSON 格式解析 event 的一个字段。
 - 例：
   ```sh
   json {
@@ -353,7 +345,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ### date
 
-：一个 filter 插件，用于解析日志事件的一个字段，获取时间。
+：一个 filter 插件，用于解析 event 的一个字段，获取时间。
 - 例：
   ```sh
   if [timestamp] {
@@ -369,19 +361,19 @@ pipeline 的语法与 Ruby 相似，特点如下：
 
 ### drop
 
-：一个 filter 插件，用于丢弃一些日志。
+：一个 filter 插件，用于丢弃一些 event 。
 - 例：
   ```sh
   if [level] == "DEBUG" {
     drop {
-      # percentage => 40      # 丢弃大概 40% 的这种日志
+      # percentage => 40      # 丢弃的概率大概为 40%
     }
   }
   ```
 
 ### mutate
 
-：一个 filter 插件，用于修改日志事件的一些字段。
+：一个 filter 插件，用于修改 event 的一些字段。
 - 例：
   ```sh
   mutate {
@@ -421,7 +413,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
 - 例：
   ```sh
   ruby {
-    code => "event.cancel if rand <= 0.90"    # 执行 Ruby 代码，这里是 90% 的概率取消日志事件
+    code => "event.cancel if rand <= 0.90"    # 执行 Ruby 代码，这里是 90% 的概率取消 event
   }
   ```
 - 可以导入一个 Ruby 脚本文件：
@@ -437,11 +429,11 @@ pipeline 的语法与 Ruby 相似，特点如下：
     @drop_percentage = params["percentage"]
   end
 
-  def filter(event)           # 必须定义一个 filter(event) 函数，输入日志事件，返回一个包含事件的数组
+  def filter(event)           # 必须定义一个 filter(event) 函数，输入 event ，返回一个包含事件的数组
     if rand >= @drop_percentage
       return [event]
     else
-      return []               # 返回一个空数组，这会取消日志事件
+      return []               # 返回一个空数组，这会取消 event
     end
   end
   ```

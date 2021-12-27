@@ -14,11 +14,10 @@
   然后启动：
   ```sh
   bin/logstash
-                -f PATH                     # --path.config ，指定配置文件的目录
+                -f PATH                     # --path.config ，指定配置文件的目录，会加载其下所有 *.conf 文件
                 -e STRING                   # --config.string ，传入一个字符串作为配置
                 --log.level=info            # 指定日志等级
                 -V                          # 显示版本号
-
                 -r                          # --config.reload.automatic ，自动加载发生变化的配置文件
                 --config.reload.interval 3  # 默认每隔 3 秒检查一次配置文件是否变化
   ```
@@ -56,30 +55,35 @@
   ├── conf.d/               # 存放一些管道的定义文件
   |   ├── a.conf
   |   └── b.conf
-  ├── jvm.options           # JVM 的配置
+  ├── jvm.options           # JVM 的配置，比如限制内存 -Xmx
   ├── log4j2.properties     # Java 日志的配置
   ├── logstash.yml          # logstash 本身的配置
-  ├── pipelines.yml
-  └── startup.options       # 自定义 logstash 的启动命令时的配置，供 systemd 等进程读取
+  ├── pipelines.yml         # 定义管道
+  └── startup.options       # 自定义 logstash 启动命令的配置，供 systemd 读取
   ```
-  - logstash.yml 默认为空，配置示例：
-    ```yml
-    # path.data: /var/lib/logstash
-    # path.logs: /var/log/logstash
-    # log.level: info
-    # log.format: plain
-    ```
-  - pipelines.yml 的内容如下，它会导入 conf.d/ 目录下定义的管道。
-    ```yml
-    - pipeline.id: main
-      path.config: "config/conf.d/*.conf"
-    ```
+- logstash.yml 默认为空，配置示例：
+  ```yml
+  path.data: /var/lib/logstash
+  path.logs: /var/log/logstash
+  log.level: info
+  log.format: plain
 
-- jvm.options 的配置示例：
-  ```sh
-  -Xms2g
-  -Xmx2g
+  pipeline:
+    batch:
+      size: 125   # input 阶段每接收指定数量的事件，才打包成一个 batch ，供 filter、output 阶段的一个 worker 处理。增加该值会提高处理速度
+      delay: 50   # 收集 batch 时，等待接收新事件的超时时间，单位 ms 。如果等待超时，则立即打包成一个 batch 。每个新事件会单独考虑超时时间
+    workers: 4    # 处理 filter、output 阶段的线程数，默认等于 CPU 核数。可以大于 CPU 核数，因为输出阶段的 worker 会等待网络 IO 而不占用 CPU
   ```
+  - pipeline 在内存中处理的 event 最大数量为 size * workers 。
+  - 接收一个 batch 的最长耗时为 size * delay 。
+
+- pipelines.yml 的配置示例：
+  ```yml
+  - pipeline.id: main                     # 创建一个管道
+    path.config: "config/conf.d/*.conf"   # 导入配置文件
+    # pipeline.output.workers: 1
+  ```
+  - pipelines.yml 可通过 - 创建多个管道，默认会继承 logstash.yml 全局作用域的配置。
 
 ## pipeline
 

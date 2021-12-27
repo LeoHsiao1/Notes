@@ -749,7 +749,7 @@
         # - --web.listen-address=:9216
         # - --web.telemetry-path=/metrics
         - --mongodb.uri=mongodb://127.0.0.1:27017/admin
-        - --mongodb.collstats-colls=db1.col1,db1.col2     # 监控指定集合
+        - --mongodb.collstats-colls=db1.col1,db1.col2     # 监控指定集合，可以只指定库名
         # - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
         # - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的其它集合
       restart: unless-stopped

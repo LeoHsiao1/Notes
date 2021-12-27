@@ -19,12 +19,13 @@
 
 ### 采集日志
 
+- Filebeat 每采集一条日志文本，都会保存为 JSON 格式的对象，称为日志事件（event）。
 - Filebeat 的主要模块：
   - input ：输入端。
   - output ：输出端。
   - harvester ：收割机，负责采集日志。
 - Filebeat 会定期扫描（scan）日志文件，如果发现其最后修改时间改变，则创建 harvester 去采集日志。
-  - 每个日志文件创建一个 harvester ，逐行读取文本，转换成日志事件，发送到输出端。
+  - 对每个日志文件创建一个 harvester ，逐行读取文本，转换成日志事件，发送到输出端。
     - 每行日志文本必须以换行符分隔，最后一行也要加上换行符才能视作一行。
   - harvester 开始读取时会打开文件描述符，读取结束时才关闭文件描述符。
     - 默认会一直读取到文件末尾，如果文件未更新的时长超过 close_inactive ，才关闭。
@@ -83,12 +84,16 @@
 
 ### 发送日志
 
-- Filebeat 每采集一条日志文本，都会保存为 JSON 对象，称为日志事件（event）。
-  - 日志事件保存在内存中，经过处理之后会发送到输出端，不会保存到磁盘中。
-- 一个日志事件的示例：
+- Filebeat 将采集的日志事件经过处理之后，会发送到输出端，该过程称为发布事件（publish event）。
+  - event 保存在内存中，不会写入磁盘。
+  - 每个 event 只有成功发送到输出端，且收到确认接收的回复，才视作发送成功。
+    - 如果发送 event 到输出端失败，则会自动重试。直到发送成功，才更新记录。
+    - 因此，采集到的 event 至少会被发送一次。但如果在确认接收之前重启 Filebeat ，则可能重复发送。
+
+- 一个 event 的内容示例：
   ```json
   {
-    "@timestamp":"2021-02-02T12:03:21.027Z",  // 当前时间戳
+    "@timestamp":"2021-02-02T12:03:21.027Z",  // 自动加上该字段，记录当前时间戳
     "@metadata":{
       "beat": "filebeat",
       "type": "_doc",
@@ -109,18 +114,11 @@
       "offset": 765072                        // 采集的偏移量
     },
     "message": "127.0.0.1 - [2/Feb/2021:12:02:34 +0000] GET /static/bg.jpg HTTP/1.1 200 0", // 日志的原始内容，之后可以进行解析
-    "fields": {},                             // 可以给日志事件加上一些字段
-    "tags": [],                               // 可以给日志事件加上一些标签，便于筛选
+    "fields": {},                             // 可以给 event 加上一些字段
+    "tags": [],                               // 可以给 event 加上一些标签，便于筛选
     ...
   }
   ```
-
-- Filebeat 每次发送日志事件到输出端时，都会记录其发送状态。
-  - 该操作称为发布事件（publish event）。
-  - 如果不能连接到输出端，则会每隔几秒尝试连接。
-  - 如果发送日志事件到输出端失败，则会自动重试。直到发送成功，才更新记录。
-  - 每个日志事件只有成功发送到输出端，且收到确认接收的回复，才视作发送成功。
-    - 因此，采集到的日志事件至少会被发送一次。但如果在确认接收之前重启 Filebeat ，则可能重复发送。
 
 ### 相关源码
 
@@ -290,10 +288,10 @@
 - filebeat.yml 的基本配置：
   ```yml
   # path.config: ${path.home}                     # 配置文件的路径，默认是项目根目录
-  # filebeat.shutdown_timeout: 0s                 # 当 Filebeat 关闭时，如果有日志事件正在发送，则等待一定时间直到其完成。默认不等待
+  # filebeat.shutdown_timeout: 0s                 # 当 Filebeat 关闭时，如果有 event 正在发送，则等待一定时间直到其完成。默认不等待
   # filebeat.registry.path: ${path.data}/registry # registry 文件的保存目录
   # filebeat.registry.file_permissions: 0600      # registry 文件的权限
-  # filebeat.registry.flush: 0s                   # 每当 Filebeat 发布一个日志事件到输出端，隔多久才刷新 registry 文件
+  # filebeat.registry.flush: 0s                   # 每当 Filebeat 发布一个 event 到输出端，隔多久才刷新 registry 文件
 
   # 配置 filebeat 自身的日志
   logging.level: info                     # 只记录不低于该级别的日志
@@ -307,7 +305,7 @@
     path: ${path.config}/modules.d/*.yml
   ```
 
-- 日志事件支持多种输出端：
+- Filebeat 支持多种输出端：
   ```yml
   # 输出到终端，便于调试
   # output.console:
@@ -322,7 +320,7 @@
   #   hosts: ['10.0.0.1:9200']
   #   username: 'admin'
   #   password: '******'
-  #   index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储日志事件的索引名
+  #   index: 'filebeat-%{[agent.version]}-%{+yyyy.MM.dd}-%{index_num}'   # 用于存储 event 的索引名
 
   # 输出到 kafka
   # output.kafka:
@@ -347,14 +345,14 @@
   ```
   - 这些参数可以配置全局的，也可以给某个日志源单独配置。
 
-- 可以配置 processors ，在输出日志事件之前进行处理：
+- 可以配置 processors ，在输出 event 之前进行处理：
   ```yml
   processors:
     - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
         when.not.contains.tags: forwarded # 如果该日志不属于转发的
     - add_docker_metadata: ~              # 如果存在 Docker 环境，则自动添加容器、镜像的信息。默认将 labels 中的点 . 替换成下划线 _
     - add_kubernetes_metadata: ~          # 如果存在 k8s 环境，则则自动添加 Pod 等信息
-    - drop_event:                         # 丢弃日志事件，如果它满足条件
+    - drop_event:                         # 丢弃 event ，如果它满足条件
         when:
           regexp:
             message: "^DEBUG"
@@ -364,7 +362,7 @@
           - cpu.user
           - cpu.system
     - rate_limit:
-        limit: 1000/m                     # 限制发送日志事件的速率，时间单位可以是 s、m、h
+        limit: 1000/m                     # 限制发送 event 的速率，时间单位可以是 s、m、h
         # fields:                         # 设置 fields 时，则考虑指定的所有字段的组合值，对每组不同的值分别限制速率
         #   - message
   ```

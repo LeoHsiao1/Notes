@@ -73,7 +73,9 @@
   elasticsearch.password: ******
   elasticsearch.requestHeadersWhitelist: [securitytenant,Authorization]
 
-  opensearch_security.cookie.secure: false        # 前端是否启用 SSL
+  opensearch_security.cookie.secure: false        # 当前端采用 HTTPS 时启用它
+  opensearch_security.cookie.ttl: 86400000        # cookie 的有效期，单位 ms ，默认为 1 小时
+  opensearch_security.session.ttl: 86400000       # session 的有效期，超时则需要用户重新登录。默认为 1 小时
   ```
 
 - 让 Logstash 输出到 OpenSearch 的方法：

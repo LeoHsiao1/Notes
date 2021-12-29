@@ -63,11 +63,12 @@
   ```
 - logstash.yml 默认为空，配置示例：
   ```yml
-  path.data: /var/lib/logstash
-  path.logs: /var/log/logstash
-  log.level: info
-  log.format: plain
+  # path.data: /var/lib/logstash
+  # path.logs: /var/log/logstash
+  # log.level: info
+  # log.format: plain
 
+  # dead_letter_queue.enable: false    # 是否启用死信队列，默认为 false
   pipeline:
     batch:
       size: 125   # input 阶段每接收指定数量的事件，才打包成一个 batch ，供 filter、output 阶段的一个 worker 处理。增加该值会提高处理速度
@@ -164,6 +165,11 @@
       }
     }
     ```
+    - output 阶段，如果某个 event 输出失败，有几种处理措施：
+      - 大部分情况下，会无限重试
+      - 如果 HTTP 响应码为 409 conflict ，则不会重试，丢弃 event 。
+      - 如果 HTTP 响应码为 400 mapper_parsing_exception 或 404 ，表示不能重试，则打印报错日志，丢弃 event 。
+        - 可以启用死信队列，将这些 event 保存到 data/dead_letter_queue/ 目录下，然后可通过 input.dead_letter_queue 插件读取。
 
 2. 启动 Logstash ，运行指定的管道：
     ```sh

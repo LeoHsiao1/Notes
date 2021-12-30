@@ -12,7 +12,7 @@
 - 发出 GET 请求：
   ```py
   >>> import requests
-  >>> r = requests.get("http://www.baidu.com")    # 目标 URL 的开头必须说明协议，比如 http:// 
+  >>> r = requests.get("http://www.baidu.com")    # 目标 URL 的开头必须说明协议，比如 http://
   >>> r                                           # 返回值是一个 Response 对象，通过它可以获取响应报文
   <Response [200]>
   ```
@@ -48,7 +48,7 @@
   {'User-Agent': 'python-requests/2.23.0', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '6'}
   ```
 
-- 给 json 参数传入 dict 类型的值，就可以直接发出 'application/json' 类型的 POST 请求： 
+- 给 json 参数传入 dict 类型的值，就可以直接发出 'application/json' 类型的 POST 请求：
   ```py
   >>> data = {'key1': 'value1', 'key2': 'value2'}
   >>> r = requests.post(url, json=data)
@@ -118,7 +118,9 @@
 200
 >>> r.reason             # 查看状态码对应的原因
 'OK'
->>> r.raise_for_status() # 如果状态码是 4xx 或 5xx 就自动抛出异常
+>>> bool(r)              # 如果状态码不是 4xx 或 5xx ，则判断为访问成功
+True
+>>> r.raise_for_status() # 如果访问失败，则自动抛出异常
 >>> r.headers            # 查看响应报文的 headers
 {'Cache-Control': 'private, no-cache, no-store, proxy-revalidate, no-transform', 'Connection': 'keep-alive', 'Content-Encoding': 'gzip', 'Content-Type': 'text/html', ...}
 >>> r.encoding           # 查看响应报文的编码格式（ requests 会根据响应报文的 Content-Type 选择编码格式，如果没有则默认为 ISO-8859-1 ）

@@ -152,10 +152,12 @@
       #   codec => line { format => "custom format: %{message}"}    # 设置处理数据的格式。默认为 json_lines
       # }
       elasticsearch {                           # 输出到 ES
+        # 该插件会将 pipeline 的一组 batch event 放在一个 bulk 请求中发出，如果单个请求超过 20M 则拆分成多个请求
         hosts => ["http://10.0.0.1:9200"]
         # user                => "admin"
         # password            => "123456"
         # ssl_certificate_verification => true                            # 使用 HTTPS 连接时，是否验证 SSL 证书
+        # http_compression    => false                                    # 是否对请求 body 进行 gzip 压缩
         # index               => "logstash-%{+yyyy.MM.dd}-%{index_num}"   # 指定写入的索引名
         # document_id         => "%{[@metadata][_id]}"                    # 指定写入的文档 id 。如果已存在相同 id 的文档，则会覆盖它
         # manage_template     => true                                     # Logstash 启动时，是否自动在 ES 中创建索引模板

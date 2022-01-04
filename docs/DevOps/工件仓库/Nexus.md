@@ -14,10 +14,10 @@
   services:
     nexus:
       container_name: nexus
-      image: sonatype/nexus3:3.34.1
+      image: sonatype/nexus3:3.37.3
       restart: unless-stopped
-      # environment:
-      #   INSTALL4J_ADD_VM_PARAMS: -Xms2703m -Xmx2703m -XX:MaxDirectMemorySize=2703m -Djava.util.prefs.userRoot=/nexus-data/javaprefs
+      environment:
+        INSTALL4J_ADD_VM_PARAMS: -Xms2703m -Xmx2703m -XX:MaxDirectMemorySize=2703m -Djava.util.prefs.userRoot=/nexus-data/javaprefs
       ports:
         - 8081:8081
       volumes:
@@ -27,7 +27,7 @@
     ```sh
     chown -R 200 .
     ```
-  - 默认用户名为 admin ，密码记录在 admin.password 文件中。
+  - 默认用户名为 admin ，初始密码记录在 admin.password 文件中。
 
 ## 用法
 
@@ -82,10 +82,10 @@
     - raw ：将工件以二进制形式存储。
 
 - 仓库有多种存储类型：
-  - hosts ：普通仓库。
+  - hosted ：普通仓库。
   - proxy ：对远程仓库的代理和缓存。当用户请求下载一个工件时，先尝试从本地缓存获取。如果不存在，则从远程仓库获取并缓存。
-  - group ：组，可以包含多个任意类型的仓库，合并它们的工件。
-    - 默认创建了 hosts 类型的 maven-releases、maven-snapshots 仓库，proxy 类型的 maven-central 仓库，三者都包含于 group 类型的 maven-public 仓库。
+  - group ：组，可以包含多个任意类型的仓库，在逻辑上合并它们的工件。
+    - 默认创建了 hosted 类型的 maven-releases、maven-snapshots 仓库，proxy 类型的 maven-central 仓库，三者都包含于 group 类型的 maven-public 仓库。
     - 从 maven-public 仓库下载工件时，会自动到 3 个成员仓库中寻找。但上传工件时，必须区分 maven-releases 和 maven-snapshots 仓库。
 
 - 在 Nexus 底层，仓库需要存储在 Blob 中。
@@ -111,14 +111,15 @@
   nx-repository-view-*-*-*            # 对 nexus 仓库的访问权限：允许对 * 类型的、名为 * 的仓库，进行 * 操作
   nx-repository-view-maven2-*-browse  # 允许对 maven2 类型的、名为 * 的仓库，进行 browse 操作
   ```
-  对仓库的操作分为：
-  ```sh
-  browse    # 通过 Web UI 浏览
-  read      # 通过 HTTP 请求读取工件
-  add       # 通过 HTTP 请求添加工件
-  edit
-  delete
-  ```
+  - 对仓库的操作分为：
+    ```sh
+    browse    # 通过 Web UI 浏览
+    read      # 通过 HTTP 请求读取工件
+    add       # 通过 HTTP 请求添加工件
+    edit
+    delete
+    ```
+  - 对于 npm 类型的仓库，需要启用 `npm Bearer Token Realm` ，提供身份认证的 token 。
 
 ### Restful API
 

@@ -56,21 +56,27 @@
 ### URL
 
 URL 的一般格式为：`protocol://host:port/path/?querystring#fragment`
-- protocol ：采用的通信协议，比如 HTTP、HTTPS、FTP 。
-- host ：服务器主机，可以是主机名、域名或 IP 地址。
+- protocol
+  - ：采用的通信协议，比如 HTTP、HTTPS、FTP 。
+- host
+  - ：服务器主机，可以是主机名、域名或 IP 地址。
   - protocol、host 不区分大小写，但一般小写。
-- port ：端口号。
+- port
+  - ：端口号。
   - 如果省略不填，则使用当前通信协议的默认端口。比如 HTTP 的默认端口为 80 。
   - 一个主机上可能运行了多个服务器软件，分别监听不同的端口。通过 host、port 才能定位一个唯一的服务器。
-- path ：服务器上某个资源的路径。
+- path
+  - ：服务器上某个资源的路径。
   - 如果省略不填，则会访问根目录 / 。比如 www.baidu.com 相当于 www.baidu.com/ 。
-  - path 是否区分大小写取决于服务器所在的文件系统。比如 Linux 的文件系统区分大小写，Windows 的 NTFS 文件系统不区分大小写。
-- querystring ：查询字符串，用于传递一些键值对形式的参数（称为 Query Param）。
+  - path 是否区分大小写，取决于服务器是否支持。比如 Linux 的文件系统区分大小写，因此运行的 HTTP 服务器默认区分大小写。而 Windows 的 NTFS 文件系统不区分大小写。
+- querystring
+  - ：查询字符串，用于传递一些键值对形式的参数（称为 Query Param）。
   - 其语法格式如下：
     1. 将每个键值对的内部用 = 连接，外部用 & 分隔，拼接成一个字符串。
     2. 将该字符串经过 URLencode 编码，放到 URL 的 ? 之后。例如：`HTTPS://www.baidu.com/s?ie=UTF-8&wd=hello%20world`
   - 某些浏览器、服务器限制了 URL 的最大长度（比如 1M），因此不能通过 querystring 传递较多的数据。
-- fragment ：片段，以 # 开头。用于定位到资源中的某一片段。
+- fragment
+  - ：片段，以 # 开头。用于定位到资源中的某一片段。
   - querystring、fragment 都区分大小写。
 
 ## 请求方法

@@ -195,11 +195,34 @@
 
 ### watch
 
-- Consul 提供了 watch 功能，用于监视某些对象，当发生变化时执行 handler 任务。
-  - 对象可以是节点、服务、KV ，或者用户自定义的事件。
+- Consul 提供了 watch 功能，用于监视某些事件，当事件发生时执行 handler 任务。
+  - 可以监视节点、服务、KV 的变化，或者用户自定义的事件。
   - handler 有两种类型：
     - 执行 shell 脚本
     - 发送 HTTP 请求
+- 例：在 Consul 配置文件中添加 watch 的配置
+  ```json
+  {
+    "watches": [                  // 定义一组 watch
+      {
+        "type": "key",            // watch 类型为 key
+        "key": "redis/config",    // 指定要监视的 key
+        "handler_type": "script",
+        "args": ["/usr/bin/my_handler.sh", "-redis"]
+      },
+      {
+        "type": "service",        // watch 类型为 service
+        "service": "redis",       // 指定要监视的服务名
+        "passingonly": true,      // 添加筛选条件，只监视健康的服务
+        "handler_type": "http",
+        "http_handler_config": {
+          "path": "http://10.0.0.1/watch/handler",
+          "method": "POST"
+        }
+      }
+    ]
+  }
+  ```
 
 ### CLI
 
@@ -374,7 +397,7 @@
       // "limits": {
       //     "http_max_conns_per_client": 200  // 限制每个客户端 IP 的并发连接数
       // }
-//
+
       // 关于 DNS
       // "domain": "consul",          // 让 agent 解析指向该域名的 DNS 查询请求，其它请求则转发给上游 DNS 服务器
       // "recursors": "<IP>",         // 添加上游 DNS 服务器

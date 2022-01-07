@@ -164,14 +164,17 @@
         # template            => "/path/to/logstash/logstash-apache.json" # template 的配置文件，默认使用内置的模板
         # template_name       => "logstash"                               # template 的名称
         # template_overwrite  => false                                    # 如果 ES 中已存在同名 template ，是否覆盖它
+        # retry_initial_interval  => 2                                    # 第 n 次重试之前等待 n*retry_initial_interval 秒
+        # retry_max_interval      => 64                                   # 重试时的最大间隔时间
       }
     }
     ```
     - output 阶段，如果某个 event 输出失败，有几种处理措施：
-      - 大部分情况下，会无限重试
+      - 大部分情况下，会无限重试。
       - 如果 HTTP 响应码为 409 conflict ，则不会重试，丢弃 event 。
       - 如果 HTTP 响应码为 400 mapper_parsing_exception 或 404 ，表示不能重试，则打印报错日志，丢弃 event 。
         - 可以启用死信队列，将这些 event 保存到 data/dead_letter_queue/ 目录下，然后可通过 input.dead_letter_queue 插件读取。
+      - 如果 HTTP 响应码为 403 pressure too high ，表示 ES 负载过大，拒绝了 bulk 请求。此时会自动重试，但这会导致 ES 的负载更大，可能返回 503 Unavailable ，最终导致 Logstash 放弃重试。建议增加 retry 的间隔。
 
 2. 启动 Logstash ，运行指定的管道：
     ```sh

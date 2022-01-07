@@ -39,7 +39,9 @@
 4. 用户执行 `git checkout xxx` 命令，切换到历史版本。
     - git 会找到该版本对应的所有文件的哈希值，根据哈希值将这些文件从 git 仓库拷贝到项目目录下，从而将项目目录还原到历史时刻。
 
-### 查看仓库
+## 版本
+
+### 查看
 
 ```sh
 git status                # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
@@ -56,9 +58,7 @@ git diff                  # 比较当前仓库与上一次 add 或 commit 的差
         <file>            # 只比较某个文件的差异
 ```
 
-## 版本控制
-
-### 修改文件
+### 修改
 
 ```sh
 git add <file>                  # 将文件加入缓存区（只会加入与上一版本哈希值不同的文件）
@@ -73,7 +73,7 @@ git rev-parse --show-toplevel   # 返回 Git 项目的顶级目录
 - 用 git rm/mv 做出的改动会自动加入缓存区。
 - 在 Windows 上重命名一个文件时，如果只是改变了文件名的大小写，git 默认不会发现该改动，此时建议通过 git mv 重命名文件。
 
-### 提交版本
+### 提交
 
 ```sh
 git commit                      # 将当前缓存区的所有文件提交为一个版本
@@ -89,13 +89,8 @@ git commit                      # 将当前缓存区的所有文件提交为一�
 	Date:   Thu Dec 10 09:15:19 2020 +0800
 	```
 	- 该哈希值的长度为 40 位，不过用户只使用前几位也能定位到该版本，比如 git checkout 86e696 。
-- 因为版本的哈希值不方便记忆，git 支持创建以下几种引用（Reference ，refs），用于指向某个版本。
-  - 分支（branch）：指向某个版本，且可以随时改为指向其它版本。相当于指针。
-    - master ：git 仓库初始化时，默认创建的一个分支，通常用作主分支。
-    - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。
-  - 标签（tag）：指向某个版本，且创建之后不能改为指向其它版本。相当于某个版本的别名。
 
-### 撤销修改
+### 撤销
 
 ```sh
 git clean [path]...     # 删除指定目录（默认为当前目录）下，所有未被 git 版本控制，或不在 .gitignore 中记录的文件
@@ -137,7 +132,15 @@ __pycache__/    # 忽略所有目录下的指定目录
 - 以 / 开头的路径，是从项目根目录开始，匹配方向是明确的。不以 / 开头的路径，可能匹配到多个目录下的文件。
 - 以 / 结尾的路径，是强调匹配目录，不匹配文件。
 
-## branch
+## 引用
+
+- 因为 commit 版本的哈希值不方便记忆，git 支持创建以下几种引用（Reference ，refs），用于指向某个版本。
+  - 分支（branch）：指向某个版本，且可以随时改为指向其它版本，相当于指针。常见分支：
+    - master ：git 仓库初始化时，默认创建的一个分支，通常用作主分支。
+    - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。
+  - 标签（tag）：指向某个版本，且创建之后不能改为指向其它版本，相当于某个版本的别名。
+
+### branch
 
 ```sh
 git branch          # 显示所有本地分支
@@ -156,6 +159,15 @@ git checkout
         -- <file> 	# 将某个文件恢复到上一次 add 或 commit 的状态
         .           # 将当前目录的所有文件恢复到上一次 add 或 commit 的状态
 ```
+
+### tag
+
+```sh
+git tag                 # 显示已有的所有标签
+        -a v1.0 9fceb02 # 给版本 9fceb02 加上标签 v1.0
+        -d <tagName>    # 删除一个标签
+```
+- 执行 `git checkout <tagName>` 之后，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
 
 ### merge
 
@@ -188,8 +200,8 @@ git merge <branch>  # 将指定分支的所有版本合并到当前分支
 ### rebase
 
 ```sh
-git rebae
-        <branch>          # 将当前分支以变基方式合并到指定分支（这会产生一个新版本）
+git rebase
+        <branch>          # 将当前分支以变基方式合并到指定分支，这会产生一个新 commit
         branch1 branch2   # 将 branch2 以变基方式合并到 branch1
         branch1 branch2 --onto branch3  # 将 branch2 相对于 branch1 的变基应用到 branch3 上
 ```
@@ -200,14 +212,12 @@ git rebae
 
 - merge 方式与 rebase 方式最终生成的版本都一样，但是 rebase 方式会删除次分支，将版本图简化成一条线。
 
-### tag
+### cherry-pick
 
 ```sh
-git tag                 # 显示已有的所有标签
-        -a v1.0 9fceb02 # 给版本 9fceb02 加上标签 v1.0
-        -d <tagName>    # 删除一个标签
+git cherry-pick <commit_hash>...  # 将指定的多个 commit 的修改内容提交到当前分支
+        -n                        # 只更新文件，不提交
 ```
-- 执行 `git checkout <tagName>` 之后，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
 
 ## 配置
 

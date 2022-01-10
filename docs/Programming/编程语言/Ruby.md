@@ -206,4 +206,3 @@
 ## 相关概念
 
 - Ruby on Rails ：简称为 Rails ，一个采用 Ruby 的 Web 应用开发框架，采用 MVC 设计模式。
-

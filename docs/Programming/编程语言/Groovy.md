@@ -1,13 +1,13 @@
 # Groovy
 
-：一个脚本语言，基于 Java 实现。
+：一个基于 Java 的脚本语言。
 - [官方文档](https://groovy-lang.org/documentation.html)
-- 于 2007 年由 James Strachan 发布，后来交给 ASF 管理。
+- 2007 年由 James Strachan 发布，后来交给 ASF 管理。
 
 ## 语法特点
 
-- 兼容大部分 Java 的语法。
-- 脚本文件的扩展名为 .groovy 。编译成 Java 字节码再由 JVM 运行。
+- 源代码编译成 Java 字节码之后由 JVM 运行。兼容大部分 Java 的语法。
+- 脚本文件的扩展名为 .groovy 。
 - 每个语句的末尾以换行符或分号 `;` 作为分隔符。
 - 用 `//` 声明单行注释，用 `/*` 和 `*/` 声明多行注释。
 - 支持定义函数，支持面向对象编程。

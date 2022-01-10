@@ -24,6 +24,10 @@
 
 ## 相关概念
 
+- Scala
+  - ：一个基于 Java 的编译型语言，2004 年发布。
+  - 源代码编译成 Java 字节码之后由 JVM 运行。
+  - 支持面向对象编程、函数式编程，属于静态类型。
 - JMX（Java Management Extensions）
   - ：一组用于监控、管理 Java 应用的 API ，属于 Java 标准库。
     - 将被管理的对象称为 MBean（Managed Bean）。

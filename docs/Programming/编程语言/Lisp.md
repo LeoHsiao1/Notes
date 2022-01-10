@@ -6,7 +6,7 @@
   - Scheme ：于 1975 年发布。
   - [Common Lisp](https://lisp-lang.org/learn/) ：于 1984  年发布，本文介绍其语法。
   - Racket ：于 1995 年发布。
-  - Clojure ：于 2007 年发布。源代码编译成 Java 字节码之后运行在 JVM 上，因此可以调用 Java 的库。
+  - Clojure ：于 2007 年发布。源代码编译成 Java 字节码之后由 JVM 运行。
 
 ## 相关历史
 

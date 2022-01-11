@@ -21,7 +21,7 @@
 
 - 进入交互式终端 irb ：
   ```lua
-  [root@Centos ~]# lua
+  [root@CentOS ~]# lua
   Lua 5.1.4  Copyright (C) 1994-2008 Lua.org, PUC-Rio
   > print("Hello")
   Hello

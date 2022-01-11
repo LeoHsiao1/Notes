@@ -232,7 +232,7 @@ $ uptime      # 显示系统运行时长、CPU 平均负载
 ```
 - 例：
   ```sh
-  [root@Centos ~]# uptime
+  [root@CentOS ~]# uptime
   up 21 days, 41 min,  1 users,  load average: 0.52, 0.58, 0.59
   ```
   - up 21 days, 41 min ：表示系统的运行时长。
@@ -249,7 +249,7 @@ $ perf top    # 显示占用 CPU 的各个事件（采样分析）
 ```
 - 例：
   ```sh
-  [root@Centos ~]# perf top
+  [root@CentOS ~]# perf top
   Samples: 4K of event 'cpu-clock', 4000 Hz, Event count (approx.): 828026549 lost: 0/0 drop: 0/0
   Overhead  Shared Object         Symbol
     22.91%  perf                  [.] __symbols__insert
@@ -272,13 +272,13 @@ $ perf report           # 显示 perf record 记录的信息
 ```
 - 例：
   ```sh
-  [root@Centos ~]# perf record ls
+  [root@CentOS ~]# perf record ls
   actions-runner  node_modules  Notes  package.json  perf.data  yarn.lock
   [ perf record: Woken up 1 times to write data ]
   [ perf record: Captured and wrote 0.014 MB perf.data (6 samples) ]
   ```
   ```sh
-  [root@Centos ~]# perf report
+  [root@CentOS ~]# perf report
   Samples: 6  of event 'cpu-clock', Event count (approx.): 1500000
   Overhead  Command  Shared Object      Symbol
     16.67%  ls       [kernel.kallsyms]  [k] copy_user_enhanced_fast_string
@@ -294,7 +294,7 @@ $ perf stat <命令>      # 分析某条命令占用 CPU 的过程
 ```
 - 例：
   ```sh
-  [root@Centos ~]# perf stat uname
+  [root@CentOS ~]# perf stat uname
   Linux
 
     Performance counter stats for 'uname':

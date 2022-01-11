@@ -516,7 +516,7 @@ class QuerySet:
 
 - 一般的查询过程：
   ```py
-  [root@Centos ~]# python manage.py shell
+  [root@CentOS ~]# python manage.py shell
   >>> from app1.models import Book
   >>> book = Book.objects.get(pk=1)   # 此时会执行 SQL ，查询 book 实例的所有字段，并缓存
   [Execute SQL] SELECT "app1_book"."id", "app1_book"."name", "app1_book"."abstract", "app1_book"."author_id", "app1_book"."datetime" FROM "app1_book" WHERE "app1_book"."id" = ? LIMIT 21

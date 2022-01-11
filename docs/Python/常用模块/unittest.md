@@ -33,7 +33,7 @@
 
 2. 用 unittest 模块执行这些测试方法：
     ```sh
-    [root@Centos ~]# python3 -m unittest -v
+    [root@CentOS ~]# python3 -m unittest -v
     test_add (__main__.TestMath) ... ok
     test_minus (__main__.TestMath) ... FAIL
 

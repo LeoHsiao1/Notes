@@ -33,7 +33,7 @@
 
 - 进入交互式终端 irb ：
   ```ruby
-  [root@Centos ~]# irb
+  [root@CentOS ~]# irb
   irb(main):001:0> puts "Hello"
   Hello
   => nil

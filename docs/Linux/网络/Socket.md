@@ -335,7 +335,7 @@ FRAG: inuse 0 memory 0
 
 - 例：查看所有 TCP 端口的信息
   ```sh
-  [root@Centos ~]# ss -tapn | cat    # 加上 cat 使显示的 users 列不换行
+  [root@CentOS ~]# ss -tapn | cat    # 加上 cat 使显示的 users 列不换行
   State      Recv-Q Send-Q Local Address:Port    Peer Address:Port
   LISTEN     0      128    127.0.0.1:34186            *:*              users:(("node",pid=15647,fd=19))
   LISTEN     0      128        *:111                  *:*              users:(("systemd",pid=1,fd=51))
@@ -362,7 +362,7 @@ FRAG: inuse 0 memory 0
 
 - 例：查看各种 Socket 的统计数量
   ```sh
-  [root@Centos ~]# ss -s
+  [root@CentOS ~]# ss -s
   Total: 1101 (kernel 1405)           # Total 表示存在的 Socket 数。不过 kernel 中存在的 Socket 数较多一些，因为有些 Socket 已关闭，但尚未回收
   TCP:   697 (estab 140, closed 538, orphaned 0, synrecv 0, timewait 295/0), ports 0
 

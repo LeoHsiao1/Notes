@@ -35,7 +35,7 @@
   - 其中名为 bash 的 shell 解释器最流行，成为了大部分 Linux 发行版默认的 shell ，它兼容 sh 。
 - 例：查看系统可用的所有 shell 解释器
   ```sh
-  [root@Centos ~]# cat /etc/shells
+  [root@CentOS ~]# cat /etc/shells
   /bin/sh
   /bin/bash
   /sbin/nologin
@@ -44,7 +44,7 @@
   ```
 - 例：查看当前的 shell 解释器
   ```sh
-  [root@Centos ~]# sh   # 进入 sh 终端
+  [root@CentOS ~]# sh   # 进入 sh 终端
   sh-4.2# echo $SHELL   # 查看用户的 login shell
   /bin/bash
   sh-4.2# echo $0       # 查看当前使用的 shell
@@ -62,7 +62,7 @@
 
 可以直接在终端输入 shell 脚本的文件路径，执行它：
 ```sh
-[root@Centos ~]# ./1.sh
+[root@CentOS ~]# ./1.sh
 -bash: ./1.sh: Permission denied
 ```
 - 此时系统会自动选择一个 shell 解释器来执行它。

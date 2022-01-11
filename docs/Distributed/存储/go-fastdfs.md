@@ -24,7 +24,7 @@
 
 - 上传文件：
   ```sh
-  [root@Centos ~]# curl http://127.0.0.1:8080/group1/upload -F file=@f1
+  [root@CentOS ~]# curl http://127.0.0.1:8080/group1/upload -F file=@f1
   http://127.0.0.1:8080/group1/default/20210101/15/22/2/f1?name=f1&download=1
   ```
 

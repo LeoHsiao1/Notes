@@ -81,7 +81,7 @@ FastDFS 的服务器分为两种角色：
 
 2. 通过客户端上传文件：
     ```sh
-    [root@Centos ~]# /usr/bin/fdfs_upload_file /etc/fdfs/client.conf test.txt
+    [root@CentOS ~]# /usr/bin/fdfs_upload_file /etc/fdfs/client.conf test.txt
     group1/M00/00/00/lRyeml-QA76AWkC1AAAAAAAAAAA357.txt
     ```
     上传成功之后会返回该文件的逻辑存储路径 path ，其格式为：
@@ -94,7 +94,7 @@ FastDFS 的服务器分为两种角色：
 
 3. 可以查看文件信息：
     ```sh
-    [root@Centos ~]# /usr/bin/fdfs_file_info /etc/fdfs/client.conf group1/M00/00/00/lRyeml-QA76AWkC1AAAAAAAAAAA357.txt
+    [root@CentOS ~]# /usr/bin/fdfs_file_info /etc/fdfs/client.conf group1/M00/00/00/lRyeml-QA76AWkC1AAAAAAAAAAA357.txt
     source storage id: 0
     source ip address: 10.0.0.1
     file create timestamp: 2020-10-30 12:42:49

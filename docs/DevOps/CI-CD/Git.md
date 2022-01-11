@@ -353,29 +353,29 @@ git push [name 或 URL]          # 推送本地仓库到远端仓库
   ```
 - 如果在远端仓库创建了一个 test 分支，则可以执行以下命令，拉取到本地仓库：
   ```sh
-  [root@Centos ~]# git branch -a                # 查看当前分支，此时没看到 test 分支
+  [root@CentOS ~]# git branch -a                # 查看当前分支，此时没看到 test 分支
   * master
     remotes/origin/HEAD -> origin/master
     remotes/origin/master
 
-  [root@Centos ~]# git fetch                    # 拉取远端仓库
+  [root@CentOS ~]# git fetch                    # 拉取远端仓库
   From https://github.com/LeoHsiao1/Notes
   * [new branch]      test       -> origin/test
 
-  [root@Centos ~]# git branch -a                # 此时可看到远端的 test 分支
+  [root@CentOS ~]# git branch -a                # 此时可看到远端的 test 分支
   * master
     remotes/origin/HEAD -> origin/master
     remotes/origin/master
     remotes/origin/test
 
-  [root@Centos ~]# git checkout test            # 切换到本地的 test 分支，会自动创建它，并跟踪到远端的 test 分支
+  [root@CentOS ~]# git checkout test            # 切换到本地的 test 分支，会自动创建它，并跟踪到远端的 test 分支
   Switched to a new branch 'test'
   Branch 'test' set up to track remote branch 'test' from 'origin'.
 
-  [root@Centos ~]# git checkout test2           # 切换到本地的 test2 分支失败，不会自动创建它
+  [root@CentOS ~]# git checkout test2           # 切换到本地的 test2 分支失败，不会自动创建它
   error: pathspec 'test2' did not match any file(s) known to git
 
-  [root@Centos ~]# git branch -a                # 查看此时的分支
+  [root@CentOS ~]# git branch -a                # 查看此时的分支
     master
   * test
     remotes/origin/HEAD -> origin/master

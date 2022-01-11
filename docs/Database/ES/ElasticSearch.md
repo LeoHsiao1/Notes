@@ -65,7 +65,7 @@
 - ES 服务器提供了 Restful API 供客户端访问。
 - 客户端向 ES 服务器发出请求的标准格式如下：
   ```sh
-  [root@Centos ~]# curl -X GET 127.0.0.1:9200/_count?pretty -H 'content-Type:application/json' -d '
+  [root@CentOS ~]# curl -X GET 127.0.0.1:9200/_count?pretty -H 'content-Type:application/json' -d '
   > {
   >   "query": {
   >     "match_all": {}

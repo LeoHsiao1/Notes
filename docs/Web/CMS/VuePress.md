@@ -317,7 +317,7 @@ meilisearch 是一个开源的搜索引擎，采用 Rust 语言开发，借鉴�
     - 启动 meilisearch 服务器时，默认没有设置密钥，允许用户访问任意 URL 。设置密钥就可以拒绝非法用户的访问。
     - 可以设置环境变量 `MEILI_MASTER_KEY=******` 作为主密钥，此时会自动生成私钥和公钥，发送以下 HTTP 请求即可查询到：
         ```sh
-        [root@Centos ~]# curl 'http://localhost:7700/keys' -H "X-Meili-API-Key: $MEILI_MASTER_KEY"
+        [root@CentOS ~]# curl 'http://localhost:7700/keys' -H "X-Meili-API-Key: $MEILI_MASTER_KEY"
         {"private":"3fced9cfe0467f23a94ac4bb8368a58f815fa167da226418a417dc58cdec8259","public":"3e7193b91276c4ec577014a99188682280a2bc674f45557d11bad94c7e0e6843"}
         ```
     - 如果用户在发出的 HTTP 查询请求的 headers 中加上私钥（主密钥一般不用于查询），才有权访问除了 `/keys` 以外的 URL 。如果使用公钥，则只有权查询 `/indexes` 下的部分内容。

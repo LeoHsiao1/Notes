@@ -57,14 +57,14 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
   - 通过 -o 或 -O 选项下载文件时，会显示进度表。
   - 将 stdout 从终端重定向到其它位置时，会通过 stderr 显示一个进度表。如下：
     ```sh
-    [root@Centos ~]# curl 127.0.0.1 | grep ok
+    [root@CentOS ~]# curl 127.0.0.1 | grep ok
       % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                     Dload  Upload   Total   Spent    Left  Speed
     100   495  100   495    0     0   905k      0 --:--:-- --:--:-- --:--:--  483k
     ```
     - 可以改为显示一行简单的进度条：
       ```sh
-      [root@Centos ~]# curl 127.0.0.1 --progress-bar > /dev/null
+      [root@CentOS ~]# curl 127.0.0.1 --progress-bar > /dev/null
       ######################################################################## 100.0%
       ```
     - 或者隐藏进度条，但这样可能隐藏其它报错信息：

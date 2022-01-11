@@ -22,13 +22,13 @@
 
 - 用解释器执行一条命令：
   ```sh
-  [root@Centos ~]# perl -e 'print "Hello World\n"'
+  [root@CentOS ~]# perl -e 'print "Hello World\n"'
   Hello World
   ```
 
 - 执行脚本文件：
   ```sh
-  [root@Centos ~]# perl test.pl 
+  [root@CentOS ~]# perl test.pl 
   a = 10
   a = $a\n
   ```

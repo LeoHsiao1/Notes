@@ -367,7 +367,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     shell 模块时会在 Python 中调用 subprocess.Popen(cmd, shell=True) ，新建一个 shell 终端来执行 cmd 命令。\
     而 command 模块是调用 subprocess.Popen(cmd, shell=False) ，不在 shell 终端中执行 cmd 命令。因此可以防止 shell 注入攻击，但是不支持管道符等 shell 语法。如下：
     ```sh
-    [root@Centos ~]# ansible localhost -a 'echo $PWD | wc -l >> f1 && echo $PWD'
+    [root@CentOS ~]# ansible localhost -a 'echo $PWD | wc -l >> f1 && echo $PWD'
     localhost | CHANGED | rc=0 >>
     /etc/ansible | wc -l >> f1 && echo /etc/ansible
     ```

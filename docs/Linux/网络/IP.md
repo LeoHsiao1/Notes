@@ -16,7 +16,7 @@ $ ifconfig                         # 显示已启用网卡的信息
 
 例：
 ```sh
-[root@Centos ~]# ifconfig
+[root@CentOS ~]# ifconfig
 eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 10.0.0.1  netmask 255.255.255.0  broadcast 10.0.0.255
         ether 52:54:00:59:c1:b7  txqueuelen 1000  (Ethernet)
@@ -65,7 +65,7 @@ $ route    # 显示本机的路由表
 
 例：
 ```sh
-[root@Centos ~]# route
+[root@CentOS ~]# route
 Kernel IP routing table
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 default         gateway         0.0.0.0         UG    0      0        0 eth0
@@ -112,7 +112,7 @@ $ ip
 
 - 例：
   ```sh
-  [root@Centos ~]# ping baidu.com
+  [root@CentOS ~]# ping baidu.com
   PING baidu.com (39.156.69.79) 56(84) bytes of data.
   64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=1 ttl=250 time=37.0 ms
   64 bytes from 39.156.69.79 (39.156.69.79): icmp_seq=2 ttl=250 time=37.0 ms
@@ -130,7 +130,7 @@ $ ip
 
 - 例：
   ```sh
-  [root@Centos ~]# ping google.com
+  [root@CentOS ~]# ping google.com
   PING google.com (93.46.8.90) 56(84) bytes of data.
 
   ^C
@@ -153,7 +153,7 @@ $ ip
   - 先探测 TTL 减 1 的路由节点，再探测 TLL 减 2 的路由节点，以此类推，直到 TTL 减为 0 或者到达目标主机。
 - 例：
   ```sh
-  [root@Centos ~]# traceroute baidu.com
+  [root@CentOS ~]# traceroute baidu.com
   traceroute to baidu.com (220.181.38.148), 30 hops max, 60 byte packets
   1  100.98.0.1 (100.98.0.1)            7.329 ms  7.170 ms  7.232 ms
   2  * * *
@@ -182,7 +182,7 @@ $ ip
 - 也可查询指定 IP 的信息：`curl cip.cc/8.8.8.8`
 - 例：
     ```sh
-    [root@Centos ~]# curl cip.cc
+    [root@CentOS ~]# curl cip.cc
     IP      : 120.241.2.7
     地址    : 中国  广东  深圳
     运营商  : 移动

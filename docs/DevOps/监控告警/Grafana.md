@@ -2,7 +2,7 @@
 
 ：一个 Web 网站，可以显示丰富、美观的数据图表。
 - [官方文档](https://grafana.com/docs/grafana/latest/)
-- 本身不存储数据，常用作监控系统、数据分析的前端。
+- 本身不存储数据，而是需要从 MySQL、ES、Prometheus 等数据源获取数据，再显示图表。
 
 ## 部署
 

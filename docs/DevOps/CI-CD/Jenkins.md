@@ -113,12 +113,12 @@
 
     ![](./jenkins_job.png)
 
-  - 左上角显示：该 Job 的菜单列，比如启动（Build）、配置、删除、重命名。
-  - 左下角显示：构建历史（Build History），记录每次执行该 Job 的编号、时间、结果。
-  - 中上侧显示：Job 名称、描述信息。
-  - 中下侧显示：构建历史中，Job 的每个阶段的耗时，便于用户发现哪个阶段的耗时比较久、哪个阶段失败了。
+  - 左上方显示：该 Job 的菜单列，比如启动（Build）、配置、删除、重命名。
+  - 左下方显示：构建历史（Build History），记录每次执行该 Job 的编号、时间、结果。
+  - 中上方显示：Job 名称、描述信息。
+  - 中下方显示：构建历史中，Job 每个阶段的耗时。
 
-- 点击某次构建，可查看其详细信息，比如启动原因、持续时长、控制台输出（Console Output）、工作目录（Workspace）。
+- 点击某次构建，可查看其详细信息，比如启动原因、持续时长、控制台输出（Console Output）。
   - 常见的几种构建结果：
     - success ：执行成功，显示为蓝色。
     - failure ：执行失败，显示为红色。
@@ -173,7 +173,7 @@
 - Localization: Chinese (Simplified)
   - 用于对 Jenkins 的页面进行汉化。
 - Blue Ocean
-  - 提供了一个更美观的流水线执行页面，但功能少。
+  - 提供了一个更美观的操作页面，但功能较少。
 - Extended Choice Parameter
   - 提供了单选框、复选框、单选按钮、多选按钮类型的输入参数。
 - Generic Webhook Trigger

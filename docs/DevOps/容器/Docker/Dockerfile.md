@@ -61,7 +61,13 @@
   - *-slim ：一种后缀，表示某种镜像的精简版，体积较小。通常是去掉了一些文件，只保留运行时环境。
   - busybox ：集成了许多常用的 Unix 命令，体积只有 2MB ，相当于一个小巧的工具箱。
   - debian
-  - alpine ：一个专为容器设计的轻量级 Linux 系统，体积只有 5MB 。包含了 busybox ，用 musl libc 库代替了 glibc 库，可能遇到兼容性问题。
+  - alpine ：一个专为容器设计的轻量级 Linux 系统，体积只有 5MB 。
+    - 包含了 busybox ，用 musl libc 库代替了 glibc 库，可能遇到兼容性问题。
+    - 可用 apk add 命令安装软件包。
+    - busybox 不包含 curl 命令，可用以下命令启动一个包含 curl 的容器：
+      ```sh
+      docker run -it --rm --entrypoint sh alpine/curl
+      ```
   - Container Linux ：一个专为容器设计的轻量级 Linux 系统，由 CoreOS 团队发布。2020 年停止开发，被 Fedora CoreOS 替代。
 
 ### 多阶段

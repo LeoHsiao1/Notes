@@ -147,7 +147,7 @@
   - 可以赋值为空。
 - 构建镜像时，可通过 `docker build --build-arg` 传入构建参数。
 - ARG 变量只影响构建过程，不会保留。
-  - 但可以通过 `docker history` 命令查看其值，因此不应该通过 ARG 传递密码等敏感信息。
+  - 可以通过 `docker history` 命令查看 ARG 变量的值，因此不应该通过 ARG 传递密码等敏感信息。可改为读取 secret 文件，或者让最终镜像不继承当前构建阶段。
 
 ### ENV
 
@@ -174,12 +174,12 @@
   ```
   - src_path 只能是相对路径，且不能使用 .. 指向超出构建上下文的路径。
     - src_path 可以包含通配符 ? 和 * 。
-    - src_path 为目录时，会递归拷贝所有文件，以及文件元数据。
+    - src_path 为目录时，不会拷贝该目录，而是拷贝该目录下的所有文件。
   - dst_path 可以是相对路径或绝对路径。
     - 为相对路径时，起点为 WORKDIR 。不会受到 RUN 指令中的 cd 命令的影响，因为每个构建步骤都是创建一个新的中间容器，工作目录复位为 WORKDIR 。
 - 例：
   ```sh
-  COPY hom* /tmp/
+  COPY *.py /tmp/
   ```
 
 ### ADD
@@ -338,7 +338,7 @@
 
   # 创建用户及目录
   RUN set -eu ;\
-      useradd $USER -u $USER_ID ;\
+      useradd $USER -u $USER_ID -m -s /bin/bash ;\
       mkdir -p $WORK_DIR ;\
       chown -R $USER:$USER $WORK_DIR
 
@@ -582,3 +582,11 @@ docker build <PATH>|<URL>
       - 重复执行 RUN 指令时，如果指令的内容相同，则会使用缓存。
       - 重复执行 ADD、COPY 指令时，如果指令的内容相同，拷贝的文件的哈希值也相同，才会使用缓存。
       - 使用缓存不一定合适，例如重复执行 `RUN date > build_time` 时，得到的时间不会变，此时可通过 `docker build --no-cache` 禁用缓存。
+    - 例如构建 npm 前端项目时，可以分别 install 和 build ，尽量让 install 命中缓存：
+      ```dockerfile
+      WORKDIR /app
+      COPY package.json /app/package.json
+      RUN npm install
+      COPY . .
+      RUN npm run build
+      ```

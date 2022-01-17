@@ -89,6 +89,34 @@
   RUN  ls /tmp
   ```
 
+- 存在多个 FROM 阶段时，传入的构建参数会被第一个声明该 ARG 的阶段获取，之后的阶段不能再获取。
+  ```sh
+  FROM    nginx
+  ARG     A=10
+
+  FROM    nginx
+  ARG     A
+  # 这里 $A 的值为空
+  RUN echo $A
+  ```
+
+- 支持在第一个 FROM 指令之前声明 ARG 指令，此时该 ARG 变量会存在于所有 FROM 阶段。如下：
+  ```dockerfile
+  ARG A=10
+
+  FROM nginx
+  # 此时 $A 属于当前作用域，值为空
+  ENV     B=$A
+  # 如果声明一个同名的 ARG 变量并赋值为空，则可以获得全局作用域的值，因此这里 $A 的值为 10
+  ARG A
+  RUN echo $A
+
+  FROM nginx
+  # 这里 $A 的值为 10
+  ARG A
+  RUN echo $A
+  ```
+
 ## 变量
 
 - Dockerfile 中可通过 ARG、ENV 指令定义变量，可在大部分指令中引用。
@@ -107,18 +135,6 @@
     ${var:-default}      # 如果变量存在且不为空，则返回其值，否则返回默认值
     ${var:+default}      # 如果变量存在且不为空，则返回默认值，否则返回空
     ```
-- 允许在第一个 FROM 指令之前插入 ARG 指令：
-  ```sh
-  ARG     A=10
-  FROM    nginx:1.$A
-
-  # 开始 FROM 构建阶段之后，不会采用 FROM 之前的 ARG 变量，因此这里 $A 的值为空
-  ENV     B=$A
-
-  # 如果声明一个同名变量并赋值为空，就可以获得之前的值，因此这里 $A 的值为 10
-  ARG     A
-  EXPOSE  $A
-  ```
 
 ### ARG
 
@@ -131,13 +147,19 @@
   - 可以赋值为空。
 - 构建镜像时，可通过 `docker build --build-arg` 传入构建参数。
 - ARG 变量只影响构建过程，不会保留。
-  - 但可以通过 `docker history` 命令查看到，因此不应该通过 ARG 传递敏感信息。
+  - 但可以通过 `docker history` 命令查看其值，因此不应该通过 ARG 传递密码等敏感信息。
 
 ### ENV
 
 ：给容器内 shell 添加一个或多个键值对格式的环境变量。
 - 语法与 ARG 指令相同。
 - ENV 变量会保存到镜像中，并添加到容器内 shell 中。
+
+### LABEL
+
+：给镜像添加一个或多个键值对格式的标签。
+- 语法与 ARG 指令相同。
+- 标签属于 docker 对象的元数据，不会影响容器内进程。
 
 ## 文件
 
@@ -210,45 +232,6 @@
     ENTRYPOINT ["java"]
     CMD ["-jar", "test.jar"]
     ```
-- 例：给容器编写一个 entrypoint.sh 脚本，可实现复杂的启动过程
-  ```dockerfile
-  COPY ./entrypoint.sh /
-  ENTRYPOINT ["/entrypoint.sh"]
-  CMD ["postgres"]
-  ```
-  脚本的内容示例：
-  ```sh
-  #!/bin/bash
-  set -e
-
-  # 如果传入的 CMD 命令即 $@ 中，第一个参数为 postgres ，则进行处理
-  if [ "$1" = 'postgres' ]; then
-      # 分配数据目录的权限
-      chown -R postgres "$DATA_DIR"
-
-      # 如果数据目录为空，则进行初始化
-      if [ -z "$(ls -A "$DATA_DIR")" ]; then
-          gosu postgres initdb
-      fi
-
-      # 以普通用户运行进程，用 $@ 作为进程的启动命令
-      exec gosu postgres "$@"
-  fi
-
-  # 如果 $@ 不匹配以上条件，则直接执行
-  exec "$@"
-  ```
-  - 这里容器会以 root 用户运行 entrypoint.sh 脚本，而脚本以 postgres 用户运行进程，并分配目录权限。
-  - 通过 exec 方式执行命令，会让该命令进程替换当前 shell 进程，作为 1 号进程，且该命令结束时当前 shell 也会退出。
-  - gosu 命令与 sudo 类似，用于以指定用户的身份执行一个命令。
-    - 但 sudo 命令会创建一个子进程去执行，而 gosu 会通过 exec 方式执行。
-
-- 例：在容器内使用 tini 托管进程
-  ```dockerfile
-  RUN wget https://github.com/krallin/tini/releases/download/v0.19.0/tini -O /usr/bin/tini ;\
-      chmod +x /usr/bin/tini
-  ENTRYPOINT ["tini", "--" , "/docker-entrypoint.sh"]
-  ```
 
 ### SHELL
 
@@ -289,17 +272,6 @@
   ```
 
 ## 其它
-
-### LABEL
-
-：给镜像添加一个或多个键值对格式的标签。
-- 标签属于 docker 对象的元数据，不会影响容器内进程。
-- 例：
-  ```sh
-  LABEL maintainer=test \
-        git_refs=master
-  ```
-  - 可以赋值为空。
 
 ### USER
 
@@ -346,6 +318,93 @@
 - 默认值：
   ```sh
   STOPSIGNAL  SIGTERM
+  ```
+
+## 例
+
+- 例：通过多阶段构建一个 Java 镜像
+  ```dockerfile
+  # 多阶段共享的 ARG 变量
+  ARG GIT_REPO=https://github.com/xx/xx.git \
+      GIT_REFS=master
+
+  # 基础阶段。这些配置很少变动，重复构建时应该命中缓存，还可以做成一个基础镜像
+  FROM openjdk:8u312-jre-buster as base_image
+
+  # 定义环境变量
+  ENV USER=test \
+      USER_ID=1000  \
+      WORK_DIR=/opt
+
+  # 创建用户及目录
+  RUN set -eu ;\
+      useradd $USER -u $USER_ID ;\
+      mkdir -p $WORK_DIR ;\
+      chown -R $USER:$USER $WORK_DIR
+
+  # 其它配置
+  USER $USER
+  WORKDIR $WORK_DIR
+  # EXPOSE 80
+  # VOLUME $WORK_DIR/data
+
+  # 构建阶段
+  FROM maven:3.8.4-jdk-8 as build_stage
+  RUN git clone    $GIT_REPO  ;\
+      git checkout $GIT_REFS  ;\
+      mvn clean package
+
+  # 最终阶段
+  FROM base_image
+  LABEL GIT_REPO=$GIT_REPO \
+        GIT_REFS=$GIT_REFS
+  COPY --from=build_stage /root/*/target/*.jar .
+  ENTRYPOINT ["java"]
+  CMD ["-jar", "test.jar"]
+  ```
+
+- 例：给容器编写一个 entrypoint.sh 脚本，可实现复杂的启动过程
+  ```dockerfile
+  ...
+  COPY ./entrypoint.sh /
+  ENTRYPOINT ["/entrypoint.sh"]
+  CMD ["-jar", "test.jar"]
+  ```
+  entrypoint.sh 的内容示例：
+  ```sh
+  #!/bin/bash
+  set -eu
+
+  # 如果传入的 CMD 命令即 $@ 中，第一个参数为 -jar ，则采用正常的启动命令
+  if [ "$1" = '-jar' ]; then
+      # 调整工作目录的权限。该目录可能是挂载目录，因此在容器启动时才能确定权限
+      chown -R $USER "$WORK_DIR"
+
+      # 如果工作目录为空，则进行初始化
+      # if [ -z "$(ls -A "$WORK_DIR")" ]; then
+      #     gosu $USER init.sh
+      # fi
+
+      # 以非 root 用户运行进程，用 $@ 作为进程的启动命令
+      exec gosu $USER "$@"
+  fi
+
+  # 如果 $@ 不匹配以上条件，则直接执行
+  exec "$@"
+  ```
+  - 这里没有通过 USER 指令切换用户，而是先以 root 用户运行 entrypoint.sh 脚本，方便调整目录权限。然后脚本通过 gosu 切换到普通用户，提高安全性。
+  - gosu 命令与 sudo 类似，用于以指定用户的身份执行一个命令。
+    - sudo 命令会创建一个子进程去执行，而 gosu 会通过 exec 方式执行。
+  - 通过 exec 方式执行命令，会让该命令进程替换当前 shell 进程，作为 1 号进程，且该命令结束时当前 shell 也会退出。
+  - entrypoint.sh 调用的环境变量在 Dockerfile 中声明了默认值，也可以在启动容器时修改，例如：docker run -e USER=xx
+
+- 例：使用 tini
+  ```dockerfile
+  ...
+  RUN wget https://github.com/krallin/tini/releases/download/v0.19.0/tini -O /usr/bin/tini ;\
+      chmod +x /usr/bin/tini
+  ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
+  CMD ["-jar", "test.jar"]
   ```
 
 ## 构建镜像
@@ -439,7 +498,7 @@ docker build <PATH>|<URL>
         cat /secret
     ```
 
-### 示例
+### 例
 
 1. 编写一个 Dockerfile ：
     ```dockerfile
@@ -496,7 +555,7 @@ docker build <PATH>|<URL>
           RUN apt update && \
               apt install -y vim && \
               apt clean && \
-              rm -rf /var/lib/apt/lists
+              rm -rf /var/lib/apt/lists/*
           ```
         - 在构建时，使用 shell 的 rm 命令只能删除当前 layer 的文件。不能删除之前 layer 的文件，只是添加一层新的 layer ，覆盖原 layer 中的文件。
 

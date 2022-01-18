@@ -87,12 +87,15 @@ python manage.py
 
                 dbshell               # 打开连接数据库的客户端
                 makemigrations        # 检查 Model 的变化，生成迁移文件
+                    <app_name>...     # 只检查指定应用
                 migrate               # 根据迁移文件修改数据库
                 flush                 # 清空数据库中存储的数据，只保留数据表的结构
 
                 check                 # 检查项目是否存在一些常见问题
                 test                  # 执行所有 tests*.py 文件中的测试用例
 ```
+- Django 会在每个应用目录之下创建 migrations 目录，每次执行 makemigrations 都会生成一个新的迁移文件来修改数据库，记录增量修改的历史。
+  - 建议将 migrations 目录保存到 git 仓库中。
 
 ## 配置项目
 

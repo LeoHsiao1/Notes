@@ -311,21 +311,21 @@ git config
 ### 相关命令
 
 ```sh
-git clone <URL>              # 将一个远端仓库克隆到本地（这会在当前目录下创建该仓库目录）
-# 此时 git 会自动将这个远端仓库命名为 origin ，并让本地的 master 分支跟踪 origin/master 分支
+git clone <URL> [dir]           # 将一个远端仓库克隆到本地，默认是保存到一个与仓库同名的子目录中
+        -b <branch>             # 切换到指定分支，默认是远程仓库的 HEAD 分支
 
-git remote                   # 显示已配置的所有远端仓库的名字
-        -v                   # 显示各个远端仓库的 URL
-        show <name>          # 显示某个远端仓库的具体信息
-        add <name> <URL>     # 添加一个远端仓库，并设置其名字
-        rm <name>            # 删除一个远端仓库
-        rename <name> <name> # 重命名一个远端仓库
+git remote                      # 显示已配置的所有远端仓库的名字
+        -v                      # 显示各个远端仓库的 URL
+        show <name>             # 显示某个远端仓库的具体信息
+        add <name> <URL>        # 添加一个远端仓库，并设置其名字
+        rm <name>               # 删除一个远端仓库
+        rename <name> <name>    # 重命名一个远端仓库
 
-git fetch [name 或 URL]      # 拉取远端仓库的最新内容（包括分支、标签），但只是下载到本地仓库，并不会改变本地分支
-        --all                # 拉取所有远端仓库（默认只是 origin 仓库）
-        --tags               # 拉取标签
+git fetch [name 或 URL]         # 拉取远端仓库的最新内容（包括分支、标签），但只是下载到本地仓库，并不会改变本地分支
+        --all                   # 拉取所有远端仓库（默认只是 origin 仓库）
+        --tags                  # 拉取标签
 
-git pull [name 或 URL]       # 先 fetch 远端仓库，然后将跟踪的远端分支合并到本地分支，但并不会合并到之前不存在的本地分支
+git pull [name 或 URL]          # 先 fetch 远端仓库，然后将跟踪的远端分支合并到本地分支，但并不会合并到之前不存在的本地分支
 
 git push [name 或 URL]          # 推送本地仓库到远端仓库
         --force                 # 强制推送
@@ -334,7 +334,8 @@ git push [name 或 URL]          # 推送本地仓库到远端仓库
         --tags                  # 推送所有标签
         --delete origin <refs>  # 删除远端的分支或标签
 ```
-- 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
+- git clone 之后，默认将远端仓库命名为 origin ，并让本地的 master 分支跟踪 origin/master 分支。
+  - 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
 - 拉取、推送代码时，默认每次都需要输入 git 服务器的账号、密码。
   - 可以在远端仓库的 URL 中写入密码：
     ```sh

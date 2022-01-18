@@ -144,7 +144,7 @@
   ARG var1  \
       var2=value2
   ```
-  - 可以赋值为空。
+  - 可以不赋值，此时值为空。
 - 构建镜像时，可通过 `docker build --build-arg` 传入构建参数。
 - ARG 变量只影响构建过程，不会保留。
   - 可以通过 `docker history` 命令查看 ARG 变量的值，因此不应该通过 ARG 传递密码等敏感信息。可改为读取 secret 文件，或者让最终镜像不继承当前构建阶段。
@@ -158,7 +158,7 @@
 ### LABEL
 
 ：给镜像添加一个或多个键值对格式的标签。
-- 语法与 ARG 指令相同。
+- 语法与 ARG 指令相同，但必须赋值。
 - 标签属于 docker 对象的元数据，不会影响容器内进程。
 
 ## 文件
@@ -329,7 +329,7 @@
       GIT_REFS=master
 
   # 基础阶段。这些配置很少变动，重复构建时应该命中缓存，还可以做成一个基础镜像
-  FROM openjdk:8u312-jre-buster as base_image
+  FROM openjdk:8u312-jre-buster AS base_image
 
   # 定义环境变量
   ENV USER=test \
@@ -349,8 +349,9 @@
   # VOLUME $WORK_DIR/data
 
   # 构建阶段
-  FROM maven:3.8.4-jdk-8 as build_stage
-  RUN git clone    $GIT_REPO  ;\
+  FROM maven:3.8.4-jdk-8 AS builder
+  WORKDIR $WORK_DIR
+  RUN git clone $GIT_REPO .   ;\
       git checkout $GIT_REFS  ;\
       mvn clean package
 
@@ -358,7 +359,7 @@
   FROM base_image
   LABEL GIT_REPO=$GIT_REPO \
         GIT_REFS=$GIT_REFS
-  COPY --from=build_stage /root/*/target/*.jar .
+  COPY --from=builder /root/*/target/*.jar .
   ENTRYPOINT ["java"]
   CMD ["-jar", "test.jar"]
   ```
@@ -415,7 +416,7 @@
 docker build <PATH>|<URL>
             -f <file>                   # Dockerfile 的路径，默认为 <dir>/Dockerfile
             -t <image>[:tag]            # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
-            --build-arg VERSION="1.0"   # 传入构建参数
+            --build-arg VERSION="1.0"   # 传入 ARG 构建参数。可多次使用该选项，每次只能传入一个键值对
             --target <stage>            # 执行完某个阶段就停止构建
             --network <name>            # 设置中间容器使用的网络
             --no-cache                  # 构建时不使用缓存

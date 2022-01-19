@@ -191,6 +191,18 @@ volumes:                      # 所有挂载的数据卷都必须在此定义。
       done
       python3 run.py
   ```
+- compose 文件中支持引用环境变量，例如：
+  ```yml
+  version: '3'
+
+  services:
+    redis:
+      image: redis:${IMAGE_TAG}
+      environment:
+        var1: $var1
+  ```
+  - 执行 docker-compose 命令时，会尝试在当前 shell 或 ./.env 文件中读取同名的环境变量，如果不存在则取值为空。
+
 - docker-compose 会自动给容器添加一些 labels ，例如：
   ```sh
   com.docker.compose.config-hash         : "fcd1bc82cbd8c940c0f6b5bc9c053914332bc3a8a2f4d51b46924feb0e7c05b7"

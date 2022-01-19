@@ -29,11 +29,9 @@
 
 ## 变量
 
-### 定义变量
+### echo 命令
 
 ```batch
-D:\>set x=1           :: 定义变量
-
 D:\>echo %x%          :: 用百分号作为变量的定界符，进行取值
 1
 
@@ -44,8 +42,6 @@ D:\>echo %y%          :: 如果变量不存在，则取值符号不会生效
 ### set 命令
 
 ```batch
-D:\>set x=1           :: 定义变量
-
 D:\>set               :: 查询所有环境变量
 ALLUSERSPROFILE=C:\ProgramData
 APPDATA=C:\Users\Leo\AppData\Roaming
@@ -54,6 +50,8 @@ CommonProgramFiles=C:\Program Files\Common Files
 
 D:\>set x             :: 查询以 x 开头的所有环境变量
 x=1
+
+D:\>set x=1           :: 定义变量
 
 D:\>set x=            :: 给变量赋值为空，会删除该变量
 
@@ -68,7 +66,7 @@ D:\>set x
   D:\>echo __%A%__
   __Hello World    :: test__  :: 赋值的字符串包括了尾部的空字符、注释。可以用 set A=%A: =% 过滤空格
   ```
- 
+
 - 使用 /a 选项时，会将赋值表达式当做算术表达式处理，并在赋值的同时打印出算术值。
   ```batch
   D:\>set /a x=1*2%3

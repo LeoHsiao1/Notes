@@ -154,21 +154,20 @@ route:
 route 块定义了分组处理警报的规则，如下：
 ```yaml
 route:
-  receiver: email_to_leo          # 只能指定一个接收方
+  receiver: email_to_leo            # 只能指定一个接收方
   group_wait: 1m
   group_interval: 1m
   repeat_interval: 24h
-  group_by:                       # 根据标签的值对已匹配的警报进行分组（默认不会分组）
+  group_by:                         # 根据标签的值对已匹配的警报进行分组（默认不会分组）
     - alertname
   routes:
   - receiver: webhook_to_leo
     # group_by:
     #   - alertname
-    match:                        # 符合这些 label:value 条件的警报才算匹配
-      job: prometheus
-    match_re:                     # 采用正则匹配。不过需要完全匹配，而不是部分匹配
-      job: prometheus|grafana
-      instance: 10.0.0.*
+    matchers:                       # 筛选出同时匹配以下 PromQL 条件的警报，如果 matchers 列表为空则选中所有警报
+      - job = prometheus            # 可选在运算符左右加空格
+      - instance =~ 10.0.0.*        # 可选加上字符串定界符
+      - '{alertname !~ "进程停止"}'  # 可选加上字符串定界符、花括号 {}
     # continue: false
   - receiver: xxx
     ...
@@ -217,23 +216,22 @@ route:
 例：
 ```yaml
 inhibit_rules:
-- source_match:
-    severity: error
-  target_match:
-    severity: warn
+- source_matchers:
+  - severity = error
+  target_matchers:
+  - severity = warn
   equal:
   - alertname
   - instance
-- source_match:
-    alertname: target 离线
-    job: node_exporter
-  target_match:
+
+- source_matchers:
+    - alertname = target 离线
+    - job = node_exporter
+  target_matchers:
   equal:
   - nodename
 ```
-- 工作原理： Alertmanager 会先根据 source_match 指定的 label:value 选中一些警报，再根据 target_match 选中一些警报。如果 source 警报存在，则抑制与它 equal 标签值相同的 target 警报。
-  - 如果改为 source_match_re、target_match_re ，则是对 label 的 value 进行正则匹配。
-  - 如果 source_match、target_match 列表为空，则是选中所有警报。
+- 工作原理： Alertmanager 会先根据 source_matchers 指定的 label:value 选中一些警报，再根据 target_matchers 选中一些警报。如果 source 警报存在，则抑制与它 equal 标签值相同的 target 警报。
   - 如果 equal 列表为空，或者 source 警报与 target 警报都不具有 equal 标签（此时相当于它们的该标签值都为空），则抑制所有 target 警报。
   - 如果 target 警报与 source 警报相同，并不会抑制 source 警报本身。
 - 上例中，第一条抑制规则的作用是：当出现 severity 为 error 的警报时，抑制与它同类型、但 severity 为 warn 的其它警报。

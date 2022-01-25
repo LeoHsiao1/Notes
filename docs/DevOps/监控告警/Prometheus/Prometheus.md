@@ -259,9 +259,9 @@ scrape_configs:
         "endsAt": "0001-01-01T00:00:00Z"
     }
     ```
-- 当异常开始时，Prometheus 会产生 `"status": "firing"` 的警报；当异常结束时，还会产生 `"status": "resolved"` 的警报。
-  - 在 fring 类型的警报中，"endsAt" 是无意义的值，比如 "0001-01-01T00:00:00Z" 。
-  - 在 resolved 类型的警报中，才会给 "endsAt" 设置有意义的值。
+- 当异常开始时，Prometheus 会产生 `"status": "firing"` 的警报。当异常结束时，还会产生 `"status": "resolved"` 的警报。
+  - startsAt 参数表示警报的开始时间，但根据 alerting_rules ，可能等监控指标持续异常一段时间之后才产生警报。
+  - resolved 类型的警报中，会增加一个 endsAt 参数。
 
 - 在 Web 页面上可以看到 Alerting Rules 的状态：
   - 不满足告警条件时，属于 Inactive 状态。

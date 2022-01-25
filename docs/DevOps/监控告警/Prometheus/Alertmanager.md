@@ -164,7 +164,7 @@ route:
   - receiver: webhook_to_leo
     # group_by:
     #   - alertname
-    matchers:                       # 筛选出同时匹配以下 PromQL 条件的警报，如果 matchers 列表为空则选中所有警报
+    matchers:                       # 筛选出目标警报，需要其 labels 同时匹配以下 PromQL 条件，如果 matchers 列表为空则选出所有警报。不支持匹配 annotations
       - job = prometheus            # 可选在运算符左右加空格
       - instance =~ 10.0.0.*        # 可选加上字符串定界符
       - '{alertname !~ "进程停止"}'  # 可选加上字符串定界符、花括号 {}

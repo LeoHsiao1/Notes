@@ -50,12 +50,9 @@ git log                   # 显示 git 仓库的 commit 日志（按时间倒序
         -n                # 只显示 n 个 commit
         --show-signature  # 增加显示 GPG 签名
 
-git diff                  # 比较当前仓库与上一次 add 或 commit 的差异
-        --cached          # 比较上一次 add 与上一次 commit 的差异
-        branch1           # 比较当前仓库与某个分支的差异
-        branch1 branch2   # 比较两个分支的差异
+git diff <refs> <refs>    # 比较两个版本的差异，包括差异的文件、文件内增删的每行
         --stat            # 只显示统计信息
-        <file>            # 只比较某个文件的差异
+        --name-only       # 只显示差异的文件列表
 ```
 
 ### 修改

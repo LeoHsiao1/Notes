@@ -22,13 +22,26 @@
   services:
     nacos:
       container_name: nacos
-      image: nacos/nacos-server:v2.0.3
+      image: nacos/nacos-server:v2.0.4
       restart: unless-stopped
       environment:
         MODE: standalone
+        # JVM_XMS: 1g
+        # JVM_XMX: 1g
       ports:
         - 8848:8848
   ```
+  - Nacos 默认将数据存储在自己目录中，可配置以下环境变量，将数据存储到 MySQL 中：
+    ```yml
+    SPRING_DATASOURCE_PLATFORM: mysql
+    MYSQL_SERVICE_HOST: 10.0.0.1
+    MYSQL_SERVICE_PORT: 3306
+    MYSQL_SERVICE_USER: nacos
+    MYSQL_SERVICE_PASSWORD: ******
+    MYSQL_SERVICE_DB_NAME: nacos
+    MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
+    ```
+    需要执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/master/distribution/conf/nacos-mysql.sql)
 
 ## Web 页面
 

@@ -30,7 +30,7 @@ MySQL 存在多个分支：
     - 实现 DDL 操作的原子性。
     - 密码的存储方式从 mysql_native_password 改为 caching_sha2_password 。老版本的客户端可能不兼容，导致不能登录。可以修改存储方式：
       ```sh
-      ALTER USER 'test'@'%' IDENTIFIED WITH mysql_native_password BY '******';
+      ALTER USER test@'%' IDENTIFIED WITH mysql_native_password BY '******';
       ```
 
 - MariaDB

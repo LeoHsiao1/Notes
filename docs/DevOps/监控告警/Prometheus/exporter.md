@@ -810,8 +810,8 @@
   ```
   - 需要在 MySQL 中创建一个 exporter 用户：
     ```sql
-    CREATE USER 'exporter'@'%' IDENTIFIED BY '******';
-    GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'exporter'@'%';
+    CREATE USER exporter@'%' IDENTIFIED BY '******';
+    GRANT PROCESS, REPLICATION CLIENT ON *.* TO exporter@'%';
     ```
 
 - 指标示例：

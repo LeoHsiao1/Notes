@@ -188,7 +188,7 @@ Content-Type: text/html; charset=utf-8
   Age: 2183                                     # 表示该响应报文来自代理服务器的缓存，这是该缓存的存在时长
 
   Cache-Control: max-age=0                      # 缓存策略
-  Expires: Wed, 17 Jul 2019 14:00:00 GMT        # 该响应的过期时刻，过期之前客户端应该使用本地缓存，过期之后再重新请求
+  Expires: Wed, 17 Jul 2019 14:00:00 GMT        # 该响应的过期时刻，采用 GMT 时区。过期之前建议客户端使用本地缓存，过期之后再重新请求
 
   Last-Modified: Fri, 5 Jun 2019 12:00:00 GMT   # 该响应报文 body 最后一次修改的时刻（用于判断内容是否变化）
   ETag: 5edd15a5-e42                            # 响应 body 的标签值（用于判断内容是否变化，比 Last-Modified 更准确）

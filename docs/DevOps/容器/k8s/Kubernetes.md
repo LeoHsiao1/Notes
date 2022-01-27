@@ -52,7 +52,7 @@
       - 创建、监控、管理 Pod ，基于容器运行时。
     - 默认监听 10250 端口。
   - kube-proxy
-    - ：负责管理节点的逻辑网络。如果节点收到一个发向某个 Pod 的网络包，则自动转发给该 Pod 。
+    - ：负责管理节点的逻辑网络，基于 iptables 规则。如果节点收到一个发向某个 Pod 的网络包，则自动转发给该 Pod 。
   <!-- - coredns -->
   <!-- - storage-provisioner -->
   <!-- pause -->
@@ -70,7 +70,7 @@
   - Namespace
     - ：命名空间，用于隔离某些资源，又称为项目（project）。
       - 不同命名空间下的 Pod、Service 相互隔离。
-      - Node、StorageClass、PersistentVolumes 不受命名空间影响。
+      - Node、IP、StorageClass、PersistentVolumes 不受命名空间影响。
       - 可执行 `kubectl api-resources --namespaced=true` 查看所有被命名空间影响的资源。
     - 一个 k8s 中可以创建多个命名空间。初始有四个：
       ```sh
@@ -96,7 +96,7 @@
   - 配置文件可以是 JSON 或 YAML 格式。
 - 配置文件的一般结构：
   ```yml
-  apiVersion: v1         # 与 kube-apiserver 交互时，采用的 API 版本
+  apiVersion: v1              # 与 kube-apiserver 交互时，采用的 API 版本
   kind: <sting>               # 对象的类型
   metadata:                   # 对象的元数据
     name: <sting>             # 名称

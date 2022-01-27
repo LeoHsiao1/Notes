@@ -26,13 +26,17 @@ k8s 常见的几种网络通信：
 ：一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
-<!-- 当您创建一个服务时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。 -->
+<!-- 当您创建一个服务时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
+考虑到云平台提供的 LoadBalancer 会收费，用户也可自行部署一个 Nginx ，根据不同的 DNS 子域名或端口，转发到不同的 Service ClusterIP
+
+不同 namespace 下的 pod、service 相互隔离，因此不能 dns 解析其它命名空间的 service ，但可以通过 Pod IP、 clusterIP 访问。
+-->
 
 ### ClusterIP
 
 ：默认的 Service 类型，是给 Service 分配一个集群内的虚拟 IP 。
 - 访问 ClusterIP:Port 的流量会被转发到 EndPoint 。
-  - 在集群内节点上，才能访问 ClusterIP 。在集群外节点上，则访问不到，需要使用 LoadBalancer 等类型的 Service 。
+  - 在集群内节点上，才能访问 ClusterIP 。从集群外则访问不到，需要使用 LoadBalancer 等类型的 Service 。
 - Service 的配置文件通常命名为 service.yml ，内容示例如下：
   ```yml
   apiVersion: v1
@@ -85,8 +89,9 @@ k8s 常见的几种网络通信：
 
 ：给 Service 分配一个负载均衡 IP 。
 - 访问 `loadBalancerIP:Port` 的流量会被转发到 EndPoint 。
-- 需要创建负载均衡器，公有云通常会提供，还可能收费。
-  - loadBalancerIP 可以是集群内 IP 或集群外 IP 、公网 IP 。
+- 一般需要购买公有云平台的负载均衡器，将其接收的流量代理到 Service。
+  - LB 位于集群之外，不受防火墙限制。
+  - LB 可以使用内网 IP 或公网 IP 。
 - 例：
   ```yml
   spec:

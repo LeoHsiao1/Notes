@@ -18,9 +18,17 @@ Docker 中的 Volume 概念比较简单，只是挂载宿主机的目录到容�
 - 一个存储类（Volume Class）上可以创建多个 PV 。
 
 PV 的访问模式：
-- ReadWriteOnce ：该卷可以被单主机读写
-- ReadOnlyMany ：该卷可以被多主机只读
-- ReadWriteMany ：该卷可以被多主机读写
+- ReadWriteOnce ：被单主机读写。如果多个 Pod 运行在同一主机，则可以同时读写。
+- ReadOnlyMany ：被多主机只读
+- ReadWriteMany ：被多主机读写
+- ReadWriteOncePod ：在 ReadWriteOnce 的基础上，限制了只能被单个 Pod 读写。
+
+
+<!-- PVC 可以配置多个 accessMode ，比如：
+  accessModes:
+  - ReadWriteOnce
+  - ReadOnlyMany
+可以将磁盘挂载到 ReadOnlyMany (AKA ROX) 中的多个 Pod，但一次只有一个 Pod 可以以 ReadWriteOnce 模式 (AKA RWO)使用该磁盘 -->
 
 ## PersistentVolumeClaim（PVC）
 

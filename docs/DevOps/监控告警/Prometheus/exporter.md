@@ -402,6 +402,7 @@
             # --prometheus_endpoint  /metrics
             --docker_only=true    # 不输出 raw cgourp 的指标，除了 root gourp ，即 id="/"
   ```
+  - 它依赖版本较新的 glibc 库，因此建议运行官方 Docker 镜像。
 - 它提供了 Web 监控页面，默认只允许从 localhost 访问，可以加上 HTTP Basic Auth 后公开：
   ```sh
   htpasswd -cb passwd admin 123456

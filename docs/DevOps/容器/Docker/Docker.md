@@ -32,7 +32,7 @@
 - dockerd 的配置文件默认位于 `/etc/docker/daemon.json` ，且默认未创建。内容示例：
   ```json
   {
-    // dockerd 的配置
+    // dockerd 配置
     // "containerd": "/run/containerd/containerd.sock",
     // "containerd-namespace": "docker",
     // "data-root": "/var/lib/docker",        // dockerd 的数据目录
@@ -42,18 +42,23 @@
     "live-restore": true,                     // 当 dockerd 终止时，是否保持容器运行。默认为 false ，建议启用，方便重启 dockerd
     // "oom-score-adjust": -500,              // dockerd 的 oom_score_adj
     // "selinux-enabled": false,
+    "registry-mirrors": [           // docker 默认采用官方镜像仓库 docker.io ，这里可添加对该仓库的镜像代理，需要部署官方 registry 服务器。只能 pull 不能 push ，不支持代理第三方仓库
+        "https://harbor.test.com"
+    ],
+
+    // 网络配置
+    // "bridge": "bridge",          // 新建容器时采用的 docker network 。默认为 bridge ，改为 none 则无网络
+    "default-address-pools": [      // docker network 的子网范围，默认为 172.[17-31].0.0/16 和 192.168.[0-240].0/20
+      {
+        "base": "172.20.0.0/16",    // 可在该范围创建子网，比如 172.20.0.0/24、172.20.1.0/24
+        "size": 24                  // 子网掩码的长度，增加其值有利于创建更多子网
+      }
+    ],
+    // "ip-forward": true,          // 是否开启 net.ipv4.ip_forward
+    // "ip-masq": true,             // 是否自动配置 iptables 规则来实现 masquerade ，使得只有私有 IP 的容器能够与其它主机通信
+    // "iptables": true,            // 是否允许 dockerd 自动配置 iptables 规则来维护容器网络
 
     // 创建容器时的默认配置。修改这些配置不会影响已创建的容器，只会影响到新创建的容器
-    // "default-address-pools": [   // docker network 的子网范围，默认为 172.[17-31].0.0/16 和 192.168.[0-240].0/20
-    //   {
-    //     "base": "172.20.0.0/16", // 可在该范围创建子网，比如 172.20.0.0/24、172.20.1.0/24
-    //     "size": 24               // 子网掩码的长度，增加其值有利于创建更多子网
-    //   },
-    //   {
-    //     "base": "172.21.0.0/16",
-    //     "size": 24
-    //   }
-    // ],
     // "default-runtime": "runc",
     // "default-shm-size": "64M",
     // "default-ulimits": {

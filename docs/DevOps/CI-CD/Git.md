@@ -58,16 +58,19 @@ git diff <refs> <refs>    # 比较两个版本的差异，包括差异的文件�
 ### 修改
 
 ```sh
-git add <file>                  # 将文件加入缓存区（只会加入与上一版本哈希值不同的文件）
-git add .                       # 将当前目录下所有文件加入缓存区
+git add <path>...               # 将指定文件加入缓存区。如果指定一个目录，则递归加入其下所有文件
+        -u                      # 如果有文件不匹配 path ，但已被 git 管理，则也加入缓存区。与 git add . 相比，git add -u 能发现已删除的文件，但不能发现新增的文件
+        -A                      # 相当于 git add . 加 git add -u
 git rm <file>                   # 删除某个文件
       --cached                  # 从缓存区删除
 git mv <src_file> <dst_file>    # 移动文件
 
 git rev-parse --show-toplevel   # 返回 Git 项目的顶级目录
 ```
-- 被修改的文件建议先加入 git 缓存区，以便之后提交成一个版本，永久保存到 git 仓库中。也可以不加入缓存区就直接提交版本。
-- 用 git rm/mv 做出的改动会自动加入缓存区。
+- 被修改的文件建议先加入 git 缓存区（stage），以便之后提交成一个版本，永久保存到 git 仓库中。
+  - 也可以不加入缓存区就直接 git commit 。
+  - 如果一个文件相对上一版本未被改动，或者被 .gitignore 文件忽略，则不会添加到缓存区。
+  - 用 git rm/mv 做出的改动会自动加入缓存区。
 - 在 Windows 上重命名一个文件时，如果只是改变了文件名的大小写，git 默认不会发现该改动，此时建议通过 git mv 重命名文件。
 
 ### 提交
@@ -79,7 +82,7 @@ git commit                      # 将当前缓存区的所有文件提交为一�
           --amend               # 将当前的缓存区合并到上一个版本（不过时间戳依然是上一个版本的）
           -S                    # 添加 GPG 签名
 ```
-- 每次提交一个版本时，会自动生成一个 SHA-1 哈希值，作为 commit ID、version name 。如下：
+- 每提交一个版本时，会自动生成一个 SHA-1 哈希值，作为 commit ID、version name 。如下：
 	```sh
 	commit 86e696bd125aa895e067c2216ae8298289ab94d6
 	Author: Leo <leohsiao@foxmail.com>
@@ -247,8 +250,8 @@ git config
           --global      # 使用当前用户的配置文件
           --local       # 使用当前 git 仓库的配置文件
 
-          -l            # 显示配置文件的全部内容
-          -e            # 在文本编辑器中打开配置文件
+          -l            # --list ，显示配置文件的全部内容
+          -e            # --edit ，在文本编辑器中打开配置文件
 
           <key>         # 显示配置文件中某项参数的值
           <key> <value> # 设置配置文件中某项参数的值

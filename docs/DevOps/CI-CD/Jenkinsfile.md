@@ -364,40 +364,44 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 
 ### checkout
 
-：用于拉取代码。
-- 例：从 Git 仓库拉取代码
+：用于拉取代码仓库。
+- 例：拉取 Git 仓库
   ```groovy
-  script {
-      checkout([
-          $class: 'GitSCM',
-          branches: [[name: "$BRANCH"]],                    // 切换到指定的分支，也可以填 tag 或 commit ID
-          extensions: [
-                        [$class: 'CleanBeforeCheckout'],    // 清理项目文件，默认启用。相当于 git clean -dfx 加 git reset --hard
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: '.'] // 本地仓库的保存目录，默认为 .
-                      ],
-          userRemoteConfigs: [[
-                      credentialsId: "credential_for_git",  // 登录 git 服务器的凭据，为 Username With Password 类型
-                      url: "$repository_url"                // git 远程仓库的地址
-                      ]]
-      ])
+  checkout([
+      $class: 'GitSCM',
+      branches: [[name: "$BRANCH"]],    // 切换到指定的分支，也可以填 tag 或 commit ID
+      extensions: [
+      [$class: 'CleanBeforeCheckout'],  // 清理项目文件，默认启用。相当于 git clean -dfx 加 git reset --hard
+      [$class: 'RelativeTargetDirectory', relativeTargetDir: '.'] // 本地仓库的保存目录，默认为 .
+      ],
+      userRemoteConfigs: [[
+      credentialsId: "account_for_git", // 登录 git 服务器的凭据，为 Username With Password 类型
+      url: "$repository_url"            // git 远程仓库的地址
+      ]]
+  ])
+  ```
+  也可主动执行 git 命令：
+  ```groovy
+  withCredentials([gitUsernamePassword(credentialsId:'account_for_git')]){  // 这会自动绑定 git 账号密码到环境变量 GIT_USERNAME、GIT_PASSWORD
+      sh """
+          git clone $repository_url
+      """
   }
   ```
 
-- 例：从 SVN 仓库拉取代码
+- 例：拉取 SVN 仓库
   ```groovy
-  script {
-      checkout([
-          $class: 'SubversionSCM',
-          locations: [[
-              remote: "$repository_url"
-              credentialsId: 'credential_for_svn',
-              local: '.',                               // 本地仓库的保存目录，默认是创建一个与 SVN 最后一段路径同名的子目录
-              // depthOption: 'infinity',               // 拉取的目录深度，默认是无限深
-          ]],
-          quietOperation: true,                         // 不显示拉取代码的过程
-          workspaceUpdater: [$class: 'UpdateUpdater']   // 使本地目录更新到最新版本
-      ])
-  }
+  checkout([
+      $class: 'SubversionSCM',
+      locations: [[
+          remote: "$repository_url"
+          credentialsId: 'account_for_svn',
+          local: '.',                               // 本地仓库的保存目录，默认是创建一个与 SVN 最后一段路径同名的子目录
+          // depthOption: 'infinity',               // 拉取的目录深度，默认是无限深
+      ]],
+      quietOperation: true,                         // 不显示拉取代码的过程
+      workspaceUpdater: [$class: 'UpdateUpdater']   // 使本地目录更新到最新版本
+  ])
   ```
 
 ### echo

@@ -73,6 +73,7 @@
   - 先将该 Job 加入构建队列，等待分配某个 node 上的一个执行器（executor）。
     - 如果没有可用的 executor ，则在构建队列中阻塞该 Job 。
     - 如果构建队列中已存在相同的 build 任务（配置、构建参数相同），则不会将当前任务加入构建队列，甚至不会占用 Build ID 。
+    - 通过 API 或上游 job 触发一个 job 时，会在构建队列中等待一段时间才执行，称为静默期。如果在静默期内多次触发该 job ，则会被构建队列自动去重。
   - 默认将当前节点的 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
     - 执行 Job 之前、之后都不会自动清空工作目录，建议用户主动清理。
     - 如果将一个 Job 并发执行多个实例，则生成的工作目录会自动添加 @1、@2 格式的后缀。
@@ -177,7 +178,10 @@
 - Extended Choice Parameter
   - 提供了单选框、复选框、单选按钮、多选按钮类型的输入参数。
 - Generic Webhook Trigger
-  - 支持以 webhook 的方式触发 Jenkins 的 Job ，需要在 Job 的配置页面定义。通过 token 指定 Job ，可以通过请求字符串或 POST body 输入参数，例如：`curl http://10.0.0.1:8080/generic-webhook-trigger/invoke?token=Sqeuu90VF0TE&action=start`
+  - 支持以 webhook 的方式触发 Jenkins 的 Job ，需要在 Job 的配置页面定义。通过 token 指定 Job ，可以通过请求字符串或 POST body 输入参数（区分大小写），如下：
+    ```sh
+    curl http://10.0.0.1:8080/generic-webhook-trigger/invoke?token=Sqeuu90VF0TE&ACTION=start
+    ```
 - Email Extension Plugin
   - 支持 Jenkins 发送邮件给用户。
   - Jenkins 自带的邮件通知功能比较简陋，不推荐使用。

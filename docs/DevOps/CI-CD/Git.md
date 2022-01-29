@@ -46,7 +46,7 @@
 ```sh
 git status                # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
 
-git log                   # 显示 git 仓库的 commit 日志（按时间倒序），这会打开一个文本阅读器
+git log [refs] [path]     # 显示 commit 历史日志（按时间倒序），不指定 refs 则选中当前版本，不指定 path 则选中所有文件
         -n                # 只显示 n 个 commit
         --show-signature  # 增加显示 GPG 签名
 
@@ -67,7 +67,7 @@ git mv <src_file> <dst_file>    # 移动文件
 
 git rev-parse --show-toplevel   # 返回 Git 项目的顶级目录
 ```
-- 被修改的文件建议先加入 git 缓存区（stage），以便之后提交成一个版本，永久保存到 git 仓库中。
+- 被修改的文件建议先加入 git 缓存区（称为 stage、index），以便之后提交成一个版本，永久保存到 git 仓库中。
   - 也可以不加入缓存区就直接 git commit 。
   - 如果一个文件相对上一版本未被改动，或者被 .gitignore 文件忽略，则不会添加到缓存区。
   - 用 git rm/mv 做出的改动会自动加入缓存区。
@@ -99,22 +99,26 @@ git clean [path]...     # 删除指定目录（默认为当前目录）下，所
           -x            # 将 .gitignore 中记录的文件也删除
           -e <pattern>  # --exclude ，排除一些文件，不删除
 
-git reset [version]     # 将当前分支指向目标版本（默认是最近一个版本）。如果与目标版本之间的所有历史版本没有被其它 branch 或 tag 使用，就可能被删除
-          --soft        # 不改变工作目录的文件，也不删掉历史版本，相当于将当前分支 checkout 到目标版本。不过一旦提交新版本，就会删掉历史版本
-          --mixed       # 不改变工作目录的文件，只是删掉历史版本。此时将当前文件提交，就又得到了历史最高版本
-          --hard        # 将工作目录的文件回滚到目标版本的状态（只改变受版本控制的文件），并删掉历史版本
+git reset [refs]        # 将当前分支指向目标版本（默认是最近一个版本）
+          --soft        # 不改变工作目录的文件（即依然处于原版本），将与目标版本不同的所有文件添加到缓存区
+          --mixed       # 不改变工作目录的文件，清空缓存区。默认采用该方式
+          --hard        # 改变工作目录的文件（即变为目标版本），并清空缓存区
 
-git revert [version]    # 自动新建一个版本来抵消某个版本的变化（这样不会删除历史版本）
+git revert <refs>...    # 自动提交一个新版本来抵消某个历史版本的变化（这样不会删除历史版本）
+          -n            # --no-commit ，只是修改文件并加入缓存区，不自动提交。默认会为撤销的每个历史版本，提交一个新版本
 ```
-- 不受 git 版本控制的文件主要有两种：
-  - 新增的文件，尚未加入版本控制。
-  - 被 .gitignore 忽略的文件。
-- 例：复位整个项目的文件
+- 撤销文件的常用命令：
   ```sh
-  git clean -dfx
-  git reset --hard
+  git checkout .            # 将文件复原到当前版本
+
+  git clean -dfx            # 清理未被版本控制的文件
+  git reset --hard          # 复原项目文件，清空缓存区
+
+  git revert HEAD           # 撤销最近一个版本
+  git revert HEAD~5..HEAD   # 撤销一连串版本，即还原到 HEAD~5 版本
   ```
-- 从 git 仓库的所有版本中永久性地删除某个文件：
+  - 通过 git checkout 可以将 HEAD 分支切换到历史版本，此时可新建分支来修改。而通过 git revert 可以将文件还原到历史版本，可作为新版本提交，继续在当前分支工作。
+- 从 git 仓库的所有版本中永久删除某个文件：
   ```sh
   git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch <文件的相对路径>' --prune-empty --tag-name-filter cat -- --all
   git push origin --force --all --tags    # 强制推送，覆盖远端仓库
@@ -122,22 +126,25 @@ git revert [version]    # 自动新建一个版本来抵消某个版本的变化
 
 ### .gitignore
 
-可以在项目根目录下创建一个 .gitignore 文件，声明一些文件让 git 不进行版本控制。如下：
-```sh
-/test.py        # 忽略项目根目录下的指定文件
-/log/*.log      # 忽略 log 目录下的一些文件
-__pycache__/    # 忽略所有目录下的指定目录
-```
-- .gitignore 根据文件相对于项目根目录的完整路径进行匹配，可以使用通配符 * 、? 。
-- 以 / 开头的路径，是从项目根目录开始，匹配方向是明确的。不以 / 开头的路径，可能匹配到多个目录下的文件。
-- 以 / 结尾的路径，是强调匹配目录，不匹配文件。
+- 不受 git 版本控制的文件主要有两种：
+  - 新增的文件，尚未加入版本控制。
+  - 被 .gitignore 忽略的文件。
+- 可以在项目根目录下创建一个 .gitignore 文件，声明一些文件让 git 不进行版本控制。如下：
+  ```sh
+  /test.py        # 忽略项目根目录下的指定文件
+  /log/*.log      # 忽略 log 目录下的一些文件
+  __pycache__/    # 忽略所有目录下的指定目录
+  ```
+  - .gitignore 根据文件相对于项目根目录的完整路径进行匹配，可以使用通配符 * 、? 。
+  - 以 / 开头的路径，是从项目根目录开始，匹配方向是明确的。不以 / 开头的路径，可能匹配到多个目录下的文件。
+  - 以 / 结尾的路径，是强调匹配目录，不匹配文件。
 
 ## 引用
 
 - 因为 commit 版本的哈希值不方便记忆，git 支持创建以下几种引用（Reference ，refs），用于指向某个版本。
   - 分支（branch）：指向某个版本，且可以随时改为指向其它版本，相当于指针。常见分支：
     - master ：git 仓库初始化时，默认创建的一个分支，通常用作主分支。
-    - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。
+    - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。还可通过 HEAD~n 的格式指向倒数第 n 个版本，比如 HEAD~0 相当于 HEAD 。
   - 标签（tag）：指向某个版本，且创建之后不能改为指向其它版本，相当于某个版本的别名。
 
 ### branch
@@ -154,11 +161,12 @@ git branch          # 显示所有本地分支
 
 ```sh
 git checkout
-        <refs>      # 切换到某个 refs 指向的版本
-          -b        # 声明 refs 是一个分支，如果它不存在则自动创建它，再切换过去
-        -- <file> 	# 将某个文件恢复到上一次 add 或 commit 的状态
-        .           # 将当前目录的所有文件恢复到上一次 add 或 commit 的状态
+        [refs]          # 将当前分支切换到某个 refs 指向的版本，如果不指定则选中当前版本
+              <path>... # 不切换，而是将指定路径的文件改为目标版本的状态
+        -b <branch>     # 切换到指定分支，如果该分支不存在则自动创建
+              <refs>    # 切换分支之后，再将该分支切换到 refs 版本
 ```
+- 如果用 `git checkout` 切换到一个 tag 或 commit ，则不会绑定分支，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
 
 ### tag
 
@@ -167,7 +175,6 @@ git tag                 # 显示已有的所有标签
         -a v1.0 9fceb02 # 给版本 9fceb02 加上标签 v1.0
         -d <tagName>    # 删除一个标签
 ```
-- 执行 `git checkout <tagName>` 之后，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
 
 ### merge
 
@@ -215,7 +222,7 @@ git rebase
 ### cherry-pick
 
 ```sh
-git cherry-pick <commit_hash>...  # 将指定的多个 commit 的修改内容提交到当前分支
+git cherry-pick <commit_hash>...  # 将指定的多个 commit 的修改内容提交到当前分支，支持提交到其它 Git 仓库
         -n                        # 只更新文件，不提交
 ```
 

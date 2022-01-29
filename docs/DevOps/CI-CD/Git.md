@@ -50,9 +50,11 @@ git log [refs] [path]     # 显示 commit 历史日志（按时间倒序），�
         -n                # 只显示 n 个 commit
         --show-signature  # 增加显示 GPG 签名
 
-git diff <refs> <refs>    # 比较两个版本的差异，包括差异的文件、文件内增删的每行
-        --stat            # 只显示统计信息
-        --name-only       # 只显示差异的文件列表
+git diff <refs> <refs>    # 显示从第一个版本到第二个版本的差异，包括差异文件、文件内增删的每行
+        --stat            # 只显示统计信息，包括差异文件列表、增减的行数
+        --name-status     # 只显示差异文件列表、文件动作的缩写（比如 A 新增、D 删除、M 修改、R 重命名）
+        --name-only       # 只显示差异文件列表
+        --no-renames      # 不自动识别 rename 动作，直接显示 create、delete
 ```
 
 ### 修改

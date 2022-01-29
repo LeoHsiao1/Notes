@@ -499,7 +499,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   ```groovy
   script {
       STDOUT = sh(script: 'echo hello', returnStdout: true).trim()
-      EXIT_CODE = sh(script: 'echo hello', returnStatus: true).trim()
+      EXIT_CODE = sh(script: 'echo hello', returnStatus: true)
       echo "$STDOUT"
       echo "$EXIT_CODE"
   }
@@ -749,9 +749,10 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
           environment name: 'A', value: '1'
           environment name: 'B', value: '2'
       }
-      branch 'dev'            // when{} 子句中的多个条件默认为 allOf{} 的关系
+      // when{} 子句中的多个条件默认为 allOf{} 的关系
   }
   ```
+  - environment 表达式只能处理环境变量，而 expression{} 能处理环境变量、普通变量。
 
 ## input{}
 

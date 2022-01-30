@@ -28,7 +28,10 @@ PV 的访问模式：
   accessModes:
   - ReadWriteOnce
   - ReadOnlyMany
-可以将磁盘挂载到 ReadOnlyMany (AKA ROX) 中的多个 Pod，但一次只有一个 Pod 可以以 ReadWriteOnce 模式 (AKA RWO)使用该磁盘 -->
+可以将磁盘挂载到 ReadOnlyMany (AKA ROX) 中的多个 Pod，但一次只有一个 Pod 可以以 ReadWriteOnce 模式 (AKA RWO)使用该磁盘
+
+给 Pod 挂载云磁盘时，会自动将云磁盘挂载到 Pod 的宿主机，再挂载到容器里。
+-->
 
 ## PersistentVolumeClaim（PVC）
 

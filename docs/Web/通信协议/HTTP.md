@@ -159,8 +159,8 @@ ie=UTF-8&wd=1
   Accept-Encoding: gzip,deflate               # 客户端能接受的响应 body 压缩格式
   Upgrade: HTTP/2.0,websocket                 # 仅 HTTP/1.1 支持该字段，表示客户端除了 HTTP/1.1 ，可切换到哪些通信协议。设置了此字段时必须设置 Connection: Upgrade ，表示切换通信协议
 
-  If-Modified-Since: Fri, 5 Jun 2019 12:00:00 GMT # 如果响应报文 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
-  If-None-Match: 5edd15a5-e42                     # 如果响应报文 body 的标签值依然为 ETag ，则请服务器返回 304 报文，让客户端使用本地缓存
+  If-Modified-Since: Fri, 5 Jun 2019 12:00:00 GMT # 如果响应报文在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
+  If-None-Match: 5edd15a5-e42                     # 如果响应报文的 Etag 值等于它，则请服务器返回 304 报文，让客户端使用本地缓存
   ```
 
 ### 响应报文
@@ -187,15 +187,15 @@ Content-Type: text/html; charset=utf-8
   Date: Wed, 17 Jul 2019 10:00:00 GMT           # 服务器生成该响应报文的时刻（代理服务器不会改变该值）
   Age: 2183                                     # 表示该响应报文来自代理服务器的缓存，这是该缓存的存在时长
 
+  # 有多种控制缓存的字段，可同时启用
   Cache-Control: max-age=0                      # 缓存策略
   Expires: Wed, 17 Jul 2019 14:00:00 GMT        # 该响应的过期时刻，采用 GMT 时区。过期之前建议客户端使用本地缓存，过期之后再重新请求
-
   Last-Modified: Fri, 5 Jun 2019 12:00:00 GMT   # 该响应报文 body 最后一次修改的时刻（用于判断内容是否变化）
   ETag: 5edd15a5-e42                            # 响应 body 的标签值（用于判断内容是否变化，比 Last-Modified 更准确）
   ```
 
 - 浏览器可以将服务器的返回的 HTML 文件缓存在本地，下次再请求该资源时就直接从本地缓存中读取数据。
-  - 用 Cache-Control 和 Expires 字段都可以控制缓存，但前者的优先级更高，常见的取值如下：
+  - Cache-Control 的取值示例：
     ```sh
     max-age=10  # 该缓存在 10 秒后过期，到时需要重新向服务器请求该资源
     max-age=0   # 该缓存在 0 秒后过期，相当于 no-cache

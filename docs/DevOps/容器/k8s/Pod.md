@@ -35,9 +35,9 @@ spec:                       # Controller 的规格
       app: redis-1
   # strategy:               # 更新部署的策略，默认为滚动更新
   #   type: RollingUpdate
-  #   rollingUpdate:            # 滚动更新过程中的配置
-  #     maxUnavailable: 25%     # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
-  #     maxSurge: 25%           # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
+  #   rollingUpdate:        # 滚动更新过程中的配置
+  #     maxUnavailable: 25% # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
+  #     maxSurge: 25%       # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
   template:                 # 开始定义 Pod 的模板
     metadata:               # Pod 的元数据
       labels:
@@ -64,12 +64,13 @@ spec:                       # Controller 的规格
     ```
   - Deployment 的 spec.selector 会被用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 。
 
-- Deployment 的 spec.template 部分就是 Pod 的配置内容，当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
+- spec.template 部分是 Pod 的配置内容，当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
   - k8s 默认会保存最近两个版本的 Deployment ，便于将 Pod 回滚（rollback）到以前的部署状态。
-  - 删除一个 Deployment 时，k8s 会自动销毁对应的 Pod 。
-  - 修改一个 Deployment 时，k8s 会自动部署新 Pod ，销毁旧 Pod 。该过程称为更新部署，有两种策略：
+  - 删除 Deployment 时，k8s 会自动销毁对应的 Pod 。
+  - 修改 Deployment 时，k8s 会自动部署新 Pod ，销毁旧 Pod 。该过程称为更新部署，有两种策略：
     - Recreate ：先销毁旧 Pod ，再部署新 Pod 。
-    - RollingUpdate ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。从而保证在更新过程中不中断服务。
+    - RollingUpdate ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
+      - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
 
 ### ReplicaSet
 

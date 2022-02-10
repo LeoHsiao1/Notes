@@ -69,7 +69,7 @@
 
 - 字符串的常见用法：
   ```groovy
-  String x = 'Hello'
+  String x = 'Hello'  // 可省略 String 关键字
   x += ' World'       // 字符串之间可以用 + 或 .plus() 方法拼接
   x += 123            // 其它类型的值与字符串拼接时，会自动转换成字符串类型
   println x
@@ -139,19 +139,23 @@
 
 ### 列表
 
-- 列表可以包含多种类型的元素。
+- 列表（array）可以同时包含多种数据类型的元素。
 - 列表支持嵌套，从而可以创建多维列表。
 - 例：
   ```groovy
-  List x = [1, 2]
-  x << 'Hello'        // 追加元素
-  println x
+  List a = [1, 2]       // 可省略 List 关键字
+  a << 'Hello'          // 追加元素
+  println a
   // 显示：[1, 2, Hello]
-  println x.size()    // 获取列表的长度
+  println a.size()      // 获取列表的长度
   // 显示：3
-  println x[0]        // 通过索引取值
+  println a[0]          // 通过索引取值
   // 显示：1
-  println x[0..-1]    // 获取切片
+  println a[0..-1]      // 获取切片
+  // 显示：[1, 2, Hello]
+  println a.join(', ')  // 将列表元素拼接成字符串
+  // 显示：1, 2, Hello
+  println a.unique()    // 将列表元素去重之后返回
   // 显示：[1, 2, Hello]
   ```
 
@@ -159,7 +163,7 @@
 
 - 例：
   ```groovy
-  def map = [a:1, b:'Hello', c:[1, 2]]
+  def map = [a:1, b:'Hello', c:[1, 2]]  // 可省略 def 关键字
   println map
   // 显示：[a:1, b:Hello, c:[1, 2]]
   println map['a']      // 通过索引取值

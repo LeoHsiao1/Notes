@@ -291,8 +291,18 @@ git config
     url = https://github.com/LeoHsiao1/python_utils.git
   ```
   - 如果想移除一个 submodule ，需要在上述两个配置文件中删除它。
-  - 当前 git 仓库不会对 submodule 的文件进行版本管理，只会记录其配置信息。
-  - 进入 submodule 的目录之后，就相当于处于其 git 仓库下，可以执行 git checkout 等命令。
+- 进入 submodule 的目录之后，就相当于处于其 git 仓库下，可以执行 git checkout 等命令。
+  - 当前 git 仓库会引用 submodule 的某个 commit 版本，不会自动更新，需要手动更新：
+    ```sh
+    cd submodule_dir/
+    git pull
+    cd ..
+    # 以上命令可简化为 git submodule update --remote --merge
+
+    git add .
+    git commit -m 'Updated submodule'
+    git push
+    ```
 
 ## 远端仓库
 
@@ -322,6 +332,8 @@ git config
 ```sh
 git clone <URL> [dir]           # 将一个远端仓库克隆到本地，默认是保存到一个与仓库同名的子目录中
         -b <branch>             # 切换到指定分支，默认是远程仓库的 HEAD 分支
+        --depth <n>             # 浅克隆（shallow clone），只下载最近的 n 个版本的文件，默认会下载全部版本
+        --recursive             # 递归克隆所有 submodule ，默认不会克隆 submodule
 
 git remote                      # 显示已配置的所有远端仓库的名字
         -v                      # 显示各个远端仓库的 URL

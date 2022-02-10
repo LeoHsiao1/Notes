@@ -371,12 +371,14 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       $class: 'GitSCM',
       branches: [[name: "$BRANCH"]],    // 切换到指定的分支，也可以填 tag 或 commit ID 。不过该插件最终会切换到具体的 commit ID
       extensions: [
-      [$class: 'CleanBeforeCheckout'],  // 清理项目文件，默认启用。相当于 git clean -dfx 加 git reset --hard
-      [$class: 'RelativeTargetDirectory', relativeTargetDir: '.'] // 本地仓库的保存目录，默认为 .
+        [$class: 'CleanBeforeCheckout'],  // 清理项目文件，默认启用。相当于 git clean -dfx 加 git reset --hard
+        // [$class: 'RelativeTargetDirectory', relativeTargetDir: '.'], // 本地仓库的保存目录，默认为 .
+        // [$class: 'CloneOption', shallow: true, depth: 1],            // 浅克隆，只下载最近 1 个版本的文件
+        // [$class: 'SubmoduleOption', recursiveSubmodules: true, parentCredentials: true, shallow: true, depth: 1], // 递归克隆 submodule ，采用父 Git 项目的凭据，并采用浅克隆
       ],
       userRemoteConfigs: [[
-      credentialsId: "account_for_git", // 登录 git 服务器的凭据，为 Username With Password 类型
-      url: "$repository_url"            // git 远程仓库的地址
+        credentialsId: 'account_for_git', // 登录 git 服务器的凭据，为 Username With Password 类型
+        url: "$repository_url"            // git 远程仓库的地址
       ]]
   ])
   ```

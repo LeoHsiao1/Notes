@@ -314,7 +314,8 @@ scrape_configs:
 - 查询表达式中，选取指标的语法如下：
   ```sh
   go_goroutines                                   # 查询具有该名称的指标
-  {job="prometheus"}                              # 查询具有该标签值的指标
+  {job="prometheus"}                              # 查询具有指定标签值的指标
+  {job!~'_.*', job!~'prometheus'}                 # 支持查询重复的指标名
   {__name__="go_goroutines", job='prometheus'}    # 通过内置的 __name__ 标签，可以匹配指标名
 
   go_goroutines{job ="prometheus"}                # 查询该名称、该标签值的指标

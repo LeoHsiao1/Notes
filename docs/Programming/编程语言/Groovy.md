@@ -132,7 +132,7 @@
   // 显示：true
   println !('Hello' ==~ 'He.*')             // 否定整个表达式
   // 显示：false
-  println "Hello    World".split('\\s+')    // 用正则表达式分割字符串
+  println 'Hello    World'.split('\\s+')    // 用正则表达式分割字符串，默认用连续的空字符分割
   // 显示：[Hello, World]
   ```
   - Groovy 的正则表达式中，转义符 `\` 本身也需要转义，因此转义字符 `\n` 要写作 `\\n` ，转义字符 `\\` 要写作 `\\\\` 。

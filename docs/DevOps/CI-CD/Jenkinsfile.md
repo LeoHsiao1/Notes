@@ -203,8 +203,8 @@ pipeline {
   echo currentBuild.description       # Build 的描述，默认为 null
   echo currentBuild.duration          # Build 的持续时长，单位 ms
   echo currentBuild.result            # Build 的结果。如果构建尚未结束，则返回值为 null
-  ```
   echo currentBuild.currentResult     # Build 的当前状态。开始执行时为 SUCCESS ，受每个 stage 影响，不会变为 null
+  ```
   - 只有 displayName、description 变量支持修改。修改其它变量时会报错：`RejectedAccessException: No such field`
   - 例：修改本次构建的名称
     ```groovy
@@ -382,14 +382,15 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       ]]
   ])
   ```
-  也可主动执行 git 命令：
-  ```groovy
-  withCredentials([gitUsernamePassword(credentialsId:'account_for_git')]){  // 这会自动绑定 git 账号密码到环境变量 GIT_USERNAME、GIT_PASSWORD
-      sh """
-          git clone $repository_url
-      """
-  }
-  ```
+  - 也可直接执行 git 命令：
+    ```groovy
+    withCredentials([gitUsernamePassword(credentialsId:'account_for_git')]){  // 这会自动绑定 git 账号密码到环境变量 GIT_USERNAME、GIT_PASSWORD
+        sh """
+            git clone $repository_url
+        """
+    }
+    ```
+  - 与直接使用 git 命令相比，使用 checkout 语句会将 git commit、diff 等信息收集到 Jenkins 中并显示。
 
 - 例：拉取 SVN 仓库
   ```groovy
@@ -576,6 +577,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
     + : 测试开始
     + comment=( 测试开始 )
     ```
+  - 每次执行 sh 语句需要耗时 300ms ，因此建议将多个 sh 语句合并。
 
 ### timeout
 

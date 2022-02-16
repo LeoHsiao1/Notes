@@ -68,10 +68,11 @@
   - Node
     - ：节点，k8s 集群中的一个主机。
   - Namespace
-    - ：命名空间，用于隔离某些资源，又称为项目（project）。
-      - 不同命名空间下的 Pod、Service 相互隔离。
+    - ：命名空间，用于对某些资源进行分组管理，又称为项目（project）。
+    - 命名空间可以管理 Pod、Service、PVC 等资源，不同命名空间下的这些资源相互隔离，互不可见。
+      - 删除一个命名空间时，会删除其下被管理的所有资源。
+      - 可执行 `kubectl api-resources --namespaced=true` 查看被命名空间管理的所有资源类型。
       - Node、IP、StorageClass、PersistentVolumes 不受命名空间影响。
-      - 可执行 `kubectl api-resources --namespaced=true` 查看所有被命名空间影响的资源。
     - 一个 k8s 中可以创建多个命名空间。初始有四个：
       ```sh
       default         # 供用户使用
@@ -111,7 +112,7 @@
     <...>
   ```
   - 在同一 namespace 下，同种对象的 name 不能重复。
-  - 每个对象会被自动分配一个 UUID ，在整个 k8s 集群的所有 namespace 中唯一。
+    - 每个对象会被自动分配一个 UUID ，在整个 k8s 集群的所有 namespace 中唯一。
   - annotations、labels 采用键值对格式。
     - key、value 都是 String 类型。
     - key 只能包含 `[a-zA-Z0-9._-]` 字符，必须以字母、数字开头和结尾。

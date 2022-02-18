@@ -43,13 +43,44 @@
     ```
     需要执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/master/distribution/conf/nacos-mysql.sql)
 
+## 功能
+
+- Namespace ：Nacos 支持创建 default、test、proc 等多个命名空间，用于隔离服务、配置等资源。
+- Nacos 将注册的服务分为两类，采用不同的健康检查方式：
+  - 临时实例
+    - ：不健康一段时间之后会被自动注销。
+    - 临时实例会定期向 Nacos 发送一个 HTTP 请求，进行心跳检查。如果该实例尚未注册，则自动注册。
+  - 持久实例
+    - ：不健康时不会注销，只是不加入负载均衡。
+    - Nacos 定期（默认间隔为 20 秒）向持久实例发送一个 TCP 或 HTTP 请求，如果响应失败则将它标记为不健康。
+
+- Spring Boot 服务注册到 Nacos 的配置示例：
+  ```yml
+  spring:
+    cloud:
+      nacos:
+        discovery:
+          server-addr: 10.0.0.1:8848                # Nacos 服务器的地址
+          # namespace: default                      # 在 Nacos 的哪个命名空间下注册该服务
+          # service: ${spring.application.name}     # 注册的服务名
+          # spring.cloud.nacos.discovery.ip: -      # 注册的 IP ，供其它服务调用。默认采用第一个网卡的 IP
+          # spring.cloud.nacos.discovery.port: ${server.port}
+          # ephemeral: true                         # 是否为临时实例
+          # weight: 1                               # 该服务实例在负载均衡时的权重，取值范围为 1~100
+          # metadata:                               # 添加一些该服务实例的元数据
+          #   preserved.heart.beat.interval: 5000   # 发送心跳的间隔时长，单位为 ms
+          #   preserved.heart.beat.timeout: 15000   # 如果该时长内无心跳，则 Nacos 将该服务实例标记为不健康
+          #   preserved.ip.delete.timeout: 30000    # 如果该时长内无心跳，则 Nacos 将该服务实例注销
+  ```
+
+- 健康保护阈值：一个浮点数，取值范围为 0~1 。当一个服务的健康实例数占总数的比值小于阈值时，Nacos 会将不健康的实例加入负载均衡。这样会损失部分流量，但避免剩下的健康实例负载过大、服务雪崩。
+
 ## Web 页面
 
 - 访问 `http://127.0.0.1:8848/nacos/` 即可登录 Nacos 的 Web 页面，默认账号、密码为 nacos、nacos 。
 - Web 页面示例：
 
   ![](./Nacos.png)
-
 
 ## HTTP API
 

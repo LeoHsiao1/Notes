@@ -11,6 +11,7 @@
   ```sh
   sh startup.sh -m standalone
   ```
+  - 访问 `http://127.0.0.1:8848/nacos/` 即可登录 Nacos 的 Web 页面，默认账号、密码为 nacos、nacos 。
 
 - 或者用 Docker 部署：
   ```yml
@@ -75,8 +76,8 @@
           # namespace: public                       # 该服务所属的命名空间
           # group: DEFAULT_GROUP                    # 该服务所属的 group
           # prefix: ${spring.application.name}      # 根据 prefix 等参数确定 DataID ，找到对应的配置集，给该服务采用
-          # file-extension: properties              # 配置文件的扩展名，比如 yml
-          # refresh: 
+          # file-extension: properties              # 配置文件的扩展名，比如 yaml
+          # refresh:
           #   enabled: true                         # 是否自动从 Nacos 获取最新的配置，这样不必重启服务
         discovery:                                  # 关于服务发现功能
           server-addr: 10.0.0.1:8848
@@ -94,13 +95,6 @@
   ```
 
 - 健康保护阈值：一个浮点数，取值范围为 0~1 。当一个服务的健康实例数占总数的比值小于阈值时，Nacos 会将不健康的实例加入负载均衡。这样会损失部分流量，但避免剩下的健康实例负载过大、服务雪崩。
-
-### Web 页面
-
-- 访问 `http://127.0.0.1:8848/nacos/` 即可登录 Nacos 的 Web 页面，默认账号、密码为 nacos、nacos 。
-- Web 页面示例：
-
-  ![](./Nacos.png)
 
 ### HTTP API
 

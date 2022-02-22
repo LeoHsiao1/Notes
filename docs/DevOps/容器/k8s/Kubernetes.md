@@ -57,8 +57,7 @@
   <!-- - storage-provisioner -->
   <!-- pause -->
 
-- 用户使用 kubectl 命令，作为客户端与 apiserver 交互，从而管理 k8s 。
-- k8s 采用基于角色的访问控制（RBAC），控制内部组件之间、用户对组件的访问权限。
+- 用户可使用 kubectl 命令，作为客户端与 apiserver 交互，从而管理 k8s 。
 
 ### 资源
 

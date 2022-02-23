@@ -143,36 +143,53 @@
 
 ### 监控对象
 
-在 prometheus.yml 中配置需要监控的对象（称为 targets ），格式如下：
-```yml
-scrape_configs:
-- job_name: prometheus              # 一项监控任务的名字（可以包含多组监控对象）
-  # honor_labels: false
-  # metrics_path: /metrics
-  # follow_redirects: true          # 是否跟随状态码为 3xx 的重定向
-  # scheme: http                    # 通信协议
-  # scrape_interval: 30s
-  # scrape_timeout: 10s
-  # basic_auth:
-  #   username: <string>
-  #   password: <string>
-  # proxy_url: <string>
-  # tls_config:
-  #   insecure_skip_verify: false   # 是否不认证 HTTPS 证书
-  static_configs:
-  - targets:                        # 一组监控对象的 IP:Port
-    - 10.0.0.1:9090
-    - 10.0.0.1:9091
-    # labels:                       # 为这些监控对象的数据加上额外的标签
-    #   nodename: CentOS-1
-  - targets: ['10.0.0.2:9090']      # 下一组监控对象
+- 例：在 prometheus.yml 中配置需要监控的对象（称为 targets ）
+  ```yml
+  scrape_configs:
+  - job_name: prometheus              # 一项监控任务的名字（可以包含多组监控对象）
+    # honor_labels: false
+    # metrics_path: /metrics
+    # follow_redirects: true          # 是否跟随状态码为 3xx 的重定向
+    # scheme: http                    # 通信协议
+    # scrape_interval: 30s
+    # scrape_timeout: 10s
+    # basic_auth:
+    #   username: <string>
+    #   password: <string>
+    # proxy_url: <string>
+    # tls_config:
+    #   insecure_skip_verify: false   # 是否不认证 HTTPS 证书
+    static_configs:
+    - targets:                        # 一组监控对象的 IP:Port
+      - 10.0.0.1:9090
+      - 10.0.0.1:9091
+      # labels:                       # 为这些监控对象的数据加上额外的标签
+      #   nodename: CentOS-1
+    - targets: ['10.0.0.2:9090']      # 下一组监控对象
 
-- job_name: node_exporter
-  file_sd_configs:                  # 从文件读取配置（这样不必让 Prometheus 重新加载配置文件）
-  - files:
-    - targets/node_exporter*.json
-    # refresh_interval: 5m          # 每隔多久重新读取一次
-```
+  - job_name: node_exporter
+    file_sd_configs:                  # 从文件读取配置，这样修改配置时不必重启 Prometheus
+    - files:
+      - targets/node_exporter*.json
+      # refresh_interval: 5m          # 每隔多久重新读取一次
+
+  - job_name: k8s-node
+    scheme: https
+    kubernetes_sd_configs:            # 从 k8s 的 HTTP API 获取配置
+    - role: node                      # 将 node_ip:kubelet_port 作为 target
+      api_server: https://apiserver
+      authorization:
+        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token   # Bearer token 类型的身份凭证
+      tls_config:
+        # ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      # namespaces:                   # 要监控的 namespace ，默认监控所有 namespace
+      #   names:
+      #   - default
+    # - role: service                 # 将 service_ip:expose_port 作为 target
+    # - role: pod                     # 将 pod_ip:expose_port 作为 target
+    # - role: endpoints               # 将每个 service endpoints 作为 target
+  ```
 - Prometheus 从每个监控对象处抓取指标数据时，默认会自动加上 `job: "$job_name"`、`instance: "$target"` 两个标签。
   还会自动记录以下指标：
   ```sh

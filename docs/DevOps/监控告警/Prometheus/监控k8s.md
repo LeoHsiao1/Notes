@@ -1,7 +1,11 @@
 # 监控 k8s
 
-- k8s 的 apiserver、kubelet 等组件本身集成了 exporter 格式的 API ，用户也可部署额外的监控工具。
-- kubelet 还集成了 cadvisor ，可通过 /metrics/cadvisor 路径访问。
+- k8s 的 apiserver、kubelet 等组件本身集成了 exporter 格式的 API 。
+- 用户也可部署额外的 exporter 服务：
+  - cAdvisor ：kubelet 已经集成了 cadvisor ，可通过 /metrics/cadvisor 路径访问。
+  - Heapster ：已淘汰。
+  - metrics-server ：从 apiserver 获取 CPU、内存使用率等指标，供 HPA 调用。
+  - kube-state-metrics
 
 ## 集成指标
 
@@ -161,3 +165,10 @@
   # 关于 cadvisor 的指标略
   ```
 
+<!-- 
+Kube State Metrics
+从 apiserver 获取 node、pod 等资源的状态，生成 Metrics 。
+
+
+
+ -->

@@ -78,6 +78,7 @@ spec:
 
 ：用于保存配置信息，采用键值对格式，以明文形式保存在 etcd 中。
 - 可以在 Deployment 等控制器中引用 ConfigMap ，导入其中的参数作为环境变量，或 Volume 。
+- 修改 ConfigMap 时，不会导致挂载它的 Pod 自动重启。
 
 配置示例：
 ```yaml
@@ -152,7 +153,8 @@ spec:
 
 ## Secret
 
-：与 ConfigMap 类似，但用于保存密码等私密信息，转换成 Base64 编码再保存。
+：与 ConfigMap 类似，但用于保存密码等私密信息。
+- 保存时会自动将参数值转换成 Base64 编码，挂载时会自动从 Base64 解码。
 
 配置示例：
 ```yaml
@@ -165,7 +167,6 @@ data:
   username: bGVvCg==
   password: MTIzNDU2Cg==
 ```
-- Opaque 类型的 secret 会将参数值经过 base64 编码之后再保存。
 
 例：引用 secret 中的参数，生成环境变量、Volume
 ```yaml

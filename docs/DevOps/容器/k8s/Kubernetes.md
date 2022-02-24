@@ -13,12 +13,14 @@
 
 - 2014 年，Google 公司开源了 k8s 项目，它借鉴了 Google 内部的大规模集群管理系统 Borg、Omega 。
 - 2015 年，Google 公司将 k8s 项目捐赠给 Linux 基金会下属的云原生计算基金会（CNCF）托管。
-- 2020 年底，k8s 发布 v1.20 版本。
+- v1.20
+  - 2020 年 12 月发布。
   - CRI 不再支持 Docker 引擎，建议改用 containerd 或 CRI-O ，工作效率更高，但不能再通过 docker 命令查看、管理容器。
     - 这是因为 Docker 没有直接支持 CRI 接口，导致 k8s 只能通过 Dockershim 模块间接与 Docker 通信，但维护该模块比较麻烦，现在停止维护该模块。
     - 使用 Docker 构建出的镜像符合 OCI 标准，因此依然可以被 containerd 或 CRI-O 运行。
     - 如果用户继续使用 Docker 运行镜像，则启动 kubelet 时会显示一条警告。
 - v1.23
+  - 2021 年 12 月发布。
   - 默认启用 PSA（Pod Security admission）服务，在创建 Pod 时根据 Pod 安全标准进行审核。
 
 ## 原理
@@ -48,9 +50,13 @@
 - 所有节点运行以下进程：
   - kubelet
     - 主要工作：
-      - 将当前节点注册到 kube-apiserver ，然后监控当前节点。
-      - 创建、监控、管理 Pod ，基于容器运行时。
+      - 将当前节点注册到 kube-apiserver 。
+      - 监控当前节点。
+      - 创建、管理、监控 Pod ，基于容器运行时。
     - 默认监听 10250 端口。
+    - 其中的 PLEG（Pod Lifecycle Event Generator）模块负责执行 relist 任务：获取本机的容器列表，检查所有 Pod 的状态，如果状态变化则生成 Pod 的生命周期事件。
+      - 每执行一次 relist ，会等 1s 再执行下一次 list 。
+      - 如果某次 relist 耗时超过 3min ，则报错 `PLEG is not healthy` ，并将当前 Node 标记为 NotReady 状态。
   - kube-proxy
     - ：负责管理节点的逻辑网络，基于 iptables 规则。如果节点收到一个发向某个 Pod 的网络包，则自动转发给该 Pod 。
   <!-- - coredns -->

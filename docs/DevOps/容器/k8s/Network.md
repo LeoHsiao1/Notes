@@ -55,7 +55,8 @@ k8s 常见的几种网络通信：
     - name: redis
       port: 6379            # Service 供外访问的端口
       protocol: TCP         # 反向代理的协议，默认为 TCP ，还可以填 UDP
-      targetPort: 6379      # 访问 Service 的 port 的流量，会被转发到 Pod 的 targetPort 端口，又称为 EndPoint
+      targetPort: 6379      # 将访问 Service 该 port 的流量，转发到 Pod 的 targetPort 端口
+      # targetPort: port1   # 可以指定 Pod 的端口名，而不是具体的端口号
     - name: sentinel
       port: 26379
       protocol: TCP

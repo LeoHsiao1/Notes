@@ -23,11 +23,9 @@
   - 2021 年 12 月发布。
   - 默认启用 PSA（Pod Security admission）服务，在创建 Pod 时根据 Pod 安全标准进行审核。
 
-## 原理
+## 架构
 
-### 架构
-
-- k8s 包含多个系统进程，通常部署多个主机上，组成分布式集群。
+- k8s 包含多个组件进程，通常部署在多个主机上，组成分布式集群。
   - 用户可以与 k8s 系统交互，部署自定义的应用，称为工作负载（workload）。
 - 每个主机称为节点（Node），分为两种：
   - 主节点（master node）：又称为控制平面节点（control plane node），负责控制整个集群、管理所有节点。
@@ -49,14 +47,6 @@
 
 - 所有节点运行以下进程：
   - kubelet
-    - 主要工作：
-      - 将当前节点注册到 kube-apiserver 。
-      - 监控当前节点。
-      - 创建、管理、监控 Pod ，基于容器运行时。
-    - 默认监听 10250 端口。
-    - 其中的 PLEG（Pod Lifecycle Event Generator）模块负责执行 relist 任务：获取本机的容器列表，检查所有 Pod 的状态，如果状态变化则生成 Pod 的生命周期事件。
-      - 每执行一次 relist ，会等 1s 再执行下一次 list 。
-      - 如果某次 relist 耗时超过 3min ，则报错 `PLEG is not healthy` ，并将当前 Node 标记为 NotReady 状态。
   - kube-proxy
     - ：负责管理节点的逻辑网络，基于 iptables 规则。如果节点收到一个发向某个 Pod 的网络包，则自动转发给该 Pod 。
   <!-- - coredns -->
@@ -65,7 +55,29 @@
 
 - 用户可使用 kubectl 命令，作为客户端与 apiserver 交互，从而管理 k8s 。
 
-### 资源
+### kubelet
+
+- 默认监听 10250 端口。
+- 主要工作：
+  - 将当前节点注册到 kube-apiserver 。
+  - 监控当前节点。
+  - 创建、管理、监控 Pod ，基于容器运行时。
+- kubelet 中的 PLEG（Pod Lifecycle Event Generator）模块负责执行 relist 任务：获取本机的容器列表，检查所有 Pod 的状态，如果状态变化则生成 Pod 的生命周期事件。
+  - 每执行一次 relist ，会等 1s 再执行下一次 list 。
+  - 如果某次 relist 耗时超过 3min ，则报错 `PLEG is not healthy` ，并将当前 Node 标记为 NotReady 状态。
+- kubelet 的配置示例：
+  ```yml
+  failSwapOn: true                  # 如果节点启用了 swap 内存，则拒绝启动 kubelet
+  maxPods: 110                      # 该 kubelet 节点上最多运行的 Pod 数
+  containerLogMaxSize: 10Mi         # 当容器日志文件达到该值时，切割一次
+  containerLogMaxFiles: 5           # 容器日志文件被切割之后，最多保留几个文件
+
+  imageGCHighThresholdPercent: 85   # 一个百分数。如果节点的磁盘使用率达到高水位，则自动清理未被使用的镜像，从最旧的镜像开始删除，直到磁盘使用率降至低水位
+  image-gc-low-threshold: 80
+  evictionMaxPodGracePeriod: 0      # 软驱逐 Pod 的最大宽限期，单位为秒。默认为 0 ，即不限制
+  ```
+
+## 资源
 
 - k8s 会管理主机、容器等多种对象，又称为资源（resource）。例如：
   - Cluster
@@ -73,18 +85,6 @@
   - Node
     - ：节点，k8s 集群中的一个主机。
   - Namespace
-    - ：命名空间，用于对某些资源进行分组管理，又称为项目（project）。
-    - 命名空间可以管理 Pod、Service、PVC 等资源，不同命名空间下的这些资源相互隔离，互不可见。
-      - 删除一个命名空间时，会删除其下被管理的所有资源。
-      - 可执行 `kubectl api-resources --namespaced=true` 查看被命名空间管理的所有资源类型。
-      - Node、IP、StorageClass、PersistentVolumes 不受命名空间影响。
-    - 一个 k8s 中可以创建多个命名空间。初始有四个：
-      ```sh
-      default         # 供用户使用
-      kube-system     # 供 k8s 系统内部使用，比如部署 apiserver、etcd 等系统服务
-      kube-node-lease # 包含各个节点的 lease 对象
-      kube-public     # 公开，未认证的用户也可访问
-      ```
   - Pod
     - ：容器组，是 k8s 的最小管理单元。
     - Docker 以容器形式部署应用，而 k8s 以 Pod 形式部署应用。
@@ -95,6 +95,21 @@
   - 删除一个 Owner 时，默认会级联删除它的所有 Dependent ，反之没有影响。
   - 比如一个 Deployment 是一组 Pod 的 Owner 。如果删除这些 Pod ，但保留 Deployment ，则会自动重新创建这些 Pod 。
   - 依赖关系不允许跨命名空间。
+
+### Namespace
+
+：命名空间，用于对某些资源进行分组管理，又称为项目（project）。
+- 命名空间可以管理 Pod、Service、PVC 等资源，不同命名空间下的这些资源相互隔离，互不可见。
+  - 删除一个命名空间时，会删除其下的所有资源。
+  - 可执行 `kubectl api-resources --namespaced=true` 查看被命名空间管理的所有资源类型。
+  - Node、IP、StorageClass、PersistentVolumes 不受命名空间影响。
+- 一个 k8s 中可以创建多个命名空间。初始有四个：
+  ```sh
+  default         # 供用户使用
+  kube-system     # 供 k8s 系统内部使用，比如部署 apiserver、etcd 等系统服务
+  kube-node-lease # 包含各个节点的 lease 对象
+  kube-public     # 公开，未认证的用户也可访问
+  ```
 
 ### 配置
 

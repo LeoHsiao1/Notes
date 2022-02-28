@@ -25,14 +25,14 @@ metadata:                   # 该 Controller 的元数据
   annotations:
     creator: Leo
   labels:
-    app: redis-1
-  name: deployment-redis-1
+    app: redis
+  name: redis
   namespace: default
 spec:                       # Controller 的规格
   replicas: 3               # Pod 运行的副本数
   selector:                 # 选择 Pod
     matchLabels:
-      app: redis-1
+      app: redis
   # strategy:               # 更新部署的策略，默认为滚动更新
   #   type: RollingUpdate
   #   rollingUpdate:        # 滚动更新过程中的配置
@@ -41,26 +41,27 @@ spec:                       # Controller 的规格
   template:                 # 开始定义 Pod 的模板
     metadata:               # Pod 的元数据
       labels:
-        app: redis-1
+        app: redis
     spec:                   # Pod 的规格
       containers:           # 定义该 Pod 中的容器
-      - name: redis-1       # 该 Pod 中的第一个容器
+      - name: redis         # 该 Pod 中的第一个容器
         image: redis:5.0.6
         command: ["redis-server /opt/redis/redis.conf"]
         ports:
         - containerPort: 6379   # 相当于 Dockerfile 中的 export 8080
 ```
-- selector ：选择器，根据 labels 筛选对象。匹配的对象可能有任意个（包括 0 个）。
+- 上例中 Deployment 名为 redis ，但可能创建多个 Pod 实例，名称带上随机后缀，比如 redis-65d9c7f6fc-szgbk 。因此不能通过名称来筛选 Pod ，而是通过 label 筛选。
+- selector ：选择器，根据 labels 筛选对象，匹配结果可能有任意个（包括 0 个）。
   - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
   - 当 selector 中没有设置筛选条件时，会选中所有对象。
   - 例：
     ```yml
     selector:
       matchLabels:
-        app: redis-1    # 要求 labels 中存在该键值对
+        app: redis      # 要求 labels 中存在该键值对
       matchExpressions:
-        - {key: app, operator: In, values: [redis-1, redis-2]}  # 要求 labels 中存在 app 键，且值为 redis-1 或 redis-2
-        - {key: app, operator: Exists}                          # 运算符可以是 In、NotIn、Exists、DidNotExist
+        - {key: app, operator: In, values: [redis, redis2]}   # 要求 labels 中存在 app 键，且值为 redis 或 redis2
+        - {key: app, operator: Exists}                        # 运算符可以是 In、NotIn、Exists、DidNotExist
     ```
   - Deployment 的 spec.selector 会被用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 。
 
@@ -71,6 +72,20 @@ spec:                       # Controller 的规格
     - Recreate ：先销毁旧 Pod ，再部署新 Pod 。
     - RollingUpdate ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
       - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
+<!-- 
+
+- 限制 pod 占用的磁盘空间,以免它将日志写入文件而不是终端，占满宿主机磁盘，导致所有 pod 故障。
+  requests.ephemeral-storage: 1Gi
+  limits.ephemeral-storage: 2Gi
+  如果 Pod 占用的内存、磁盘资源超过限制，则会被驱逐（Evicted），变为 Failed 状态。不过 deployment 会自动创建新的 Pod 实例
+  
+
+
+被驱逐的 Pod 不会被自动删除，一直占用 Pod IP 等资源。可添加一个 crontab 任务来删除：
+```sh
+kubectl delete pods --all-namespaces --field-selector status.phase=Failed
+``` -->
+
 
 ### ReplicaSet
 
@@ -307,7 +322,7 @@ status:
 例：
 ```yml
 contaienrs:
-- name: redis-1
+- name: redis
   livenessProbe:            # 定义 livenessProbe 用途、ExecAction 方式的探针
     exec:
       command:              # 每次探测时，在容器中执行命令：ls /tmp/health
@@ -337,7 +352,7 @@ contaienrs:
 可以给 Pod 中的单个容器定义 postStart、preStop 钩子，在启动、终止过程中增加操作。如下：
   ```yml
   contaienrs:
-  - name: redis-1
+  - name: redis
     lifecycle:
       postStart:
         exec:

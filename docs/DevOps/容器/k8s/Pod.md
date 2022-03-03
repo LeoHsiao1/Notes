@@ -8,6 +8,15 @@
 - 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 管理 Pod 。
   - 用户需要编写 Controller 配置文件，描述如何部署一个应用的 Pod 。然后创建该 Controller ，k8s 就会自动部署其 Pod 。
 
+<!--
+
+### 配置
+
+### 状态
+
+ -->
+
+
 ## Controller
 
 ：控制器，用于管理 Pod 。
@@ -16,6 +25,8 @@
 ### Deployment
 
 ：默认的 Controller 类型，用于部署无状态的 Pod 。
+
+#### 配置
 
 配置文件示例：
 ```yml
@@ -28,6 +39,7 @@ metadata:                   # 该 Controller 的元数据
     app: redis
   name: redis
   namespace: default
+  # generation: 3           # 配置文件的版本序号，从 1 开始递增，由 k8s 自动更新
 spec:                       # Controller 的规格
   replicas: 3               # Pod 运行的副本数
   selector:                 # 选择 Pod
@@ -35,23 +47,32 @@ spec:                       # Controller 的规格
       app: redis
   # strategy:               # 更新部署的策略，默认为滚动更新
   #   type: RollingUpdate
-  #   rollingUpdate:        # 滚动更新过程中的配置
-  #     maxUnavailable: 25% # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
-  #     maxSurge: 25%       # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
-  template:                 # 开始定义 Pod 的模板
-    metadata:               # Pod 的元数据
+  #   rollingUpdate:              # 滚动更新过程中的配置
+  #     maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
+  #     maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
+  # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
+  # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
+  template:                       # 开始定义 Pod 的模板
+    metadata:                     # Pod 的元数据
       labels:
         app: redis
-    spec:                   # Pod 的规格
-      containers:           # 定义该 Pod 中的容器
-      - name: redis         # 该 Pod 中的第一个容器
+    spec:                         # Pod 的规格
+      containers:                 # 定义该 Pod 中的容器
+      - name: redis               # 该 Pod 中的第一个容器
         image: redis:5.0.6
         command: ["redis-server /opt/redis/redis.conf"]
         ports:
         - containerPort: 6379   # 相当于 Dockerfile 中的 export 8080
+      # dnsPolicy: ClusterFirst
+      # imagePullSecrets:
+      # - name: qcloudregistrykey
+      # restartPolicy: Always
+      # schedulerName: default-scheduler
+      # securityContext: {}
+      # terminationGracePeriodSeconds: 30
 ```
 - 上例中 Deployment 名为 redis ，但可能创建多个 Pod 实例，名称带上随机后缀，比如 redis-65d9c7f6fc-szgbk 。因此不能通过名称来筛选 Pod ，而是通过 label 筛选。
-- selector ：选择器，根据 labels 筛选对象，匹配结果可能有任意个（包括 0 个）。
+- Deployment 的 spec.selector 是必填字段，称为选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod ，匹配结果可能有任意个（包括 0 个）。
   - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
   - 当 selector 中没有设置筛选条件时，会选中所有对象。
   - 例：
@@ -63,22 +84,62 @@ spec:                       # Controller 的规格
         - {key: app, operator: In, values: [redis, redis2]}   # 要求 labels 中存在 app 键，且值为 redis 或 redis2
         - {key: app, operator: Exists}                        # 运算符可以是 In、NotIn、Exists、DidNotExist
     ```
-  - Deployment 的 spec.selector 会被用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 。
 
-- spec.template 部分是 Pod 的配置内容，当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
-  - k8s 默认会保存最近两个版本的 Deployment ，便于将 Pod 回滚（rollback）到以前的部署状态。
+- spec.template 是必填字段，用于描述 Pod 的配置。
+  - 当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
   - 删除 Deployment 时，k8s 会自动销毁对应的 Pod 。
   - 修改 Deployment 时，k8s 会自动部署新 Pod ，销毁旧 Pod 。该过程称为更新部署，有两种策略：
     - Recreate ：先销毁旧 Pod ，再部署新 Pod 。
     - RollingUpdate ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
       - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
-<!-- 
+
+### 状态
+
+- Deployment 的生命周期分为多种状态（condition）：
+  ```sh
+  Progressing       # 处理中，比如正在部署或销毁 Pod 实例
+  Complete          # 处理完成，比如部署完所有 Pod 实例且可用，或者该 Deployment 是停止运行的旧版本
+  Available         # 可用，即达到 ReplicaSet 的 Pod 实例最小可用数
+  ReplicaFailure    # 处理失败，比如不能部署 Pod 实例、Progressing 超时
+  ```
+  - 一个资源可能同时处于多种 condition ，但只能处于一种 phrase 。
+    - 比如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
+
+- Deployment 的状态示例：
+  ```yml
+  status:
+    availableReplicas: 1    # 可用的 Pod 实例数，允许接收 service 的流量
+    observedGeneration: 3   # 可用的 Pod 实例采用的 Deployment 版本，如果小于 metadata.generation 则说明不是最新版本
+    readyReplicas: 1        # 处于 health 状态的 Pod 实例数
+    replicas: 1             # 期望运行的实例数
+    updatedReplicas: 1      # 采用最新版本 Deployment 的 Pod 实例数
+    conditions:
+    - type: Progressing     # condition 类型
+      status: "True"        # 是否处于当前 condition ，可以取值为 True、False、Unknown
+      reason: NewReplicaSetAvailable  # status 的原因
+      message: ReplicaSet "redis-bbf945bc9" has successfully progressed.  # reason 的详细信息
+      lastTransitionTime: "2021-06-29T10:52:18Z"
+      lastUpdateTime: "2022-02-10T02:34:38Z"
+    - type: Available
+      status: "True"
+      reason: MinimumReplicasAvailable
+      message: Deployment has minimum availability.
+      lastTransitionTime: "2022-02-10T15:53:46Z"
+      lastUpdateTime: "2022-02-10T15:53:46Z"
+  ```
+
+<!--
+lastTransitionTime    # 上一次进入该状态的时间？？？
+lastUpdateTime        # 上一次更新该状态的时间
+ -->
+
+<!--
 
 - 限制 pod 占用的磁盘空间,以免它将日志写入文件而不是终端，占满宿主机磁盘，导致所有 pod 故障。
   requests.ephemeral-storage: 1Gi
   limits.ephemeral-storage: 2Gi
   如果 Pod 占用的内存、磁盘资源超过限制，则会被驱逐（Evicted），变为 Failed 状态。不过 deployment 会自动创建新的 Pod 实例
-  
+
 
 
 被驱逐的 Pod 不会被自动删除，一直占用 Pod IP 等资源。可添加一个 crontab 任务来删除：

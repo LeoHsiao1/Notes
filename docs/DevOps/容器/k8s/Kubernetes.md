@@ -120,16 +120,18 @@
   apiVersion: v1              # 与 kube-apiserver 交互时，采用的 API 版本
   kind: <sting>               # 对象的类型
   metadata:                   # 对象的元数据
-    name: <sting>             # 名称
-    # namespace: default      # 所属的命名空间
-    # annotations:            # 注释
-    #   <key>: <value>
-    # labels:                 # 标签，用于筛选对象
-    #   <key>: <value>
+    name: <sting>             # 名称，必填
+    namespace: default        # 所属的命名空间
+    annotations:              # 注释
+      <key>: <value>
+    labels:                   # 标签，用于筛选对象
+      <key>: <value>
+    # resourceVersion: xx     # 配置文件的版本号，由 k8s 自动更新，是一串随机数字（不是哈希值），全局唯一
   spec:                       # 规格，描述对象的期望状态
     <...>
-  status:                     # 描述对象的实际状态
-    <...>
+
+  # status:                   # 描述对象的实际状态，这部分字段由 k8s 自动写入
+  #   <...>
   ```
   - 在同一 namespace 下，同种对象的 name 不能重复。
     - 每个对象会被自动分配一个 UUID ，在整个 k8s 集群的所有 namespace 中唯一。
@@ -137,4 +139,4 @@
     - key、value 都是 String 类型。
     - key 只能包含 `[a-zA-Z0-9._-]` 字符，必须以字母、数字开头和结尾。
     - 可以给 key 加上一个 `<dns_domain>/` 格式的前缀。
-      - 前缀 kubernetes.io/ 、k8s.io/ 保留，供 k8s 系统内部使用。
+      - 前缀 `kubernetes.io/` 、`k8s.io/` 保留，供 k8s 系统内部使用。

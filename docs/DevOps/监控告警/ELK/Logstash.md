@@ -158,7 +158,7 @@
         # password            => "123456"
         # ssl_certificate_verification => true                            # 使用 HTTPS 连接时，是否验证 SSL 证书
         # http_compression    => false                                    # 是否对请求 body 进行 gzip 压缩
-        # index               => "logstash-%{+yyyy.MM.dd}-%{index_num}"   # 指定写入的索引名
+        # index               => "logstash-%{+yyyy.MM.dd}"                # 指定写入的索引名。可通过 %{} 插入变量，比如 %{[field]][sub_field]}
         # document_id         => "%{[@metadata][_id]}"                    # 指定写入的文档 id 。如果已存在相同 id 的文档，则会覆盖它
         # manage_template     => true                                     # Logstash 启动时，是否自动在 ES 中创建索引模板
         # template            => "/path/to/logstash/logstash-apache.json" # template 的配置文件，默认使用内置的模板
@@ -211,7 +211,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
       }
     }
     ```
-    - `@metadata` 字段不会被 output 阶段输出，因此适合存储一些临时的子字段。
+    - `@metadata` 字段不会被 output 阶段输出，因此可以存储一些临时的子字段。
 - 支持使用 if 语句：
   - 支持 `<`、`>`、`<=`、`>=`、`==`、`!=` 比较运算符。
   - 支持 `=~` `!~` 运算符，判断左侧的字符串是否匹配右侧的正则表达式。
@@ -241,6 +241,11 @@ pipeline 的语法与 Ruby 相似，特点如下：
     ```
     ```sh
     if [level]                              # 判断一个字段是否存在，且取值不为 false、null
+    ```
+    ```sh
+    if ![level] {                           # 如果字段不存在，则添加它
+      add_field => { "level" => "DEBUG" }
+    }
     ```
 
 ## 插件

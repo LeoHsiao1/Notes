@@ -241,20 +241,20 @@
   - 非一致内存访问（Non-Uniform Memory Access，NUMA）
     - ：在计算机中划分多个节点（node），每个节点包含多核 CPU 、独立内存。
     - 各节点的 CPU 可以并发访问本节点的内存，也可以通过互联模块访问其它节点的内存，但比本地内存的访问速度慢。
-    - SMP 属于一致内存访问。与 SMP 相比，MUMA 大幅提高了 CPU 利用率，但跨节点访问内存时慢。
+    - SMP 属于一致内存访问。与 SMP 相比，NUMA 大幅提高了 CPU 利用率，但跨节点访问内存时慢。
   - 大规模并行处理（Massive Parallel Processing，MPP）
     - ：将多个 SMP 服务器通过网络连通，组成一个计算机系统。
-    - 与 MUMA 相比，MPP 不存在跨节点的内存访问。增加 CPU 时，系统性能会线性提升。
+    - 与 NUMA 相比，MPP 不存在跨节点的内存访问。增加 CPU 时，系统性能会线性提升。
 
-- 例：查看本机的 MUMA 节点
+- 例：查看本机的 NUMA 节点
   ```sh
   [root@CentOS ~]# lscpu | grep NUMA
   NUMA node(s):          2
   NUMA node0 CPU(s):     0-15
   NUMA node1 CPU(s):     16-31
   ```
-  - 上例中有 2 个 MUMA 节点，分别包含 16 核 CPU 。
-  - 如果只有 1 个 MUMA 节点，则属于 SMP 架构。
+  - 上例中有 2 个 NUMA 节点，分别包含 16 核 CPU 。
+  - 如果只有 1 个 NUMA 节点，则属于 SMP 架构。
 
 ## 相关命令
 

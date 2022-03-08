@@ -77,9 +77,9 @@
     ```sh
     agent_* : "filebeat-00*"            # 支持在字段名、值中使用通配符
     agent_name: *                       # agent_name 字段存在
-    not agent_name: *                   # agent_name 字段不存在
-    status_code : (401 or 403 or 404)
-    status_code : 200 and not (tags : (success and info))
+    NOT agent_name: *                   # agent_name 字段不存在
+    status_code : (401 OR 403 OR 404)
+    status_code : 200 AND NOT (tags : (success AND info))
     ```
   - 点击页面右上角的 Inspect ，可以查看查询的耗时、对应的 query 语句。
 

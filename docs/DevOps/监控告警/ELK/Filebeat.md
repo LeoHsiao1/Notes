@@ -1,21 +1,6 @@
-# Beats
+# Filebeat
 
-- Beats 程序有多种类型，例如：
-  - Filebeat ：用于采集日志文件。
-  - Packetbeat ：用于采集网络数据包的日志。
-  - Winlogbeat ：用于采集 Windows 的 event 日志。
-  - Metricbeat ：用于采集系统或软件的性能指标。
-  - Auditbeat ：用于采集 Linux Audit 进程的日志。
-- 用户也可以基于 Beats 框架开发自定义的 Beats 程序。
-- Beats 采集日志数据之后，支持多种输出端：
-  - ES
-  - Logstash
-  - Kafka
-  - Redis
-  - File
-  - Console
-
-## Filebeat
+## 原理
 
 ### 采集日志
 
@@ -269,7 +254,7 @@
   }
   ```
 
-### 部署
+## 部署
 
 1. 用 yum 安装：
     ```sh
@@ -283,7 +268,7 @@
               -e          # 将 filebeat 自身的日志输出到 stderr
     ```
 
-### 基本配置
+## 配置
 
 - filebeat.yml 的基本配置：
   ```yml
@@ -388,7 +373,7 @@
               <parameters>
     ```
 
-### 采集日志文件
+### 文件日志
 
 - 让 filebeat 采集普通日志文件的配置示例：
   ```yml
@@ -463,7 +448,7 @@
     ```
   - filebeat 支持的 [模块列表](https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-modules.html)
 
-### 采集容器日志
+### 容器日志
 
 - 采集容器日志的配置示例：
   ```yml

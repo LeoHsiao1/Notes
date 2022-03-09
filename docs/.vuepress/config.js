@@ -1282,8 +1282,8 @@ module.exports = {
                                     path: "/DevOps/监控告警/ELK/Kibana"
                                 },
                                 {
-                                    title: "Beats",
-                                    path: "/DevOps/监控告警/ELK/Beats"
+                                    title: "Filebeat",
+                                    path: "/DevOps/监控告警/ELK/Filebeat"
                                 },
                                 {
                                     title: "Logstash",

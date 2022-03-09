@@ -19,6 +19,13 @@ ELk 系统主要由以下软件组成：
 ELK 系统还可以选择加入以下软件：
 - Beats
   - 采用 Golang 开发，用于采集日志数据。比 Logstash 更轻量级，但功能较少。
+  - Beats 程序有多种类型：
+    - Filebeat ：用于采集日志文件。
+    - Packetbeat ：用于采集网络数据包的日志。
+    - Winlogbeat ：用于采集 Windows 的 event 日志。
+    - Metricbeat ：用于采集系统或软件的性能指标。
+    - Auditbeat ：用于采集 Linux Audit 进程的日志。
+  - 用户也可以基于 Beats 框架开发自定义的 Beats 程序。
 - Elastic Agent
   - v7.8 版本新增的软件，用于采集日志数据。它集成了不同类型的 Beats 的功能。
 - Observability
@@ -68,4 +75,4 @@ ELK 系统还可以选择加入以下软件：
     - Promtail ：用于采集日志文件。
     - Loki ：用于存储日志数据。
     - Grafana ：用于展示日志数据。
-  - 借鉴了 Prometheus 的工作方式，给日志数据添加一些键值对格式的标签，从而筛选日志。比 ELK 的查询、显示速度快很多，但不支持索引、全文搜索。
+  - 借鉴了 Prometheus 的工作方式，给日志数据添加一些键值对格式的标签，从而筛选日志。比 ELK 的查询、显示速度快很多，但不支持全文查询。

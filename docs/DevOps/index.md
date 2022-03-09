@@ -45,7 +45,7 @@
     - [监控 k8s](监控告警/Prometheus/监控k8s.md)
   - [ELK](监控告警/ELK/ELK.md)
     - [Kibana](监控告警/ELK/Kibana.md)
-    - [Beats](监控告警/ELK/Beats.md)
+    - [Filebeat](监控告警/ELK/Filebeat.md)
     - [Logstash](监控告警/ELK/Logstash.md)
     - [OpenSearch](监控告警/ELK/OpenSearch.md)
 - 其它

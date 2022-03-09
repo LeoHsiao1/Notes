@@ -256,19 +256,30 @@
 
 ## 部署
 
-1. 用 yum 安装：
-    ```sh
-    yum install https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.14.0-x86_64.rpm
-    ```
-
-2. 启动：
-    ```sh
-    # ./filebeat setup    # 可选择进行初始化。这会先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
-    ./filebeat            # 在前台运行
-              -e          # 将 filebeat 自身的日志输出到 stderr
-    ```
+- 用 yum 安装：
+  ```sh
+  yum install https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.14.0-x86_64.rpm
+  ```
+  然后启动：
+  ```sh
+  # ./filebeat setup    # 可选择进行初始化。这会先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
+  ./filebeat            # 在前台运行
+            -c /etc/filebeat/filebeat.yml # 指定配置文件
+            -e          # 将 filebeat 自身的日志输出到 stderr
+  ```
+- 在 k8s 中部署时，可参考[官方配置](https://github.com/elastic/beats/blob/main/deploy/kubernetes/filebeat-kubernetes.yaml) 。
 
 ## 配置
+
+- 所有类型的 beats 都支持以下 General 配置项：
+  ```yml
+  name: 'filebeat-001'        # 该 Beat 的名称，默认使用当前主机名
+  tags: ['json']              # 给每条日志加上标签，保存到一个名为 tags 的字段中，便于筛选日志
+  fields:                     # 给每条日志加上字段，这些字段默认保存到一个名为 fields 的字段的子字典中
+    project: test
+  fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
+  ```
+  - 这些参数可以配置全局的，也可以给某个日志源单独配置。
 
 - filebeat.yml 的基本配置：
   ```yml
@@ -286,9 +297,11 @@
   # logging.metrics.enabled: true         # 是否在日志中记录监控信息，包括 filebeat 的状态、系统负载
   # logging.metrics.period: 30s           # 记录监控信息的时间间隔
 
-  filebeat.config.modules:                # 加载模块的配置
+  filebeat.config.modules:                # 加载模块
     path: ${path.config}/modules.d/*.yml
   ```
+
+### output
 
 - Filebeat 支持多种输出端：
   ```yml
@@ -320,15 +333,7 @@
   ```
   - 同时只能启用一种输出端。
 
-- 所有类型的 beats 都支持以下 General 配置项：
-  ```yml
-  name: 'filebeat-001'        # 该 Beat 的名称，默认使用当前主机名
-  tags: ['json']              # 给每条日志加上标签，保存到一个名为 tags 的字段中，便于筛选日志
-  fields:                     # 给每条日志加上字段，这些字段默认保存到一个名为 fields 的字段的子字典中
-    project: test
-  fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
-  ```
-  - 这些参数可以配置全局的，也可以给某个日志源单独配置。
+### processors
 
 - 可以配置 processors ，在输出 event 之前进行处理：
   ```yml
@@ -375,7 +380,7 @@
 
 ### 文件日志
 
-- 让 filebeat 采集普通日志文件的配置示例：
+- 采集文件日志的配置示例：
   ```yml
   filebeat.inputs:                  # 关于输入项的配置
   - type: log                       # 定义一个输入项，类型为普通的日志文件
@@ -455,29 +460,42 @@
   filebeat.inputs:
   - type: container
     paths:
-      - '/var/lib/docker/containers/*/*.log'
+      - /var/lib/docker/containers/*/*.log
     # stream: all                   # 从哪个流读取日志，可以取值为 stdout、stderr、all ，默认为 all
     # 兼容 type: log 的配置参数
   ```
   - 注意 docker 的日志文件默认需要 root 权限才能查看。
 
 - 上述配置会采集所有容器的日志，而使用以下自动发现（autodiscover）的配置，可以只采集部分容器的日志：
-  ```yml
-  filebeat.autodiscover:
-    providers:
-      - type: docker                # 声明一个自动发现的日志源，为 docker 类型。这会调用内置 docker 变量模板
-        templates:
-          - condition:              # 只采集满足该条件的日志
-              contains:
-                docker.container.name: elasticsearch
-            config:
-              - type: container     # 兼容 type: container 的配置参数
-                paths:
-                  - /var/lib/docker/containers/${data.docker.container.id}/*.log
 
-      - type: kubernetes
-        ...
-  ```
+- filebeat 支持对容器的自动发现（autodiscover），还支持从容器的元数据中加载配置，称为基于提示（hints）的自动发现。
+  - 配置示例：
+    ```yml
+    filebeat.autodiscover:
+      providers:
+        - type: docker                # 声明一个自动发现的日志源，为 docker 类型。这会调用内置 docker 变量模板
+          # templates:
+          #   - condition:            # 只采集满足该条件的日志
+          #       contains:
+          #         docker.container.name: elasticsearch
+          #     config:
+          #       - type: container   # 该 container 是指 filebeat.inputs 类型，不是指 providers 类型
+          #         paths:
+          #           - /var/lib/docker/containers/${data.docker.container.id}/*.log
+          # hints.enabled: false      # 是否启用 hints ，从 Docker 容器的 Labels 加载配置
+          # hints.default_config:     # 设置默认的 hints 配置
+          #   enabled: true           # 是否采集容器的日志，默认为 true 。如果禁用，则需要容器启用 co.elastic.logs/enabled 配置
+          #   type: container
+          #   paths:
+          #     - /var/lib/docker/containers/${data.docker.container.id}/*.log
+
+        - type: kubernetes
+          # hints.enabled: false      # 从 k8s Pod 的 Annotations 加载配置
+          # hints.default_config:
+          #   type: container
+          #   paths:
+          #     - /var/log/containers/*${data.kubernetes.container.id}.log
+    ```
   - provider 为 docker 类型时，可以引用以下变量：
     ```sh
     docker.container.id
@@ -485,23 +503,9 @@
     docker.container.name
     docker.container.labels
     ```
-  - provider 为 kubernetes 类型时，详细配置见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover.html#_kubernetes) 。
-
-- filebeat 还支持从 Docker 容器的 Labels ，或 k8s Pod 的 Annotations 中加载配置，这称为基于提示（hints）的自动发现。
-  - 例如在 filebeat.yml 中加入配置：
-    ```yml
-    filebeat.autodiscover:
-      providers:
-        - type: docker
-          hints.enabled: true
-          # hints.default_config:     # 设置容器默认的配置参数
-          #   type: container
-          #   paths:
-          #     - /var/log/containers/${data.docker.container.id}/*.log
-    ```
-    然后给 Docker 容器添加 Labels ：
+  - 使用 hints 功能时，可以在容器的 Labels 或 Annotations 中添加配置参数：
     ```sh
-    co.elastic.logs/enabled: true     # 默认启用，会采集所有容器的日志
+    co.elastic.logs/enabled: true     # 是否采集容器的日志，默认为 true
     co.elastic.logs/json.*: ...
     co.elastic.logs/multiline.*: ...
     co.elastic.logs/exclude_lines: '^DEBUG'

@@ -1,6 +1,6 @@
 # ETH
 
-：一种数字货币，由以太坊（Ethereum）区块链发行。
+：以太币，一种数字货币，由以太坊（Ethereum）区块链发行。
 - [官方文档](https://ethereum.org/en/developers/docs/)
 - 与 BTC 相比，提供了一种图灵完备的脚本语言，允许用户编写去中心化应用程序，部署到 ETH 区块链中。
 

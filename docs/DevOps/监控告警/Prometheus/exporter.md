@@ -400,31 +400,41 @@
   访问地址为 `127.0.0.1:8080/containers/` 。
 - 指标示例：
   ```sh
-  container_start_time_seconds{container_label_maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>", id="/docker/e2b21f73d372c59a5cc6c5180ae1325c9d8c3e9a211087db036228ffa5b54b43",
-  image="nginx:latest", instance="10.0.0.1:8080", job="cadvisor", name="nginx"}   # 容器的创建时刻（不是启动时刻），采用 Unix 时间戳
-  container_last_seen     # 最后一次监控该容器的时刻。cadvisor 不会监控已停止的容器，但会在容器停止之后的几分钟内依然记录该指标
+  container_start_time_seconds              # 容器的创建时刻（不是启动时刻），采用 Unix 时间戳
+  container_last_seen                       # 最后一次监控该容器的时刻。cadvisor 不会监控已停止的容器，但会在容器停止之后的几分钟内依然记录该指标
+  container_tasks_state{state="xx"}         # 容器是否处于某种状态
+  container_processes                       # 进程数
+  container_threads                         # 线程数
 
   container_cpu_usage_seconds_total         # 容器占用 CPU 的累计时长
+  container_cpu_user_seconds_total          # 占用用户态 CPU 的时长
+  container_cpu_system_seconds_total
   container_cpu_load_average_10s            # 容器占用 CPU 的 10 秒平均负载
-  container_cpu_cfs_throttled_seconds_total # 容器被 cpu.cfs_quota_us 限制的时长，即拒绝分配的 CPU 时长
+  container_cpu_cfs_throttled_seconds_total # 容器超出 cpu.cfs_quota_us 限额之后申请的 CPU 时长
 
   container_memory_usage_bytes              # 容器占用的全部内存，包括 RSS、swap、Page Cache 等
-  container_memory_working_set_bytes        # 容器的工作集内存，即最近访问的内存，等于 container_memory_usage_bytes - inactive_page
   container_memory_rss                      # 容器的 rss 内存。超过 Cgroup 限制时会被 OOM 杀死
   container_memory_swap                     # 容器占用的 swap 分区
   container_memory_cache                    # 容器占用的 Page Cache
+  container_memory_working_set_bytes        # 容器的工作集内存，即最近访问的内存，等于 container_memory_usage_bytes - inactive_page
 
-  container_fs_reads_total                  # 磁盘读的累计字节数
+  container_file_descriptors                # 打开的文件描述符数
+  container_fs_reads_total{device="xx"}     # 磁盘读的次数，按设备划分
+  container_fs_reads_bytes_total            # 磁盘读的累计字节数
   container_fs_read_seconds_total           # 磁盘读的累计耗时
-  container_fs_writes_bytes_total           # 磁盘写的累计字节数
-  container_fs_write_seconds_total          # 磁盘写的累计耗时
+  container_fs_writes_total                 # 磁盘写
+  container_fs_write_seconds_total
+  container_fs_writes_bytes_total
 
-  container_network_receive_bytes_total     # 网卡接收的累计字节量
-  container_network_receive_packets_total   # 网卡接收的累计数据包数
-  container_network_transmit_bytes_total    # 网卡发送的累计字节量
-  container_network_transmit_packets_total  # 网卡发送的累计数据包数
+  container_sockets                                       # 打开的 Socket 数
+  container_network_receive_bytes_total{interface="xx"}   # 网络收的累计字节量
+  container_network_receive_packets_total                 # 网络收的累计数据包数
+  container_network_transmit_bytes_total                  # 网卡发
+  container_network_transmit_packets_total
   ```
-  - 假设容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 上限时，不会触发 OOM ，而是停止增长。此时容器可以减少 Page Cache ，继续增加 container_memory_working_set_bytes 。当 container_memory_working_set_bytes 达到 Cgroup 上限时，会触发 OOM ，杀死容器。
+  - 假设容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 上限时，不会触发 OOM ，而是停止增长。
+    - 此时容器可以减少 Page Cache ，继续增加 container_memory_working_set_bytes 。
+    - 当 container_memory_working_set_bytes 达到 Cgroup 上限时，会触发 OOM ，杀死容器。
 
 ### blackbox_exporter
 

@@ -16,6 +16,22 @@
 
 Pod 中每个容器可单独设置 request、limit 资源
 
+<!--
+
+限制容器占用的内存时，如果容器内全部进程占用的内存总和超过限制，则触发 OOM-killer 。如果 OOM-killer 没有杀死 1 号进程，则容器会继续运行，否则容器会终止。
+
+- 限制 pod 占用的磁盘空间,以免它将日志写入文件而不是终端，占满宿主机磁盘，导致所有 pod 故障。
+  requests.ephemeral-storage: 1Gi
+  limits.ephemeral-storage: 2Gi
+  如果 Pod 占用的内存、磁盘资源超过限制，则会被驱逐（Evicted），变为 Failed 状态。不过 deployment 会自动创建新的 Pod 实例
+
+
+
+被驱逐的 Pod 不会被自动删除，一直占用 Pod IP 等资源。可添加一个 crontab 任务来删除：
+```sh
+kubectl delete pods --all-namespaces --field-selector status.phase=Failed
+``` -->
+
 ### 状态
 
  -->
@@ -150,20 +166,6 @@ spec:                       # Controller 的规格
 lastTransitionTime    # 上一次进入该状态的时间？？？
 lastUpdateTime        # 上一次更新该状态的时间
  -->
-
-<!--
-
-- 限制 pod 占用的磁盘空间,以免它将日志写入文件而不是终端，占满宿主机磁盘，导致所有 pod 故障。
-  requests.ephemeral-storage: 1Gi
-  limits.ephemeral-storage: 2Gi
-  如果 Pod 占用的内存、磁盘资源超过限制，则会被驱逐（Evicted），变为 Failed 状态。不过 deployment 会自动创建新的 Pod 实例
-
-
-
-被驱逐的 Pod 不会被自动删除，一直占用 Pod IP 等资源。可添加一个 crontab 任务来删除：
-```sh
-kubectl delete pods --all-namespaces --field-selector status.phase=Failed
-``` -->
 
 
 ### ReplicaSet

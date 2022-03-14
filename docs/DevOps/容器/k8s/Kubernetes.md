@@ -136,7 +136,7 @@
   - 在同一 namespace 下，同种对象的 name 不能重复。
     - 每个对象会被自动分配一个 UUID ，在整个 k8s 集群的所有 namespace 中唯一。
   - annotations、labels 采用键值对格式。
-    - key、value 都是 String 类型。
+    - key、value 都是 String 类型，不能为 bool 等类型。
     - key 只能包含 `[a-zA-Z0-9._-]` 字符，必须以字母、数字开头和结尾。
     - 可以给 key 加上一个 `<dns_domain>/` 格式的前缀。
       - 前缀 `kubernetes.io/` 、`k8s.io/` 保留，供 k8s 系统内部使用。

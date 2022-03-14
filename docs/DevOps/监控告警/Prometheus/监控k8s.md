@@ -103,12 +103,9 @@
   etcd_request_duration_seconds_count
   etcd_request_duration_seconds_sum
 
-  # 关于 node
+  # 关于 kubelet
   kubernetes_build_info                                                     # k8s 版本信息
-  kubelet_node_name{job="k8s-node", instance="10.0.0.1", node="10.0.0.1"}   # 在 label 中记录该 kubelet 所在的 node
-  kubelet_container_log_filesystem_used_bytes                               # 每个 container 的日志占用的磁盘空间
-  kubelet_cgroup_manager_duration_seconds_count{operation_type="create"}    # Cgroup Manager 各种操作的次数
-  kubelet_cgroup_manager_duration_seconds_sum
+  kubelet_node_name{job="k8s-node", instance="10.0.0.1", node="10.0.0.1"}   # 通过 node 标签记录该 kubelet 所在的 node ip
   kubelet_evictions{eviction_signal="xx"}                                   # 发出的各种驱逐 pod 信号的次数
   kubelet_http_requests_total                                               # 各种 HTTP 请求的次数
   kubelet_http_requests_duration_seconds_sum
@@ -119,6 +116,7 @@
   kubelet_runtime_operations_errors_total{operation_type="xx"}              # 各种操作出错的次数
   kubelet_running_pod_count
   kubelet_running_container_count{container_state="xx"}
+  kubelet_container_log_filesystem_used_bytes                               # 每个 container 的日志占用的磁盘空间
 
   # 关于 cadvisor 的指标略
   ```
@@ -166,16 +164,15 @@
 - 指标示例：
   ```sh
   # 几种资源都存在的指标
-  *_created                     # 资源的创建时间，取值为 Unix 时间戳
-  *_metadata_resource_version   # 资源的 resourceVersion
+  *_created                       # 资源的创建时间，取值为 Unix 时间戳
+  *_metadata_resource_version     # 资源的 resourceVersion
   *_annotations
   *_labels
 
   # 各种资源
   kube_node_spec_unschedulable    # Node 是否不可调度
-  kube_node_status_condition{condition="xx", status="true"}       # 是否处于某种状态
-  kube_node_status_capacity{resource="cpu", unit="core"}          # node 各种资源的容量
-  1 - kube_node_status_allocatable / kube_node_status_capacity    # 各种资源的使用率
+  kube_node_status_condition{condition="xx", status="true"} # 是否处于某种状态
+  kube_node_status_allocatable{resource="cpu", unit="core"} # node 各种资源的容量
 
   kube_pod_info
   kube_pod_owner{owner_kind="ReplicaSet", owner_name="xx"}  # 父资源

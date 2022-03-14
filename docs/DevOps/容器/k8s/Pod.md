@@ -12,6 +12,8 @@
 
 ### 配置
 
+Pod 中每个容器可单独设置 request、limit 资源
+
 ### 状态
 
  -->
@@ -104,6 +106,8 @@ spec:                       # Controller 的规格
   ```
   - 一个资源可能同时处于多种 condition ，但只能处于一种 phrase 。
     - 比如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
+  - 根据 `.status.conditions` 判断 `.status.phase`
+  <!-- - 支持添加自定义的 condition -->
 
 - Deployment 的状态示例：
   ```yml

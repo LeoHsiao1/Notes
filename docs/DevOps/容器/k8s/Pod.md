@@ -2,11 +2,13 @@
 
 ## 原理
 
-- 一个 Pod 由一个或多个容器组成，它们会被部署到同一个 Node 上。而且：
+- Docker 以容器为单位部署应用，而 k8s 以 Pod 为单位部署应用。
+- 一个 Pod 由一个或多个容器组成，它们会被部署到同一个 Node 上。特点：
   - 共享一个网络空间，可以相互通信。对外映射的访问 IP 都是 Pod IP ，因此不能暴露同样的端口号。
   - 共享所有存储卷。
 - 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 管理 Pod 。
   - 用户需要编写 Controller 配置文件，描述如何部署一个应用的 Pod 。然后创建该 Controller ，k8s 就会自动部署其 Pod 。
+
 
 <!--
 
@@ -73,7 +75,19 @@ spec:                       # Controller 的规格
       # securityContext: {}
       # terminationGracePeriodSeconds: 30
 ```
-- 上例中 Deployment 名为 redis ，但可能创建多个 Pod 实例，名称带上随机后缀，比如 redis-65d9c7f6fc-szgbk 。因此不能通过名称来筛选 Pod ，而是通过 label 筛选。
+- 部署一个 Deployment 时，可以创建多个 Pod 实例。
+  - Pod 的命名格式为 `<Controller_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
+    ```sh
+    redis-65d9c7f6fc-szgbk
+    ```
+    - 用 kubectl 命令管理 Pod 时，不能事先知道 Pod 的具体名称，应该通过 label 来筛选 Pod 。
+  - 每个 Pod 中，容器的命名格式为 `k8s_<container_name>_<pod_name>_<k8s_namespace>_<pod_uid>_<restart_id>` ，例如：
+    ```sh
+    k8s_POD_redis-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0   # Pod 中内置的 pause 容器，其容器名为 POD
+    k8s_redis_redis-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0
+    ```
+    - 当 Pod 配置不变时，如果触发重启事件，创建新 Pod ，则会将容器末尾的 restart_id 加 1（从 0 开始递增）。
+
 - Deployment 的 spec.selector 是必填字段，称为选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod ，匹配结果可能有任意个（包括 0 个）。
   - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
   - 当 selector 中没有设置筛选条件时，会选中所有对象。

@@ -62,6 +62,13 @@
   - 将当前节点注册到 kube-apiserver 。
   - 监控当前节点。
   - 创建、管理、监控 Pod ，基于容器运行时。
+- kubelet 部署 Pod 时，会调用 CRI 接口 RuntimeService.RunPodSandbox ，先创建一个沙盒（Pod Sandbox），再启动 Pod 中的容器。
+  - Sandbox 负责提供一个 Pod 运行环境，比如设置网络。
+  - Sandbox 可以基于 Linux namespace 实现，也可以基于虚拟机实现，比如 kata-containers 。
+  - 基于 Linux namespace 实现 Sandbox 时，kubelet 会先在每个 Pod 中运行一个 pause 容器。
+    - pause 容器是一个简单程序，一直以睡眠状态保持运行，避免 Pod 中所有容器进程停止时，Linux namespace 被自动删除。
+    - 如果停止 pause 容器，则会导致 kubelet 认为该 Pod 失败，触发重启事件，创建新 Pod 。
+    - pause 容器可以与其它容器共用一个 PID namespace ，从而为其它容器启动 1 号进程、清理僵尸进程。不过 k8s 默认禁用了该共享功能，使得其它容器的 1 号进程的 PID 依然为 1 。
 - kubelet 中的 PLEG（Pod Lifecycle Event Generator）模块负责执行 relist 任务：获取本机的容器列表，检查所有 Pod 的状态，如果状态变化则生成 Pod 的生命周期事件。
   - 每执行一次 relist ，会等 1s 再执行下一次 list 。
   - 如果某次 relist 耗时超过 3min ，则报错 `PLEG is not healthy` ，并将当前 Node 标记为 NotReady 状态。

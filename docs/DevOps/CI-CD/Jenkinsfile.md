@@ -198,12 +198,13 @@ pipeline {
 
 - 可以通过 currentBuild 字典获取当前的构建信息。如下：
   ```sh
-  echo currentBuild.displayName       # Build 的名称，格式为 #number
-  echo currentBuild.fullDisplayName   # Build 的全名，格式为 JOB_NAME #number
-  echo currentBuild.description       # Build 的描述，默认为 null
-  echo currentBuild.duration          # Build 的持续时长，单位 ms
-  echo currentBuild.result            # Build 的结果。如果构建尚未结束，则返回值为 null
-  echo currentBuild.currentResult     # Build 的当前状态。开始执行时为 SUCCESS ，受每个 stage 影响，不会变为 null
+  currentBuild.buildCauses       # Build 的执行原因，返回一个字典，包括 userId、userName 等
+  currentBuild.displayName       # Build 的名称，格式为 #number
+  currentBuild.fullDisplayName   # Build 的全名，格式为 JOB_NAME #number
+  currentBuild.description       # Build 的描述，默认为 null
+  currentBuild.duration          # Build 的持续时长，单位 ms
+  currentBuild.result            # Build 的结果。如果构建尚未结束，则返回值为 null
+  currentBuild.currentResult     # Build 的当前状态。开始执行时为 SUCCESS ，受每个 stage 影响，不会变为 null
   ```
   - 只有 displayName、description 变量支持修改。修改其它变量时会报错：`RejectedAccessException: No such field`
   - 例：修改本次构建的名称

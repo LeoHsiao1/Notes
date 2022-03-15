@@ -178,7 +178,6 @@
   kube_pod_owner{owner_kind="ReplicaSet", owner_name="xx"}  # 父资源
   kube_pod_status_scheduled{condition="true"} # Pod 是否已被调度
   kube_pod_status_scheduled_time              # Pod 被调度的时刻
-  kube_pod_status_unschedulable               # 不能被调度的 Pod
   kube_pod_start_time
   kube_pod_completion_time
   kube_pod_status_phase{phase="xx"}           # Pod 是否处于某个生命周期

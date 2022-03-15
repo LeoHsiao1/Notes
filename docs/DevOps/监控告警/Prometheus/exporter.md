@@ -418,11 +418,12 @@
   container_memory_cache                    # 容器占用的 Page Cache
   container_memory_working_set_bytes        # 容器的工作集内存，即最近访问的内存，等于 container_memory_usage_bytes - inactive_page
 
-  container_file_descriptors                # 打开的文件描述符数
-  container_fs_reads_total{device="xx"}     # 磁盘读的次数，按设备划分
-  container_fs_reads_bytes_total            # 磁盘读的累计字节数
+  container_file_descriptors                # 打开的文件数
+  container_fs_usage_bytes                  # 容器占用的磁盘，包括 rootfs、终端日志，不包括挂载的 volume
+  container_fs_reads_total                  # 磁盘读的累计次数
+  container_fs_reads_bytes_total            # 磁盘读的累计字节量
   container_fs_read_seconds_total           # 磁盘读的累计耗时
-  container_fs_writes_total                 # 磁盘写
+  container_fs_writes_total{device="xx"}    # 磁盘写的累计次数，按 device 划分，包括 rootfs、volume ，不包括终端日志，不包括 Page Cache 缓冲区的数据
   container_fs_write_seconds_total
   container_fs_writes_bytes_total
 

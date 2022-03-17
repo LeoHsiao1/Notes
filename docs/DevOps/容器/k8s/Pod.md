@@ -127,7 +127,7 @@ spec:                       # Controller 的规格
 
 ### 状态
 
-- Deployment 的生命周期分为多种状态（condition）：
+- Deployment 的生命周期分为多种条件（condition）：
   ```sh
   Progressing       # 处理中，比如正在部署或销毁 Pod 实例
   Complete          # 处理完成，比如部署完所有 Pod 实例且可用，或者该 Deployment 是停止运行的旧版本

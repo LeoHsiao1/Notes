@@ -68,9 +68,8 @@ k8s 常见的几种网络通信：
 
 ### NodePort
 
-：使用 Node 主机的 IP ，并从 Node 的 30000~32767 端口中随机选取或指定一个端口。
-- 访问 `NodeIP:Port` 的流量会被转发到 EndPoint 。
-  - 不过 Pod 迁移到其它 Node 上时，NodeIP 会变化。
+：在所有 Node 上监听一个 Port ，将访问 `NodeIP:Port` 的流量转发到 EndPoint 。
+- 默认的 NodePort 范围为 30000~32767 ，以免与系统端口冲突。
 - 例：
   ```yml
   spec:
@@ -85,6 +84,11 @@ k8s 常见的几种网络通信：
       protocol: TCP
       targetPort: 6379
   ```
+
+### HostPort
+
+：与 NodePort 相似，但只是在 Pod 所在的 Node 上监听一个 Port 。
+- 当 Pod 迁移部署到其它 Node 时，Host IP 会变化。
 
 ### LoadBalancer
 

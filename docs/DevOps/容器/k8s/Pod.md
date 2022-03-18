@@ -54,12 +54,12 @@ apiVersion: v1
 kind: Deployment            # 该 Controller 的类型
 metadata:                   # 该 Controller 的元数据
   annotations:
-    creator: Leo
+    deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置是第几次修改版本，从 1 开始递增
   labels:
-    app: redis
+    creator: Leo
   name: redis
   namespace: default
-  # generation: 3           # 配置文件的版本序号，从 1 开始递增，由 k8s 自动更新
+  # generation: 1           # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
 spec:                       # Controller 的规格
   replicas: 3               # Pod 运行的副本数
   selector:                 # 选择 Pod
@@ -78,11 +78,11 @@ spec:                       # Controller 的规格
         app: redis
     spec:                         # Pod 的规格
       containers:                 # 定义该 Pod 中的容器
-      - name: redis               # 该 Pod 中的第一个容器
+      - name: redis               # 该 Pod 中的第一个容器名
         image: redis:5.0.6
         command: ["redis-server /opt/redis/redis.conf"]
         ports:
-        - containerPort: 6379   # 相当于 Dockerfile 中的 export 8080
+        - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
       # dnsPolicy: ClusterFirst
       # imagePullSecrets:
       # - name: qcloudregistrykey
@@ -104,7 +104,7 @@ spec:                       # Controller 的规格
     ```
     - 当 Pod 配置不变时，如果触发重启事件，创建新 Pod ，则会将容器末尾的 restart_id 加 1（从 0 开始递增）。
 
-- Deployment 的 spec.selector 是必填字段，称为选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod ，匹配结果可能有任意个（包括 0 个）。
+- Deployment 的 spec.selector 是必填字段，称为选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 进行控制，匹配结果可能有任意个（包括 0 个）。
   - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
   - 当 selector 中没有设置筛选条件时，会选中所有对象。
   - 例：

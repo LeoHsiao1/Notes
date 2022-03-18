@@ -43,19 +43,17 @@ k8s 常见的几种网络通信：
   kind: Service
   metadata:
     name: redis
-    namespace: redis
-
+    namespace: default
   spec:
     type: ClusterIP
     clusterIP: 10.124.0.1
-    selector:               # 通过 selector 选中一组 Pod ，进行反向代理
+    selector:               # 通过 selector 选中一些 Pod ，进行反向代理
       app: redis
-
     ports:                  # 定义一组反向代理规则
     - name: redis
-      port: 6379            # Service 供外访问的端口
+      port: 6379            # Service 监听的端口，供外部访问
       protocol: TCP         # 反向代理的协议，默认为 TCP ，还可以填 UDP
-      targetPort: 6379      # 将访问 Service 该 port 的流量，转发到 Pod 的 targetPort 端口
+      targetPort: 6379      # 将访问 clusterIP:port 的流量，转发到 Pod_IP:targetPort
       # targetPort: port1   # 可以指定 Pod 的端口名，而不是具体的端口号
     - name: sentinel
       port: 26379
@@ -63,32 +61,59 @@ k8s 常见的几种网络通信：
       targetPort: 26379
   ```
   - 该 Service 分配了一个 clusterIP ，映射了两个 port ，供用户访问。
-  - 用户可以通过 `ClusterIP:Port` 访问该服务。
-    - 也可以通过 `ServiceName:Port` 访问，但这需要将 ServiceName 解析到 ClusterIP 。
+  - 此时可以通过 3 种地址访问 Pod 端口：
+    ```sh
+    service_name:port   # 访问者与 service 在同一命名空间时，service_name 会被自动 DNS 解析到 service_ip 。在不同命名空间时，则不支持
+    service_ip:port     # 在不同命名空间时，也可以通过 service_ip 访问 service
+    pod_ip:targetPort   # 也可以直接访问 Pod
+    ```
 
 ### NodePort
 
 ：在所有 Node 上监听一个 Port ，将访问 `NodeIP:Port` 的流量转发到 EndPoint 。
-- 默认的 NodePort 范围为 30000~32767 ，以免与系统端口冲突。
+- NodePort 默认的取值范围为 30000~32767 ，以免与系统端口冲突。
 - 例：
   ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: redis
+    namespace: default
   spec:
-    type: NodePort
-    clusterIP: 10.124.0.1
-    selector:
-      app: redis
+    clusterIP: 10.124.0.1   # NodePort 类型的 service 也会绑定一个 clusterIP
     ports:
-    - name: redis
-      nodePort: 31533
-      port: 6379
+    - nodePort: 31017       # 如果不指定 nodePort ，则随机选取一个端口
+      port: 80
       protocol: TCP
-      targetPort: 6379
+      targetPort: 80
+    selector:
+      k8s-app: redis
   ```
 
 ### HostPort
 
-：与 NodePort 相似，但只是在 Pod 所在的 Node 上监听一个 Port 。
-- 当 Pod 迁移部署到其它 Node 时，Host IP 会变化。
+：与 NodePort 相似，但只使用 Pod 所在节点的端口。
+- HostPort 不属于 Service 对象，没有监听端口，只是添加 iptables 规则实现端口转发。
+  - HostPort 的取值范围不限。
+  - 如果 HostPort 与 NodePort 端口号相同，则依然可以创建，但优先级更高。
+- 缺点：
+  - 当 Pod 迁移部署到其它节点时，节点 IP 会变化，因此通常将 Pod 固定调度在某个节点上。
+  - 同一节点上不允许重复使用同一个 HostPort ，因此 Pod 不支持 rollingUpdate 。
+- HostPort 需要在 Pod 的 spec.containers 里配置，如下：
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: redis
+  spec:
+    containers:
+    - name: redis
+      image: redis:5.0.6
+      command: ["redis-server /opt/redis/redis.conf"]
+      ports:
+      - containerPort: 6379
+        hostPort: 6379      # 将访问 hostPort 的流量转发到 containerPort
+  ```
 
 ### LoadBalancer
 
@@ -99,6 +124,11 @@ k8s 常见的几种网络通信：
   - LB 可以使用内网 IP 或公网 IP 。
 - 例：
   ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: redis
+    namespace: default
   spec:
     type: LoadBalancer
     clusterIP: 10.124.0.1
@@ -117,6 +147,11 @@ k8s 常见的几种网络通信：
 ：添加一条neiw集群内的 DNS 规则，将 ServiceName 解析到指定的域名。
 - 例：
   ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: redis
+    namespace: default
   spec:
     type: ExternalName
     externalName: redis.test.com
@@ -127,6 +162,11 @@ k8s 常见的几种网络通信：
 ：给 Service 分配集群外的 IP ，此时 Service 可以是任意 type 。
 - 例：
   ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: redis
+    namespace: default
   spec:
     selector:
       app: redis
@@ -168,3 +208,4 @@ k8s 常见的几种网络通信：
 - Service Account
 - RBAC
 - NetWorkPolicy ：管控 Pod 之间的网络流量，相当于第四层的 ACL 。
+

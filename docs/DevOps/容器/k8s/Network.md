@@ -117,11 +117,7 @@ k8s 常见的几种网络通信：
 
 ### LoadBalancer
 
-：给 Service 分配一个负载均衡 IP 。
-- 访问 `loadBalancerIP:Port` 的流量会被转发到 EndPoint 。
-- 一般需要购买公有云平台的负载均衡器，将其接收的流量代理到 Service。
-  - LB 位于集群之外，不受防火墙限制。
-  - LB 可以使用内网 IP 或公网 IP 。
+：一般是购买公有云平台的负载均衡器，绑定一个内网或公网 IP ，将访问它的流量转发到 Service 。
 - 例：
   ```yml
   apiVersion: v1
@@ -144,7 +140,7 @@ k8s 常见的几种网络通信：
 
 ### ExternalName
 
-：添加一条neiw集群内的 DNS 规则，将 ServiceName 解析到指定的域名。
+：添加一条集群内的 DNS 规则，将 ServiceName 解析到指定的域名。
 - 例：
   ```yml
   apiVersion: v1
@@ -186,26 +182,36 @@ k8s 常见的几种网络通信：
 ## Ingress
 
 ：一种管理逻辑网络的对象，用于对某些 Service 进行 HTTP、HTTPS 反向代理，常用于实现路由转发。
-- 实现 Ingress 功能的 Controller 有多种，常见的是 Nginx Ingress Controller ，它基于 Nginx 实现 Ingress 功能。
-- 配置示例：
+- 实现 Ingress 功能的 Controller 有多种，常见的是 Nginx Ingress Controller ，它基于 Nginx 实现 Ingress 功能，会在每个 node 上监听 80、443 端口。
+- 例：
   ```yml
-  apiVersion: v1
+  apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
-    name: test-ingress
+    name: test
+    namespace: default
   spec:
-    rules:                        # Ingress 的入站规则列表
-    - http:                       # 定义 http 协议的规则
+    ingressClassName: nginx
+    rules:                        # Ingress 的入站规则表
+    - host: test.com              # 处理发向该域名的请求
+      http:                       # 定义 http 类型的转发规则
         paths:
-        - path: /login            # 将发往该 URL 的请求转发到后端（backend）的 Service
-          backend:
-            serviceName: nginx
-            servicePort: 80
+        - backend:
+            service:
+              name: nginx
+              port:
+                number: 80
+          path: /                 # 将发向该 URL 的请求转发到后端（backend）的 Service
+          pathType: Prefix
   ```
+  - 执行以下命令，即可访问该 ingress ：
+    ```sh
+    echo '10.0.0.1 test.com' >> /etc/hosts    # 将 ingress 域名解析到任一 k8s node
+    curl test.com
+    ```
 
 ## 访问控制
 
 - Service Account
 - RBAC
 - NetWorkPolicy ：管控 Pod 之间的网络流量，相当于第四层的 ACL 。
-

@@ -141,7 +141,8 @@
   # status:                   # 描述对象的实际状态，这部分字段由 k8s 自动写入
   #   <...>
   ```
-  - 在同一 namespace 下，同种对象的 name 不能重复。
+  - 对象的 name 必须符合 DNS 命名规范，只能包含 `[a-z0-9.-]` 字符。
+    - 在同一 namespace 下，同种对象的 name 不能重复。
     - 每个对象会被自动分配一个 UUID ，在整个 k8s 集群的所有 namespace 中唯一。
   - annotations、labels 采用键值对格式。
     - key、value 都是 String 类型，不能为 bool 等类型。

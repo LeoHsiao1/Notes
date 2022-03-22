@@ -27,10 +27,11 @@ Pod 中每个容器可单独设置 request、limit 资源
 
 
 
-被驱逐的 Pod 不会被自动删除，一直占用 Pod IP 等资源。可添加一个 crontab 任务来删除：
+evicted Pod 不会被自动删除，一直占用 Pod IP 等资源。可添加一个 crontab 任务来删除：
 ```sh
 kubectl delete pods --all-namespaces --field-selector status.phase=Failed
-``` -->
+```
+-->
 
 ### 状态
 

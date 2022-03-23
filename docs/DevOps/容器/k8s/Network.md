@@ -21,6 +21,12 @@ k8s 常见的几种网络通信：
 - 同一个集群内，Pod 到服务的通信
 - 集群内与集群外的通信
 
+允许 Pod 被 k8s 集群外主机访问的几种方式：
+- 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网或公网 IP 。
+- 给 Pod 创建 NodePort 类型的 Service 。
+- 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
+- 给 Pod 启用 `hostNetwork: true` ，采用宿主机的网卡。
+
 ## Service
 
 ：一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
@@ -97,8 +103,8 @@ k8s 常见的几种网络通信：
   - HostPort 的取值范围不限。
   - 如果 HostPort 与 NodePort 端口号相同，则依然可以创建，但优先级更高。
 - 缺点：
-  - 当 Pod 迁移部署到其它节点时，节点 IP 会变化，因此通常将 Pod 固定调度在某个节点上。
-  - 同一节点上不允许重复使用同一个 HostPort ，因此 Pod 不支持 rollingUpdate 。
+  - 当 Pod 迁移部署到其它节点时，节点 IP 会变化，因此通常将 Pod 固定调度到某个节点。
+  - 同一节点上不允许多个 Pod 使用同一个 HostPort ，否则会被 evicted ，因此以 DaemonSet 方式部署比 Deployment 更合适。
 - HostPort 需要在 Pod 的 spec.containers 里配置，如下：
   ```yml
   apiVersion: v1
@@ -117,7 +123,8 @@ k8s 常见的几种网络通信：
 
 ### LoadBalancer
 
-：一般是购买公有云平台的负载均衡器，绑定一个内网或公网 IP ，将访问它的流量转发到 Service 。
+：给 Service 绑定一个内网或公网的负载均衡 IP ，将访问该 IP 的流量转发到 Service 的 clusterIP 。
+- 一般需要购买云平台的负载均衡器，也可以用 MetalLB 自建。
 - 例：
   ```yml
   apiVersion: v1

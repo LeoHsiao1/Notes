@@ -66,13 +66,13 @@ spec:                       # Controller 的规格
   selector:                 # 选择 Pod
     matchLabels:
       app: redis
+  # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
+  # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
   # strategy:               # 更新部署的策略，默认为滚动更新
   #   type: RollingUpdate
   #   rollingUpdate:              # 滚动更新过程中的配置
   #     maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
   #     maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
-  # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
-  # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
   template:                       # 开始定义 Pod 的模板
     metadata:                     # Pod 的元数据
       labels:
@@ -121,10 +121,12 @@ spec:                       # Controller 的规格
 - spec.template 是必填字段，用于描述 Pod 的配置。
   - 当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
   - 删除 Deployment 时，k8s 会自动销毁对应的 Pod 。
-  - 修改 Deployment 时，k8s 会自动部署新 Pod ，销毁旧 Pod 。该过程称为更新部署，有两种策略：
-    - Recreate ：先销毁旧 Pod ，再部署新 Pod 。
-    - RollingUpdate ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
-      - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
+  - 修改 Deployment 时，k8s 会自动部署新 Pod ，销毁旧 Pod ，该过程称为更新部署。
+
+- Deployment 的更新部署策略（strategy）有两种：
+  - Recreate ：先销毁旧 Pod ，再部署新 Pod 。
+  - RollingUpdate ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
+    - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
 
 ### 状态
 
@@ -191,8 +193,32 @@ lastUpdateTime        # 上一次更新该状态的时间
 
 ### DaemonSet
 
-：与 Deployment 类似，但部署的是宿主机上的 daemon 服务，例如监控、日志服务。
-- 一个 DaemonSet 服务通常在每个宿主机上只需部署一个 Pod 实例。
+：与 Deployment 类似，但是在每个 node 上只部署一个 Pod 实例。适合监控、日志等 deamon 服务。
+- 例：
+  ```yml
+  apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    name: redis
+    namespace: default
+  spec:
+    selector:
+      matchLabels:
+        k8s-app: redis
+    template:
+      metadata:
+        labels:
+          k8s-app: redis
+      spec:
+        containers:
+          - ...
+    # nodeName: xx              # DaemonSet 默认会调度到每个节点，可以限制调度的节点
+    # updateStrategy:           # DaemonSet 的更新部署策略（updateStrategy）有两种：RollingUpdate、OnDelete
+    #   type: RollingUpdate
+    #   rollingUpdate:
+    #     maxSurge: 0
+    #     maxUnavailable: 1
+  ```
 
 ### Job
 

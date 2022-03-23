@@ -22,6 +22,7 @@
     - [Pod](容器/k8s/Pod.md)
     - [Network](容器/k8s/Network.md)
     - [Volume](容器/k8s/Volume.md)
+    - [权限](容器/k8s/权限.md)
     - [插件](容器/k8s/插件.md)
 - 配置管理
   - [简介](配置管理/简介.md)

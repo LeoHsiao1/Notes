@@ -407,6 +407,19 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   ])
   ```
 
+### dir
+
+：用于暂时切换工作目录，执行一些指令之后又回到 WORKSPACE 。
+- 例：
+  ```groovy
+  steps {
+    dir("/tmp") {
+        sh "pwd"
+    }
+    sh "pwd"
+  }
+  ```
+
 ### echo
 
 ：用于显示字符串。

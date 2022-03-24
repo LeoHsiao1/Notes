@@ -19,33 +19,32 @@ pipeline {
         label 'master'
     }
     environment {               // 定义环境变量
-        PORT = '80'
+        GIT_REPO = 'https://github.com/xx'
     }
     options {
         timestamps()
-        timeout(time: 5, unit: 'MINUTES')
+        timeout(time: 10, unit: 'MINUTES')
     }
     stages {
         stage('拉取代码') {      // 开始一个阶段
             environment {       // 定义该阶段的环境变量
-                GIT_BRANCH = 'dev'
+                BRANCH = 'master'
             }
-            steps {             // 执行一些命令
-                sh "git checkout $GIT_BRANCH"
-                echo '已切换分支'
+            steps {             // 该阶段需要执行一些步骤
+                sh """
+                    git clone $GIT_REPO
+                    git checkout $BRANCH"
+                """
             }
         }
         stage('构建镜像') {
             steps {
-                docker build -t ${image_hub}/${image_project}/${build_image_name}:${build_image_tag} .
-                docker push ${image_hub}/${image_project}/${build_image_name}:${build_image_tag}
-                docker image rm ${image_hub}/${image_project}/${build_image_name}:${build_image_tag}
-            }
-        }
-        stage('测试') {
-            steps {
-                echo '测试中...'
-                echo '测试完成'
+                sh '''
+                    IMAGE=${image_hub}/${image_project}/${image_name}:${image_tag}
+                    docker build . -t $IMAGE
+                    docker push $IMAGE
+                    docker image rm $IMAGE
+                '''
             }
         }
     }

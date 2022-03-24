@@ -222,11 +222,12 @@ lastUpdateTime        # 上一次更新该状态的时间
 
 ### Job
 
-：与 Deployment 类似，但部署的是只执行一次的任务。
+：只执行一次的任务，即部署一次某个 Pod 。
 
 ### CronJob
 
-：与 Deployment 类似，但部署的是定时任务或周期性任务。
+：定时任务，定时创建并执行某个 Job 。
+- 由 kube-controller-manager 定时调度，而后者默认采用 UTC 时区。
 
 ## Sidecar
 

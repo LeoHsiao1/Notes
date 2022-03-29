@@ -15,6 +15,7 @@
 ### 配置
 
 Pod 中每个容器可单独设置 request、limit 资源
+ -->
 
 <!--
 
@@ -35,7 +36,6 @@ kubectl delete pods --all-namespaces --field-selector status.phase=Failed
 
 ### 状态
 
- -->
 
 
 ## Controller
@@ -186,10 +186,13 @@ lastUpdateTime        # 上一次更新该状态的时间
 ### StatefulSet
 
 ：与 Deployment 类似，但部署的是有状态服务。
-<!-- - 无状态应用：不需要保持连续运行，可以随时销毁并从镜像重新创建。
+
+<!--
+- 无状态应用：不需要保持连续运行，可以随时销毁并从镜像重新创建。
 使用数据卷
 - 一个有状态服务的每个 Pod 实例使用独立的资源、配置文件，不能随时创建、销毁 Pod ，甚至连 Pod 名都不能改变。
-- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。 -->
+- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。
+-->
 
 ### DaemonSet
 

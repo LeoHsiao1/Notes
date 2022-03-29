@@ -206,10 +206,12 @@ pipeline {
   currentBuild.currentResult     # Build 的当前状态。开始执行时为 SUCCESS ，受每个 stage 影响，不会变为 null
   ```
   - 只有 displayName、description 变量支持修改。修改其它变量时会报错：`RejectedAccessException: No such field`
-  - 例：修改本次构建的名称
+  - 例：
     ```groovy
     script {
-        currentBuild.displayName = "#${env.BUILD_NUMBER} branch=${env.BRANCH}"
+        jenkins_user = "${currentBuild.buildCauses}".findAll('userName:([^,\\]]+)')[0].replaceAll('userName:', '')
+        currentBuild.displayName = "#${env.BUILD_NUMBER}    $jenkins_user"
+        currentBuild.description = "BRANCH=${env.BRANCH}"
     }
     ```
 
@@ -361,6 +363,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       // quietPeriod: 5,    // 设置静默期，默认为 5 秒
   )
   ```
+  - 如果给下游 job 传入未定义的 parameters ，则后者并不会接收。
 
 ### checkout
 

@@ -423,6 +423,7 @@ docker build <PATH>|<URL>
             --force-rm                  # 即使构建失败，也强制删除中间容器
 ```
 - 执行 `docker build <PATH>` 时，会将目标目录及其子目录的所有文件（包括隐藏文件）作为构建上下文（build context），拷贝发送给 dockerd ，从而允许用 COPY 或 ADD 指令拷贝文件到容器中。
+  - 因此文件会被拷贝两次，有两倍耗时。比较大的文件可以利用缓存，或者用 wget 下载到镜像中。
   - 执行 `docker build - < Dockerfile` ，则只会发送 Dockerfile 作为构建上下文。
 - 可以在 .dockerignore 文件中声明不想被发送的文件或目录。如下：
   ```sh

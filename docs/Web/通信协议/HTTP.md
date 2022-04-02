@@ -34,7 +34,7 @@
 - 1997 年发布。向下兼容 HTTP/1.0 。
 - 默认启用 TCP 长连接，除非在报文 Headers 中添加 `Connection: close` 。
 - 增加 PUT、DELETE 等请求方法。
-- 增加 Host、Upgrade、If-Modified-Since、Cache-Control 等 Headers 。
+- 增加 Host、Upgrade、Cache-Control 等 Headers 。
 
 ### HTTP/2.0
 
@@ -158,9 +158,6 @@ ie=UTF-8&wd=1
   Accept-Charset: GB2312,utf-8;q=0.7,*;q=0.7  # 客户端能接受的响应 body 编码格式
   Accept-Encoding: gzip,deflate               # 客户端能接受的响应 body 压缩格式
   Upgrade: HTTP/2.0,websocket                 # 仅 HTTP/1.1 支持该字段，表示客户端除了 HTTP/1.1 ，可切换到哪些通信协议。设置了此字段时必须设置 Connection: Upgrade ，表示切换通信协议
-
-  If-Modified-Since: Fri, 5 Jun 2019 12:00:00 GMT # 如果响应报文在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 报文，让客户端使用本地缓存
-  If-None-Match: 5edd15a5-e42                     # 如果响应报文的 Etag 值等于它，则请服务器返回 304 报文，让客户端使用本地缓存
   ```
 
 ### 响应报文
@@ -186,42 +183,7 @@ Content-Type: text/html; charset=utf-8
 
   Date: Wed, 17 Jul 2019 10:00:00 GMT           # 服务器生成该响应报文的时刻（代理服务器不会改变该值）
   Age: 2183                                     # 表示该响应报文来自代理服务器的缓存，这是该缓存的存在时长
-
-  # 有多种控制缓存的字段，可同时启用
-  Cache-Control: max-age=0                      # 缓存策略
-  Expires: Wed, 17 Jul 2019 14:00:00 GMT        # 该响应的过期时刻，采用 GMT 时区。过期之前建议客户端使用本地缓存，过期之后再重新请求
-  Last-Modified: Fri, 5 Jun 2019 12:00:00 GMT   # 该响应报文 body 最后一次修改的时刻（用于判断内容是否变化）
-  ETag: 5edd15a5-e42                            # 响应 body 的标签值（用于判断内容是否变化，比 Last-Modified 更准确）
   ```
-
-- 浏览器可以将服务器的返回的 HTML 文件缓存在本地，下次再请求该资源时就直接从本地缓存中读取数据。
-  - Cache-Control 的取值示例：
-    ```sh
-    max-age=10  # 该缓存在 10 秒后过期，到时需要重新向服务器请求该资源
-    max-age=0   # 该缓存在 0 秒后过期，相当于 no-cache
-    no-cache    # 不能直接使用缓存，要先向服务器重新请求该资源，如果服务器返回 304 才可以使用缓存
-    no-store    # 不进行缓存
-    private     # 允许客户端缓存
-    public      # 客户端和代理服务器都可以缓存
-    ```
-
-### Content-Type
-
-- 报文 Headers 中的 Content-Type 用于声明报文 body 的数据类型，便于解析报文 body 。常见的几种 MIME 类型如下：
-
-    Content-Type|含义
-    -|-
-    application/x-www-form-urlencoded            | 默认格式，与 Query String 格式相同，通常用于传输 form 表单
-    application/json                             | JSON 格式的文本
-    application/javascript                       | js 代码，且会被浏览器自动执行
-    application/octet-stream                     | 二进制数据，通常用于传输单个文件
-    text/plain                                   | 纯文本
-    text/html                                    | HTML 格式的文本
-    text/javascript                              | js 代码
-    image/jpeg, image/png, image/gif             | 图片
-    multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 boundary 的值作为分隔符
-
-- 可以在 Content-Type 中同时声明 MIME 类型和编码格式，用分号分隔，例如：`Content-Type: text/html; charset=utf-8`
 
 ### 状态码
 
@@ -263,6 +225,69 @@ Content-Type: text/html; charset=utf-8
   - 503 ：Service Unavailable ，请求的服务不可用。比如服务器过载时不能提供服务。
   - 504 ：Gateway Timeout ，通常是因为作为网关或代理的服务器，没有及时从上游服务器收到 HTTP 响应报文。
   - 505 ：HTTP Version Not Supported ，服务器不支持该请求报文采用的 HTTP 版本。
+
+### Content-Type
+
+- 报文 Headers 中的 Content-Type 用于声明报文 body 的数据类型，便于解析报文 body 。常见的几种 MIME 类型如下：
+
+    Content-Type|含义
+    -|-
+    application/x-www-form-urlencoded            | 默认格式，与 Query String 格式相同，通常用于传输 form 表单
+    application/json                             | JSON 格式的文本
+    application/javascript                       | js 代码，且会被浏览器自动执行
+    application/octet-stream                     | 二进制数据，通常用于传输单个文件
+    text/plain                                   | 纯文本
+    text/html                                    | HTML 格式的文本
+    text/javascript                              | js 代码
+    image/jpeg, image/png, image/gif             | 图片
+    multipart/form-data; boundary=----7MA4YWxkT  | 传输多个键值对，用 boundary 的值作为分隔符
+
+- 可以在 Content-Type 中同时声明 MIME 类型和编码格式，用分号分隔，例如：`Content-Type: text/html; charset=utf-8`
+
+### 缓存
+
+- Web 服务的主要耗时，是客户端发出请求之后，等待响应的耗时。
+  - 客户端可以缓存一个请求的响应（比如图片），如果下一个请求命中缓存，则直接使用缓存，从而大幅降低耗时。如果未命中缓存，才从服务器获取响应。
+  - 基础的 HTTP 客户端（比如 curl 命令）没有缓存功能，而 Web 浏览器通常会自动缓存响应报文，并自动清理。
+- 浏览器有多种缓存位置，优先级从高到低如下：
+  - Service Worker ：允许通过 JS 拦截当前网页发出的所有请求，可以控制缓存，甚至自己编写响应内容。
+  - Memory Cache ：容量小，访问速度快，关闭浏览器时会丢失缓存。
+  - Disk Cache ：容量大，访问速度慢，允许同一个缓存文件被不同网站使用。
+
+- 服务器可以在响应报文加入以下 Header ，让客户端自行判断是否使用缓存：
+  ```sh
+  Expires: Wed, 17 Jul 2019 14:00:00 GMT    # 该响应的过期时刻，采用 GMT 时区。过期之前建议客户端使用本地缓存，过期之后再重新请求
+  Cache-Control: max-age=0                  # 缓存策略
+  ```
+  - Cache-Control 的取值示例：
+    ```sh
+    max-age=10  # 该缓存在 10 秒后过期，到时需要重新向服务器请求该资源
+    max-age=0   # 该缓存在 0 秒后过期，相当于 no-cache
+    no-cache    # 缓存不能直接使用，要先向服务器重新请求该资源，如果服务器返回 304 才使用缓存
+    no-store    # 不保存到缓存
+    private     # 默认值，只能在客户端缓存，不能在代理服务器缓存
+    public      # 客户端和代理服务器都可以缓存
+    ```
+  - 例如浏览器访问一个网页时：
+    - 如果按 F5 刷新，则重新发出请求，根据 Header 控制缓存。
+    - 如果按 Ctrl+F5 强制刷新，则重新发出请求，且声明 `Cache-control: no-cache` 。
+
+- 服务器可以在响应报文加入以下 Header ，让客户端与服务器协商是否使用缓存：
+  ```sh
+  Last-Modified: Fri, 5 Jun 2019 12:00:00 GMT     # 该响应 body 最后一次修改的时刻
+  ETag: 5edd15a5-e42                              # 该响应 body 的标签值，比如哈希值
+  ```
+  客户端需要在请求报文加入以下 Header ：
+  ```sh
+  If-Modified-Since: Fri, 5 Jun 2019 12:00:00 GMT # 如果响应 body 在 Last-Modified 时刻之后并没有被修改，则请服务器返回 304 响应，让客户端使用本地缓存
+  If-None-Match: 5edd15a5-e42                     # 如果响应 body 的 Etag 值等于它，则请服务器返回 304 响应，让客户端使用本地缓存
+  ```
+
+- 允许在响应报文中同时声明多种缓存字段。
+  - HTTP/1.0 可以用 Expires、Last-Modified 字段控制缓存，而 HTTP/1.1 增加了 Cache-Control、Etag 字段，功能更多、优先级更高。
+  - 强缓存：比如 Expires、Cache-Control 两种缓存方式，不会发出请求。例如 Chrome 浏览器会为该请求显示预配的请求头（Provisional headers），和缓存的响应头、状态码。
+  - 协商缓存：比如 Etag、Last-Modified 两种缓存方式，依然有通信耗时，只是减少了响应 body 。
+  - 启发式缓存：如果响应报文中没有声明缓存字段，则浏览器默认设置响应的缓存时长为 `(Now - Last-Modified)*10%` ，这属于强缓存。
 
 ## Basic Auth
 

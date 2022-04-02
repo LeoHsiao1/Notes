@@ -28,7 +28,7 @@
 
 - tomcat/bin/ 目录下有一些管理 Tomcat 的脚本：
   - startup.sh  ：用于启动 Tomcat ，实际上是调用 `catalina.sh start` 。
-    - 默认将 Tomcat 作为 deamon 进程运行，使用 `catalina.sh run` 则会在前台运行。
+    - 默认将 Tomcat 作为 daemon 进程运行，使用 `catalina.sh run` 则会在前台运行。
   - shutdown.sh ：用于停止 Tomcat ，实际上是调用 `catalina.sh stop` 。
   - version.sh  ：用于显示版本信息。
 

@@ -21,7 +21,8 @@ Pod 中每个容器可单独设置 request、limit 资源
 
 限制容器占用的内存时，如果容器内全部进程占用的内存总和超过限制，则触发 OOM-killer 。如果 OOM-killer 没有杀死 1 号进程，则容器会继续运行，否则容器会终止。
 
-- 限制 pod 占用的磁盘空间,以免它将日志写入文件而不是终端，占满宿主机磁盘，导致所有 pod 故障。
+kubelet 的数据目录默认为 /var/lib/kubelet/ ，而 docker 的数据目录默认为 /var/lib/docker 。两者都默认放在主机的系统盘，如果容器占用大量磁盘空间，就可能耗尽主机磁盘。
+可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
   requests.ephemeral-storage: 1Gi
   limits.ephemeral-storage: 2Gi
   如果 Pod 占用的内存、磁盘资源超过限制，则会被驱逐（Evicted），变为 Failed 状态。不过 deployment 会自动创建新的 Pod 实例
@@ -196,7 +197,7 @@ lastUpdateTime        # 上一次更新该状态的时间
 
 ### DaemonSet
 
-：与 Deployment 类似，但是在每个 node 上只部署一个 Pod 实例。适合监控、日志等 deamon 服务。
+：与 Deployment 类似，但是在每个 node 上只部署一个 Pod 实例。适合监控、日志等 daemon 服务。
 - 例：
   ```yml
   apiVersion: apps/v1

@@ -13,22 +13,21 @@
 }
 
 html {
-    background-color: #ebe6dd;    // 当body部分（即正文）过短时，就能看到这个背景色
+    height: 100%;   // 让网页填充全屏
 }
-
 body {
-    background-color: #3d3961;    // 这个紫色的背景色，只是用于填充首页，正文部分会单独设置米色的背景色
+    height: 100%;
+    background-color: #ebe6dd;    // 普通文档的背景色采用米色
     color: #2c3e50;
     font-family: 'Consolas', 'Microsoft YaHei', serif;
     font-size: 16px;
 }
-
 body .site-name {
     font-family: 'mv boli';
 }
 
 // 导航栏
-body .navbar {                      
+body .navbar {
     background-color: #e0dbd2;
 }
 body .navbar div.links {
@@ -39,17 +38,17 @@ body .navbar div.links .nav-dropdown {
 }
 
 // 正文部分
-body .page {                        
+body .page {
     background-color: #ebe6dd;
 }
 
 
 // 侧边栏
-body .sidebar {                     
+body .sidebar {
     background-color: #e0dbd2;
 }
 // 侧边栏的分组标题（不带链接时）
-body .sidebar-heading {             
+body .sidebar-heading {
     font-weight: normal;
 }
 // 侧边栏中的箭头
@@ -89,17 +88,22 @@ body div[class*="language-"] pre[class*="language-"] code {
 }
 
 
-
 // 自定义首页
-.theme-container.homepage_class div {
+main.home {
     background-image: url(/cat.gif);
     background-repeat: no-repeat;
     background-position: 50% 50%;
 }
-.theme-container.homepage_class #homepage_title {
+div.homepage_class {
+    background-color: #3d3961;    // 首页的背景色采用紫色
+}
+main.home #homepage_title {
     color: #f8f8f8;
     text-align: center;
     font-family: 'mv boli';
     font-size: 4em;
     font-weight: normal;
+}
+main.home div.footer {
+    display: none;
 }

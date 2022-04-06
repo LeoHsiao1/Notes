@@ -303,24 +303,27 @@ meilisearch 是一个开源的搜索引擎，采用 Rust 语言开发，借鉴�
       每当目标网站的内容更新时，就应该抓取一次。
   3. 向 meilisearch 服务器发出 HTTP 查询请求，搜索某一字符串在目标网站上的位置。
 
-#### 使用步骤
+#### 用法
 
-1. 启动 meilisearch 服务器：
+1. 部署 meilisearch 服务器：
     ```sh
     docker run -d --name meilisearch \
             -p 7700:7700 \
             -e MEILI_MASTER_KEY=****** \
             -e MEILI_HTTP_ADDR=0.0.0.0:7700 \
             -v /opt/meilisearch:/data.ms \
-            getmeili/meilisearch
+            getmeili/meilisearch:v0.26.1
     ```
-    - 启动 meilisearch 服务器时，默认没有设置密钥，允许用户访问任意 URL 。设置密钥就可以拒绝非法用户的访问。
-    - 可以设置环境变量 `MEILI_MASTER_KEY=******` 作为主密钥，此时会自动生成私钥和公钥，发送以下 HTTP 请求即可查询到：
+    - 启动 meilisearch 服务器时，默认没有启用访问控制，允许任何用户访问。
+    - 为了启用访问控制，需要设置环境变量 `MEILI_MASTER_KEY=******` ，此时会用它作为主密钥，据此自动生成两个密钥：
         ```sh
-        [root@CentOS ~]# curl 'http://localhost:7700/keys' -H "X-Meili-API-Key: $MEILI_MASTER_KEY"
-        {"private":"3fced9cfe0467f23a94ac4bb8368a58f815fa167da226418a417dc58cdec8259","public":"3e7193b91276c4ec577014a99188682280a2bc674f45557d11bad94c7e0e6843"}
+        Default Admin API Key   # 有权进行大部分操作，除了访问 /keys API 。需要保密
+        Default Search API Key  # 有权访问 /indexes API ，从而搜索文档。可以公开
         ```
-    - 如果用户在发出的 HTTP 查询请求的 headers 中加上私钥（主密钥一般不用于查询），才有权访问除了 `/keys` 以外的 URL 。如果使用公钥，则只有权查询 `/indexes` 下的部分内容。
+        可用以下命令查询所有密钥：
+        ```sh
+        curl 'http://localhost:7700/keys' -H "Authorization: Bearer $MEILI_MASTER_KEY"
+        ```
     - 部署新的 meilisearch 时，索引不能向上兼容，需要清空 `/data.ms` 目录，重新生成索引。
 
 2. 执行 meilisearch 的 scrape 工具：
@@ -328,7 +331,7 @@ meilisearch 是一个开源的搜索引擎，采用 Rust 语言开发，借鉴�
     docker run -it --rm \
         --network=host \
         -e MEILISEARCH_HOST_URL='http://test.com:7700' \
-        -e MEILISEARCH_API_KEY='$private_key' \
+        -e MEILISEARCH_API_KEY=$Admin_API_Key \
         -v $PWD/etc/docs-scraper.json:/docs-scraper/config.json \
         getmeili/docs-scraper pipenv run ./docs_scraper config.json
     ```
@@ -365,7 +368,7 @@ meilisearch 是一个开源的搜索引擎，采用 Rust 语言开发，借鉴�
             ['vuepress-plugin-meilisearch',
                 {
                     hostUrl: 'http://test.com:7700',        // 该 URL 应该能在用户的浏览器上被访问，不能为 localhost
-                    apiKey: '57557c7907388a064d88e127e15a', // 这里应该使用 public key
+                    apiKey: "$Search_API_Key",
                     indexUid: 'docs',
                     placeholder: 'Search as you type...',   // 在搜索栏中显示的占位符
                     maxSuggestions: 5,                      // 最多显示几个搜索结果

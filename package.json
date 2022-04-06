@@ -1,10 +1,10 @@
 {
   "dependencies": {
-    "@vuepress/plugin-google-analytics": "^1.2.0",
-    "vuepress": "^1.2.0",
-    "vuepress-plugin-meilisearch": "^0.10.1",
-    "vuepress-plugin-right-anchor": "^0.5.2",
-    "vuepress-plugin-seo": "^0.1.4",
+    "@vuepress/plugin-google-analytics": "^1.9.7",
+    "vuepress": "^1.9.7",
+    "vuepress-plugin-meilisearch": "^0.12.1",
+    "vuepress-plugin-right-anchor": "^0.5.5",
+    "vuepress-plugin-seo": "^0.2.0",
     "vuepress-plugin-sitemap": "^2.3.1",
     "vuepress-plugin-zooming": "^1.1.8"
   }

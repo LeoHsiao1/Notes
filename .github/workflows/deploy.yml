@@ -59,4 +59,4 @@ jobs:
           -e MEILISEARCH_HOST_URL=https://meilisearch.leohsiao.com \
           -e MEILISEARCH_API_KEY=$API_KEY \
           -v $PWD/etc/docs-scraper.json:/docs-scraper/config.json \
-          getmeili/docs-scraper:v0.11.0 pipenv run ./docs_scraper config.json
+          getmeili/docs-scraper:v0.12.1 pipenv run ./docs_scraper config.json

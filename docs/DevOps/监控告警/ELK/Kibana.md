@@ -68,16 +68,16 @@
 - 搜索时，默认采用 Kibana 自带的查询语言 KQL 。
   - 例：
     ```sh
-    elastic                   # 查询任一字段的值包含该单词的文档。必须是分词之后完全相同的单词，比如 elasticsearch 多了字母就不匹配
-    elastic*                  # 可以使用通配符
-    "elastic search"          # 查询一个包含空格的字符串时，需要加上定界符
+    elastic search            # 模糊查询，查询包含任一单词的文档。要求分词之后的单词完全匹配，比如 elastic 与 elasticsearch 是不同单词
+    elastic*                  # 可以使用通配符，模糊匹配一个单词
+    "elastic search"          # 加上定界符，要求文档包含该字符串
     elastic AND NOT search    # 支持使用 and、or、not 逻辑运算符
     ```
   - 支持用 `:` 对指定字段进行查询：
     ```sh
-    agent_* : "filebeat-00*"            # 支持在字段名、值中使用通配符
-    agent_name: *                       # agent_name 字段存在
-    NOT agent_name: *                   # agent_name 字段不存在
+    agent_* : filebeat-*      # 支持在字段名、值中使用通配符
+    agent_name: *             # agent_name 字段存在
+    NOT agent_name: *         # agent_name 字段不存在
     status_code : (401 OR 403 OR 404)
     status_code : 200 AND NOT (tags : (success AND info))
     ```

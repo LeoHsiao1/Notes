@@ -10,12 +10,65 @@
   - 用户需要编写 Controller 配置文件，描述如何部署一个应用的 Pod 。然后创建该 Controller ，k8s 就会自动部署其 Pod 。
 
 
+### 配置
 <!--
 
-### 配置
 
 Pod 中每个容器可单独设置 request、limit 资源
- -->
+```yml
+spec:                         # Pod 的规格
+  containers:                 # 定义该 Pod 中的容器
+  - name: redis               # 该 Pod 中的第一个容器名
+    image: redis:5.0.6
+    command: ["redis-server /opt/redis/redis.conf"]
+    ports:
+    - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
+  # dnsPolicy: ClusterFirst
+  # dnsConfig: ...
+  # imagePullSecrets:
+  # - name: qcloudregistrykey
+  # restartPolicy: Always
+  # schedulerName: default-scheduler
+  # securityContext: {}
+  # terminationGracePeriodSeconds: 30
+```
+-->
+
+
+#### dnsPolicy
+
+dnsPolicy 表示容器采用的 DNS 策略，可以取值如下：
+- ClusterFirst
+  - ：表示查询一个域名时，优先解析为 k8s 集群内域名。如果不能解析，才尝试解析为集群外域名。
+  - 此时会自动在主机 /etc/resolv.conf 文件的基础上为容器生成 /etc/resolv.conf 文件，内容示例：
+    ```sh
+    nameserver 10.43.0.10     # k8s 集群内的 DNS 服务器，比如 CoreDNS
+    search default.svc.cluster.local svc.cluster.local cluster.local openstacklocal
+    options ndots:5
+    ```
+    - 如果查询同一个命名空间下的短域名，比如 nginx ，则首先尝试解析 nginx.default.svc.cluster.local ，因此第一个 search 域就解析成功。
+    - 如果查询其它命名空间下的域名，即使指定了完整域名比如 redis.db.svc.cluster.local ，其点数为 4 ，因此第一个 search 域会解析失败，第二个 search 域才解析成功，增加了 DNS 请求数。
+- Default
+  - ：用 kubelet 的 --resolv-conf 参数指定的文件作为容器的 /etc/resolv.conf 文件，因此只能解析集群外域名。
+- None 
+  - ：不自动为容器生成 /etc/resolv.conf 文件，此时需要 dnsConfig 自定义配置。
+
+
+dnsConfig 用于自定义容器内 /etc/resolv.conf 中的配置参数。
+- 例：
+  ```yml
+  dnsPolicy: "None"
+  dnsConfig:
+    nameservers:
+    - 8.8.8.8
+    searches:
+    - default.svc.cluster.local
+    options:
+    - name: ndots
+      value: "4"
+    - name: timeout
+      value: "3"
+  ```
 
 <!--
 
@@ -85,13 +138,6 @@ spec:                       # Controller 的规格
         command: ["redis-server /opt/redis/redis.conf"]
         ports:
         - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
-      # dnsPolicy: ClusterFirst
-      # imagePullSecrets:
-      # - name: qcloudregistrykey
-      # restartPolicy: Always
-      # schedulerName: default-scheduler
-      # securityContext: {}
-      # terminationGracePeriodSeconds: 30
 ```
 - 部署一个 Deployment 时，可以创建多个 Pod 实例。
   - Pod 的命名格式为 `<Controller_name>-<ReplicaSet_id>-<Pod_id>` ，例如：

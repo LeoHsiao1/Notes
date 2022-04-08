@@ -52,7 +52,7 @@ k8s 常见的几种网络通信：
     namespace: default
   spec:
     type: ClusterIP
-    clusterIP: 10.124.0.1
+    clusterIP: 10.124.0.1   # 给该 Service 分配一个 clusterIP ，允许自行指定。在创建 Service 之后不允许修改，除非重建 Service
     selector:               # 通过 selector 选中一些 Pod ，进行反向代理
       app: redis
     ports:                  # 定义一组反向代理规则
@@ -66,7 +66,6 @@ k8s 常见的几种网络通信：
       protocol: TCP
       targetPort: 26379
   ```
-  - 该 Service 分配了一个 clusterIP ，映射了两个 port ，供用户访问。
   - 此时可以通过 3 种地址访问 Pod 端口：
     ```sh
     service_name:port   # 访问者与 service 在同一命名空间时，service_name 会被自动 DNS 解析到 service_ip 。在不同命名空间时，则不支持
@@ -184,7 +183,7 @@ k8s 常见的几种网络通信：
 
 ### Headless Service
 
-：配置 `clusterIP: None` 。此时 Service 没有自己的 IP ，必须通过 selector 选中一个 Pod ，Service 名会被解析到 Pod IP 。
+：配置 `clusterIP: None` 。此时 Service 没有自己的 IP ，Service 名会被解析到 Pod IP 。
 
 ## Ingress
 

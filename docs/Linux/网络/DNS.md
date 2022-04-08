@@ -21,11 +21,31 @@ Linux 系统会读取如下三处 DNS 配置，它们的优先级从高到低：
   ```
   - 修改网络配置之后需要重启 network 服务：`systemctl restart network`
 
-- `/etc/resolv.conf` 文件中配置了 Linux 系统采用的 DNS 服务器：
+- `/etc/resolv.conf` 文件保存了本机的 DNS 配置：
   ```sh
   nameserver 114.114.114.114
   nameserver 8.8.8.8
+  search test.com openstacklocal
+  options ndots:1 timeout:1 attempts:1 rotate
   ```
+  - nameserver ：指定一个 DNS 服务器，最多可以指定三个。
+    - 查询一个域名时，同时只能向一个 nameserver 发出 DNS 请求。如果超时未响应，则向下一个 nameserver 发出 DNS 请求。
+  - search ：指定多个搜索域。
+    - 比如查询域名 host1 时，会准备多个可能的域名，依次尝试解析：
+      ```sh
+      host1
+      host1.test.com
+      host1.openstacklocal
+      ```
+      - 如果某个域名解析成功，则立即结束查询。如果所有域名都解析失败，则查询失败。
+      - 尝试解析每个域名时，会按 IPv4、IPv6 分别发出两个 DNS 请求。
+      - 综上，查询一个域名时，最好指定完整域名，从而减少 DNS 请求数。
+  - options ：指定一些额外配置。
+    - ndots ：默认为 1 。如果原域名中的 . 点数小于 ndots ，则先尝试解析 search 域名，然后尝试解析原域名。否则先尝试解析原域名。
+      - 比如查询域名 www.host1 时，其点数为 1 。（这里不考虑根域名 . ）
+    - timeout ：发出 DNS 请求之后，等待响应的超时时间。单位为秒，默认为 5 。
+    - attempts ：如果所有 nameserver 都查询失败，则重新请求所有 nameserver ，这样最多遍历 attempts 次。默认为 2 。
+    - rotate ：循环使用各个 nameserver 。默认禁用，此时每个 DNS 请求都优先使用第一个 nameserver 。
 
 ## DNS 缓存
 

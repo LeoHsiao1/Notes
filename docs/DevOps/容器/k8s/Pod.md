@@ -75,18 +75,20 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 中的配置参数。
 
 限制容器占用的内存时，如果容器内全部进程占用的内存总和超过限制，则触发 OOM-killer 。如果 OOM-killer 没有杀死 1 号进程，则容器会继续运行，否则容器会终止。
 
-kubelet 的数据目录默认为 /var/lib/kubelet/ ，而 docker 的数据目录默认为 /var/lib/docker 。两者都默认放在主机的系统盘，如果容器占用大量磁盘空间，就可能耗尽主机磁盘。
+kubelet 的数据目录默认为 /var/lib/kubelet/ ，而 docker 的数据目录默认为 /var/lib/docker 。两者都默认放在节点的系统盘，如果容器占用大量磁盘空间，就可能耗尽节点磁盘。
 可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
   requests.ephemeral-storage: 1Gi
   limits.ephemeral-storage: 2Gi
-  如果 Pod 占用的内存、磁盘资源超过限制，则会被驱逐（Evicted），变为 Failed 状态。不过 deployment 会自动创建新的 Pod 实例
 
+Pod 占用的资源超过 limits 的情况：
+- 如果超过 limits.cpu ，则会让 CPU 暂停运行该 Pod ，直到下一秒重新分配 CPU 。
+- 如果超过 limits.memory、ephemeral-storage ，则会终止 Pod 。
+  - 此时会将 Pod 标记为 evicted 状态、进入 Failed 阶段，不会自动删除，会一直占用 Pod IP 等资源。
+  - 可添加一个 crontab 任务来删除 evicted Pod ：
+    ```sh
+    kubectl delete pods --all-namespaces --field-selector status.phase=Failed
+    ```
 
-
-evicted Pod 不会被自动删除，一直占用 Pod IP 等资源。可添加一个 crontab 任务来删除：
-```sh
-kubectl delete pods --all-namespaces --field-selector status.phase=Failed
-```
 -->
 
 ### 状态
@@ -380,9 +382,9 @@ spec:
       - 如果不指定 key ，则匹配 Taint 的所有 key 。
       - 如果不指定 effect ，则匹配 Taint 的所有 effect 。
 
-## Pod 的生命周期
+## 生命周期
 
-Pod 被 kubelet 启动、终止的大致流程：
+每个 Pod 可能经过以下阶段：
 - 初始化：按顺序启动各个 init 容器。
 - 启动  ：启动主容器、sidecar 容器。
 - 运行  ：会被探针定期探测。
@@ -529,13 +531,69 @@ contaienrs:
   - 没有定义 preStop 时，kubelet 会采用默认的终止方式：先向 Pod 中的所有容器的进程发送 SIGTERM 信号，并将 Pod 的状态标识为 Terminating 。超过宽限期（grace period ，默认为 30 秒）之后，如果仍有进程在运行，则发送 SIGKILL 信号，强制终止它们。
   - 这里说的终止是指容器被 kubelet 主动终止，不包括容器自己运行结束的情况。
 
+## 终止
+
+- Running 状态的 Pod 可以被终止运行。但不能暂时终止，只能永久终止。
+- 可调用 apiserver 的两种 API 来终止 Pod ：
+  - Delete Pod
+    - 流程如下：
+      1. apiserver 将 Pod 标记为 Terminating 状态。
+      2. kubelet 发现 Terminating 状态之后终止 Pod ，删除其中的容器，然后通知 apiserver 。
+      3. apiserver 从 etcd 数据库删除 Pod ，以及 Endpoint 等相关资源。
+    - 如果该 Pod 受某个 Controller 管理，则后者会自动创建新的 Pod 。
+  - Evict Pod
+    - ：过程与 Delete 一致。
+
 ### 重启
 
-容器的重启策略分为以下几种：
-- `restartPolicy: Always` ：当容器终止时，或者被探针判断为 Failure 时，总是会自动重启。这是默认策略。
-- `restartPolicy: OnFailure` ：只有当容器异常终止时，才会自动重启。
-- `restartPolicy: Never` ：总是不会自动重启。
+- 如果容器终止运行，但所属的 Pod 未被删除，则 kubelet 会自动重启该容器。
+  - 容器重启时，所属的 Pod 不会变化，也不会调度到其它 Node 。
+  - 容器重启时，如果多次重启失败，重启的间隔时间将按 10s、20s、40s 的形式倍增，上限为 5min 。当容器成功运行 10min 之后会重置。
 
-当容器重启时，
-- 如果多次重启失败，重启的间隔时间将按 10s、20s、40s 的形式倍增，上限为 5min 。当容器成功运行 10min 之后会重置。
-- 容器只会在当前 Node 上重启，除非因为 Node 故障等原因触发了主机调度。
+- 容器的重启策略 restartPolicy 分为多种：
+  ```sh
+  Always     # 当容器终止时，或者被探针判断为 Failure 时，总是会自动重启。这是默认策略
+  OnFailure  # 只有当容器异常终止时，才会自动重启
+  Never      # 总是不会自动重启
+  ```
+
+### 节点压力驱逐
+
+- 节点压力驱逐（Node-pressure Eviction）：当 Node 可用资源低于阈值时，kubelet 会驱逐该节点上的 Pod 。
+  - 驱逐过程：
+    1. 给 Node 添加一个 NoSchedule 类型的污点，不再调度新 Pod 。
+    2. 驱逐该节点上的 Pod 。
+    3. 驱逐一些 Pod 之后，如果不再满足驱逐阈值，则停止驱逐。
+  - 优先驱逐这些 Pod ：
+    - Pod 当前占用资源多于 requests
+    - Pod Priority 较低
+
+- 几种驱逐信号：
+  ```sh
+  memory.available    # 节点可用内存不足，这是根据 Cgroup 数据计算：节点总内存 - 节点 workingSet 内存
+  nodefs.available    # 节点可用磁盘不足
+  nodefs.inodesFree   # 节点可用的 inode 不足
+  imagefs.available
+  imagefs.inodesFree
+  pid.available       # 节点可用的 PID 不足
+  ```
+  - nodefs 是指节点的主文件系统，用于存储 /var/lib/kubelet/ 等数据。可以另外指定一个称为 imagefs 的文件系统，用于存储 docker images、container rootfs 。
+  - kubelet 发出驱逐信号时，会给节点添加以下 condition 状态：
+    ```sh
+    MemoryPressure
+    DiskPressure
+    PIDPressure
+    ```
+
+- 驱逐阈值分为两种：
+  - 硬驱逐：满足阈值时，立即强制杀死 Pod 。
+  - 软驱逐：满足阈值且持续一段时间之后，在宽限期内优雅地终止 Pod ，不会考虑 Pod 的 terminationGracePeriodSeconds 。
+- kubelet 默认没启用软驱逐，只启用了硬驱逐，配置如下：
+  ```sh
+  memory.available<100Mi    # 如果节点可用内存低于阈值，则发出该驱逐信号
+  nodefs.available<10%
+  imagefs.available<15%
+  nodefs.inodesFree<5%
+  ```
+  - 阈值可以是绝对值、百分比。
+  - 同一指标同时只能配置一个阈值。

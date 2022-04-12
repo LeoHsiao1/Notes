@@ -456,7 +456,7 @@ docker build <PATH>|<URL>
                 --secret id=mysecret,src=/root/secret # 将宿主机上的文件声明为一个私密文件，指定 id ，可供 RUN 命令挂载
             ls                      # 列出所有 builder 实例
             du                      # 显示 buildx 占用的磁盘
-            prune                   # 清空 buildx cache
+            prune -f                # 清空 buildx cache
   ```
   - 可以修改 daemon.json 的配置，使得 docker build 也启用 BuildKit 。
 

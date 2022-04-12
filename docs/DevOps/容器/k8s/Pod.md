@@ -2,13 +2,14 @@
 
 ## 原理
 
-- Docker 以容器为单位部署应用，而 k8s 以 Pod 为单位部署应用。
 - 一个 Pod 由一个或多个容器组成，它们会被部署到同一个 Node 上。特点：
   - 共享一个网络空间，可以相互通信。对外映射的访问 IP 都是 Pod IP ，因此不能暴露同样的端口号。
   - 共享所有存储卷。
-- 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 管理 Pod 。
+- 当用户向 apiserver 请求创建一个 Pod 对象之后，会自动执行以下流程：
+  1. kube-scheduler 决定将该 Pod 调度到哪个节点上。
+  2. 由指定节点的 kubelet 部署该 Pod 。
+- 用户用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 自动管理 Pod 。
   - 用户需要编写 Controller 配置文件，描述如何部署一个应用的 Pod 。然后创建该 Controller ，k8s 就会自动部署其 Pod 。
-
 
 ### 配置
 <!--
@@ -50,7 +51,7 @@ dnsPolicy 表示容器采用的 DNS 策略，可以取值如下：
     - 如果查询其它命名空间下的域名，即使指定了完整域名比如 redis.db.svc.cluster.local ，其点数为 4 ，因此第一个 search 域会解析失败，第二个 search 域才解析成功，增加了 DNS 请求数。
 - Default
   - ：用 kubelet 的 --resolv-conf 参数指定的文件作为容器的 /etc/resolv.conf 文件，因此只能解析集群外域名。
-- None 
+- None
   - ：不自动为容器生成 /etc/resolv.conf 文件，此时需要 dnsConfig 自定义配置。
 
 
@@ -177,14 +178,14 @@ spec:                       # Controller 的规格
 
 ### 状态
 
-- Deployment 的生命周期分为多种条件（condition）：
+- Deployment 存在多种条件（condition）：
   ```sh
   Progressing       # 处理中，比如正在部署或销毁 Pod 实例
   Complete          # 处理完成，比如部署完所有 Pod 实例且可用，或者该 Deployment 是停止运行的旧版本
   Available         # 可用，即达到 ReplicaSet 的 Pod 实例最小可用数
   ReplicaFailure    # 处理失败，比如不能部署 Pod 实例、Progressing 超时
   ```
-  - 一个资源可能同时处于多种 condition ，但只能处于一种 phrase 。
+  - 一个资源可能同时处于多种 condition 状态，但只能处于一种 phrase 。
     - 比如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
   - 根据 `.status.conditions` 判断 `.status.phase`
   <!-- - 支持添加自定义的 condition -->
@@ -295,11 +296,7 @@ lastUpdateTime        # 上一次更新该状态的时间
 ：Pod 的水平方向上的自动伸缩（HPA）。
 - k8s 会监控服务的一些 metrics 指标（比如 CPU 负载），当超过一定阙值时就自动增加 ReplicaSet 数量，从而实现服务的横向扩容。
 
-## 主机调度
-
-部署 Pod 时，k8s 的 scheduler 会给 Pod 自动分配一个 Node（这一过程称为主机调度），然后由 Node 上的 kubelet 部署该 Pod 。
-- scheduler 会综合考虑 Affinity、Taint、Tolerations 等因素，从而选出一个 Node 。
-- 如果 Pod 所在的 Node 出现故障，该 Pod 会被立即迁移到其它 Node 运行。
+## 节点调度
 
 ### Affinity
 
@@ -440,7 +437,7 @@ status:
     - Failed 的 Pod 会被 kubelet 自动重启，如果重启成功则会变回 Running 。
   - Unkown ：状态未知。例如与 Pod 所在节点通信失败时就会不知道状态。
 
-- status.conditions 是一个数组，包含了对 Pod 多种状态条件的判断，如下：
+- status.conditions 是一个数组，记录了多个状态条件及其是否成立：
   - PodScheduled ：Pod 已被调度到一个节点上。
   - Unschedulable ：Pod 不能被调度到节点上。可能是缺乏可用节点、缺乏挂载卷等资源。
   - Initialized ：Pod 中的所有 init 容器都已成功启动（不管是否运行结束）。

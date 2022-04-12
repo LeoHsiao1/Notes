@@ -42,10 +42,10 @@
     - ：负责监控、管理 Node、Namespace、Pod、Service 等各种 k8s 资源。
     - 管理 Pod 时，主要根据 Controller 配置。
   - kube-scheduler
-    - ：负责调度 Pod ，根据一些策略决定将 Pod 分配到哪个节点上部署。
+    - ：负责调度 Pod ，根据一些策略决定将每个 Pod 分配到哪个节点上部署。
   - etcd
     - ：分布式数据库。
-    - 默认监听 2379、2380 端口，只被本机的 kube-apiserver 访问，用于存储 k8s 的配置、状态数据。
+    - 默认监听 2379、2380 端口，只被本机的 apiserver 访问，用于存储 k8s 的配置、状态数据。
     - 也可以将 etcd 部署在主节点之外，或集群之外。
 
 - 所有节点运行以下进程：
@@ -53,11 +53,50 @@
     - 负责管理当前节点上的所有 Pod 。
   - kube-proxy
     - ：负责管理节点的逻辑网络，基于 iptables 规则。如果节点收到一个发向某个 Pod 的网络包，则自动转发给该 Pod 。
-  <!-- - coredns -->
-  <!-- - storage-provisioner -->
-  <!-- pause -->
 
 - 用户可使用 kubectl 命令，作为客户端与 apiserver 交互，从而管理 k8s 。
+
+### kube-scheduler
+
+- kube-scheduler 调度每个 Pod 时要经过两个步骤：
+  - 过滤
+    - ：遍历所有 Node ，筛选出允许调度该 Pod 的所有 Node ，称为可调度节点。比如 Node 必须满足 Pod 的 request 资源、Pod 必须容忍 Node 的污点。
+    - 如果没有可调度节点，则 Pod 一直不会部署。
+    - 如果 Node 总数低于 100 ，则默认当可调度节点达到 50% Node 时就停止遍历，从而减少耗时。
+    - 为了避免某些节点一直未被遍历，每次遍历 Node 列表时，会以上一次遍历的终点作为本次遍历的起点。
+  - 打分
+    - ：给每个可调度节点打分，选出一个最适合部署该 Pod 的 Node 。比如考虑节点的亲和性。
+    - 如果存在多个打分最高的 Node ，则随机选取一个。
+
+### kubelet
+
+- 主要工作：
+  - 将当前节点注册到 kube-apiserver 。
+  - 监控当前节点。
+  - 创建、管理、监控 Pod ，基于容器运行时。
+- 默认监听 10250 端口。
+- kubelet 部署 Pod 时，会调用 CRI 接口 RuntimeService.RunPodSandbox ，先创建一个沙盒（Pod Sandbox），再启动 Pod 中的容器。
+  - Sandbox 负责提供一个 Pod 运行环境，比如设置网络。
+  - Sandbox 可以基于 Linux namespace 实现，也可以基于虚拟机实现，比如 kata-containers 。
+  - 基于 Linux namespace 实现 Sandbox 时，kubelet 会先在每个 Pod 中运行一个 pause 容器。
+    - pause 容器是一个简单程序，便于管理 Linux namespace ，比如创建 network namespace 并共享给其它容器。
+    - pause 容器一直以睡眠状态保持运行，避免 Pod 中所有容器进程停止时，Linux namespace 被自动删除。
+    - 如果停止 pause 容器，则会导致 kubelet 认为该 Pod 失败，触发重启事件，创建新 Pod 。
+    - pause 容器可以与其它容器共用一个 PID namespace ，从而为其它容器启动 1 号进程、清理僵尸进程。不过 k8s 默认禁用了该共享功能，使得其它容器的 1 号进程的 PID 依然为 1 。
+- kubelet 中的 PLEG（Pod Lifecycle Event Generator）模块负责执行 relist 任务：获取本机的容器列表，检查所有 Pod 的状态，如果状态变化则生成 Pod 的生命周期事件。
+  - 每执行一次 relist ，会等 1s 再执行下一次 list 。
+  - 如果某次 relist 耗时超过 3min ，则报错 `PLEG is not healthy` ，并将当前 Node 标记为 NotReady 状态。
+- kubelet 的配置示例：
+  ```yml
+  failSwapOn: true                  # 如果节点启用了 swap 内存，则拒绝启动 kubelet
+  maxPods: 110                      # 该 kubelet 节点上最多运行的 Pod 数
+  containerLogMaxSize: 10Mi         # 当容器日志文件达到该值时，切割一次
+  containerLogMaxFiles: 5           # 容器日志文件被切割之后，最多保留几个文件
+
+  imageGCHighThresholdPercent: 85   # 一个百分数。如果节点的磁盘使用率达到高水位，则自动清理未被使用的镜像，从最旧的镜像开始删除，直到磁盘使用率降至低水位
+  image-gc-low-threshold: 80
+  evictionMaxPodGracePeriod: 0      # 软驱逐 Pod 的最大宽限期，单位为秒。默认为 0 ，即不限制
+  ```
 
 ## 资源
 
@@ -69,7 +108,7 @@
   - Namespace
   - Pod
     - ：容器组，是 k8s 的最小管理单元。
-    - Docker 以容器形式部署应用，而 k8s 以 Pod 形式部署应用。
+    - Docker 以容器为单位部署应用，而 k8s 以 Pod 为单位部署应用。
   - Service
     - ：对某些 Pod 的反向代理，代表一个抽象的应用服务。
 
@@ -99,7 +138,7 @@
   - 配置文件可以是 JSON 或 YAML 格式。
 - 配置文件的一般结构：
   ```yml
-  apiVersion: v1              # 与 kube-apiserver 交互时，采用的 API 版本
+  apiVersion: v1              # 与 apiserver 交互时，采用的 API 版本
   kind: <sting>               # 对象的类型
   metadata:                   # 对象的元数据
     name: <sting>             # 名称，必填

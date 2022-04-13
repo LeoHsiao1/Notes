@@ -73,16 +73,15 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 中的配置参数。
 
 <!--
 
-限制容器占用的内存时，如果容器内全部进程占用的内存总和超过限制，则触发 OOM-killer 。如果 OOM-killer 没有杀死 1 号进程，则容器会继续运行，否则容器会终止。
-
 kubelet 的数据目录默认为 /var/lib/kubelet/ ，而 docker 的数据目录默认为 /var/lib/docker 。两者都默认放在节点的系统盘，如果容器占用大量磁盘空间，就可能耗尽节点磁盘。
 可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
   requests.ephemeral-storage: 1Gi
   limits.ephemeral-storage: 2Gi
 
 Pod 占用的资源超过 limits 的情况：
-- 如果超过 limits.cpu ，则会让 CPU 暂停运行该 Pod ，直到下一秒重新分配 CPU 。
-- 如果超过 limits.memory、ephemeral-storage ，则会终止 Pod 。
+- 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
+- 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止。
+- 如果超过 ephemeral-storage ，则会强制杀死 Pod 。
   - 此时会将 Pod 标记为 evicted 状态、进入 Failed 阶段，不会自动删除，会一直占用 Pod IP 等资源。
   - 可添加一个 crontab 任务来删除 evicted Pod ：
     ```sh

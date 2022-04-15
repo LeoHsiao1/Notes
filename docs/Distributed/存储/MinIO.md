@@ -2,24 +2,34 @@
 
 ：一个 Web 服务器，提供了对象存储的功能。
 - [官方文档](https://docs.min.io/docs/)
-- 采用 Go 开发，基于 TCP 通信。
+- 采用 Go 开发，基于 HTTP 通信。
 - 特点：
   - 轻量级，读写速度快，云原生架构。
-  - 支持生成文件的下载链接。
-  - 提供了命令行客户端 `mc` ，支持 ls、cp、rm、find 等多种 Unix 风格的命令。
-  - 提供了 Python、Go、Java 等语言的 SDK 。
+  - 支持生成文件的临时下载链接。
   - 兼容 Amazon S3 的 API 。
+  - 提供了命令行客户端 mc ，支持 ls、cp、rm、find 等多种 Unix 风格的命令。
+  - 提供了 Python、Go、Java 等语言的客户端库。
 
 ## 部署
 
-- 用 Docker 部署：
-  ```sh
-  docker run -d -p 9000:9000 \
-          --name minio \
-          -e "MINIO_ACCESS_KEY=admin" \     # 账号
-          -e "MINIO_SECRET_KEY=******" \    # 密码
-          -v /opt/minio:/data \
-          minio/minio server /data
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    elasticsearch:
+      container_name: minio
+      image: minio/minio:RELEASE.2021-06-09T18-51-39Z
+      command:
+        - server
+        - /data
+      environment:
+        - MINIO_ACCESS_KEY=admin    # 账号，默认为 minioadmin
+        - MINIO_SECRET_KEY=******   # 密码，默认为 minioadmin
+      ports:
+        - 9000:9000
+      volumes:
+        - ./data:/data
   ```
 
 ## 用法

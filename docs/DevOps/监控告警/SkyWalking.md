@@ -47,9 +47,26 @@
 ## 原理
 
 - SkyWalking 监控系统分为多个组件：
-  - Probes ：探针，负责收集监控数据，格式化之后存储。
   - UI ：Web 前端。
-  - backend ：Web 后端。
+  - OAP ：Web 后端。
   - Storage ：负责存储监控数据。
     - 支持 ES、MySQL 等多种数据库。
     - 为了保证监控的实时性，这里不采用消息队列，当数据量过大时可以降低采样率。
+  - agent ：采集业务服务的监控数据，发送给 OAP 。
+
+## 用法
+
+例：以非侵入方式监控 Python 进程
+- 安装 SkyWalking Python agent：`pip install apache-skywalking`
+- 配置环境变量：
+  ```sh
+  export SW_AGENT_NAME=test_service     # 监控的该服务名
+  # export SW_AGENT_INSTANCE=           # 服务实例名，默认会自动生成
+  export SW_AGENT_COLLECTOR_BACKEND_SERVICES=10.0.0.1:11800 # SkyWalking OAP 地址
+  # export SW_AGENT_PROTOCOL=grpc       # 通信协议，默认为 grpc
+  # export SW_AGENT_LOGGING_LEVEL=INFO  # agent 的日志级别
+  ```
+- 用 agent 启动 Python 进程：
+  ```sh
+  sw-python run python test.py
+  ```

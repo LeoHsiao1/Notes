@@ -1302,6 +1302,10 @@ module.exports = {
                         {
                             title: "Zipkin",
                             path: "/DevOps/监控告警/Zipkin"
+                        },
+                        {
+                            title: "SkyWalking",
+                            path: "/DevOps/监控告警/SkyWalking"
                         }
                     ]
                 },

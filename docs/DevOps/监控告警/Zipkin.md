@@ -1,6 +1,6 @@
 # Zipkin
 
-：一个 Web 服务器，用于分布式链路跟踪。
+：一个 Web 服务器，用于分布式链路监控。
 - [官方文档](https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md)
 - 由 Twitter 公司开源，采用 Java 开发。
 

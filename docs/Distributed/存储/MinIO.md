@@ -19,15 +19,17 @@
   services:
     elasticsearch:
       container_name: minio
-      image: minio/minio:RELEASE.2021-06-09T18-51-39Z
+      image: minio/minio:RELEASE.2022-01-28T02-28-16Z
       command:
         - server
         - /data
       environment:
         - MINIO_ACCESS_KEY=admin    # 账号，默认为 minioadmin
         - MINIO_SECRET_KEY=******   # 密码，默认为 minioadmin
+        - MINIO_CONSOLE_ADDRESS=:9001
       ports:
-        - 9000:9000
+        - 9000:9000   # API 端口
+        - 9001:9001   # Web 端口
       volumes:
         - ./data:/data
   ```

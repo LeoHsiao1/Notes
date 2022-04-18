@@ -85,7 +85,7 @@ PV 的访问模式：
   - 如果没找到，则不能部署该 Pod 。
 
 配置示例：
-```yaml
+```yml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -100,7 +100,7 @@ spec:
 ```
 
 例：在 Deployment 中挂载 PVC
-```yaml
+```yml
 apiVersion: v1
 kind: Deployment
 spec:
@@ -125,7 +125,7 @@ spec:
 - 修改 ConfigMap 时，不会导致挂载它的 Pod 自动重启。
 
 配置示例：
-```yaml
+```yml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -142,7 +142,7 @@ data:
 - 一个 ConfigMap 中可以保存多个配置文件。
 
 例：引用 ConfigMap 中的参数，生成环境变量
-```yaml
+```yml
 apiVersion: v1
 kind: Deployment
 spec:
@@ -169,7 +169,7 @@ spec:
 ```
 
 例：引用 ConfigMap 中的参数，生成 volume 并挂载
-```yaml
+```yml
 apiVersion: v1
 kind: Deployment
 spec:
@@ -201,7 +201,7 @@ spec:
 - 保存时会自动将参数值转换成 Base64 编码，挂载时会自动从 Base64 解码。
 
 配置示例：
-```yaml
+```yml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -212,27 +212,22 @@ data:
   password: MTIzNDU2Cg==
 ```
 
-例：引用 secret 中的参数，生成环境变量、volume
-```yaml
-apiVersion: v1
-kind: Deployment
-spec:
-  template:
-    spec:
-      containers:
-      - name: redis
-        image: redis:5.0.6
-        env:
-        - name: username
-          valueFrom:
-            secretKeyRef:
-              name: redis-secret
-              key: username
-        volumeMounts:
-        - name: volume1
-          mountPath: /opt/redis/secret
-      volumes:
-        - name: volume1
-          secret:
-            secretName: redis-secret
-```
+- 例：将 secret 中的 key 参数赋值为环境变量，然后在启动命令中读取
+  ```yml
+  spec:
+    containers:
+    - name: redis
+      image: redis:5.0.6
+      command:
+        - redis-cli
+      args:
+        - -a=$(PASSWORD)
+      env:
+      - name: PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: redis-secret  # secret 名称
+            key: password
+  ```
+  - 在 command、args 中可以用 `$()` 语法读取 env 变量，k8s 会在创建容器时嵌入变量，而不是在 shell 中读取变量。
+    - 不能使用 `$var` 或 `${var}` 读取 env 变量，否则会被视作纯字符串。

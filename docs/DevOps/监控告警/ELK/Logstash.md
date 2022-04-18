@@ -149,7 +149,10 @@
       }
       # file {                                  # 输出到文件
       #   path  => "/tmp/http.log"
-      #   codec => line { format => "custom format: %{message}"}    # 设置处理数据的格式。默认为 json_lines
+      #   codec => line {                                     # 逐行解析输入的文本
+      #               format => "custom format: %{message}"   # 设置处理数据的格式。默认为 json_lines
+      #               charset => "UTF-8"                      # 编码格式，默认为 UTF-8
+      #            }
       # }
       elasticsearch {                           # 输出到 ES
         # 该插件会将 pipeline 的一组 batch event 放在一个 bulk 请求中发出，如果单个请求超过 20M 则拆分成多个请求

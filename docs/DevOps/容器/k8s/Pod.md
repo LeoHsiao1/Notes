@@ -465,7 +465,7 @@ status:
   - Unknown ：未知结果，此时不采取行动。
 - 探针有三种用途：
   - startupProbe ：启动探针，用于探测容器是否已成功启动。
-  - readinessProbe ：就绪探针，用于探测容器是否处于就绪状态，可以开始工作。
+  - readinessProbe ：就绪探针，用于探测容器是否处于 Ready 状态，可以加入 endpoint 被访问。
   - livenessProbe ：存活探针，用于探测容器是否在正常运行。
 - 探针的影响：
   - 如果用户没定义探针，则容器刚创建时，可能尚未成功启动业务进程，kubelet 就会认为容器处于就绪状态，进而认为 Pod 处于就绪状态，提前接入 Service 的访问流量。
@@ -485,7 +485,7 @@ contaienrs:
       command:              # 每次探测时，在容器中执行命令：ls /tmp/health
       - ls
       - /tmp/health         # 可见，当/tmp/health 文件存在时，探测结果才会为 Success
-    initialDelaySeconds: 5  # 容器刚创建之后，等待几秒才开始第一次探测（用于等待容器成功启动）
+    initialDelaySeconds: 5  # 容器刚创建时，等待几秒才开始第一次探测，默认为 0
     periodSeconds: 3        # 每隔几秒探测一次
     timeoutSeconds: 1       # 每次探测的超时时间
     failureThreshold: 3     # 容器正常运行时，连续多少次探测为 Failure ，才判断容器为 Failure

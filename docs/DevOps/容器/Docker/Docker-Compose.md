@@ -86,6 +86,7 @@ services:                     # 开始定义服务
 
   web:                        # 定义第二个服务
     container_name: web       # 指定生成的容器名
+    # scale: 1                # 运行的实例数
 
     # 关于镜像
     # image: centos:7
@@ -111,6 +112,8 @@ services:                     # 开始定义服务
       - World
     command: echo Hello       # 覆盖 Dockerfile 中的 CMD
     restart: unless-stopped   # 容器的重启策略
+    # stop_signal: SIGTERM    # 执行 docker stop 时向容器发送的信号
+    # stop_grace_period: 10s  # 执行 docker stop 之后，如果容器超时未终止，则发送 SIGKILL 信号强制杀死
 
     # 关于环境变量
     environment:              # 环境变量，采用数组的格式声明

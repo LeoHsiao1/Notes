@@ -40,6 +40,11 @@
     MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
     ```
     需要执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/master/distribution/conf/nacos-mysql.sql)
+  - Nacos 的 Web 端默认启用了密码认证，但 API 未启用密码认证。需要添加以下环境变量：
+    ```sh
+    NACOS_AUTH_ENABLE=true
+    ```
+    然后让业务服务访问 Nacos 时带上账号密码。
 
 ## 用法
 
@@ -79,6 +84,8 @@
           # file-extension: properties              # 配置文件的扩展名，比如 yaml
           # refresh:
           #   enabled: true                         # 是否自动从 Nacos 获取最新的配置，这样不必重启服务
+          # username=***                            # 访问 Nacos API 的账号，默认无
+          # password=***
         discovery:                                  # 关于服务发现功能
           server-addr: 10.0.0.1:8848
           # namespace: public
@@ -96,7 +103,7 @@
 
 - 健康保护阈值：一个浮点数，取值范围为 0~1 。当一个服务的健康实例数占总数的比值小于阈值时，Nacos 会将不健康的实例加入负载均衡。这样会损失部分流量，但避免剩下的健康实例负载过大、服务雪崩。
 
-### HTTP API
+### API
 
 ```sh
 # 发布配置

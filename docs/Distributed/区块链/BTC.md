@@ -252,7 +252,7 @@ pkScript 有多种类型：
 ### 多重签名
 
 ：多重签名（multi-signature，multisig），一种基于 P2SH 的交易方式。
-- 原理：将 BTC 转账到一个 P2SH 地址，通过 pkScript 指定 n 个公钥，要求 sigscript 至少用 m 个对应的私钥签名才有效。
+- 原理：将 BTC 转账到一个 P2SH 地址，通过 pkScript 指定 n 个公钥组成一个列表，要求 sigscript 至少包含 m 个对应的私钥签名才有效。
   - 其中 1≤m≤n≤15 ，又称为 m-of-n 交易。
 - 1of2 是允许两个账户中的任意一个都有权花费 UTXO 。
 - 2of3 适合三方交易。例如 A 想花费 BTC 从 B 处购买商品，先将 BTC 转账到 2of3 多签地址。

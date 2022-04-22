@@ -296,6 +296,7 @@ lastUpdateTime        # 上一次更新该状态的时间
 
 ：Pod 的水平方向上的自动伸缩（HPA）。
 - k8s 会监控服务的一些 metrics 指标（比如 CPU 负载），当超过一定阙值时就自动增加 ReplicaSet 数量，从而实现服务的横向扩容。
+<!-- Vertical Pod Autoscaler (VPA)可以增加和减少 Pod 容器的 CPU 和内存资源请求 -->
 
 ## 节点调度
 

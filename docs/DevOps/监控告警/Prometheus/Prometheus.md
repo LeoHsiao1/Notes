@@ -450,8 +450,9 @@
 - 修改矢量的标签：
   ```sh
   label_join(go_goroutines, "new_label", ",", "instance", "job")               # 给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance、job 标签的值的组合，用 , 分隔
-  label_replace(go_goroutines, "new_label", "$1-$2", "instance", "(.*):(.*)")  # 给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance 标签的值的正则匹配的结果
+  label_replace(go_goroutines, "new_label", "$1-$2", "instance", "(.*):(.*)")  # 正则匹配。给矢量 go_goroutines 添加一个标签，其名为 new_label ，其值为 instance 标签的值的正则匹配的结果
   ```
+  - 如果 new_label 与已有标签同名，则会覆盖它。
 
 #### 算术函数
 

@@ -114,8 +114,8 @@
   kubelet_runtime_operations_duration_seconds_count{operation_type="xx"}    # 各种操作的次数
   kubelet_runtime_operations_duration_seconds_sum{operation_type="xx"}
   kubelet_runtime_operations_errors_total{operation_type="xx"}              # 各种操作出错的次数
-  kubelet_running_pod_count
-  kubelet_running_container_count{container_state="xx"}
+  kubelet_running_pods
+  kubelet_running_containers{container_state="xx"}
   kubelet_container_log_filesystem_used_bytes                               # 每个 container 的日志占用的磁盘空间
 
   # 关于 cadvisor 的指标略
@@ -163,20 +163,19 @@
 
 - 指标示例：
   ```sh
-  # 几种资源都存在的指标
+  # 大部分类型的资源都存在的指标
+  *_info
   *_created                       # 资源的创建时间，取值为 Unix 时间戳
   *_metadata_resource_version     # 资源的 resourceVersion
   *_annotations
   *_labels
 
-  # 各种资源
-  kube_node_spec_unschedulable    # Node 是否不可调度
-  kube_node_status_condition{condition="xx", status="true"} # 是否处于某种状态
+  kube_node_role{role="worker"}                             # node 节点类型
+  kube_node_status_condition{condition="xx", status="true"} # node 是否处于某种状态
   kube_node_status_allocatable{resource="cpu", unit="core"} # node 各种资源的容量
 
-  kube_pod_info
   kube_pod_owner{owner_kind="ReplicaSet", owner_name="xx"}  # 父资源
-  kube_pod_status_scheduled{condition="true"} # Pod 是否已被调度
+  kube_pod_status_scheduled{condition="true"} # Pod 是否已被调度。这包括停止运行但未删除的 Pod
   kube_pod_status_scheduled_time              # Pod 被调度的时刻
   kube_pod_start_time
   kube_pod_completion_time
@@ -184,8 +183,7 @@
   kube_pod_status_ready{condition="true"}     # Pod 是否就绪
   kube_pod_status_reason{reason="xx"}         # Pod 处于当前状态的原因
 
-  kube_pod_container_info{pod="xx", container="xx", image="xx"}     # Pod 中容器信息
-  kube_pod_container_resource_requests{resource="cpu", unit="core"} # Pod 中容器的资源需求
+  kube_pod_container_resource_requests{resource="cpu", unit="core"} # Pod 中容器的资源需求。这包括停止运行但未删除的 Pod
   kube_pod_container_resource_limits{resource="cpu", unit="core"}   # Pod 中容器的资源限制
   kube_pod_container_state_started            # Pod 中容器的启动时刻
   kube_pod_container_status_running           # Pod 中容器是否处于 Running 状态
@@ -201,8 +199,9 @@
   kube_statefulset_status_replicas_available  # 实际可用的实例数
   kube_statefulset_status_replicas_updated    # 最新版本的实例数
 
-  kube_daemonset_status_desired_number_scheduled    # 期待运行的实例数
-  kube_daemonset_status_number_available            # 实际可用的实例数
+  kube_daemonset_status_desired_number_scheduled  # 期待运行的实例数
+  kube_daemonset_status_number_available          # 实际可用的实例数
+  kube_daemonset_status_updated_number_scheduled  # 最新版本的实例数
 
   kube_job_owner{owner_kind="CronJob", owner_name="xx"}  # 父资源
   kube_job_complete{condition="true"}         # 是否结束执行
@@ -217,7 +216,6 @@
   kube_endpoint_address_available             # 可用的 endpoint 数量
   kube_endpoint_address_not_ready             # 不可用的 endpoint 数量
 
-  kube_service_info
   kube_service_spec_type
   kube_service_status_load_balancer_ingress
 

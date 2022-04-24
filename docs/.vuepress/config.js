@@ -1269,10 +1269,6 @@ module.exports = {
                                 {
                                     title: "Alertmanager",
                                     path: "/DevOps/监控告警/Prometheus/Alertmanager"
-                                },
-                                {
-                                    title: "监控 k8s",
-                                    path: "/DevOps/监控告警/Prometheus/监控k8s"
                                 }
                             ]
                         },

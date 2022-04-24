@@ -33,6 +33,26 @@ spec:                         # Pod 的规格
   # securityContext: {}
   # terminationGracePeriodSeconds: 30
 ```
+
+- Pod 部署时常见的几种异常：
+  - pod 长时间停留在 pending 阶段，比如：
+    - 未分配用于部署的节点，即 unscheduled
+    - 拉取不到镜像
+    - 不能获取 Volume 等依赖
+  - pod 进入 running 阶段，但启动之后很快终止，因此不断重启，即 CrashLoopBackOff 状态
+  - pod 进入 running 阶段，保持运行，但长时间未通过健康检查，即 unready 状态
+  - pod 资源不足，比如发生内存 OOM 而重启
+  - pod 异常终止，进入 failed 阶段
+  - pod 被驱逐，进入 failed 阶段
+
+Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
+
+- deployment 部署时常见的几种异常：
+  - deployment 没有可用的 Pod 实例，即整个 deployment 不可用
+  - deployment 的 Pod 实例未全部可用，持续长时间
+  - deployment 的 Pod 实例未全部更新到最新版本，持续长时间
+  - deployment 停留在 Progressing 状态超过 progressDeadlineSeconds 时长），则变为 Failed 状态
+
 -->
 
 
@@ -80,7 +100,7 @@ kubelet 的数据目录默认为 /var/lib/kubelet/ ，而 docker 的数据目录
 
 Pod 占用的资源超过 limits 的情况：
 - 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
-- 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止。
+- 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，然后容器被自动重启。
 - 如果超过 ephemeral-storage ，则会强制杀死 Pod 。
   - 此时会将 Pod 标记为 evicted 状态、进入 Failed 阶段，不会自动删除，会一直占用 Pod IP 等资源。
   - 可添加一个 crontab 任务来删除 evicted Pod ：

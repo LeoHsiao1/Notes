@@ -16,18 +16,21 @@
 - 大部分成员关系都可以通过两种方式访问，如下：
     ```
     client.test
-    client["test"]
+    client['test']
     ```
     比如选择 MongoDB 中的数据库、数据库中的集合、集合中的文档、文档中的键值对。
 
-数据库的操作方法与 MongoDB shell 中的差不多，如下：
+数据库的操作方法与 MongoDB shell 相似，如下：
 ```py
-db.c1.insert_one({"name": "leo", "age": 10})
-db.c1.insert_many([{"age": 10}, {"age": 11}])
+col = db['test']['c1']
 
-db.c1.find()
-db.c1.find().limit(100)
+col.find().limit(10)
+from bson.objectid import ObjectId
+col.find({'_id': ObjectId('xxx')})
 
-id = db.c1.find_one({"name":"leo"})["_id"]
-db.c1.deleteOne(id)
+col.insert_one({'name': 'leo', 'age': 10})
+col.insert_many([{'age': 10}, {'age': 11}])
+
+_id = col.find_one({'name':'leo'})['_id']
+col.deleteOne(_id)
 ```

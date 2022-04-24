@@ -43,7 +43,6 @@
     - [exporter](监控告警/Prometheus/exporter.md)
     - [Pushgateway](监控告警/Prometheus/Pushgateway.md)
     - [Alertmanager](监控告警/Prometheus/Alertmanager.md)
-    - [监控 k8s](监控告警/Prometheus/监控k8s.md)
   - [ELK](监控告警/ELK/ELK.md)
     - [Kibana](监控告警/ELK/Kibana.md)
     - [Filebeat](监控告警/ELK/Filebeat.md)

@@ -60,18 +60,32 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 
 命令：
 ```sh
-$ route    # 显示本机的路由表
+$ route     # 显示本机的路由表
+    -n      # 将名称解析为 IP
 ```
 
-例：
-```sh
-[root@CentOS ~]# route
-Kernel IP routing table
-Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-default         gateway         0.0.0.0         UG    0      0        0 eth0
-10.0.0.1        0.0.0.0         255.255.255.0   U     0      0        0 eth0
-link-local      0.0.0.0         255.255.0.0     U     1002   0        0 eth0
-```
+- 例：查看路由表
+  ```sh
+  [root@CentOS ~]# route -n
+  Kernel IP routing table
+  Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+  0.0.0.0         10.0.1.1        0.0.0.0         UG    0      0        0 eth0    # 缺省路由。默认将数据包通过 eth0 网卡发送到 10.1.6.1 网关
+  10.0.0.0        0.0.0.0         255.255.255.0   U     0      0        0 eth0    # 将指向 10.0.0.0/24 子网的数据包通过 eth0 网卡发出
+  169.254.0.0     0.0.0.0         255.255.0.0     U     1002   0        0 eth0    # Link-Local Address
+  ```
+  - Flags 的常见取值：
+    ```sh
+    U   # Up ，该路由为启用状态
+    !   # 该路由为禁用状态
+    H   # Host ，该网关是一个主机
+    G   # Gateway ，该网关是一个路由器
+    ```
+  - Metric 表示这条路由的跳数，即到目标主机需要经过几次路由转发。
+- 例：修改路由表
+  ```sh
+  route add -net 10.0.1.0 netmask 255.255.255.0 dev eth0    # 增加一条路由
+  route del -net 10.0.1.0 netmask 255.255.255.0 dev eth0    # 删除一条路由
+  ```
 
 ## ip
 

@@ -93,20 +93,15 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 中的配置参数。
 
 <!--
 
-kubelet 的数据目录默认为 /var/lib/kubelet/ ，而 docker 的数据目录默认为 /var/lib/docker 。两者都默认放在节点的系统盘，如果容器占用大量磁盘空间，就可能耗尽节点磁盘。
 可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
-  requests.ephemeral-storage: 1Gi
-  limits.ephemeral-storage: 2Gi
+  requests.ephemeral-storage: 500Mi
+  limits.ephemeral-storage: 1Gi
 
 Pod 占用的资源超过 limits 的情况：
 - 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
 - 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，然后容器被自动重启。
-- 如果超过 ephemeral-storage ，则会强制杀死 Pod 。
-  - 此时会将 Pod 标记为 evicted 状态、进入 Failed 阶段，不会自动删除，会一直占用 Pod IP 等资源。
-  - 可添加一个 crontab 任务来删除 evicted Pod ：
-    ```sh
-    kubectl delete pods --all-namespaces --field-selector status.phase=Failed
-    ```
+- 如果超过 ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
+
 
 -->
 
@@ -562,7 +557,12 @@ contaienrs:
       3. apiserver 从 etcd 数据库删除 Pod ，以及 Endpoint 等相关资源。
     - 如果该 Pod 受某个 Controller 管理，则后者会自动创建新的 Pod 。
   - Evict Pod
-    - ：过程与 Delete 一致。
+    - ：驱逐，过程与 Delete 一致。
+    - k8s 会在资源不足时自动驱逐 Pod 。此时 Pod 会标记为 evicted 状态、进入 Failed 阶段，不会自动删除，会一直占用 Pod IP 等资源。
+    - 可添加一个 crontab 任务来删除 Failed Pod：
+      ```sh
+      kubectl delete pods --all-namespaces --field-selector status.phase=Failed
+      ```
 
 ### 重启
 
@@ -580,13 +580,14 @@ contaienrs:
 ### 节点压力驱逐
 
 - 节点压力驱逐（Node-pressure Eviction）：当 Node 可用资源低于阈值时，kubelet 会驱逐该节点上的 Pod 。
+  - 决定驱逐的资源主要是内存、磁盘，并不考虑 CPU 。
   - 驱逐过程：
     1. 给 Node 添加一个 NoSchedule 类型的污点，不再调度新 Pod 。
     2. 驱逐该节点上的 Pod 。
     3. 驱逐一些 Pod 之后，如果不再满足驱逐阈值，则停止驱逐。
   - 优先驱逐这些 Pod ：
-    - Pod 当前占用资源多于 requests
-    - Pod Priority 较低
+    - 实际占用内存、磁盘多于 requests 的 Pod ，按差值排序
+    - Priority 较低的 Pod
 
 - 几种驱逐信号：
   ```sh
@@ -597,7 +598,9 @@ contaienrs:
   imagefs.inodesFree
   pid.available       # 节点可用的 PID 不足
   ```
-  - nodefs 是指节点的主文件系统，用于存储 /var/lib/kubelet/ 等数据。可以另外指定一个称为 imagefs 的文件系统，用于存储 docker images、container rootfs 。
+  - nodefs、imagefs 一般都位于主机的主文件系统上。
+    - nodefs ：用于存放 /var/lib/kubelet/ 目录。
+    - imagefs ：用于存放 /var/lib/docker/ 目录，主要包括 docker images、container rootfs、container log 数据。
   - kubelet 发出驱逐信号时，会给节点添加以下 condition 状态：
     ```sh
     MemoryPressure
@@ -605,7 +608,7 @@ contaienrs:
     PIDPressure
     ```
 
-- 驱逐阈值分为两种：
+- 节点压力驱逐的阈值分为两种：
   - 硬驱逐：满足阈值时，立即强制杀死 Pod 。
   - 软驱逐：满足阈值且持续一段时间之后，在宽限期内优雅地终止 Pod ，不会考虑 Pod 的 terminationGracePeriodSeconds 。
 - kubelet 默认没启用软驱逐，只启用了硬驱逐，配置如下：

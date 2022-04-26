@@ -298,20 +298,20 @@
   node_filefd_maximum                           # 文件描述符的数量上限
   node_filefd_allocated                         # 文件描述符的使用数量
 
-  # 关于网卡
-  node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网卡的信息（broadcast 是广播地址，duplex 是双工模式，）
-  node_network_up                                                     # 网卡的状态，取值 1、0 表示是否正在启用
+  # 关于网口
+  node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网口的信息（broadcast 是广播地址，duplex 是双工模式，）
   node_network_mtu_bytes                                              # MTU 大小
-  rate(node_network_receive_bytes_total{device!~`lo|docker0`}[1m])   # 网卡每秒接收量
-  rate(node_network_transmit_bytes_total{device!~`lo|docker0`}[1m])  # 网卡每秒发送量
+  node_network_up{device=~`eth\d`}                                    # 网口的状态，取值 1、0 表示是否启用
+  rate(node_network_receive_bytes_total{device!~`lo|docker0`}[1m])    # 网口每秒接收量
+  rate(node_network_transmit_bytes_total{device!~`lo|docker0`}[1m])   # 网口每秒发送量
 
   # 关于 IP 协议
-  node_network_receive_packets_total        # 网卡接收的数据包数
-  node_network_receive_errs_total           # 网卡接收的错误包数
-  node_network_receive_drop_total           # 网卡接收时的丢弃包数
-  node_network_receive_compressed_total     # 网卡接收的压缩包数
-  node_network_receive_multicast_total      # 网卡接收的多播包数
-  node_network_transmit_packets_total       # 网卡发送的数据包数
+  node_network_receive_packets_total        # 接收的数据包数
+  node_network_receive_errs_total           # 接收的错误包数
+  node_network_receive_drop_total           # 接收时的丢弃包数
+  node_network_receive_compressed_total     # 接收的压缩包数
+  node_network_receive_multicast_total      # 接收的多播包数
+  node_network_transmit_packets_total       # 发送的数据包数
   node_network_transmit_errs_total
   node_network_transmit_drop_total
   node_network_transmit_compressed_total
@@ -486,8 +486,8 @@
   rate(windows_logical_disk_write_bytes_total[1m])                        # 磁盘每秒写入量
 
   # net collector
-  rate(windows_net_bytes_received_total{nic="xxx"}[1m])                   # 网卡每秒接收量
-  rate(windows_net_bytes_sent_total{nic="xxx"}[1m])                       # 网卡每秒发送量
+  rate(windows_net_bytes_received_total{nic="xxx"}[1m])                   # 接口每秒接收量
+  rate(windows_net_bytes_sent_total{nic="xxx"}[1m])                       # 接口每秒发送量
 
   # process collector
   timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长
@@ -553,7 +553,7 @@
   container_sockets                                       # 打开的 Socket 数
   container_network_receive_bytes_total{interface="xx"}   # 网络收的累计字节量
   container_network_receive_packets_total                 # 网络收的累计数据包数
-  container_network_transmit_bytes_total                  # 网卡发
+  container_network_transmit_bytes_total                  # 网络发
   container_network_transmit_packets_total
   ```
   - 假设容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 上限时，不会触发 OOM ，而是停止增长。

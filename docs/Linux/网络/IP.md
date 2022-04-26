@@ -4,14 +4,14 @@
 
 用法：
 ```sh
-$ ifconfig                         # 显示已启用网卡的信息
-            -a                     # 显示所有网卡的信息
-            eth0                   # 显示网卡 eth0 的信息
-            up                     # 启用网卡
-            down                   # 停用网卡
-            10.0.0.1               # 设置网卡的 IP 地址
-            netmask 255.255.255.0  # 设置网卡的子网掩码
-            broadcast 10.0.0.255   # 设置网卡的广播地址
+$ ifconfig                         # 显示已启用的网口
+            -a                     # 显示所有网口的信息
+            eth0                   # 显示网口 eth0 的信息
+            up                     # 启用网口
+            down                   # 停用网口
+            10.0.0.1               # 设置网口的 IP 地址
+            netmask 255.255.255.0  # 设置网口的子网掩码
+            broadcast 10.0.0.255   # 设置网口的广播地址
 ```
 
 例：
@@ -33,17 +33,24 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
         TX packets 3615476  bytes 2842561090 (2.6 GiB)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 ```
-- 主机一般都有一张物理网卡 eth0 ，还有多张虚拟网卡，比如环回地址的网卡 lo 。
-- flags ：
-  - UP ：表示网卡已被启用。
-  - BROADCAST ：表示支持广播。
-  - RUNNING ：表示网卡已连接到网络。
-  - MULTICAST ：表示支持组播。
+- 一个主机可以有多个网络接口，例如：
+  ```sh
+  eth0    # 连接到第一个以太网网卡
+  wlan0   # 连接到第一个无线网卡
+  lo      # 环回网口，地址为 127.0.0.1 。属于虚拟网口，没有连接到物理设备
+  ```
+- 每个网口有一些配置信息，比如 IP、子网掩码，保存在内核的网络协议栈中。
+  - MAC 地址属于网卡的配置信息，与网口无关。
+- flags 取值示例：
+  - UP ：网口已启用。
+  - BROADCAST ：网口支持广播。
+  - RUNNING ：网口已连接到网络。
+  - MULTICAST ：网口支持组播。
 - 地址信息：
-  - mtu ：最大传输单元，即网卡能传输的 IP 数据包最大大小，单位 bytes 。
-  - inet ：网卡的 IP 地址。
+  - mtu ：最大传输单元，即网口能传输的 IP 数据包最大大小，单位 bytes 。
+  - inet ：网口的 IP 地址。
   - netmask ：子网掩码。
-  - ether ：网卡的 MAC 地址。
+  - ether ：网口的 MAC 地址。
   - txqueuelen ：传输队列的长度。
 - IP 数据包的统计数量：
   - RX packets ：接收的数据包总数。
@@ -69,8 +76,8 @@ $ route     # 显示本机的路由表
   [root@CentOS ~]# route -n
   Kernel IP routing table
   Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-  0.0.0.0         10.0.1.1        0.0.0.0         UG    0      0        0 eth0    # 缺省路由。默认将数据包通过 eth0 网卡发送到 10.1.6.1 网关
-  10.0.0.0        0.0.0.0         255.255.255.0   U     0      0        0 eth0    # 将指向 10.0.0.0/24 子网的数据包通过 eth0 网卡发出
+  0.0.0.0         10.0.1.1        0.0.0.0         UG    0      0        0 eth0    # 缺省路由。默认将数据包通过 eth0 网口发送到 10.1.6.1 网关
+  10.0.0.0        0.0.0.0         255.255.255.0   U     0      0        0 eth0    # 将指向 10.0.0.0/24 子网的数据包通过 eth0 网口发出
   169.254.0.0     0.0.0.0         255.255.0.0     U     1002   0        0 eth0    # Link-Local Address
   ```
   - Flags 的常见取值：
@@ -94,16 +101,16 @@ $ route     # 显示本机的路由表
 命令：
 ```sh
 $ ip
-    link                  # 显示所有网卡的信息
-        -s                # 增加显示网卡接收、发送的字节数（该选项要放在 link 之前）
-        -s -s             # 增加显示网卡接收、发送的错误包数（该选项要放在 link 之前）
-        show eth0         # 只显示指定网卡的信息
-        set eth0 up       # 启用网卡
-                  down    # 停用网卡
-        del eth0          # 删除网卡
+    link                  # 显示所有网口的信息
+        -s                # 增加显示网口接收、发送的字节数（该选项要放在 link 之前）
+        -s -s             # 增加显示网口接收、发送的错误包数（该选项要放在 link 之前）
+        show eth0         # 只显示指定网口的信息
+        set eth0 up       # 启用网口
+                  down    # 停用网口
+        del eth0          # 删除网口
 
-    addr                            # 显示所有网卡的信息，及其 IP 地址
-        add 10.0.0.1/24 dev eth0    # 给网卡增加一个 IP 及掩码
+    addr                            # 显示所有网口的信息，及其 IP 地址
+        add 10.0.0.1/24 dev eth0    # 给网口增加一个 IP 及掩码
         del 10.0.0.1/24 dev eth0    # 删除
 
     neighbour                       # 显示当前网段的其它主机
@@ -120,7 +127,7 @@ $ ip
   $ ping <host>    # 启动 ping
           -c n     # 最多发送 ICMP 报文多少次（默认为无限次）
           -i n     # 每次发送 ICMP 报文的间隔时间（默认为 1 秒）
-          -I eth0  # 使用本机的指定网卡来发送 ICMP 报文（默认自动选取网卡）
+          -I eth0  # 使用本机的指定网口来发送 ICMP 报文（默认自动选取网口）
   ```
   - host 可以是 IP 地址或域名，如果是域名，在执行时还会显示出域名解析后的 IP 地址。
 

@@ -325,7 +325,7 @@
 
 - agent 启动时的日志示例：
   ```sh
-  ==> Found address '10.0.0.1' for interface 'eth0', setting bind option...   # 发现网卡的 IP 地址，绑定它
+  ==> Found address '10.0.0.1' for interface 'eth0', setting bind option...   # 发现以太网接口的 IP 地址，绑定它
   ==> Starting Consul agent...
             Version: 'v1.6.1'
             Node ID: '2e5r747a-806a-a337-8a0f-7ac5o98d0cc4'

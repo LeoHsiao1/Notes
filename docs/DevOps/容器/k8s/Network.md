@@ -5,7 +5,7 @@
 k8s 常见的几种 IP 地址：
 - Node IP
   - ：集群中一个主机节点的 IP 地址。
-  - Node IP 一般绑定在物理机或虚拟机的 eth 网卡上，固定不变。
+  - Node IP 一般采用宿主机的 eth0 接口的 IP ，固定不变。
 - Pod IP
   - ：一个 Pod 的 IP 地址。
   - k8s 创建每个 Pod 时，会给它分配一个独立的虚拟 IP 。
@@ -25,7 +25,7 @@ k8s 常见的几种网络通信：
 - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网或公网 IP 。
 - 给 Pod 创建 NodePort 类型的 Service 。
 - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
-- 给 Pod 启用 `hostNetwork: true` ，采用宿主机的网卡。
+- 给 Pod 启用 `hostNetwork: true` ，采用宿主机的 network namespace 。
 
 ## Service
 
@@ -42,7 +42,7 @@ k8s 常见的几种网络通信：
 
 ：默认的 Service 类型，是给 Service 分配一个集群内的虚拟 IP 。
 - 访问 ClusterIP:Port 的流量会被转发到 EndPoint 。
-  - 在集群内节点上，才能访问 ClusterIP 。从集群外则访问不到，需要使用 LoadBalancer 等类型的 Service 。
+  - 在集群内节点上或容器中，才能访问 ClusterIP ，不需要 NAT 。从集群外则访问不到，需要使用 LoadBalancer 等类型的 Service 。
 - Service 的配置文件通常命名为 service.yml ，内容示例如下：
   ```yml
   apiVersion: v1

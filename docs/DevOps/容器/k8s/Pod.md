@@ -40,7 +40,7 @@ spec:                         # Pod 的规格
     - 拉取不到镜像
     - 不能获取 Volume 等依赖
   - pod 进入 running 阶段，但启动之后很快终止，因此不断重启，即 CrashLoopBackOff 状态
-  - pod 进入 running 阶段，保持运行，但长时间未通过健康检查，即 unready 状态
+  - pod 进入 running 阶段，保持运行，但长时间未通过健康检查，即 unready 状态。此时该 Pod 会从 EndPoint 中删除
   - pod 资源不足，比如发生内存 OOM 而重启
   - pod 异常终止，进入 failed 阶段
   - pod 被驱逐，进入 failed 阶段

@@ -43,16 +43,9 @@
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
 
-### DNS
+<!-- ### DNS -->
 
 
-
-- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
-  ```sh
-  NGINX_SERVICE_PORT=80
-  NGINX_SERVICE_HOST=10.43.0.2
-  ```
-  Serivce 变化时不会自动更新环境变量，因此不可靠。
 
 
 <!-- 创建一个 Service 时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
@@ -63,10 +56,8 @@
 
 ### ClusterIP
 
-：默认的 Service 类型，是给 Service 分配一个集群内的 VIP 。
-- 访问 ClusterIP:Port 的流量会被转发到 EndPoint 。
-  - 在集群内节点上或容器中，才能访问 ClusterIP ，不需要 NAT 。从集群外则访问不到，需要使用 LoadBalancer 等类型的 Service 。
-- Service 的配置文件通常命名为 service.yml ，内容示例如下：
+：默认的 Service 类型，是给 Service 分配一个集群内的 VIP ，将访问 `ClusterIP:Port` 的流量转发到 EndPoint 。
+- 配置文件示例：
   ```yml
   apiVersion: v1
   kind: Service
@@ -88,13 +79,39 @@
       port: 26379
       protocol: TCP
       targetPort: 26379
+    # sessionAffinity: ClientIP   # 会话保存。默认为 None ，即将数据包随机转发到各个 Pod IP
+    # sessionAffinityConfig:
+    #   clientIP:                 # 为每个 client IP 创建一个会话。在会话持续时间内，将来自同一个 client IP 的数据包总是转发到同一个 Pod IP
+    #     timeoutSeconds: 3600
   ```
-  - 此时可以通过 3 种地址访问 Pod 端口：
+  - 此时可以通过 3 种地址访问 Pod ：
     ```sh
     service_name:port   # 访问者与 service 在同一命名空间时，service_name 会被自动 DNS 解析到 service_ip 。在不同命名空间时，则不支持
     service_ip:port     # 在不同命名空间时，也可以通过 service_ip 访问 service
     pod_ip:targetPort   # 也可以直接访问 Pod
     ```
+
+- 创建一个 Service 时，如果指定了 selector ，则会自动创建一个同名的端点（EndPoint）对象，用于跟踪需要代理的 Pod_IP:targetPort 地址。。如下：
+  ```sh
+  [root@CentOS ~]# kubectl get service redis
+  NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)              AGE
+  redis        ClusterIP   10.43.2.2    <none>        6379/TCP,26379/TCP   2h
+  [root@CentOS ~]# kubectl get endpoints redis
+  NAME         ENDPOINTS                        AGE
+  redis        10.42.3.6:6379,10.42.3.6:26379   2h
+  ```
+  - EndPoint 只会包含 Ready 状态的 Pod ，并会实时更新。
+  - 可以不指定 Service 的 selector ，手动创建 EndPoint 对象。
+
+- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
+  ```sh
+  REDIS_SERVICE_HOST=10.43.2.2
+  REDIS_PORT_6379_TCP_PORT=6379
+  REDIS_PORT_6379_TCP_PROTO=tcp
+  REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
+  ...
+  ```
+  Serivce 变化时不会自动更新环境变量，因此不可靠。
 
 ### NodePort
 

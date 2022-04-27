@@ -42,9 +42,20 @@
 ：一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
+<!--
+### DNS
 
-<!-- ### DNS -->
 
+- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
+  ```sh
+  REDIS_SERVICE_HOST=10.43.2.2
+  REDIS_PORT_6379_TCP_PORT=6379
+  REDIS_PORT_6379_TCP_PROTO=tcp
+  REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
+  ...
+  ```
+  Serivce 变化时不会自动更新环境变量，因此不可靠。
+ -->
 
 
 
@@ -56,7 +67,7 @@
 
 ### ClusterIP
 
-：默认的 Service 类型，是给 Service 分配一个集群内的 VIP ，将访问 `ClusterIP:Port` 的流量转发到 EndPoint 。
+：默认的 Service 类型，是给 Service 分配一个集群内的 VIP ，将访问 `ClusterIP:Port` 的流量转发到 EndPoints 。
 - 配置文件示例：
   ```yml
   apiVersion: v1
@@ -91,31 +102,9 @@
     pod_ip:targetPort   # 也可以直接访问 Pod
     ```
 
-- 创建一个 Service 时，如果指定了 selector ，则会自动创建一个同名的端点（EndPoint）对象，用于跟踪需要代理的 Pod_IP:targetPort 地址。。如下：
-  ```sh
-  [root@CentOS ~]# kubectl get service redis
-  NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)              AGE
-  redis        ClusterIP   10.43.2.2    <none>        6379/TCP,26379/TCP   2h
-  [root@CentOS ~]# kubectl get endpoints redis
-  NAME         ENDPOINTS                        AGE
-  redis        10.42.3.6:6379,10.42.3.6:26379   2h
-  ```
-  - EndPoint 只会包含 Ready 状态的 Pod ，并会实时更新。
-  - 可以不指定 Service 的 selector ，手动创建 EndPoint 对象。
-
-- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
-  ```sh
-  REDIS_SERVICE_HOST=10.43.2.2
-  REDIS_PORT_6379_TCP_PORT=6379
-  REDIS_PORT_6379_TCP_PROTO=tcp
-  REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
-  ...
-  ```
-  Serivce 变化时不会自动更新环境变量，因此不可靠。
-
 ### NodePort
 
-：在所有 Node 上监听一个 Port ，将访问 `NodeIP:Port` 的流量转发到 EndPoint 。
+：在所有 Node 上监听一个 Port ，将访问 `NodeIP:Port` 的流量转发到 EndPoints 。
 - NodePort 默认的取值范围为 30000~32767 ，以免与系统端口冲突。
 - 例：
   ```yml
@@ -224,6 +213,24 @@
 ### Headless Service
 
 ：配置 `clusterIP: None` 。此时 Service 没有自己的 IP ，Service 名会被解析到 Pod IP 。
+
+## EndPoints
+
+- 每个 Service 需要创建一个同名的端点（EndPoints）对象，用于跟踪需要反向代理的 Pod_IP:targetPort 地址。
+- 创建一个 Service 时，如果指定了 selector ，则会自动创建一个 EndPoints 。如下：
+  ```sh
+  [root@CentOS ~]# kubectl get service redis
+  NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)              AGE
+  redis        ClusterIP   10.43.2.2    <none>        6379/TCP,26379/TCP   2h
+  [root@CentOS ~]# kubectl get endpoints redis
+  NAME         ENDPOINTS                        AGE
+  redis        10.42.3.6:6379,10.42.3.6:26379   2h
+  ```
+  - EndPoints 只会记录 Ready 状态的 Pod 端点，并会实时更新。
+- k8s v1.19 开始，Service 会创建 EndPoints 和 EndpointSlices 对象，而 kube-proxy 反向代理的端点从 EndPoints 改为 EndpointSlices 。
+  - etcd 中单个对象的最大体积默认为 1.5MB ，因此一个 EndPoints 最多记录 5000 多个端点。并且一个 Service 的 EndPoints 每次变化时，需要全量同步到所有节点的 kube-proxy ，开销较大。
+  - 可以将单个 EndPoints 拆分成多个 EndpointSlice 对象，从而增加端点数量、降低同步开销。
+  - 每个 EndpointSlices 默认最多记录 100 个端点。
 
 ## Ingress
 

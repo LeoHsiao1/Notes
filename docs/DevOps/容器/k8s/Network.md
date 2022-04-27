@@ -1,38 +1,61 @@
 # Network
 
-## 原理
+## IP
 
-k8s 常见的几种 IP 地址：
-- Node IP
-  - ：集群中一个主机节点的 IP 地址。
-  - Node IP 一般采用宿主机的 eth0 接口的 IP ，固定不变。
-- Pod IP
-  - ：一个 Pod 的 IP 地址。
-  - k8s 创建每个 Pod 时，会给它分配一个独立的虚拟 IP 。
-  - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP ，而且重新部署时 Pod IP 还会变化。因此使用 Pod IP 不方便访问，建议用 Service IP 或 Ingress IP 。
-- Service IP
-  - 用户可以创建一个 Service ，反向代理某些 Pod 。向 Service IP 发送的网络流量，会被自动转发到对应的 Pod IP 。
-    - 此时，外部访问应用时，目的地址是 Service IP 。而应用访问外部时，源地址是 Pod IP 。
-- Ingress IP
+- k8s 集群内会使用一些虚拟 IP ，称为 Cluster IP、VIP 。
+  - 在 k8s 集群内主机上能访问到 VIP ，在集群外主机上则访问不到。
 
-k8s 常见的几种网络通信：
-- 同一个 Pod 内，容器之间的通信
-- 同一个服务内，Pod 之间的通信
-- 同一个集群内，Pod 到服务的通信
-- 集群内与集群外的通信
+- k8s 常见的几种 IP ：
+  - Node IP
+    - ：集群中一个主机节点的 IP 。
+    - Node IP 一般采用宿主机的 eth0 网口的 IP ，不属于 VIP 。
+  - Pod IP
+    - ：分配给 Pod 使用的 VIP 。
+    - k8s 会给每个 Node 分配一个虚拟 CIDR 子网。在 Node 上创建 Pod 时，会给它分配一个当前 CIDR 子网的 VIP 。
+    - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP 。而且重新部署时，会创建新 Pod ，分配新 Pod IP 。因此 Pod IP 不固定，不方便访问，建议通过 Service IP 或 Ingress IP 访问应用。
+  - Service IP
+  - Ingress IP
 
-允许 Pod 被 k8s 集群外主机访问的几种方式：
-- 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网或公网 IP 。
-- 给 Pod 创建 NodePort 类型的 Service 。
-- 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
-- 给 Pod 启用 `hostNetwork: true` ，采用宿主机的 network namespace 。
+- k8s 常见的几种网络通信：
+  - 同一个 Pod 内，容器之间的通信
+    - 这些容器共享同一个 network namespace、Pod IP 。
+    - 假设容器 A 监听 80 端口，则容器 B 可通过 127.0.0.1:80 访问容器 A 。
+  - Pod 之间的通信
+    - 假设 Pod A 向 Pob B 发送数据包，流程如下：
+      1. Pod A 从自己的 eth0 网口发出数据包，到达宿主机的 veth 网口。
+      2. 宿主机找到数据包的目标 IP 所属的 CIDR 子网，路由转发到相应的 Node 。
+      3. Pod B 从自己的 eth0 网口收到数据包。
+  - Pod 访问 Service
+    - Pod 向 Service 发送数据包时，源地址是 Pod IP ，目的地址是 Service IP 。
+    - Service 返回数据包给 Pod 时，源地址是 Service IP ，目的地址是 Pod IP 。
+  - Pod 访问集群外主机
+    - 此时，宿主机会将 Pod 发出的数据包转发给集群外主机。并将数据包的源 IP 改为宿主机的 Node IP ，即 SNAT 。
+
+- 允许 Pod 被 k8s 集群外主机访问的几种方式：
+  - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网或公网 IP 。
+  - 给 Pod 创建 NodePort 类型的 Service 。
+  - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
+  - 给 Pod 启用 `hostNetwork: true` ，采用宿主机的 network namespace 。
 
 ## Service
 
 ：一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
-<!-- 当您创建一个服务时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
+
+### DNS
+
+
+
+- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
+  ```sh
+  NGINX_SERVICE_PORT=80
+  NGINX_SERVICE_HOST=10.43.0.2
+  ```
+  Serivce 变化时不会自动更新环境变量，因此不可靠。
+
+
+<!-- 创建一个 Service 时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
 考虑到云平台提供的 LoadBalancer 会收费，用户也可自行部署一个 Nginx ，根据不同的 DNS 子域名或端口，转发到不同的 Service ClusterIP
 
 不同 namespace 下的 pod、service 相互隔离，因此不能 dns 解析其它命名空间的 service ，但可以通过 Pod IP、 clusterIP 访问。
@@ -40,7 +63,7 @@ k8s 常见的几种网络通信：
 
 ### ClusterIP
 
-：默认的 Service 类型，是给 Service 分配一个集群内的虚拟 IP 。
+：默认的 Service 类型，是给 Service 分配一个集群内的 VIP 。
 - 访问 ClusterIP:Port 的流量会被转发到 EndPoint 。
   - 在集群内节点上或容器中，才能访问 ClusterIP ，不需要 NAT 。从集群外则访问不到，需要使用 LoadBalancer 等类型的 Service 。
 - Service 的配置文件通常命名为 service.yml ，内容示例如下：
@@ -122,7 +145,7 @@ k8s 常见的几种网络通信：
 
 ### LoadBalancer
 
-：给 Service 绑定一个内网或公网的负载均衡 IP ，将访问该 IP 的流量转发到 Service 的 clusterIP 。
+：给 Service 绑定 k8s 集群外的一个内网或公网 IP ，将访问该 IP 的流量转发到随机一个 Node ，然后路由到 Pod IP 。
 - 一般需要购买云平台的负载均衡器，也可以用 MetalLB 自建。
 - 例：
   ```yml

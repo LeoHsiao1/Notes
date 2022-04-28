@@ -37,33 +37,10 @@
   - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
   - 给 Pod 启用 `hostNetwork: true` ，采用宿主机的 network namespace 。
 
-## Service
+## Service 类型
 
-：一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
+- Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
-
-<!--
-### DNS
-
-
-- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
-  ```sh
-  REDIS_SERVICE_HOST=10.43.2.2
-  REDIS_PORT_6379_TCP_PORT=6379
-  REDIS_PORT_6379_TCP_PROTO=tcp
-  REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
-  ...
-  ```
-  Serivce 变化时不会自动更新环境变量，因此不可靠。
- -->
-
-
-
-<!-- 创建一个 Service 时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
-考虑到云平台提供的 LoadBalancer 会收费，用户也可自行部署一个 Nginx ，根据不同的 DNS 子域名或端口，转发到不同的 Service ClusterIP
-
-不同 namespace 下的 pod、service 相互隔离，因此不能 dns 解析其它命名空间的 service ，但可以通过 Pod IP、 clusterIP 访问。
--->
 
 ### ClusterIP
 
@@ -84,7 +61,7 @@
     - name: redis
       port: 6379            # Service 监听的端口，供外部访问
       protocol: TCP         # 反向代理的协议，默认为 TCP ，还可以填 UDP
-      targetPort: 6379      # 将访问 clusterIP:port 的流量，转发到 Pod_IP:targetPort
+      targetPort: 6379      # 将访问 clusterIP:port 的流量，转发到 pod_ip:targetPort
       # targetPort: port1   # 可以指定 Pod 的端口名，而不是具体的端口号
     - name: sentinel
       port: 26379
@@ -210,13 +187,38 @@
     - 123.0.0.1
   ```
 
-### Headless Service
+### Headless
 
-：配置 `clusterIP: None` 。此时 Service 没有自己的 IP ，Service 名会被解析到 Pod IP 。
+：配置 `clusterIP: None` 。此时 Service 没有 VIP ，只是 Service 名会被 DNS 解析到 Pod IP 。
 
-## EndPoints
 
-- 每个 Service 需要创建一个同名的端点（EndPoints）对象，用于跟踪需要反向代理的 Pod_IP:targetPort 地址。
+## Service 相关
+
+<!-- ### DNS -->
+
+<!-- 创建一个 Service 时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
+考虑到云平台提供的 LoadBalancer 会收费，用户也可自行部署一个 Nginx ，根据不同的 DNS 子域名或端口，转发到不同的 Service ClusterIP
+
+不同 namespace 下的 pod、service 相互隔离，因此不能 dns 解析其它命名空间的 service ，但可以通过 Pod IP、 clusterIP 访问。
+-->
+
+### 环境变量
+
+- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
+  ```sh
+  REDIS_SERVICE_HOST=10.43.2.2
+  REDIS_PORT_6379_TCP_PORT=6379
+  REDIS_PORT_6379_TCP_PROTO=tcp
+  REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
+  ...
+  ```
+  Serivce 变化时不会自动更新环境变量，因此不可靠。
+
+### EndPoints
+
+：端点，Service 的一种子对象，用于跟踪需要反向代理的 pod_ip:targetPort 地址。
+- 每个 Service 最多存在一个 EndPoints 对象，两者同名。
+- 如果一个 Service 不存在 EndPoints 对象，则向 service_ip:port 发送的数据包不会被转发，因此无响应。
 - 创建一个 Service 时，如果指定了 selector ，则会自动创建一个 EndPoints 。如下：
   ```sh
   [root@CentOS ~]# kubectl get service redis
@@ -226,11 +228,16 @@
   NAME         ENDPOINTS                        AGE
   redis        10.42.3.6:6379,10.42.3.6:26379   2h
   ```
-  - EndPoints 只会记录 Ready 状态的 Pod 端点，并会实时更新。
-- k8s v1.19 开始，Service 会创建 EndPoints 和 EndpointSlices 对象，而 kube-proxy 反向代理的端点从 EndPoints 改为 EndpointSlices 。
-  - etcd 中单个对象的最大体积默认为 1.5MB ，因此一个 EndPoints 最多记录 5000 多个端点。并且一个 Service 的 EndPoints 每次变化时，需要全量同步到所有节点的 kube-proxy ，开销较大。
-  - 可以将单个 EndPoints 拆分成多个 EndpointSlice 对象，从而增加端点数量、降低同步开销。
+  - EndPoints 会监听所有 Ready 状态的 Pod 变化，记录其端点，实现服务发现。
+
+### EndpointSlices
+
+：端点分片，Service 的一种子对象，用于将大量端点分片存储。
+- 每个 Service 可以绑定多个 EndpointSlices 对象。
   - 每个 EndpointSlices 默认最多记录 100 个端点。
+- etcd 中单个对象的最大体积默认为 1.5MB ，因此一个 EndPoints 最多记录 5000 多个端点。并且一个 Service 的 EndPoints 每次变化时，需要全量同步到所有节点的 kube-proxy ，开销较大。
+  - 如果将单个 EndPoints 拆分成多个 EndpointSlice ，则可以增加端点容量、降低同步开销。
+  - k8s v1.19 开始默认启用 EndpointSlices 功能，让 kube-proxy 从 EndpointSlices 读取反向代理的端点，而不是 EndPoints 。
 
 ## Ingress
 

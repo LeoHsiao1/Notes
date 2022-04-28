@@ -481,7 +481,7 @@ status:
   - Unknown ：未知结果，此时不采取行动。
 - 探针有三种用途：
   - startupProbe ：启动探针，用于探测容器是否已成功启动。
-  - readinessProbe ：就绪探针，用于探测容器是否处于 Ready 状态，可以加入 endpoint 被访问。
+  - readinessProbe ：就绪探针，用于探测容器是否处于 Ready 状态，可以加入 EndPoints 被访问。
   - livenessProbe ：存活探针，用于探测容器是否在正常运行。
 - 探针的影响：
   - 如果用户没定义探针，则容器刚创建时，可能尚未成功启动业务进程，kubelet 就会认为容器处于就绪状态，进而认为 Pod 处于就绪状态，提前接入 Service 的访问流量。
@@ -554,7 +554,7 @@ contaienrs:
     - 流程如下：
       1. apiserver 将 Pod 标记为 Terminating 状态。
       2. kubelet 发现 Terminating 状态之后终止 Pod ，删除其中的容器，然后通知 apiserver 。
-      3. apiserver 从 etcd 数据库删除 Pod ，以及 Endpoint 等相关资源。
+      3. apiserver 从 etcd 数据库删除 Pod ，以及 EndPoints 等相关资源。
     - 如果该 Pod 受某个 Controller 管理，则后者会自动创建新的 Pod 。
   - Evict Pod
     - ：驱逐，过程与 Delete 一致。

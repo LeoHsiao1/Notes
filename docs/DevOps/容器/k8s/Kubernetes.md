@@ -50,9 +50,9 @@
 
 - 所有节点运行以下进程：
   - kubelet
-    - 负责管理当前节点上的所有 Pod 。
+    - ：负责管理当前节点上的所有 Pod 。
   - kube-proxy
-    - ：负责管理节点的逻辑网络，基于 iptables 规则。如果节点收到一个发向某个 Pod 的网络包，则自动转发给该 Pod 。
+    - ：负责管理节点的逻辑网络。
 
 - 用户可使用 kubectl 命令，作为客户端与 apiserver 交互，从而管理 k8s 。
 
@@ -97,6 +97,36 @@
   image-gc-low-threshold: 80
   evictionMaxPodGracePeriod: 0      # 软驱逐 Pod 的最大宽限期，单位为秒。默认为 0 ，即不限制
   ```
+
+### kube-proxy
+
+kube-proxy 主要负责将访问 Service 的流量反向代理到 Pod 。有多种代理模式：
+- userspace
+  - k8s v1.2 之前的默认模式。
+  - 原理：
+    - kube-proxy 监听一些端口，反向代理到 Pod 。
+    - 配置 iptables 规则，将访问 Service IP 的流量转发到 kube-proxy 监听的端口。
+  - 缺点：
+    - 流量会先后被 iptables、kube-proxy 转发，需要从内核态传递到用户态，性能较低。
+- iptables
+  - k8s v1.2 之后的默认模式。
+  - 原理：
+    - 监听所有 Service、EndPoints 的变化，自动配置 iptables 规则，将访问 Service IP 的流量转发到 EndPoints 。
+    - 如果 EndPoints 包含多个 Pod IP ，则有两种负载均衡算法：随机、轮询。
+    - 转发数据包时会进行 NAT ，实现透明代理。
+      - 将数据包转发给 EndPoints 时，会将数据包的目标 IP 改为 Pod IP ，即 DNAT 。
+      - 转发 EndPoints 返回的数据包时，会将数据包的源 IP 改为 Pod IP ，即 SNAT 。
+  - 缺点：
+    - 修改 iptables 规则时，需要先用 iptables-save 导出，然后修改，最后用 iptables-restore 导入，有一定耗时。
+    - 处理每个数据包时，需要线性查找与其匹配的 iptables 规则，时间复杂度为 O(n) 。因此 Service 数量较多时，耗时较久。
+- IPVS
+  - k8s v1.8 新增的模式，基于 LVS 的 NAT 代理模式。
+  - 原理：
+    - 为每个 Service IP 创建一个 IPVS ，负责反向代理。
+    - 通过 ipset 命令创建一些包含 Service IP 的哈希集合。然后配置 iptables 规则，将访问 ipset 集合的流量交给 IPVS 处理，并进行 NAT 。
+  - 优点：
+    - 通过 ipset 大幅减少了 iptables 规则的数量，并且哈希查找的速度更快。
+    - 支持多种负载均衡算法。
 
 ## 资源
 

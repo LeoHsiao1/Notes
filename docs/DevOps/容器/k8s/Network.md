@@ -67,10 +67,10 @@
       port: 26379
       protocol: TCP
       targetPort: 26379
-    # sessionAffinity: ClientIP   # 会话保存。默认为 None ，即将数据包随机转发到各个 Pod IP
+    # sessionAffinity: ClientIP   # 会话保持。默认为 None ，即将数据包随机转发到各个 Pod IP
     # sessionAffinityConfig:
     #   clientIP:                 # 为每个 client IP 创建一个会话。在会话持续时间内，将来自同一个 client IP 的数据包总是转发到同一个 Pod IP
-    #     timeoutSeconds: 3600
+    #     timeoutSeconds: 10800
   ```
   - 此时可以通过 3 种地址访问 Pod ：
     ```sh

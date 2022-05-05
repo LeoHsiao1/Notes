@@ -1,13 +1,13 @@
 # Pod
 
-## 原理
-
-- 一个 Pod 由一个或多个容器组成，它们会被部署到同一个 Node 上。特点：
-  - 共享一个网络空间，可以相互通信。对外映射的访问 IP 都是 Pod IP ，因此不能暴露同样的端口号。
-  - 共享所有存储卷。
-- 当用户向 apiserver 请求创建一个 Pod 对象之后，会自动执行以下流程：
+- 一个 Pod 包含一个或多个容器，又称为容器组。
+  - Docker 以容器为单位部署应用，而 k8s 以 Pod 为单位部署应用。
+- 当用户向 apiserver 请求创建一个 Pod 之后，会自动执行以下流程：
   1. kube-scheduler 决定将该 Pod 调度到哪个节点上。
   2. 由指定节点的 kubelet 部署该 Pod 。
+- 同一 Pod 中的所有容器会被部署到同一个节点上。特点：
+  - 共享一个网络空间，可以相互通信。对外映射的访问 IP 都是 Pod IP ，因此不能暴露同样的端口号。
+  - 共享所有存储卷。
 
 ## 配置
 
@@ -386,14 +386,6 @@ spec:
   - 如果不指定 key ，则匹配 Taint 的所有 key 。
   - 如果不指定 effect ，则匹配 Taint 的所有 effect 。
 
-## 资源分配
-
-### HPA
-
-：水平方向的自动伸缩（Horizontal Pod Autoscaling）。
-- k8s 会监控服务的一些 metrics 指标（比如 CPU 负载），当超过一定阙值时就自动增加 ReplicaSet 数量，从而实现服务的横向扩容。
-<!-- Vertical Pod Autoscaler (VPA)可以增加和减少 Pod 容器的 CPU 和内存资源请求 -->
-
 ### 节点压力驱逐
 
 - 节点压力驱逐（Node-pressure Eviction）：当 Node 可用资源低于阈值时，kubelet 会驱逐该节点上的 Pod 。
@@ -438,3 +430,54 @@ spec:
   - 阈值可以是绝对值、百分比。
   - 同一指标同时只能配置一个阈值。
 
+## 自动伸缩
+
+- Pod 的负载可能有时大、有时小，需要的 CPU、内存资源也不一样。
+  - 如果一直给 Pod 分配较多资源，则负载较低时 Pod 会浪费资源。
+  - 如果一直给 Pod 分配较少资源，则负载较高时 Pod 会资源不足，导致处理速度过慢，甚至服务中断。
+- k8s 支持自动调整给 Pod 分配的资源数量，从而适应负载的变化。
+- 在离线混合部署：当在线业务的负载较低时（比如晚上），运行一些离线业务，提高节点的资源利用率。
+
+### HPA
+
+：Pod 水平方向的自动伸缩（Horizontal Pod Autoscaling），又称为横向伸缩。
+- 原理：
+  1. 创建一个 HPA 对象，监控 Pod 的一些 metrics 指标。
+  2. HPA 自动增加、减少 Pod 的 replicas 数量，使得 metrics 指标接近指定数值。算法为：
+      ```sh
+      rate = metrics当前值 / metrics期望值
+      replicas期望值 = ceil(replicas当前值 * rate )   # ceil 即向上取整
+      ```
+- 配置示例：
+  ```yml
+  apiVersion: autoscaling/v2beta2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: test-hpa
+    namespace: default
+  spec:
+    maxReplicas: 10           # Pod 自动伸缩的最大数量
+    minReplicas: 1            # 最小数量
+    metrics:                  # 监控指标
+    - resource:
+        name: cpu
+        target:
+          averageValue: 100m
+          type: AverageValue  # 全部 Pod 的 metrics 平均值
+      type: Resource
+    scaleTargetRef:           # 要控制的 Pod
+      apiVersion: apps/v1
+      kind: Deployment
+      name: nginx
+  ```
+- kube-controller-manager 默认每隔 15s 执行一次 HPA 伸缩。
+- HPA 适合控制 Deployment 类型的 Pod 。而 StatefulSet 一般不适合改变 Pod 数量，DaemonSet 则不能改变 Pod 数量。
+- 安装 k8s-prometheus-adapter 之后可使用自定义的 metrics 。
+
+### VPA
+
+：Pod 的纵向伸缩（Vertical Pod Autoscaler），即自动增加、减少 Pod 的 request、limit 资源配额。
+
+### CA
+
+：k8s 集群的自动伸缩（cluster-autoscaler），即自动增加、减少集群的节点数量。

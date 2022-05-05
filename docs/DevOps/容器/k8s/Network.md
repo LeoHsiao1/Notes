@@ -39,7 +39,7 @@
 
 ## Service 类型
 
-- Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，常用于实现服务发现、负载均衡。
+- Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，代表一个抽象的应用服务，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
 ### ClusterIP

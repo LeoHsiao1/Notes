@@ -125,10 +125,7 @@ kube-proxy 主要负责将访问 Service 的流量反向代理到 Pod 。有多�
     - ：节点，k8s 集群中的一个主机。
   - Namespace
   - Pod
-    - ：容器组，是 k8s 的最小管理单元。
-    - Docker 以容器为单位部署应用，而 k8s 以 Pod 为单位部署应用。
   - Service
-    - ：对某些 Pod 的反向代理，代表一个抽象的应用服务。
 
 - 一些 k8s 对象之间存在上下级依赖关系，上级称为 Owner ，下级称为 Dependent 。
   - 删除一个 Owner 时，默认会级联删除它的所有 Dependent ，反之没有影响。

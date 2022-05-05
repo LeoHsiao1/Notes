@@ -95,8 +95,8 @@ ValueError: math domain error
 ## 其它
 
 ```py
->>> math.ceil(x)    # 返回 x 的上限（ceiling），即大于等于 x 的最小整数
+>>> math.ceil(x)    # 向上取整（ceiling），即大于等于 x 的最近整数
 4
->>> math.floor(x)   # 返回 x 的下限（floor），即小于等于 x 的最大整数
+>>> math.floor(x)   # 向下取整（floor），即小于等于 x 的最近整数
 3
 ```

@@ -8,13 +8,10 @@
 - 当用户向 apiserver 请求创建一个 Pod 对象之后，会自动执行以下流程：
   1. kube-scheduler 决定将该 Pod 调度到哪个节点上。
   2. 由指定节点的 kubelet 部署该 Pod 。
-- 用户用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用 Controller 自动管理 Pod 。
-  - 用户需要编写 Controller 配置文件，描述如何部署一个应用的 Pod 。然后创建该 Controller ，k8s 就会自动部署其 Pod 。
 
-### 配置
+## 配置
+
 <!--
-
-
 Pod 中每个容器可单独设置 request、limit 资源
 ```yml
 spec:                         # Pod 的规格
@@ -32,6 +29,7 @@ spec:                         # Pod 的规格
   # schedulerName: default-scheduler
   # securityContext: {}
   # terminationGracePeriodSeconds: 30
+  # hostNetwork: false    # 是否采用宿主机的 network namespace
 ```
 
 - Pod 部署时常见的几种异常：
@@ -56,7 +54,18 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
 -->
 
 
-#### dnsPolicy
+### Sidecar
+
+一个 Pod 中只运行一个容器的情况最简单（称为主容器），但有时也会运行一些辅助容器（Sidecar）。
+
+辅助容器有两种类型：
+- 标准容器：与主容器差不多。
+- init 容器：在创建 Pod 时最先启动，执行一些初始化任务，执行完成之后会自动退出。
+  - 可以给一个 Pod 设置多个 init 容器，它们会按顺序串行执行。当一个 init 容器执行成功之后，才会启动下一个 init 容器或应用容器。
+  - 如果某个 init 容器启动失败或异常退出，则 kubelet 会重新启动该 Pod 。
+  - 重启 Pod 时会重新启动各个 init 容器。因此，为了避免多次重启 Pod 时出错，init 容器的行为应该满足幂等性。
+
+### dnsPolicy
 
 dnsPolicy 表示容器采用的 DNS 策略，可以取值如下：
 - ClusterFirst
@@ -103,299 +112,9 @@ Pod 占用的资源超过 limits 的情况：
 - 如果超过 ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
 
 
+例如一个服务常态运行时只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期时需要 2 核 CPU 。
+
 -->
-
-### 状态
-
-
-
-## Controller
-
-：控制器，用于管理 Pod 。
-- Controller 分为 Deployment、StatefulSet 等多种类型。
-
-### Deployment
-
-：默认的 Controller 类型，用于部署无状态的 Pod 。
-
-#### 配置
-
-配置文件示例：
-```yml
-apiVersion: v1
-kind: Deployment            # 该 Controller 的类型
-metadata:                   # 该 Controller 的元数据
-  annotations:
-    deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置是第几次修改版本，从 1 开始递增
-  labels:
-    creator: Leo
-  name: redis
-  namespace: default
-  # generation: 1           # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
-spec:                       # Controller 的规格
-  replicas: 3               # Pod 运行的副本数
-  selector:                 # 选择 Pod
-    matchLabels:
-      app: redis
-  # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
-  # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
-  # strategy:               # 更新部署的策略，默认为滚动更新
-  #   type: RollingUpdate
-  #   rollingUpdate:              # 滚动更新过程中的配置
-  #     maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
-  #     maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
-  template:                       # 开始定义 Pod 的模板
-    metadata:                     # Pod 的元数据
-      labels:
-        app: redis
-    spec:                         # Pod 的规格
-      containers:                 # 定义该 Pod 中的容器
-      - name: redis               # 该 Pod 中的第一个容器名
-        image: redis:5.0.6
-        command: ["redis-server /opt/redis/redis.conf"]
-        ports:
-        - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
-```
-- 部署一个 Deployment 时，可以创建多个 Pod 实例。
-  - Pod 的命名格式为 `<Controller_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
-    ```sh
-    redis-65d9c7f6fc-szgbk
-    ```
-    - 用 kubectl 命令管理 Pod 时，不能事先知道 Pod 的具体名称，应该通过 label 来筛选 Pod 。
-  - 每个 Pod 中，容器的命名格式为 `k8s_<container_name>_<pod_name>_<k8s_namespace>_<pod_uid>_<restart_id>` ，例如：
-    ```sh
-    k8s_POD_redis-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0   # Pod 中内置的 pause 容器，其容器名为 POD
-    k8s_redis_redis-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0
-    ```
-    - 当 Pod 配置不变时，如果触发重启事件，创建新 Pod ，则会将容器末尾的 restart_id 加 1（从 0 开始递增）。
-
-- Deployment 的 spec.selector 是必填字段，称为选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 进行控制，匹配结果可能有任意个（包括 0 个）。
-  - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
-  - 当 selector 中没有设置筛选条件时，会选中所有对象。
-  - 例：
-    ```yml
-    selector:
-      matchLabels:
-        app: redis      # 要求 labels 中存在该键值对
-      matchExpressions:
-        - {key: app, operator: In, values: [redis, redis2]}   # 要求 labels 中存在 app 键，且值为 redis 或 redis2
-        - {key: app, operator: Exists}                        # 运算符可以是 In、NotIn、Exists、DidNotExist
-    ```
-
-- spec.template 是必填字段，用于描述 Pod 的配置。
-  - 当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
-  - 删除 Deployment 时，k8s 会自动销毁对应的 Pod 。
-  - 修改 Deployment 时，k8s 会自动部署新 Pod ，销毁旧 Pod ，该过程称为更新部署。
-
-- Deployment 的更新部署策略（strategy）有两种：
-  - Recreate ：先销毁旧 Pod ，再部署新 Pod 。
-  - RollingUpdate ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
-    - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
-
-### 状态
-
-- Deployment 存在多种条件（condition）：
-  ```sh
-  Progressing       # 处理中，比如正在部署或销毁 Pod 实例
-  Complete          # 处理完成，比如部署完所有 Pod 实例且可用，或者该 Deployment 是停止运行的旧版本
-  Available         # 可用，即达到 ReplicaSet 的 Pod 实例最小可用数
-  ReplicaFailure    # 处理失败，比如不能部署 Pod 实例、Progressing 超时
-  ```
-  - 一个资源可能同时处于多种 condition 状态，但只能处于一种 phrase 。
-    - 比如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
-  - 根据 `.status.conditions` 判断 `.status.phase`
-  <!-- - 支持添加自定义的 condition -->
-
-- Deployment 的状态示例：
-  ```yml
-  status:
-    availableReplicas: 1    # 可用的 Pod 实例数，允许接收 service 的流量
-    observedGeneration: 3   # 可用的 Pod 实例采用的 Deployment 版本，如果小于 metadata.generation 则说明不是最新版本
-    readyReplicas: 1        # 处于 health 状态的 Pod 实例数
-    replicas: 1             # 期望运行的实例数
-    updatedReplicas: 1      # 采用最新版本 Deployment 的 Pod 实例数
-    conditions:
-    - type: Progressing     # condition 类型
-      status: "True"        # 是否处于当前 condition ，可以取值为 True、False、Unknown
-      reason: NewReplicaSetAvailable  # status 的原因
-      message: ReplicaSet "redis-bbf945bc9" has successfully progressed.  # reason 的详细信息
-      lastTransitionTime: "2021-06-29T10:52:18Z"
-      lastUpdateTime: "2022-02-10T02:34:38Z"
-    - type: Available
-      status: "True"
-      reason: MinimumReplicasAvailable
-      message: Deployment has minimum availability.
-      lastTransitionTime: "2022-02-10T15:53:46Z"
-      lastUpdateTime: "2022-02-10T15:53:46Z"
-  ```
-
-<!--
-lastTransitionTime    # 上一次进入该状态的时间？？？
-lastUpdateTime        # 上一次更新该状态的时间
- -->
-
-
-### ReplicaSet
-
-：副本集（RC），用于控制一个应用的 Pod 实例数量。
-- 取代了 k8s 早期版本的副本控制器（Replication Controller，RS），会被 Deployment 调用。
-- 假设用户指定运行 n 个 Pod ，ReplicaSet 会自动控制可用的 Pod 数量，使其等于 n 。
-  - 通过健康检查的 Pod 才计入可用数量。
-  - 如果可用的 Pod 数多于 n ，则停止多余的 Pod 。
-  - 如果可用的 Pod 数少于 n ，则增加部署 Pod 。包括以下情况：
-    - 已有的 Pod 故障，比如部署失败、部署之后未通过健康检查。
-    - 已有的 Pod 需要的部署资源不足，比如 Pod 所在 Node 故障。
-- 通过 ReplicaSet ，可以方便地调整 Pod 数量，实现横向扩容、缩容。
-
-### StatefulSet
-
-：与 Deployment 类似，但部署的是有状态服务。
-
-<!--
-- 无状态应用：不需要保持连续运行，可以随时销毁并从镜像重新创建。
-使用数据卷
-- 一个有状态服务的每个 Pod 实例使用独立的资源、配置文件，不能随时创建、销毁 Pod ，甚至连 Pod 名都不能改变。
-- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。
--->
-
-### DaemonSet
-
-：与 Deployment 类似，但是在每个 node 上只部署一个 Pod 实例。适合监控、日志等 daemon 服务。
-- 例：
-  ```yml
-  apiVersion: apps/v1
-  kind: DaemonSet
-  metadata:
-    name: redis
-    namespace: default
-  spec:
-    selector:
-      matchLabels:
-        k8s-app: redis
-    template:
-      metadata:
-        labels:
-          k8s-app: redis
-      spec:
-        containers:
-          - ...
-    # nodeName: xx              # DaemonSet 默认会调度到每个节点，可以限制调度的节点
-    # updateStrategy:           # DaemonSet 的更新部署策略（updateStrategy）有两种：RollingUpdate、OnDelete
-    #   type: RollingUpdate
-    #   rollingUpdate:
-    #     maxSurge: 0
-    #     maxUnavailable: 1
-  ```
-
-### Job
-
-：只执行一次的任务，即部署一次某个 Pod 。
-
-### CronJob
-
-：定时任务，定时创建并执行某个 Job 。
-- 由 kube-controller-manager 定时调度，而后者默认采用 UTC 时区。
-
-## Sidecar
-
-一个 Pod 中只运行一个容器的情况最简单（称为主容器），但有时也会运行一些辅助容器（Sidecar）。
-
-辅助容器有两种类型：
-- 标准容器：与主容器差不多。
-- init 容器：在创建 Pod 时最先启动，执行一些初始化任务，执行完成之后会自动退出。
-  - 可以给一个 Pod 设置多个 init 容器，它们会按顺序串行执行。当一个 init 容器执行成功之后，才会启动下一个 init 容器或应用容器。
-  - 如果某个 init 容器启动失败或异常退出，则 kubelet 会重新启动该 Pod 。
-  - 重启 Pod 时会重新启动各个 init 容器。因此，为了避免多次重启 Pod 时出错，init 容器的行为应该满足幂等性。
-
-## Horizontal Pod Autoscaling
-
-：Pod 的水平方向上的自动伸缩（HPA）。
-- k8s 会监控服务的一些 metrics 指标（比如 CPU 负载），当超过一定阙值时就自动增加 ReplicaSet 数量，从而实现服务的横向扩容。
-<!-- Vertical Pod Autoscaler (VPA)可以增加和减少 Pod 容器的 CPU 和内存资源请求 -->
-
-## 节点调度
-
-### Affinity
-
-：节点的亲和性，表示 Pod 适合部署在什么样的 Node 上。
-- 用法：先给 Node 添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
-- 亲和性的主要分类：
-  - requiredDuringScheduling ：当 Pod 开始部署时，只能部署到满足条件的 Node 上。如果没有这样的 Node ，则重新部署。（硬性要求）
-  - preferredDuringScheduling ：当 Pod 开始部署时，优先部署到符合条件的 Node 上。如果没有这样的 Node ，则部署到其它 Node 上。（软性要求）
-  - RequiredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则重新部署。（硬性要求）
-  - IgnoredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则忽略该问题，继续运行 Pod 。（软性要求）
-- 例：
-```yml
-spec:
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: k1
-            operator: In
-            values:
-            - v1.0
-            - v1.1
-      preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 1
-        preference:
-          matchExpressions:
-          - key: k2
-            operator: In
-            values:
-            - v2
-```
-- 上例中在 nodeAffinity 下定义了两个亲和性。
-- nodeSelector 下的条件只要满足一个即可，matchExpressions 下的条件要全部满足。
-- 条件的 operator 可以是以下类型：
-  - Exists ：Node 上存在该 key 。
-  - DoesNotExist ：与 Exists 相反。
-  - In ：Node 上存在该 key ，且其值在给定的列表中。
-  - NotIn ：与 In 相反。
-  - Gt ：Node 上存在该 key ，且其值大于给定值。
-  - Lt ：与 Gt 相反，是小于。
-
-### Taint、Tolerations
-
-- Node Taint ：Node 的污点。
-- Pod Tolerations ：Pod 的容忍度。
-  - scheduler 不会在将 Pod 调度到有污点的节点上，除非 Pod 能容忍该污点。
-  - 搭配使用污点和容忍度，可以限制某个 Pod 只能被调度到指定 Node 上。
-
-例：
-- 给 Node 添加污点：
-    ```sh
-    kubectl taint nodes node1 k1=v1:NoSchedule
-    ```
-- 在 Pod spec 中配置容忍度：
-    ```yml
-    spec:
-      containers:
-        ...
-      tolerations:
-      - key: "k1"
-        operator: "Equal"
-        value: "v1"
-        effect: "NoSchedule"
-      - key: "k2"
-        operator: "Exists"
-        effect: "PreferNoSchedule"
-      - key: "k3"
-        operator: "Exists"
-        effect: "NoExecute"
-        tolerationSeconds: 3600
-    ```
-    - 污点的效果分为三种：
-      - NoSchedule ：如果 Pod 不容忍该污点，则不部署到该 Node 上。如果已经部署了，则继续运行该 Pod 。
-      - PreferNoSchedule ：如果 Pod 不容忍该污点，则优先部署到其它 Node 上，不行的话才部署到该 Node 上。
-      - NoExecute ：如果 Pod 不容忍该污点，则不部署到该 Node 上。如果已经部署了，则驱除该 Pod 。
-        - 可以额外设置 tolerationSeconds ，表示即使 Pod 容忍该污点，也最多只能保留指定秒数，超时之后就会被驱除，除非在此期间该污点消失。
-    - 在 Tolerations 中：
-      - 当 operator 为 Equal 时，如果 effect、key、value 与 Taint 的相同，则匹配该 Taint 。
-      - 当 operator 为 Exists 时，如果 effect、key 与 Taint 的相同，则匹配该 Taint 。
-      - 如果不指定 key ，则匹配 Taint 的所有 key 。
-      - 如果不指定 effect ，则匹配 Taint 的所有 effect 。
 
 ## 生命周期
 
@@ -405,6 +124,37 @@ spec:
 - 运行  ：会被探针定期探测。
 - 终止  ：终止各个容器。
 - 重启  ：kubelet 会按照 restartPolicy 重启容器。
+
+### 终止
+
+- Running 状态的 Pod 可以被终止运行。但不能暂时终止，只能永久终止。
+- 可调用 apiserver 的两种 API 来终止 Pod ：
+  - Delete Pod
+    - 流程如下：
+      1. apiserver 将 Pod 标记为 Terminating 状态。
+      2. kubelet 发现 Terminating 状态之后终止 Pod ，删除其中的容器，然后通知 apiserver 。
+      3. apiserver 从 etcd 数据库删除 Pod ，以及 EndPoints 等相关资源。
+    - 如果该 Pod 受某个 Controller 管理，则后者会自动创建新的 Pod 。
+  - Evict Pod
+    - ：驱逐，过程与 Delete 一致。
+    - k8s 会在资源不足时自动驱逐 Pod 。此时 Pod 会标记为 evicted 状态、进入 Failed 阶段，不会自动删除，会一直占用 Pod IP 等资源。
+    - 可添加一个 crontab 任务来删除 Failed Pod：
+      ```sh
+      kubectl delete pods --all-namespaces --field-selector status.phase=Failed
+      ```
+
+### 重启
+
+- 如果容器终止运行，但所属的 Pod 未被删除，则 kubelet 会自动重启该容器。
+  - 容器重启时，所属的 Pod 不会变化，也不会调度到其它 Node 。
+  - 容器重启时，如果多次重启失败，重启的间隔时间将按 10s、20s、40s 的形式倍增，上限为 5min 。当容器成功运行 10min 之后会重置。
+
+- 容器的重启策略 restartPolicy 分为多种：
+  ```sh
+  Always     # 当容器终止时，或者被探针判断为 Failure 时，总是会自动重启。这是默认策略
+  OnFailure  # 只有当容器异常终止时，才会自动重启
+  Never      # 总是不会自动重启
+  ```
 
 ### 状态
 
@@ -546,36 +296,103 @@ contaienrs:
   - 没有定义 preStop 时，kubelet 会采用默认的终止方式：先向 Pod 中的所有容器的进程发送 SIGTERM 信号，并将 Pod 的状态标识为 Terminating 。超过宽限期（grace period ，默认为 30 秒）之后，如果仍有进程在运行，则发送 SIGKILL 信号，强制终止它们。
   - 这里说的终止是指容器被 kubelet 主动终止，不包括容器自己运行结束的情况。
 
-## 终止
+## 节点调度
 
-- Running 状态的 Pod 可以被终止运行。但不能暂时终止，只能永久终止。
-- 可调用 apiserver 的两种 API 来终止 Pod ：
-  - Delete Pod
-    - 流程如下：
-      1. apiserver 将 Pod 标记为 Terminating 状态。
-      2. kubelet 发现 Terminating 状态之后终止 Pod ，删除其中的容器，然后通知 apiserver 。
-      3. apiserver 从 etcd 数据库删除 Pod ，以及 EndPoints 等相关资源。
-    - 如果该 Pod 受某个 Controller 管理，则后者会自动创建新的 Pod 。
-  - Evict Pod
-    - ：驱逐，过程与 Delete 一致。
-    - k8s 会在资源不足时自动驱逐 Pod 。此时 Pod 会标记为 evicted 状态、进入 Failed 阶段，不会自动删除，会一直占用 Pod IP 等资源。
-    - 可添加一个 crontab 任务来删除 Failed Pod：
+- 创建一个 Pod 之后，kube-scheduler 会决定将该 Pod 调度到哪个节点上。调度过程分为两个步骤：
+  - 过滤
+    - ：遍历所有 Node ，筛选出允许调度该 Pod 的所有 Node ，称为可调度节点。比如 Node 必须满足 Pod 的 request 资源、Pod 必须容忍 Node 的污点。
+    - 如果没有可调度节点，则 Pod 一直不会部署。
+    - 如果 Node 总数低于 100 ，则默认当可调度节点达到 50% Node 时就停止遍历，从而减少耗时。
+    - 为了避免某些节点一直未被遍历，每次遍历 Node 列表时，会以上一次遍历的终点作为本次遍历的起点。
+  - 打分
+    - ：给每个可调度节点打分，选出一个最适合部署该 Pod 的 Node 。比如考虑节点的亲和性。
+    - 如果存在多个打分最高的 Node ，则随机选取一个。
+
+### Affinity
+
+：节点的亲和性，表示 Pod 优先部署在什么样的 Node 上。
+- 用法：先给 Node 添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
+- 亲和性的主要分类：
+  - requiredDuringScheduling ：当 Pod 开始部署时，只能部署到满足条件的 Node 上。如果没有这样的 Node ，则重新部署。（硬性要求）
+  - preferredDuringScheduling ：当 Pod 开始部署时，优先部署到符合条件的 Node 上。如果没有这样的 Node ，则部署到其它 Node 上。（软性要求）
+  - RequiredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则重新部署。（硬性要求）
+  - IgnoredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则忽略该问题，继续运行 Pod 。（软性要求）
+- 例：
+```yml
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: k1
+            operator: In
+            values:
+            - v1.0
+            - v1.1
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: k2
+            operator: In
+            values:
+            - v2
+```
+- 上例中在 nodeAffinity 下定义了两个亲和性。
+- nodeSelector 下的条件只要满足一个即可，matchExpressions 下的条件要全部满足。
+- 条件的 operator 可以是以下类型：
+  - Exists ：Node 上存在该 key 。
+  - DoesNotExist ：与 Exists 相反。
+  - In ：Node 上存在该 key ，且其值在给定的列表中。
+  - NotIn ：与 In 相反。
+  - Gt ：Node 上存在该 key ，且其值大于给定值。
+  - Lt ：与 Gt 相反，是小于。
+
+### Taint、Tolerations
+
+- 可以给节点添加一些标签作为污点（Taint），然后给 Pod 添加一些标签作为容忍（Tolerations）。kube-scheduler 不会在将 Pod 调度到有污点的节点上，除非 Pod 能容忍该污点。
+- 例：
+  1. 给 Node 添加污点：
       ```sh
-      kubectl delete pods --all-namespaces --field-selector status.phase=Failed
+      kubectl taint nodes node1 k1=v1:NoSchedule
       ```
+  2. 在 Pod spec 中配置容忍度：
+      ```yml
+      spec:
+        containers:
+          ...
+        tolerations:
+        - key: "k1"
+          operator: "Equal"
+          value: "v1"
+          effect: "NoSchedule"
+        - key: "k2"
+          operator: "Exists"
+          effect: "PreferNoSchedule"
+        - key: "k3"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 3600
+      ```
+- 污点的效果分为三种：
+  - NoSchedule ：如果 Pod 不容忍该污点，则不部署到该 Node 上。如果已经部署了，则继续运行该 Pod 。
+  - PreferNoSchedule ：如果 Pod 不容忍该污点，则优先部署到其它 Node 上，不行的话才部署到该 Node 上。
+  - NoExecute ：如果 Pod 不容忍该污点，则不部署到该 Node 上。如果已经部署了，则驱除该 Pod 。
+    - 可以额外设置 tolerationSeconds ，表示即使 Pod 容忍该污点，也最多只能保留指定秒数，超时之后就会被驱除，除非在此期间该污点消失。
+- 在 Tolerations 中：
+  - 当 operator 为 Equal 时，如果 effect、key、value 与 Taint 的相同，则匹配该 Taint 。
+  - 当 operator 为 Exists 时，如果 effect、key 与 Taint 的相同，则匹配该 Taint 。
+  - 如果不指定 key ，则匹配 Taint 的所有 key 。
+  - 如果不指定 effect ，则匹配 Taint 的所有 effect 。
 
-### 重启
+## 资源分配
 
-- 如果容器终止运行，但所属的 Pod 未被删除，则 kubelet 会自动重启该容器。
-  - 容器重启时，所属的 Pod 不会变化，也不会调度到其它 Node 。
-  - 容器重启时，如果多次重启失败，重启的间隔时间将按 10s、20s、40s 的形式倍增，上限为 5min 。当容器成功运行 10min 之后会重置。
+### HPA
 
-- 容器的重启策略 restartPolicy 分为多种：
-  ```sh
-  Always     # 当容器终止时，或者被探针判断为 Failure 时，总是会自动重启。这是默认策略
-  OnFailure  # 只有当容器异常终止时，才会自动重启
-  Never      # 总是不会自动重启
-  ```
+：水平方向的自动伸缩（Horizontal Pod Autoscaling）。
+- k8s 会监控服务的一些 metrics 指标（比如 CPU 负载），当超过一定阙值时就自动增加 ReplicaSet 数量，从而实现服务的横向扩容。
+<!-- Vertical Pod Autoscaler (VPA)可以增加和减少 Pod 容器的 CPU 和内存资源请求 -->
 
 ### 节点压力驱逐
 
@@ -620,3 +437,4 @@ contaienrs:
   ```
   - 阈值可以是绝对值、百分比。
   - 同一指标同时只能配置一个阈值。
+

@@ -35,7 +35,7 @@
   - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网或公网 IP 。
   - 给 Pod 创建 NodePort 类型的 Service 。
   - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
-  - 给 Pod 启用 `hostNetwork: true` ，采用宿主机的 network namespace 。
+  - 给 Pod 启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace 。
 
 ## Service 类型
 

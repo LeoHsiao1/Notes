@@ -20,6 +20,7 @@
   - [Kubernetes](容器/k8s/Kubernetes.md)
     - [部署](容器/k8s/部署.md)
     - [Pod](容器/k8s/Pod.md)
+    - [Controller](容器/k8s/Controller.md)
     - [Network](容器/k8s/Network.md)
     - [Volume](容器/k8s/Volume.md)
     - [权限](容器/k8s/权限.md)

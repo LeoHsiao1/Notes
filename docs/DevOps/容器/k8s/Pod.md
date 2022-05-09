@@ -30,6 +30,8 @@ spec:                         # Pod 的规格
   # securityContext: {}
   # terminationGracePeriodSeconds: 30
   # hostNetwork: false    # 是否采用宿主机的 network namespace
+  # hostIPC: false        # 是否采用宿主机的 IPC namespace
+  # hostPID: false        # 是否采用宿主机的 PID namespace
 ```
 
 - Pod 部署时常见的几种异常：

@@ -124,110 +124,108 @@ spec:
 - 可以在 Deployment 等控制器中引用 ConfigMap ，导入其中的参数作为环境变量，或 volume 。
 - 修改 ConfigMap 时，不会导致挂载它的 Pod 自动重启。
 
-配置示例：
-```yml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: redis-config
-data:
-  k1: hello
-  k2: world
-  redis.conf: |-
-    bind 0.0.0.0
-    port 6379
-    daemonize yes
-```
-- data 部分可以包含多个键值对。用 `|-` 声明的是文件内容。
-- 一个 ConfigMap 中可以保存多个配置文件。
+- 配置示例：
+  ```yml
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: redis-config
+  data:
+    k1: hello
+    k2: world
+    redis.conf: |-
+      bind 0.0.0.0
+      port 6379
+      daemonize yes
+  ```
+  - data 部分可以包含多个键值对，比如保存多个变量、配置文件。
+  - 用 `|-` 传入多行字符串作为 value 。
 
-例：引用 ConfigMap 中的参数，生成环境变量
-```yml
-apiVersion: v1
-kind: Deployment
-spec:
-  template:
-    spec:
-      containers:
-      - name: redis
-        image: redis:5.0.6
-        command: ["echo", "$K1", "$K2"] # 使用环境变量
-        env:
-        - name: K1                      # 创建一个环境变量 K1 ，
-          valueFrom:                    # 它的取值为，
-            configMapKeyRef:
-              name: redis-config        # 名为 redis-config 的 ConfigMap 中，
-              key: k1                   # 参数 k1 的值
-        - name: K2
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: k2
-        envFrom:
-        - configMapRef:
-            name: redis-config          # 导入名为 redis-config 的 ConfigMap 中的所有参数，生成环境变量
-```
+- 例：根据 ConfigMap 创建环境变量
+  ```yml
+  apiVersion: v1
+  kind: Deployment
+  spec:
+    template:
+      spec:
+        containers:
+        - name: redis
+          image: redis:5.0.6
+          command: ["echo", "$K1", "$(K2)"]
+          env:
+          - name: K1                      # 创建一个环境变量 K1 ，
+            valueFrom:                    # 它的取值为，
+              configMapKeyRef:
+                name: redis-config        # 名为 redis-config 的 ConfigMap 中，
+                key: k1                   # 参数 k1 的值
+                # optional: false         # 是否可省略。默认为 false ，当 secret.key 不存在时，会拒绝创建 Pod 。如果为 true ，则当 secret.key 不存在时，不会创建该 env 变量
+          - name: K2
+            valueFrom:
+              configMapKeyRef:
+                name: redis-config
+                key: k2
+          envFrom:
+          - configMapRef:
+              name: redis-config          # 导入 ConfigMap 中的所有参数，生成环境变量
+  ```
+  - 在 command、args 中可以用以下语法读取环境变量：
+    ```sh
+    echo $var1 ${var2}          # 这不是在 shell 中执行命令，$ 符号不生效，会保留原字符串
+    sh -c "echo $var1 ${var2}"  # 这会读取 shell 环境变量
+    echo $(var)                 # 这会在创建容器时嵌入 spec.env 环境变量，而不是读取 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会保留原字符串
+    ```
 
-例：引用 ConfigMap 中的参数，生成 volume 并挂载
-```yml
-apiVersion: v1
-kind: Deployment
-spec:
-  template:
-    spec:
-      containers:
-      - name: redis
-        image: redis:5.0.6
-        volumeMounts:
-        - name: volume1
-          mountPath: /opt/redis/volume1     # 将名为 volume1 的存储卷挂载到该目录
-        - name: volume2
-          mountPath: /opt/redis/volume2
-      volumes:
-        - name: volume1             # 创建一个名为 volume1 的卷
-          configMap:
-            name: redis-config      # 引用名为 redis-config 的 ConfigMap 中，
-            items:
-            - key: sentinel.conf    # 参数 sentinel.conf 的值
-              path: sentinel.conf   # 将该参数的值保存到 mountPath/path 文件中
-        - name: volume2             # 创建一个名为 volume2 的卷
-          configMap:
-            name: redis-config      # 导入名为 redis-config 的 ConfigMap 中的所有参数，生成 volume
-```
+- 例：将 ConfigMap 作为 volume 并挂载
+  ```yml
+  apiVersion: v1
+  kind: Deployment
+  spec:
+    template:
+      spec:
+        containers:
+        - name: redis
+          image: redis:5.0.6
+          volumeMounts:
+          - name: volume1
+            mountPath: /opt/redis/volume1     # 将名为 volume1 的存储卷挂载到该目录
+          - name: volume2
+            mountPath: /opt/redis/volume2
+        volumes:
+          - name: volume1             # 创建一个名为 volume1 的卷
+            configMap:
+              name: redis-config      # 引用的 ConfigMap 名称
+              items:
+              - key: sentinel.conf    # 引用 ConfigMap 中的哪个参数
+                path: sentinel.conf   # 将该参数的值保存到 mountPath/path 文件中
+          - name: volume2             # 创建一个名为 volume2 的卷
+            configMap:
+              name: redis-config      # 导入名为 redis-config 的 ConfigMap 中的所有参数，生成 volume
+  ```
 
 ## Secret
 
 ：与 ConfigMap 类似，但用于保存密码等私密信息。
 - 保存时会自动将参数值转换成 Base64 编码，挂载时会自动从 Base64 解码。
-
-配置示例：
-```yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: redis-secret
-type: Opaque
-data:
-  username: bGVvCg==
-  password: MTIzNDU2Cg==
-```
-
-- 例：将 secret 中的 key 参数赋值为环境变量，然后在启动命令中读取
+- 配置示例：
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: redis-secret
+  type: Opaque
+  data:
+    username: bGVvCg==
+    password: MTIzNDU2Cg==
+  ```
+  调用 secret ：
   ```yml
   spec:
     containers:
     - name: redis
-      image: redis:5.0.6
-      command:
-        - redis-cli
-      args:
-        - -a=$(PASSWORD)
       env:
       - name: PASSWORD
         valueFrom:
           secretKeyRef:
-            name: redis-secret  # secret 名称
             key: password
+            name: redis
   ```
-  - 在 command、args 中可以用 `$()` 语法读取 env 变量，k8s 会在创建容器时嵌入变量，而不是在 shell 中读取变量。
-    - 不能使用 `$var` 或 `${var}` 读取 env 变量，否则会被视作纯字符串。

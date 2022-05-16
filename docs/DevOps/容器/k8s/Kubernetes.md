@@ -74,17 +74,6 @@
 - kubelet 中的 PLEG（Pod Lifecycle Event Generator）模块负责执行 relist 任务：获取本机的容器列表，检查所有 Pod 的状态，如果状态变化则生成 Pod 的生命周期事件。
   - 每执行一次 relist ，会等 1s 再执行下一次 list 。
   - 如果某次 relist 耗时超过 3min ，则报错 `PLEG is not healthy` ，并将当前 Node 标记为 NotReady 状态。
-- kubelet 的配置示例：
-  ```yml
-  failSwapOn: true                  # 如果节点启用了 swap 内存，则拒绝启动 kubelet
-  maxPods: 110                      # 该 kubelet 节点上最多运行的 Pod 数
-  containerLogMaxSize: 10Mi         # 当容器日志文件达到该值时，切割一次
-  containerLogMaxFiles: 5           # 容器日志文件被切割之后，最多保留几个文件
-
-  imageGCHighThresholdPercent: 85   # 一个百分数。如果节点的磁盘使用率达到高水位，则自动清理未被使用的镜像，从最旧的镜像开始删除，直到磁盘使用率降至低水位
-  image-gc-low-threshold: 80
-  evictionMaxPodGracePeriod: 0      # 软驱逐 Pod 的最大宽限期，单位为秒。默认为 0 ，即不限制
-  ```
 
 ### kube-proxy
 

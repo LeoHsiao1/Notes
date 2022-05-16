@@ -40,7 +40,7 @@ spec:                         # Pod 的规格
     - 拉取不到镜像
     - 不能获取 Volume 等依赖
   - pod 进入 running 阶段，但启动之后很快终止，因此不断重启，即 CrashLoopBackOff 状态
-  - pod 进入 running 阶段，保持运行，但长时间未通过健康检查，即 unready 状态。此时该 Pod 会从 EndPoint 中删除
+  - pod 进入 running 阶段，保持运行，但长时间未通过健康检查，即非 Ready 状态。此时该 Pod 会从 EndPoint 中删除
   - pod 资源不足，比如发生内存 OOM 而重启
   - pod 异常终止，进入 failed 阶段
   - pod 被驱逐，进入 failed 阶段
@@ -391,6 +391,7 @@ spec:
 ### 节点压力驱逐
 
 - 节点压力驱逐（Node-pressure Eviction）：当 Node 可用资源低于阈值时，kubelet 会驱逐该节点上的 Pod 。
+  - kube-scheduler 会限制每个节点上，所有 pod.request 的资源之和不超过 allocatable 。但 Pod 实际占用的资源可能更多，用 pod.limit 限制也不可靠，因此需要驱逐 Pod ，避免整个主机的资源耗尽。
   - 决定驱逐的资源主要是内存、磁盘，并不考虑 CPU 。
   - 驱逐过程：
     1. 给 Node 添加一个 NoSchedule 类型的污点，不再调度新 Pod 。
@@ -402,13 +403,19 @@ spec:
 
 - 几种驱逐信号：
   ```sh
-  memory.available    # 节点可用内存不足，这是根据 Cgroup 数据计算：节点总内存 - 节点 workingSet 内存
+  memory.available    # 节点可用内存不足
   nodefs.available    # 节点可用磁盘不足
   nodefs.inodesFree   # 节点可用的 inode 不足
   imagefs.available
   imagefs.inodesFree
   pid.available       # 节点可用的 PID 不足
   ```
+  - 计算关系：
+    ```sh
+    memory.capacity = RAM     # 节点的硬件资源容量
+    memory.allocatable = memory.capacity - kube-reserved - system-reserved  # 节点的可分配资源量，等于硬件容量减去保留量
+    memory.available = memory.allocatable - memory.workingSet               # 节点实际用的资源量，这是根据 Cgroup 数据计算的，与 pod.request 无关
+    ```
   - nodefs、imagefs 一般都位于主机的主文件系统上。
     - nodefs ：用于存放 /var/lib/kubelet/ 目录。
     - imagefs ：用于存放 /var/lib/docker/ 目录，主要包括 docker images、container rootfs、container log 数据。
@@ -429,7 +436,7 @@ spec:
   imagefs.available<15%
   nodefs.inodesFree<5%
   ```
-  - 阈值可以是绝对值、百分比。
+  - 阈值可以是绝对值、百分比。百分比是指 available / capacity 。
   - 同一指标同时只能配置一个阈值。
 
 ## 自动伸缩

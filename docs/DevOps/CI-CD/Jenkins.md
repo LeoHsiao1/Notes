@@ -192,6 +192,8 @@
 - Folder Properties
   - 用于在 Folder 中定义一些环境变量，称为属性，供其下的 Job 调用。
   - 需要在 Pipeline 的 options 中加入 withFolderProperties() ，才会在 stages 阶段载入 Folder 变量。
+- AnsiColor
+  - 用于在 Jenkins 网页上查看 Console Output 时，识别 ANSI 颜色编码。
 
 ## ♢ jenkinsapi
 

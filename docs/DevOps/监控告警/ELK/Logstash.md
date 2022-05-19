@@ -144,19 +144,20 @@
     # }
 
     output {
-      stdout {                                  # 输出到终端，便于调试
-        # codec => rubydebug                    # 输出时默认采用 rubydebug 格式
+      stdout {                                    # 输出到终端，便于调试
+        # codec => rubydebug                      # 输出时默认采用 rubydebug 格式
+        # codec => rubydebug { metadata => true } # 是否输出 @metadata 字段
       }
-      # file {                                  # 输出到文件
-      #   path  => "/tmp/http.log"
+      # file {                                    # 输出到文件
+      #   path  => "/tmp/logstash.log"
       #   codec => line {                                     # 逐行解析输入的文本
       #               format => "custom format: %{message}"   # 设置处理数据的格式。默认为 json_lines
       #               charset => "UTF-8"                      # 编码格式，默认为 UTF-8
       #            }
       # }
-      elasticsearch {                           # 输出到 ES
+      elasticsearch {                             # 输出到 ES
         # 该插件会将 pipeline 的一组 batch event 放在一个 bulk 请求中发出，如果单个请求超过 20M 则拆分成多个请求
-        hosts => ["http://10.0.0.1:9200"]
+        hosts => "http://10.0.0.1:9200"
         # user                => "admin"
         # password            => "123456"
         # ssl_certificate_verification => true                            # 使用 HTTPS 连接时，是否验证 SSL 证书
@@ -214,7 +215,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
       }
     }
     ```
-    - `@metadata` 字段不会被 output 阶段输出，因此可以存储一些临时的子字段。
+    - `@metadata` 是一个内置字段，不会被 output 阶段输出，因此可以存储一些临时的子字段。
 - 支持使用 if 语句：
   - 支持 `<`、`>`、`<=`、`>=`、`==`、`!=` 比较运算符。
   - 支持 `=~` `!~` 运算符，判断左侧的字符串是否匹配右侧的正则表达式。

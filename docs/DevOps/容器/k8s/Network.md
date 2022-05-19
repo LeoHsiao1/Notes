@@ -11,8 +11,9 @@
     - Node IP 一般采用宿主机的 eth0 网口的 IP ，不属于 VIP 。
   - Pod IP
     - ：分配给 Pod 使用的 VIP 。
-    - k8s 会给每个 Node 分配一个虚拟 CIDR 子网。在 Node 上创建 Pod 时，会给它分配一个当前 CIDR 子网的 VIP 。
+    - k8s 会给每个 Node 分配一个虚拟 CIDR 子网，给每个 Pod 分配一个当前 CIDR 子网的 VIP 。
     - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP 。而且重新部署时，会创建新 Pod ，分配新 Pod IP 。因此 Pod IP 不固定，不方便访问，建议通过 Service IP 或 Ingress IP 访问应用。
+    - Pod IP 支持 ICMP 协议，因为绑定了一个虚拟网卡。而 Service IP 不支持 ICMP 协议，因为只负责端口转发。
   - Service IP
   - Ingress IP
 

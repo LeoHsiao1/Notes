@@ -90,8 +90,8 @@ $ route     # 显示本机的路由表
   - Metric 表示这条路由的跳数，即到目标主机需要经过几次路由转发。
 - 例：修改路由表
   ```sh
-  route add -net 10.0.1.0 netmask 255.255.255.0 dev eth0    # 增加一条路由
-  route del -net 10.0.1.0 netmask 255.255.255.0 dev eth0    # 删除一条路由
+  route add -net 10.0.1.0/16 gw 10.0.1.1  # 增加一条路由
+  route del -net 10.0.1.0/16 gw 10.0.1.1  # 删除一条路由
   ```
 
 ## ip

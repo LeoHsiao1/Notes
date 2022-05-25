@@ -195,7 +195,7 @@
       echo 'A'
   } else if ( 'Hello' == 'Hello' ) {
       echo 'B'
-  }  else {
+  } else {
       echo 'C'
   }
   ```

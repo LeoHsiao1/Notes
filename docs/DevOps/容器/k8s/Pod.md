@@ -53,12 +53,15 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
   - deployment 的 Pod 实例未全部更新到最新版本，持续长时间
   - deployment 停留在 Progressing 状态超过 progressDeadlineSeconds 时长），则变为 Failed 状态
 
+- 容器的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
+  - 如果存在其它日志文件，可以增加一个 sidecar 容器，执行 tail -f xx.log 命令。
+
 -->
 
 
 ### Sidecar
 
-一个 Pod 中只运行一个容器的情况最简单（称为主容器），但有时也会运行一些辅助容器（Sidecar）。
+- 一个 Pod 中只运行一个容器的情况最简单（称为主容器），但有时也会运行一些辅助容器（Sidecar）。
 
 辅助容器有两种类型：
 - 标准容器：与主容器差不多。

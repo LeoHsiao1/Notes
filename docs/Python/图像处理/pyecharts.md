@@ -26,7 +26,7 @@
 
   bar = Bar(init_opts=opts.InitOpts(                                # 初始化图像
                                     # width    = '900px',           # 画布宽度
-                                    # height   = '500px',           # 画布度
+                                    # height   = '500px',           # 画布高度
                                     # chart_id = None,              # 图像的 ID ，在显示多个图像时用于区分
                                     # renderer = RenderType.CANVAS, # 渲染风格，可以为 canvas 或 svg
                                     page_title = 'Test',            # HTML 网页的标题

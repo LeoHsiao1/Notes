@@ -43,7 +43,7 @@
 
 下载[官方脚本](https://github.com/jumpserver/installer)：
 ```sh
-wget https://github.com/jumpserver/installer/releases/download/v2.9.1/jumpserver-installer-v2.9.1.tar.gz
+wget https://github.com/jumpserver/installer/releases/download/v2.22.1/jumpserver-installer-v2.22.1.tar.gz
 ```
 解压后执行：
 ```sh

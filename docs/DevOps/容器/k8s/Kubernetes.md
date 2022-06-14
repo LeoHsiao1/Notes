@@ -39,12 +39,12 @@
     - ：负责提供 Restful API ，供用户访问、控制 k8s 集群。
     - 默认监听 6443 端口，会被其它 kube 服务访问。
   - kube-controller-manager
-    - ：负责监控、管理 Node、Namespace、Pod、Service 等各种 k8s 资源。
+    - ：控制器。负责监控、管理 Node、Namespace、Pod、Service 等各种 k8s 资源。
     - 管理 Pod 时，主要根据 Controller 配置。
   - kube-scheduler
-    - ：负责调度 Pod ，根据一些策略决定将每个 Pod 分配到哪个节点上部署。
+    - ：调度器。负责调度 Pod ，根据一些策略决定将每个 Pod 分配到哪个节点上部署。
   - etcd
-    - ：分布式数据库，用于存储 k8s 的配置、状态数据。
+    - ：一个分布式数据库，用于存储 k8s 的配置、状态数据。
     - 默认监听 2379、2380 端口，仅供本机的 apiserver 访问。
     - 一般将 etcd 部署在主节点上，也可以部署在独立主机上，或者部署在 k8s 集群之外。
 

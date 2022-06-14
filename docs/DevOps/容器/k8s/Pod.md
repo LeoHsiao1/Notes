@@ -151,7 +151,7 @@ Pod 占用的资源超过 limits 的情况：
 ### 重启
 
 - 如果容器终止运行，但所属的 Pod 未被删除，则 kubelet 会自动重启该容器。
-  - 容器重启时，所属的 Pod 不会变化，也不会调度到其它 Node 。
+  - 容器重启时，所属的 Pod 不会变化，也不会调度到其它节点。
   - 容器重启时，如果多次重启失败，重启的间隔时间将按 10s、20s、40s 的形式倍增，上限为 5min 。当容器成功运行 10min 之后会重置。
 
 - 容器的重启策略 restartPolicy 分为多种：
@@ -301,7 +301,7 @@ contaienrs:
   - 没有定义 preStop 时，kubelet 会采用默认的终止方式：先向 Pod 中的所有容器的进程发送 SIGTERM 信号，并将 Pod 的状态标识为 Terminating 。超过宽限期（grace period ，默认为 30 秒）之后，如果仍有进程在运行，则发送 SIGKILL 信号，强制终止它们。
   - 这里说的终止是指容器被 kubelet 主动终止，不包括容器自己运行结束的情况。
 
-## 节点调度
+## 调度节点
 
 - 创建一个 Pod 之后，kube-scheduler 会决定将该 Pod 调度到哪个节点上。调度过程分为两个步骤：
   - 过滤
@@ -313,52 +313,70 @@ contaienrs:
     - ：给每个可调度节点打分，选出一个最适合部署该 Pod 的 Node 。比如考虑节点的亲和性。
     - 如果存在多个打分最高的 Node ，则随机选取一个。
 
+### nodeSelector
+
+- k8s 默认可能将 Pod 调度到任一节点上。可以给 Pod 增加 nodeSelector 配置，指定可调度节点。
+- 用法：先给节点添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
+- 例：
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: nginx
+  spec:
+    containers:
+    - name: nginx
+      image: nginx
+    nodeSelector:       # 根据节点标签，筛选出可调度节点，可能有多个
+      project: test
+    # nodeName: node-1  # 也可以明确地指定一个可调度节点
+  ```
+
 ### Affinity
 
-：节点的亲和性，表示 Pod 优先部署在什么样的 Node 上。
-- 用法：先给 Node 添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
+：节点的亲和性，表示将 Pod 优先部署在哪些 Node 上，比 nodeSelector 更灵活。
 - 亲和性的主要分类：
-  - requiredDuringScheduling ：当 Pod 开始部署时，只能部署到满足条件的 Node 上。如果没有这样的 Node ，则重新部署。（硬性要求）
-  - preferredDuringScheduling ：当 Pod 开始部署时，优先部署到符合条件的 Node 上。如果没有这样的 Node ，则部署到其它 Node 上。（软性要求）
-  - RequiredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则重新部署。（硬性要求）
-  - IgnoredDuringExecution ：当 Pod 正在运行时，如果 Node 变得不满足条件，则忽略该问题，继续运行 Pod 。（软性要求）
+  - requiredDuringScheduling ：为 Pod 调度节点时，只能调度到满足条件的节点上。如果没有这样的节点，则不可调度。（硬性要求）
+  - preferredDuringScheduling ：为 Pod 调度节点时，优先调度到满足条件的节点上。如果没有这样的节点，则调度到其它节点上。（软性要求）
+  - RequiredDuringExecution ：当 Pod 已调度之后，如果当前节点不满足条件，则驱逐 Pod 。（硬性要求）
+  - IgnoredDuringExecution ：当 Pod 已调度之后，如果当前节点不满足条件，则继续运行 Pod 。（软性要求）
 - 例：
-```yml
-spec:
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: k1
-            operator: In
-            values:
-            - v1.0
-            - v1.1
-      preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 1
-        preference:
-          matchExpressions:
-          - key: k2
-            operator: In
-            values:
-            - v2
-```
-- 上例中在 nodeAffinity 下定义了两个亲和性。
-- nodeSelector 下的条件只要满足一个即可，matchExpressions 下的条件要全部满足。
-- 条件的 operator 可以是以下类型：
-  - Exists ：Node 上存在该 key 。
-  - DoesNotExist ：与 Exists 相反。
-  - In ：Node 上存在该 key ，且其值在给定的列表中。
-  - NotIn ：与 In 相反。
-  - Gt ：Node 上存在该 key ，且其值大于给定值。
-  - Lt ：与 Gt 相反，是小于。
+  ```yml
+  spec:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: k1
+              operator: In
+              values:
+              - v1.0
+              - v1.1
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          preference:
+            matchExpressions:
+            - key: k2
+              operator: In
+              values:
+              - v2
+  ```
+  - 上例中在 nodeAffinity 下定义了两个亲和性。
+  - nodeSelector 下的条件只要满足一个即可，matchExpressions 下的条件要全部满足。
+  - 条件的 operator 可以是以下类型：
+    - Exists ：Node 上存在该 key 。
+    - DoesNotExist ：与 Exists 相反。
+    - In ：Node 上存在该 key ，且其值在给定的列表中。
+    - NotIn ：与 In 相反。
+    - Gt ：Node 上存在该 key ，且其值大于给定值。
+    - Lt ：与 Gt 相反，是小于。
 
 ### Taint、Tolerations
 
 - 可以给节点添加一些标签作为污点（Taint），然后给 Pod 添加一些标签作为容忍（Tolerations）。kube-scheduler 不会在将 Pod 调度到有污点的节点上，除非 Pod 能容忍该污点。
 - 例：
-  1. 给 Node 添加污点：
+  1. 给节点添加污点：
       ```sh
       kubectl taint nodes node1 k1=v1:NoSchedule
       ```
@@ -381,9 +399,9 @@ spec:
           tolerationSeconds: 3600
       ```
 - 污点的效果分为三种：
-  - NoSchedule ：如果 Pod 不容忍该污点，则不部署到该 Node 上。如果已经部署了，则继续运行该 Pod 。
-  - PreferNoSchedule ：如果 Pod 不容忍该污点，则优先部署到其它 Node 上，不行的话才部署到该 Node 上。
-  - NoExecute ：如果 Pod 不容忍该污点，则不部署到该 Node 上。如果已经部署了，则驱除该 Pod 。
+  - NoSchedule ：如果 Pod 不容忍该污点，则不部署到该节点上。如果已经部署了，则继续运行该 Pod 。
+  - PreferNoSchedule ：如果 Pod 不容忍该污点，则优先部署到其它节点上，不行的话才部署到该节点上。
+  - NoExecute ：如果 Pod 不容忍该污点，则不部署到该节点上。如果已经部署了，则驱除该 Pod 。
     - 可以额外设置 tolerationSeconds ，表示即使 Pod 容忍该污点，也最多只能保留指定秒数，超时之后就会被驱除，除非在此期间该污点消失。
 - 在 Tolerations 中：
   - 当 operator 为 Equal 时，如果 effect、key、value 与 Taint 的相同，则匹配该 Taint 。
@@ -393,11 +411,11 @@ spec:
 
 ### 节点压力驱逐
 
-- 节点压力驱逐（Node-pressure Eviction）：当 Node 可用资源低于阈值时，kubelet 会驱逐该节点上的 Pod 。
+- 节点压力驱逐（Node-pressure Eviction）：当节点可用资源低于阈值时，kubelet 会驱逐该节点上的 Pod 。
   - kube-scheduler 会限制每个节点上，所有 pod.request 的资源之和不超过 allocatable 。但 Pod 实际占用的资源可能更多，用 pod.limit 限制也不可靠，因此需要驱逐 Pod ，避免整个主机的资源耗尽。
   - 决定驱逐的资源主要是内存、磁盘，并不考虑 CPU 。
   - 驱逐过程：
-    1. 给 Node 添加一个 NoSchedule 类型的污点，不再调度新 Pod 。
+    1. 给节点添加一个 NoSchedule 类型的污点，不再调度新 Pod 。
     2. 驱逐该节点上的 Pod 。
     3. 驱逐一些 Pod 之后，如果不再满足驱逐阈值，则停止驱逐。
   - 优先驱逐这些 Pod ：

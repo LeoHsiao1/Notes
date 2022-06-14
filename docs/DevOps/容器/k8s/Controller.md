@@ -154,6 +154,7 @@ lastUpdateTime        # 上一次更新该状态的时间
 ## DaemonSet
 
 ：与 Deployment 类似，但是在每个 node 上只部署一个 Pod 实例。适合监控、日志等 daemon 服务。
+- DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
 - 例：
   ```yml
   apiVersion: apps/v1
@@ -172,7 +173,6 @@ lastUpdateTime        # 上一次更新该状态的时间
       spec:
         containers:
           - ...
-    # nodeName: xx              # DaemonSet 默认会调度到每个节点，可以限制调度的节点
     # updateStrategy:           # DaemonSet 的更新部署策略（updateStrategy）有两种：RollingUpdate、OnDelete
     #   type: RollingUpdate
     #   rollingUpdate:

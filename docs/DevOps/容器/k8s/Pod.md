@@ -168,10 +168,11 @@ Pod 占用的资源超过 limits 的情况：
 apiVersion: v1
 kind: Pod
 metadata:
-  ...
+  name: nginx
 spec:
   containers:
-    ...
+  - name: nginx
+    image: nginx:1.20
   restartPolicy: Always   # Pod 中的容器 restartPolicy
   schedulerName: default-scheduler
   ...
@@ -277,7 +278,7 @@ contaienrs:
 
 ### postStart、preStop
 
-可以给 Pod 中的单个容器定义 postStart、preStop 钩子，在启动、终止过程中增加操作。如下：
+可以给 Pod 中的每个容器定义 postStart、preStop 钩子，在启动、终止过程中增加操作。如下：
   ```yml
   contaienrs:
   - name: redis
@@ -319,58 +320,53 @@ contaienrs:
 - 用法：先给节点添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
 - 例：
   ```yml
-  apiVersion: v1
-  kind: Pod
-  metadata:
-    name: nginx
   spec:
-    containers:
-    - name: nginx
-      image: nginx
     nodeSelector:       # 根据节点标签，筛选出可调度节点，可能有多个
       project: test
     # nodeName: node-1  # 也可以明确地指定一个可调度节点
   ```
 
-### Affinity
+### nodeAffinity
 
 ：节点的亲和性，表示将 Pod 优先部署在哪些 Node 上，比 nodeSelector 更灵活。
-- 亲和性的主要分类：
+- 亲和性的几种类型：
   - requiredDuringScheduling ：为 Pod 调度节点时，只能调度到满足条件的节点上。如果没有这样的节点，则不可调度。（硬性要求）
   - preferredDuringScheduling ：为 Pod 调度节点时，优先调度到满足条件的节点上。如果没有这样的节点，则调度到其它节点上。（软性要求）
-  - RequiredDuringExecution ：当 Pod 已调度之后，如果当前节点不满足条件，则驱逐 Pod 。（硬性要求）
-  - IgnoredDuringExecution ：当 Pod 已调度之后，如果当前节点不满足条件，则继续运行 Pod 。（软性要求）
+  - RequiredDuringExecution ：当 Pod 已调度之后，如果当前节点的标签变得不满足条件，则驱逐 Pod 。（硬性要求）
+  - IgnoredDuringExecution ：当 Pod 已调度之后，不考虑亲和性。（软性要求）
 - 例：
   ```yml
   spec:
     affinity:
-      nodeAffinity:
+      nodeAffinity:               # nodeAffinity 之下可以定义多种亲和性，需要同时满足
         requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
+          nodeSelectorTerms:      # nodeSelectorTerms 之下可以定义多个条件，只需满足一个即可
           - matchExpressions:
-            - key: k1
+            - key: kubernetes.io/os
               operator: In
               values:
-              - v1.0
-              - v1.1
+              - linux
         preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 1
           preference:
-            matchExpressions:
-            - key: k2
+            matchExpressions:     # matchExpressions 之下可以定义多个条件，需要全部满足
+            - key: kubernetes.io/hostname
               operator: In
               values:
-              - v2
+              - node-1
+        - weight: 50              # 可设置多个 preferred 条件。这会遍历所有节点，如果满足一个条件，则将 weight 作为得分，最后选出总得分最高的节点用于调度
+          preference: ...
   ```
-  - 上例中在 nodeAffinity 下定义了两个亲和性。
-  - nodeSelector 下的条件只要满足一个即可，matchExpressions 下的条件要全部满足。
-  - 条件的 operator 可以是以下类型：
-    - Exists ：Node 上存在该 key 。
-    - DoesNotExist ：与 Exists 相反。
-    - In ：Node 上存在该 key ，且其值在给定的列表中。
-    - NotIn ：与 In 相反。
-    - Gt ：Node 上存在该 key ，且其值大于给定值。
-    - Lt ：与 Gt 相反，是小于。
+  - operator 可以是以下类型：
+    ```sh
+    Exists        # 节点存在该 key
+    DoesNotExist  # 与 Exists 相反，可实现反亲和性
+    In            # 节点存在该 key ，且其值在指定的列表中
+    NotIn
+    Gt            # 节点存在该 key ，且其值大于指定值
+    Lt            # 小于
+    ```
+- 如果同时配置了 nodeSelector、Affinity ，则节点需要同时满足这些条件。
 
 ### Taint、Tolerations
 

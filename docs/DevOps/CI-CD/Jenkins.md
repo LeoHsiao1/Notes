@@ -32,7 +32,7 @@
       image: jenkins/jenkins:2.289.3
       restart: unless-stopped
       environment:
-        JAVA_OPTS: -Duser.timezone=GMT+08
+        JAVA_OPTS: -Duser.timezone=GMT+08 -Xms4g -Xmx4g
       ports:
         - 8080:8080                                   # 供用户访问 Jenkins 的 Web 页面
         # - 50000:50000                               # 供 JNLP 类型的 agent 访问 Jenkins

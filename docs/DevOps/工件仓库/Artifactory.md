@@ -24,7 +24,7 @@
       image: docker.bintray.io/jfrog/artifactory-oss:7.18.6
       restart: unless-stopped
       environment:
-        JAVA_OPTS: -Duser.timezone=GMT+08
+        JAVA_OPTS: -Duser.timezone=GMT+08 -Xms2g -Xmx2g
       ports:
         - 8082:8082
       volumes:

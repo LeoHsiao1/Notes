@@ -313,6 +313,7 @@ contaienrs:
   - 打分
     - ：给每个可调度节点打分，选出一个最适合部署该 Pod 的 Node 。比如考虑节点的亲和性。
     - 如果存在多个打分最高的 Node ，则随机选取一个。
+- 可以配置 nodeSelector、Affinity、Taint 等条件，只有同时满足这些条件的节点才可用于调度。
 
 ### nodeSelector
 
@@ -323,17 +324,17 @@ contaienrs:
   spec:
     nodeSelector:       # 根据节点标签，筛选出可调度节点，可能有多个
       project: test
-    # nodeName: node-1  # 也可以明确地指定一个可调度节点
+    # nodeName: node-1  # 也可以直接指定一个可调度节点
   ```
 
 ### nodeAffinity
 
-：节点的亲和性，表示将 Pod 优先部署在哪些 Node 上，比 nodeSelector 更灵活。
+：节点的亲和性，表示将 Pod 优先部署在哪些节点上，比 nodeSelector 更灵活。
 - 亲和性的几种类型：
-  - requiredDuringScheduling ：为 Pod 调度节点时，只能调度到满足条件的节点上。如果没有这样的节点，则不可调度。（硬性要求）
   - preferredDuringScheduling ：为 Pod 调度节点时，优先调度到满足条件的节点上。如果没有这样的节点，则调度到其它节点上。（软性要求）
-  - RequiredDuringExecution ：当 Pod 已调度之后，如果当前节点的标签变得不满足条件，则驱逐 Pod 。（硬性要求）
-  - IgnoredDuringExecution ：当 Pod 已调度之后，不考虑亲和性。（软性要求）
+  - requiredDuringScheduling ：为 Pod 调度节点时，只能调度到满足条件的节点上。如果没有这样的节点，则不可调度。（硬性要求）
+  - IgnoredDuringExecution ：当 Pod 已调度之后，不考虑亲和性，因此不怕节点的标签变化。（软性要求）
+  - RequiredDuringExecution ：当 Pod 已调度之后，依然考虑亲和性。如果节点的标签变得不满足条件，则可能驱逐 Pod 。（硬性要求，尚不支持）
 - 例：
   ```yml
   spec:
@@ -347,14 +348,14 @@ contaienrs:
               values:
               - linux
         preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 1
+        - weight: 1               # preferredDuringScheduling 必须设置 weight 权重。这会遍历所有节点，如果满足一个条件，则累计 weight 作为得分，最后选出总得分最高的节点用于调度
           preference:
             matchExpressions:     # matchExpressions 之下可以定义多个条件，需要全部满足
             - key: kubernetes.io/hostname
               operator: In
               values:
               - node-1
-        - weight: 50              # 可设置多个 preferred 条件。这会遍历所有节点，如果满足一个条件，则将 weight 作为得分，最后选出总得分最高的节点用于调度
+        - weight: 50
           preference: ...
   ```
   - operator 可以是以下类型：
@@ -366,7 +367,40 @@ contaienrs:
     Gt            # 节点存在该 key ，且其值大于指定值
     Lt            # 小于
     ```
-- 如果同时配置了 nodeSelector、Affinity ，则节点需要同时满足这些条件。
+
+### podAffinity
+
+：Pod 间的亲和性，表示将某些 Pod 优先部署到同一个节点上。
+- 例：
+  ```yml
+  spec:
+    affinity:
+      podAffinity:                              # Pod 间的亲和性
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: project
+              operator: In
+              values:
+              - test
+          topologyKey: kubernetes.io/hostname   # 拓扑，将某个标签取值相同的多个节点划分为一个区域，然后将满足亲和性的多个 Pod 调度到同一个区域
+          # namespaces:                         # 默认将当前 Pod 与所有命名空间的 Pod 考虑亲和性，可以指定命名空间
+          #   - default
+          # namespaceSelector:
+          #   matchLabels:
+          #     project: test
+      podAntiAffinity:                          #  Pod 间的反亲和性
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: k8s-app
+                operator: In
+                values:
+                - redis
+            topologyKey: kubernetes.io/hostname
+  ```
 
 ### Taint、Tolerations
 

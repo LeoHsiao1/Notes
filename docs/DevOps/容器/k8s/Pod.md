@@ -14,6 +14,7 @@
 <!--
 Pod 中每个容器可单独设置 request、limit 资源
 ```yml
+kind: Pod
 spec:                         # Pod 的规格
   containers:                 # 定义该 Pod 中的容器
   - name: redis               # 该 Pod 中的第一个容器名
@@ -58,6 +59,55 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
 
 -->
 
+
+
+<!--
+
+可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
+  requests.ephemeral-storage: 500Mi
+  limits.ephemeral-storage: 1Gi
+
+Pod 占用的资源超过 limits 的情况：
+- 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
+- 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，然后容器被自动重启。
+- 如果超过 ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
+
+
+例如一个服务常态运行时只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期时需要 2 核 CPU 。
+
+-->
+
+
+### RuntimeClass
+
+- 可以创建 RuntimeClass 对象，自定义容器运行时。
+- 例：
+  ```yml
+  apiVersion: node.k8s.io/v1
+  kind: RuntimeClass
+  metadata:
+    name: test-rc
+  handler: test-rc    # 通过 CRI 调用某个 handler ，负责创建、管理容器
+  overhead:
+    podFixed:         # 单个 Pod 本身需要占用的系统资源，默认不考虑
+      cpu: 100m
+      memory: 100Mi
+  scheduling:         # 调度规则，用于将 Pod 调度到某些节点上，比如支持该容器运行时的节点
+    nodeSelector:
+      project: test
+    tolerations:
+      - key: "k1"
+        operator: "Equal"
+        value: "v1"
+        effect: "NoSchedule"
+  ```
+  ```yml
+  kind: Pod
+  spec:
+    runtimeClassName: runC-pod    # Pod 采用的 RuntimeClass 。默认为空，即采用默认的容器运行时
+  ```
+  - 调度 Pod 时，会累计 Container requests、Pod overhead 资源，作为 Pod requests ，然后寻找可用资源大于 Pod requests 的节点来调度。
+  - 调度 Pod 之后，会累计 Container limits、Pod overhead 资源，作为 Pod limits，然后为 Pod 创建 Cgroup ，设置 cpu.cfs_quota_us、memory.limit_in_bytes 阈值，从而限制 Pod 的资源开销。
 
 ### Sidecar
 
@@ -105,21 +155,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 中的配置参数。
       value: "3"
   ```
 
-<!--
 
-可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
-  requests.ephemeral-storage: 500Mi
-  limits.ephemeral-storage: 1Gi
-
-Pod 占用的资源超过 limits 的情况：
-- 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
-- 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，然后容器被自动重启。
-- 如果超过 ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
-
-
-例如一个服务常态运行时只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期时需要 2 核 CPU 。
-
--->
 
 ## 生命周期
 
@@ -321,6 +357,7 @@ contaienrs:
 - 用法：先给节点添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
 - 例：
   ```yml
+  kind: Pod
   spec:
     nodeSelector:       # 根据节点标签，筛选出可调度节点，可能有多个
       project: test
@@ -337,6 +374,7 @@ contaienrs:
   - RequiredDuringExecution ：当 Pod 已调度之后，依然考虑亲和性。如果节点的标签变得不满足条件，则可能驱逐 Pod 。（硬性要求，尚不支持）
 - 例：
   ```yml
+  kind: Pod
   spec:
     affinity:
       nodeAffinity:               # nodeAffinity 之下可以定义多种亲和性，需要同时满足
@@ -373,6 +411,7 @@ contaienrs:
 ：Pod 间的亲和性，表示将某些 Pod 优先部署到同一个节点上。
 - 例：
   ```yml
+  kind: Pod
   spec:
     affinity:
       podAffinity:                              # Pod 间的亲和性
@@ -412,9 +451,8 @@ contaienrs:
       ```
   2. 在 Pod spec 中配置容忍度：
       ```yml
+      kind: Pod
       spec:
-        containers:
-          ...
         tolerations:
         - key: "k1"
           operator: "Equal"

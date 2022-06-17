@@ -59,25 +59,6 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
 
 -->
 
-
-
-<!--
-
-可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
-  requests.ephemeral-storage: 500Mi
-  limits.ephemeral-storage: 1Gi
-
-Pod 占用的资源超过 limits 的情况：
-- 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
-- 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，然后容器被自动重启。
-- 如果超过 ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
-
-
-例如一个服务常态运行时只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期时需要 2 核 CPU 。
-
--->
-
-
 ### RuntimeClass
 
 - 可以创建 RuntimeClass 对象，自定义容器运行时。
@@ -87,19 +68,19 @@ Pod 占用的资源超过 limits 的情况：
   kind: RuntimeClass
   metadata:
     name: test-rc
-  handler: test-rc    # 通过 CRI 调用某个 handler ，负责创建、管理容器
-  overhead:
-    podFixed:         # 单个 Pod 本身需要占用的系统资源，默认不考虑
-      cpu: 100m
-      memory: 100Mi
-  scheduling:         # 调度规则，用于将 Pod 调度到某些节点上，比如支持该容器运行时的节点
-    nodeSelector:
-      project: test
-    tolerations:
-      - key: "k1"
-        operator: "Equal"
-        value: "v1"
-        effect: "NoSchedule"
+  handler: test-rc      # 通过 CRI 调用某个 handler ，负责创建、管理容器
+  # overhead:
+  #   podFixed:         # 单个 Pod 本身需要占用的系统资源，默认不考虑
+  #     cpu: 100m
+  #     memory: 100Mi
+  # scheduling:         # 调度规则，用于将 Pod 调度到某些节点上，比如支持该容器运行时的节点
+  #   nodeSelector:
+  #     project: test
+  #   tolerations:
+  #     - key: k1
+  #       operator: Equal
+  #       value: v1
+  #       effect: NoSchedule
   ```
   ```yml
   kind: Pod
@@ -122,7 +103,7 @@ Pod 占用的资源超过 limits 的情况：
 
 ### dnsPolicy
 
-dnsPolicy 表示容器采用的 DNS 策略，可以取值如下：
+dnsPolicy 表示容器采用的 DNS 策略，几种取值示例：
 - ClusterFirst
   - ：表示查询一个域名时，优先解析为 k8s 集群内域名。如果不能解析，才尝试解析为集群外域名。
   - 此时会自动在主机 /etc/resolv.conf 文件的基础上为容器生成 /etc/resolv.conf 文件，内容示例：
@@ -138,8 +119,7 @@ dnsPolicy 表示容器采用的 DNS 策略，可以取值如下：
 - None
   - ：不自动为容器生成 /etc/resolv.conf 文件，此时需要 dnsConfig 自定义配置。
 
-
-dnsConfig 用于自定义容器内 /etc/resolv.conf 中的配置参数。
+dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 - 例：
   ```yml
   dnsPolicy: "None"
@@ -154,8 +134,6 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 中的配置参数。
     - name: timeout
       value: "3"
   ```
-
-
 
 ## 生命周期
 
@@ -338,6 +316,90 @@ contaienrs:
   - 没有定义 preStop 时，kubelet 会采用默认的终止方式：先向 Pod 中的所有容器的进程发送 SIGTERM 信号，并将 Pod 的状态标识为 Terminating 。超过宽限期（grace period ，默认为 30 秒）之后，如果仍有进程在运行，则发送 SIGKILL 信号，强制终止它们。
   - 这里说的终止是指容器被 kubelet 主动终止，不包括容器自己运行结束的情况。
 
+## 资源配额
+
+
+<!--
+可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
+  requests.ephemeral-storage: 500Mi
+  limits.ephemeral-storage: 1Gi
+
+Pod 占用的资源超过 limits 的情况：
+- 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
+- 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，然后容器被自动重启。
+- 如果超过 ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
+
+例如一个服务常态运行时只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期时需要 2 核 CPU 。 -->
+
+### LimitRange
+
+- 可以创建 LimitRange 对象，设置每个容器的资源配额的取值范围。例：
+  ```yml
+  apiVersion: v1
+  kind: LimitRange
+  metadata:
+    name: test-limit-range
+    namespace: default      # 作用于该命名空间
+  spec:
+    limits:
+    - default:              # 每个容器 limits 的默认值
+        cpu: 500m
+        memory: 512Mi
+        ephemeral-storage: 1Gi
+      # defaultRequest:     # 每个容器 requests 的默认值。如果不指定，则自动设置为上述的 default 值
+      #   memory: 100Mi
+      # max:                # 每个容器 limits 的最大值
+      #   memory: 1Gi
+      # min:                # 每个容器 requests 的最小值
+      #   memory: 100Mi
+      type: Container
+  ```
+  - 创建容器时，
+    - 如果未指定 limits、requests ，则自动设置为默认值。特别地，如果指定了 limits、未指定 requests ，则将 requests 设置为 limits 。
+    - 如果指定的 requests 大于 limits 值，则创建失败。
+    - 如果指定的 limits 不符合 max、min 条件，则创建失败。
+  - 已创建的容器不受 LimitRange 影响。
+
+### ResourceQuota
+
+- 可以创建 ResourceQuota 对象，限制一个 namespace 中所有 Pod 的资源总配额。例：
+  ```yml
+  apiVersion: v1
+  kind: ResourceQuota
+  metadata:
+    name: test-rq
+    namespace: default
+  spec:
+    hard:
+      requests.cpu: "10"                # 限制所有 Pod 的 requests 资源的总和
+      limits.cpu: "20"
+      requests.memory: 1Gi
+      limits.memory: 2Gi
+
+      requests.storage: 100Gi           # 限制 PVC 的总容量
+      persistentvolumeclaims: "10"      # 限制 PVC 的总数
+      requests.ephemeral-storage: 100Gi
+      limits.ephemeral-storage: 100Gi
+
+      pods: "100"                       # 限制 Pod 的总数
+      services: "100"
+      count/deployments.apps: "100"     # 可用 count/<resource> 的语法限制某种资源的总数
+      requests.nvidia.com/gpu: 4        # 限制 GPU 的总数
+      hugepages-<size>: "100"           # 限制 某种尺寸的 hugepages 的总数
+
+  # scopes:                               # 只限制指定范围的 Pod
+  #   - BestEffort
+  #   - NotBestEffort
+  # scopeSelector:
+  #   matchExpressions:
+  #     - operator: In                    # 运算符可以是 In、NotIn、Exists、DoesNotExist
+  #       scopeName: PriorityClass
+  #       values:
+  #         - high
+  ```
+  - 创建 Pod 时，如果指定的 limits、requests 超过总配额，则创建失败。
+  - 如果 Pod 的 .status.phase 为 Failed、Succeeded ，则处于终止状态，不会占用 cpu、memory、pods 等资源配额，但会占用 storage 等资源配额。
+
 ## 调度节点
 
 - 创建一个 Pod 之后，kube-scheduler 会决定将该 Pod 调度到哪个节点上。调度过程分为两个步骤：
@@ -454,16 +516,16 @@ contaienrs:
       kind: Pod
       spec:
         tolerations:
-        - key: "k1"
-          operator: "Equal"
-          value: "v1"
-          effect: "NoSchedule"
-        - key: "k2"
-          operator: "Exists"
-          effect: "PreferNoSchedule"
-        - key: "k3"
-          operator: "Exists"
-          effect: "NoExecute"
+        - key: k1
+          operator: Equal
+          value: v1
+          effect: NoSchedule
+        - key: k2
+          operator: Exists
+          effect: PreferNoSchedule
+        - key: k3
+          operator: Exists
+          effect: NoExecute
           tolerationSeconds: 3600
       ```
 - 污点的效果分为三种：

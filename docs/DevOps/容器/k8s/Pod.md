@@ -59,37 +59,6 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
 
 -->
 
-### RuntimeClass
-
-- 可以创建 RuntimeClass 对象，自定义容器运行时。
-- 例：
-  ```yml
-  apiVersion: node.k8s.io/v1
-  kind: RuntimeClass
-  metadata:
-    name: test-rc
-  handler: test-rc      # 通过 CRI 调用某个 handler ，负责创建、管理容器
-  # overhead:
-  #   podFixed:         # 单个 Pod 本身需要占用的系统资源，默认不考虑
-  #     cpu: 100m
-  #     memory: 100Mi
-  # scheduling:         # 调度规则，用于将 Pod 调度到某些节点上，比如支持该容器运行时的节点
-  #   nodeSelector:
-  #     project: test
-  #   tolerations:
-  #     - key: k1
-  #       operator: Equal
-  #       value: v1
-  #       effect: NoSchedule
-  ```
-  ```yml
-  kind: Pod
-  spec:
-    runtimeClassName: runC-pod    # Pod 采用的 RuntimeClass 。默认为空，即采用默认的容器运行时
-  ```
-  - 调度 Pod 时，会累计 Container requests、Pod overhead 资源，作为 Pod requests ，然后寻找可用资源大于 Pod requests 的节点来调度。
-  - 调度 Pod 之后，会累计 Container limits、Pod overhead 资源，作为 Pod limits，然后为 Pod 创建 Cgroup ，设置 cpu.cfs_quota_us、memory.limit_in_bytes 阈值，从而限制 Pod 的资源开销。
-
 ### Sidecar
 
 - 一个 Pod 中只运行一个容器的情况最简单（称为主容器），但有时也会运行一些辅助容器（Sidecar）。
@@ -318,18 +287,71 @@ contaienrs:
 
 ## 资源配额
 
+- Pod 中的容器默认可以占用主机的全部 CPU、内存，可能导致主机宕机。建议限制其资源配额，例：
+  ```yml
+  kind: Pod
+  spec:
+    containers:
+    - name: alpine
+      image: alpine/curl:latest
+      resources:
+        limits:
+          cpu: 500m               # 每秒占用的 CPU 核数
+          ephemeral-storage: 1Gi  # 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
+          memory: 512Mi           # 占用的内存
+        requests:
+          cpu: 100m
+          ephemeral-storage: 100Mi
+          memory: 100Mi
+  ```
+- requests 表示节点应该分配给 Pod 的资源量，limits 表示 Pod 最多占用的资源量。
+  - 创建 Pod 时，如果指定的 requests 大于 limits 值，则创建失败。
+  - 调度 Pod 时，会寻找可用资源不低于 Pod requests 的节点。如果不存在，则调度失败。
+  - 启动 Pod 时，会创建一个 Cgroup ，根据 Pod limits 设置 cpu.cfs_quota_us、memory.limit_in_bytes 阈值，从而限制 Pod 的资源开销。
 
-<!--
-可以限制 pod 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
-  requests.ephemeral-storage: 500Mi
-  limits.ephemeral-storage: 1Gi
+- 当 Pod 占用的资源超过 limits 时：
+  - 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
+  - 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，不过一般设置了容器自动重启。
+  - 如果超过 limits.ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
 
-Pod 占用的资源超过 limits 的情况：
-- 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
-- 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，然后容器被自动重启。
-- 如果超过 ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
+- 几种 Pod 举例：
+  - Pod 的 requests=limits ，这样容易预测 Pod 的资源开销。
+  - Pod 运行时一般只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期需要 2 核 CPU 。
+    - 如果分配过多 requests=limits ，就容易浪费节点资源。
+    - 如果分配过少 requests=limits ，就容易资源不足。
+    - 如果分配较少 requests、较多 limits ，就难以预测 Pod 的资源开销。如果多个这样的 Pod 调度到同一个节点上，limits 之和会超过节点总资源，可能耗尽节点资源。
 
-例如一个服务常态运行时只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期时需要 2 核 CPU 。 -->
+### RuntimeClass
+
+- 可以创建 RuntimeClass 对象，自定义容器运行时。
+- 例：
+  ```yml
+  apiVersion: node.k8s.io/v1
+  kind: RuntimeClass
+  metadata:
+    name: test-rc
+  handler: test-rc      # 通过 CRI 调用某个 handler ，负责创建、管理容器
+  # overhead:
+  #   podFixed:         # 单个 Pod 本身需要占用的系统资源
+  #     cpu: 100m
+  #     memory: 100Mi
+  # scheduling:         # 调度规则，用于将 Pod 调度到某些节点上，比如支持该容器运行时的节点
+  #   nodeSelector:
+  #     project: test
+  #   tolerations:
+  #     - key: k1
+  #       operator: Equal
+  #       value: v1
+  #       effect: NoSchedule
+  ```
+  ```yml
+  kind: Pod
+  spec:
+    runtimeClassName: runC-pod    # Pod 采用的 RuntimeClass 。默认为空，即采用默认的容器运行时
+  ```
+- 默认的 Pod overhead 为空，即不考虑。如果指定了非空值，则：
+  - 调度 Pod 时，会累计 Container requests、Pod overhead 资源，作为 Pod requests ，寻找有足够可用资源的节点。
+  - 启动 Pod 时，会累计 Container limits、Pod overhead 资源，作为 Pod limits ，根据它设置 Cgroup 阈值。
 
 ### LimitRange
 
@@ -356,7 +378,6 @@ Pod 占用的资源超过 limits 的情况：
   ```
   - 创建容器时，
     - 如果未指定 limits、requests ，则自动设置为默认值。特别地，如果指定了 limits、未指定 requests ，则将 requests 设置为 limits 。
-    - 如果指定的 requests 大于 limits 值，则创建失败。
     - 如果指定的 limits 不符合 max、min 条件，则创建失败。
   - 已创建的容器不受 LimitRange 影响。
 

@@ -8,18 +8,18 @@
 
 - 工作流程：
   1. 用户发出一个请求。
-  2. 业务系统的一个服务处理该请求，并可能调用其它服务 API ，称为一个调用链路。
+  2. 业务系统的一个服务处理该请求，并可能调用其它服务 API ，称为一个调用链路（trace）。
       - 每个服务 API 处理请求之后，都发送一次监控数据到 Zipkin 服务器。
-  3. Zipkin 统计分析所有监控数据，可绘制树形图、散点图。
+      - 每创建一个新的 trace ，Zipkin 会分配一个随机的 traceId 。
+  3. Zipkin 统计分析所有监控数据，比如绘制树形图、散点图。
 
-- 每创建一个新的调用链路，Zipkin 会分配一个随机的 traceId 。
-- 每调用一个服务 API ，称为调用链路中的一个 span 。
+- 每调用一个服务 API ，称为 trace 中的一个 span 。
   - 一般采用 API 方法名作为 spanName 。
   - 每次执行 span 时会分配一个随机的 spanId 。
   - 上游服务调用下游服务时，称为后者的 parent span 。
     - 上游服务会在 HTTP Header 中加入 traceId、parentId 等信息。
 
-- 例：Zipkin 显示的一个调用链路
+- 例：Zipkin 显示的一个 trace
   ![](./Zipkin.png)
 
 - 业务服务需要在代码中使用 Zipkin 客户端库，封装服务 API ，从而发送监控数据到 Zipkin 。负责发送、接收的模块分别称为 Reporter、Collector 。

@@ -27,11 +27,13 @@
     oap:
       image: apache/skywalking-oap-server:8.9.1
       environment:
+        JAVA_OPTS: "-Xms2G -Xmx2G"
         SW_STORAGE: elasticsearch
         SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
         SW_HEALTH_CHECKER: default
         SW_TELEMETRY: prometheus
-        JAVA_OPTS: "-Xms2G -Xmx2G"
+        # SW_CORE_RECORD_DATA_TTL: 3    # Record 数据的保存天数
+        # SW_CORE_METRICS_DATA_TTL: 7   # Metrics 数据的保存天数
       ports:
         - 11800:11800
         - 12800:12800
@@ -46,13 +48,33 @@
 
 ## 原理
 
-- SkyWalking 监控系统分为多个组件：
+- SkyWalking 系统分为多个组件：
   - UI ：Web 前端。
   - OAP ：Web 后端。
   - Storage ：负责存储监控数据。
     - 支持 ES、MySQL 等多种数据库。
     - 为了保证监控的实时性，这里不采用消息队列，当数据量过大时可以降低采样率。
   - agent ：采集业务服务的监控数据，发送给 OAP 。
+
+- SkyWalking 监控的主要概念：
+  - service
+    - ：表示一种应用服务，具有某种功能、负责处理某种请求。
+    - 一个 service 可能运行了一个或多个实例（instance），而一个 instance 可能包含一个或多个进程（process）。
+  - endpoint
+    - ：service 接收请求的地址，比如 HTTP URI 或 gRPC 地址。
+    - 一个 service 可能包含一个或多个 endpoint 。
+  - trace
+    - ：用户发出一个请求时，业务系统会依次调用多个服务 API 来处理请求，称为一个调用链路（trace）。
+    - 每调用一个服务 API 称为一个 span 。
+  - segment
+    - ：在一个 trace 中，同一个 instance 执行的多个 span ，划分为一个段（segment）。
+    - 一个 trace 由多个 segment 串联组成。每个 segment 包含多个 span ，拥有相同的 segment_id 。
+  - event
+    - ：客户端可以上报事件到 SkyWalking 服务器，比如 k8s 事件。
+
+- SkyWalking 保存的监控数据分为几种：
+  - record ：包括 traces、logs、alarm 等数据。
+  - metrics ：包括 service、instance、endpoint 等对象的监控指标、元数据。
 
 ## 用法
 

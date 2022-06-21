@@ -24,6 +24,7 @@
       restart: unless-stopped
       environment:
         MODE: standalone
+        NACOS_AUTH_ENABLE: true   # Nacos 默认给 Web 端启用了密码认证，但 API 未启用密码认证，需要主动开启
         # JVM_XMS: 1g
         # JVM_XMX: 1g
       ports:
@@ -40,11 +41,6 @@
     MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
     ```
     需要执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/master/distribution/conf/nacos-mysql.sql)
-  - Nacos 的 Web 端默认启用了密码认证，但 API 未启用密码认证。需要添加以下环境变量：
-    ```sh
-    NACOS_AUTH_ENABLE=true
-    ```
-    然后让业务服务访问 Nacos 时带上账号密码。
 
 ## 用法
 
@@ -76,18 +72,20 @@
       active: test
     cloud:
       nacos:
-        config:                                     # 关于配置管理功能
+        username: ***                               # 访问 Nacos API 的账号，默认无
+        password: ***
+        config:                                     # 关于配置管理
           server-addr: 10.0.0.1:8848                # Nacos 服务器的地址
+          # enabled: true                           # 是否启用配置管理功能
           # namespace: public                       # 该服务所属的命名空间
           # group: DEFAULT_GROUP                    # 该服务所属的 group
           # prefix: ${spring.application.name}      # 根据 prefix 等参数确定 DataID ，找到对应的配置集，给该服务采用
           # file-extension: properties              # 配置文件的扩展名，比如 yaml
           # refresh:
           #   enabled: true                         # 是否自动从 Nacos 获取最新的配置，这样不必重启服务
-          # username=***                            # 访问 Nacos API 的账号，默认无
-          # password=***
-        discovery:                                  # 关于服务发现功能
-          server-addr: 10.0.0.1:8848
+        discovery:                                  # 关于服务发现
+          server-addr: ${spring.cloud.nacos.config.server-addr}
+          # register-enabled: true                  # 是否将当前进程注册到 Nacos ，作为一个服务实例。但依然会通过 Nacos 发现其它服务
           # namespace: public
           # group: DEFAULT_GROUP
           # service: ${spring.application.name}     # 注册的服务名

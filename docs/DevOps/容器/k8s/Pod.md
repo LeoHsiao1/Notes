@@ -70,7 +70,7 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
   - 如果某个 init 容器启动失败或异常退出，则 kubelet 会重新启动该 Pod 。
   - 重启 Pod 时会重新启动各个 init 容器。因此，为了避免多次重启 Pod 时出错，init 容器的行为应该满足幂等性。
 
-### dnsPolicy
+### dns
 
 dnsPolicy 表示容器采用的 DNS 策略，几种取值示例：
 - ClusterFirst
@@ -103,6 +103,39 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
     - name: timeout
       value: "3"
   ```
+
+### priority
+
+- 优先级（priority）
+  - ：多个 Pod 同时等待 kube-scheduler 调度时，会选出 priority 最高的 Pod 优先调度。如果该 Pod 调度成功或不可调度，才调度 priority 较低的 Pod 。
+- 抢占（Preemption）
+  - ：当一个 Pod 缺乏可用资源来调度时，会自动驱逐某个节点上一些 priority 较低的 Pod （这会优雅地终止），腾出 CPU、内存等资源。
+  - 在抢占成功之前，如果出现另一个可调度节点，则停止抢占。
+  - 在抢占成功之前，如果出现另一个 priority 更高的 Pod ，则优先调度它。而当前 Pod 会重新调度。
+- PriorityClass
+  - ：一种不受命名空间管理的对象，用于配置 Pod priority 。
+  - 例：创建一个 PriorityClass
+    ```yml
+    apiVersion: scheduling.k8s.io/v1
+    kind: PriorityClass
+    metadata:
+      name: test-priority
+    value: 1000                               # 优先级，取值范围为 0~2^32 ，默认为 0
+    # preemptionPolicy: PreemptLowerPriority  # 抢占策略，默认会抢占 priority 较低的 Pod 。设置成 Never 则放弃抢占
+    # globalDefault: false                    # 是否将该 PriorityClass 默认绑定到所有 Pod 。最多存在一个默认的 PriorityClass
+    ```
+    绑定到 Pod ：
+    ```yml
+    kind: Pod
+    spec:
+      priorityClassName: test-priority
+    ```
+    此后新创建的 Pod 会自动根据 PriorityClass 设置 priority ，但不会影响已创建的 Pod 。
+  - k8s 自带了两个 PriorityClass ，用于部署系统组件。
+    ```sh
+    system-cluster-critical
+    system-node-critical
+    ```
 
 ## 生命周期
 
@@ -427,7 +460,7 @@ contaienrs:
   - 过滤
     - ：遍历所有 Node ，筛选出允许调度该 Pod 的所有 Node ，称为可调度节点。比如 Node 必须满足 Pod 的 request 资源、Pod 必须容忍 Node 的污点。
     - 如果没有可调度节点，则 Pod 一直不会部署。
-    - 如果 Node 总数低于 100 ，则默认当可调度节点达到 50% Node 时就停止遍历，从而减少耗时。
+    - 对于节点总数低于 100 的 k8s ，默认设置了 percentageOfNodesToScore=50 ，即当可调度节点数量达到总数的 50% 时就停止遍历，从而减少耗时。
     - 为了避免某些节点一直未被遍历，每次遍历 Node 列表时，会以上一次遍历的终点作为本次遍历的起点。
   - 打分
     - ：给每个可调度节点打分，选出一个最适合部署该 Pod 的 Node 。比如考虑亲和性、污点。
@@ -591,8 +624,8 @@ contaienrs:
     2. 驱逐该节点上的 Pod 。
     3. 驱逐一些 Pod 之后，如果不再满足驱逐阈值，则停止驱逐。
   - 优先驱逐这些 Pod ：
-    - 实际占用内存、磁盘多于 requests 的 Pod ，按差值排序
-    - Priority 较低的 Pod
+    - 实际占用内存、磁盘多于 requests 的 Pod ，按差值排序。
+    - Priority 较低的 Pod。
 
 - 几种驱逐信号：
   ```sh

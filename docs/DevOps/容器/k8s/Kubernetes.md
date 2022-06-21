@@ -126,8 +126,7 @@ kube-proxy 主要负责将访问 Service 的流量反向代理到 Pod 。有多�
 ：命名空间，用于对某些资源进行分组管理，又称为项目（project）。
 - 命名空间可以管理 Pod、Service、PVC 等资源，不同命名空间下的这些资源相互隔离，互不可见。
   - 删除一个命名空间时，会删除其下的所有资源。
-  - 可执行 `kubectl api-resources --namespaced=true` 查看被命名空间管理的所有资源类型。
-  - Node、IP、StorageClass、PersistentVolumes 不受命名空间影响。
+  - 可执行 `kubectl api-resources --namespaced=true` 查看被命名空间管理的所有资源类型，比如 Node、IP、StorageClass、PersistentVolumes 等资源不受命名空间管理。
 - 一个 k8s 中可以创建多个命名空间。初始有四个：
   ```sh
   default         # 供用户使用

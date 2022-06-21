@@ -430,7 +430,7 @@ contaienrs:
     - 如果 Node 总数低于 100 ，则默认当可调度节点达到 50% Node 时就停止遍历，从而减少耗时。
     - 为了避免某些节点一直未被遍历，每次遍历 Node 列表时，会以上一次遍历的终点作为本次遍历的起点。
   - 打分
-    - ：给每个可调度节点打分，选出一个最适合部署该 Pod 的 Node 。比如考虑节点的亲和性。
+    - ：给每个可调度节点打分，选出一个最适合部署该 Pod 的 Node 。比如考虑亲和性、污点。
     - 如果存在多个打分最高的 Node ，则随机选取一个。
 - 可以配置 nodeSelector、Affinity、Taint 等条件，只有同时满足这些条件的节点才可用于调度。
 
@@ -449,7 +449,7 @@ contaienrs:
 
 ### nodeAffinity
 
-：节点的亲和性，表示将 Pod 优先部署在哪些节点上，比 nodeSelector 更灵活。
+：节点的亲和性，表示将 Pod 优先调度在哪些节点上，比 nodeSelector 更灵活。
 - 亲和性的几种类型：
   - preferredDuringScheduling ：为 Pod 调度节点时，优先调度到满足条件的节点上。如果没有这样的节点，则调度到其它节点上。（软性要求）
   - requiredDuringScheduling ：为 Pod 调度节点时，只能调度到满足条件的节点上。如果没有这样的节点，则不可调度。（硬性要求）
@@ -491,7 +491,7 @@ contaienrs:
 
 ### podAffinity
 
-：Pod 间的亲和性，表示将某些 Pod 优先部署到同一个节点上。
+：Pod 间的亲和性，表示将某些 Pod 优先调度到同一区域。
 - 例：
   ```yml
   kind: Pod
@@ -526,13 +526,22 @@ contaienrs:
 
 ### Taint、Tolerations
 
-- 可以给节点添加一些标签作为污点（Taint），然后给 Pod 添加一些标签作为容忍（Tolerations）。kube-scheduler 不会在将 Pod 调度到有污点的节点上，除非 Pod 能容忍该污点。
+：污点、容忍度，表示避免将 Pod 调度到哪些节点上，与亲和性相反。
+- 可以给节点添加一些标签作为污点（Taint），然后给 Pod 添加一些标签作为容忍度（Tolerations）。kube-scheduler 不会将 Pod 调度到有污点的节点上，除非 Pod 能容忍该污点。
 - 例：
   1. 给节点添加污点：
       ```sh
       kubectl taint nodes node1 k1=v1:NoSchedule
       ```
-  2. 在 Pod spec 中配置容忍度：
+      或者修改节点的配置：
+      ```yml
+      spec:
+        taints:
+        - effect: NoSchedule
+          key: k1
+          value: v1
+      ```
+  2. 给 Pod 配置容忍度：
       ```yml
       kind: Pod
       spec:
@@ -547,18 +556,30 @@ contaienrs:
         - key: k3
           operator: Exists
           effect: NoExecute
-          tolerationSeconds: 3600
+          # tolerationSeconds: 3600
       ```
 - 污点的效果分为三种：
-  - NoSchedule ：如果 Pod 不容忍该污点，则不部署到该节点上。如果已经部署了，则继续运行该 Pod 。
-  - PreferNoSchedule ：如果 Pod 不容忍该污点，则优先部署到其它节点上，不行的话才部署到该节点上。
-  - NoExecute ：如果 Pod 不容忍该污点，则不部署到该节点上。如果已经部署了，则驱除该 Pod 。
-    - 可以额外设置 tolerationSeconds ，表示即使 Pod 容忍该污点，也最多只能保留指定秒数，超时之后就会被驱除，除非在此期间该污点消失。
+  - PreferNoSchedule ：如果 Pod 不容忍该污点，则优先调度到其它节点上，除非其它节点不可用，或者已经调度了。
+  - NoSchedule ：如果 Pod 不容忍该污点，则不调度到该节点上。如果已经调度了，则继续运行该 Pod 。
+  - NoExecute ：如果 Pod 不容忍该污点，则不调度到该节点上。如果已经调度了，则驱逐该 Pod 。
+    - 可以额外设置 tolerationSeconds ，表示即使 Pod 容忍该污点，也最多只能保留指定秒数，超时之后就会被驱逐，除非在此期间污点消失。
 - 在 Tolerations 中：
   - 当 operator 为 Equal 时，如果 effect、key、value 与 Taint 的相同，则匹配该 Taint 。
   - 当 operator 为 Exists 时，如果 effect、key 与 Taint 的相同，则匹配该 Taint 。
   - 如果不指定 key ，则匹配 Taint 的所有 key 。
   - 如果不指定 effect ，则匹配 Taint 的所有 effect 。
+- 例：当节点不可用时，node controller 可能自动添加以下 NoExecute 类型的污点
+  ```sh
+  node.kubernetes.io/not-ready            # 节点未准备好
+  node.kubernetes.io/unschedulable        # 节点不可调度
+  node.kubernetes.io/unreachable          # node controller 访问不到该节点
+
+  # 节点压力驱逐
+  node.kubernetes.io/disk-pressure
+  node.kubernetes.io/memory-pressure
+  node.kubernetes.io/pid-pressure
+  ```
+  - DaemontSet 类型的 Pod 默认会添加对上述 6 种污点的容忍度，因此当节点不可用时，也不会被驱逐。
 
 ### 节点压力驱逐
 

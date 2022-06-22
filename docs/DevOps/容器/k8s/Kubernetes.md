@@ -42,7 +42,7 @@
 - 一些 k8s 对象之间存在上下级依赖关系，上级称为 Owner ，下级称为 Dependent 。
   - 删除一个 Owner 时，默认会级联删除它的所有 Dependent ，反之没有影响。
   - 比如一个 Deployment 是一组 Pod 的 Owner 。如果删除这些 Pod ，但保留 Deployment ，则会自动重新创建这些 Pod 。
-  - 依赖关系不允许跨命名空间。
+  - 依赖关系只能位于同一个命名空间。
 
 ### Namespace
 
@@ -73,19 +73,29 @@
       <key>: <value>
     labels:                   # 标签，用于筛选对象
       <key>: <value>
+    # creationTimestamp: xx   # 创建时间，格式如 "2022-01-01T11:00:01Z"
+    # ownerReferences: xx     # 指向上级对象，如果存在的话
     # resourceVersion: xx     # 配置文件的版本号，由 k8s 自动更新，是一串随机数字（不是哈希值），全局唯一
+    # uid: xx                 # 每个对象会被分配一个 UID ，在整个 k8s 集群中唯一
   spec:                       # 规格，描述对象的期望状态
     <...>
 
   # status:                   # 描述对象的实际状态，这部分字段由 k8s 自动写入
   #   <...>
   ```
-  - 修改 k8s 中的配置文件时，如果不符合语法，则会报错不能修改。如果加入了未定义的字段，则会自动删除。
+  - 修改 k8s 中的配置文件时，如果不符合语法，则会报错不能修改。
+    - 如果加入了未定义的字段，则会自动删除。
   - 对象的 name 大多需要符合 DNS 命名规范：只能包含 `[a-z0-9.-]` 字符，以字母、数字开头和结尾。
     - 在同一 namespace 下，同种对象的 name 不能重复。
-    - 每个对象会被分配一个 UUID ，在整个 k8s 集群中唯一。
   - annotations、labels 采用键值对格式。
     - key、value 都是 String 类型，不能为 bool 等类型。
     - key 只能包含 `[a-zA-Z0-9._-]` 字符，以字母、数字开头和结尾。
       - 可以给 key 加上一个 `<dns_domain>/` 格式的前缀。
       - 前缀 `kubernetes.io/` 、`k8s.io/` 保留，供 k8s 系统内部使用。
+- 可选添加 `metadata.finalizers` 字段，定义终结器。
+  - 当 k8s 删除一个对象时，如果定义了 finalizers ，则会调用相应的终结器，并添加 `metadata.deletionTimestamp` 字段，将对象标记为 terminating 状态。直到 finalizers 字段为空，才会实际删除对象。
+  - 例如 PersistentVolume 对象默认定义了 finalizers ，当不被 Pod 使用时，才能删除。
+    ```yml
+    finalizers:
+    - kubernetes.io/pv-protection
+    ```

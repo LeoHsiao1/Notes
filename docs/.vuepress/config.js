@@ -1165,6 +1165,10 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
+                                    title: "组件",
+                                    path: "/DevOps/容器/k8s/组件"
+                                },
+                                {
                                     title: "部署",
                                     path: "/DevOps/容器/k8s/部署"
                                 },

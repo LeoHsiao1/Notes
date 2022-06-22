@@ -456,20 +456,11 @@ contaienrs:
 
 ## 调度节点
 
-- 创建一个 Pod 之后，kube-scheduler 会决定将该 Pod 调度到哪个节点上。调度过程分为两个步骤：
-  - 过滤
-    - ：遍历所有 Node ，筛选出允许调度该 Pod 的所有 Node ，称为可调度节点。比如 Node 必须满足 Pod 的 request 资源、Pod 必须容忍 Node 的污点。
-    - 如果没有可调度节点，则 Pod 一直不会部署。
-    - 对于节点总数低于 100 的 k8s ，默认设置了 percentageOfNodesToScore=50 ，即当可调度节点数量达到总数的 50% 时就停止遍历，从而减少耗时。
-    - 为了避免某些节点一直未被遍历，每次遍历 Node 列表时，会以上一次遍历的终点作为本次遍历的起点。
-  - 打分
-    - ：给每个可调度节点打分，选出一个最适合部署该 Pod 的 Node 。比如考虑亲和性、污点。
-    - 如果存在多个打分最高的 Node ，则随机选取一个。
-- 可以配置 nodeSelector、Affinity、Taint 等条件，只有同时满足这些条件的节点才可用于调度。
+- k8s 默认可能将 Pod 调度到任一节点上。可以配置 nodeSelector、Affinity、Taint 等条件，只有同时满足这些条件的节点才可用于部署 Pod 。
 
 ### nodeSelector
 
-- k8s 默认可能将 Pod 调度到任一节点上。可以给 Pod 增加 nodeSelector 配置，指定可调度节点。
+：节点选择器，用于筛选可调度节点。
 - 用法：先给节点添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
 - 例：
   ```yml
@@ -477,7 +468,8 @@ contaienrs:
   spec:
     nodeSelector:       # 根据节点标签，筛选出可调度节点，可能有多个
       project: test
-    # nodeName: node-1  # 也可以直接指定一个可调度节点
+
+    # nodeName: node-1  # 也可以用 nodeName 直接指定一个可调度节点
   ```
 
 ### nodeAffinity

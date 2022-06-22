@@ -18,6 +18,7 @@
     - [Dockerfile](容器/Docker/Dockerfile.md)
     - [Docker Compose](容器/Docker/Docker-Compose.md)
   - [Kubernetes](容器/k8s/Kubernetes.md)
+    - [组件](容器/k8s/组件.md)
     - [部署](容器/k8s/部署.md)
     - [Pod](容器/k8s/Pod.md)
     - [Controller](容器/k8s/Controller.md)

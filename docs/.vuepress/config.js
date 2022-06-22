@@ -1177,8 +1177,8 @@ module.exports = {
                                     path: "/DevOps/容器/k8s/Pod"
                                 },
                                 {
-                                    title: "Controller",
-                                    path: "/DevOps/容器/k8s/Controller"
+                                    title: "Workload",
+                                    path: "/DevOps/容器/k8s/Workload"
                                 },
                                 {
                                     title: "Network",

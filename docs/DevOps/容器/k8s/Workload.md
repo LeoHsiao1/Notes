@@ -1,20 +1,20 @@
-# Controller
+# Workload
 
-- 用户用 kubectl 命令手动管理 Pod 比较麻烦，因此一般用控制器（Controller）自动管理 Pod 。
-  - 用户需要编写 Controller 配置文件，描述如何部署一个 Pod 。然后创建该 Controller 对象，k8s 就会自动创建并部署其 Pod 。
-- Controller 分为 Deployment、StatefulSet 等多种类型。
+- 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般通过控制器（Controller）自动管理 Pod ，统称为工作负载（workload）。。
+  - Controller 分为 Deployment、StatefulSet 等多种类型。
+  - 用户需要编写 Controller 配置文件，描述如何部署一个 Pod 。然后创建该 Controller 对象，k8s 就会自动创建并部署 Pod 。
 
 ## Deployment
 
-：默认的 Controller 类型，用于部署无状态的 Pod 。
+：用于部署无状态的 Pod 。
 
 ### 配置
 
 配置文件示例：
 ```yml
 apiVersion: v1
-kind: Deployment            # 该 Controller 的类型
-metadata:                   # 该 Controller 的元数据
+kind: Deployment
+metadata:
   annotations:
     deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置是第几次修改版本，从 1 开始递增
   labels:
@@ -22,7 +22,7 @@ metadata:                   # 该 Controller 的元数据
   name: redis
   namespace: default
   # generation: 1           # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
-spec:                       # Controller 的规格
+spec:
   replicas: 3               # Pod 运行的副本数，默认为 1
   selector:                 # 选择 Pod
     matchLabels:
@@ -47,7 +47,7 @@ spec:                       # Controller 的规格
         - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
 ```
 - 部署一个 Deployment 时，可以创建多个 Pod 实例。
-  - Pod 的命名格式为 `<Controller_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
+  - Pod 的命名格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
     ```sh
     redis-65d9c7f6fc-szgbk
     ```

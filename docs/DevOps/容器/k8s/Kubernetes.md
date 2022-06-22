@@ -19,6 +19,9 @@
     - 这是因为 Docker 没有直接支持 CRI 接口，导致 k8s 只能通过 Dockershim 模块间接与 Docker 通信，但维护该模块比较麻烦，现在停止维护该模块。
     - 使用 Docker 构建出的镜像符合 OCI 标准，因此依然可以被 containerd 或 CRI-O 运行。
     - 如果用户继续使用 Docker 运行镜像，则启动 kubelet 时会显示一条警告。
+- v1.22
+  - 2021 年 8 月发布。
+  - 允许在节点上启用 Swap 。
 - v1.23
   - 2021 年 12 月发布。
   - 默认启用 PSA（Pod Security admission）服务，在创建 Pod 时根据 Pod 安全标准进行审核。
@@ -27,6 +30,24 @@
   - 删除了 Dockershim 模块。
 
 ## 架构
+
+### 组件
+
+- k8s 包含多个组件进程，通常部署在多个主机上，组成分布式集群。
+  - 每个主机称为节点（Node），分为两种类型：
+    - 控制平面节点（Control Plane Node）：又称为主节点（master node），负责控制整个集群、管理所有节点。
+    - 工作节点（Worker Node）：负责部署 Pod 。
+  - 部署 k8s 组件时，可以直接运行二进制文件，也可以容器化部署。
+
+- 主节点一般运行以下进程：
+  - kube-apiserver
+  - kube-controller-manager
+  - kube-scheduler
+  - etcd
+
+- 所有节点都运行以下进程：
+  - kubelet
+  - kube-proxy
 
 ### 资源
 
@@ -54,7 +75,7 @@
   ```sh
   default         # 供用户使用
   kube-system     # 供 k8s 系统内部使用，比如部署 apiserver、etcd 等系统服务
-  kube-node-lease # 包含各个节点的 lease 对象
+  kube-node-lease # 保存节点的 Lease 对象
   kube-public     # 公开，未认证的用户也可访问
   ```
 

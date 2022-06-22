@@ -591,6 +591,7 @@ contaienrs:
   node.kubernetes.io/not-ready            # 节点未准备好
   node.kubernetes.io/unschedulable        # 节点不可调度
   node.kubernetes.io/unreachable          # node controller 访问不到该节点
+  node.kubernetes.io/network-unavailable  # 节点的网络配置错误，不能正常 Pod 通信
 
   # 节点压力驱逐
   node.kubernetes.io/disk-pressure

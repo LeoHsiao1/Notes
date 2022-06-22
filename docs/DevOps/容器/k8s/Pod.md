@@ -14,7 +14,10 @@
 <!--
 Pod 中每个容器可单独设置 request、limit 资源
 ```yml
+apiVersion: v1
 kind: Pod
+metadata:
+  name: redis
 spec:                         # Pod 的规格
   containers:                 # 定义该 Pod 中的容器
   - name: redis               # 该 Pod 中的第一个容器名
@@ -181,17 +184,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 以下是一个 Pod 对象的状态示例：
 ```yml
-apiVersion: v1
 kind: Pod
-metadata:
-  name: nginx
-spec:
-  containers:
-  - name: nginx
-    image: nginx:1.20
-  restartPolicy: Always   # Pod 中的容器 restartPolicy
-  schedulerName: default-scheduler
-  ...
 status:
   conditions:             # Pod 的状态
   - type: Initialized

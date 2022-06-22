@@ -46,10 +46,10 @@
 
 ### Namespace
 
-：命名空间，用于对某些资源进行分组管理，又称为项目（project）。
+：命名空间，用于分组管理某些类型的资源，又称为项目（project）。
 - 命名空间可以管理 Pod、Service、PVC 等资源，不同命名空间下的这些资源相互隔离，互不可见。
   - 删除一个命名空间时，会删除其下的所有资源。
-  - 可执行 `kubectl api-resources --namespaced=true` 查看被命名空间管理的所有资源类型，比如 Node、IP、StorageClass、PersistentVolumes 等资源不受命名空间管理。
+  - 可执行 `kubectl api-resources --namespaced=false` 查看不受命名空间管理的资源类型，比如 Node、IP、StorageClass、PersistentVolumes 。
 - 一个 k8s 中可以创建多个命名空间。初始有四个：
   ```sh
   default         # 供用户使用
@@ -81,11 +81,11 @@
   #   <...>
   ```
   - 修改 k8s 中的配置文件时，如果不符合语法，则会报错不能修改。如果加入了未定义的字段，则会自动删除。
-  - 对象的 name 必须符合 DNS 命名规范，只能包含 `[a-z0-9.-]` 字符。
+  - 对象的 name 大多需要符合 DNS 命名规范：只能包含 `[a-z0-9.-]` 字符，以字母、数字开头和结尾。
     - 在同一 namespace 下，同种对象的 name 不能重复。
-    - 每个对象会被自动分配一个 UUID ，在整个 k8s 集群的所有 namespace 中唯一。
+    - 每个对象会被分配一个 UUID ，在整个 k8s 集群中唯一。
   - annotations、labels 采用键值对格式。
     - key、value 都是 String 类型，不能为 bool 等类型。
-    - key 只能包含 `[a-zA-Z0-9._-]` 字符，必须以字母、数字开头和结尾。
-    - 可以给 key 加上一个 `<dns_domain>/` 格式的前缀。
+    - key 只能包含 `[a-zA-Z0-9._-]` 字符，以字母、数字开头和结尾。
+      - 可以给 key 加上一个 `<dns_domain>/` 格式的前缀。
       - 前缀 `kubernetes.io/` 、`k8s.io/` 保留，供 k8s 系统内部使用。

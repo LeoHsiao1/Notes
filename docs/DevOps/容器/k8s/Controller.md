@@ -26,7 +26,7 @@ spec:                       # Controller 的规格
   replicas: 3               # Pod 运行的副本数，默认为 1
   selector:                 # 选择 Pod
     matchLabels:
-      app: redis
+      k8s-app: redis
   # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
   # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
   # strategy:               # 更新部署的策略，默认为滚动更新
@@ -37,7 +37,7 @@ spec:                       # Controller 的规格
   template:                       # 开始定义 Pod 的模板
     metadata:                     # Pod 的元数据
       labels:
-        app: redis
+        k8s-app: redis
     spec:                         # Pod 的规格
       containers:                 # 定义该 Pod 中的容器
       - name: redis               # 该 Pod 中的第一个容器名
@@ -59,17 +59,21 @@ spec:                       # Controller 的规格
     ```
     - 当 Pod 配置不变时，如果触发重启事件，创建新 Pod ，则会将容器末尾的 restart_id 加 1（从 0 开始递增）。
 
-- Deployment 的 spec.selector 是必填字段，称为选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 进行控制，匹配结果可能有任意个（包括 0 个）。
-  - 当 selector 中设置了多个筛选条件时，只会选中满足所有条件的对象。
-  - 当 selector 中没有设置筛选条件时，会选中所有对象。
+- spec.selector 是必填字段，称为标签选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 进行管理，筛选结果可能有任意个（包括 0 个）。
+  - 当 selector 中没有设置筛选条件时，会选出所有对象。
+  - 当 selector 中设置了多个筛选条件时，只会选出满足所有条件的对象。
   - 例：
     ```yml
     selector:
       matchLabels:
-        app: redis      # 要求 labels 中存在该键值对
+        k8s-app: redis        # 要求 labels 中存在该键值对
       matchExpressions:
-        - {key: app, operator: In, values: [redis, redis2]}   # 要求 labels 中存在 app 键，且值为 redis 或 redis2
-        - {key: app, operator: Exists}                        # 运算符可以是 In、NotIn、Exists、DidNotExist
+        - key: k1             # 要求存在 app 标签，且取值包含于指定列表
+          operator: In
+          values:
+          - v1
+        - key: k2
+          operator: Exists    # 运算符可以为 In、NotIn、Exists、DidNotExist
     ```
 
 - spec.template 是必填字段，用于描述 Pod 的配置。

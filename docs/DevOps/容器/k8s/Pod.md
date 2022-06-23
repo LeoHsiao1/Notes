@@ -4,10 +4,11 @@
   - Docker 以容器为单位部署应用，而 k8s 以 Pod 为单位部署应用。
 - 当用户向 apiserver 请求创建一个 Pod 之后，会自动执行以下流程：
   1. kube-scheduler 决定将该 Pod 调度到哪个节点上。
-  2. 由指定节点的 kubelet 部署该 Pod 。
+  2. 由指定节点的 kubelet 运行该 Pod 。
 - 同一 Pod 中的所有容器会被部署到同一个节点上。特点：
-  - 共享一个网络空间，可以相互通信。对外映射的访问 IP 都是 Pod IP ，因此不能暴露同样的端口号。
-  - 共享所有存储卷。
+  - 容器内的主机名等于 Pod name ，模拟一个虚拟机。
+  - 所有容器共享一个 network namespace ，可以相互通信。绑定同一个 Pod IP ，因此不能监听同一个端口号。
+  - 所有容器共享挂载的所有 volume 。
 
 ## 配置
 
@@ -22,13 +23,14 @@ spec:                         # Pod 的规格
   containers:                 # 定义该 Pod 中的容器
   - name: redis               # 该 Pod 中的第一个容器名
     image: redis:5.0.6
+    imagePullPolicy: IfNotPresent   # 拉取镜像的策略，表示本机不存在该镜像时才拉取。设置成 Always 则总是拉取
     command: ["redis-server /opt/redis/redis.conf"]
     ports:
     - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
   # dnsPolicy: ClusterFirst
   # dnsConfig: ...
-  # imagePullSecrets:
-  # - name: qcloudregistrykey
+  # imagePullSecrets:       # 拉取镜像时使用的账号密码，需要指定 secret 对象
+  # - name: my_harbor
   # restartPolicy: Always
   # schedulerName: default-scheduler
   # securityContext: {}
@@ -59,6 +61,10 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
 
 - 容器的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
   - 如果存在其它日志文件，可以增加一个 sidecar 容器，执行 tail -f xx.log 命令。
+
+- Static Pod 是一种特殊的 Pod ，由 kubelet 管理，不受 apiserver 控制，不能调用 ConfigMap 等对象。
+  - 用法：启动 kubelet 时加上 --pod-manifest-path=/etc/kubernetes/manifests 参数，然后将 Pod 的配置文件保存到该目录下。kubelet 会定期扫描配置文件，启动 Pod 。
+  - 例如用 kubeadm 部署 k8s 集群时，会以 Static Pod 的形式运行 kube-apiserver、kube-scheduler 等 k8s 组件。
 
 -->
 
@@ -142,7 +148,10 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 ## 生命周期
 
-每个 Pod 可能经过以下阶段：
+每个 Pod 的生命周期分为多个阶段：
+- Pending
+  - Pod 已创建，但尚未运行。需要经过调度阶段、拉取镜像、挂载卷等步骤。
+  - 如果拉取镜像失败，则进入 ImagePullBackOff 状态，表示每隔一段时间重试拉取一次。间隔时间不断增大，最多达到 300 秒。
 - 初始化：按顺序启动各个 init 容器。
 - 启动  ：启动主容器、sidecar 容器。
 - 运行  ：会被探针定期探测。

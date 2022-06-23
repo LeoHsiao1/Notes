@@ -1,8 +1,8 @@
 # Workload
 
-- 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般通过控制器（Controller）自动管理 Pod ，统称为工作负载（workload）。。
-  - Controller 分为 Deployment、StatefulSet 等多种类型。
-  - 用户需要编写 Controller 配置文件，描述如何部署一个 Pod 。然后创建该 Controller 对象，k8s 就会自动创建并部署 Pod 。
+- 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般通过控制器（Controller）自动管理 Pod ，统称为工作负载（workload）。
+  - workload 分为 Deployment、StatefulSet 等多种类型。
+  - 用户需要编写 workload 配置文件，描述如何部署一个 Pod 。然后创建该 workload 对象，k8s 就会自动创建并部署 Pod 。
 
 ## Deployment
 
@@ -34,7 +34,7 @@ spec:
   #   rollingUpdate:              # 滚动更新过程中的配置
   #     maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
   #     maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
-  template:                       # 开始定义 Pod 的模板
+  template:                       # 定义 Pod 模板
     metadata:                     # Pod 的元数据
       labels:
         k8s-app: redis
@@ -76,10 +76,9 @@ spec:
           operator: Exists    # 运算符可以为 In、NotIn、Exists、DidNotExist
     ```
 
-- spec.template 是必填字段，用于描述 Pod 的配置。
-  - 当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 就会创建一个新版本的 Deployment ，据此重新部署 Pod 。
+- spec.template 是必填字段，表示 Pod 配置文件的模板。
+  - 当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 会创建一个新版本的 Deployment ，据此部署新的 Pod ，并删除旧的 Pod 。该过程称为更新部署。
   - 删除 Deployment 时，k8s 会自动销毁对应的 Pod 。
-  - 修改 Deployment 时，k8s 会自动部署新 Pod ，销毁旧 Pod ，该过程称为更新部署。
 
 - Deployment 的更新部署策略（strategy）有两种：
   - Recreate ：先销毁旧 Pod ，再部署新 Pod 。

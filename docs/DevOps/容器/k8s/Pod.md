@@ -18,13 +18,16 @@ Pod 中每个容器可单独设置 request、limit 资源
 apiVersion: v1
 kind: Pod
 metadata:
-  name: redis
+  name: nginx
 spec:                         # Pod 的规格
   containers:                 # 定义该 Pod 中的容器
-  - name: redis               # 该 Pod 中的第一个容器名
-    image: redis:5.0.6
+  - name: nginx               # 该 Pod 中的第一个容器名
+    image: nginx:1.20
     imagePullPolicy: IfNotPresent   # 拉取镜像的策略，表示本机不存在该镜像时才拉取。设置成 Always 则总是拉取
-    command: ["redis-server /opt/redis/redis.conf"]
+    command:
+      - nginx
+      - -c
+      - /etc/nginx/nginx.conf
     ports:
     - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
   # dnsPolicy: ClusterFirst
@@ -174,9 +177,9 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
   - 调度节点
     - Pod 被调度到一个节点之后，不能迁移到其它节点。只能在其它节点创建新的 Pod ，即使采用相同的 Pod name ，但 UID 也不同。
   - 拉取镜像
-    - 如果拉取镜像失败，则进入 ImagePullBackOff 状态，表示每隔一段时间重试拉取一次。间隔时间不断增大，最多达到 300 秒。
+    - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间将按 10s、20s、40s 的形式倍增，最大为 5min 。成功运行 10min 之后重置间隔时间。
   - 启动容器
-    - 需要启动 Pod 的全部容器。先启动 init 容器，再启动标准容器。
+    - 先启动 init 容器，再启动标准容器。
 
 ### 终止
 
@@ -202,7 +205,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 - Pod 终止时，如果启用了 restartPolicy ，则会被 kubelet 自动重启。
   - kubelet 重启 Pod 时，并不会重启容器，而是在当前节点上重新创建 Pod 内的所有容器，并删除旧容器。
-  - 如果 Pod 多次重启失败，则重启的间隔时间将按 10s、20s、40s 的形式倍增，最大为 5min 。当容器成功运行 10min 之后会重置。
+  - 如果 Pod 多次重启失败，则重启的间隔时间将按 10s、20s、40s 的形式倍增，最大为 5min 。成功运行 10min 之后重置间隔时间。
 
 - Pod 的重启策略 restartPolicy 分为多种：
   ```sh
@@ -217,52 +220,55 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 ```yml
 kind: Pod
 status:
-  conditions:             # Pod 的状态
-  - type: Initialized
-    status: "True"        # 结合 type、status 来看，该 Pod 已初始化
+  conditions:             # Pod 的一些状态条件
+  - type: Initialized     # 条件名
+    status: "True"        # 是否符合条件
     lastProbeTime: null   # 上次探测状态的时刻
-    lastTransitionTime: "2019-12-24T08:20:23Z"  # 上次状态改变的时刻
+    lastTransitionTime: "2021-12-01T08:20:23Z"  # 上次改变状态的时刻
   - type: Ready
     status: "True"
     lastProbeTime: null
-    lastTransitionTime: "2019-12-24T08:21:24Z"
+    lastTransitionTime: "2021-12-01T08:21:24Z"
   ...
   containerStatuses:      # 容器的状态
   - containerID: docker://2bc5f548736046c64a10d9162024ed102fba0565ff742e16cd032c7a1b75cc29
-    image: harbor.test.com/test/redis:5.0.6_1577092536
-    imageID: docker-pullable://harbor.test.com/test/redis@sha256:db3c9eb0f9bc7143d5995370afc23f7434f736a5ceda0d603e0132b4a6c7e2cd
-    name: redis
+    image: nginx:1.20
+    imageID: docker-pullable://nginx@sha256:db3c9eb0f9bc7143d5995370afc23f7434f736a5ceda0d603e0132b4a6c7e2cd
+    name: nginx
     ready: true
     restartCount: 0
     state:
       running:
-        startedAt: "2019-12-24T08:21:23Z"
-  hostIP: 192.168.120.23
-  podIP: 10.244.57.150
-  phase: Running
-  startTime: "2019-12-24T08:20:23Z"
+        startedAt: "2021-12-01T08:21:23Z"
+  hostIP: 10.0.0.1
+  podIP: 10.42.57.150
+  phase: Running          # Pod 所处的生命周期阶段
+  startTime: "2021-12-01T08:20:23Z"
 ```
-- status.conditions 是一个数组，记录了多个状态条件及其是否成立：
-  - PodScheduled ：Pod 已被调度到一个节点上。
-  - Unschedulable ：Pod 不能被调度到节点上。可能是缺乏可用节点、缺乏挂载卷等资源。
-  - Initialized ：Pod 中的所有 init 容器都已成功启动（不管是否运行结束）。
-    - 运行 init 容器的过程中，Pod 处于 pending 阶段，Initialized 条件为 True 。
-  - ContainersReady ：Pod 中的所有容器已成功启动。
-  - Ready ：Pod 处于就绪状态。此时 k8s 才允许该 Pod 被 Service 发现。
+- status.conditions.type 记录了 Pod 的多种状态条件及其是否成立：
+  ```sh
+  PodScheduled      # Pod 已被调度到一个节点上
+  Unschedulable     # Pod 不能被调度到节点上。可能是缺乏可用节点、找不到挂载卷等资源
+  Initialized       # Pod 中的所有 init 容器都已运行结束
+  ContainersReady   # Pod 中的所有容器已运行，且处于就绪状态
+  Ready             # 整个 Pod 处于就绪状态，可以开始工作。此时该 Pod 才会开始被 Service 反向代理
+  ```
+  - k8s 的一个资源可能同时处于多种 conditions ，但只能处于一种 phase 。
 
-- status.containerStatuses.state 记录了容器的状态，有以下几种取值：
-  - waiting ：正在准备启动。比如拉取镜像、挂载数据卷，或者等待重启。
-  - running ：正在运行。
-  - terminated ：已终止。
+- status.containerStatuses.state 记录了容器的状态，有以下三种取值：
+  ```sh
+  waiting       # 正在准备启动。比如拉取镜像、挂载数据卷，或者等待重启
+  running       # 正在运行
+  terminated    # 已终止
+  ```
 
-- Pod 的状态取决于容器的状态。因此，分析 Pod 的状态时，需要考虑更细单位的容器。
-  - kubelet 创建一个容器之后，还要等容器中的业务进程成功启动，这个容器才算真正启动。可以通过 postStart 判断容器是否已创建，通过 readinessProbe 判断容器是否已成功启动。
+- Pod 的状态主要取决于容器的状态。因此，分析 Pod 的状态时，需要考虑更细单位的容器。
   - 当 Pod 中的所有容器都处于 running 状态时，Pod 才能处于 Running 状态。
-  - 当 Pod 中有某个容器处于 terminated 状态时，kubelet 会按照 restartPolicy 重启它。在重启完成之前，Pod 都处于 Unavailable 状态。
+  - 当 Pod 中有某个容器处于 terminated 状态时，kubelet 会按照 restartPolicy 重启。在重启完成之前，Pod 都处于 Unavailable 状态。
 
 ### 探针
 
-探针：又称为健康检查。在 spec.contaienrs 中定义，用于定期探测容器是否在正常运行。
+可以让 kubelet 定期对容器执行一些探针，从而进行健康检查：
 - 探针每次的探测结果有三种：
   - Success ：容器在正常运行。
   - Failure ：容器没在正常运行。此时 kubelet 会按照 restartPolicy 重启它。
@@ -283,7 +289,7 @@ status:
 例：
 ```yml
 contaienrs:
-- name: redis
+- name: nginx
   livenessProbe:            # 定义 livenessProbe 用途、ExecAction 方式的探针
     exec:
       command:              # 每次探测时，在容器中执行命令：ls /tmp/health
@@ -296,12 +302,12 @@ contaienrs:
     successThreshold: 1     # 容器启动时，或发现异常时，连续多少次探测为 Success ，才判断容器为 Success
   readinessProbe:           # 定义 readinessProbe 用途、TCPSocketAction 方式的探针
     tcpSocket:
-      port: 8080
+      port: 80
     periodSeconds: 3
   livenessProbe:            # 定义 livenessProbe 用途、HTTPGetAction 方式的探针
     httpGet:
       path: /health
-      port: 8080
+      port: 80
       httpHeaders:          # 添加请求报文的 Headers
       - name: X-Custom-Header
         value: hello
@@ -313,7 +319,7 @@ contaienrs:
 可以给 Pod 中的每个容器定义 postStart、preStop 钩子，在启动、终止过程中增加操作。如下：
   ```yml
   contaienrs:
-  - name: redis
+  - name: nginx
     lifecycle:
       postStart:
         exec:
@@ -326,11 +332,11 @@ contaienrs:
           command:
           - /bin/bash
           - -c
-          - redis-cli shutdown
+          - nginx -s quit
   ```
-- kubelet 刚创建一个容器之后，会立即执行其 postStart 钩子。
+- kubelet 创建一个容器之后，会立即执行 postStart 钩子。
   - postStart 与容器的 ENTRYPOINT 是异步执行的，因此执行顺序不能确定。不过只有等 postStart 执行完成之后，k8s 才会将容器的状态标为 Running 。
-- kubelet 终止一个容器时，会先执行其 preStop 钩子。超过宽限期之后会发送 SIGTERM 信号并再宽限 2 秒，最后才发送 SIGKILL 信号。
+- kubelet 终止一个容器之前，会先执行 preStop 钩子。超过宽限期之后会发送 SIGTERM 信号并再宽限 2 秒，最后才发送 SIGKILL 信号。
   - 没有定义 preStop 时，kubelet 会采用默认的终止方式：先向 Pod 中的所有容器的进程发送 SIGTERM 信号，并将 Pod 的状态标识为 Terminating 。超过宽限期（grace period ，默认为 30 秒）之后，如果仍有进程在运行，则发送 SIGKILL 信号，强制终止它们。
   - 这里说的终止是指容器被 kubelet 主动终止，不包括容器自己运行结束的情况。
 
@@ -561,7 +567,7 @@ contaienrs:
               - key: k8s-app
                 operator: In
                 values:
-                - redis
+                - nginx
             topologyKey: kubernetes.io/hostname
   ```
 

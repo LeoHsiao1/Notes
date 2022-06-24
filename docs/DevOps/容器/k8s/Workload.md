@@ -19,14 +19,14 @@ metadata:
     deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置是第几次修改版本，从 1 开始递增
   labels:
     creator: Leo
-  name: redis
+  name: nginx
   namespace: default
   # generation: 1           # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
 spec:
   replicas: 3               # Pod 运行的副本数，默认为 1
   selector:                 # 选择 Pod
     matchLabels:
-      k8s-app: redis
+      k8s-app: nginx
   # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
   # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
   # strategy:               # 更新部署的策略，默认为滚动更新
@@ -37,27 +37,26 @@ spec:
   template:                       # 定义 Pod 模板
     metadata:                     # Pod 的元数据
       labels:
-        k8s-app: redis
+        k8s-app: nginx
     spec:                         # Pod 的规格
       containers:                 # 定义该 Pod 中的容器
-      - name: redis               # 该 Pod 中的第一个容器名
-        image: redis:5.0.6
-        command: ["redis-server /opt/redis/redis.conf"]
+      - name: nginx               # 该 Pod 中的第一个容器名
+        image: nginx:1.20
         ports:
-        - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
+        - containerPort: 80       # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
 ```
 - 部署一个 Deployment 时，可以创建多个 Pod 实例。
   - Pod 的命名格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
     ```sh
-    redis-65d9c7f6fc-szgbk
+    nginx-65d9c7f6fc-szgbk
     ```
     - 用 kubectl 命令管理 Pod 时，不能事先知道 Pod 的具体名称，应该通过 label 来筛选 Pod 。
   - 每个 Pod 中，容器的命名格式为 `k8s_<container_name>_<pod_name>_<k8s_namespace>_<pod_uid>_<restart_id>` ，例如：
     ```sh
-    k8s_POD_redis-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0   # Pod 中内置的 pause 容器，其容器名为 POD
-    k8s_redis_redis-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0
+    k8s_POD_nginx-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0   # Pod 中内置的 pause 容器，其容器名为 POD
+    k8s_nginx_nginx-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0
     ```
-    - 当 Pod 配置不变时，如果触发重启事件，创建新 Pod ，则会将容器末尾的 restart_id 加 1（从 0 开始递增）。
+    - Pod 重启时，会创建新的容器，容器名末尾的 restart_id 从 0 开始递增。
 
 - spec.selector 是必填字段，称为标签选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 进行管理，筛选结果可能有任意个（包括 0 个）。
   - 当 selector 中没有设置筛选条件时，会选出所有对象。
@@ -66,7 +65,7 @@ spec:
     ```yml
     selector:
       matchLabels:
-        k8s-app: redis        # 要求 labels 中存在该键值对
+        k8s-app: nginx        # 要求 labels 中存在该键值对
       matchExpressions:
         - key: k1             # 要求存在 app 标签，且取值包含于指定列表
           operator: In
@@ -87,15 +86,14 @@ spec:
 
 ### 状态
 
-- Deployment 存在多种条件（condition）：
+- Deployment 存在多种状态条件（condition）：
   ```sh
   Progressing       # 处理中，比如正在部署或销毁 Pod 实例
   Complete          # 处理完成，比如部署完所有 Pod 实例且可用，或者该 Deployment 是停止运行的旧版本
   Available         # 可用，即达到 ReplicaSet 的 Pod 实例最小可用数
   ReplicaFailure    # 处理失败，比如不能部署 Pod 实例、Progressing 超时
   ```
-  - 一个资源可能同时处于多种 condition 状态，但只能处于一种 phrase 。
-    - 比如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
+  - 比如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
   - 根据 `.status.conditions` 判断 `.status.phase`
   <!-- - 支持添加自定义的 condition -->
 
@@ -111,7 +109,7 @@ spec:
     - type: Progressing     # condition 类型
       status: "True"        # 是否处于当前 condition ，可以取值为 True、False、Unknown
       reason: NewReplicaSetAvailable  # status 的原因
-      message: ReplicaSet "redis-bbf945bc9" has successfully progressed.  # reason 的详细信息
+      message: ReplicaSet "nginx-bbf945bc9" has successfully progressed.  # reason 的详细信息
       lastTransitionTime: "2021-06-29T10:52:18Z"
       lastUpdateTime: "2022-02-10T02:34:38Z"
     - type: Available
@@ -163,16 +161,16 @@ lastUpdateTime        # 上一次更新该状态的时间
   apiVersion: apps/v1
   kind: DaemonSet
   metadata:
-    name: redis
+    name: nginx
     namespace: default
   spec:
     selector:
       matchLabels:
-        k8s-app: redis
+        k8s-app: nginx
     template:
       metadata:
         labels:
-          k8s-app: redis
+          k8s-app: nginx
       spec:
         containers:
           - ...

@@ -1,7 +1,7 @@
 # Workload
 
 - 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般通过控制器（Controller）自动管理 Pod ，统称为工作负载（workload）。
-  - workload 分为 Deployment、StatefulSet 等多种类型。
+  - Workload 分为 Pod、Deployment、Job 等多种类型。
   - 用户需要编写 workload 配置文件，描述如何部署一个 Pod 。然后创建该 workload 对象，k8s 就会自动创建并部署 Pod 。
 
 ## Deployment

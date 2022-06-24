@@ -148,20 +148,46 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 ## 生命周期
 
-每个 Pod 的生命周期分为多个阶段：
-- Pending
-  - Pod 已创建，但尚未运行。需要经过调度阶段、拉取镜像、挂载卷等步骤。
-  - 如果拉取镜像失败，则进入 ImagePullBackOff 状态，表示每隔一段时间重试拉取一次。间隔时间不断增大，最多达到 300 秒。
-- 初始化：按顺序启动各个 init 容器。
-- 启动  ：启动主容器、sidecar 容器。
-- 运行  ：会被探针定期探测。
-- 终止  ：终止各个容器。
-- 重启  ：kubelet 会按照 restartPolicy 重启容器。
+- 一个对象从创建到删除的过程称为生命周期。
+
+### phase
+
+- Pod 的生命周期分为多个阶段（phase）：
+  - Pending
+    - ：Pod 已创建，但尚未运行。
+  - Running
+    - ：运行中，即 kubelet 在运行该 Pod 的所有容器。
+  - Succeeded
+    - ：Pod 中的所有容器都已经正常终止。
+  - Failed
+    - ：Pod 中的所有容器都已经终止，且至少有一个容器是异常终止。
+  - Unkown
+    - ：状态未知。
+    - 例如 apiserver 与 kubelet 断开连接时，就不知道 Pod 的状态。
+
+- 一般的 Pod 会按顺序经过 Pending、Running、Succeeded 阶段，但也可能在几个阶段之间反复切换。
+- k8s 定义了上述几个 Pod phase ，不过通常还会用 Scheduled、terminated 等状态（status）来形容 Pod 。
+
+### Pending
+
+- Pending 阶段的 Pod 需要经过以下主要步骤，才能进入 Running 阶段。
+  - 调度节点
+    - Pod 被调度到一个节点之后，不能迁移到其它节点。只能在其它节点创建新的 Pod ，即使采用相同的 Pod name ，但 UID 也不同。
+  - 拉取镜像
+    - 如果拉取镜像失败，则进入 ImagePullBackOff 状态，表示每隔一段时间重试拉取一次。间隔时间不断增大，最多达到 300 秒。
+  - 启动容器
+    - 需要启动 Pod 的全部容器。先启动 init 容器，再启动标准容器。
 
 ### 终止
 
-- Running 状态的 Pod 可以被终止运行。但不能暂时终止，只能永久终止。
-- 可调用 apiserver 的两种 API 来终止 Pod ：
+- 如果 Pod 处于 Failed、Succeeded 阶段，则称为终止（terminated）状态。
+  - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
+  - Pod 终止时，可能根据 restartPolicy 重启，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
+  - 可添加一个 crontab 任务来删除 Failed Pod：
+    ```sh
+    kubectl delete pods --all-namespaces --field-selector status.phase=Failed
+    ```
+- 可调用 apiserver 的两种 API 来主动终止 Pod ：
   - Delete Pod
     - 流程如下：
       1. apiserver 将 Pod 标记为 Terminating 状态。
@@ -170,19 +196,15 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
     - 如果该 Pod 受某个 Controller 管理，则后者会自动创建新的 Pod 。
   - Evict Pod
     - ：驱逐，过程与 Delete 一致。
-    - k8s 会在资源不足时自动驱逐 Pod 。此时 Pod 会标记为 evicted 状态、进入 Failed 阶段，不会自动删除，会一直占用 Pod IP 等资源。
-    - 可添加一个 crontab 任务来删除 Failed Pod：
-      ```sh
-      kubectl delete pods --all-namespaces --field-selector status.phase=Failed
-      ```
+    - k8s 会在资源不足时自动驱逐 Pod 。此时 Pod 会标记为 evicted 状态、进入 Failed 阶段，不会自动删除。
 
 ### 重启
 
-- 如果容器终止运行，但所属的 Pod 未被删除，则 kubelet 会自动重启该容器。
-  - 容器重启时，所属的 Pod 不会变化，也不会调度到其它节点。
-  - 容器重启时，如果多次重启失败，重启的间隔时间将按 10s、20s、40s 的形式倍增，上限为 5min 。当容器成功运行 10min 之后会重置。
+- Pod 终止时，如果启用了 restartPolicy ，则会被 kubelet 自动重启。
+  - kubelet 重启 Pod 时，并不会重启容器，而是在当前节点上重新创建 Pod 内的所有容器，并删除旧容器。
+  - 如果 Pod 多次重启失败，则重启的间隔时间将按 10s、20s、40s 的形式倍增，最大为 5min 。当容器成功运行 10min 之后会重置。
 
-- 容器的重启策略 restartPolicy 分为多种：
+- Pod 的重启策略 restartPolicy 分为多种：
   ```sh
   Always     # 当容器终止时，或者被探针判断为 Failure 时，总是会自动重启。这是默认策略
   OnFailure  # 只有当容器异常终止时，才会自动重启
@@ -220,14 +242,6 @@ status:
   phase: Running
   startTime: "2019-12-24T08:20:23Z"
 ```
-- status.phase 记录了 Pod 目前处于生命周期的哪一阶段，有以下几种取值：
-  - Pending ：待定。此时 kubelet 正在部署该 Pod ，包括分配 Node、拉取镜像、启动容器等。
-  - Running ：运行中。此时 kubelet 已经启动了该 Pod 的所有容器。
-  - Succeeded ：Pod 中的所有容器都已经正常终止。
-  - Failed ：Pod 中的所有容器都已经终止，且至少有一个容器是异常终止。
-    - Failed 的 Pod 会被 kubelet 自动重启，如果重启成功则会变回 Running 。
-  - Unkown ：状态未知。例如与 Pod 所在节点通信失败时就会不知道状态。
-
 - status.conditions 是一个数组，记录了多个状态条件及其是否成立：
   - PodScheduled ：Pod 已被调度到一个节点上。
   - Unschedulable ：Pod 不能被调度到节点上。可能是缺乏可用节点、缺乏挂载卷等资源。
@@ -237,7 +251,7 @@ status:
   - Ready ：Pod 处于就绪状态。此时 k8s 才允许该 Pod 被 Service 发现。
 
 - status.containerStatuses.state 记录了容器的状态，有以下几种取值：
-  - waiting ：正在准备启动。比如拉取镜像、取用 ConfigMap ，或者等待重启。
+  - waiting ：正在准备启动。比如拉取镜像、挂载数据卷，或者等待重启。
   - running ：正在运行。
   - terminated ：已终止。
 
@@ -443,18 +457,18 @@ contaienrs:
       requests.nvidia.com/gpu: 4        # 限制 GPU 的总数
       hugepages-<size>: "100"           # 限制 某种尺寸的 hugepages 的总数
 
-  # scopes:                               # 只限制指定范围的 Pod
+  # scopes:                             # 只限制指定范围的 Pod
   #   - BestEffort
   #   - NotBestEffort
   # scopeSelector:
   #   matchExpressions:
-  #     - operator: In                    # 运算符可以是 In、NotIn、Exists、DoesNotExist
+  #     - operator: In                  # 运算符可以是 In、NotIn、Exists、DoesNotExist
   #       scopeName: PriorityClass
   #       values:
   #         - high
   ```
   - 创建 Pod 时，如果指定的 limits、requests 超过总配额，则创建失败。
-  - 如果 Pod 的 .status.phase 为 Failed、Succeeded ，则处于终止状态，不会占用 cpu、memory、pods 等资源配额，但会占用 storage 等资源配额。
+  - terminated 状态的 Pod 不会占用 cpu、memory、pods 等资源配额，但会占用 storage 等资源配额。
 
 ## 调度节点
 

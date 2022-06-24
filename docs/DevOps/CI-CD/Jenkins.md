@@ -60,7 +60,7 @@
   ├── jobs/                     # 保存各个 Job 的信息
   │   ├── job1/
   │   │   ├── builds/           # 保存每次 build 的信息，包括配置文件、日志
-  │   │   ├── config.xml        # 该 Job 的配置文件
+  │   │   ├── config.xml        # 该 Job 的配置文件。Jenkins 重启时会读取该文件，修改 Job 之后会保存到该文件
   │   │   └── nextBuildNumber   # 记录下一次 build 的编号
   │   ├── job2/
   │   └── job3/

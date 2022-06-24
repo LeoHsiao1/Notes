@@ -124,6 +124,8 @@
   - ：一个 Java 的 Socket 通信框架，支持 TCP、UDP 等协议，或自定义协议。
   - 采用非阻塞 IO （NIO），并发能力强。
 
+### spring
+
 - Spring Framework
   - ：一个流行的 Java 应用开发框架，于 2002 年发布。
   - 内嵌了一个 Tomcat ，因此可以开发 Web 应用，作为 Web 服务器运行。
@@ -147,12 +149,13 @@
       ```
 
 - Spring Boot
-  - ：对 Spring 框架进行了一些开箱即用的配置，简化了开发的过程。
-  - 可以基于 Spring Boot 快速开发单个应用，比如单个微服务。
+  - ：一个基于 Spring Framework 4.0 的轻量级框架，于 2014 年发布。
+  - [官方文档](https://spring.io/projects/spring-boot)
+  - 增加了一些默认配置，简化了开发的过程，可以快速开发单个应用。
 
 - Spring Cloud
-  - ：一个基于 Spring Boot 的开发框架，适合开发分布式应用，比如微服务。
-  - 包含了多个组件：
+  - ：一个基于 Spring Boot 的微服务框架，于 2015 年发布。
+  - 包含多个组件：
     - Config ：配置管理中心，基于 git 存储配置信息。例：
       ```java
       @Value("${test.name}")    // 添加注解，将指定的配置参数赋值给该变量

@@ -151,7 +151,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 ## 生命周期
 
-- 一个对象从创建到删除的过程称为生命周期。
+- 一个对象从创建到删除的过程称为生命周期（lifecycle）。
 
 ### phase
 
@@ -190,12 +190,16 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
     ```sh
     kubectl delete pods --all-namespaces --field-selector status.phase=Failed
     ```
-- 可调用 apiserver 的两种 API 来主动终止 Pod ：
+- 除了 Pod 自动终止，kubelet 也可以主动终止 Pod ，一般流程如下：
+  1. 向容器内主进程发送 SIGTERM 信号。
+  2. 等待宽限期（terminationGracePeriodSeconds）之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
+
+- 可调用 apiserver 的几种 API ，让 kubelet 主动终止 Pod ：
   - Delete Pod
     - 流程如下：
       1. apiserver 将 Pod 标记为 Terminating 状态。
-      2. kubelet 发现 Terminating 状态之后终止 Pod ，删除其中的容器，然后通知 apiserver 。
-      3. apiserver 从 etcd 数据库删除 Pod ，以及 EndPoints 等相关资源。
+      2. kubelet 发现 Terminating 状态之后主动终止 Pod ，删除其中的容器，然后通知 apiserver 。
+      3. apiserver 从 etcd 数据库删除 Pod 。
     - 如果该 Pod 受某个 Controller 管理，则后者会自动创建新的 Pod 。
   - Evict Pod
     - ：驱逐，过程与 Delete 一致。
@@ -269,22 +273,27 @@ status:
 
 ### 探针
 
-- 可以让 kubelet 定期对容器执行一些探针，从而进行健康检查。
-- Pod 默认未定义任何探针，相当于探测结果一直为 Success 。缺点：
+- Pod 默认未定义探针，因此经常遇到以下问题：
   - 容器刚启动时，可能还在初始化，kubelet 就会认为 Pod 处于 Ready 状态，过早接入 Service 的访问流量。
   - 容器运行一段时间之后突然故障，kubelet 却不能发现，依然接入 Service 的访问流量。
-- 探针有三种用途：
-  ```sh
-  startupProbe    # 启动探针，用于探测容器是否已成功启动。如果探测结果为 Failure ，则触发 restartPolicy
-  livenessProbe   # 存活探针，用于探测容器是否正常运行。如果探测结果为 Failure ，则触发 restartPolicy
-  readinessProbe  # 就绪探针。如果探测结果为 Success ，则将 Pod 标记为 Ready 状态
-  ```
+- 可以给 Pod 定义三种不同用途的探针，让 kubelet 定期对容器进行健康检查：
+  - startupProbe
+    - ：启动探针，用于探测容器是否已成功启动。如果探测结果为 Failure ，则触发 restartPolicy 。
+    - 适用于启动耗时较久的容器。
+  - livenessProbe
+    - ：存活探针，用于探测容器是否正常运行。如果探测结果为 Failure ，则触发 restartPolicy 。
+    - 适用于运行时可能故障，且需要主动重启的容器。
+  - readinessProbe
+    - ：就绪探针，用于探测容器是否就绪。如果探测结果为 Success ，则将 Pod 标记为 Ready 状态 。
+    - 适用于运行可能故障，且不需要重启的容器。
 - 探针每次的探测结果有三种：
   ```sh
   Success
   Failure
   Unknown     # 未知结果，此时不采取行动
   ```
+  - Pod 默认未定义探针，相当于探测结果一直为 Success 。
+  - Pod 定义了探针时，探测结果默认为 Failure ，需要探测成功，才能变为 Success 。
 - 探针有多种实现方式：
   ```sh
   exec        # 在容器中执行指定的命令，如果命令的退出码为 0 ，则探测结果为 Success
@@ -299,7 +308,7 @@ kind: Pod
 spec:
   containers:
   - name: nginx
-    startupProbe:               # 定义 livenessProbe 用途、exec 方式的探针
+    startupProbe:
       exec:
         command:
         - ls
@@ -307,16 +316,17 @@ spec:
       # initialDelaySeconds: 0  # 容器刚启动时，等待几秒才开始第一次探测
       # periodSeconds: 10       # 每隔几秒探测一次
       # timeoutSeconds: 1       # 每次探测的超时时间
-      # failureThreshold: 3     # 容器正常运行时，连续多少次探测为 Failure ，才判断容器为 Failure
-      # successThreshold: 1     # 容器启动时，或发现异常时，连续多少次探测为 Success ，才判断容器为 Success
-    livenessProbe:              # 定义 livenessProbe 用途、httpGet 方式的探针
+      # failureThreshold: 3     # 容器处于 Success 时，连续多少次探测为 Failure ，才判断容器为 Failure
+      # successThreshold: 1     # 容器处于 Failure 时，连续多少次探测为 Success ，才判断容器为 Success
+    livenessProbe:
       tcpSocket:
         port: 80
       periodSeconds: 3
-    readinessProbe:             # 定义 readinessProbe 用途、tcpSocket 方式的探针
+    readinessProbe:
       httpGet:
         path: /health
         port: 80
+        # scheme: HTTP
         httpHeaders:            # 给请求报文添加 Headers
         - name: X-Custom-Header
           value: hello
@@ -325,29 +335,30 @@ spec:
 
 ### postStart、preStop
 
-可以给 Pod 中的每个容器定义 postStart、preStop 钩子，在启动、终止过程中增加操作。如下：
+- 可以给 Pod 中的每个容器定义 postStart、preStop 钩子，在启动、终止时增加操作。例：
   ```yml
-  contaienrs:
-  - name: nginx
-    lifecycle:
-      postStart:
-        exec:
-          command:
-          - /bin/bash
-          - -c
-          - echo hello ; sleep 1
-      preStop:
-        exec:
-          command:
-          - /bin/bash
-          - -c
-          - nginx -s quit
+  kind: Pod
+  spec:
+    contaienrs:
+    - name: nginx
+      lifecycle:
+        postStart:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - echo hello ; sleep 1
+        preStop:
+          httpGet:
+            path: /
+            port: 80
   ```
-- kubelet 创建一个容器之后，会立即执行 postStart 钩子。
-  - postStart 与容器的 ENTRYPOINT 是异步执行的，因此执行顺序不能确定。不过只有等 postStart 执行完成之后，k8s 才会将容器的状态标为 Running 。
-- kubelet 终止一个容器之前，会先执行 preStop 钩子。超过宽限期之后会发送 SIGTERM 信号并再宽限 2 秒，最后才发送 SIGKILL 信号。
-  - 没有定义 preStop 时，kubelet 会采用默认的终止方式：先向 Pod 中的所有容器的进程发送 SIGTERM 信号，并将 Pod 的状态标识为 Terminating 。超过宽限期（grace period ，默认为 30 秒）之后，如果仍有进程在运行，则发送 SIGKILL 信号，强制终止它们。
-  - 这里说的终止是指容器被 kubelet 主动终止，不包括容器自己运行结束的情况。
+- 启用了 postStart 时，会被 kubelet 在创建容器之后立即执行。
+  - 如果 postStart 执行结果为 Failure ，则触发 restartPolicy 。
+  - postStart 与容器的 ENTRYPOINT 是异步执行的，执行顺序不能确定。不过只有等 postStart 执行成功之后，kubelet 才会将容器的状态标为 Running 。
+- 启用了 preStop 时，kubelet 主动终止 Pod 的流程如下：
+  1. 先执行 preStop 钩子。
+  2. 超过宽限期之后，如果容器依然未终止，则发送 SIGTERM 信号并再宽限 2 秒，最后发送 SIGKILL 信号。
 
 ## 资源配额
 

@@ -185,7 +185,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 - 如果 Pod 处于 Failed、Succeeded 阶段，则称为终止（terminated）状态。
   - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
-  - Pod 终止时，可能根据 restartPolicy 重启，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
+  - Pod 终止时，可能触发 restartPolicy ，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
   - 可添加一个 crontab 任务来删除 Failed Pod：
     ```sh
     kubectl delete pods --all-namespaces --field-selector status.phase=Failed
@@ -207,7 +207,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
   - kubelet 重启 Pod 时，并不会重启容器，而是在当前节点上重新创建 Pod 内的所有容器，并删除旧容器。
   - 如果 Pod 多次重启失败，则重启的间隔时间将按 10s、20s、40s 的形式倍增，最大为 5min 。成功运行 10min 之后重置间隔时间。
 
-- Pod 的重启策略 restartPolicy 分为多种：
+- Pod 的重启策略（restartPolicy）分为多种：
   ```sh
   Always     # 当容器终止时，或者被探针判断为 Failure 时，总是会自动重启。这是默认策略
   OnFailure  # 只有当容器异常终止时，才会自动重启
@@ -251,7 +251,7 @@ status:
   Unschedulable     # Pod 不能被调度到节点上。可能是缺乏可用节点、找不到挂载卷等资源
   Initialized       # Pod 中的所有 init 容器都已运行结束
   ContainersReady   # Pod 中的所有容器已运行，且处于就绪状态
-  Ready             # 整个 Pod 处于就绪状态，可以开始工作。此时该 Pod 才会开始被 Service 反向代理
+  Ready             # 整个 Pod 处于就绪状态，可以开始工作。此时该 Pod 才会加入 EndPoints ，被 Service 反向代理
   ```
   - k8s 的一个资源可能同时处于多种 conditions ，但只能处于一种 phase 。
 
@@ -262,57 +262,66 @@ status:
   terminated    # 已终止
   ```
 
-- Pod 的状态主要取决于容器的状态。因此，分析 Pod 的状态时，需要考虑更细单位的容器。
-  - 当 Pod 中的所有容器都处于 running 状态时，Pod 才能处于 Running 状态。
-  - 当 Pod 中有某个容器处于 terminated 状态时，kubelet 会按照 restartPolicy 重启。在重启完成之前，Pod 都处于 Unavailable 状态。
+- Pod 的状态主要取决于其中容器的状态。
+  - 当所有容器启动成功，变为 running 状态时，Pod 才从 Pending 阶段进入 Running 阶段。
+  - 当所有容器处于 running 状态，并通过 readinessProbe 检查时，Pod 才处于 Running 阶段、Ready 状态。
+  - 当任一容器变为 terminated 状态时，kubelet 会将 Pod 取消 Ready 状态，并触发 restartPolicy 。
 
 ### 探针
 
-可以让 kubelet 定期对容器执行一些探针，从而进行健康检查：
-- 探针每次的探测结果有三种：
-  - Success ：容器在正常运行。
-  - Failure ：容器没在正常运行。此时 kubelet 会按照 restartPolicy 重启它。
-  - Unknown ：未知结果，此时不采取行动。
+- 可以让 kubelet 定期对容器执行一些探针，从而进行健康检查。
+- Pod 默认未定义任何探针，相当于探测结果一直为 Success 。缺点：
+  - 容器刚启动时，可能还在初始化，kubelet 就会认为 Pod 处于 Ready 状态，过早接入 Service 的访问流量。
+  - 容器运行一段时间之后突然故障，kubelet 却不能发现，依然接入 Service 的访问流量。
 - 探针有三种用途：
-  - startupProbe ：启动探针，用于探测容器是否已成功启动。
-  - readinessProbe ：就绪探针，用于探测容器是否处于 Ready 状态，可以加入 EndPoints 被访问。
-  - livenessProbe ：存活探针，用于探测容器是否在正常运行。
-- 探针的影响：
-  - 如果用户没定义探针，则容器刚创建时，可能尚未成功启动业务进程，kubelet 就会认为容器处于就绪状态，进而认为 Pod 处于就绪状态，提前接入 Service 的访问流量。
-  - 如果 readinessProbe 的结果为 Farlure ，则 k8s 会认为该容器所属的 Pod 不处于就绪状态，不允许被 Service 发现。
-  - 如果 startupProbe、livenessProbe 的结果为 Farlure ，则 k8s 会按照 restartPolicy 重启容器。
-- 探针有三种实现方式：
-  - ExecAction ：在容器中执行指定的命令，如果命令的退出码为 0 ，则检查结果为 Success 。
-  - TCPSocketAction ：访问容器的指定端口，如果能建立 TCP 连接，则检查结果为 Success 。
-  - HTTPGetAction ：向容器的指定 URL 发出 HTTP GET 请求，如果收到响应报文，且状态码为 2xx 或 3xx ，则检查结果为 Success 。
+  ```sh
+  startupProbe    # 启动探针，用于探测容器是否已成功启动。如果探测结果为 Failure ，则触发 restartPolicy
+  livenessProbe   # 存活探针，用于探测容器是否正常运行。如果探测结果为 Failure ，则触发 restartPolicy
+  readinessProbe  # 就绪探针。如果探测结果为 Success ，则将 Pod 标记为 Ready 状态
+  ```
+- 探针每次的探测结果有三种：
+  ```sh
+  Success
+  Failure
+  Unknown     # 未知结果，此时不采取行动
+  ```
+- 探针有多种实现方式：
+  ```sh
+  exec        # 在容器中执行指定的命令，如果命令的退出码为 0 ，则探测结果为 Success
+  tcpSocket   # 访问容器的指定 TCP 端口，如果能建立 TCP 连接（不必保持），则探测结果为 Success
+  httpGet     # 向容器的指定端口、URL 发出 HTTP GET 请求，如果收到响应报文，且状态码为 2xx 或 3xx ，则探测结果为 Success
+  grpc
+  ```
 
 例：
 ```yml
-contaienrs:
-- name: nginx
-  livenessProbe:            # 定义 livenessProbe 用途、ExecAction 方式的探针
-    exec:
-      command:              # 每次探测时，在容器中执行命令：ls /tmp/health
-      - ls
-      - /tmp/health         # 可见，当/tmp/health 文件存在时，探测结果才会为 Success
-    initialDelaySeconds: 5  # 容器刚创建时，等待几秒才开始第一次探测，默认为 0
-    periodSeconds: 3        # 每隔几秒探测一次
-    timeoutSeconds: 1       # 每次探测的超时时间
-    failureThreshold: 3     # 容器正常运行时，连续多少次探测为 Failure ，才判断容器为 Failure
-    successThreshold: 1     # 容器启动时，或发现异常时，连续多少次探测为 Success ，才判断容器为 Success
-  readinessProbe:           # 定义 readinessProbe 用途、TCPSocketAction 方式的探针
-    tcpSocket:
-      port: 80
-    periodSeconds: 3
-  livenessProbe:            # 定义 livenessProbe 用途、HTTPGetAction 方式的探针
-    httpGet:
-      path: /health
-      port: 80
-      httpHeaders:          # 添加请求报文的 Headers
-      - name: X-Custom-Header
-        value: hello
-    periodSeconds: 3
+kind: Pod
+spec:
+  containers:
+  - name: nginx
+    startupProbe:               # 定义 livenessProbe 用途、exec 方式的探针
+      exec:
+        command:
+        - ls
+        - /tmp/health
+      # initialDelaySeconds: 0  # 容器刚启动时，等待几秒才开始第一次探测
+      # periodSeconds: 10       # 每隔几秒探测一次
+      # timeoutSeconds: 1       # 每次探测的超时时间
+      # failureThreshold: 3     # 容器正常运行时，连续多少次探测为 Failure ，才判断容器为 Failure
+      # successThreshold: 1     # 容器启动时，或发现异常时，连续多少次探测为 Success ，才判断容器为 Success
+    livenessProbe:              # 定义 livenessProbe 用途、httpGet 方式的探针
+      tcpSocket:
+        port: 80
+      periodSeconds: 3
+    readinessProbe:             # 定义 readinessProbe 用途、tcpSocket 方式的探针
+      httpGet:
+        path: /health
+        port: 80
+        httpHeaders:            # 给请求报文添加 Headers
+        - name: X-Custom-Header
+          value: hello
 ```
+- 定义了 startupProbe 探针时，容器必须在 `initialDelaySeconds + failureThreshold × periodSeconds` 时长内成功启动，否则会触发 restartPolicy ，陷入死循环。
 
 ### postStart、preStop
 

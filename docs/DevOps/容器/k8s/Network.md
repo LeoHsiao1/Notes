@@ -229,7 +229,7 @@
   NAME         ENDPOINTS                        AGE
   redis        10.42.3.6:6379,10.42.3.6:26379   2h
   ```
-  - EndPoints 会监听所有 Ready 状态的 Pod 变化，记录其端点，实现服务发现。
+  - EndPoints 会监听所有 Pod ，记录 Ready 状态的 Pod 的端点，实现服务发现。
 
 ### EndpointSlices
 

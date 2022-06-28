@@ -37,8 +37,8 @@ spec:                         # Pod 的规格
   # schedulerName: default-scheduler
   # securityContext: {}
   # terminationGracePeriodSeconds: 30   # kubelet 主动终止 Pod 时的宽限期，默认为 30s
-  # hostNetwork: false        # 是否采用宿主机的 network namespace
   # hostIPC: false            # 是否采用宿主机的 IPC namespace
+  # hostNetwork: false        # 是否采用宿主机的 Network namespace
   # hostPID: false            # 是否采用宿主机的 PID namespace
 ```
 
@@ -67,7 +67,7 @@ spec:                         # Pod 的规格
       - 当一个 init 容器运行成功之后（即进入Succeeded阶段），才会启动下一个 init 容器。
       - 当所有 init 容器都运行成功之后，才会同时启动所有普通容器。
       - 如果某个 init 容器运行失败，则触发 restartPolicy 。
-    - init 容器不会长期运行，因此不支持 lifecycle、xxProbe 等配置。
+    - init 容器不会长期运行，因此不支持 lifecycle、Probe 等配置。
     - init 容器可能多次重启、重复运行，因此建议实现幂等性。
 
 - 例：
@@ -90,6 +90,21 @@ spec:                         # Pod 的规格
   - 对于整个 Pod ，一种配额的有效值（决定了调度），采用以下两者的较大值：
     - 所有普通容器的该种配额的总和
     - init 容器的该种配额的有效值
+
+- 临时容器（Ephemeral Containers）
+  - ：一种临时存在的容器，便于人工调试。
+  - 临时容器不能在 Pod spec 中定义，只能通过 API 创建。不会自动重启，不会自动删除。
+  - 例：
+    ```sh
+    # 在指定节点创建一个临时容器。这会创建一个 Pod ，采用 hostNetwork、hostPID 等
+    kubectl debug node/<node> -it --image=alpine/curl:latest -- sh
+    kubectl delete pod node-debugger-xxx
+
+    # 创建一个临时容器，添加到指定的 Pod
+    kubectl debug <pod> -it --image=alpine/curl:latest -- sh
+        -c <name>         # 指定临时容器的名称
+        --target=<name>   # 共用指定容器的 PID namespace
+    ```
 
 ### dns
 

@@ -5,62 +5,42 @@
 - 当用户向 apiserver 请求创建一个 Pod 之后，会自动执行以下流程：
   1. kube-scheduler 决定将该 Pod 调度到哪个节点上。
   2. 由指定节点的 kubelet 运行该 Pod 。
-- 同一 Pod 中的所有容器会被部署到同一个节点上。特点：
-  - 容器内的主机名等于 Pod name ，模拟一个虚拟机。
-  - 所有容器共享一个 network namespace ，可以相互通信。绑定同一个 Pod IP ，因此不能监听同一个端口号。
-  - 所有容器共享挂载的所有 volume 。
 
 ## 配置
 
-<!--
-Pod 中每个容器可单独设置 request、limit 资源
+一个 Pod 的配置示例：
 ```yml
 apiVersion: v1
 kind: Pod
 metadata:
   name: nginx
 spec:                         # Pod 的规格
-  containers:                 # 定义该 Pod 中的容器
-  - name: nginx               # 该 Pod 中的第一个容器名
+  containers:                 # 在 Pod 中定义一组容器
+  - name: nginx               # 容器名
     image: nginx:1.20
     imagePullPolicy: IfNotPresent   # 拉取镜像的策略，表示本机不存在该镜像时才拉取。设置成 Always 则总是拉取
-    command:
-      - nginx
-      - -c
-      - /etc/nginx/nginx.conf
-    ports:
-    - containerPort: 6379   # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
-  # dnsPolicy: ClusterFirst
-  # dnsConfig: ...
-  # imagePullSecrets:       # 拉取镜像时使用的账号密码，需要指定 secret 对象
+    args:                     # 覆盖容器的 CMD 命令
+    - nginx
+    - -c
+    - /etc/nginx/nginx.conf
+    command:                  # 覆盖容器的 ENTRYPOINT 命令
+    - bash
+    - -c
+    env:                      # 添加环境变量到容器终端
+    - name: k1
+      value: v1
+    # terminationMessagePath: /dev/termination-log
+    # terminationMessagePolicy: File
+  # imagePullSecrets:         # 拉取镜像时使用的账号密码，需要指定 secret 对象
   # - name: my_harbor
   # restartPolicy: Always
   # schedulerName: default-scheduler
   # securityContext: {}
-  # terminationGracePeriodSeconds: 30
-  # hostNetwork: false    # 是否采用宿主机的 network namespace
-  # hostIPC: false        # 是否采用宿主机的 IPC namespace
-  # hostPID: false        # 是否采用宿主机的 PID namespace
+  # terminationGracePeriodSeconds: 30   # kubelet 主动终止 Pod 时的宽限期，默认为 30s
+  # hostNetwork: false        # 是否采用宿主机的 network namespace
+  # hostIPC: false            # 是否采用宿主机的 IPC namespace
+  # hostPID: false            # 是否采用宿主机的 PID namespace
 ```
-
-- Pod 部署时常见的几种异常：
-  - pod 长时间停留在 pending 阶段，比如：
-    - 未分配用于部署的节点，即 unscheduled
-    - 拉取不到镜像
-    - 不能获取 Volume 等依赖
-  - pod 进入 running 阶段，但启动之后很快终止，因此不断重启，即 CrashLoopBackOff 状态
-  - pod 进入 running 阶段，保持运行，但长时间未通过健康检查，即非 Ready 状态。此时该 Pod 会从 EndPoint 中删除
-  - pod 资源不足，比如发生内存 OOM 而重启
-  - pod 异常终止，进入 failed 阶段
-  - pod 被驱逐，进入 failed 阶段
-
-Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
-
-- deployment 部署时常见的几种异常：
-  - deployment 没有可用的 Pod 实例，即整个 deployment 不可用
-  - deployment 的 Pod 实例未全部可用，持续长时间
-  - deployment 的 Pod 实例未全部更新到最新版本，持续长时间
-  - deployment 停留在 Progressing 状态超过 progressDeadlineSeconds 时长），则变为 Failed 状态
 
 - 容器的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
   - 如果存在其它日志文件，可以增加一个 sidecar 容器，执行 tail -f xx.log 命令。
@@ -69,12 +49,18 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
   - 用法：启动 kubelet 时加上 --pod-manifest-path=/etc/kubernetes/manifests 参数，然后将 Pod 的配置文件保存到该目录下。kubelet 会定期扫描配置文件，启动 Pod 。
   - 例如用 kubeadm 部署 k8s 集群时，会以 Static Pod 的形式运行 kube-apiserver、kube-scheduler 等 k8s 组件。
 
--->
+### containers
 
-### initContainers
+- 一个 Pod 中可以运行多个容器，特点：
+  - 各个容器必须设置不同的 name 。
+  - 容器内的主机名等于 Pod name ，模拟一个虚拟机。
+  - 所有容器会被部署到同一个节点上。
+    - 所有容器共享一个 network namespace ，可以相互通信。绑定同一个 Pod IP ，因此不能监听同一个端口号。
+    - 所有容器共享挂载的所有 volume 。
 
-- 一个 Pod 中可以运行多个容器，分为两种类型：
+- Pod 中的容器分为两种类型：
   - 普通容器
+    - 辅助容器（Sidecar）：一些辅助用途的普通容器，不运行业务服务，而是负责采集日志、监控告警等辅助功能。
   - init 容器
     - ：在创建 Pod 之后最先启动，执行一些初始化任务，执行完成之后就退出。
     - 可以给一个 Pod 设置多个 init 容器，它们会按顺序先后运行。
@@ -83,8 +69,6 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
       - 如果某个 init 容器运行失败，则触发 restartPolicy 。
     - init 容器不会长期运行，因此不支持 lifecycle、xxProbe 等配置。
     - init 容器可能多次重启、重复运行，因此建议实现幂等性。
-- Pod 中各个容器必须设置不同的 name 。
-- 辅助容器（Sidecar）：一些辅助用途的普通容器，不运行业务服务，而是负责采集日志、监控告警等辅助功能。
 
 - 例：
   ```yml
@@ -109,7 +93,7 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
 
 ### dns
 
-dnsPolicy 表示容器采用的 DNS 策略，几种取值示例：
+dnsPolicy 表示容器内采用的 DNS 策略，常见的几种取值：
 - ClusterFirst
   - ：表示查询一个域名时，优先解析为 k8s 集群内域名。如果不能解析，才尝试解析为集群外域名。
   - 此时会自动在主机 /etc/resolv.conf 文件的基础上为容器生成 /etc/resolv.conf 文件，内容示例：
@@ -128,17 +112,19 @@ dnsPolicy 表示容器采用的 DNS 策略，几种取值示例：
 dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 - 例：
   ```yml
-  dnsPolicy: "None"
-  dnsConfig:
-    nameservers:
-    - 8.8.8.8
-    searches:
-    - default.svc.cluster.local
-    options:
-    - name: ndots
-      value: "4"
-    - name: timeout
-      value: "3"
+  kind: Pod
+  spec:
+    dnsPolicy: "None"   # 默认取值为 ClusterFirst
+    dnsConfig:
+      nameservers:
+      - 8.8.8.8
+      searches:
+      - default.svc.cluster.local
+      options:
+      - name: ndots
+        value: "4"
+      - name: timeout
+        value: "3"
   ```
 
 ### priority
@@ -222,8 +208,10 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
     - 一般流程如下：
       1. 向容器内主进程发送 SIGTERM 信号。
       2. 等待宽限期（terminationGracePeriodSeconds）之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
-  - 主机故障，导致 Pod 容器终止。
+  - Linux 内核主动终止 Pod 。
+    - 比如因为 OOM 杀死容器、用 kill 命令杀死容器内主进程。
     - 此时宽限期不生效，Pod 会突然终止，可能中断正在执行的事务，甚至丢失数据。
+  - 主机宕机，导致 Pod 容器终止。
 
 - 用户可调用 apiserver 的以下几种 API ，让 kubelet 终止 Pod ，称为自愿中断（voluntary disruptions）。
   - Delete Pod

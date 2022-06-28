@@ -42,8 +42,6 @@ spec:
       containers:                 # 定义该 Pod 中的容器
       - name: nginx               # 该 Pod 中的第一个容器名
         image: nginx:1.20
-        ports:
-        - containerPort: 80       # 声明容器监听的端口，相当于 Dockerfile 中的 expose 指令
 ```
 - 部署一个 Deployment 时，可以创建多个 Pod 实例。
   - Pod 的命名格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
@@ -125,6 +123,14 @@ spec:
 <!--
 lastTransitionTime    # 上一次进入该状态的时间？？？
 lastUpdateTime        # 上一次更新该状态的时间
+
+
+- deployment 的常见问题：
+  - deployment 没有可用的 Pod 实例，即整个 deployment 不可用
+  - deployment 的 Pod 实例未全部可用，持续长时间
+  - deployment 的 Pod 实例未全部更新到最新版本，持续长时间
+  - deployment 停留在 Progressing 状态超过 progressDeadlineSeconds 时长），则变为 Failed 状态
+
  -->
 
 

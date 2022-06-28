@@ -71,16 +71,41 @@ Pod 处于 completion 状态时，可能是 Succeeded 或 Failed 阶段
 
 -->
 
-### Sidecar
+### initContainers
 
-- 一个 Pod 中只运行一个容器的情况最简单（称为主容器），但有时也会运行一些辅助容器（Sidecar）。
+- 一个 Pod 中可以运行多个容器，分为两种类型：
+  - 普通容器
+  - init 容器
+    - ：在创建 Pod 之后最先启动，执行一些初始化任务，执行完成之后就退出。
+    - 可以给一个 Pod 设置多个 init 容器，它们会按顺序先后运行。
+      - 当一个 init 容器运行成功之后（即进入Succeeded阶段），才会启动下一个 init 容器。
+      - 当所有 init 容器都运行成功之后，才会同时启动所有普通容器。
+      - 如果某个 init 容器运行失败，则触发 restartPolicy 。
+    - init 容器不会长期运行，因此不支持 lifecycle、xxProbe 等配置。
+    - init 容器可能多次重启、重复运行，因此建议实现幂等性。
+- Pod 中各个容器必须设置不同的 name 。
+- 辅助容器（Sidecar）：一些辅助用途的普通容器，不运行业务服务，而是负责采集日志、监控告警等辅助功能。
 
-辅助容器有两种类型：
-- 标准容器：与主容器差不多。
-- init 容器：在创建 Pod 时最先启动，执行一些初始化任务，执行完成之后会自动退出。
-  - 可以给一个 Pod 设置多个 init 容器，它们会按顺序串行执行。当一个 init 容器执行成功之后，才会启动下一个 init 容器或应用容器。
-  - 如果某个 init 容器启动失败或异常退出，则 kubelet 会重新启动该 Pod 。
-  - 重启 Pod 时会重新启动各个 init 容器。因此，为了避免多次重启 Pod 时出错，init 容器的行为应该满足幂等性。
+- 例：
+  ```yml
+  kind: Pod
+  spec:
+    containers:                 # 普通容器
+    - name: nginx
+      image: nginx:1.20
+    initContainers:             # init 容器
+    - name: init
+      image: busybox:latest
+      command:
+        - touch
+        - /tmp/f1
+  ```
+
+- 关于资源配额：
+  - 如果多个 init 容器定义了一种配额，比如 limits/requests.cpu ，则采用各个 init 容器中取值最大的该种配额，作为有效值，作用于所有 init 容器的运行过程。
+  - 对于整个 Pod ，一种配额的有效值（决定了调度），采用以下两者的较大值：
+    - 所有普通容器的该种配额的总和
+    - init 容器的该种配额的有效值
 
 ### dns
 
@@ -161,7 +186,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
   - Running
     - ：运行中，即 kubelet 在运行该 Pod 的所有容器。
   - Succeeded
-    - ：Pod 中的所有容器都已经正常终止。
+    - ：Pod 中的所有容器都已经正常终止。又称为 Completed 状态。
   - Failed
     - ：Pod 中的所有容器都已经终止，且至少有一个容器是异常终止。
   - Unkown
@@ -183,7 +208,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 ### 终止
 
-- 如果 Pod 处于 Failed、Succeeded 阶段，则称为终止（terminated）状态。
+- 如果 Pod 处于 Succeeded、Failed 阶段，则称为终止（terminated）状态。
   - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
   - Pod 终止时，可能触发 restartPolicy ，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
   - 可添加一个 crontab 任务来删除 Failed Pod：
@@ -213,10 +238,11 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 - Pod 的重启策略（restartPolicy）分为多种：
   ```sh
-  Always     # 当容器终止时，或者被探针判断为 Failure 时，总是会自动重启。这是默认策略
+  Always     # 当容器终止时，总是会自动重启。这是默认策略
   OnFailure  # 只有当容器异常终止时，才会自动重启
   Never      # 总是不会自动重启
   ```
+  - 例如 Deployment Pod 的重启策略只能为 Always 。
 
 ### 状态
 
@@ -253,7 +279,7 @@ status:
   ```sh
   PodScheduled      # Pod 已被调度到一个节点上
   Unschedulable     # Pod 不能被调度到节点上。可能是缺乏可用节点、找不到挂载卷等资源
-  Initialized       # Pod 中的所有 init 容器都已运行结束
+  Initialized       # Pod 中的所有 init 容器都已运行成功
   ContainersReady   # Pod 中的所有容器已运行，且处于就绪状态
   Ready             # 整个 Pod 处于就绪状态，可以开始工作。此时该 Pod 才会加入 EndPoints ，被 Service 反向代理
   ```
@@ -367,8 +393,8 @@ spec:
   kind: Pod
   spec:
     containers:
-    - name: alpine
-      image: alpine/curl:latest
+    - name: nginx
+      image: nginx:1.20
       resources:
         limits:
           cpu: 500m               # 每秒占用的 CPU 核数

@@ -29,7 +29,7 @@ spec:
       k8s-app: nginx
   # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
   # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
-  # strategy:               # 更新部署的策略，默认为滚动更新
+  # strategy:                     # 更新部署的策略，默认为滚动更新
   #   type: RollingUpdate
   #   rollingUpdate:              # 滚动更新过程中的配置
   #     maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
@@ -80,8 +80,10 @@ spec:
   - 删除 Deployment 时，k8s 会自动销毁对应的 Pod 。
 
 - Deployment 的更新部署策略（strategy）有两种：
-  - Recreate ：先销毁旧 Pod ，再部署新 Pod 。
-  - RollingUpdate ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
+  - Recreate
+    - ：先销毁旧 Pod ，再部署新 Pod 。
+  - RollingUpdate
+    - ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
     - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
 
 ### 状态

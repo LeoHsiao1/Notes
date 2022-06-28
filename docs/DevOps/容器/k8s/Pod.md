@@ -208,27 +208,33 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 
 ### 终止
 
-- 如果 Pod 处于 Succeeded、Failed 阶段，则称为终止（terminated）状态。
+- Pod 的终止（terminated）状态，是指其中所有容器已终止运行。
   - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
   - Pod 终止时，可能触发 restartPolicy ，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
   - 可添加一个 crontab 任务来删除 Failed Pod：
     ```sh
     kubectl delete pods --all-namespaces --field-selector status.phase=Failed
     ```
-- 除了 Pod 自动终止，kubelet 也可以主动终止 Pod ，一般流程如下：
-  1. 向容器内主进程发送 SIGTERM 信号。
-  2. 等待宽限期（terminationGracePeriodSeconds）之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
 
-- 可调用 apiserver 的几种 API ，让 kubelet 主动终止 Pod ：
+- Pod 终止的常见原因：
+  - Pod 自己终止，进入 Succeeded 或 Failed 阶段。
+  - kubelet 主动终止 Pod 。
+    - 一般流程如下：
+      1. 向容器内主进程发送 SIGTERM 信号。
+      2. 等待宽限期（terminationGracePeriodSeconds）之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
+  - 主机故障，导致 Pod 容器终止。
+    - 此时宽限期不生效，Pod 会突然终止，可能中断正在执行的事务，甚至丢失数据。
+
+- 用户可调用 apiserver 的以下几种 API ，让 kubelet 终止 Pod ，称为自愿中断（voluntary disruptions）。
   - Delete Pod
     - 流程如下：
       1. apiserver 将 Pod 标记为 Terminating 状态。
-      2. kubelet 发现 Terminating 状态之后主动终止 Pod ，删除其中的容器，然后通知 apiserver 。
+      2. kubelet 发现 Terminating 状态之后终止 Pod ，删除其中的容器，然后通知 apiserver 。
       3. apiserver 从 etcd 数据库删除 Pod 。
-    - 如果该 Pod 受某个 Controller 管理，则后者会自动创建新的 Pod 。
+    - 在 k8s 中，修改一个 Pod 的配置时，实际上会创建新 Pod 、删除旧 Pod 。
   - Evict Pod
     - ：驱逐，过程与 Delete 一致。
-    - k8s 会在资源不足时自动驱逐 Pod 。此时 Pod 会标记为 evicted 状态、进入 Failed 阶段，不会自动删除。
+    - kubelet 会在节点资源不足时自动驱逐 Pod 。此时 Pod 会标记为 evicted 状态、进入 Failed 阶段，不会自动删除。
 
 ### 重启
 
@@ -382,7 +388,7 @@ spec:
 - 启用了 postStart 时，会被 kubelet 在创建容器之后立即执行。
   - 如果 postStart 执行结果为 Failure ，则触发 restartPolicy 。
   - postStart 与容器的 ENTRYPOINT 是异步执行的，执行顺序不能确定。不过只有等 postStart 执行成功之后，kubelet 才会将容器的状态标为 Running 。
-- 启用了 preStop 时，kubelet 主动终止 Pod 的流程如下：
+- 启用了 preStop 时，kubelet 终止 Pod 的流程如下：
   1. 先执行 preStop 钩子。
   2. 超过宽限期之后，如果容器依然未终止，则发送 SIGTERM 信号并再宽限 2 秒，最后发送 SIGKILL 信号。
 

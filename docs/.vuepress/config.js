@@ -54,7 +54,6 @@ module.exports = {
         docsBranch: 'master',
         editLinks: true,
         editLinkText: 'Edit on GitHub',
-        lastUpdated: 'Last Updated',
         smoothScroll: true,
         nav: [{
             text: "Notes",

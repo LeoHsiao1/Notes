@@ -26,10 +26,11 @@ spec:                                 # Pod 的规格
     command:                          # 覆盖容器的 ENTRYPOINT 命令
     - bash
     - -c
-    env:                              # 添加环境变量
+    env:                              # 添加环境变量到容器终端
     - name: k1
       value: v1
-    # terminationMessagePath: /dev/termination-log
+    # workingDir: /tmp                # 指定容器的工作目录
+    # terminationMessagePath: /dev/termination-log  # 默认挂载一个文件到容器内指定路径，用于记录容器的终止信息
     # terminationMessagePolicy: File
   # imagePullSecrets:                 # 拉取镜像时使用的账号密码，需要指定 secret 对象
   # - name: my_harbor
@@ -108,12 +109,11 @@ spec:                                 # Pod 的规格
 
 ### env
 
-- Pod 中定义的 env 环境变量会被添加到容器终端。
-- 在 command、args 中可通过以下语法读取环境变量：
+- Pod 中定义的 env 环境变量会被添加到容器终端，还可在 command、args 命令中引用：
   ```sh
   echo $var1 ${var2}          # 这不是在 shell 中执行命令，$ 符号不生效，会保留原字符串
   sh -c "echo $var1 ${var2}"  # 这会读取 shell 环境变量
-  echo $(var)                 # 这会在创建容器时嵌入 Pod env 环境变量，而不是读取 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会保留原字符串
+  echo $(var)                 # 语法 $() 会在创建容器时嵌入 Pod env 环境变量，而不是读取 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会保留原字符串
   ```
   例：
   ```yml

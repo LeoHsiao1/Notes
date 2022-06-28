@@ -593,12 +593,9 @@ spec:
       podAffinity:                              # Pod 间的亲和性
         requiredDuringSchedulingIgnoredDuringExecution:
         - labelSelector:
-            matchExpressions:
-            - key: project
-              operator: In
-              values:
-              - test
-          topologyKey: kubernetes.io/hostname   # 拓扑，将某个标签取值相同的多个节点划分为一个区域，然后将满足亲和性的多个 Pod 调度到同一个区域
+            matchLabels:
+              project: test
+          topologyKey: kubernetes.io/hostname   # 根据指定 label 划分节点的拓扑域，然后将满足亲和性的多个 Pod 集中调度到同一个拓扑域
           # namespaces:                         # 默认将当前 Pod 与所有命名空间的 Pod 考虑亲和性，可以指定命名空间
           #   - default
           # namespaceSelector:
@@ -609,13 +606,30 @@ spec:
         - weight: 100
           podAffinityTerm:
             labelSelector:
-              matchExpressions:
-              - key: k8s-app
-                operator: In
-                values:
-                - nginx
+              matchLabels:
+                k8s-app: nginx
             topologyKey: kubernetes.io/hostname
   ```
+
+### topology
+
+- 可以根据某个 label 的多种取值，将所有节点划分为多个拓扑域。
+
+- 例：
+  ```yml
+  kind: Pod
+  spec:
+    topologySpreadConstraints:
+      - labelSelector:                    # 筛选出某类型的 Pod （当前命名空间下）
+          matchLabels:
+            k8s-app: nginx
+        topologyKey: kubernetes.io/zone   # 根据指定 label 划分节点的拓扑域，然后将该类型的 Pod 分散调度到不同的拓扑域，使得数量尽量均衡
+        maxSkew: 1                        # 计算该类型的 Pod 调度到各个拓扑域的数量，取最大值与最小值之差，称为 maxSkew ，表示分布不均的程度
+        whenUnsatisfiable: DoNotSchedule  # 如果 Pod 不满足 maxSkew 条件，默认不会调度。取值为 ScheduleAnyway 则依然调度，但尽量减小 maxSkew
+      # - labelSelector: ...              # 一个 Pod 可定义多个 topologySpreadConstraints 条件，调度时需要同时满足
+  ```
+  - 如果某个节点不存在指定 label ，则不属于拓扑域，不会用于调度上述 Pod ，除非设置了 ScheduleAnyway 。
+  - 上述条件只会在调度 Pod 时生效。如果终止已调度的 Pod ，则可能导致不满足 maxSkew 条件。
 
 ### Taint、Tolerations
 

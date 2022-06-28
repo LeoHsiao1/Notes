@@ -59,8 +59,8 @@ spec:
     - Pod 重启时，会创建新的容器，容器名末尾的 restart_id 从 0 开始递增。
 
 - spec.selector 是必填字段，称为标签选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 进行管理，筛选结果可能有任意个（包括 0 个）。
-  - 当 selector 中没有设置筛选条件时，会选出所有对象。
-  - 当 selector 中设置了多个筛选条件时，只会选出满足所有条件的对象。
+  - 当 selector 中没有设置筛选条件时，默认选中所有对象。
+  - 当 selector 中设置了多个筛选条件时，会选中同时满足所有条件的对象。
   - 例：
     ```yml
     selector:

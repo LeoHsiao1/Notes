@@ -14,32 +14,31 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: nginx
-spec:                         # Pod 的规格
-  containers:                 # 在 Pod 中定义一组容器
-  - name: nginx               # 容器名
+spec:                                 # Pod 的规格
+  containers:                         # 在 Pod 中定义一组容器
+  - name: nginx                       # 容器名
     image: nginx:1.20
-    imagePullPolicy: IfNotPresent   # 拉取镜像的策略，表示本机不存在该镜像时才拉取。设置成 Always 则总是拉取
-    args:                     # 覆盖容器的 CMD 命令
+    imagePullPolicy: IfNotPresent     # 拉取镜像的策略，表示本机不存在该镜像时才拉取。设置成 Always 则总是拉取
+    args:                             # 覆盖容器的 CMD 命令
     - nginx
     - -c
     - /etc/nginx/nginx.conf
-    command:                  # 覆盖容器的 ENTRYPOINT 命令
+    command:                          # 覆盖容器的 ENTRYPOINT 命令
     - bash
     - -c
-    env:                      # 添加环境变量到容器终端
+    env:                              # 添加环境变量
     - name: k1
       value: v1
     # terminationMessagePath: /dev/termination-log
     # terminationMessagePolicy: File
-  # imagePullSecrets:         # 拉取镜像时使用的账号密码，需要指定 secret 对象
+  # imagePullSecrets:                 # 拉取镜像时使用的账号密码，需要指定 secret 对象
   # - name: my_harbor
   # restartPolicy: Always
-  # schedulerName: default-scheduler
-  # securityContext: {}
-  # terminationGracePeriodSeconds: 30   # kubelet 主动终止 Pod 时的宽限期，默认为 30s
-  # hostIPC: false            # 是否采用宿主机的 IPC namespace
-  # hostNetwork: false        # 是否采用宿主机的 Network namespace
-  # hostPID: false            # 是否采用宿主机的 PID namespace
+  # terminationGracePeriodSeconds: 30 # kubelet 主动终止 Pod 时的宽限期，默认为 30s
+  # hostIPC: false                    # 是否采用宿主机的 IPC namespace
+  # hostNetwork: false                # 是否采用宿主机的 Network namespace
+  # hostPID: false                    # 是否采用宿主机的 PID namespace
+  # shareProcessNamespace:false       # 是否让所有容器共用 pause 容器的 PID namespace
 ```
 
 - 容器的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
@@ -55,8 +54,9 @@ spec:                         # Pod 的规格
   - 各个容器必须设置不同的 name 。
   - 容器内的主机名等于 Pod name ，模拟一个虚拟机。
   - 所有容器会被部署到同一个节点上。
-    - 所有容器共享一个 network namespace ，可以相互通信。绑定同一个 Pod IP ，因此不能监听同一个端口号。
+    - 所有容器共享一个 Network namespace ，可以相互通信。绑定同一个 Pod IP ，因此不能监听同一个端口号。
     - 所有容器共享挂载的所有 volume 。
+    - 所有容器采用独立的 PID namespace ，保证每个容器的主进程的 PID 为 1 。
 
 - Pod 中的容器分为两种类型：
   - 普通容器
@@ -105,6 +105,43 @@ spec:                         # Pod 的规格
         -c <name>         # 指定临时容器的名称
         --target=<name>   # 共用指定容器的 PID namespace
     ```
+
+### env
+
+- Pod 中定义的 env 环境变量会被添加到容器终端。
+- 在 command、args 中可通过以下语法读取环境变量：
+  ```sh
+  echo $var1 ${var2}          # 这不是在 shell 中执行命令，$ 符号不生效，会保留原字符串
+  sh -c "echo $var1 ${var2}"  # 这会读取 shell 环境变量
+  echo $(var)                 # 这会在创建容器时嵌入 Pod env 环境变量，而不是读取 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会保留原字符串
+  ```
+  例：
+  ```yml
+  kind: Pod
+  spec:
+    containers:
+    - name: busybox
+      image: busybox:latest
+      command: ["echo", "$K1", "$(K2)"]
+      env:
+      - name: K1
+        value: V1
+      - name: K2
+        value: V2
+  ```
+- 可以将 Pod 的 [一些字段](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/) 保存为环境变量，例：
+  ```yml
+  env:
+  - name: POD_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.labels['k8s-app']
+  - name: LIMITS_CPU
+    valueFrom:
+      resourceFieldRef:
+        containerName: container-0
+        resource: limits.cpu
+  ```
 
 ### dns
 

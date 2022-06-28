@@ -168,12 +168,6 @@ spec:
           - configMapRef:
               name: redis-config          # 导入 ConfigMap 中的所有参数，生成环境变量
   ```
-  - 在 command、args 中可以用以下语法读取环境变量：
-    ```sh
-    echo $var1 ${var2}          # 这不是在 shell 中执行命令，$ 符号不生效，会保留原字符串
-    sh -c "echo $var1 ${var2}"  # 这会读取 shell 环境变量
-    echo $(var)                 # 这会在创建容器时嵌入 spec.env 环境变量，而不是读取 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会保留原字符串
-    ```
 
 - 例：将 ConfigMap 作为 volume 并挂载
   ```yml

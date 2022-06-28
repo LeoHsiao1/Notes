@@ -188,13 +188,13 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
   - 调度节点
     - Pod 被调度到一个节点之后，不能迁移到其它节点。只能在其它节点创建新的 Pod ，即使采用相同的 Pod name ，但 UID 也不同。
   - 拉取镜像
-    - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间将按 10s、20s、40s 的形式倍增，最大为 5min 。成功运行 10min 之后重置间隔时间。
+    - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间将按 1s、10s、20s、40s 的形式倍增，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
   - 启动容器
     - 先启动 init 容器，再启动标准容器。
 
 ### 终止
 
-- Pod 的终止（terminated）状态，是指其中所有容器已终止运行。
+- 如果 Pod 中所有容器从 running 状态变为 terminated 状态时，则称该 Pod 处于终止（terminated）状态。
   - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
   - Pod 终止时，可能触发 restartPolicy ，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
   - 可添加一个 crontab 任务来删除 Failed Pod：
@@ -227,8 +227,9 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 ### 重启
 
 - Pod 终止时，如果启用了 restartPolicy ，则会被 kubelet 自动重启。
-  - kubelet 重启 Pod 时，并不会重启容器，而是在当前节点上重新创建 Pod 内的所有容器，并删除旧容器。
-  - 如果 Pod 多次重启失败，则重启的间隔时间将按 10s、20s、40s 的形式倍增，最大为 5min 。成功运行 10min 之后重置间隔时间。
+  - kubelet 重启 Pod 时，并不会重启容器，而是在当前节点上重新创建 Pod 中的所有容器，并删除旧容器。
+  - 如果 Pod 连续重启失败，则重启的间隔时间将按 1s、10s、20s、40s 的形式倍增，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
+    - 连续重启时，k8s 会报错 CrashLoopBackOff ，表示 Pod 陷入崩溃循环中。
 
 - Pod 的重启策略（restartPolicy）分为多种：
   ```sh
@@ -281,7 +282,7 @@ status:
 
 - status.containerStatuses.state 记录了容器的状态，有以下三种取值：
   ```sh
-  waiting       # 正在准备启动。比如拉取镜像、挂载数据卷，或者等待重启
+  waiting       # 等待一些条件才能启动。比如拉取镜像、挂载数据卷、等待重启间隔
   running       # 正在运行
   terminated    # 已终止
   ```

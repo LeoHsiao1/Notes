@@ -837,9 +837,12 @@
         # - --web.telemetry-path=/metrics
         - --kafka.server=10.0.0.1:9092    # broker 的地址，可以多次使用该选项
         - --kafka.version=2.2.0
-        # - --sasl.enabled=false
+
+        # - --sasl.enabled                # 是否启用 SASL/PLAIN 认证，默认为 false
+        # - --sasl.mechanism=plain
         # - --sasl.username=xx
         # - --sasl.password=******
+
         # - --topic.filter=.*             # 通过正则表达式筛选要监控的 topic ，例如 filter=^[^_].*
         # - --group.filter=.*
       ports:

@@ -209,7 +209,7 @@
 
   jk = Jenkins('http://10.0.0.1:8080', username=None, password=None, timeout=10, useCrumb=True)
   ```
-  - Jenkins 要求在 POST 请求中包含 Crumb 参数，避免 CSRF 攻击
+  - useCrumb 表示在 POST 请求中包含 Crumb 参数，避免 CSRF 攻击。
 
 - 查询 job ：
   ```py
@@ -223,9 +223,9 @@
 
 - job 的配置：
   ```py
-  xml = job.get_config()            # 导出 job 的 XML 配置
-  job = jk.create_job(jobname, xml) # 创建一个 job
-  job.update_config(xml)            # 修改 job 的 XML 配置
+  xml = job.get_config()                  # 导出 job 的 XML 配置
+  job = jk.create_job(jobname, xml)       # 创建一个 job
+  job.update_config(xml.encode('utf-8'))  # 修改 job 的 XML 配置
   ```
 
 - job 的构建：

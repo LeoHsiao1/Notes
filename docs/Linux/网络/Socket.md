@@ -85,7 +85,7 @@
   // 连接到指定 Socket（常被作为客户端的进程调用）
   int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 
-  // 从指定 Socket的 accept 队列取出一个 TCP 握手成功的连接，为它创建并绑定一个新 Socket ，返回新的 sockfd
+  // 从指定 Socket 的 accept 队列取出一个 TCP 握手成功的连接，为它创建并绑定一个新 Socket ，返回新的 sockfd
   // 源 Socket 为 Listen 状态，新 Socket 为 ESTABLISHED 状态
   // 如果 accept 队列为空，则一直阻塞等待
   int accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);

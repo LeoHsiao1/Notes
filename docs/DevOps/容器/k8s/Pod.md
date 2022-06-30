@@ -65,7 +65,7 @@ spec:                                 # Pod 的规格
   - init 容器
     - ：在创建 Pod 之后最先启动，执行一些初始化任务，执行完成之后就退出。
     - 可以给一个 Pod 设置多个 init 容器，它们会按顺序先后运行。
-      - 当一个 init 容器运行成功之后（即进入Succeeded阶段），才会启动下一个 init 容器。
+      - 当一个 init 容器运行成功之后（即进入 Succeeded 阶段），才会启动下一个 init 容器。
       - 当所有 init 容器都运行成功之后，才会同时启动所有普通容器。
       - 如果某个 init 容器运行失败，则触发 restartPolicy 。
     - init 容器不会长期运行，因此不支持 lifecycle、Probe 等配置。
@@ -249,7 +249,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 - 如果 Pod 中所有容器从 running 状态变为 terminated 状态时，则称该 Pod 处于终止（terminated）状态。
   - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
   - Pod 终止时，可能触发 restartPolicy ，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
-  - 可添加一个 crontab 任务来删除 Failed Pod：
+  - 可添加一个 crontab 任务来删除 Failed Pod ：
     ```sh
     kubectl delete pods --all-namespaces --field-selector status.phase=Failed
     ```
@@ -747,7 +747,7 @@ spec:
     3. 驱逐一些 Pod 之后，如果不再满足驱逐阈值，则停止驱逐。
   - 优先驱逐这些 Pod ：
     - 实际占用内存、磁盘多于 requests 的 Pod ，按差值排序。
-    - Priority 较低的 Pod。
+    - Priority 较低的 Pod 。
 
 - 几种驱逐信号：
   ```sh
@@ -802,8 +802,8 @@ spec:
   1. 创建一个 HPA 对象，监控 Pod 的一些 metrics 指标。
   2. HPA 自动增加、减少 Pod 的 replicas 数量，使得 metrics 指标接近指定数值。算法为：
       ```sh
-      rate = metrics当前值 / metrics期望值
-      replicas期望值 = ceil(replicas当前值 * rate )   # ceil 即向上取整
+      rate = metrics 当前值 / metrics 期望值
+      replicas 期望值 = ceil(replicas 当前值 * rate )   # ceil 即向上取整
       ```
 - 配置示例：
   ```yml

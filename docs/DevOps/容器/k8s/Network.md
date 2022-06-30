@@ -197,7 +197,7 @@
 
 <!-- ### DNS -->
 
-<!-- 创建一个 Service 时，它会创建一个相应的DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
+<!-- 创建一个 Service 时，它会创建一个相应的 DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local ，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
 考虑到云平台提供的 LoadBalancer 会收费，用户也可自行部署一个 Nginx ，根据不同的 DNS 子域名或端口，转发到不同的 Service ClusterIP
 
 不同 namespace 下的 pod、service 相互隔离，因此不能 dns 解析其它命名空间的 service ，但可以通过 Pod IP、 clusterIP 访问。

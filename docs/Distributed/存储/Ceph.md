@@ -57,7 +57,7 @@
 Ceph 有多种部署方式：
 - ceph-ansible ：基于 ansible playbook 部署 Ceph 集群。
 - ceph-deploy ：一个命令行工具，已停止维护。
-- Cephadm ：一个 Python3 脚本，用于以容器形式部署 Ceph 集群，通过编排（Orchestrator，orch）接口控制 Ceph 。
+- Cephadm ：一个 Python3 脚本，用于以容器形式部署 Ceph 集群，通过编排（Orchestrator ，orch）接口控制 Ceph 。
 - Rook ：用于在 k8s 中部署 Ceph 集群。
 
 ### 版本
@@ -187,7 +187,7 @@ ceph orch apply -i <xx.yml>                   # 导入服务的 spec 配置
     - daemon 的命名格式为 `<service_name>.<hostname>` ，例如 mon.host1 。
     - daemon 的容器命名格式为 `ceph-<fsid>-<process_name>` 。
   - 没有直接重启服务的命令，管理不方便。
-- 同种服务的 daemon 采用同一份配置（Specification，spec）。例如 mon 服务的配置如下：
+- 同种服务的 daemon 采用同一份配置（Specification ，spec）。例如 mon 服务的配置如下：
   ```yml
   service_type: mon
   service_name: mon
@@ -293,7 +293,7 @@ ceph osd pool set <pool> <key> <value>
 ```sh
 ceph fs ls                                    # 列出已创建的 fs
 ceph fs status
-ceph fs new <fs_name> <meta> <data>           # 创建一个 fs，指定其用于存储元数据、数据的 pool
+ceph fs new <fs_name> <meta> <data>           # 创建一个 fs ，指定其用于存储元数据、数据的 pool
 ceph fs rm  <fs_name> --yes-i-really-mean-it  # 删除一个 fs
 ceph fs add_data_pool <fs_name> <pool>        # 给 CephFS 增加数据池
 ceph fs get <fs_name>                         # 读取全部配置参数

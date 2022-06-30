@@ -79,7 +79,7 @@
 ## 用法
 
 例：以非侵入方式监控 Python 进程
-1. 安装 SkyWalking Python agent：`pip install apache-skywalking`
+1. 安装 SkyWalking Python agent ：`pip install apache-skywalking`
 2. 配置环境变量：
     ```sh
     export SW_AGENT_NAME=test_service     # 监控的该服务名

@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 '''
-替换文件中的字符串，基于正则语法。
+该脚本用于对文件中的字符串进行正则替换。
 
 Sample：
 python3 replace.py --file 1.py --src '([\u4e00-\u9fa5])(\w)' --dst '$1 $2'
@@ -12,7 +11,7 @@ import argparse
 def replace(string, src: str, dst: str) -> str:
     """
     Replace `src` with `dst` in `string`, based on regular expressions.
-    
+
     Sample:
     >>> replace('Hello World', 'Hello', 'hi')
     'hi World'

@@ -31,9 +31,9 @@
 - JMX（Java Management Extensions）
   - ：一组用于监控、管理 Java 应用的 API ，属于 Java 标准库。
     - 将被管理的对象称为 MBean（Managed Bean）。
-    - 基于 RMI（Remote Method Invocation，远程方法调用）协议进行通信。
+    - 基于 RMI（Remote Method Invocation ，远程方法调用）协议进行通信。
   - 在 Java 应用中调用 JMX 库，实现其接口，便可以从外部通过 HTTP 通信等方式监控、管理该 Java 应用。
-- JAAS（Java Authentication and Authorization Service，Java 认证和授权服务）
+- JAAS（Java Authentication and Authorization Service ，Java 认证和授权服务）
   - ：一个进行身份认证的 Java 框架，内置在 JRE 中。
 - JDBC（Java Database Connectivity）
   - ：Java 程序访问数据库的 API 规范，主要用于关系型数据库。

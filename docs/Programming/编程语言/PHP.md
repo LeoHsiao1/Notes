@@ -190,6 +190,6 @@
   - phpStudy ：一款兼容 WAMP 和 WNMP 的软件。
 
 - php-fpm
-  - ：PHP 的一个进程管理（FastCGI Process Manage，FPM）工具，用于将一个提供 FastCGI 服务的 PHP 进程运行多个实例，并进行管理。
+  - ：PHP 的一个进程管理（FastCGI Process Manage ，FPM）工具，用于将一个提供 FastCGI 服务的 PHP 进程运行多个实例，并进行管理。
   - 单个 PHP 进程的配置文件默认位于 `/etc/php.ini` 和 `/etc/php.d/*.ini` 。
   - php-fpm 的配置文件默认位于 `/etc/php-fpm.conf` 和 `/etc/php-fpm.d/*.conf` 。

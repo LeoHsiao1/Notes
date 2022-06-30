@@ -439,7 +439,7 @@ docker build <PATH>|<URL>
 - Docker 的 18.09 版本增加了一个构建工具 BuildKit 。
 
 - 特点：
-  - 采用一种更低级的格式来定义构建过程，称为（Low Level Builder，LLB）。
+  - 采用一种更低级的格式来定义构建过程，称为（Low Level Builder ，LLB）。
     - 兼容 Dockerfile ，通过前端组件自动将其转换成 LLB 。
   - 优化了构建过程，减少耗时。
     - 会显示每个 step 的耗时。

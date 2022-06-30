@@ -72,7 +72,7 @@
       - 压缩公钥（compressed）：由坐标 x 的值组成，并加上前缀 0x02 或 0x03 表示坐标 y 为偶数或奇数，总长度为 33 bytes 。
         - 椭圆曲线关于 x 轴对称，一个坐标 x 对应两个 y 点。且在 secp256k1 曲线中，这两个 y 点分别为偶数、奇数，因此需要通过前缀区分。
         - 使用压缩公钥时，需要给私钥加上后缀 0x01 作为标识，其长度增加 1 字节。
-        - 压缩格式的公钥、私钥更方便记录，是用户通常看到的格式，也是一般钱包采用的导入格式（Wallet Import Format，WIF）。
+        - 压缩格式的公钥、私钥更方便记录，是用户通常看到的格式，也是一般钱包采用的导入格式（Wallet Import Format ，WIF）。
         - 钱包软件在实际使用公钥时，会从压缩格式转换成非压缩格式。
 
   3. 计算压缩公钥的 SHA256 哈希值，再计算其结果的 RIPEMD-160 哈希值。
@@ -131,7 +131,7 @@
 
 - 如果一个账户拥有一些 BTC ，则可以发起一个交易，输入一些 BTC ，然后输出给其它账户。
   - 所有账户收到的 BTC ，都来自历史交易的输出，且源头都是 coinbase 交易。
-  - 如果一个交易输出的 BTC ，尚未被目标账户花费，则称为未花费交易输出（Unspent TX Output，UTXO）。
+  - 如果一个交易输出的 BTC ，尚未被目标账户花费，则称为未花费交易输出（Unspent TX Output ，UTXO）。
     - 一个账户拥有的所有 UTXO 总和，称为该账户的余额。
     - 一个交易的 UTXO 要么不被花费，要么被一次性全部花费，不能拆开花费。
       - 例如 UTXO 为 5 BTC 时，用户可以新建一个交易，发送 1 BTC 给别人，然后将剩下的 BTC 发送给自己，从而实现找零。
@@ -166,7 +166,7 @@
 
 ### pkScript
 
-：公钥脚本（Pubkey Script，pkScript），采用一种专用的脚本语言编写，包含一些指令。
+：公钥脚本（Pubkey Script ，pkScript），采用一种专用的脚本语言编写，包含一些指令。
 - 该脚本语言的特点：
   - 基于堆栈。
   - 非图灵完备，不支持循环。因此不能实现复杂的逻辑，但减少了出错的可能性。
@@ -200,7 +200,7 @@ pkScript 有多种类型：
 
 ### sigScript
 
-：签名脚本（Signature Script，sigScript）。
+：签名脚本（Signature Script ，sigScript）。
 - sigScript 包含以下内容：
   - pubKey ：账户公钥。
   - sig ：交易数据的数字签名，使用账户私钥生成。
@@ -233,11 +233,11 @@ pkScript 有多种类型：
     - SegWit 尚未推广，早期升级的收益较小。
     - 旧区块可通过 AsicBoost 算法提高挖矿的哈希算力。
     - SegWit 增加了区块的复杂性，需要修改很多客户端代码，不如硬分叉简单。
-  - 2017 年 2 月，社区的开发人员提出了 BIP148 ，提议用户激活软分叉（User Activated Soft Fork，UASF），逼迫矿工激活 SegWit 。
+  - 2017 年 2 月，社区的开发人员提出了 BIP148 ，提议用户激活软分叉（User Activated Soft Fork ，UASF），逼迫矿工激活 SegWit 。
     - BIP148 大意为：从 8 月开始，采用 BIP148 的节点会拒绝不支持 SegWit 的新区块，导致发生硬分叉。
     - BIP9 让矿工投票决定软分叉升级，而 UASF 使得用户也拥有了控制权。但这更像一个抗议行动，不支持的矿工只是少了打包这部分用户的交易费。
   - 2017 年 4 月，Charlie Lee 与矿工协商之后，成功在 LTC 上激活 SegWit 。
-  - 2017 年 5 月，一些公司和矿池签署了纽约共识（New York Agreement，NYA），表示作为激活 SegWit 的交换，要求也激活 SegWit2x 。
+  - 2017 年 5 月，一些公司和矿池签署了纽约共识（New York Agreement ，NYA），表示作为激活 SegWit 的交换，要求也激活 SegWit2x 。
     - 原理：与 SegWit 不同，直接将区块的基础容量限制从 1MB 增加到 2MB ，属于硬分叉升级
     - SegWit2x 与 BCH 的区块扩容类似，受到 Bitcoin Core 开发人员的反对，最终在 11 月放弃了该提议。
   - 2017 年 5 月，一个开发人员提出了 BIP91 ，使得 BIP148 与 SegWit2x 两派可以兼容，避免发生硬分叉。
@@ -253,7 +253,7 @@ pkScript 有多种类型：
 
 ### 多重签名
 
-：多重签名（multi-signature，multisig），一种基于 P2SH 的交易方式。
+：多重签名（multi-signature ，multisig），一种基于 P2SH 的交易方式。
 - 原理：将 BTC 转账到一个 P2SH 地址，通过 pkScript 指定 n 个公钥组成一个列表，要求 sigscript 至少包含 m 个对应的私钥签名才有效。
   - 其中 1≤m≤n≤15 ，又称为 m-of-n 交易。
 - 1of2 是允许两个账户中的任意一个都有权花费 UTXO 。
@@ -264,7 +264,7 @@ pkScript 有多种类型：
 
 ### 闪电交易
 
-：闪电交易（Lightning Network，LN），一种 layer2 技术，基于链下交易（Off-Chain）。
+：闪电交易（Lightning Network ，LN），一种 layer2 技术，基于链下交易（Off-Chain）。
 - [GitHub](https://github.com/lightning/bolts)
 - 原理：在区块链下进行任意数量的交易，然后将这些交易的结果保存到区块链。主要步骤如下：
   1. 开启通道：两个账户将一笔 BTC 转账到一个多签地址，暂时锁定，称为开启一个闪电交易通道（channel）。
@@ -282,7 +282,7 @@ pkScript 有多种类型：
 
 - 闪电交易通道只能连通两个账户，但大量相互开启通道的账户可以组成闪电交易网络。
   - 假设 A 与 B 之间存在通道，B 与 C 之间存在通道，则 A 可以通过 B 间接转账给 C 。此时 B 称为路由节点，像计算机网络的路由转发。
-  - 哈希时间锁定合约（Hash Time Locked Contracts，HTLC）：一种智能合约，用于保证路由节点的可信任。工作流程如下：
+  - 哈希时间锁定合约（Hash Time Locked Contracts ，HTLC）：一种智能合约，用于保证路由节点的可信任。工作流程如下：
     1. A 创建一个密钥 secret ，私下发送给 C 。
     2. A 在 A、B 之间的通道，使用 secret 的哈希值签署一个 HTLC 合约，将 BTC 转入合约。合约大意为：如果 B 能在 locktime 时间内发现 secret ，则有权获得合约的 UTXO ，否则资金将返回给 A 。
     3. B 在 B、C 之间的通道，也创建一个使用同样 secret 哈希值的 HTLC 合约，请求 C 提供 secret 。但是合约锁定的 UTXO 微少一点，因为 B 收取了交易费。locktime 也更短一点。
@@ -346,7 +346,7 @@ pkScript 有多种类型：
       - 可根据自己存储的 header ，验证全节点提供的各个区块是否正确。
     - 全节点能够独立验证一个交易、区块是否有效，而轻节点需要依赖全节点。
     - 大部分的钱包软件属于轻节点，通过 SPV 验证指定账户的历史交易、UTXO 。
-      - 简单支付验证（Simplified Payment Verification，SPV）：普通节点连接到全节点，发送布隆过滤器（bloom filter），筛选出与指定账户相关的所有历史交易，然后下载这些交易。
+      - 简单支付验证（Simplified Payment Verification ，SPV）：普通节点连接到全节点，发送布隆过滤器（bloom filter），筛选出与指定账户相关的所有历史交易，然后下载这些交易。
 
 - 一个全节点的启动步骤：
   1. 与至少一个全节点建立对等连接，加入 BTC 网络。
@@ -376,7 +376,7 @@ pkScript 有多种类型：
 
 - 所有 BTC 节点遵循一些相同的共识规则，比如如何验证一个交易、区块是否有效。
 
-- BTC 改进提案（Bitcoin Improvement Proposals，BIP）：BTC 社区通过提案来讨论一些改进方案。
+- BTC 改进提案（Bitcoin Improvement Proposals ，BIP）：BTC 社区通过提案来讨论一些改进方案。
   - [GitHub](https://github.com/bitcoin/bips)
 
 - 实施一个新的共识规则时，根据兼容性，分为两种情况：

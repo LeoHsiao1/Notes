@@ -298,8 +298,8 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 kind: Pod
 status:
   conditions:             # Pod 的一些状态条件
-  - type: Initialized     # 条件名
-    status: "True"        # 是否符合条件
+  - type: Initialized     # condition 类型
+    status: "True"        # 是否符合当前 condition ，可以取值为 True 、False 、Unknown
     lastProbeTime: null   # 上次探测状态的时刻
     lastTransitionTime: "2021-12-01T08:20:23Z"  # 上次改变状态的时刻
   - type: Ready
@@ -322,15 +322,19 @@ status:
   phase: Running          # Pod 所处的生命周期阶段
   startTime: "2021-12-01T08:20:23Z"
 ```
-- status.conditions.type 记录了 Pod 的多种状态条件及其是否成立：
+- 与 phase 类似，k8s 给一些资源定义了多种状态条件（conditions）。
+  - 一个资源可能同时符合多种 conditions ，但同时只能处于一种 phase 。例如 Pod 可以同时符合 PodScheduled、Ready 条件。
+  - k8s 会根据一个资源符合哪些 conditions ，判断该资源所处的 phase 。
+  - 用户可以添加自定义的 conditions 。
+
+- status.conditions.type 记录了 Pod 的多种 conditions ：
   ```sh
   PodScheduled      # Pod 已被调度到一个节点上
   Unschedulable     # Pod 不能被调度到节点上。可能是缺乏可用节点、找不到挂载卷等资源
   Initialized       # Pod 中的所有 init 容器都已运行成功
   ContainersReady   # Pod 中的所有容器已运行，且处于就绪状态
-  Ready             # 整个 Pod 处于就绪状态，可以开始工作。此时该 Pod 才会加入 EndPoints ，被 Service 反向代理
+  Ready             # 整个 Pod 处于就绪状态，可以开始工作，又称为健康（health）状态。此时该 Pod 才会加入 EndPoints ，被 Service 反向代理
   ```
-  - k8s 的一个资源可能同时处于多种 conditions ，但只能处于一种 phase 。
 
 - status.containerStatuses.state 记录了容器的状态，有以下三种取值：
   ```sh

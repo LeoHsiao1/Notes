@@ -1,7 +1,7 @@
 # Workload
 
 - 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般通过控制器（Controller）自动管理 Pod ，统称为工作负载（workload）。
-  - Workload 分为 Pod、Deployment、Job 等多种类型。
+  - Workload 分为 Pod 、Deployment 、Job 等多种类型。
   - 用户需要编写 workload 配置文件，描述如何部署一个 Pod 。然后创建该 workload 对象，k8s 就会自动创建并部署 Pod 。
 
 ## Deployment
@@ -10,23 +10,22 @@
 
 ### 配置
 
-配置文件示例：
+例：
 ```yml
 apiVersion: v1
 kind: Deployment
 metadata:
   annotations:
     deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置是第几次修改版本，从 1 开始递增
-  labels:
-    creator: Leo
   name: nginx
   namespace: default
-  # generation: 1           # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
+  # generation: 1                 # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
 spec:
-  replicas: 3               # Pod 运行的副本数，默认为 1
-  selector:                 # 选择 Pod
+  replicas: 3                     # Pod 运行的副本数，默认为 1
+  selector:                       # 选择 Pod
     matchLabels:
       k8s-app: nginx
+  # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
   # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
   # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
   # strategy:                     # 更新部署的策略，默认为滚动更新
@@ -43,7 +42,7 @@ spec:
       - name: nginx               # 该 Pod 中的第一个容器名
         image: nginx:1.20
 ```
-- 部署一个 Deployment 时，可以创建多个 Pod 实例。
+- 一个 Deployment 可以创建多个 Pod 实例。
   - Pod 的命名格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
     ```sh
     nginx-65d9c7f6fc-szgbk
@@ -70,7 +69,7 @@ spec:
           values:
           - v1
         - key: k2
-          operator: Exists    # 运算符可以为 In、NotIn、Exists、DidNotExist
+          operator: Exists    # 运算符可以为 In 、NotIn 、Exists 、DidNotExist
     ```
 
 - spec.template 是必填字段，表示 Pod 配置文件的模板。
@@ -86,29 +85,27 @@ spec:
 
 ### 状态
 
-- Deployment 存在多种状态条件（condition）：
+- Deployment 存在多种 conditions ：
   ```sh
-  Progressing       # 处理中，比如正在部署或销毁 Pod 实例
-  Complete          # 处理完成，比如部署完所有 Pod 实例且可用，或者该 Deployment 是停止运行的旧版本
-  Available         # 可用，即达到 ReplicaSet 的 Pod 实例最小可用数
-  ReplicaFailure    # 处理失败，比如不能部署 Pod 实例、Progressing 超时
+  Progressing       # 处理中，比如正在部署或销毁 Pod
+  Complete          # 处理完成，比如部署完所有 Pod 且可用，或者该 Deployment 是停止运行的旧版本
+  Available         # 可用，即 availableReplicas 不低于 ReplicaSet 要求的 maxUnavailable
+  ReplicaFailure    # 处理失败，比如不能部署 Pod 、处于 Progressing 状态且超时
   ```
-  - 比如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
-  - 根据 `.status.conditions` 判断 `.status.phase`
-  <!-- - 支持添加自定义的 condition -->
+  - 例如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
 
 - Deployment 的状态示例：
   ```yml
   status:
-    availableReplicas: 1    # 可用的 Pod 实例数，允许接收 service 的流量
-    observedGeneration: 3   # 可用的 Pod 实例采用的 Deployment 版本，如果小于 metadata.generation 则说明不是最新版本
-    readyReplicas: 1        # 处于 health 状态的 Pod 实例数
-    replicas: 1             # 期望运行的实例数
-    updatedReplicas: 1      # 采用最新版本 Deployment 的 Pod 实例数
+    availableReplicas: 1    # 可用的 Pod 数，允许接收 service 的流量
+    observedGeneration: 3   # 可用的 Pod 采用的 Deployment 版本。如果小于 metadata.generation 则说明不是最新版本
+    readyReplicas: 1        # 就绪状态的 Pod 数
+    replicas: 1             # 期望运行的 Pod 数
+    updatedReplicas: 1      # 采用最新版本 Deployment 的 Pod 数。如果等于 replicas ，则说明已全部更新
     conditions:
-    - type: Progressing     # condition 类型
-      status: "True"        # 是否处于当前 condition ，可以取值为 True、False、Unknown
-      reason: NewReplicaSetAvailable  # status 的原因
+    - type: Progressing
+      status: "True"
+      reason: NewReplicaSetAvailable    # 处于当前状态的原因
       message: ReplicaSet "nginx-bbf945bc9" has successfully progressed.  # reason 的详细信息
       lastTransitionTime: "2021-06-29T10:52:18Z"
       lastUpdateTime: "2022-02-10T02:34:38Z"
@@ -119,6 +116,7 @@ spec:
       lastTransitionTime: "2022-02-10T15:53:46Z"
       lastUpdateTime: "2022-02-10T15:53:46Z"
   ```
+  - 一般的 Pod 通过 readinessProbe 健康检查之后，就会进入 Ready 状态，加入 EndPoints 。但 Deployment 要求一个 Pod 保持 Ready 状态至少 minReadySeconds 秒，才加入 EndPoints ，并使 availableReplicas 加一。
 
 <!--
 lastTransitionTime    # 上一次进入该状态的时间？？？
@@ -126,9 +124,9 @@ lastUpdateTime        # 上一次更新该状态的时间
 
 
 - deployment 的常见问题：
-  - deployment 没有可用的 Pod 实例，即整个 deployment 不可用
-  - deployment 的 Pod 实例未全部可用，持续长时间
-  - deployment 的 Pod 实例未全部更新到最新版本，持续长时间
+  - deployment 没有可用的 Pod ，即整个 deployment 不可用
+  - deployment 的 Pod 未全部可用，持续长时间
+  - deployment 的 Pod 未全部更新到最新版本，持续长时间
   - deployment 停留在 Progressing 状态超过 progressDeadlineSeconds 时长），则变为 Failed 状态
 
  -->
@@ -137,7 +135,7 @@ lastUpdateTime        # 上一次更新该状态的时间
 ## ReplicaSet
 
 ：副本集（RC），用于控制一个应用的 Pod 实例数量。
-- 取代了 k8s 早期版本的副本控制器（Replication Controller，RS），会被 Deployment 调用。
+- 取代了 k8s 早期版本的副本控制器（Replication Controller ，RS），会被 Deployment 调用。
 - 假设用户指定运行 n 个 Pod ，ReplicaSet 会自动控制可用的 Pod 数量，使其等于 n 。
   - 通过健康检查的 Pod 才计入可用数量。
   - 如果可用的 Pod 数多于 n ，则停止多余的 Pod 。
@@ -156,7 +154,7 @@ lastUpdateTime        # 上一次更新该状态的时间
   - 将数据存储在容器中时，会随着容器一起销毁。因此建议将数据存储在挂载卷，或容器外的数据库中。
 
 使用数据卷
-- 一个有状态服务的每个 Pod 实例使用独立的资源、配置文件，不能随时创建、销毁 Pod ，甚至连 Pod 名都不能改变。
+- 一个有状态服务的每个 Pod 使用独立的资源、配置文件，不能随时创建、销毁 Pod ，甚至连 Pod 名都不能改变。
 - 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。
 -->
 
@@ -182,7 +180,7 @@ lastUpdateTime        # 上一次更新该状态的时间
       spec:
         containers:
           - ...
-    # updateStrategy:           # DaemonSet 的更新部署策略（updateStrategy）有两种：RollingUpdate、OnDelete
+    # updateStrategy:           # DaemonSet 的更新部署策略（updateStrategy）有两种：RollingUpdate 、OnDelete
     #   type: RollingUpdate
     #   rollingUpdate:
     #     maxSurge: 0

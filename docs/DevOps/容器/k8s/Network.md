@@ -37,6 +37,7 @@
   - 给 Pod 创建 NodePort 类型的 Service 。
   - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
   - 给 Pod 启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace 。
+  - 在集群外主机添加 route 规则：`ip route add 10.43.0.0/16 via 10.0.1.1`
 
 ## Service 类型
 

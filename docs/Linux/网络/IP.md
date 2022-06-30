@@ -67,8 +67,8 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 
 命令：
 ```sh
-$ route     # 显示本机的路由表
-    -n      # 将名称解析为 IP
+$ route       # 显示本机的路由表
+    -n        # 将名称解析为 IP
 ```
 
 - 例：查看路由表
@@ -77,22 +77,35 @@ $ route     # 显示本机的路由表
   Kernel IP routing table
   Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
   0.0.0.0         10.0.1.1        0.0.0.0         UG    0      0        0 eth0    # 缺省路由。默认将数据包通过 eth0 网口发送到 10.1.6.1 网关
-  10.0.0.0        0.0.0.0         255.255.255.0   U     0      0        0 eth0    # 将指向 10.0.0.0/24 子网的数据包通过 eth0 网口发出
+  10.0.1.0        0.0.0.0         255.255.255.0   U     0      0        0 eth0    # 将发向 10.0.1.0/24 子网的数据包通过 eth0 网口发出
   169.254.0.0     0.0.0.0         255.255.0.0     U     1002   0        0 eth0    # Link-Local Address
   ```
+  - 常见的路由方式：
+    - 目标地址在当前网络，因此直接将数据包从某网口发出，直接访问。
+    - 目标地址在其它网络，因此下一跳会将数据包发送到一个网关，由它继续路由转发。
+      - 该网关必须在当前网络，可直接访问。通常是当前网络的路由器。
   - Flags 的常见取值：
     ```sh
-    U   # Up ，该路由为启用状态
-    !   # 该路由为禁用状态
-    H   # Host ，该网关是一个主机
-    G   # Gateway ，该网关是一个路由器
+    U     # Up ，该路由为启用状态
+    !     # 该路由为禁用状态
+    H     # Host ，目的地址是一个主机
+    G     # Gateway ，将数据包发送到一个网关
     ```
-  - Metric 表示这条路由的跳数，即到目标主机需要经过几次路由转发。
+  - Metric 表示这条路由的跳数，即到目标主机需要经过几次路由转发。默认为 0 。
 - 例：修改路由表
   ```sh
-  route add -net 10.0.1.0/16 gw 10.0.1.1  # 增加一条路由
-  route del -net 10.0.1.0/16 gw 10.0.1.1  # 删除一条路由
+  route add default gw 10.0.1.1         # 设置缺省路由
+  route del default
+
+  route add -host 10.0.1.2 dev eth0     # 添加一条路由，将发向 10.0.1.2 的数据包通过 eth0 网口发出。其中 -host 表示目的地址是一个主机
+  route add -net 10.0.1.0/24 metric 1024 dev eth0   # -net 表示目的地址是一个子网
+  route add -net 10.0.1.0/24 gw 10.0.1.1            # 将发向 10.0.1.0/24 子网的数据包路由到网关 10.0.1.1
+
+  route add -host 10.0.1.2 reject       # 拒绝发向指定主机的流量
   ```
+
+- 用 route、ip 命令修改的路由在主机重启之后不会保存。
+  - 可以将路由保存在 `/etc/sysconfig/network-scripts/route-xx` 文件中，然后执行 `systemctl restart network` 。
 
 ## ip
 
@@ -116,7 +129,9 @@ $ ip
     neighbour                       # 显示当前网段的其它主机
 
     route                           # 显示路由表
-        add default via 10.0.0.1    # 增加一个默认网关
+      add default via 10.0.1.1      # 设置缺少路由
+      add 10.0.1.0/24 via 10.0.1.1  # via 相当于 route 命令的 gw
+      add 10.0.1.0/24 dev eth0
 ```
 
 ## ping

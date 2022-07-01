@@ -21,13 +21,14 @@ metadata:
   namespace: default
   # generation: 1                 # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
 spec:
-  replicas: 3                     # Pod 运行的副本数，默认为 1
+  # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
+  # paused: false                 # 是否暂停编排，默认为 false 。如果为 true ，则修改 spec.template 时不会触发更新部署
+  # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态，但会继续尝试部署。执行 rollout pause 时不会累计该时长
+  replicas: 1                     # 期望运行的 Pod 实例数，默认为 1
+  revisionHistoryLimit: 2         # 保留最近多少个历史版本的 ReplicaSet（不包括当前版本），可用于回滚（rollback）。默认为 10 ，设置为 0 则不保留
   selector:                       # 选择 Pod
     matchLabels:
       k8s-app: nginx
-  # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
-  # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
-  # revisionHistoryLimit: 10      # 保留最近多少个历史版本的 ReplicaSet ，可用于回滚（rollback）。设置为 0 则不保留
   # strategy:                     # 更新部署的策略，默认为 RollingUpdate
   #   type: RollingUpdate
   template:                       # 定义 Pod 模板
@@ -90,8 +91,8 @@ spec:
       strategy:
         type: RollingUpdate
         rollingUpdate:              # 滚动更新的配置
-          maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
-          maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
+          maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数或百分数，默认为 25%
+          maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数或百分数，默认为 25%
       ```
       滚动更新时，会尽量保持 `replicas - maxUnavailable ≤ availableReplicas ≤ replicas + maxSurge` 。
 
@@ -99,10 +100,10 @@ spec:
 
 - Deployment 存在多种 conditions ：
   ```sh
-  Progressing       # 处理中，比如正在部署或删除 Pod
-  Complete          # 处理完成，比如部署完所有 Pod 且可用，或者该 Deployment 是停止运行的旧版本
-  Available         # 可用，即 availableReplicas 不低于 ReplicaSet 要求的 maxUnavailable
-  ReplicaFailure    # 处理失败，比如不能部署 Pod 、处于 Progressing 状态且超时
+  Progressing       # 处理中，例如正在部署或删除 Pod
+  Complete          # 处理完成，例如部署完所有 Pod 且可用，或者该 Deployment 是停止运行的旧版本
+  Available         # 可用，即 availableReplicas 不低于 maxUnavailable
+  ReplicaFailure    # 处理失败，例如不能部署 Pod 、停留在 Progressing 状态超时
   ```
   - 例如 Deployment 处于 Available 状态时，可能同时处于 Progressing 或 Complete 状态。
 
@@ -117,10 +118,10 @@ spec:
     conditions:
     - type: Progressing
       status: "True"
-      reason: NewReplicaSetAvailable    # 处于当前状态的原因
+      reason: NewReplicaSetAvailable                # 处于当前状态的原因
       message: ReplicaSet "nginx-bbf945bc9" has successfully progressed.  # reason 的详细信息
-      lastTransitionTime: "2021-06-29T10:52:18Z"
-      lastUpdateTime: "2022-02-10T02:34:38Z"
+      lastTransitionTime: "2022-02-10T15:53:46Z"    # 最近一次改变该 condition 的 status 的时刻
+      lastUpdateTime: "2022-02-10T15:53:55Z"        # 最近一次更新该 condition 的时刻
     - type: Available
       status: "True"
       reason: MinimumReplicasAvailable
@@ -128,21 +129,12 @@ spec:
       lastTransitionTime: "2022-02-10T15:53:46Z"
       lastUpdateTime: "2022-02-10T15:53:46Z"
   ```
-  - 一般的 Pod 通过 readinessProbe 健康检查之后，就会进入 Ready 状态，加入 EndPoints 。但 Deployment 要求一个 Pod 保持 Ready 状态至少 minReadySeconds 秒，才加入 EndPoints ，并使 availableReplicas 计数加一。
+  - 一般的 Pod 通过 readinessProbe 健康检查之后，就会进入 Ready 状态，加入 EndPoints 。但 Deployment 要求一个 Pod 保持 Ready 状态至少 minReadySeconds 秒，才视作可用（available），加入 EndPoints 。
 
-<!--
-lastTransitionTime    # 上一次进入该状态的时间？？？
-lastUpdateTime        # 上一次更新该状态的时间
-
-
-- deployment 的常见问题：
-  - deployment 没有可用的 Pod ，即整个 deployment 不可用
-  - deployment 的 Pod 未全部可用，持续长时间
-  - deployment 的 Pod 未全部更新到最新版本，持续长时间
-  - deployment 停留在 Progressing 状态超过 progressDeadlineSeconds 时长），则变为 Failed 状态
-
- -->
-
+- Deployment 的常见问题：
+  - 没有一个可用的 Pod 。
+  - Pod 未全部可用。
+  - Pod 未全部更新到最新版本。
 
 ## ReplicaSet
 

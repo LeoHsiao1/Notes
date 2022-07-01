@@ -302,8 +302,8 @@ status:
   conditions:             # Pod 的一些状态条件
   - type: Initialized     # condition 类型
     status: "True"        # 是否符合当前 condition ，可以取值为 True 、False 、Unknown
-    lastProbeTime: null   # 上次探测状态的时刻
-    lastTransitionTime: "2021-12-01T08:20:23Z"  # 上次改变状态的时刻
+    lastProbeTime: null   # 最近一次探测的时刻
+    lastTransitionTime: "2021-12-01T08:20:23Z"  # 最近一次改变该 condition 的 status 的时刻
   - type: Ready
     status: "True"
     lastProbeTime: null

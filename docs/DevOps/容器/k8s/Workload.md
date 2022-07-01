@@ -42,7 +42,7 @@ spec:
       - name: nginx               # 该 Pod 中的第一个容器名
         image: nginx:1.20
 ```
-- Deployment 会自动创建 ReplicaSet 对象，负责运行指定数量的 Pod 实例。
+- Deployment 会自动创建 ReplicaSet 对象，用于运行指定数量的 Pod 实例。
   - 删除一个 Deployment 时，会级联删除其下级对象 ReplicaSet ，和 ReplicaSet 的下级对象 Pod 。
   - 此时 Pod name 的格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
     ```sh
@@ -76,7 +76,8 @@ spec:
     ```
 
 - spec.template 是必填字段，表示 Pod 配置文件的模板。
-  - 当用户修改了 spec.template 之后，Deployment 会创建一个新版本的 ReplicaSet ，更新 pod-template-hash 标签的值，并删除旧版本 ReplicaSet 。该过程称为更新部署。
+  - 当用户修改了 spec.template 之后，Deployment 会创建一个新版本的 ReplicaSet ，并删除旧版本 ReplicaSet 。该过程称为滚动更新部署（rollout）。
+  - ReplicaSet 会给 Pod 添加一个 `pod-template-hash=xxx` 标签，从而区分不同版本的 Pod 。
   - 修改 Deployment 的其它配置，比如 replicas ，不会触发更新部署。
 
 - Deployment 的更新部署策略（strategy）有两种：
@@ -137,15 +138,14 @@ lastUpdateTime        # 上一次更新该状态的时间
 
 ## ReplicaSet
 
-：副本集（RC），用于控制一个应用的 Pod 实例数量。
-- 取代了 k8s 早期版本的副本控制器（Replication Controller ，RS），会被 Deployment 调用。
-- 假设用户指定运行 n 个 Pod ，ReplicaSet 会自动控制可用的 Pod 数量，使其等于 n 。
-  - 通过健康检查的 Pod 才计入可用数量。
+：副本集（RC），用于运行指定数量的 Pod 实例。
+- ReplicaSet 取代了 k8s 早期版本的副本控制器（Replication Controller ，RS），会被 Deployment 调用。
+- 假设用户指定运行 n 个 Pod ，ReplicaSet 会自动控制 available Pod 数量，使其等于 n 。
   - 如果可用的 Pod 数多于 n ，则停止多余的 Pod 。
-  - 如果可用的 Pod 数少于 n ，则增加部署 Pod 。包括以下情况：
+  - 如果可用的 Pod 数少于 n ，则创建空缺数量的 Pod 。包括以下情况：
     - 已有的 Pod 故障，比如部署失败、部署之后未通过健康检查。
     - 已有的 Pod 需要的部署资源不足，比如 Pod 所在 Node 故障。
-- 通过 ReplicaSet ，可以方便地调整 Pod 数量，实现横向扩容、缩容。
+- 通过 ReplicaSet ，可以方便地调整某个应用的 Pod 实例数量，实现横向扩容、缩容，称为缩放（scale）。
 
 ## StatefulSet
 

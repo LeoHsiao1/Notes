@@ -24,7 +24,7 @@ spec:
   # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
   # paused: false                 # 是否暂停编排，默认为 false 。如果为 true ，则修改 spec.template 时不会触发更新部署
   # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态，但会继续尝试部署。执行 rollout pause 时不会累计该时长
-  replicas: 1                     # 期望运行的 Pod 副本数，默认为 1
+  replicas: 2                     # 期望运行的 Pod 副本数，默认为 1
   revisionHistoryLimit: 2         # 保留最近多少个历史版本的 ReplicaSet（不包括当前版本），可用于回滚（rollback）。默认为 10 ，设置为 0 则不保留
   selector:                       # 选择 Pod
     matchLabels:
@@ -42,7 +42,7 @@ spec:
 ```
 - Deployment 会自动创建 ReplicaSet 对象，用于运行指定数量的 Pod 副本。
   - 删除一个 Deployment 时，会级联删除其下级对象 ReplicaSet ，和 ReplicaSet 的下级对象 Pod 。
-  - 此时 Pod name 的格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
+  - Pod name 的格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
     ```sh
     nginx-65d9c7f6fc-szgbk
     ```
@@ -90,9 +90,9 @@ spec:
       ```yml
       strategy:
         type: RollingUpdate
-        rollingUpdate:              # 滚动更新的配置
-          maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数或百分数，默认为 25%
-          maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数或百分数，默认为 25%
+        rollingUpdate:            # 滚动更新的配置
+          maxUnavailable: 0       # 允许同时不可用的 Pod 数量。可以为整数或百分数，默认为 25%
+          maxSurge: 1             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数或百分数，默认为 25%
       ```
       滚动更新时，会尽量保持 `replicas - maxUnavailable ≤ availableReplicas ≤ replicas + maxSurge` 。
 
@@ -155,17 +155,83 @@ spec:
 
 ## StatefulSet
 
-：与 Deployment 类似，但部署的是有状态服务。
+：与 Deployment 类似，但用于部署有状态的 Pod 。
+- 相关概念：
+  - 无状态应用
+    - ：历史执行的任务不会影响新执行的任务。因此 Pod 可以随时销毁并从镜像重新创建。
+  - 有状态应用
+    - ：历史执行的任务会影响新执行的任务，因此需要存储一些历史数据。
+    - 将数据存储在容器中时，会随着容器一起销毁。因此建议将数据存储到挂载卷，或容器外的数据库。
+- 与 Deployment 相比，StatefulSet 的特点：
+  - 有序性
+    - ：StatefulSet 会按顺序创建 replicas 个 Pod （不会同时创建），给每个 Pod 分配一个从 0 开始递增的序号。
+    - 不过删除 StatefulSet 不会有序地删除 Pod ，可以先手动删除。
+  - 唯一性
+    - ：每个 Pod 副本是独特的，不可相互替换。
+    - Pod name 的格式为 `<StatefulSet_name>-<Pod_id>` 。
+
+  - 持久性
+    - 即使重启、重新创建 Pod ，同一序号的 Pod 使用的 Pod Name、Pod IP 不变
+    - 删除 Pod 时，不会自动删除其挂载的 volume
+
 
 <!--
-- 无状态应用：历史执行的任务不会影响新执行的任务。因此应用可以随时销毁并从镜像重新创建。
-- 有状态应用：历史执行的任务会影响新执行的任务，因此需要存储一些历史数据。
-  - 将数据存储在容器中时，会随着容器一起销毁。因此建议将数据存储在挂载卷，或容器外的数据库中。
-
-使用数据卷
 - 一个有状态服务的每个 Pod 使用独立的资源、配置文件，不能随时创建、销毁 Pod ，甚至连 Pod 名都不能改变。
-- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。
--->
+- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。 -->
+
+
+- 例：
+  ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: nginx
+    namespace: default
+  spec:
+    clusterIP: None
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      k8s-app: nginx
+
+  ---
+
+  apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    name: nginx
+    namespace: default
+  spec:
+    # podManagementPolicy: OrderedReady
+    replicas: 2
+    # revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        k8s-app: nginx
+    serviceName: nginx
+    template:
+      metadata:
+        labels:
+          k8s-app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:1.20
+    # updateStrategy:         # 更新部署的策略，注意与 strategy 的语法不同
+    #   rollingUpdate:
+    #     partition: 0
+    #   type: RollingUpdate
+  ```
+  - 上例创建了一个 Headless Service ，并配置到 StatefulSet 的 serviceName 。此时会自动给每个 Pod 创建子域名，格式为 `<Pod_name>.<Service_domain>` ，例：
+    ```sh
+    nginx-0.nginx.nlp-web.svc.cluster.local
+    nginx-1.nginx.nlp-web.svc.cluster.local
+    ```
+
+
+
 
 ## DaemonSet
 
@@ -182,20 +248,18 @@ spec:
     selector:
       matchLabels:
         k8s-app: nginx
+    # strategy:
+    #   type: RollingUpdate
     template:
       metadata:
         labels:
           k8s-app: nginx
       spec:
         containers:
-          - ...
-        # updateStrategy:   #
-        #   type: RollingUpdate
-        #   rollingUpdate:
-        #     maxSurge: 0
-        #     maxUnavailable: 1
+        - name: nginx
+          image: nginx:1.20
   ```
-- DaemonSet 的更新部署策略（updateStrategy）有两种：
+- DaemonSet 的更新部署策略（strategy）有两种：
   - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
   - RollingUpdate ：默认采用。
 

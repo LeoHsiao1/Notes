@@ -58,7 +58,7 @@
     type: ClusterIP
     clusterIP: 10.124.0.1   # 给该 Service 分配一个 clusterIP ，允许自行指定。在创建 Service 之后不允许修改，除非重建 Service
     selector:               # 通过 selector 选中一些 Pod ，进行反向代理
-      app: redis
+      k8s-app: redis
     ports:                  # 定义一组反向代理规则
     - name: redis
       port: 6379            # Service 监听的端口，供外部访问
@@ -144,7 +144,7 @@
     clusterIP: 10.124.0.1
     loadBalancerIP: 123.0.0.1
     selector:
-      app: redis
+      k8s-app: redis
     ports:
       - name: redis
         port: 6379
@@ -179,7 +179,7 @@
     namespace: default
   spec:
     selector:
-      app: redis
+      k8s-app: redis
     ports:
     - name: redis
       port: 6379
@@ -191,8 +191,7 @@
 
 ### Headless
 
-：配置 `clusterIP: None` 。此时 Service 没有 VIP ，只是 Service 名会被 DNS 解析到 Pod IP 。
-
+：配置 `clusterIP: None` 。此时 Service 没有 VIP ，访问 Service 名会被 DNS 解析到随机一个 Pod IP 。
 
 ## Service 相关
 

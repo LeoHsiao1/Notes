@@ -27,12 +27,9 @@ spec:
       k8s-app: nginx
   # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
   # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
-  # revisionHistoryLimit: 10      # 保留 Deployment 最近多少个历史版本，可用于回滚（rollback）。设置为 0 则不保留
+  # revisionHistoryLimit: 10      # 保留最近多少个历史版本的 ReplicaSet ，可用于回滚（rollback）。设置为 0 则不保留
   # strategy:                     # 更新部署的策略，默认为 RollingUpdate
   #   type: RollingUpdate
-  #   rollingUpdate:              # 滚动更新的配置
-  #     maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
-  #     maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
   template:                       # 定义 Pod 模板
     metadata:                     # Pod 的元数据
       labels:
@@ -76,16 +73,27 @@ spec:
     ```
 
 - spec.template 是必填字段，表示 Pod 配置文件的模板。
-  - 当用户修改了 spec.template 之后，Deployment 会自动创建一个新版本的 ReplicaSet ，并删除旧版本的 ReplicaSet 。该过程称为更新部署。
-  - ReplicaSet 会给 Pod 添加一个 `pod-template-hash=xxx` 标签，从而区分不同版本的 Pod 。
-  - 修改 Deployment 的其它配置，比如 replicas ，不会触发更新部署。
+  - 当用户修改了 spec.template 之后，Deployment 会自动创建一个新版本的 ReplicaSet ，并将旧版本的 ReplicaSet 的 replicas 减至 0 。该过程称为更新部署。
+    - ReplicaSet 在创建 Pod 时会添加一个 `pod-template-hash` 标签，从而区分不同版本的 Pod 。
+    - Deployment 会保留最近 revisionHistoryLimit 个历史版本的 ReplicaSet ，可用于回滚。
+  - 修改 Deployment 的其它配置，比如 replicas ，不算版本变化，不会触发更新部署。
+    - 创建 Deployment 之后不允许修改 spec.selector 。
 
 - Deployment 的更新部署策略（strategy）有两种：
   - Recreate
-    - ：重建式更新。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
+    - ：直接重建。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
   - RollingUpdate
-    - ：滚动式更新。先创建新 Pod ，等它们可用了，再删除旧 Pod 。
+    - ：滚动更新。先创建新 Pod ，等它们可用了，再删除旧 Pod 。
     - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
+    - 例：
+      ```yml
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:              # 滚动更新的配置
+          maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
+          maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
+      ```
+      滚动更新时，会尽量保持 `replicas - maxUnavailable ≤ availableReplicas ≤ replicas + maxSurge` 。
 
 ### 状态
 
@@ -183,15 +191,15 @@ lastUpdateTime        # 上一次更新该状态的时间
       spec:
         containers:
           - ...
-    # updateStrategy:
-    #   type: RollingUpdate
-    #   rollingUpdate:
-    #     maxSurge: 0
-    #     maxUnavailable: 1
+        # updateStrategy:   #
+        #   type: RollingUpdate
+        #   rollingUpdate:
+        #     maxSurge: 0
+        #     maxUnavailable: 1
   ```
-  - DaemonSet 的更新部署策略（updateStrategy）有两种：
-    - RollingUpdate
-    - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
+- DaemonSet 的更新部署策略（updateStrategy）有两种：
+  - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
+  - RollingUpdate ：默认采用。
 
 ## Job
 

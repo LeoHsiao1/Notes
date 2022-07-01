@@ -257,7 +257,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
     ```
 
 - Pod 终止的常见原因：
-  - Pod 自己终止，进入 Succeeded 或 Failed 阶段。
+  - Pod 自行终止，进入 Succeeded 或 Failed 阶段。
   - kubelet 主动终止 Pod 。
     - 一般流程如下：
       1. 向容器内主进程发送 SIGTERM 信号。

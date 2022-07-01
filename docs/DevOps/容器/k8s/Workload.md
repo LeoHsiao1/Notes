@@ -24,7 +24,7 @@ spec:
   # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
   # paused: false                 # 是否暂停编排，默认为 false 。如果为 true ，则修改 spec.template 时不会触发更新部署
   # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态，但会继续尝试部署。执行 rollout pause 时不会累计该时长
-  replicas: 1                     # 期望运行的 Pod 实例数，默认为 1
+  replicas: 1                     # 期望运行的 Pod 副本数，默认为 1
   revisionHistoryLimit: 2         # 保留最近多少个历史版本的 ReplicaSet（不包括当前版本），可用于回滚（rollback）。默认为 10 ，设置为 0 则不保留
   selector:                       # 选择 Pod
     matchLabels:
@@ -40,7 +40,7 @@ spec:
       - name: nginx               # 该 Pod 中的第一个容器名
         image: nginx:1.20
 ```
-- Deployment 会自动创建 ReplicaSet 对象，用于运行指定数量的 Pod 实例。
+- Deployment 会自动创建 ReplicaSet 对象，用于运行指定数量的 Pod 副本。
   - 删除一个 Deployment 时，会级联删除其下级对象 ReplicaSet ，和 ReplicaSet 的下级对象 Pod 。
   - 此时 Pod name 的格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
     ```sh
@@ -75,7 +75,7 @@ spec:
 
 - spec.template 是必填字段，表示 Pod 配置文件的模板。
   - 当用户修改了 spec.template 之后，Deployment 会自动创建一个新版本的 ReplicaSet ，并将旧版本的 ReplicaSet 的 replicas 减至 0 。该过程称为更新部署。
-    - ReplicaSet 在创建 Pod 时会添加一个 `pod-template-hash` 标签，从而区分不同版本的 Pod 。
+    - ReplicaSet 会根据 template 创建 Pod ，并添加 `metadata.ownerReferences` 和 `metadata.labels.pod-template-hash` ，用于区分不同版本的 Pod 。
     - Deployment 会保留最近 revisionHistoryLimit 个历史版本的 ReplicaSet ，可用于回滚。
   - 修改 Deployment 的其它配置，比如 replicas ，不算版本变化，不会触发更新部署。
     - 创建 Deployment 之后不允许修改 spec.selector 。
@@ -138,14 +138,20 @@ spec:
 
 ## ReplicaSet
 
-：副本集（RC），用于运行指定数量的 Pod 实例。
-- ReplicaSet 取代了 k8s 早期版本的副本控制器（Replication Controller ，RS），会被 Deployment 调用。
-- 假设用户指定运行 n 个 Pod ，ReplicaSet 会自动控制 available Pod 数量，使其等于 n 。
-  - 如果可用的 Pod 数多于 n ，则停止多余的 Pod 。
-  - 如果可用的 Pod 数少于 n ，则创建空缺数量的 Pod 。包括以下情况：
+：副本集（RC），用于运行指定数量的 Pod 副本。
+- ReplicaSet 取代了 k8s 早期的副本控制器（Replication Controller ，RS）。
+  - 使用 Deployment 时，会自动创建、管理 ReplicaSet ，不必用户直接操作 ReplicaSet 。
+- 假设用户指定运行 replicas 个 Pod ，ReplicaSet 会自动控制 available Pod 数量，使其等于 replicas 。
+  - 如果可用的 Pod 数多于 replicas ，则停止多余的 Pod 。
+  - 如果可用的 Pod 数少于 replicas ，则创建空缺数量的 Pod 。包括以下情况：
     - 已有的 Pod 故障，比如部署失败、部署之后未通过健康检查。
     - 已有的 Pod 需要的部署资源不足，比如 Pod 所在 Node 故障。
-- 通过 ReplicaSet ，可以方便地调整某个应用的 Pod 实例数量，实现横向扩容、缩容，称为缩放（scale）。
+- 通过修改 replicas ，可以方便地调整某个应用的 Pod 副本数量，实现横向扩容、缩容，称为缩放（scale）。
+  - 减少 replicas 时，优先删除以下 Pod ：
+    - unschedulable、pending 状态的 Pod 。
+    - 给 Pod 添加注释 `controller.kubernetes.io/pod-deletion-cost: ±<int>` ，表示删除 Pod 的成本，默认为 0 。优先删除成本较低的 Pod 。
+    - 调度的 Pod 副本数较多的节点上的 Pod 。
+    - 创建时间较晚的 Pod 。
 
 ## StatefulSet
 
@@ -163,7 +169,7 @@ spec:
 
 ## DaemonSet
 
-：与 Deployment 类似，但是在每个 node 上只部署一个 Pod 实例。适合监控、日志等 daemon 服务。
+：与 Deployment 类似，但是在每个 node 上只部署一个 Pod 副本。适合监控、日志等 daemon 服务。
 - DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
 - 例：
   ```yml
@@ -195,9 +201,10 @@ spec:
 
 ## Job
 
-：只执行一次的任务，即部署一次某个 Pod 。
+：一次性任务，适合部署运行一段时间就会自行终止、不需要重启的 Pod 。
+
 
 ## CronJob
 
-：定时任务，定时创建并执行某个 Job 。
+：定时任务，用于定时创建并执行某个 Job 。
 - 由 kube-controller-manager 定时调度，而后者默认采用 UTC 时区。

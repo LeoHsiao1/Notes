@@ -234,19 +234,21 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 - 一般的 Pod 会按顺序经过 Pending、Running、Succeeded 阶段，但也可能在几个阶段之间反复切换。
 - k8s 定义了上述几个 Pod phase ，不过通常还会用 Scheduled、terminated 等状态（status）来形容 Pod 。
 
-### Pending
+### 启动
 
-- Pending 阶段的 Pod 需要经过以下主要步骤，才能进入 Running 阶段。
+- 一个新建的 Pod ，主要经过以下步骤，才能从 Pending 阶段进入 Running 阶段。
   - 调度节点
-    - Pod 被调度到一个节点之后，不能迁移到其它节点。只能在其它节点创建新的 Pod ，即使采用相同的 Pod name ，但 UID 也不同。
+    - Pod 被调度到一个节点之后，不能迁移到其它节点。如果在其它节点创建新的 Pod ，即使采用相同的 Pod name ，但 UID 也会不同。
   - 拉取镜像
     - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间将按 1s、10s、20s、40s 的形式倍增，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
+  - 创建容器
+    - 比如根据镜像配置容器、挂载数据卷。
   - 启动容器
     - 先启动 init 容器，再启动标准容器。
 
 ### 终止
 
-- 如果 Pod 中所有容器从 running 状态变为 terminated 状态时，则称该 Pod 处于终止（terminated）状态。
+- 如果 Pod 中所有容器从 running 状态变为 terminated 状态，则称该 Pod 处于终止（terminated）状态。
   - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
   - Pod 终止时，可能触发 restartPolicy ，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
   - 可添加一个 crontab 任务来删除 Failed Pod ：

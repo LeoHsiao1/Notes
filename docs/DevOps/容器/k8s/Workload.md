@@ -42,18 +42,20 @@ spec:
       - name: nginx               # 该 Pod 中的第一个容器名
         image: nginx:1.20
 ```
-- 一个 Deployment 可以创建多个 Pod 实例。
-  - Pod 的命名格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
+- Deployment 会自动创建 ReplicaSet 对象，负责运行指定数量的 Pod 实例。
+  - 删除一个 Deployment 时，会级联删除其下级对象 ReplicaSet ，和 ReplicaSet 的下级对象 Pod 。
+  - 此时 Pod name 的格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
     ```sh
     nginx-65d9c7f6fc-szgbk
     ```
-    - 用 kubectl 命令管理 Pod 时，不能事先知道 Pod 的具体名称，应该通过 label 来筛选 Pod 。
+    - 因此不能事先知道 Deployment 创建的 Pod name ，通常通过 spec.selector 来筛选 Pod 。
+
   - 每个 Pod 中，容器的命名格式为 `k8s_<container_name>_<pod_name>_<k8s_namespace>_<pod_uid>_<restart_id>` ，例如：
     ```sh
     k8s_POD_nginx-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0   # Pod 中内置的 pause 容器，其容器名为 POD
     k8s_nginx_nginx-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0
     ```
-    - Pod 重启时，会创建新的容器，容器名末尾的 restart_id 从 0 开始递增。
+    - Pod 重启时，会创建一组新的容器，容器名末尾的 restart_id 从 0 开始递增。
 
 - spec.selector 是必填字段，称为标签选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 进行管理，筛选结果可能有任意个（包括 0 个）。
   - 当 selector 中没有设置筛选条件时，默认选中所有对象。
@@ -63,6 +65,7 @@ spec:
     selector:
       matchLabels:
         k8s-app: nginx        # 要求 labels 中存在该键值对
+
       matchExpressions:
         - key: k1             # 要求存在 app 标签，且取值包含于指定列表
           operator: In
@@ -73,12 +76,12 @@ spec:
     ```
 
 - spec.template 是必填字段，表示 Pod 配置文件的模板。
-  - 当用户修改了 template 之后（改变 ReplicaSet 不算），k8s 会创建一个新版本的 Deployment ，据此部署新的 Pod ，并删除旧的 Pod 。该过程称为更新部署。
-  - 删除 Deployment 时，k8s 会自动销毁对应的 Pod 。
+  - 当用户修改了 spec.template 之后，Deployment 会创建一个新版本的 ReplicaSet ，更新 pod-template-hash 标签的值，并删除旧版本 ReplicaSet 。该过程称为更新部署。
+  - 修改 Deployment 的其它配置，比如 replicas ，不会触发更新部署。
 
 - Deployment 的更新部署策略（strategy）有两种：
   - Recreate
-    - ：先销毁旧 Pod ，再部署新 Pod 。
+    - ：先销毁旧 ReplicaSet 的 Pod ，再部署新 ReplicaSet 的 Pod 。
   - RollingUpdate
     - ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
     - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。

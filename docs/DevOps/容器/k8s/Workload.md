@@ -16,7 +16,7 @@ apiVersion: v1
 kind: Deployment
 metadata:
   annotations:
-    deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置是第几次修改版本，从 1 开始递增
+    deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置文件是第几次修改的版本，从 1 开始递增
   name: nginx
   namespace: default
   # generation: 1                 # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
@@ -27,10 +27,10 @@ spec:
       k8s-app: nginx
   # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
   # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态
-  # revisionHistoryLimit: 10      # 保留 Deployment 的多少个旧版本，可用于回滚（rollback）。设置为 0 则不保留
-  # strategy:                     # 更新部署的策略，默认为滚动更新
+  # revisionHistoryLimit: 10      # 保留 Deployment 最近多少个历史版本，可用于回滚（rollback）。设置为 0 则不保留
+  # strategy:                     # 更新部署的策略，默认为 RollingUpdate
   #   type: RollingUpdate
-  #   rollingUpdate:              # 滚动更新过程中的配置
+  #   rollingUpdate:              # 滚动更新的配置
   #     maxUnavailable: 25%       # 允许同时不可用的 Pod 数量。可以为整数，或者百分数，默认为 25%
   #     maxSurge: 25%             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数，或者百分数，默认为 25%
   template:                       # 定义 Pod 模板
@@ -76,22 +76,22 @@ spec:
     ```
 
 - spec.template 是必填字段，表示 Pod 配置文件的模板。
-  - 当用户修改了 spec.template 之后，Deployment 会创建一个新版本的 ReplicaSet ，并删除旧版本 ReplicaSet 。该过程称为滚动更新部署（rollout）。
+  - 当用户修改了 spec.template 之后，Deployment 会自动创建一个新版本的 ReplicaSet ，并删除旧版本的 ReplicaSet 。该过程称为更新部署。
   - ReplicaSet 会给 Pod 添加一个 `pod-template-hash=xxx` 标签，从而区分不同版本的 Pod 。
   - 修改 Deployment 的其它配置，比如 replicas ，不会触发更新部署。
 
 - Deployment 的更新部署策略（strategy）有两种：
   - Recreate
-    - ：先销毁旧 ReplicaSet 的 Pod ，再部署新 ReplicaSet 的 Pod 。
+    - ：重建式更新。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
   - RollingUpdate
-    - ：先部署新 Pod ，等它们可用了，再销毁旧 Pod 。
+    - ：滚动式更新。先创建新 Pod ，等它们可用了，再删除旧 Pod 。
     - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
 
 ### 状态
 
 - Deployment 存在多种 conditions ：
   ```sh
-  Progressing       # 处理中，比如正在部署或销毁 Pod
+  Progressing       # 处理中，比如正在部署或删除 Pod
   Complete          # 处理完成，比如部署完所有 Pod 且可用，或者该 Deployment 是停止运行的旧版本
   Available         # 可用，即 availableReplicas 不低于 ReplicaSet 要求的 maxUnavailable
   ReplicaFailure    # 处理失败，比如不能部署 Pod 、处于 Progressing 状态且超时
@@ -120,7 +120,7 @@ spec:
       lastTransitionTime: "2022-02-10T15:53:46Z"
       lastUpdateTime: "2022-02-10T15:53:46Z"
   ```
-  - 一般的 Pod 通过 readinessProbe 健康检查之后，就会进入 Ready 状态，加入 EndPoints 。但 Deployment 要求一个 Pod 保持 Ready 状态至少 minReadySeconds 秒，才加入 EndPoints ，并使 availableReplicas 加一。
+  - 一般的 Pod 通过 readinessProbe 健康检查之后，就会进入 Ready 状态，加入 EndPoints 。但 Deployment 要求一个 Pod 保持 Ready 状态至少 minReadySeconds 秒，才加入 EndPoints ，并使 availableReplicas 计数加一。
 
 <!--
 lastTransitionTime    # 上一次进入该状态的时间？？？
@@ -183,12 +183,15 @@ lastUpdateTime        # 上一次更新该状态的时间
       spec:
         containers:
           - ...
-    # updateStrategy:           # DaemonSet 的更新部署策略（updateStrategy）有两种：RollingUpdate 、OnDelete
+    # updateStrategy:
     #   type: RollingUpdate
     #   rollingUpdate:
     #     maxSurge: 0
     #     maxUnavailable: 1
   ```
+  - DaemonSet 的更新部署策略（updateStrategy）有两种：
+    - RollingUpdate
+    - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
 
 ## Job
 

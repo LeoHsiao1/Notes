@@ -1011,6 +1011,9 @@
   mongodb_ss_uptime                                       # 服务器的运行时长，单位为秒
   mongodb_ss_connections{conn_type="current"}             # 客户端连接数
 
+  # 关于主机
+  mongodb_sys_cpu_num_cpus                                # 主机的 CPU 核数
+
   # 关于 collection
   {__name__=~'mongodb_.*_storageStats_count'         , database="xx", collection="xx"}  # 文档数
   {__name__=~'mongodb_.*_storageStats_size'          , database="xx", collection="xx"}  # 体积，单位 bytes
@@ -1025,9 +1028,6 @@
   # 关于锁
   delta(mongodb_ss_locks_acquireCount{lock_mode="w"}[1m]) # 新加锁的数量。R 表示共享锁，W 表示独占锁，r 表示意向共享锁，w 表示意向独占锁
   mongodb_ss_globalLock_currentQueue{count_type="total"}  # 被锁阻塞的操作数
-
-  # 关于主机的状态
-  mongodb_sys_cpu_num_cpus    # 主机的 CPU 核数
   ```
 
 ### mysqld_exporter
@@ -1047,7 +1047,7 @@
       #   - --web.listen-address=:9104
       #   - --web.telemetry-path=/metrics
       environment:
-        DATA_SOURCE_NAME: "user:password@(10.0.0.1:3306)/"
+        DATA_SOURCE_NAME: user:password@(10.0.0.1:3306)/
       ports:
         - 9104:9104
       volumes:
@@ -1068,15 +1068,15 @@
   delta(mysql_global_status_bytes_sent[1m])             # 网络发送的 bytes
 
   # 关于客户端
-  mysql_global_status_threads_connected                 # 当前的客户端连接数
+  mysql_global_status_threads_connected                 # 客户端连接数
   mysql_global_status_threads_running                   # 正在执行命令的客户端连接数，即非 sleep 状态
   delta(mysql_global_status_aborted_connects[1m])       # 客户端建立连接失败的连接数，比如登录失败
   delta(mysql_global_status_aborted_clients[1m])        # 客户端连接之后，未正常关闭的连接数
 
   # 关于命令
-  delta(mysql_global_status_commands_total{command="xx"}[1m]) > 0     # 各种命令的数量
-  delta(mysql_global_status_handlers_total{handler="xx"}[1m]) > 0     # 各种操作的数量
-  delta(mysql_global_status_handlers_total{handler="commit"}[1m]) > 0 # commit 的数量
+  delta(mysql_global_status_commands_total{command="xx"}[1m]) > 0     # 每分钟各种命令的次数
+  delta(mysql_global_status_handlers_total{handler="xx"}[1m]) > 0     # 每分钟各种操作的次数
+  delta(mysql_global_status_handlers_total{handler="commit"}[1m]) > 0 # 每分钟 commit 的次数
   delta(mysql_global_status_table_locks_immediate[1m])  # 请求获取锁，且立即获得的请求数
   delta(mysql_global_status_table_locks_waited[1m])     # 请求获取锁，但需要等待的请求数。该值越少越好
 
@@ -1088,4 +1088,67 @@
   mysql_global_status_buffer_pool_pages{state="data"}   # 包含数据的数据页数，包括洁页、脏页
   mysql_global_status_buffer_pool_dirty_pages           # 脏页数
   ```
-  - 这些监控指标主要从 MySQL 的 `SHOW GLOBAL STATUS` 和 `SHOW GLOBAL VARIABLES` 获得。
+  - 这些监控指标主要从 MySQL 的 `SHOW GLOBAL STATUS` 和 `SHOW GLOBAL VARIABLES` 命令获得。
+
+### redis_exporter
+
+：用于监控 Redis 服务器。
+- [GitHub](https://github.com/oliver006/redis_exporter)
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    redis_exporter:
+      container_name: redis_exporter
+      image: oliver006/redis_exporter:v1.43.0
+      restart: unless-stopped
+      environment:
+        # REDIS_EXPORTER_WEB_LISTEN_ADDRESS: 0.0.0.0:9121
+        # REDIS_EXPORTER_WEB_TELEMETRY_PATH: /metrics
+        # REDIS_EXPORTER_LOG_FORMAT: txt        # 日志格式，默认为 txt ，可改为 json
+
+        REDIS_ADDR: redis://10.0.0.1:6379
+        # REDIS_USER: ***
+        REDIS_PASSWORD: ******
+        # REDIS_EXPORTER_IS_CLUSTER: 'false'    # 目标 redis 是否为集群模式
+        # REDIS_EXPORTER_CHECK_KEYS: db0=key1,db1=key1  # 在指定 db 中通过 SCAN 命令查找一些 key ，然后监控它们的值、长度
+      ports:
+        - 9121:9121
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+  ```
+
+- 指标示例：
+  ```sh
+  # 关于服务器
+  redis_up                                    # 服务器是否在线
+  redis_uptime_in_seconds                     # 运行时长，单位 s
+  rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])  # 占用 CPU 核数
+  redis_memory_used_bytes                     # 占用内存量
+  redis_memory_max_bytes                      # 限制的最大内存，如果没限制则为 0
+  delta(redis_net_input_bytes_total[1m])      # 网络接收的 bytes
+  delta(redis_net_output_bytes_total[1m])     # 网络发送的 bytes
+
+  # 关于客户端
+  redis_connected_clients                     # 客户端连接数
+  redis_connected_clients / redis_config_maxclients # 连接数使用率
+  redis_rejected_connections_total            # 拒绝的客户端连接数
+  redis_connected_slaves                      # slave 连接数
+
+  # 关于命令
+  delta(redis_commands_total{cmd="xx"}[1m])   # 每分钟各种 command 的次数
+  delta(redis_commands_duration_seconds_total{cmd="xx"}[1m])   # 每分钟各种 command 的耗时
+  delta(redis_keyspace_hits_total[1m])        # 每分钟查询 hits 的次数
+  delta(redis_keyspace_misses_total[1m])      # 每分钟查询 miss 的次数，与 hits 结合可计算命中率
+
+  # 关于 db
+  redis_db_keys{db="xx"}                      # 各个 db 的 key 数量，包括 expiring 状态的
+  redis_db_keys_expiring                      # 已过期，尚未删除的 key 数量
+  redis_db_avg_ttl_seconds                    # 各个 db 的平均 TTL
+
+  # 关于 key
+  delta(redis_expired_keys_total[1m])         # 每分钟过期的 key 数量
+  redis_evicted_keys_total                    # 被 maxmemory-policy 驱逐的 key 数量
+  ```
+  - 这些监控指标主要从 Redis 的 `INFO` 命令获得。

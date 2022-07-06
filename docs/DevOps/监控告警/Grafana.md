@@ -187,10 +187,9 @@
   - 点击 "State history" 可以查看告警历史。
   - 点击 "Test Rule" 可以测试告警条件。
 
-- Grafana 告警功能的缺点：
+- Grafana 内部集成了一个 Alertmanager ，用于对警报进行分组管理。
   - 只有 Graph 类型的 pannel 支持设置告警。
   - 在 pannel 中使用变量时，不支持设置告警。
-  - 不擅长处理大量告警。
 
 告警规则示例：
 - 下例是一种 Alert 的触发条件：

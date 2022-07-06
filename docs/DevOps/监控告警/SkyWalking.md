@@ -1,6 +1,6 @@
 # SkyWalking
 
-：一个 Web 服务器，支持分布式链路监控、应用性能监控（APM）。
+：一个 Web 服务器，支持链路监控、应用性能监控（APM）。
 - [官方文档](https://skywalking.apache.org/docs/main/latest/readme/)
 - 2015 年由中国开发人员吴晟开源，2017 年底进入 Apache 孵化器。
 
@@ -103,5 +103,5 @@
     -Dskywalking.collector.backend_service=10.0.0.1:11800 \
     -jar test.jar
     ```
-    详情参考[官方文档](https://skywalking.apache.org/docs/main/v8.4.0/en/setup/service-agent/java-agent/readme/)
-
+    - 这样能监控到 Java 进程对外通信的流量。不过想实现链路追踪的功能，还需要在代码里埋点 traceId 。
+    - 详情参考[官方文档](https://skywalking.apache.org/docs/skywalking-java/v8.4.0/en/setup/service-agent/java-agent/readme/)

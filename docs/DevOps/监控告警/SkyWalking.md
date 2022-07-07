@@ -16,7 +16,7 @@
       environment:
         - discovery.type=single-node
         - bootstrap.memory_lock=true
-        - "ES_JAVA_OPTS=-Xms2G -Xmx2G"
+        - "ES_JAVA_OPTS=-Xms2G -Xmx2G -XX:MaxDirectMemorySize=1g"
       ports:
         - 9200:9200
       ulimits:
@@ -27,7 +27,7 @@
     oap:
       image: apache/skywalking-oap-server:8.9.1
       environment:
-        JAVA_OPTS: "-Xms2G -Xmx2G"
+        JAVA_OPTS: "-Xms2G -Xmx2G -XX:MaxDirectMemorySize=1g"
         SW_STORAGE: elasticsearch
         SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
         SW_HEALTH_CHECKER: default
@@ -41,6 +41,7 @@
     ui:
       image: apache/skywalking-ui:8.9.1
       environment:
+        JAVA_OPTS: "-Xms1G -Xmx1G -XX:MaxDirectMemorySize=100M"
         SW_OAP_ADDRESS: http://oap:12800
       ports:
         - 8080:8080
@@ -49,12 +50,15 @@
 ## 原理
 
 - SkyWalking 系统分为多个组件：
-  - UI ：Web 前端。
-  - OAP ：Web 后端。
-  - Storage ：负责存储监控数据。
-    - 支持 ES、MySQL 等多种数据库。
+  - UI
+    - ：Web 前端，采用 Java 开发。
+  - OAP
+    - ：Web 后端，采用 Java 开发。
+  - Storage
+    - ：负责存储监控数据，可以是 ES、MySQL 等多种数据库。
     - 为了保证监控的实时性，这里不采用消息队列，当数据量过大时可以降低采样率。
-  - agent ：采集业务服务的监控数据，发送给 OAP 。
+  - agent
+    - ：采集业务服务的监控数据，发送给 OAP 。
 
 - SkyWalking 监控的主要概念：
   - service

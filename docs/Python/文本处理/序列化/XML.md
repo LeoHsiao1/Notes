@@ -23,17 +23,15 @@
   - 标签用尖括号标记。
   - 标签、值都是字符串，但是不必加引号作为定界符。
 
-- 每个元素有两个标签，前一个标签称为开始标签，前一个标签称为结束标签。
-  如果元素没有值，则可以合并成一个标签，如下：
+- 每个元素有两个标签，前一个标签称为开始标签，前一个标签称为结束标签。如果元素没有值，则可以合并成一个标签，如下：
   ```xml
   <name />
   <name id='1' />
   ```
 
-- 可以在开始标签中加上属性。
-  属性是键值对格式，且它的值必须要用双引号作为定界符。如下：
+- 可以在开始标签中加上属性。属性是键值对格式，且它的值必须要用双引号作为定界符。如下：
   ```xml
-  <note date="20191001" time="12:00">
+  <note date="20201001" time="12:00">
   Hello World
   </note>
   ```
@@ -45,7 +43,18 @@
     <name>one</name>
   </student>
   ```
-  - 一个 XML 文档中最外层的元素称为“根元素”。
+  - 一个 XML 文档中最外层的元素称为根元素。
+
+### 转义字符
+
+- 在 XML 文本中，以下左侧字符需要替换成右侧的转义字符：
+  ```sh
+  <     &lt;
+  >     &gt;
+  &     &amp;
+  '     &apos;
+  "     &quot;
+  ```
 
 ## ♢ xml
 
@@ -160,7 +169,7 @@
   >>> etree.indent(root, space='  ')
   >>> root.text                           # 处理后，元素值加上了缩进
   '\n  '
-  >>> print(etree.tostring(root, encoding='utf-8').decode()) 
+  >>> print(etree.tostring(root, encoding='utf-8').decode())
   <root>
     <id>1</id>
   </root>
@@ -168,7 +177,7 @@
   处理 HTML 格式：
   ```py
   >>> root = etree.XML('<html><head/><body><p>Hello<br/>World</p></body></html>')
-  >>> etree.tostring(root, method='xml')  
+  >>> etree.tostring(root, method='xml')
   b'<html><head/><body><p>Hello<br/>World</p></body></html>'
   >>> etree.tostring(root, method='html')
   b'<html><head></head><body><p>Hello<br>World</p></body></html>'   # HTML 标准的标签有些许差异

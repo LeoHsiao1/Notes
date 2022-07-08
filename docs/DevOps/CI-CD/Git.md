@@ -56,6 +56,10 @@ git diff <refs> <refs>    # 显示从第一个版本到第二个版本的差异�
         --name-only       # 只显示差异文件列表
         --no-renames      # 不自动识别 rename 动作，直接显示 create、delete
 
+git ls-remote             # 列出远程仓库的所有 refs
+    --heads               # 只列出所有分支，格式如 refs/heads/master
+    --tags                # 只列出所有标签，格式如 refs/tags/v1.0
+
 git for-each-ref
     --points-at=<name>    # 列出与一个名称相关的所有 refs
 ```

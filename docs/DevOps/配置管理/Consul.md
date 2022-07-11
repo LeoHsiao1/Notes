@@ -18,11 +18,10 @@
   - server
     - ：比 client 多了维护集群的责任。
     - 一个 Consul 集群至少要有 1 个 server 节点，负责存储集群数据。
-    - 集群采用 Raft 算法实现分布式一致性。
+    - 集群采用 Raft 算法实现分布式一致性，建议部署 3 或 5 个 server 。
       - server 之间会自行选出一个 server 担任 leader ，负责引导集群。其它 server 则担任 follower 。
       - 每次修改集群数据时需要 quorum 个 server 同意。
-    - 建议部署 3 或 5 个 server ，此时允许 1 或 2 个 server 故障，实现高可用。
-      - client 数量不影响集群的可用性，可以部署上万节点。
+      - client 可以部署上万实例，不影响集群的可用性。
 
 - agent 的状态：
   - agent 进程启动，通过 join 命令加入集群，标记为 alive 状态。

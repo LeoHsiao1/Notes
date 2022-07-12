@@ -7,32 +7,6 @@
 
 ## 集成类型
 
-### Prometheus
-
-- 本身集成了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
-- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
-- 指标示例：
-  ```sh
-  prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息
-
-  time() - process_start_time_seconds                             # 运行时长（s）
-  rate(process_cpu_seconds_total[1m])                             # 占用 CPU 核数
-  process_resident_memory_bytes                                   # 占用内存
-  prometheus_tsdb_storage_blocks_bytes                            # tsdb block 占用的磁盘空间
-  sum(delta(prometheus_http_requests_total[1m])) by (code)        # 每分钟收到 HTTP 请求的次数
-  sum(delta(prometheus_http_request_duration_seconds_sum[1m]))    # 每分钟处理 HTTP 请求的耗时（s）
-
-  count(up == 1)                                                  # target 在线数
-  sum(scrape_samples_scraped)                                     # scrape 的指标数
-  sum(scrape_duration_seconds)                                    # scrape 的耗时（s）
-  sum(delta(prometheus_rule_evaluations_total[1m])) without (rule_group)          # rule 每分钟的执行次数
-  sum(delta(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
-  delta(prometheus_rule_evaluation_duration_seconds_sum[1m])                      # rule 每分钟的执行耗时（s）
-
-  ALERTS{alertname="xxx", alertstate="pending|firing"}            # 存在的警报
-  ALERTS_FOR_STATE{alertname="xxx"}                               # 警报开始的时间戳（这是 pending 状态的开始时间，不能区分 firing 状态）
-  ```
-
 ### Alertmanager
 
 - 本身集成了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
@@ -224,6 +198,32 @@
   kubelet_container_log_filesystem_used_bytes                               # 每个 container 的日志占用的磁盘空间
   ```
 
+### Prometheus
+
+- 本身集成了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
+- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
+- 指标示例：
+  ```sh
+  prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息
+
+  time() - process_start_time_seconds                             # 运行时长（s）
+  rate(process_cpu_seconds_total[1m])                             # 占用 CPU 核数
+  process_resident_memory_bytes                                   # 占用内存
+  prometheus_tsdb_storage_blocks_bytes                            # tsdb block 占用的磁盘空间
+  sum(delta(prometheus_http_requests_total[1m])) by (code)        # 每分钟收到 HTTP 请求的次数
+  sum(delta(prometheus_http_request_duration_seconds_sum[1m]))    # 每分钟处理 HTTP 请求的耗时（s）
+
+  count(up == 1)                                                  # target 在线数
+  sum(scrape_samples_scraped)                                     # scrape 的指标数
+  sum(scrape_duration_seconds)                                    # scrape 的耗时（s）
+  sum(delta(prometheus_rule_evaluations_total[1m])) without (rule_group)          # rule 每分钟的执行次数
+  sum(delta(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
+  delta(prometheus_rule_evaluation_duration_seconds_sum[1m])                      # rule 每分钟的执行耗时（s）
+
+  ALERTS{alertname="xxx", alertstate="pending|firing"}            # 存在的警报
+  ALERTS_FOR_STATE{alertname="xxx"}                               # 警报开始的时间戳（这是 pending 状态的开始时间，不能区分 firing 状态）
+  ```
+
 ### ZooKeeper
 
 - 可启用 exporter API ，默认监听 7000 端口， metrics_path 为 `/metrics` 。
@@ -252,6 +252,192 @@
   ```
 
 ## 通用类型
+
+### blackbox_exporter
+
+：提供探针（probe）的功能，可以通过 DNS、ICMP、TCP、HTTP 等通信监控服务的状态。
+- [GitHub](https://github.com/prometheus/blackbox_exporter)
+
+#### 配置
+
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    blackbox_exporter:
+      container_name: blackbox_exporter
+      image: prom/blackbox-exporter:v0.19.0
+      restart: unless-stopped
+      # command:
+      #   - --web.listen-address=:9115
+      #   - --config.file=/etc/blackbox_exporter/config.yml
+      ports:
+        - 9115:9115
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        # - ./config.yml:/etc/blackbox_exporter/config.yml
+  ```
+
+- 可以手动发出 HTTP 请求，调用探针：
+  - 使用 icmp 模块，检测目标主机能否 ping 通，也会检测出 DNS 耗时：
+    ```sh
+    curl 'http://localhost:9115/probe?module=icmp&target=baidu.com'
+    ```
+  - 使用 tcp_connect 模块，检测目标主机的 TCP 端口能否连通：
+    ```sh
+    curl 'http://localhost:9115/probe?module=tcp_connect&target=baidu.com:80'
+    ```
+  - 使用 http_2xx 模块，检测目标网站的 HTTP 状态码是否为 2xx ：
+    ```sh
+    curl 'http://localhost:9115/probe?module=http_2xx&target=http://baidu.com'
+    ```
+
+- 在 Prometheus 中加入 job 配置，调用探针：
+  ```yml
+  - job_name: blackbox_exporter
+    metrics_path: /probe
+    params:
+      module: [http_2xx]                # 使用的模块
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: '10.0.0.1:9115'    # blackbox_exporter 的地址
+    static_configs:
+      - targets: ['10.0.0.2']
+  ```
+
+- blackbox_exporter 的配置文件中默认定义了一些功能模块，可以在其中加入自定义的模块，如下：
+  ```yml
+  modules:
+    http_2xx_example:                   # 定义一个功能模块
+      prober: http                      # 探针的类型，可以是 dns、icmp、tcp、http
+      timeout: 2m                       # 每次探测的超时时间，超过则放弃。默认为 2 m
+      http:                             # 对应 prober 类型的配置参数
+        # 关于每次探测时发出的 HTTP 请求
+        method: GET                     # 请求方法，默认为 GET
+        headers:
+          <string>: <string>
+        body: <string>
+        basic_auth:
+          username: <string>
+          password: <string>
+        proxy_url: <string>
+        preferred_ip_protocol: ip6      # DNS 解析时，优先采用的 IP 协议，默认为 IPv6
+        ip_protocol_fallback: true      # 当 preferred_ip_protocol 不可用时，是否允许另一种 IP 协议。默认为 true
+
+        # 关于 HTTPS
+        fail_if_ssl: false              # 如果采用 SSL ，是否探测失败
+        fail_if_not_ssl: false          # 如果不采用 SSL ，是否探测失败
+        tls_config:
+          insecure_skip_verify: false   # 是否跳过检验证书
+
+        # 关于每次探测时收到的 HTTP 响应
+        valid_status_codes: <int>,...   # 有效的状态码，默认为 2xx 。如果出现其它值，则探测失败
+        valid_http_versions:            # 有效的 HTTP 协议版本
+          - HTTP/1.1
+          - HTTP/2.0
+        compression: 'gzip'             # 响应 body 的解压算法，默认为 ''
+        follow_redirects: true          # 是否跟随重定向
+        fail_if_body_matches_regexp:    # 如果响应 body 与正则表达式匹配，则探测失败
+          - <regex>
+        fail_if_body_not_matches_regexp:
+          - <regex>
+        fail_if_header_matches:         # 如果响应 header 与正则表达式匹配，则探测失败
+          - header: <string>
+            regexp: <regex>
+            allow_missing: false
+        fail_if_header_not_matches:
+        # - header: Set-Cookie
+        #   regexp: 'Test.*'
+  ```
+
+#### 指标
+
+- 指标示例：
+  ```sh
+  probe_success                   # 是否探测成功（取值 1、0 分别表示成功、失败）
+  probe_duration_seconds          # 探测的耗时
+
+  # 关于 DNS
+  probe_dns_lookup_time_seconds   # DNS 解析的耗时
+  probe_ip_protocol               # IP 协议，取值为 4、6
+  probe_ip_addr_hash              # IP 地址的哈希值，用于判断 IP 是否变化
+
+  # 关于 HTTP
+  probe_http_status_code          # HTTP 响应的状态码。如果发生重定向，则取决于最后一次响应
+  probe_http_content_length       # HTTP 响应的 body 长度，单位 bytes
+  probe_http_version              # HTTP 响应的协议版本，比如 1.1
+  probe_http_ssl                  # HTTP 响应是否采用 SSL ，取值为 1、0
+  probe_ssl_earliest_cert_expiry  # SSL 证书的过期时间，为 Unix 时间戳
+  ```
+
+### cAdvisor
+
+：用于监控容器。
+- [GitHub](https://github.com/google/cadvisor)
+- 该工具由 Google 公司开发，支持将监控数据输出到 Prometheus、InfluxDB、Kafka、ES 等存储服务。
+- 下载后启动：
+  ```sh
+  ./cadvisor
+            # --listen_ip 0.0.0.0
+            # --port 8080
+            # --prometheus_endpoint  /metrics
+            --docker_only=true    # 不输出 raw cgourp 的指标，除了 root gourp ，即 id="/"
+  ```
+  - 它依赖版本较新的 glibc 库，因此建议运行官方 Docker 镜像。
+- 它提供了 Web 监控页面，默认只允许从 localhost 访问，可以加上 HTTP Basic Auth 后公开：
+  ```sh
+  htpasswd -cb passwd admin 123456
+  ./cadvisor --http_auth_file passwd --http_auth_realm 0.0.0.0
+  ```
+  访问地址为 `127.0.0.1:8080/containers/` 。
+- 指标示例：
+  ```sh
+  container_start_time_seconds              # 容器的创建时刻（不是启动时刻），采用 Unix 时间戳
+  container_last_seen                       # 最后一次监控该容器的时刻。cadvisor 不会监控已停止的容器，但会在容器停止之后的几分钟内依然记录该指标
+  container_tasks_state{state="xx"}         # 容器是否处于某种状态
+  container_processes                       # 进程数
+  container_threads                         # 线程数
+
+  container_cpu_usage_seconds_total         # 容器占用 CPU 的累计时长
+  container_cpu_user_seconds_total          # 占用用户态 CPU 的时长
+  container_cpu_system_seconds_total
+  container_cpu_load_average_10s            # 容器占用 CPU 的 10 秒平均负载
+  container_cpu_cfs_throttled_seconds_total # 容器超出 cpu.cfs_quota_us 限额之后申请的 CPU 时长
+
+  container_memory_usage_bytes              # 容器占用的全部内存，包括 RSS、swap、Page Cache 等
+  container_memory_rss                      # 容器的 rss 内存。超过 Cgroup 限制时会被 OOM 杀死
+  container_memory_swap                     # 容器占用的 swap 分区
+  container_memory_cache                    # 容器占用的 Page Cache
+  container_memory_working_set_bytes        # 容器的工作集内存，即最近访问的内存，等于 container_memory_usage_bytes - inactive_page
+
+  container_file_descriptors                # 打开的文件数
+  container_fs_usage_bytes                  # 容器占用的磁盘，包括 rootfs、终端日志，不包括挂载的 volume
+  container_fs_reads_total                  # 磁盘读的累计次数
+  container_fs_reads_bytes_total            # 磁盘读的累计字节量
+  container_fs_read_seconds_total           # 磁盘读的累计耗时
+  container_fs_writes_total{device="xx"}    # 磁盘写的累计次数，按 device 划分，包括 rootfs、volume ，不包括终端日志，不包括 Page Cache 缓冲区的数据
+  container_fs_write_seconds_total
+  container_fs_writes_bytes_total
+
+  container_sockets                                       # 打开的 Socket 数
+  container_network_receive_bytes_total{interface="xx"}   # 网络收的累计字节量
+  container_network_receive_packets_total                 # 网络收的累计数据包数
+  container_network_transmit_bytes_total                  # 网络发
+  container_network_transmit_packets_total
+  ```
+  - 假设容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 上限时，不会触发 OOM ，而是停止增长。
+    - 此时容器可以减少 Page Cache ，继续增加 container_memory_working_set_bytes 。
+    - 当 container_memory_working_set_bytes 达到 Cgroup 上限时，会触发 OOM ，杀死容器。
+
+### jmx_exporter
+
+：用于从 JMX 端口获取监控指标。
+- [GitHub](https://github.com/prometheus/jmx_exporter)
 
 ### node_exporter
 
@@ -500,192 +686,6 @@
   - 当 windows_exporter 发现进程 A 之后，就会一直记录它的指标。但是如果进程 A 停止，则不会再记录它的指标。
   - 不能监控进程的网络 IO 。
   - 不能通过启动命令区分相同名字的进程，只能通过 PID 区分。
-
-### cAdvisor
-
-：用于监控容器。
-- [GitHub](https://github.com/google/cadvisor)
-- 该工具由 Google 公司开发，支持将监控数据输出到 Prometheus、InfluxDB、Kafka、ES 等存储服务。
-- 下载后启动：
-  ```sh
-  ./cadvisor
-            # --listen_ip 0.0.0.0
-            # --port 8080
-            # --prometheus_endpoint  /metrics
-            --docker_only=true    # 不输出 raw cgourp 的指标，除了 root gourp ，即 id="/"
-  ```
-  - 它依赖版本较新的 glibc 库，因此建议运行官方 Docker 镜像。
-- 它提供了 Web 监控页面，默认只允许从 localhost 访问，可以加上 HTTP Basic Auth 后公开：
-  ```sh
-  htpasswd -cb passwd admin 123456
-  ./cadvisor --http_auth_file passwd --http_auth_realm 0.0.0.0
-  ```
-  访问地址为 `127.0.0.1:8080/containers/` 。
-- 指标示例：
-  ```sh
-  container_start_time_seconds              # 容器的创建时刻（不是启动时刻），采用 Unix 时间戳
-  container_last_seen                       # 最后一次监控该容器的时刻。cadvisor 不会监控已停止的容器，但会在容器停止之后的几分钟内依然记录该指标
-  container_tasks_state{state="xx"}         # 容器是否处于某种状态
-  container_processes                       # 进程数
-  container_threads                         # 线程数
-
-  container_cpu_usage_seconds_total         # 容器占用 CPU 的累计时长
-  container_cpu_user_seconds_total          # 占用用户态 CPU 的时长
-  container_cpu_system_seconds_total
-  container_cpu_load_average_10s            # 容器占用 CPU 的 10 秒平均负载
-  container_cpu_cfs_throttled_seconds_total # 容器超出 cpu.cfs_quota_us 限额之后申请的 CPU 时长
-
-  container_memory_usage_bytes              # 容器占用的全部内存，包括 RSS、swap、Page Cache 等
-  container_memory_rss                      # 容器的 rss 内存。超过 Cgroup 限制时会被 OOM 杀死
-  container_memory_swap                     # 容器占用的 swap 分区
-  container_memory_cache                    # 容器占用的 Page Cache
-  container_memory_working_set_bytes        # 容器的工作集内存，即最近访问的内存，等于 container_memory_usage_bytes - inactive_page
-
-  container_file_descriptors                # 打开的文件数
-  container_fs_usage_bytes                  # 容器占用的磁盘，包括 rootfs、终端日志，不包括挂载的 volume
-  container_fs_reads_total                  # 磁盘读的累计次数
-  container_fs_reads_bytes_total            # 磁盘读的累计字节量
-  container_fs_read_seconds_total           # 磁盘读的累计耗时
-  container_fs_writes_total{device="xx"}    # 磁盘写的累计次数，按 device 划分，包括 rootfs、volume ，不包括终端日志，不包括 Page Cache 缓冲区的数据
-  container_fs_write_seconds_total
-  container_fs_writes_bytes_total
-
-  container_sockets                                       # 打开的 Socket 数
-  container_network_receive_bytes_total{interface="xx"}   # 网络收的累计字节量
-  container_network_receive_packets_total                 # 网络收的累计数据包数
-  container_network_transmit_bytes_total                  # 网络发
-  container_network_transmit_packets_total
-  ```
-  - 假设容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 上限时，不会触发 OOM ，而是停止增长。
-    - 此时容器可以减少 Page Cache ，继续增加 container_memory_working_set_bytes 。
-    - 当 container_memory_working_set_bytes 达到 Cgroup 上限时，会触发 OOM ，杀死容器。
-
-### blackbox_exporter
-
-：提供探针（probe）的功能，可以通过 DNS、ICMP、TCP、HTTP 等通信监控服务的状态。
-- [GitHub](https://github.com/prometheus/blackbox_exporter)
-
-#### 配置
-
-- 用 docker-compose 部署：
-  ```yml
-  version: '3'
-
-  services:
-    blackbox_exporter:
-      container_name: blackbox_exporter
-      image: prom/blackbox-exporter:v0.19.0
-      restart: unless-stopped
-      # command:
-      #   - --web.listen-address=:9115
-      #   - --config.file=/etc/blackbox_exporter/config.yml
-      ports:
-        - 9115:9115
-      volumes:
-        - /etc/localtime:/etc/localtime:ro
-        # - ./config.yml:/etc/blackbox_exporter/config.yml
-  ```
-
-- 可以手动发出 HTTP 请求，调用探针：
-  - 使用 icmp 模块，检测目标主机能否 ping 通，也会检测出 DNS 耗时：
-    ```sh
-    curl 'http://localhost:9115/probe?module=icmp&target=baidu.com'
-    ```
-  - 使用 tcp_connect 模块，检测目标主机的 TCP 端口能否连通：
-    ```sh
-    curl 'http://localhost:9115/probe?module=tcp_connect&target=baidu.com:80'
-    ```
-  - 使用 http_2xx 模块，检测目标网站的 HTTP 状态码是否为 2xx ：
-    ```sh
-    curl 'http://localhost:9115/probe?module=http_2xx&target=http://baidu.com'
-    ```
-
-- 在 Prometheus 中加入 job 配置，调用探针：
-  ```yml
-  - job_name: blackbox_exporter
-    metrics_path: /probe
-    params:
-      module: [http_2xx]                # 使用的模块
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
-      - target_label: __address__
-        replacement: '10.0.0.1:9115'    # blackbox_exporter 的地址
-    static_configs:
-      - targets: ['10.0.0.2']
-  ```
-
-- blackbox_exporter 的配置文件中默认定义了一些功能模块，可以在其中加入自定义的模块，如下：
-  ```yml
-  modules:
-    http_2xx_example:                   # 定义一个功能模块
-      prober: http                      # 探针的类型，可以是 dns、icmp、tcp、http
-      timeout: 2m                       # 每次探测的超时时间，超过则放弃。默认为 2 m
-      http:                             # 对应 prober 类型的配置参数
-        # 关于每次探测时发出的 HTTP 请求
-        method: GET                     # 请求方法，默认为 GET
-        headers:
-          <string>: <string>
-        body: <string>
-        basic_auth:
-          username: <string>
-          password: <string>
-        proxy_url: <string>
-        preferred_ip_protocol: ip6      # DNS 解析时，优先采用的 IP 协议，默认为 IPv6
-        ip_protocol_fallback: true      # 当 preferred_ip_protocol 不可用时，是否允许另一种 IP 协议。默认为 true
-
-        # 关于 HTTPS
-        fail_if_ssl: false              # 如果采用 SSL ，是否探测失败
-        fail_if_not_ssl: false          # 如果不采用 SSL ，是否探测失败
-        tls_config:
-          insecure_skip_verify: false   # 是否跳过检验证书
-
-        # 关于每次探测时收到的 HTTP 响应
-        valid_status_codes: <int>,...   # 有效的状态码，默认为 2xx 。如果出现其它值，则探测失败
-        valid_http_versions:            # 有效的 HTTP 协议版本
-          - HTTP/1.1
-          - HTTP/2.0
-        compression: 'gzip'             # 响应 body 的解压算法，默认为 ''
-        follow_redirects: true          # 是否跟随重定向
-        fail_if_body_matches_regexp:    # 如果响应 body 与正则表达式匹配，则探测失败
-          - <regex>
-        fail_if_body_not_matches_regexp:
-          - <regex>
-        fail_if_header_matches:         # 如果响应 header 与正则表达式匹配，则探测失败
-          - header: <string>
-            regexp: <regex>
-            allow_missing: false
-        fail_if_header_not_matches:
-        # - header: Set-Cookie
-        #   regexp: 'Test.*'
-  ```
-
-#### 指标
-
-- 指标示例：
-  ```sh
-  probe_success                   # 是否探测成功（取值 1、0 分别表示成功、失败）
-  probe_duration_seconds          # 探测的耗时
-
-  # 关于 DNS
-  probe_dns_lookup_time_seconds   # DNS 解析的耗时
-  probe_ip_protocol               # IP 协议，取值为 4、6
-  probe_ip_addr_hash              # IP 地址的哈希值，用于判断 IP 是否变化
-
-  # 关于 HTTP
-  probe_http_status_code          # HTTP 响应的状态码。如果发生重定向，则取决于最后一次响应
-  probe_http_content_length       # HTTP 响应的 body 长度，单位 bytes
-  probe_http_version              # HTTP 响应的协议版本，比如 1.1
-  probe_http_ssl                  # HTTP 响应是否采用 SSL ，取值为 1、0
-  probe_ssl_earliest_cert_expiry  # SSL 证书的过期时间，为 Unix 时间戳
-  ```
-
-### jmx_exporter
-
-：用于从 JMX 端口获取监控指标。
-- [GitHub](https://github.com/prometheus/jmx_exporter)
 
 ## 专用类型
 

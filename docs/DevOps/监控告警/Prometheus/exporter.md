@@ -26,6 +26,18 @@
   ```
   - 如果重启 Alertmanager ，则会使一些计数的指标归零。
 
+### etcd
+
+- 本身集成了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
+- 指标示例：
+  ```sh
+  ```
+
+https://etcd.io/docs/v3.5/metrics/
+<!-- 请监控backend_commit_duration_seconds（p99 持续时间应小于 25 毫秒）以确认磁盘相当快 -->
+
+
+
 ### Grafana
 
 - 本身集成了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
@@ -783,7 +795,7 @@
   elasticsearch_index_stats_get_time_seconds_total              # index GET 的耗时
   elasticsearch_index_stats_indexing_delete_total               # index delete 的次数
   elasticsearch_index_stats_indexing_delete_time_seconds_total
-  elasticsearch_index_stats_indexing_index_total                # index 新增文档的次数
+  elasticsearch_index_stats_indexing_index_total                # index 新增文档数
   elasticsearch_index_stats_indexing_index_time_seconds_total
   elasticsearch_index_stats_merge_total                         # index merge 的次数
   elasticsearch_index_stats_merge_time_seconds_total

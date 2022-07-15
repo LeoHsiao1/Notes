@@ -55,7 +55,6 @@ pipeline {
     }
 }
 ```
-- 区分大小写。
 - 用 // 声明单行注释。
 - 每个 {} 的内容不能为空。
 
@@ -73,16 +72,17 @@ pipeline {
       sh 'echo $ID'       // 执行 sh 语句，字符串定界符为单引号时，会直接作为 Shell 命令执行，因此 $ 会读取 Shell 变量
   }
   ```
-
 - Groovy 语言支持在字符串中用 `$` 插入变量的值，用 `${}` 插入表达式的值。
   - Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
     - 如果通过 $ 读取的变量不存在，则会抛出 Groovy 的语法异常：`groovy.lang.MissingPropertyException: No such property`
     - 如果通过 ${env.A} 方式读取的变量不存在，则会返回 null ，不会报错。
   - 如果想让 Groovy 将字符串中的 $ 当作普通字符处理，则需要使用单引号作为定界符，或者使用转义字符 `\$` 。
 
+- Jenkinsfile script{} 中创建的 Groovy 变量名区分大小写，但 parameters、environment 变量名不区分大小写，不过它们加入 shell 环境变量时会区分大小写。
+
 ### 环境变量
 
-- 在 environment{} 中可以定义环境变量，它们会保存为 Groovy 变量和 Shell 变量。如下：
+- 在 environment{} 中可以定义环境变量，它们会保存为 Groovy 变量和 Shell 环境变量。如下：
   ```groovy
   stage('测试') {
       environment {
@@ -115,7 +115,7 @@ pipeline {
 
 ### 构建参数
 
-- 可以给 Job 声明构建参数，它们会保存为 Groovy 变量和 Shell 变量。
+- 可以给 Job 声明构建参数，它们会保存为 Groovy 变量和 Shell 环境变量。
   - 用户在启动 Job 时，必须传入构建参数，除非它们有默认值。
 - Pipeline Job 可以在 pipeline.parameters{} 中以代码的形式定义构建参数，而其它类型的 Job 只能在 Jenkins Web 页面中定义构建参数。如下：
     ```groovy

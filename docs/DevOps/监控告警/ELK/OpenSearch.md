@@ -35,6 +35,8 @@
       container_name: opensearch_dashboards
       image: opensearchproject/opensearch-dashboards:1.1.0
       restart: unless-stopped
+      # environment:
+      #   NODE_OPTIONS: --max-old-space-size=2048   # 如果查询的数据过大，需要增加 node.js 最大占用内存
       ports:
         - 5601:5601
       volumes:

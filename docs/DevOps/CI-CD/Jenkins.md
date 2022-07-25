@@ -207,7 +207,7 @@
   ```py
   from jenkinsapi.jenkins import Jenkins
 
-  jk = Jenkins('http://10.0.0.1:8080', username=None, password=None, timeout=10, useCrumb=True)
+  jk = Jenkins('http://10.0.0.1:8080', username='xx', password='xx', useCrumb=True)
   ```
   - useCrumb 表示在 POST 请求中包含 Crumb 参数，避免 CSRF 攻击。
 
@@ -223,9 +223,9 @@
 
 - job 的配置：
   ```py
-  xml = job.get_config()                  # 导出 job 的 XML 配置
-  job = jk.create_job(jobname, xml)       # 创建一个 job
-  job.update_config(xml.encode('utf-8'))  # 修改 job 的 XML 配置
+  config = job.get_config()                  # 导出 job 的配置，为 XML 格式
+  job = jk.create_job(jobname, config)       # 创建一个 job
+  job.update_config(config.encode('utf-8'))  # 修改 job 的配置。建议修改 update_config() 的定义代码，允许传入 bytes 类型的 config
   ```
 
 - job 的构建：

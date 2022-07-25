@@ -3064,7 +3064,8 @@ with os.popen("ipconfig") as p:
 >>>
 ('.', ['res', 'utils', '__pycache__'], [1.py', '__init__.py'])
 ('.\\res', ['img'], [])
-('.\\res\\img', [], ['9.jpg', 'logo.ico'])        # 生成器的每项元素为：目录、该目录下的子目录名、文件名
+('.\\res\\img', [], ['9.jpg', 'logo.ico'])
+  - 生成器的每行元素为：目录、该目录下的文件夹列表、文件列表。
   - os.walk()默认会忽略遇到的异常，应该传入onerror参数，记录遇到的异常。
 ## 获取文件信息。
 >>> os.path.exists("D:\\1")        # 判断文件是否存在

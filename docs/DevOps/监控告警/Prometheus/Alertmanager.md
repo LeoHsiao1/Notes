@@ -155,8 +155,8 @@ route 块定义了分组处理警报的规则，如下：
 ```yaml
 route:
   receiver: email_to_leo            # 只能指定一个接收方
-  group_wait: 1m
-  group_interval: 1m
+  group_wait: 2m
+  group_interval: 5m
   repeat_interval: 24h
   group_by:                         # 根据标签的值对已匹配的警报进行分组（默认不会分组）
     - alertname

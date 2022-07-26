@@ -51,6 +51,10 @@
   CCC
   {% endif %}
   ```
+  ```sh
+  {{ True if a else False }}
+  {{ a or 'Hello' }}      # 为变量设置默认值
+  ```
 
 - 迭代列表：
   ```sh
@@ -98,7 +102,7 @@
   ```
   可以合并成一步：
   ```py
-  >>> Template('Hello {{a}}').render(a='Word')      
+  >>> Template('Hello {{a}}').render(a='Word')
   'Hello Word'
   >>> Template('Hello {{b}}').render(a='Word')      # 变量 b 不存在，因此读取到的值为空字符串
   'Hello '
@@ -109,5 +113,5 @@
 - 调用 render() 时可以传入关键字形式的参数，也可以传入一个字典：
   ```py
   template.render(a='Word')
-  template.render({'a':'World'}) 
+  template.render({'a':'World'})
   ```

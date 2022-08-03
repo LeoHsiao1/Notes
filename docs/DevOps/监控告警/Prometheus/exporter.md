@@ -1086,7 +1086,8 @@ https://etcd.io/docs/v3.5/metrics/
   delta(mysql_global_status_bytes_sent[1m])             # 网络发送的 bytes
 
   # 关于客户端
-  mysql_global_status_threads_connected                 # 客户端连接数
+  mysql_global_status_threads_connected                 # 当前的客户端连接数
+  mysql_global_variables_max_connections                # 允许的最大连接数
   mysql_global_status_threads_running                   # 正在执行命令的客户端连接数，即非 sleep 状态
   delta(mysql_global_status_aborted_connects[1m])       # 客户端建立连接失败的连接数，比如登录失败
   delta(mysql_global_status_aborted_clients[1m])        # 客户端连接之后，未正常关闭的连接数

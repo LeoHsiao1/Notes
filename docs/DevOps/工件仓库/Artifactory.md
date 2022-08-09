@@ -21,10 +21,10 @@
   services:
     artifactory:
       container_name: artifactory
-      image: docker.bintray.io/jfrog/artifactory-oss:7.18.6
+      image: docker.bintray.io/jfrog/artifactory-oss:7.27.3
       restart: unless-stopped
       environment:
-        JAVA_OPTS: -Duser.timezone=GMT+08 -Xms2g -Xmx2g
+        EXTRA_JAVA_OPTIONS: -Xms4g -Xmx4g
       ports:
         - 8082:8082
       volumes:

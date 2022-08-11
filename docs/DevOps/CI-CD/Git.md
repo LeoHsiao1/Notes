@@ -282,9 +282,11 @@ git config
   ```sh
   git submodule
                 add <repository_url> [<path>] [--name <name>] [-b <branch>]   # 添加 submodule
-                update        # 更新 submodule ，这会从远端仓库 pull 它的最新版本
-                sync          # 将 .gitmodules 文件中的配置同步到 .git/config 中（默认不会自动同步）
-                status        # 显示所有 submodule 的 commit、path、branch 信息
+                update          # 从远程仓库拉取 submodule ，根据记录的 commit id
+                      --remote  # 根据 .gitmodules 中配置的 branch 进行拉取
+                      --recurse # 递归拉取所有嵌套的 submodule
+                sync            # 将 .gitmodules 文件中的配置同步到 .git/config 中（默认不会自动同步）
+                status          # 显示所有 submodule 的 commit、path、branch 信息
   ```
 - 添加了 submodule 之后，会在项目根目录生成一个 .gitmodules 文件，用于保存其配置信息。如下：
   ```ini

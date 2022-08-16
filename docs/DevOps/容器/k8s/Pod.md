@@ -574,6 +574,9 @@ spec:
   ```
   - 创建 Pod 时，如果指定的 limits、requests 超过总配额，则创建失败。
   - terminated 状态的 Pod 不会占用 cpu、memory、pods 等资源配额，但会占用 storage 等资源配额。
+  - 安装 Nvidia 插件可让 kubelet 识别出主机上的 GPU ，然后分配给 Pod 。
+    - 每个容器可以分配整数个 GPU ，不支持小数。
+    - 不同容器之间不能共享 GPU 。
 
 ## 调度节点
 

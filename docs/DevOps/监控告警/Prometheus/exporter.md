@@ -785,6 +785,32 @@ https://etcd.io/docs/v3.5/metrics/
   elasticsearch_cluster_health_initializing_shards
   elasticsearch_cluster_health_relocating_shards
 
+  # 关于 Node
+  elasticsearch_os_cpu_percent
+  elasticsearch_os_load1
+  elasticsearch_filesystem_data_size_bytes                            # 磁盘总量
+  elasticsearch_filesystem_data_available_bytes{name="node-1", mount="/usr/share/elasticsearch/data (/dev/vdb)"}    # 磁盘可用大小
+  elasticsearch_filesystem_io_stats_device_read_size_kilobytes_sum    # 磁盘累计读，单位为 KB
+  elasticsearch_filesystem_io_stats_device_write_size_kilobytes_sum   # 磁盘累计写
+  elasticsearch_transport_rx_size_bytes_total                         # 网络累计读
+  elasticsearch_transport_tx_size_bytes_total
+  elasticsearch_process_max_files_descriptors
+  elasticsearch_process_open_files_count
+
+  # 关于 JVM
+  elasticsearch_jvm_memory_max_bytes                              # JVM 内存总量
+  elasticsearch_jvm_memory_used_bytes                             # JVM 已用内存
+  sum(elasticsearch_jvm_gc_collection_seconds_count) without(gc)  # GC 累计次数
+  elasticsearch_jvm_gc_collection_seconds_sum                     # GC 累计耗时
+
+  # 关于 thread pool
+  elasticsearch_thread_pool_threads_count
+  elasticsearch_thread_pool_active_count
+  elasticsearch_thread_pool_completed_count
+  elasticsearch_thread_pool_largest_count
+  elasticsearch_thread_pool_queue_count
+  elasticsearch_thread_pool_rejected_count
+
   # 关于 index
   elasticsearch_indices_docs_total{index=".kibana"}     # index 的可见文档数，包括主分片、副分片的文档，不包括 delete 文档
   elasticsearch_indices_deleted_docs_total              # index 的 deleted 文档数
@@ -811,24 +837,6 @@ https://etcd.io/docs/v3.5/metrics/
 
   # 关于 segment
   elasticsearch_indices_segment_count_total             # index 的 segment 数量
-
-  # 关于 Node
-  elasticsearch_os_cpu_percent
-  elasticsearch_os_load1
-  elasticsearch_filesystem_data_size_bytes                            # 磁盘总量
-  elasticsearch_filesystem_data_available_bytes{name="node-1", mount="/usr/share/elasticsearch/data (/dev/vdb)"}    # 磁盘可用大小
-  elasticsearch_filesystem_io_stats_device_read_size_kilobytes_sum    # 磁盘累计读，单位为 KB
-  elasticsearch_filesystem_io_stats_device_write_size_kilobytes_sum   # 磁盘累计写
-  elasticsearch_transport_rx_size_bytes_total                         # 网络累计读
-  elasticsearch_transport_tx_size_bytes_total
-  elasticsearch_process_max_files_descriptors
-  elasticsearch_process_open_files_count
-
-  # 关于 JVM
-  elasticsearch_jvm_memory_max_bytes                              # JVM 内存总量
-  elasticsearch_jvm_memory_used_bytes                             # JVM 已用内存
-  sum(elasticsearch_jvm_gc_collection_seconds_count) without(gc)  # GC 累计次数
-  elasticsearch_jvm_gc_collection_seconds_sum                     # GC 累计耗时
   ```
 
 ### kafka_exporter

@@ -6,7 +6,7 @@
 
 ## Deployment
 
-：用于部署无状态的 Pod 。
+：用于部署无状态的 Pod ，可以在整个集群内运行任意个 Pod 实例（又称为副本）。
 
 ### 配置
 
@@ -235,7 +235,7 @@ spec:
 
 ## DaemonSet
 
-：与 Deployment 类似，但是在每个 node 上只部署一个 Pod 副本。适合监控、日志等 daemon 服务。
+：与 Deployment 类似，但在每个 Node 上最多只能部署一个 Pod 副本。适合监控、日志等 daemon 服务。
 - DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
 - 例：
   ```yml

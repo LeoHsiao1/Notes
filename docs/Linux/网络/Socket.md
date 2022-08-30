@@ -312,7 +312,7 @@ FRAG: inuse 0 memory 0
 
           -e  # 增加显示 User、Inode 列
           -p  # 增加显示 PID/Program name 列，表示使用每个 socket 的进程
-          -n  # 不允许用服务名代替端口号（比如默认会把 22 端口显示成 ssh）
+          -n  # 取消将端口号显示成服务名（比如默认会把 22 端口显示成 ssh）
   ```
 
 ### ss
@@ -329,7 +329,7 @@ FRAG: inuse 0 memory 0
       -x      # 只显示 unix socket
 
       -p      # 显示使用每个 socket 的进程名
-      -n      # 不允许用服务名代替端口号
+      -n      # 取消将端口号显示成服务名
 
       -s      # 只显示各种 Socket 的统计数量
   ```

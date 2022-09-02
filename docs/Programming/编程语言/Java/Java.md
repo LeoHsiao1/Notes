@@ -63,13 +63,12 @@
 ：垃圾回收（Garbage Collection），指销毁 Java 进程中不需要保留的对象，回收其内存。
 
 - Java 进程占用的内存分为几部分：
-  - Heap
-    - ：堆内存。主要存储 Java 类的实例对象。
-  - Non-Heap
-    - ：非堆内存。主要存储 Java 类、方法、常量。
-    - 比如 Metaspace 内存区域，用于存储 Java 类的元数据，包括常量、注解等，替代了 Java 8 以前的永久代（Permanent）。
-  - Other
-    - ：主要是运行 JVM 本身占用的内存。
+  - Heap ：堆内存。主要存储 Java 类的实例对象。
+  - Direct Memory ：直接内存，用于存放与操作系统交互的数据，比如文件。
+  - Metaspace ：存储 Java 类的元数据，包括常量、注解等。替代了 Java 8 以前的永久代（Permanent）。
+  - JVM native ：运行 JVM 本身占用的内存。
+  - Code Cache ：存储根据 Java 字节码生成的机器代码。
+  - Thread Stack ：线程堆栈。
 
 - 对象的引用分为四种，从强到弱如下：
   - 强引用（Strong Reference）

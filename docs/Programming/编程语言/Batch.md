@@ -1,6 +1,6 @@
 # Batch
 
-：一个脚本语言，中文名为 “批处理” 。
+：一种脚本语言，中文名为 “批处理” 。
 - 主要用于微软的磁盘操作系统（Mircro Software Disk Operating System ，MS-DOS），用 cmd.exe 解释执行。
 - 与 shell 语言相比，功能很少，也不灵活，且语法习惯差异很大。
 

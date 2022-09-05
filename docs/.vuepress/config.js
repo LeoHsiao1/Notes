@@ -262,6 +262,10 @@ module.exports = {
                                     path: "/Python/文本处理/序列化/XML"
                                 },
                                 {
+                                    title: "JSON",
+                                    path: "/Python/文本处理/序列化/JSON"
+                                },
+                                {
                                     title: "pickle",
                                     path: "/Python/文本处理/序列化/pickle"
                                 },

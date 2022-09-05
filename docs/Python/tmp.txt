@@ -4493,93 +4493,13 @@ ws1['A2'].Font=font1
 
 
  
-JSON
-## JSON（JavaScript Object Notation）：一种保存结构化数据的文本格式。
-- JSON原本是JavaScript的对象表示格式，后来发展成为一种独立于语言和平台的文本格式，常用于不同编程语言之间的通信。
-- JSON、XML、YAML都是纯文本格式，用于将数据序列化，方便传输、存储。而HTML是用于在网页上显示数据。
-## 语法。
-- JavaScript 中可以用 // 声明单行注释，但 JSON 中不允许使用注释，否则会导致解析时出错。
-- JSON中的数据采用键/值（key/value）对的格式表示，每个键值对之间用逗号隔开。
-  - 键名放在双引号中，然后通过冒号连接其value。例如，JSON中的 "name" : "菜鸟教程"相当于JavaScript 中的name = "菜鸟教程"。
-- key必须是字符串类型，而且不能重复。
-- value可以是以下类型。
-  - Number    ：整数或浮点数。
-  - Boolean    ：取值为true 或 false。
-  - String    ：用双引号包住。
-  - Array    ：用中括号包住，有序地存储多个键值对。
-  - Object    ：用花括号包住，无序地存储多个键值对。
-  - null
-- 例：
-{
-"id":1,
-"enabled":true,
-"payload": [
-{ "name":"菜鸟教程" , "url":"m.runoob.com" },
-{ "name":"google" , "url":"www.google.com" },
-]
-}
-##
-##
-##
- 
-♢ json
-## json：Python的标准库，用于解析JSON格式的文本。
-- def dumps(obj, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, default=None, sort_keys=False) -> str
-  - 功能：将Python基本数据类型的对象转换成JSON格式的字符串。
-  - 例：
->>> import json
->>> json.dumps(True)
-'true'
->>> dict1={'a': 1, 'b': 2, 'c': 3}
->>> json.dumps(dict1)
-'{"a": 1, "b": 2, "c": 3}'
-  - ensure_ascii=True表示将输出的字符转换成ASCII码。
->>> json.dumps("你好")
-'"\\u4f60\\u597d"'                            # Unicode字符会直接保存成显示的Unicode编码
->>> json.dumps("你好", ensure_ascii=False)        # 不转换ASCII码，继续使用Python的Unicode编码
-'"你好"'
->>> json.dumps("你好", ensure_ascii=False).encode()
-b'"\xe4\xbd\xa0\xe5\xa5\xbd"'
-  - indent=None参数表示输出时不换行、不缩进。
->>> print(json.dumps(dict1, indent=4))        # 输出时换行，且缩进为4个空格
-{
-    "a": 1,
-    "b": 2,
-    "c": 3
-}
-- def loads(s, ...) -> object
-  - 功能：将JSON格式的文本转换成Python的基本数据类型的对象。
-  - s是一个str、bytes或bytearray对象，包含JSON格式的文本。
-  - 例：
->>> json.loads("true")
-True
->>> json.loads('{"你好":1}')
-{'你好': 1}
->>> json.loads(json.dumps(dict1, indent=4))
-{'a': 1, 'b': 2, 'c': 3}
->>> with open("test.json") as f:
-...     jsons = json.loads(f.read())
-...
-
-## 使用json.dumps()时，会将Python中的基本数据类型转换成JSON中的数据类型。如下：
-int, long, float —> number
-str, unicode —> string
-list, tuple —> array
-dict  —> object
-True  —> true
-False —> false
-None  —> null
-
-例：
->>> json.dumps({'list1':[1,2,3], '': 3.14, None: True})
-'{"list1": [1, 2, 3], "": 3.14, "null": true}'
 
 ##
 ##
 ##
 
 YAML
-## YAML（/ˈjæməl/）：一种保存结构化数据的文本格式，比JSON更简单。
+## YAML（/ˈjæməl/）：一种序列化数据的文本格式，比JSON更简单。
 - YAML格式的文件的扩展名为 .yaml 或 .yml 。
 ## 基本语法。
 - 用 # 声明单行注释。

@@ -266,6 +266,10 @@ module.exports = {
                                     path: "/Python/文本处理/序列化/JSON"
                                 },
                                 {
+                                    title: "YAML",
+                                    path: "/Python/文本处理/序列化/YAML"
+                                },
+                                {
                                     title: "pickle",
                                     path: "/Python/文本处理/序列化/pickle"
                                 },

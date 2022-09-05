@@ -5,6 +5,7 @@
 
 ## 语法
 
+- JSON 格式的文本文件的扩展名为 .json 。
 - JavaScript 中可以用 // 声明单行注释，但 JSON 中不允许使用注释，否则会导致解析出错。
 - JSON 中可以记录多个键值对（key-value）格式的字段，每个键值对之间用逗号分隔。
   - key 必须是字符串类型，用双引号包住，且同一作用域下不能重名。
@@ -19,7 +20,7 @@
     object    # 对象，用花括号包住，无序地存储多个键值对
     null      # 空，代表 value 不存在
     ```
-- 为了方便阅读，JSON 文本通常采用 4 个空格作为行首缩进。
+- 为了方便阅读，JSON 文本通常采用 4 个空格作为缩进。
   - 字段之间可以插入任意个空字符，不影响语法。
 - 例：
   ```json
@@ -36,7 +37,7 @@
 ## ♢ json
 
 ：Python 的标准库，用于生成、解析 JSON 格式的文本。
-
+- [官方文档](https://docs.python.org/3/library/json.html)
 - 使用 json.dumps() 可将 Python 基本数据类型的对象转换成 JSON 中的数据类型。转换关系如下：
   ```sh
   int,  long, float —> number
@@ -62,7 +63,7 @@
   ```py
   >>> json.dumps(json)                        # 非基本数据类型的对象，在序列化时会报错
   TypeError: Object of type module is not JSON serializable
-  >>> json.dumps('你好')                      # Unicode 字符会按 str.encode("unicode_escape") 编码
+  >>> json.dumps('你好')                      # Unicode 字符会按 str.encode('unicode_escape') 编码
   '"\\u4f60\\u597d"'
   >>> json.dumps("你好", ensure_ascii=False)  # 默认为 ensure_ascii=True ，将输出的字符全部转换成 ASCII 码。这里采用 False
   '"你好"'

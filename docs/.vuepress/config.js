@@ -266,6 +266,10 @@ module.exports = {
                                     path: "/Python/文本处理/序列化/pickle"
                                 },
                                 {
+                                    title: "ProtoBuf",
+                                    path: "/Python/文本处理/序列化/ProtoBuf"
+                                },
+                                {
                                     title: "Jinja",
                                     path: "/Python/文本处理/序列化/Jinja"
                                 }

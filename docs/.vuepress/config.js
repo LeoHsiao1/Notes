@@ -262,6 +262,10 @@ module.exports = {
                                     path: "/Python/文本处理/序列化/XML"
                                 },
                                 {
+                                    title: "pickle",
+                                    path: "/Python/文本处理/序列化/pickle"
+                                },
+                                {
                                     title: "Jinja",
                                     path: "/Python/文本处理/序列化/Jinja"
                                 }

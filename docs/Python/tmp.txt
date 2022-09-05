@@ -4263,30 +4263,7 @@ False
 ##
 ##
  
-♢ pickle
-## pickle：Python的标准库，可以将Python中任意类型的对象序列化成二进制形式。
-- 没有保存成XML、JSON等通用的文本格式，因此只能被Python读取。
-- 序列化：
->>> import pickle
->>> class Test:
-...     a = 1
-...     b = 2
-...
->>> data = pickle.dumps(Test())        # 序列化
->>> data
-b'\x80\x03c__main__\nTest\nq\x00)\x81q\x01.'
->>> with open('dumps', 'wb') as f:
-...     f.write(data)
-...
-24
-- 反序列化：
->>> with open('dumps', 'rb') as f:
-...     data = f.read()
-...
->>> data
-b'\x80\x03c__main__\nTest\nq\x00)\x81q\x01.'
->>> pickle.loads(data)                # 反序列化
-<__main__.Test object at 0x7f82d2495710>
+
 ##
 ##
 ##

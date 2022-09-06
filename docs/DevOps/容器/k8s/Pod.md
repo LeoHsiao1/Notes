@@ -462,17 +462,18 @@ spec:
   - 创建 Pod 时，如果指定的 requests 大于 limits 值，则创建失败。
   - 调度 Pod 时，会寻找可用资源不低于 Pod requests 的节点。如果不存在，则调度失败。
   - 启动 Pod 时，会创建一个 Cgroup ，根据 Pod limits 设置 cpu.cfs_quota_us、memory.limit_in_bytes 阈值，从而限制 Pod 的资源开销。
+  - k8s v1.8 增加了 ephemeral-storage 功能，不是通过 Cgroup 技术，而是定期统计 Pod 占用的磁盘空间。
 
 - 当 Pod 占用的资源超过 limits 时：
   - 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
   - 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，不过一般设置了容器自动重启。
   - 如果超过 limits.ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
 
-- 几种 Pod 举例：
-  - Pod 的 requests=limits ，这样容易预测 Pod 的资源开销。
-  - Pod 运行时一般只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期需要 2 核 CPU 。
-    - 如果分配过多 requests=limits ，就容易浪费节点资源。
-    - 如果分配过少 requests=limits ，就容易资源不足。
+- 建议监控 Pod 运行一段时间的实际资源开销，据此配置 requests、limits 。
+  - 最好配置 Pod 的 requests 等于 limits ，这样容易预测 Pod 的资源开销。
+  - 假设一个 Pod 运行时通常只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期需要 2 核 CPU 。
+    - 如果 requests 等于 limits 且多于实际开销，就容易浪费节点资源。
+    - 如果 requests 等于 limits 且少于实际开销，Pod 就容易资源不足。
     - 如果分配较少 requests、较多 limits ，就难以预测 Pod 的资源开销。如果多个这样的 Pod 调度到同一个节点上，limits 之和会超过节点总资源，可能耗尽节点资源。
 
 ### RuntimeClass
@@ -773,9 +774,10 @@ spec:
     memory.allocatable = memory.capacity - kube-reserved - system-reserved  # 节点的可分配资源量，等于硬件容量减去保留量
     memory.available = memory.allocatable - memory.workingSet               # 节点实际用的资源量，这是根据 Cgroup 数据计算的，与 pod.request 无关
     ```
-  - nodefs、imagefs 一般都位于主机的主文件系统上。
+  - nodefs、imagefs 一般都位于主机的主文件系统上（俗称系统盘）。
     - nodefs ：用于存放 /var/lib/kubelet/ 目录。
     - imagefs ：用于存放 /var/lib/docker/ 目录，主要包括 docker images、container rootfs、container log 数据。
+  - 修改了节点的系统盘大小之后，可以重启 kubelet ，让它更新 capacity 。
   - kubelet 发出驱逐信号时，会给节点添加以下 condition 状态：
     ```sh
     MemoryPressure

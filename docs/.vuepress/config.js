@@ -280,6 +280,10 @@ module.exports = {
                                 {
                                     title: "Jinja",
                                     path: "/Python/文本处理/序列化/Jinja"
+                                },
+                                {
+                                    title: "Markdown",
+                                    path: "/Python/文本处理/序列化/Markdown"
                                 }
                             ]
                         },

@@ -65,7 +65,7 @@
   TypeError: Object of type module is not JSON serializable
   >>> json.dumps('你好')                      # Unicode 字符会按 str.encode('unicode_escape') 编码
   '"\\u4f60\\u597d"'
-  >>> json.dumps("你好", ensure_ascii=False)  # 默认为 ensure_ascii=True ，将输出的字符全部转换成 ASCII 码。这里采用 False
+  >>> json.dumps("你好", ensure_ascii=False)  # 取消将输出的字符全部转换成 ASCII 码，从而保留 Unicode 字符
   '"你好"'
   ```
 

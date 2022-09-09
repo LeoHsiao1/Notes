@@ -88,13 +88,14 @@ node100 ansible_host=10.0.0.2         # 添加一个 host 的名字、地址
 # ansible_connection=ssh              # Ansible 的连接方式
 # ansible_ssh_port=22                 # SSH 登录时的端口号
 ansible_ssh_user='root'               # SSH 登录时的用户名
-ansible_ssh_pass='123456'             # SSH 登录时的密码（使用该项需要安装 sshpass）
+ansible_ssh_pass='******'             # SSH 登录时的密码（使用该项需要安装 sshpass）
 # ansible_ssh_private_key_file='~/.ssh/id_rsa'   # 用密钥文件进行 SSH 登录
 # ansible_become=false                # SSH 登录之后是否切换用户
 # ansible_become_method=sudo          # 切换用户的方式
 # ansible_become_user=root            # 切换到哪个用户
-# ansible_become_pass='123456'        # 用 sudo 切换用户时的密码
+# ansible_become_pass='******'        # 用 sudo 切换用户时的密码
 # ansible_python_interpreter=/usr/bin/python
+# timeout=10                          # SSH 登录的超时时间
 ```
 - host 的地址可以为 IP 、域名或主机名，只要能被 SSH 连接。
   - 特别地， `ansible_connection=local` 代表直接连接本机，不会采用 SSH 连接的配置参数。

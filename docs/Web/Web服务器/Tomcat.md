@@ -136,7 +136,7 @@
 - `<Service>` 代表一个接受 HTTP 请求的服务器（逻辑上的）。
   - 配置文件中只能定义一个 `<Server>` ，而 `<Server>` 中可以定义多个 `<Service>` 。
   - 每个 `<Service>` 中可以定义一个 `<Engine>` 和多个 `<Connector>` 。
-  - 每个 `<Connector>` 监听一个端口，它们收到的 HTTP 请求都会交给 `<Engine>` 处理。
+  - 每个 `<Connector>` 监听一个 port 端口，将收到的 HTTP 请求交给 `<Engine>` 处理，将 HTTPS 请求重定向到 redirectPort 端口。
   - 每个 `<Service>.<Engine>` 中可以定义多个 `<Host>` 。`<Service>` 收到的 HTTP 请求最终会交给与 name 匹配的 `<Host>` 处理，如果没有匹配的，则交给 defaultHost 处理。
 
 - `<Host>` 代表一个匹配 HTTP 请求的主机（逻辑上的）。

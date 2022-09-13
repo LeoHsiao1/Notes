@@ -1425,6 +1425,10 @@ module.exports = {
                                     path: "/Distributed/消息队列/Kafka/工具"
                                 }
                             ]
+                        },
+                        {
+                            title: "Pulsar",
+                            path: "/Distributed/消息队列/Pulsar"
                         }
                     ]
                 },

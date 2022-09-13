@@ -17,6 +17,7 @@
     - [原理](消息队列/Kafka/原理.md)
     - [部署](消息队列/Kafka/部署.md)
     - [工具](消息队列/Kafka/工具.md)
+  - [Pulsar](消息队列/Pulsar.md)
 - 存储
   - [简介](存储/简介.md)
   - [Ceph](存储/Ceph.md)

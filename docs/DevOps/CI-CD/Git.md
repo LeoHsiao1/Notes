@@ -4,7 +4,7 @@
 - [官方文档](https://git-scm.com/docs)
 - 采用 C 语言开发。2005 年由 Linus Torvalds 发布。
 - 特点：
-  - 分布式管理。每个服务器、客户端都存储一份完整的代码仓库，可以相互同步。
+  - 分布式管理。每个服务器、客户端都存储一份独立的代码仓库，可以相互同步。
   - 支持将每次修改后的文件提交为一个版本，允许用户将文件回滚到任意历史版本。
   - 支持创建多个分支，进行分支切换、合并，便于多人合作开发同一个项目。
 
@@ -46,7 +46,7 @@
 ```sh
 git status                # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
 
-git log [refs] [path]     # 显示 commit 历史日志（按时间倒序），不指定 refs 则选中当前版本，不指定 path 则选中所有文件
+git log [refs] [path]     # 显示最近一些 commit 的提交日志，不指定 refs 则采用 HEAD 分支，不指定 path 则选中所有文件
         -n                # 只显示 n 个 commit
         --show-signature  # 增加显示 GPG 签名
 
@@ -62,6 +62,9 @@ git ls-remote             # 列出远程仓库的所有 refs
 
 git for-each-ref
     --points-at=<name>    # 列出与一个名称相关的所有 refs
+
+git rev-parse --show-toplevel   # 返回 Git 项目的顶级目录
+git gc                          # 清理磁盘文件，比如删除 orphan commit 、删除重复文件
 ```
 
 ### 修改
@@ -73,8 +76,6 @@ git add <path>...               # 将指定文件加入缓存区。如果指定�
 git rm <file>                   # 删除某个文件
       --cached                  # 从缓存区删除
 git mv <src_file> <dst_file>    # 移动文件
-
-git rev-parse --show-toplevel   # 返回 Git 项目的顶级目录
 ```
 - 被修改的文件建议先加入 git 缓存区（称为 stage、index），以便之后提交成一个版本，永久保存到 git 仓库中。
   - 也可以不加入缓存区就直接 git commit 。
@@ -98,6 +99,8 @@ git commit                      # 将当前缓存区的所有文件提交为一�
 	Date:   Thu Dec 10 09:15:19 2020 +0800
 	```
 	- 该哈希值的长度为 40 位，不过用户只使用前几位也能定位到该版本，比如 git checkout 86e696 。
+- 假设在 git 仓库创建一个分支 test ，提交几个 commit ，然后删除分支 test 。
+  - 此时，这些 commit 不在任何 branch 或 tag 的版本树上，称为孤立提交（orphan commit）。可执行 `git gc` 来清理。
 
 ### 撤销
 
@@ -130,7 +133,7 @@ git revert <refs>...    # 自动提交一个新版本来抵消某个历史版本
 - 从 git 仓库的所有版本中永久删除某个文件：
   ```sh
   git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch <文件的相对路径>' --prune-empty --tag-name-filter cat -- --all
-  git push origin --force --all --tags    # 强制推送，覆盖远端仓库
+  git push origin --force --all --tags    # 强制推送，覆盖远程仓库
   ```
 
 ### .gitignore
@@ -151,7 +154,8 @@ git revert <refs>...    # 自动提交一个新版本来抵消某个历史版本
 
 ## 引用
 
-- 因为 commit 版本的哈希值不方便记忆，git 支持创建以下几种引用（Reference ，refs），用于指向某个版本。
+- 因为 commit 版本的哈希值不方便记忆，git 支持创建以下几种引用（Reference ，refs），用于指向某个 commit 版本。
+  - commit ID 也算 refs 。
   - 分支（branch）：指向某个版本，且可以随时改为指向其它版本，相当于指针。常见分支：
     - master ：git 仓库初始化时，默认创建的一个分支，通常用作主分支。
     - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。还可通过 HEAD~n 的格式指向倒数第 n 个版本，比如 HEAD~0 相当于 HEAD 。
@@ -161,7 +165,7 @@ git revert <refs>...    # 自动提交一个新版本来抵消某个历史版本
 
 ```sh
 git branch          # 显示所有本地分支
-        -a          # 增加显示远端分支
+        -a          # 增加显示 tracked 的远程分支，分支命名格式为 remotes/origin/<branch>
         -v          # 显示每个分支所在的版本
         <branch>    # 新建一个分支，默认以 HEAD 分支为源
           -d        # 删除分支，需要该分支已合并到其它分支
@@ -224,7 +228,7 @@ git rebase
         branch1 branch2 --onto branch3  # 将 branch2 相对于 branch1 的变基应用到 branch3 上
 ```
 
-- 如下图，通过变基（rebase）方式将 C3 合并到 master 时，会先找到 C3 与 C4 的共同祖先 C2；然后删除 C3 ，将从 C2 到 C3 之间的所有变动应用到 C4 上，生成一个新版本 C3'；最后将 master 分支快进到 C3'处。
+- 如下图，通过变基（rebase）方式将 C3 合并到 master 时，会先找到 C3 与 C4 的共同祖先 C2 。然后删除 C3 ，将从 C2 到 C3 之间的所有变动应用到 C4 上，生成一个新版本 C3' 。最后将 master 分支快进到 C3' 处。
 
   ![](./git_rebase.png)
 
@@ -252,9 +256,9 @@ git 的配置文件有三种，局部的配置会覆盖全局的配置：
     bare       = false          # 该仓库是否为裸仓库
     ignorecase = false          # 是否忽略文件名的大小写
 
-[remote "origin"]               # 定义一个远端仓库，名为 origin
+[remote "origin"]               # 定义一个远程仓库，名为 origin
     url    = https://github.com/LeoHsiao1/test.git
-    fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，声明让本地的 src 分支跟踪远端仓库的 dst 分支
+    fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，表示让本地分支 src 跟踪远程分支 dst
 
 [branch "master"]
     remote = origin
@@ -315,23 +319,27 @@ git config
     git push
     ```
 
-## 远端仓库
+## 远程仓库
 
 拥有一个 git 服务器之后，就可以将本地的 git 仓库推送到服务器存储，或从服务器拉取 git 仓库。
-- 一个本地仓库可以配置 0 个或任意个远端仓库。
-  - 配置之后，通过 URL 或 name 即可指定远端仓库。
-- 将本地仓库推送到远端时，会自动推送所有分支，并让本地分支与远端分支建立一对一的关系（称为跟踪）。
-  - 如果已有被跟踪的远端分支，则让本地分支与它合并。（如果发生冲突则不能直接推送）
-  - 如果不存在被跟踪的远端分支，则自动创建它。
-  - 如果选择强制推送，则相当于清空远端仓库后再上传本地仓库。
-  - 默认不会推送标签，要手动推送。
-- 远端仓库有两种传输方式：
-	- 基于 HTTPS 协议：
-		- 先在 git 服务器上创建账号
-		- 然后在本机连接到 git 服务器，输入账号、密码进行认证。
+- 一个本地仓库可以配置 0 个或任意个远程仓库。
+  - 配置之后，通过 URL 或 name 即可引用远程仓库。
+  - 本地仓库的分支需要与远程仓库的分支建立一对一的关系，称为跟踪（tracked），才能通过 pull、push 的方式同步分支。
+  - 例：git clone 时，默认将远程仓库命名为 origin ，并让本地分支 master 跟踪远程分支 origin/master 。
+
+- 本地仓库与远程仓库之间，有两种传输方式：
 	- 基于 SSH 协议：
-		- 先生成一对 SSH 密钥，将密钥保存在本机的 ~/.ssh/id_rsa 文件中，将公钥保存到 git 服务器上。
-		- 然后在本机连接到 git 服务器，使用私钥进行认证。
+		1. 先生成一对 SSH 密钥，将密钥保存在本机的 ~/.ssh/id_rsa 文件中，将公钥保存到 git 服务器上。
+		2. 然后在本机连接到 git 服务器，使用私钥文件进行认证。
+	- 基于 HTTPS 协议：
+		1. 先在 git 服务器上创建账号。
+		2. 然后在本机连接到 git 服务器，输入账号、密码进行认证。 \
+       不过每次 pull、push 都需要输入账号、密码，可以将输入的凭证缓存起来：
+        ```sh
+        git config --global credential.helper cache   # 将凭证在内存中缓存 15 分钟
+        git config --global credential.helper store   # 将凭证持久保存，以明文形式保存到 ~/.git-credentials 文件中
+        ```
+
 - 常见的 git 服务器：
   - GitLab ：提供了代码托管、项目管理、Wiki、CI 等丰富的功能，比较繁重。可使用公网版、私有部署版。
   - GitHub ：功能比 GitLab 少些。只可使用公网版。
@@ -341,71 +349,61 @@ git config
 ### 相关命令
 
 ```sh
-git clone <URL> [dir]           # 将一个远端仓库克隆到本地，默认是保存到一个与仓库同名的子目录中
+git clone <URL> [dir]           # 将一个远程仓库克隆到本地，默认是保存到一个与仓库同名的子目录中
         -b <branch>             # 切换到指定分支，默认是远程仓库的 HEAD 分支
         --depth <n>             # 浅克隆（shallow clone），只下载最近的 n 个版本的文件，默认会下载全部版本
         --recursive             # 递归克隆所有 submodule ，默认不会克隆 submodule
 
-git remote                      # 显示已配置的所有远端仓库的名字
-        -v                      # 显示各个远端仓库的 URL
-        show <name>             # 显示某个远端仓库的具体信息
-        add <name> <URL>        # 添加一个远端仓库，并设置其名字
-        rm <name>               # 删除一个远端仓库
-        rename <name> <name>    # 重命名一个远端仓库
+git remote                      # 显示已配置的所有远程仓库的名字
+        -v                      # 显示各个远程仓库的 URL
+        show <name>             # 显示某个远程仓库的地址、所有 tracked 的远程分支
+        add <name> <URL>        # 添加一个远程仓库，并设置其名字
+        rm <name>               # 删除一个远程仓库
+        rename <name> <name>    # 重命名一个远程仓库
 
-git fetch [name 或 URL]         # 拉取远端仓库的最新内容（包括分支、标签），但只是下载到本地仓库，并不会改变本地分支
-        --all                   # 拉取所有远端仓库（默认只是 origin 仓库）
+git fetch [name 或 URL]         # 拉取远程仓库的最新内容（包括分支、标签），但只是下载到本地仓库，不会修改本地分支
+        --all                   # 拉取所有远程仓库（默认只是 origin 仓库）
         --tags                  # 拉取标签
+        --prune                 # 如果一个 tracked 的远程分支在远程仓库不存在了，则在本地仓库删除 tracked 关系，但不会影响本地分支
+        --dry-run
 
-git pull [name 或 URL]          # 先 fetch 远端仓库，然后将跟踪的远端分支合并到本地分支，但并不会合并到之前不存在的本地分支
+git pull [name 或 URL]          # 先 fetch 远程仓库，然后将所有 tracked 的远程分支合并到本地分支
 
-git push [name 或 URL]          # 推送本地仓库到远端仓库
-        --force                 # 强制推送
-        --all                   # 推送本地仓库的所有分支
+git push [name 或 URL]          # 推送本地仓库到远程仓库。默认会推送所有 tracked 分支，但不会推送 tag
+        --force                 # 强制推送，即清空远程仓库后再上传本地仓库
+        --all                   # 推送本地仓库的所有分支。如果不存在 tracked 的远程分支，则自动创建它
         <tag>                   # 推送一个标签
         --tags                  # 推送所有标签
-        --delete origin <refs>  # 删除远端的分支或标签
+        --delete origin <refs>  # 删除远程的分支或标签
 ```
-- git clone 之后，默认将远端仓库命名为 origin ，并让本地的 master 分支跟踪 origin/master 分支。
-  - 执行 git pull、fetch、push 时，如果不指定远端仓库，则使用默认的 origin 仓库。
-- 拉取、推送代码时，默认每次都需要输入 git 服务器的账号、密码。
-  - 可以在远端仓库的 URL 中写入密码：
-    ```sh
-    git clone http://leo:******@github.com/LeoHsiao1/Notes.git
-    ```
-    但这样会将明文密码泄露到终端。
-  - 或者执行以下命令，将以后输入的凭证都自动缓存起来：
-    ```sh
-    git config --global credential.helper cache   # 将凭证在内存中缓存 15 分钟
-    git config --global credential.helper store   # 将凭证持久保存，实际上是以明文形式保存到 ~/.git-credentials 文件中
-    ```
-- 例：推送一个本地分支到远端仓库
+- 执行 git fetch、pull、push 时，如果不指定远程仓库，则默认使用 origin 仓库。
+- 例：推送一个本地分支到远程仓库
   ```sh
-  git push origin master : origin/master # 推送分支 master 到远端仓库 origin ，并与远端分支 master 合并
-  git push origin : origin/master        # 推送一个空分支（这会删除指定的远端分支）
+  git push origin master : origin/master # 推送分支 master 到远程仓库 origin ，并与远程分支 master 合并
+  git push origin : origin/master        # 推送一个空分支（这会删除指定的远程分支）
   ```
-- 如果在远端仓库创建了一个 test 分支，则可以执行以下命令，拉取到本地仓库：
+- 例：在远程仓库创建一个 test 分支，在本地仓库使用
   ```sh
-  [root@CentOS ~]# git branch -a                # 查看当前分支，此时没看到 test 分支
+  [root@CentOS ~]# git branch -a                # 查看当前分支，此时没看到远程分支 test
   * master
     remotes/origin/HEAD -> origin/master
     remotes/origin/master
 
-  [root@CentOS ~]# git fetch                    # 拉取远端仓库
+  [root@CentOS ~]# git fetch                    # 拉取远程仓库
   From https://github.com/LeoHsiao1/Notes
   * [new branch]      test       -> origin/test
 
-  [root@CentOS ~]# git branch -a                # 此时可看到远端的 test 分支
+  [root@CentOS ~]# git branch -a                # 此时可看到远程分支 test
   * master
     remotes/origin/HEAD -> origin/master
     remotes/origin/master
     remotes/origin/test
 
-  [root@CentOS ~]# git checkout test            # 切换到本地的 test 分支，会自动创建它，并跟踪到远端的 test 分支
+  [root@CentOS ~]# git checkout test            # 切换到本地分支 test ，这会自动创建它，并跟踪到远程分支 test
   Switched to a new branch 'test'
   Branch 'test' set up to track remote branch 'test' from 'origin'.
 
-  [root@CentOS ~]# git checkout test2           # 切换到本地的 test2 分支失败，不会自动创建它
+  [root@CentOS ~]# git checkout test2           # 切换到本地分支 test2 ，这不会自动创建它，因为不存在对应的远程分支
   error: pathspec 'test2' did not match any file(s) known to git
 
   [root@CentOS ~]# git branch -a                # 查看此时的分支
@@ -420,12 +418,12 @@ git push [name 或 URL]          # 推送本地仓库到远端仓库
 
 - 执行 `git init --bare` 会创建一个裸仓库。
   - 它不会创建 .git 子目录，而是将 git 仓库中的文件直接存储到项目根目录。并且通常将项目根目录加上扩展名 .git 。
-  - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远端仓库，供多人推送修改。
+  - 它不支持提交 commit ，只能通过 push 的方式修改，因此常用于在服务器上存储远程仓库，供多人推送修改。
 
 ### LFS
 
 - Git LFS（Large File Storage）：Git 的一种插件，用于存储大文件。
-  - 原理：将一些大文件存储在 Git 仓库外部（位于 `.git/lfs/` 目录下），只在 Git 仓库内通过指针引用。在 pull 远端仓库时，默认只拉取当前版本的大文件。
+  - 原理：将一些大文件存储在 Git 仓库外部（位于 `.git/lfs/` 目录下），只在 Git 仓库内通过指针引用。在 pull 远程仓库时，默认只拉取当前版本的大文件。
   - 相关命令：
     ```sh
     yum install git-lfs     # 安装 lfs

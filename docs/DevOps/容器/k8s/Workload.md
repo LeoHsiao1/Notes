@@ -6,7 +6,7 @@
 
 ## Deployment
 
-：用于部署无状态的 Pod ，可以在整个集群内运行任意个 Pod 实例（又称为副本）。
+：适合部署无状态的 Pod ，可以在 k8s 集群内同时运行任意个 Pod 副本（又称为实例）。
 
 ### 配置
 
@@ -155,7 +155,7 @@ spec:
 
 ## StatefulSet
 
-：与 Deployment 类似，但用于部署有状态的 Pod 。
+：与 Deployment 类似，但适合部署有状态的 Pod 。
 - 相关概念：
   - 无状态应用
     - ：历史执行的任务不会影响新执行的任务。因此 Pod 可以随时销毁并从镜像重新创建。
@@ -235,7 +235,7 @@ spec:
 
 ## DaemonSet
 
-：与 Deployment 类似，但在每个 Node 上最多只能部署一个 Pod 副本。适合监控、日志等 daemon 服务。
+：与 Deployment 类似，但在每个 Node 上最多运行一个 Pod 副本。适合部署监控系统、日志采集等 daemon 服务。
 - DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
 - 例：
   ```yml
@@ -265,10 +265,133 @@ spec:
 
 ## Job
 
-：一次性任务，适合部署运行一段时间就会自行终止、不需要重启的 Pod 。
+：一次性任务，适合部署运行一段时间就会自己终止的 Pod ，可以同时运行任意个 Pod 副本。
+- Job 会创建一些 Pod 副本，等一定数量的 Pod 进入 Succeeded 阶段之后，该 Job 就算完成。
+
+<!--
+- 删除一个 Job 时，会自动删除其下属的所有 Pod 。
+- 暂停一个 Job 时，会自动删除其 Running 阶段的 Pod 。
+？？有时不会，是否因为 k8s 版本
+Pod 完成时，会优雅地终止所有 Running 阶段的 Pod
+-->
+
+
+如果 Pod 没有自己终止，则会一直保持运行，不会被 k8s 杀死
+Job 在创建之后，不支持修改配置
+
+
+- 例：用该配置创建一个 Job
+  ```yml
+  apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: test-job
+    namespace: default
+  spec:
+    template:
+      spec:
+        containers:
+        - command:
+          - curl
+          - baidu.com
+          name: curl
+          image: alpine/curl:latest
+        restartPolicy: Never      # Job 的重启策略，只能为 Never 或 OnFailure
+  ```
+  创建 Job 之后再查看其配置，可见 k8s 自动添加了一些配置参数：
+  ```yml
+  apiVersion: batch/v1
+  kind: Job
+  metadata:
+    labels:
+      controller-uid: c21ce7a7-f858-4c4e-95f8-9ac02fa60995
+      job-name: test-job
+    name: test-job
+    namespace: default
+  spec:
+    backoffLimit: 6   # 重试次数
+    completions: 1    # 完成数量。当 Job 下属的 Succeeded Pod 达到该数量时， Job 变为 Complete 状态，停止运行
+    parallelism: 1    # 并行数量，即最多存在多少个 Running Pod 。默认为 1 。如果为 0 ，则停止运行 Job
+    selector:
+      matchLabels:
+        controller-uid: c21ce7a7-f858-4c4e-95f8-9ac02fa60995
+    template:
+      metadata:
+        labels:
+          controller-uid: c21ce7a7-f858-4c4e-95f8-9ac02fa60995    # k8s 自动添加了 controller-uid 标签，用于 selector
+          job-name: test-job
+      spec:
+        containers:
+        - command:
+          - curl
+          - baidu.com
+          image: alpine/curl:latest
+          imagePullPolicy: Always
+          name: curl
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Never
+        schedulerName: default-scheduler
+        terminationGracePeriodSeconds: 30
+  ```
+
+- 当任一 Pod 进入 Failed 阶段时，Job 会自动重试，最多重试 backoffLimit 次。
+  - 重试的间隔时间按 0s、10s、20s、40s 数列增加，最大为 6min 。
+  - 重试的方式：
+    - 采用 `restartPolicy: Never` 时，Job 每次重试，会保留 Failed Pod ，创建新 Pod 。
+      - Job 的 `status.failed` 字段记录了当前 Failed Pod 数量。如果 `status.failed - 1 ≥ backoffLimit` ，则 Job 停止重试。
+      - 因此最多可能运行 `parallelism + backoffLimit` 次 Pod 。
+    - 采用 `restartPolicy: OnFailure` 时，Job 每次重试，会重启 Failed Pod 。
+      - Pod 的 `status.containerStatuses[0].restartCount` 字段记录了 Pod 被 restartPolicy 重启的次数。如果 `sum_all_pod_restartCount ≥ backoffLimit` ，则 Job 停止重试。
+      - 因此最多可能运行 `parallelism + backoffLimit` 次 Pod 。不过最后一次重启时，Pod 刚启动几秒，就会因为 restartCount 达到阈值而被终止。
+    - 如果主动删除 Pod ，导致 Job 自动创建新 Pod ，则不会消耗重试次数。
+  - Job 达到 backoffLimit 限制而停止重试时，会变为 Failed 状态，自动删除所有 Running Pod ，保留 Failed Pod 。
+    - 特别地，如果采用 `restartPolicy: OnFailure` ，则会删除所有 Pod ，不方便保留现场、看日志。
+    - 因此，建议让 Job 采用 `restartPolicy: Never` 。
+
 
 
 ## CronJob
 
-：定时任务，用于定时创建并执行某个 Job 。
+：定时任务，用于定时创建并执行 Job 。
 - 由 kube-controller-manager 定时调度，而后者默认采用 UTC 时区。
+- 例：
+  ```yml
+  apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    name: delete-failed-pod
+    namespace: kube-system
+  spec:
+    concurrencyPolicy: Allow
+    failedJobsHistoryLimit: 1
+    jobTemplate:
+      spec:
+        template:
+          spec:
+            containers:
+              - args:
+                - delete
+                - pods
+                - --all-namespaces
+                - --field-selector
+                - status.phase=Failed
+                image: bitnami/kubectl:1.21
+                imagePullPolicy: IfNotPresent
+                name: container-0
+                resources: {}
+                terminationMessagePath: /dev/termination-log
+                terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            restartPolicy: Never
+            schedulerName: default-scheduler
+            serviceAccount: admin     # 这里事先为该 ServiceAccount 设置 ClusterRoleBinding 权限，从而允许执行 kubectl 命令
+            serviceAccountName: admin
+            terminationGracePeriodSeconds: 30
+    schedule: 0 1 * * *
+    successfulJobsHistoryLimit: 1
+    suspend: false    # 是否暂停执行
+  ```
+

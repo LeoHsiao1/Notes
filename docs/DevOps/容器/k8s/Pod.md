@@ -257,7 +257,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
   - 调度节点
     - Pod 被调度到一个节点之后，不能迁移到其它节点。如果在其它节点创建新的 Pod ，即使采用相同的 Pod name ，但 UID 也会不同。
   - 拉取镜像
-    - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间将按 1s、10s、20s、40s 的形式倍增，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
+    - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间按 0s、10s、20s、40s 数列增加，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
   - 创建容器
     - 比如根据镜像配置容器、挂载数据卷。
   - 启动容器
@@ -298,9 +298,11 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 ### 重启
 
 - Pod 终止时，如果启用了 restartPolicy ，则会被 kubelet 自动重启。
-  - kubelet 重启 Pod 时，并不会重启容器，而是在当前节点上重新创建 Pod 中的所有容器，并删除旧容器。
-  - 如果 Pod 连续重启失败，则重启的间隔时间将按 1s、10s、20s、40s 的形式倍增，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
+  - kubelet 重启 Pod 时，并不会重启容器，而是删除旧容器（保留 pause 容器），然后在当前节点上重新创建 Pod 中的所有容器。
+  - 如果 Pod 连续重启失败，则重启的间隔时间按 0s、10s、20s、40s 数列增加，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
     - 连续重启时，k8s 会报错 CrashLoopBackOff ，表示 Pod 陷入崩溃循环中。
+  - 如果手动终止 Pod 中的任一容器，则 kubelet 会在 1s 内发现，并将 Pod 标记为 Failed 阶段，等满足重启间隔之后，再根据 restartPolicy 重启 Pod 。
+    - 特别地，手动终止 pause 容器时，kubelet 可能过几秒才发现。
 
 - Pod 的重启策略（restartPolicy）分为多种：
   ```sh
@@ -332,7 +334,7 @@ status:
     imageID: docker-pullable://nginx@sha256:db3c9eb0f9bc7143d5995370afc23f7434f736a5ceda0d603e0132b4a6c7e2cd
     name: nginx
     ready: true
-    restartCount: 0
+    restartCount: 0       # Pod 被 restartPolicy 重启的次数
     state:
       running:
         startedAt: "2021-12-01T08:21:23Z"

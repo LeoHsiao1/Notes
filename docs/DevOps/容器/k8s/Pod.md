@@ -8,42 +8,59 @@
 
 ## 配置
 
-一个 Pod 的配置示例：
-```yml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-spec:                                 # Pod 的规格
-  containers:                         # 在 Pod 中定义一组容器
-  - name: nginx                       # 容器名
-    image: nginx:1.20
-    imagePullPolicy: IfNotPresent     # 拉取镜像的策略，表示本机不存在该镜像时才拉取。设置成 Always 则总是拉取
-    args:                             # 覆盖容器的 CMD 命令
-    - nginx
-    - -c
-    - /etc/nginx/nginx.conf
-    command:                          # 覆盖容器的 ENTRYPOINT 命令
-    - bash
-    - -c
-    env:                              # 添加环境变量到容器终端
-    - name: k1
-      value: v1
-    # workingDir: /tmp                # 指定容器的工作目录
-    # terminationMessagePath: /dev/termination-log  # 默认挂载一个文件到容器内指定路径，用于记录容器的终止信息
-    # terminationMessagePolicy: File
-  # imagePullSecrets:                 # 拉取镜像时使用的账号密码，需要指定 secret 对象
-  # - name: my_harbor
-  # restartPolicy: Always
-  # terminationGracePeriodSeconds: 30 # kubelet 主动终止 Pod 时的宽限期，默认为 30s
-  # hostIPC: false                    # 是否采用宿主机的 IPC namespace
-  # hostNetwork: false                # 是否采用宿主机的 Network namespace
-  # hostPID: false                    # 是否采用宿主机的 PID namespace
-  # shareProcessNamespace:false       # 是否让所有容器共用 pause 容器的 PID namespace
-```
+- 例：简单的 Pod 配置
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: curl
+    namespace: default
+  spec:                           # Pod 的规格
+    containers:                   # 在 Pod 中定义一组容器
+    - command:
+      - ping
+      - baidu.com
+      name: curl                  # 容器名
+      image: alpine/curl:latest
+  ```
+  - 使用上述配置参数即可创建一个 Pod ，省略的其它配置参数会采用默认值。
 
-- 容器的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
-  - 如果存在其它日志文件，可以增加一个 sidecar 容器，执行 tail -f xx.log 命令。
+- 例：详细的 Pod 配置
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: nginx
+  spec:
+    containers:
+    - name: nginx
+      image: nginx:1.20
+      # imagePullPolicy: Always         # 拉取镜像的策略。默认为 Always ，表示每次创建容器时都要 pull 镜像。可选 IfNotPresent ，表示本机不存在该镜像时才拉取
+      args:                             # 容器的启动命令，这会覆盖 Dockerfile 的 CMD 指令
+      - nginx
+      - -c
+      - /etc/nginx/nginx.conf
+      command:                          # 容器的启动参数，这会覆盖 Dockerfile 的 ENTRYPOINT 指令
+      - bash
+      - -c
+      env:                              # 添加环境变量到容器终端
+      - name: k1
+        value: v1
+      workingDir: /tmp                  # 容器的工作目录，这会覆盖 Dockerfile 的 WORKDIR 指令
+      # terminationMessagePath: /dev/termination-log  # 默认挂载一个文件到容器内指定路径，用于记录容器的终止信息
+      # terminationMessagePolicy: File
+    # imagePullSecrets:                 # 拉取镜像时使用的账号密码，需要指定 secret 对象
+    # - name: my_harbor
+    # restartPolicy: Always             # 重启策略
+    # terminationGracePeriodSeconds: 30 # kubelet 主动终止 Pod 时的宽限期，默认为 30s
+    # hostIPC: false                    # 是否采用宿主机的 IPC namespace
+    # hostNetwork: false                # 是否采用宿主机的 Network namespace
+    # hostPID: false                    # 是否采用宿主机的 PID namespace
+    # shareProcessNamespace:false       # 是否让所有容器共用 pause 容器的 PID namespace
+  ```
+
+- 容器内应用程序的的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
+  - 如果输出到容器内的日志文件，可以增加一个 sidecar 容器，执行 `tail -f xx.log` 命令，将日志采集到容器终端。
 
 - Static Pod 是一种特殊的 Pod ，由 kubelet 管理，不受 apiserver 控制，不能调用 ConfigMap 等对象。
   - 用法：启动 kubelet 时加上 --pod-manifest-path=/etc/kubernetes/manifests 参数，然后将 Pod 的配置文件保存到该目录下。kubelet 会定期扫描配置文件，启动 Pod 。
@@ -470,7 +487,12 @@ spec:
   - 如果超过 limits.ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
 
 - 建议监控 Pod 运行一段时间的实际资源开销，据此配置 requests、limits 。
-  - 最好配置 Pod 的 requests 等于 limits ，这样容易预测 Pod 的资源开销。
+  - 例如用脚本自动配置：
+    ```py
+    requests.cpu = average_over_24_hours(monitor.cpu)   # 根据 24 小时的平均开销设置 requests 资源
+    limits.cpu   = max_over_24_hours(monitor.cpu)       # 根据 24 小时的最大开销设置 requests 资源
+    ```
+    - 理想的情况是， Pod 的 requests 等于 limits ，这样容易预测 Pod 的资源开销。
   - 假设一个 Pod 运行时通常只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期需要 2 核 CPU 。
     - 如果 requests 等于 limits 且多于实际开销，就容易浪费节点资源。
     - 如果 requests 等于 limits 且少于实际开销，Pod 就容易资源不足。

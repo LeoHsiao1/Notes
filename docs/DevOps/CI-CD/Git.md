@@ -228,18 +228,22 @@ git rebase
         branch1 branch2 --onto branch3  # 将 branch2 相对于 branch1 的变基应用到 branch3 上
 ```
 
-- 如下图，通过变基（rebase）方式将 C3 合并到 master 时，会先找到 C3 与 C4 的共同祖先 C2 。然后删除 C3 ，将从 C2 到 C3 之间的所有变动应用到 C4 上，生成一个新版本 C3' 。最后将 master 分支快进到 C3' 处。
+- 如下图，假设在 Git 仓库的 master 分支上依次提交了 C0、C1、C2、C4 版本。此时有人 fork 了 C2 版本，做出修改，生成 C3 版本。
+  - 如果以 merge 方式将 C3 合并到 C4 ，则可能存在合并冲突，需要手动处理。
+  - 如果以变基（rebase）方式将 C3 合并到 master ，则会自动找到 C3 与 C4 的共同祖先 C2 。然后删除 C3 ，将从 C2 到 C3 之间的所有变化拷贝提交到 C4 ，生成一个新版本 C3' 。最后将 master 分支指向 C3' 版本。
 
   ![](./git_rebase.png)
 
-- merge 方式与 rebase 方式最终生成的版本都一样，但是 rebase 方式会删除次分支，将版本图简化成一条线。
+- merge 与 rebase 方式最终生成的版本都一样，但是 rebase 方式会删除分叉的分支，将版本图简化成一条线。
 
 ### cherry-pick
 
 ```sh
-git cherry-pick <commit_hash>...  # 将指定的多个 commit 的修改内容提交到当前分支，支持提交到其它 Git 仓库
+git cherry-pick <commit_hash>...  # 提取多个 commit 的修改内容，拷贝提交到当前分支。支持提交到其它 Git 仓库
         -n                        # 只更新文件，不提交
 ```
+- cherry-pick 适合在差异较大的分支之间拷贝一些 commit 变化，甚至拷贝到其它 Git 仓库。
+  - 假设修改了 master 分支的 .gitignore 文件，然后想同步到其它分支。如果采用 merge、rebase 方式，则需要将 master 分支合并到其它分支，可能修改大量文件。而采用 cherry-pick 方式，则只会修改 .gitignore 文件。
 
 ## 配置
 

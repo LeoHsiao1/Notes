@@ -263,10 +263,14 @@ spec:
   - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
   - RollingUpdate ：默认采用。
 
+
+
+
+
 ## Job
 
 ：一次性任务，适合部署运行一段时间就会自己终止的 Pod ，可以同时运行任意个 Pod 副本。
-- 例：用该配置创建一个 Job
+- 例：用以下配置创建一个 Job
   ```yml
   apiVersion: batch/v1
   kind: Job
@@ -300,14 +304,14 @@ spec:
     parallelism: 1      # 并行数量，默认为 1 。表示最多存在多少个 Running Pod 。如果为 0 ，则不创建 Pod
     # suspend: false    # 是否暂停执行 Job
     # activeDeadlineSeconds: 0    # Job 执行的超时时间，超过则终止 Job ，变为 Failed 状态。默认不限制
-    # ttlSecondsAfterFinished: 0  # 当 Job 执行完成之后，最多保留 n 秒就删除 Job ，这会自动删除下属的 Pod 。默认不限制。如果为 0 ，则立即删除
+    # ttlSecondsAfterFinished: 0  # 当 Job 执行完成之后，保留多少秒就删除 Job ，这会自动删除下属的 Pod 。默认不限制。如果为 0 ，则立即删除
     selector:
       matchLabels:
         controller-uid: c21ce7a7-f858-4c4e-95f8-9ac02fa60995
     template:
       metadata:
         labels:
-          controller-uid: c21ce7a7-f858-4c4e-95f8-9ac02fa60995    # k8s 自动添加了 controller-uid 标签，用于 selector
+          controller-uid: c21ce7a7-f858-4c4e-95f8-9ac02fa60995
           job-name: test-job
       spec:
         containers:
@@ -331,6 +335,14 @@ spec:
     startTime: "2022-01-01T12:00:00Z"
     # completionTime: ...
   ```
+  - 创建 Job 时，k8s 默认会自动给 Job 添加一个唯一的 controller-uid 标签，用于 selector 。
+    - 也可以手动指定 selector 标签，如下：
+      ```yml
+      manualSelector: true    # 是否允许手动指定 selector 标签
+      selector:
+        matchLabels:
+          k8s-app: test-job
+      ```
 
 - Job 的工作流程：
   1. Job 被创建，立即开始执行，处于 Active 状态。
@@ -340,7 +352,7 @@ spec:
 - 除了 Complete 状态，Job 也可能达到 activeDeadlineSeconds、backoffLimit 限制而变为 Failed 状态，都属于终止执行。
   - 当 Job 终止时，会自动删除所有 Running Pod （优雅地终止），但剩下的 Pod 一般会保留，方便用户查看。除非设置了 ttlSecondsAfterFinished 。
   - 如果 Pod 一直处于 Running 阶段，不自己终止，Job 就会一直执行，等待 spec.completions 条件。除非设置了 activeDeadlineSeconds 。
-  - 用户主动删除一个 Job 时，并不会自动删除所有下级 Pod 。反而让这些 Pod 不再受 controller 控制，比如 Running Pod 会继续运行。
+  - 用户主动删除一个 Job 时，并不会自动删除其下级 Pod 。反而这些 Pod 会不再受 controller 控制，比如 Running Pod 会继续运行。
 
 - 当任一 Pod 进入 Failed 阶段时，Job 会自动重试，最多重试 backoffLimit 次。
   - 重试的间隔时间按 0s、10s、20s、40s 数列增加，最大为 6min 。
@@ -355,6 +367,7 @@ spec:
   - Job 达到 backoffLimit 限制时，会停止重试，变为 Failed 状态，自动删除所有 Running Pod ，保留其它 Pod 。
     - 特别地，如果采用 `restartPolicy: OnFailure` ，则会删除所有 Pod ，不方便保留现场、看日志。
     - 因此，建议让 Job 采用 `restartPolicy: Never` 。
+  - k8s v1.25 给 Job 增加了 spec.podFailurePolicy 字段，决定当容器退出码在什么范围时，让 Job 重试。在什么范围时，让 Job 直接变为 Failed 状态。
 
 - 例：暂停执行 Job
   ```sh

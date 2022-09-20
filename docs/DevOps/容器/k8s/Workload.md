@@ -266,20 +266,6 @@ spec:
 ## Job
 
 ：一次性任务，适合部署运行一段时间就会自己终止的 Pod ，可以同时运行任意个 Pod 副本。
-- Job 会创建一些 Pod 副本，等一定数量的 Pod 进入 Succeeded 阶段之后，该 Job 就算完成。
-
-<!--
-- 删除一个 Job 时，会自动删除其下属的所有 Pod 。
-- 暂停一个 Job 时，会自动删除其 Running 阶段的 Pod 。
-？？有时不会，是否因为 k8s 版本
-Pod 完成时，会优雅地终止所有 Running 阶段的 Pod
--->
-
-
-如果 Pod 没有自己终止，则会一直保持运行，不会被 k8s 杀死
-Job 在创建之后，不支持修改配置
-
-
 - 例：用该配置创建一个 Job
   ```yml
   apiVersion: batch/v1
@@ -296,7 +282,7 @@ Job 在创建之后，不支持修改配置
           - baidu.com
           name: curl
           image: alpine/curl:latest
-        restartPolicy: Never      # Job 的重启策略，只能为 Never 或 OnFailure
+        restartPolicy: Never      # Job 下级 Pod 的重启策略，只能为 Never 或 OnFailure
   ```
   创建 Job 之后再查看其配置，可见 k8s 自动添加了一些配置参数：
   ```yml
@@ -309,9 +295,12 @@ Job 在创建之后，不支持修改配置
     name: test-job
     namespace: default
   spec:
-    backoffLimit: 6   # 重试次数
-    completions: 1    # 完成数量。当 Job 下属的 Succeeded Pod 达到该数量时， Job 变为 Complete 状态，停止运行
-    parallelism: 1    # 并行数量，即最多存在多少个 Running Pod 。默认为 1 。如果为 0 ，则停止运行 Job
+    backoffLimit: 6     # 重试次数，默认为 6
+    completions: 1      # 完成数量，默认为 1 。当 Job 下级的 Succeeded Pod 达到该数量时，Job 变为 Complete 状态
+    parallelism: 1      # 并行数量，默认为 1 。表示最多存在多少个 Running Pod 。如果为 0 ，则不创建 Pod
+    # suspend: false    # 是否暂停执行 Job
+    # activeDeadlineSeconds: 0    # Job 执行的超时时间，超过则终止 Job ，变为 Failed 状态。默认不限制
+    # ttlSecondsAfterFinished: 0  # 当 Job 执行完成之后，最多保留 n 秒就删除 Job ，这会自动删除下属的 Pod 。默认不限制。如果为 0 ，则立即删除
     selector:
       matchLabels:
         controller-uid: c21ce7a7-f858-4c4e-95f8-9ac02fa60995
@@ -335,23 +324,44 @@ Job 在创建之后，不支持修改配置
         restartPolicy: Never
         schedulerName: default-scheduler
         terminationGracePeriodSeconds: 30
+  status:
+    active: 1         # 记录当前 Running 阶段的 Pod 数量
+    failed: 0         # 记录当前 Failed 阶段的 Pod 数量
+    # succeeded: 0    # 表示该 Job 是否执行完成
+    startTime: "2022-01-01T12:00:00Z"
+    # completionTime: ...
   ```
+
+- Job 的工作流程：
+  1. Job 被创建，立即开始执行，处于 Active 状态。
+  2. Job 创建一些 Pod 副本。
+  3. 等 spec.completions 数量的 Pod 进入 Succeeded 阶段之后，该 Job 就执行完成，进入 Succeeded 阶段、Complete 状态。
+
+- 除了 Complete 状态，Job 也可能达到 activeDeadlineSeconds、backoffLimit 限制而变为 Failed 状态，都属于终止执行。
+  - 当 Job 终止时，会自动删除所有 Running Pod （优雅地终止），但剩下的 Pod 一般会保留，方便用户查看。除非设置了 ttlSecondsAfterFinished 。
+  - 如果 Pod 一直处于 Running 阶段，不自己终止，Job 就会一直执行，等待 spec.completions 条件。除非设置了 activeDeadlineSeconds 。
+  - 用户主动删除一个 Job 时，并不会自动删除所有下级 Pod 。反而让这些 Pod 不再受 controller 控制，比如 Running Pod 会继续运行。
 
 - 当任一 Pod 进入 Failed 阶段时，Job 会自动重试，最多重试 backoffLimit 次。
   - 重试的间隔时间按 0s、10s、20s、40s 数列增加，最大为 6min 。
   - 重试的方式：
     - 采用 `restartPolicy: Never` 时，Job 每次重试，会保留 Failed Pod ，创建新 Pod 。
-      - Job 的 `status.failed` 字段记录了当前 Failed Pod 数量。如果 `status.failed - 1 ≥ backoffLimit` ，则 Job 停止重试。
+      - 如果 `status.failed - 1 ≥ backoffLimit` ，则 Job 停止重试。
       - 因此最多可能运行 `parallelism + backoffLimit` 次 Pod 。
     - 采用 `restartPolicy: OnFailure` 时，Job 每次重试，会重启 Failed Pod 。
       - Pod 的 `status.containerStatuses[0].restartCount` 字段记录了 Pod 被 restartPolicy 重启的次数。如果 `sum_all_pod_restartCount ≥ backoffLimit` ，则 Job 停止重试。
-      - 因此最多可能运行 `parallelism + backoffLimit` 次 Pod 。不过最后一次重启时，Pod 刚启动几秒，就会因为 restartCount 达到阈值而被终止。
+      - 因此最多可能运行 `parallelism + backoffLimit` 次 Pod 。不过最后一次重启时，Pod 刚启动几秒，就会因为 restartCount 达到阈值而被终止。相当于少了一次重试。
     - 如果主动删除 Pod ，导致 Job 自动创建新 Pod ，则不会消耗重试次数。
-  - Job 达到 backoffLimit 限制而停止重试时，会变为 Failed 状态，自动删除所有 Running Pod ，保留 Failed Pod 。
+  - Job 达到 backoffLimit 限制时，会停止重试，变为 Failed 状态，自动删除所有 Running Pod ，保留其它 Pod 。
     - 特别地，如果采用 `restartPolicy: OnFailure` ，则会删除所有 Pod ，不方便保留现场、看日志。
     - 因此，建议让 Job 采用 `restartPolicy: Never` 。
 
-
+- 例：暂停执行 Job
+  ```sh
+  kubectl patch job/test-job -p '{"spec":{"suspend":true}}'
+  ```
+  - 暂停执行 Job 时，会优雅地终止所有 Running Pod 。
+  - 恢复执行 Job 时，会重新设置 status.startTime 字段，导致 activeDeadlineSeconds 重新计时。
 
 ## CronJob
 

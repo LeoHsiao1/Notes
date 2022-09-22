@@ -159,19 +159,6 @@ $ ssh-copy-id root@10.0.0.1         # 将本机的 SSH 公钥拷贝给目标主�
 - 执行该命令时，需要先通过目标主机的 SSH 认证，才有拷贝 SSH 公钥的权限。
 - 该 SSH 公钥会被拷贝到目标主机的指定用户的 ~/.ssh/authorized_keys 文件中，允许以后本机以该用户的 SSH 私钥登录到目标主机。
 
-### scp
-
-：安全拷贝协议（Secure copy protocol），基于 SSH 协议加密通信，用于在主机之间拷贝文件。
-
-用法：
-```sh
-$ scp
-      <file>... root@10.10.0.1:/root  # 将本机的文件拷贝到其它主机（需要通过 SSH 认证）
-      root@10.10.0.1:/root/f1 /root   # 将其它主机的文件拷贝到本机的指定目录
-      -r                              # 递归操作（用于拷贝目录）
-      -P 22                           # 指定 SSH 的端口
-```
-
 ### sftp
 
 ：安全文件传输协议（Secure File Transfer Protocol），基于 SSH 协议加密通信，兼容 FTP 的大部分指令，比 scp 的功能更多。

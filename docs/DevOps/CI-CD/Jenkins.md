@@ -143,6 +143,8 @@
   - master 每次连接 slave 时，不会加载 `/etc/profile` 和 `~/.bash_profile` ，只会加载 `/etc/bashrc` 和 `~/.bashrc` 。
   - 建议在 slave 的配置页面添加 Prefix Start Agent Command ：`source /etc/profile;source ~/.bash_profile;` 。
   - 客户端执行的所有 shell 命令都会继承它的 shell 环境变量。因此，当用户修改 shell 环境变量时，客户端不会自动更新，必须手动将 slave 断开重连。
+- 2022 年，Jenkins 发布 LTS 2.361 版本，要求用 Java 11 或更高版本的 JVM 运行 jenkins.war 和 remoting.jar 。
+  - 建议在 agent 主机上安装 `yum install java-11-openjdk` ，然后设置节点的 Java Path 变量。
 
 ### 管理权限
 

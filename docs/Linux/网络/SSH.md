@@ -8,7 +8,7 @@
 - 采用 C/S 架构工作。
   - SSH 服务器要运行一个守护进程 sshd ，监听发到某个端口（默认是 TCP 22 端口）的 SSH 请求。
   - SSH 客户端可采用 SecureCRT、Putty 等软件，向服务器发起 SSH 请求。
-- FTP、Telnet、POP 等网络传输协议采用明文传输数据，容易被监听。而 SSH 将数据经过非对称加密之后再传输，很安全，但速度较慢。
+- FTP、Telnet、POP 等网络传输协议采用明文传输数据，容易被监听、窃取。而 SSH 将数据经过非对称加密之后再传输，很安全，但传输耗时大了点。
 
 ## 服务器
 
@@ -51,24 +51,33 @@ PasswordAuthentication yes        # 允许使用密码登录（否则只能使�
 PermitEmptyPasswords no           # 不允许使用空密码登录
 
 UseDNS no                         # 不检查目标主机的主机名、 IP 是否与 DNS 一致，否则会增加建立 SSH 连接的耗时
-StrictHostKeyChecking ask         # SSH 登录其它主机时，如果发现其公钥与 known_hosts 中的记录不同，则采取什么措施。默认为询问是否连接
 StrictModes yes                   # 被 SSH 登录时，检查用户的家目录、authorized_keys 等文件是否只被该用户拥有写权限
 ```
 - 修改了配置文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
-- `~/.ssh/authorized_keys` 文件记录了一些公钥，允许客户端使用对应的私钥进行 SSH 认证，登录到本机。
-- `~/.ssh/known_hosts` 文件记录了所有与本机成功进行了 SSH 认证的主机的公钥。
-- 如果 StrictModes 检查不通过，则 sshd 依然会拒绝 SSH 认证，并在 `/var/log/secure` 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` 。此时建议执行：
+- 如果 StrictModes 检查不通过，则 sshd 依然会拒绝 SSH 认证，并在 `/var/log/secure` 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` 。此时建议调整文件权限：
   ```sh
-  chmod 700   ~   ~/.ssh
-  chmod 600   ~/.ssh/authorized_keys
+  chmod 700 ~  ~/.ssh
+  chmod 600 ~/.ssh/authorized_keys
   ```
 - 使用 SSH 客户端登录 SSH 服务器时，有两种认证方式：
-  - 账号和密码认证：容易被暴力破解密码，还可能受到“中间人攻击”（连接到一个冒充的 SSH 服务器）。
-  - 密钥认证：先将 SSH 客户端的公钥放在 SSH 服务器上，当 SSH 客户端要登录时会发出该公钥的指纹，而 SSH 服务器会根据指纹检查 authorized_keys 中是否有匹配的公钥，有的话就允许该客户端登录。然后 SSH 服务器会用该公钥加密一个消息回复给 SSH 客户端，该消息只能被 SSH 客户端的私钥解密，这样就完成了双向认证。
-- 为了避免恶意用户频繁尝试 SSH 登录，进行暴力破解，可采取以下措施：
+  - 用户名加密码认证
+    - ：登录时指定用户名，然后按提示输入密码。
+    - 优点：
+      - 可设置方便记忆的密码。
+    - 缺点：
+      - 每次登录时需要手动输入密码。
+      - 采用弱密码时容易被暴力破解。
+  - 密钥认证
+    - ：先将 SSH 客户端的公钥放在 SSH 服务器上，当 SSH 客户端要登录时会发出该公钥的指纹，而 SSH 服务器会根据指纹检查 authorized_keys 中是否有匹配的公钥，有的话就允许该客户端登录。然后 SSH 服务器会用该公钥加密一个消息回复给 SSH 客户端，该消息只能被 SSH 客户端的私钥解密，这样就完成了双向认证。
+    - 优点：
+      - 很安全。
+      - 每次登录时不需要手动输入密码，又称为免密登录。
+    - 缺点：
+      - 密钥文件只能拷贝，不方便人记忆。
+- 为了避免恶意用户频繁尝试 SSH 登录，进行暴力破解，可采取以下安全措施：
   - 使用复杂的 SSH 密码，或者只允许使用 SSH 密钥进行登录。
   - 禁止 root 用户远程登录，这样暴力破解时还需要猜测有效的用户名。
-  - 禁止公网 IP 登录，甚至只允许白名单的 IP 登录。
+  - 只允许内网 IP 登录，甚至只允许少量白名单的 IP 登录。
 
 ### 白名单、黑名单
 
@@ -94,7 +103,8 @@ StrictModes yes                   # 被 SSH 登录时，检查用户的家目录
 
 ## 客户端
 
-使用客户端：
+### 命令
+
 ```sh
 $ ssh <user>@<host>   # 使用 ssh 协议，以 user 用户（默认为 root ）的身份登录 host 主机
       -p 22           # 指定端口号
@@ -112,17 +122,11 @@ $ ssh <user>@<host>   # 使用 ssh 协议，以 user 用户（默认为 root ）
   ssh root@10.0.0.1  'echo $HOSTNAME'         # 用单引号时，不会在本机读取变量的值，而是直接先将命令发送到远端去执行
   ```
 - ssh 登录成功之后，会在目标主机上打开一个 shell 终端，并将其 stdin、stdout 绑定到当前终端。
-- ssh 连接 timeout 的可能原因：
+- ssh 登录时报错 timeout 的可能原因：
   - 与目标主机的网络不通。
   - 目标主机没有运行 sshd 服务器，或者防火墙没有开通 22 端口。
   - 目标主机的负载太大，接近卡死，不能响应 ssh 连接请求。
-- 通过 sshpass 命令可以传递密码给 ssh、scp 命令，如下：
-  ```sh
-  yum install sshpass
-  sshpass -p 123456 ssh root@10.0.0.1
-  ```
-  但这样会将明文密码泄露到终端，比较危险。
-- 采用以下格式可以发送多行命令：
+- 可通过以下格式发送多行命令：
   ```sh
   ssh -tt root@10.0.0.1 << EOL
     uname -n
@@ -135,7 +139,50 @@ $ ssh <user>@<host>   # 使用 ssh 协议，以 user 用户（默认为 root ）
     甚至两个定界符之间的缩进空格，也会被一起发送。
   - 最后一条命令应该是 exit ，用于主动退出远程终端。
 
+### 配置
+
+- `~/.ssh/config` 文件记录了 ssh 命令的配置参数。示例：
+  ```sh
+  Host *
+      StrictHostKeyChecking ask         # 是否检查远程主机的公钥。默认为 ask ，即在登录时询问是否检查。可改为 yes 或 no ，即总是检查、不检查
+      # Port 22                         # SSH 登录端口
+      # User root                       # SSH 登录用户
+      # IdentityFile ~/.ssh/id_rsa.pub  # 用于免密登录的私钥文件
+      # UserKnownHostsFile ~/.ssh/known_hosts   # known_hosts 文件的路径
+
+  Host 10.0.*
+      StrictHostKeyChecking no
+
+  Host centos* !centos-1                # 匹配所有名称以 centos 开头的主机，排除 centos-1 主机
+      StrictHostKeyChecking yes
+  ```
+  - 该文件默认不存在，可主动创建。
+  - 可定义多组 Host 配置，它们会分别生效。如果某个主机匹配一个或多个 Host 模式，则采用对应的配置参数。
+
+- `~/.ssh/known_hosts` 文件记录了所有与本机进行过 SSH 通信的远程主机的公钥，用于验证远程主机的身份。
+  - ssh 命令默认会在第一次尝试登录远程主机时（不需要成功登录），按 SSH 协议进行一次通信，将其公钥记录到 known_hosts 文件。
+    - 以后再尝试登录远程主机时，如果其密钥与记录的值不同，则终止登录并发出警告，怀疑该远程主机是假冒的。
+  - ssh 命令第一次尝试登录远程主机时，known_hosts 文件未记录该主机的密钥，不能验证身份。默认配置了 `StrictHostKeyChecking yes` ，会询问是否依然要登录。如下：
+    ```sh
+    [root@CentOS ~]# ssh 10.0.0.1
+    The authenticity of host '10.0.0.1 (10.0.0.1)' can't be established.
+    ECDSA key fingerprint is SHA256:4v11FRemHSDNLDPETHgi7TBKLzg6STOCNXsN1aX18Ko.
+    ECDSA key fingerprint is MD5:69:8a:63:97:37:2f:13:5c:4f:d4:27:46:9d:e8:7d:43.
+    Are you sure you want to continue connecting (yes/no)?
+    ```
+
+- `~/.ssh/authorized_keys` 文件记录了一些远程主机的公钥，允许使用这些公钥对应的私钥进行认证，登录本机。
+
 ## 相关命令
+
+### sshpass
+
+- 通过 sshpass 命令可以传递密码给 ssh、scp 命令，如下：
+  ```sh
+  yum install sshpass
+  sshpass -p 123456 ssh root@10.0.0.1
+  ```
+  但这样会将明文密码泄露到终端，不安全。
 
 ### ssh-keygen
 
@@ -162,19 +209,18 @@ $ ssh-copy-id root@10.0.0.1         # 将本机的 SSH 公钥拷贝给目标主�
 ### sftp
 
 ：安全文件传输协议（Secure File Transfer Protocol），基于 SSH 协议加密通信，兼容 FTP 的大部分指令，比 scp 的功能更多。
-
-例：
-```sh
-[root@CentOS ~]# sftp root@10.0.0.1
-Connecting to 10.0.0.1...
-sftp> pwd
-Remote working directory: /root
-sftp> ls
-sftp> ls -l
-drwxr-xr-x    2 root root     4096 Dec  7  2016 backup
--rw-r--r--    1 root root     6821 Dec 19  2019 test.py
--rwxrwxr-x    1 root root      115 Dec 21  2018 test.sh
-sftp> get test.sh
-Fetching /root/test.sh to test.sh
-/root/test.sh                                                100%   6821  6.7KB/s   00:00
-```
+- 例：
+  ```sh
+  [root@CentOS ~]# sftp root@10.0.0.1
+  Connecting to 10.0.0.1...
+  sftp> pwd
+  Remote working directory: /root
+  sftp> ls
+  sftp> ls -l
+  drwxr-xr-x    2 root root     4096 Dec  7  2016 backup
+  -rw-r--r--    1 root root     6821 Dec 19  2019 test.py
+  -rwxrwxr-x    1 root root      115 Dec 21  2018 test.sh
+  sftp> get test.sh
+  Fetching /root/test.sh to test.sh
+  /root/test.sh                                                100%   6821  6.7KB/s   00:00
+  ```

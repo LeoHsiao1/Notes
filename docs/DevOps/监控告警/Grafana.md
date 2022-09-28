@@ -266,7 +266,7 @@
   /etc/grafana/grafana.ini      # 配置文件
   /var/lib/grafana/grafana.db   # 一个 SQLite 数据库，保存 Grafana 自身的数据，比如用户表、仪表盘配置
   /var/lib/grafana/plugins/     # 插件目录
-  /var/log/grafana/             # 日志目录。日志文件会自动按天切割，最多保存 7 天
+  /var/log/grafana/             # 日志目录。日志文件会自动按天轮换，最多保存 7 天
   ```
 - 以二进制包的方式部署 Grafana 时，上述文件都保存在工作目录下：
   ```sh

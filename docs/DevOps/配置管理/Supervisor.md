@@ -179,13 +179,13 @@ stderr_logfile_backups=0
   - flase ：总是不重启。
   - unexpected ：异常退出时才重启，即退出码与 exitcodes 不同。
 
-- 建议为进程只保留一份日志，另外用 logrotate 来按日期切割日志。配置如下：
-    ```ini
-    stdout_logfile=/var/log/supervisor/%(program_name)s.out
-    stdout_logfile_maxbytes=0
-    stdout_logfile_backups=0
-    redirect_stderr=true
-    ```
+- 建议为进程只保留一份日志，另外用 logrotate 来按日期轮换日志文件。配置如下：
+  ```ini
+  stdout_logfile=/var/log/supervisor/%(program_name)s.out
+  stdout_logfile_maxbytes=0
+  stdout_logfile_backups=0
+  redirect_stderr=true
+  ```
 
 ## 命令
 

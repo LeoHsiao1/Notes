@@ -305,7 +305,7 @@ spec:
     parallelism: 1      # 并行数量，默认为 1 。表示最多存在多少个 Running Pod 。如果为 0 ，则不创建 Pod
     # suspend: false    # 是否暂停 Job
     # activeDeadlineSeconds: 0    # Job 执行的超时时间，超过则终止 Job ，变为 Failed 状态。默认不限制
-    # ttlSecondsAfterFinished: 0  # 当 Job 执行完成之后，保留多少秒就删除 Job ，这会自动删除下属的 Pod 。默认不限制。如果为 0 ，则立即删除
+    # ttlSecondsAfterFinished: 0  # 当 Job 执行完成之后，保留多少秒就删除 Job ，这会自动删除下级 Pod 。默认不限制。如果为 0 ，则立即删除
     selector:
       matchLabels:
         controller-uid: c21ce7a7-f858-4c4e-95f8-9ac02fa60995
@@ -345,14 +345,15 @@ spec:
           k8s-app: test-job
       ```
 
-- Job 的工作流程：
-  1. Job 被创建，立即开始执行，处于 Active 状态。
-  2. Job 创建一些 Pod 副本。
-  3. 等 spec.completions 数量的 Pod 进入 Succeeded 阶段之后，该 Job 就执行完成，进入 Succeeded 阶段、Complete 状态。
+- kube-controller-manager 中的 JobController 负责管理 Job 。主要的工作流程：
+  1. Job 被创建之后，处于 Active 状态，立即创建一些 Pod 副本。
+  2. 每隔 1s 检查一次 Job ，等 spec.completions 数量的 Pod 进入 Succeeded 阶段之后，该 Job 就执行完成，进入 Succeeded 阶段、Complete 状态。
 
 - 除了 Complete 状态，Job 也可能达到 activeDeadlineSeconds、backoffLimit 限制而变为 Failed 状态，都属于终止执行。
-  - 当 Job 终止时，会自动删除所有 Running Pod （优雅地终止），但剩下的 Pod 一般会保留，方便用户查看。除非设置了 ttlSecondsAfterFinished 。
   - 如果 Pod 一直处于 Running 阶段，不自己终止，Job 就会一直执行，等待 spec.completions 条件。除非设置了 activeDeadlineSeconds 。
+  - 当 Job 终止时，会自动删除所有 Running Pod （优雅地终止），但剩下的 Pod 一般会保留，方便用户查看。除非设置了 ttlSecondsAfterFinished 。
+  - 特别地，用户主动删除一个 Job 时，不会自动删除其下级 Pod 。
+    - 删除一个 CronJob 时，会自动删除其下级 Job 及 Pod 。
 
 - 当任一 Pod 进入 Failed 阶段时，Job 会自动重试，最多重试 backoffLimit 次。
   - 重试的间隔时间按 0s、10s、20s、40s 数列增加，最大为 6min 。
@@ -417,7 +418,7 @@ spec:
     Replace   # 删除旧 Job ，再创建新 Job ，使得该 CronJob 同时只执行一个 Job
     ```
 
-- kube-controller-manager 中的 CronJobController 负责调度 CronJob 。
+- kube-controller-manager 中的 CronJobController 负责管理 CronJob 。
   - kube-controller-manager 部署在容器中时，默认采用 UTC 时区。
   - 如果 CronJob 没有在预期时刻调度 Job （允许延迟 startingDeadlineSeconds 秒），则称为错过调度（miss schedule）。可能是因为 CronJob 暂停、主机时钟不准、k8s 故障等原因。
   - CronJobController 的主函数 Run() 每隔 10s 循环执行一次，期间调用 syncOne() 函数处理每个 CronJob 。

@@ -352,7 +352,7 @@ spec:
 - 除了 Complete 状态，Job 也可能达到 activeDeadlineSeconds、backoffLimit 限制而变为 Failed 状态，都属于终止执行。
   - 如果 Pod 一直处于 Running 阶段，不自己终止，Job 就会一直执行，等待 spec.completions 条件。除非设置了 activeDeadlineSeconds 。
   - 当 Job 终止时，会自动删除所有 Running Pod （优雅地终止），但剩下的 Pod 一般会保留，方便用户查看。除非设置了 ttlSecondsAfterFinished 。
-  - 特别地，用户主动删除一个 Job 时，不会自动删除其下级 Pod 。
+  - 特别地，用户主动删除一个 Job 时，不会自动删除其下级 Pod 。这与 Deployment 不同。
     - 删除一个 CronJob 时，会自动删除其下级 Job 及 Pod 。
 
 - 当任一 Pod 进入 Failed 阶段时，Job 会自动重试，最多重试 backoffLimit 次。

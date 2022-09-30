@@ -404,7 +404,7 @@ spec:
             restartPolicy: Never
             schedulerName: default-scheduler
             terminationGracePeriodSeconds: 30
-    schedule: '*/5 * * * *'           # 调度时刻表，表示在什么时候创建 Job ，采用 Linux Cron 的时间表达式
+    schedule: '*/5 * * * *'           # 调度时刻表，表示在什么时候创建 Job 。采用 Linux Cron 时间表达式
     # startingDeadlineSeconds: null   # 如果没在预期时刻准时调度 Job ，则最多允许延迟 n 秒调度，超过截止时间则错过这次调度。默认不限制截止时间
     successfulJobsHistoryLimit: 3     # 最多保留多少个执行成功的 Job ，超过则自动删除。设置为 0 则不保留
     suspend: false                    # 是否暂停 CronJob
@@ -429,4 +429,4 @@ spec:
     2. 如果错过次数 == 0 ，则不需要调度 CronJob 。
     3. 如果错过次数 > 0 ，则选取最近一次错过的预期时刻，补充调度。如果该时刻加上 startingDeadlineSeconds 之后早于当前时刻，则错过这次调度。
         - 例如暂停 CronJob 一段时间，然后取消暂停。默认不限制 startingDeadlineSeconds ，会补充最近一次错过的调度。
-        - CronJob 正常的调度，也是基于错过次数来发现。因此如果设置了 startingDeadlineSeconds 且取值小于 CronJobController 的执行间隔 10 ，则该 CronJob 永远不会被调度。
+        - CronJob 正常的调度，也是基于错过次数来发现。

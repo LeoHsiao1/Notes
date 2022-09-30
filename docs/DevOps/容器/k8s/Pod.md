@@ -769,7 +769,7 @@ spec:
   node.kubernetes.io/memory-pressure
   node.kubernetes.io/pid-pressure
   ```
-  - DaemontSet 类型的 Pod 默认会添加对上述 6 种污点的容忍度，因此当节点不可用时，也不会被驱逐。
+  - DaemontSet 类型的 Pod 默认会添加对上述几种污点的容忍度，因此当节点出现这些故障时，也不会被驱逐。
 
 ### 节点压力驱逐
 

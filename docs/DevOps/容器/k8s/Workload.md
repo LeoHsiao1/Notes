@@ -10,36 +10,36 @@
 
 ### 配置
 
-例：
-```yml
-apiVersion: v1
-kind: Deployment
-metadata:
-  annotations:
-    deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置文件是第几次修改的版本，从 1 开始递增
-  name: nginx
-  namespace: default
-  # generation: 1                 # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
-spec:
-  # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
-  # paused: false                 # 是否暂停编排，默认为 false 。如果为 true ，则修改 spec.template 时不会触发更新部署
-  # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态，但会继续尝试部署。执行 rollout pause 时不会累计该时长
-  replicas: 2                     # 期望运行的 Pod 副本数，默认为 1
-  revisionHistoryLimit: 2         # 保留最近多少个历史版本的 ReplicaSet（不包括当前版本），可用于回滚（rollback）。默认为 10 ，设置为 0 则不保留
-  selector:                       # 选择 Pod
-    matchLabels:
-      k8s-app: nginx
-  # strategy:                     # 更新部署的策略，默认为 RollingUpdate
-  #   type: RollingUpdate
-  template:                       # 定义 Pod 模板
-    metadata:                     # Pod 的元数据
-      labels:
+- 例：
+  ```yml
+  apiVersion: v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"  # k8s 自动添加该字段，表示当前配置文件是第几次修改的版本，从 1 开始递增
+    name: nginx
+    namespace: default
+    # generation: 1                 # k8s 自动添加该字段，表示配置文件的版本序号，从 1 开始递增
+  spec:
+    # minReadySeconds: 0            # 一个 Pod 需要保持 Ready 状态多久，才视作可用
+    # paused: false                 # 是否暂停编排，默认为 false 。如果为 true ，则修改 spec.template 时不会触发更新部署
+    # progressDeadlineSeconds: 600  # 如果 Deployment 停留在 Progressing 状态超过一定时长，则变为 Failed 状态，但会继续尝试部署。执行 rollout pause 时不会累计该时长
+    replicas: 2                     # 期望运行的 Pod 副本数，默认为 1
+    revisionHistoryLimit: 2         # 保留最近多少个历史版本的 ReplicaSet（不包括当前版本），可用于回滚（rollback）。默认为 10 ，设置为 0 则不保留
+    selector:                       # 选择 Pod
+      matchLabels:
         k8s-app: nginx
-    spec:                         # Pod 的规格
-      containers:                 # 定义该 Pod 中的容器
-      - name: nginx               # 该 Pod 中的第一个容器名
-        image: nginx:1.20
-```
+    # strategy:                     # 更新部署的策略，默认为 RollingUpdate
+    #   type: RollingUpdate
+    template:                       # 定义 Pod 模板
+      metadata:                     # Pod 的元数据
+        labels:
+          k8s-app: nginx
+      spec:                         # Pod 的规格
+        containers:                 # 定义该 Pod 中的容器
+        - name: nginx               # 该 Pod 中的第一个容器名
+          image: nginx:1.20
+  ```
 - Deployment 会自动创建 ReplicaSet 对象，用于运行指定数量的 Pod 副本。
   - 删除一个 Deployment 时，会级联删除其下级对象 ReplicaSet ，和 ReplicaSet 的下级对象 Pod 。
   - Pod name 的格式为 `<Deployment_name>-<ReplicaSet_id>-<Pod_id>` ，例如：
@@ -153,6 +153,36 @@ spec:
     - 调度的 Pod 副本数较多的节点上的 Pod 。
     - 创建时间较晚的 Pod 。
 
+## DaemonSet
+
+：与 Deployment 类似，但在每个 Node 上最多运行一个 Pod 副本。适合部署监控系统、日志采集等进程。
+- 例：
+  ```yml
+  apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    name: nginx
+    namespace: default
+  spec:
+    selector:
+      matchLabels:
+        k8s-app: nginx
+    # strategy:
+    #   type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          k8s-app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:1.20
+  ```
+- DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
+- DaemonSet 的更新部署策略（strategy）有两种：
+  - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
+  - RollingUpdate ：滚动更新。默认采用这种。
+
 ## StatefulSet
 
 ：与 Deployment 类似，但适合部署有状态的 Pod 。
@@ -233,44 +263,11 @@ spec:
 
 
 
-## DaemonSet
-
-：与 Deployment 类似，但在每个 Node 上最多运行一个 Pod 副本。适合部署监控系统、日志采集等 daemon 服务。
-- DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
-- 例：
-  ```yml
-  apiVersion: apps/v1
-  kind: DaemonSet
-  metadata:
-    name: nginx
-    namespace: default
-  spec:
-    selector:
-      matchLabels:
-        k8s-app: nginx
-    # strategy:
-    #   type: RollingUpdate
-    template:
-      metadata:
-        labels:
-          k8s-app: nginx
-      spec:
-        containers:
-        - name: nginx
-          image: nginx:1.20
-  ```
-- DaemonSet 的更新部署策略（strategy）有两种：
-  - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
-  - RollingUpdate ：默认采用。
-
-
-
-
-
 ## Job
 
-：一次性任务，适合部署运行一段时间就会自己终止的 Pod 。
+：一次性任务，适合部署运行一段时间就会自行终止的 Pod 。
 - 创建 Job 之后，它会立即创建指定个 Pod 副本，而 Pod 会被自动调度、运行。
+- 与 Job 相比，Deployment、Daemonset、StatefulSet 适合部署长期运行的 Pod ，挂掉了就自动重启，直到被用户主动删除。
 - 例：用以下配置创建一个 Job
   ```yml
   apiVersion: batch/v1
@@ -350,7 +347,7 @@ spec:
   2. 每隔 1s 检查一次 Job ，等 spec.completions 数量的 Pod 进入 Succeeded 阶段之后，该 Job 就执行完成，进入 Succeeded 阶段、Complete 状态。
 
 - 除了 Complete 状态，Job 也可能达到 activeDeadlineSeconds、backoffLimit 限制而变为 Failed 状态，都属于终止执行。
-  - 如果 Pod 一直处于 Running 阶段，不自己终止，Job 就会一直执行，等待 spec.completions 条件。除非设置了 activeDeadlineSeconds 。
+  - 如果 Pod 一直处于 Running 阶段，不自行终止，Job 就会一直执行，等待 spec.completions 条件。除非设置了 activeDeadlineSeconds 。
   - 当 Job 终止时，会自动删除所有 Running Pod （优雅地终止），但剩下的 Pod 一般会保留，方便用户查看。除非设置了 ttlSecondsAfterFinished 。
   - 特别地，用户主动删除一个 Job 时，不会自动删除其下级 Pod 。这与 Deployment 不同。
     - 删除一个 CronJob 时，会自动删除其下级 Job 及 Pod 。

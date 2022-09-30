@@ -269,7 +269,8 @@ spec:
 
 ## Job
 
-：一次性任务，适合部署运行一段时间就会自己终止的 Pod ，可以同时运行任意个 Pod 副本。
+：一次性任务，适合部署运行一段时间就会自己终止的 Pod 。
+- 创建 Job 之后，它会立即创建指定个 Pod 副本，而 Pod 会被自动调度、运行。
 - 例：用以下配置创建一个 Job
   ```yml
   apiVersion: batch/v1
@@ -302,7 +303,7 @@ spec:
     backoffLimit: 6     # 重试次数，默认为 6
     completions: 1      # 完成数量，默认为 1 。当 Job 下级的 Succeeded Pod 达到该数量时，Job 变为 Complete 状态
     parallelism: 1      # 并行数量，默认为 1 。表示最多存在多少个 Running Pod 。如果为 0 ，则不创建 Pod
-    # suspend: false    # 是否暂停执行 Job
+    # suspend: false    # 是否暂停 Job
     # activeDeadlineSeconds: 0    # Job 执行的超时时间，超过则终止 Job ，变为 Failed 状态。默认不限制
     # ttlSecondsAfterFinished: 0  # 当 Job 执行完成之后，保留多少秒就删除 Job ，这会自动删除下属的 Pod 。默认不限制。如果为 0 ，则立即删除
     selector:
@@ -352,7 +353,6 @@ spec:
 - 除了 Complete 状态，Job 也可能达到 activeDeadlineSeconds、backoffLimit 限制而变为 Failed 状态，都属于终止执行。
   - 当 Job 终止时，会自动删除所有 Running Pod （优雅地终止），但剩下的 Pod 一般会保留，方便用户查看。除非设置了 ttlSecondsAfterFinished 。
   - 如果 Pod 一直处于 Running 阶段，不自己终止，Job 就会一直执行，等待 spec.completions 条件。除非设置了 activeDeadlineSeconds 。
-  - 用户主动删除一个 Job 时，并不会自动删除其下级 Pod 。反而这些 Pod 会不再受 controller 控制，比如 Running Pod 会继续运行。
 
 - 当任一 Pod 进入 Failed 阶段时，Job 会自动重试，最多重试 backoffLimit 次。
   - 重试的间隔时间按 0s、10s、20s、40s 数列增加，最大为 6min 。
@@ -363,7 +363,7 @@ spec:
     - 采用 `restartPolicy: OnFailure` 时，Job 每次重试，会重启 Failed Pod 。
       - Pod 的 `status.containerStatuses[0].restartCount` 字段记录了 Pod 被 restartPolicy 重启的次数。如果 `sum_all_pod_restartCount ≥ backoffLimit` ，则 Job 停止重试。
       - 因此最多可能运行 `parallelism + backoffLimit` 次 Pod 。不过最后一次重启时，Pod 刚启动几秒，就会因为 restartCount 达到阈值而被终止。相当于少了一次重试。
-    - 如果主动删除 Pod ，导致 Job 自动创建新 Pod ，则不会消耗重试次数。
+    - 如果主动删除 Pod ，导致 Job 自动创建新 Pod ，不会消耗重试次数。
   - Job 达到 backoffLimit 限制时，会停止重试，变为 Failed 状态，自动删除所有 Running Pod ，保留其它 Pod 。
     - 特别地，如果采用 `restartPolicy: OnFailure` ，则会删除所有 Pod ，不方便保留现场、看日志。
     - 因此，建议让 Job 采用 `restartPolicy: Never` 。
@@ -378,43 +378,54 @@ spec:
 
 ## CronJob
 
-：定时任务，用于定时创建并执行 Job 。
-- 由 kube-controller-manager 定时调度，而后者默认采用 UTC 时区。
+：定时任务，用于定时创建 Job 。
 - 例：
   ```yml
   apiVersion: batch/v1
   kind: CronJob
   metadata:
-    name: delete-failed-pod
-    namespace: kube-system
+    name: test-cronjob
+    namespace: default
   spec:
     concurrencyPolicy: Allow
-    failedJobsHistoryLimit: 1
+    failedJobsHistoryLimit: 1     # 最多保留多少个执行失败的 Job ，超过则自动删除。设置为 0 则不保留
     jobTemplate:
       spec:
         template:
           spec:
             containers:
-              - args:
-                - delete
-                - pods
-                - --all-namespaces
-                - --field-selector
-                - status.phase=Failed
-                image: bitnami/kubectl:1.21
-                imagePullPolicy: IfNotPresent
-                name: container-0
-                resources: {}
-                terminationMessagePath: /dev/termination-log
-                terminationMessagePolicy: File
+              - command:
+                - curl
+                - baidu.com
+                name: curl
+                image: alpine/curl:latest
             dnsPolicy: ClusterFirst
             restartPolicy: Never
             schedulerName: default-scheduler
-            serviceAccount: admin     # 这里事先为该 ServiceAccount 设置 ClusterRoleBinding 权限，从而允许执行 kubectl 命令
-            serviceAccountName: admin
             terminationGracePeriodSeconds: 30
-    schedule: 0 1 * * *
-    successfulJobsHistoryLimit: 1
-    suspend: false    # 是否暂停执行
+    schedule: '*/5 * * * *'           # 调度时刻表，表示在什么时候创建 Job ，采用 Linux Cron 的时间表达式
+    # startingDeadlineSeconds: null   # 如果没在预期时刻准时调度 Job ，则最多允许延迟 n 秒调度，超过截止时间则错过这次调度。默认不限制截止时间
+    successfulJobsHistoryLimit: 3     # 最多保留多少个执行成功的 Job ，超过则自动删除。设置为 0 则不保留
+    suspend: false                    # 是否暂停 CronJob
+  status:
+    lastScheduleTime: "2022-01-01T09:25:00Z"    # 上一次调度的时刻
   ```
+  - 创建一个 Job 时，如果之前创建的 Job 还在运行，则根据 concurrencyPolicy 进行操作：
+    ```sh
+    Allow     # 允许并发运行多个 Job 。这是默认策略。如果 Job 不会自行终止，则可能并发运行大量 Job
+    Forbid    # 禁止并发。旧 Job 没有执行完时，会跳过创建新 Job 。因此不会更新 lastScheduleTime ，属于错过调度
+    Replace   # 删除旧 Job ，再创建新 Job ，使得该 CronJob 同时只执行一个 Job
+    ```
 
+- kube-controller-manager 中的 CronJobController 负责调度 CronJob 。
+  - kube-controller-manager 部署在容器中时，默认采用 UTC 时区。
+  - 如果 CronJob 没有在预期时刻调度 Job （允许延迟 startingDeadlineSeconds 秒），则称为错过调度（miss schedule）。可能是因为 CronJob 暂停、主机时钟不准、k8s 故障等原因。
+  - CronJobController 的主函数 Run() 每隔 10s 循环执行一次，期间调用 syncOne() 函数处理每个 CronJob 。
+  - syncOne() 函数的流程大概如下：
+    1. 调用 getRecentUnmetScheduleTimes() 函数，计算从 lastScheduleTime + startingDeadlineSeconds 时刻至今缺少调度 Job 的次数，即错过次数。
+        - 如果是新创建的 CronJob ，则采用 CreationTimestamp 作为 lastScheduleTime 。
+        - 如果错过次数 > 100 ，则当作 0 处理，并报错：Too many missed start time
+    2. 如果错过次数 == 0 ，则不需要调度 CronJob 。
+    3. 如果错过次数 > 0 ，则选取最近一次错过的预期时刻，补充调度。如果该时刻加上 startingDeadlineSeconds 之后早于当前时刻，则错过这次调度。
+        - 例如暂停 CronJob 一段时间，然后取消暂停。默认不限制 startingDeadlineSeconds ，会补充最近一次错过的调度。
+        - CronJob 正常的调度，也是基于错过次数来发现。因此如果设置了 startingDeadlineSeconds 且取值小于 CronJobController 的执行间隔 10 ，则该 CronJob 永远不会被调度。

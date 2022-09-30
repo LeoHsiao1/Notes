@@ -268,7 +268,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
 - 如果 Pod 中所有容器从 running 状态变为 terminated 状态，则称该 Pod 处于终止（terminated）状态。
   - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
   - Pod 终止之后，可能触发 restartPolicy ，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
-    - kube-controller 会在 terminated pod 数量达到 terminated-pod-gc-threshold 阈值时，删除它们。
+    - kube-controller-manager 会在 terminated pod 数量达到 terminated-pod-gc-threshold 阈值时，删除它们。
     - 用户也可以添加一个 crontab 任务来删除 Failed Pod ：
       ```sh
       kubectl delete pods --all-namespaces --field-selector status.phase=Failed

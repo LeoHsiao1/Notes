@@ -29,7 +29,7 @@
     selector:                       # 选择 Pod
       matchLabels:
         k8s-app: nginx
-    # strategy:                     # 更新部署的策略，默认为 RollingUpdate
+    # strategy:
     #   type: RollingUpdate
     template:                       # 定义 Pod 模板
       metadata:                     # Pod 的元数据
@@ -81,10 +81,8 @@
     - 创建 Deployment 之后不允许修改 spec.selector 。
 
 - Deployment 的更新部署策略（strategy）有两种：
-  - Recreate
-    - ：直接重建。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
   - RollingUpdate
-    - ：滚动更新。先创建新 Pod ，等它们可用了，再删除旧 Pod 。
+    - ：滚动更新，这是默认策略。先创建新 Pod ，等它们可用了，再删除旧 Pod 。
     - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
     - 例：
       ```yml
@@ -95,6 +93,8 @@
           maxSurge: 1             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数或百分数，默认为 25%
       ```
       滚动更新时，会尽量保持 `replicas - maxUnavailable ≤ availableReplicas ≤ replicas + maxSurge` 。
+  - Recreate
+    - ：直接重建。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
 
 ### 状态
 
@@ -180,8 +180,8 @@
   ```
 - DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
 - DaemonSet 的更新部署策略（strategy）有两种：
+  - RollingUpdate ：滚动更新，这是默认策略。
   - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
-  - RollingUpdate ：滚动更新。默认采用这种。
 
 ## StatefulSet
 
@@ -194,21 +194,13 @@
     - 将数据存储在容器中时，会随着容器一起销毁。因此建议将数据存储到挂载卷，或容器外的数据库。
 - 与 Deployment 相比，StatefulSet 的特点：
   - 有序性
-    - ：StatefulSet 会按顺序创建 replicas 个 Pod （不会同时创建），给每个 Pod 分配一个从 0 开始递增的序号。
-    - 不过删除 StatefulSet 不会有序地删除 Pod ，可以先手动删除。
+    - ：StatefulSet 会按顺序创建 replicas 个 Pod ，给每个 Pod 分配一个从 0 开始递增的序号。
   - 唯一性
-    - ：每个 Pod 副本是独特的，不可相互替换。
-    - Pod name 的格式为 `<StatefulSet_name>-<Pod_id>` 。
-
+    - ：每个 Pod 副本是独特的，不可相互替代。
+    - Pod name 的格式为 `<StatefulSet_name>-<Pod_id>` ，比如 nginx-0、nginx-1 。
   - 持久性
-    - 即使重启、重新创建 Pod ，同一序号的 Pod 使用的 Pod Name、Pod IP 不变
-    - 删除 Pod 时，不会自动删除其挂载的 volume
-
-
-<!--
-- 一个有状态服务的每个 Pod 使用独立的资源、配置文件，不能随时创建、销毁 Pod ，甚至连 Pod 名都不能改变。
-- 例如：以无状态服务的方式运行一个 CentOS 容器，所有状态都存储在容器里，不可靠。改成 StatefulSet 方式运行，就可以漂移到不同节点上，实现高可用。 -->
-
+    - 删除 Pod 时，会自动重建该 Pod ，采用相同的序号、Pod Name ，但 Pod IP 会重新分配。
+    - 删除 Pod 时，默认不会自动删除其挂载的 volume 。重建 Pod 时，会挂载原来的 volume 。
 
 - 例：
   ```yml
@@ -240,7 +232,7 @@
     selector:
       matchLabels:
         k8s-app: nginx
-    serviceName: nginx
+    serviceName: nginx        # 该 StatefulSet 采用的 k8s Service ，默认为 ''
     template:
       metadata:
         labels:
@@ -249,25 +241,46 @@
         containers:
         - name: nginx
           image: nginx:1.20
-    # updateStrategy:         # 更新部署的策略，注意与 strategy 的语法不同
+    # updateStrategy:         # 更新部署的策略，与 DaemonSet 的 strategy 相似。默认为 RollingUpdate ，可改为 OnDelete
+    #   type: RollingUpdate
     #   rollingUpdate:
     #     partition: 0
-    #   type: RollingUpdate
+    # PersistentVolumeClaim:  # k8s v1.23 新增的功能，表示在 StatefulSet 的生命周期中是否自动删除 PVC
+    #   whenDeleted: Retain   # 删除 StatefulSet 时如何处理 PVC 。默认为 Retain 即保留，可改为 Delete
+    #   whenScaled: Retain    # 减少 StatefulSet 的 replicas 时如何处理 PVC
   ```
   - 上例创建了一个 Headless Service ，并配置到 StatefulSet 的 serviceName 。此时会自动给每个 Pod 创建子域名，格式为 `<Pod_name>.<Service_domain>` ，例：
     ```sh
     nginx-0.nginx.nlp-web.svc.cluster.local
     nginx-1.nginx.nlp-web.svc.cluster.local
     ```
+    - Deployment 的各个 Pod 可相互替代，而 StatefulSet 的各个 Pod 是独特的，建议通过 DNS 子域名来访问指定的 Pod 。
+    - Pod IP 在删除重建 Pod 时会变化，因此不适合用作网络标识。
+    - 如果 StatefulSet 不需要被其它服务访问，可省略 serviceName 字段。
 
+- podManagementPolicy 表示管理多个 Pod 时的策略，有两种：
+  - OrderedReady
+    - 这是默认策略。
+    - 创建多个 Pod 时，按从小到大的序号逐个创建，等一个 Pod 变为 Ready 状态，才创建下一个 Pod 。
+      - k8s v1.25 开始支持给 StatefulSet 设置 spec.minReadySeconds ，等一个 Pod 保持 Ready 状态几秒之后，才创建下一个 Pod 。
+    - 删除多个 Pod 时，按从大到小的序号逐个删除，等一个 Pod 删除成功，才删除下一个 Pod 。
+  - Parallel
+    - ：创建、删除多个 Pod 时，都并行处理，像 Deployment 。
 
-
+- StatefulSet 的更新部署策略（updateStrategy），与 DaemonSet 的 strategy 相似，有两种：
+  - RollingUpdate
+    - ：滚动更新，这是默认策略。
+    - 按从小到大的序号逐个更新 Pod 。先删除序号为 n 的旧版 Pod ，然后创建序号为 n 的新版 Pod ，等它变为 Ready 状态，才更新序号为 n-1 的 Pod 。
+    - 设置了 updateStrategy.rollingUpdate.partition 时，则会将该 StatefulSet 的所有 Pod 分为两个分区：
+      - 旧分区：序号小于 partition 的 Pod 。这些 Pod 会一直采用设置 partition 时的那个版本，即使更新 StatefulSet 、删除重建 Pod ，也会停留在旧版本。
+      - 新分区：序号大于等于 partition 的 Pod ，会正常更新部署。
+      该功能适合灰度发布。
+  - OnDelete
 
 ## Job
 
 ：一次性任务，适合部署运行一段时间就会自行终止的 Pod 。
 - 创建 Job 之后，它会立即创建指定个 Pod 副本，而 Pod 会被自动调度、运行。
-- 与 Job 相比，Deployment、Daemonset、StatefulSet 适合部署长期运行的 Pod ，挂掉了就自动重启，直到被用户主动删除。
 - 例：用以下配置创建一个 Job
   ```yml
   apiVersion: batch/v1
@@ -284,7 +297,7 @@
           - baidu.com
           name: curl
           image: alpine/curl:latest
-        restartPolicy: Never      # Job 下级 Pod 的重启策略，只能为 Never 或 OnFailure
+        restartPolicy: Never      # Job 下级 Pod 的重启策略，是必填字段，只能为 Never 或 OnFailure
   ```
   创建 Job 之后再查看其配置，可见 k8s 自动添加了一些配置参数：
   ```yml
@@ -349,7 +362,7 @@
 - 除了 Complete 状态，Job 也可能达到 activeDeadlineSeconds、backoffLimit 限制而变为 Failed 状态，都属于终止执行。
   - 如果 Pod 一直处于 Running 阶段，不自行终止，Job 就会一直执行，等待 spec.completions 条件。除非设置了 activeDeadlineSeconds 。
   - 当 Job 终止时，会自动删除所有 Running Pod （优雅地终止），但剩下的 Pod 一般会保留，方便用户查看。除非设置了 ttlSecondsAfterFinished 。
-  - 特别地，用户主动删除一个 Job 时，不会自动删除其下级 Pod 。这与 Deployment 不同。
+  - 特别地，用户主动删除一个 Job 时，不会自动删除其下级 Pod 。
     - 删除一个 CronJob 时，会自动删除其下级 Job 及 Pod 。
 
 - 当任一 Pod 进入 Failed 阶段时，Job 会自动重试，最多重试 backoffLimit 次。
@@ -397,10 +410,7 @@
                 - baidu.com
                 name: curl
                 image: alpine/curl:latest
-            dnsPolicy: ClusterFirst
             restartPolicy: Never
-            schedulerName: default-scheduler
-            terminationGracePeriodSeconds: 30
     schedule: '*/5 * * * *'           # 调度时刻表，表示在什么时候创建 Job 。采用 Linux Cron 时间表达式
     # startingDeadlineSeconds: null   # 如果没在预期时刻准时调度 Job ，则最多允许延迟 n 秒调度，超过截止时间则错过这次调度。默认不限制截止时间
     successfulJobsHistoryLimit: 3     # 最多保留多少个执行成功的 Job ，超过则自动删除。设置为 0 则不保留

@@ -15,7 +15,6 @@
     - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP 。而且重新部署时，会创建新 Pod ，分配新 Pod IP 。因此 Pod IP 不固定，不方便访问，建议通过 Service IP 或 Ingress IP 访问应用。
     - Pod IP 支持 ICMP 协议，因为绑定了一个虚拟网卡。也支持 TCP/UDP 通信，比较能模拟一个主机。
       - 而 Service IP 不支持 ICMP 协议，只负责 TCP/UDP 端口转发。
-
   - Service IP
   - Ingress IP
 

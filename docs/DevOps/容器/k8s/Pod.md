@@ -311,7 +311,8 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
   OnFailure  # 只有当容器异常终止时，才会自动重启
   Never      # 总是不会自动重启
   ```
-  - 例如 Deployment Pod 的重启策略只能为 Always 。
+  - Deployment、Daemonset、StatefulSet 适合部署长期运行的 Pod ，挂掉了就自动重启，除非被删除。因此 restartPolicy 只能为 Always 。
+  - Job 适合部署运行一段时间就会自行终止的 Pod ，因此 restartPolicy 只能为 Never 或 OnFailure 。
 
 ### 状态
 

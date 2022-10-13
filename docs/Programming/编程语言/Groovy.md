@@ -82,7 +82,7 @@
   // 显示：Hell
   ```
   ```groovy
-  println '_' + " Hello\t\n\r".trim()+ '_'  // .trim() 方法可去掉字符串开头、末尾的空白字符
+  println '_' + " Hello\t\n\r ".trim() + '_'  // .trim() 方法可去掉字符串开头、末尾的空白字符
   // 显示：_Hello_
   ```
 

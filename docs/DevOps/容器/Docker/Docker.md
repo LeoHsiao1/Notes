@@ -37,6 +37,7 @@
     // "containerd": "/run/containerd/containerd.sock",
     // "containerd-namespace": "docker",
     // "data-root": "/var/lib/docker",        // dockerd 的数据目录
+    // "log-level": "info",
     // "debug": false,                        // 是否开启调试模式
     // "exec-root": "/var/run/docker",        // dockerd 的工作目录
     "insecure-registries" : ["10.0.0.1:80"],  // dockerd 默认以 HTTPS 方式访问镜像仓库服务器。如果服务器不支持 SSL 认证，则需要将其地址加入白名单
@@ -84,6 +85,7 @@
   }
   ```
   - 修改配置之后，需要重启 dockerd 。
+  - 当 dockerd 运行出错时，建议执行 `journalctl -u docker.service` 看详细日志，还可设置 `"log-level": "debug"` 。
 
 - docker 命令的配置文件存放在 `$HOME/.docker/` 目录下。
 

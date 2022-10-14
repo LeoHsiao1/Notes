@@ -2,7 +2,7 @@
 
 ：一个管理镜像、容器的软件。
 - [官方文档](https://docs.docker.com/reference/)
-- 采用 Golang 开发，在 Moby 项目中开源。
+- 采用 Golang 开发，通过名为 Moby 的项目开源。
 - 提供了用于 Linux、MacOS、Windows 系统的软件安装包。
 
 ## 安装

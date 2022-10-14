@@ -12,7 +12,7 @@
 ## 版本
 
 - 2014 年，Google 公司开源了 k8s 项目，它借鉴了 Google 内部的大规模集群管理系统 Borg、Omega 。
-- 2015 年，Google 公司将 k8s 项目捐赠给 Linux 基金会下属的云原生计算基金会（CNCF）托管。
+- 2015 年，Google 公司将 k8s 项目捐赠给 CNCF 基金会托管。
 - v1.20
   - 2020 年 12 月发布。
   - CRI 弃用了 Docker 引擎，建议改用 containerd 或 CRI-O ，工作效率更高，但不能再通过 docker 命令查看、管理容器。

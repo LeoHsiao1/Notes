@@ -68,7 +68,7 @@
       ```sh
       docker run -it --rm --entrypoint sh alpine/curl
       ```
-  - Container Linux ：一个专为容器设计的轻量级 Linux 系统，由 CoreOS 团队发布。2020 年停止开发，被 Fedora CoreOS 替代。
+  - Container Linux ：一个专为容器设计的轻量级 Linux 系统，由 CoreOS 公司发布。2020 年停止开发，被 Fedora CoreOS 替代。
 
 ### 多阶段
 

@@ -381,6 +381,8 @@ git push [name 或 URL]          # 推送本地仓库到远程仓库。默认会
         --delete origin <refs>  # 删除远程的分支或标签
 ```
 - 执行 git fetch、pull、push 时，如果不指定远程仓库，则默认使用 origin 仓库。
+- 执行 git push 时，会先把要传输的 commit 打包为一个 pack 文件，然后用 git-send-pack 命令发送到服务器。而服务器会用 git-receive-pack 命令接收 pack 文件。
+  - 有的服务器会限制单次 push 的 pack 文件的最大体积，比如 10M 。
 - 例：推送一个本地分支到远程仓库
   ```sh
   git push origin master : origin/master # 推送分支 master 到远程仓库 origin ，并与远程分支 master 合并

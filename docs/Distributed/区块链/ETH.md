@@ -320,6 +320,61 @@
 - 以太坊改进提案（Ethereum Improvement Proposals ，EIP）：以太坊社区通过提案来讨论一些改进方案。
   - [全部提案](https://eips.ethereum.org/all)
 
+### ERC20
+
+- ERC20（Ethereum Request for Comments 20）是 2015 年发布的一种基于以太坊的代币标准。
+  - 早期的区块链行业，开发者需要研发区块链协议，运行一条独立的区块链，才能发行一种数字货币。而使用 ERC20 ，开发者可以低成本发行很多种代币，依靠以太坊的生态，不需要运行一条独立的区块链。
+- 用户部署一个实现以下 API 的智能合约，即可创建一种符合 ERC20 标准的代币（token）。
+  ```js
+  // 返回代币的名称
+  function name() public view returns (string)
+  // 返回代币的符号，通常是名称的英文缩写
+  function symbol() public view returns (string)
+  // 返回代币的小数位数
+  function decimals() public view returns (uint8)
+  // 返回代币的总供应量
+  function totalSupply() public view returns (uint256)
+  // 返回 _owner 账户的代币余额
+  function balanceOf(address _owner) public view returns (uint256 balance)
+  // 从合约调用者转账代币到 _to 账户
+  function transfer(address _to, uint256 _value) public returns (bool success)
+  // 从 _from 账户转账代币到 _to 账户
+  function transferFrom(address _from, address _to, uint256 _value) public returns (bool success)
+  // 合约调用者授权给 _spender 账户，允许它从前者账户转走最多 _value 数量的代币
+  function approve(address _spender, uint256 _value) public returns (bool success)
+  // 返回 _spender 账户从 _owner 账户剩下有权转走的代币数量
+  function allowance(address _owner, address _spender) public view returns (uint256 remaining)
+
+  // transfer()、transferFrom() 函数应该触发该事件，包括转账数量为 0 的情况，不包括抛出异常的情况
+  event Transfer(address indexed _from, address indexed _to, uint256 _value)
+  // approve() 函数执行成功时应该触发该事件
+  event Approval(address indexed _owner, address indexed _spender, uint256 _value)
+  ```
+  - 假设 decimals 为 4 ，则一个账户的 balance 为 100 时，实际上拥有 100/10^4=0.01 个代币。
+  - 在 DEX 交易所，用户第一次交易某种 ERC20 代币之前，需要进行一次 approve() 授权，允许 DEX 智能合约转走用户的这种代币，从而进行交易。
+
+### ERC721
+
+- ERC721 是2018 年发布的一种基于以太坊的代币标准，称为不可替换代币（Non-Fungible Token，NFT）。
+  - NFT 代币适合代表一些独一无二的事物，比如彩票、门票、版权。
+- ERC721 要求用户部署一个实现以下 API 的智能合约。
+  ```js
+  // 返回某个账户拥有的代币数量
+  function balanceOf(address _owner) external view returns (uint256);
+  // 返回某个代币的所有者账户
+  function ownerOf(uint256 _tokenId) external view returns (address);
+  // 转账代币
+  function transferFrom(address _from, address _to, uint256 _tokenId) external payable;
+  ...
+  ```
+  - 每个代币有一个全局唯一的 tokenId ，数据类型为 uint256 。
+- 相关概念：
+  - 2017 年，网络游戏 CryptoKitties 发行了一种 NFT 代币，每个代币绑定一个猫的卡通图像。
+    - 该游戏吸引了大量用户买卖 NFT 代币，甚至导致以太坊的网络拥堵。
+    - 该游戏是第一个出名的区块链游戏，也推广了 NFT 技术。
+  - 2017 年，[OpenSea](https://opensea.io/) 交易所创立。它是世界上第一个 NFT 交易所，也是目前最大的一个。
+    - 用户可在 OpenSea 平台上免费铸造 NFT 代币。不过有些用户将现实世界中不归自己所有的艺术品，铸造为自己的代币，导致抄袭或盗版。
+
 ### ETH v2
 
 - 在以太坊早期，开发人员就计划着将以太坊升级到 v2 版本，通过一系列措施解决 TPS 低、交易费高、PoW 浪费能源等问题。
@@ -362,7 +417,7 @@
   - 销毁和铸币（Burn and Mint）
     - ：销毁用户在源链上的代币，然后在目标链上铸造新代币，交给用户。
   - 原子交换（Atomic Swap）
-    - ：将源链上的代币，交换为目标链上的代币，像日常交易。
+    - ：将源链上的代币，交换为目标链上的代币，像直接交易。
 
 - 网桥按可信程度分为：
   - 受信任的网桥
@@ -429,59 +484,4 @@
 
 - 流动性挖矿
 - 去中心化金融（DeFi）
-
-
-### ERC20
-
-- ERC20（Ethereum Request for Comments 20）是 2015 年发布的一种基于以太坊的代币标准。
-  - 早期的区块链行业，开发者需要研发区块链协议，运行一条独立的区块链，才能发行一种数字货币。而使用 ERC20 ，开发者可以低成本发行很多种代币，依靠以太坊的生态，不需要运行一条独立的区块链。
-- 用户部署一个实现以下 API 的智能合约，即可创建一种符合 ERC20 标准的代币（token）。
-  ```js
-  // 返回代币的名称
-  function name() public view returns (string)
-  // 返回代币的符号，通常是名称的英文缩写
-  function symbol() public view returns (string)
-  // 返回代币的小数位数
-  function decimals() public view returns (uint8)
-  // 返回代币的总供应量
-  function totalSupply() public view returns (uint256)
-  // 返回 _owner 账户的代币余额
-  function balanceOf(address _owner) public view returns (uint256 balance)
-  // 从合约调用者转账代币到 _to 账户
-  function transfer(address _to, uint256 _value) public returns (bool success)
-  // 从 _from 账户转账代币到 _to 账户
-  function transferFrom(address _from, address _to, uint256 _value) public returns (bool success)
-  // 合约调用者授权给 _spender 账户，允许它从前者账户转走最多 _value 数量的代币
-  function approve(address _spender, uint256 _value) public returns (bool success)
-  // 返回 _spender 账户从 _owner 账户剩下有权转走的代币数量
-  function allowance(address _owner, address _spender) public view returns (uint256 remaining)
-
-  // transfer()、transferFrom() 函数应该触发该事件，包括转账数量为 0 的情况，不包括抛出异常的情况
-  event Transfer(address indexed _from, address indexed _to, uint256 _value)
-  // approve() 函数执行成功时应该触发该事件
-  event Approval(address indexed _owner, address indexed _spender, uint256 _value)
-  ```
-  - 假设 decimals 为 4 ，则一个账户的 balance 为 100 时，实际上拥有 100/10^4=0.01 个代币。
-  - 在 DEX 交易所，用户第一次交易某种 ERC20 代币之前，需要进行一次 approve() 授权，允许 DEX 智能合约转走用户的这种代币，从而进行交易。
-
-### ERC721
-
-- ERC721 是2018 年发布的一种基于以太坊的代币标准，称为不可替换代币（Non-Fungible Token，NFT）。
-  - NFT 代币适合代表一些独一无二的事物，比如彩票、门票、版权。
-- ERC721 要求用户部署一个实现以下 API 的智能合约。
-  ```js
-  // 返回某个账户拥有的代币数量
-  function balanceOf(address _owner) external view returns (uint256);
-  // 返回某个代币的所有者账户
-  function ownerOf(uint256 _tokenId) external view returns (address);
-  // 转账代币
-  function transferFrom(address _from, address _to, uint256 _tokenId) external payable;
-  ...
-  ```
-  - 每个代币有一个全局唯一的 tokenId ，数据类型为 uint256 。
-- 相关概念：
-  - 2017 年，网络游戏 CryptoKitties 发行了一种 NFT 代币，每个代币绑定一个猫的卡通图像。
-    - 该游戏吸引了大量用户买卖 NFT 代币，甚至导致以太坊的网络拥堵。
-    - 该游戏是第一个出名的区块链游戏，也推广了 NFT 技术。
-  - 2017 年，[OpenSea](https://opensea.io/) 交易所创立。它是世界上第一个 NFT 交易所，也是目前最大的一个。
-    - 用户可在 OpenSea 平台上免费铸造 NFT 代币。不过有些用户将现实世界中不归自己所有的艺术品，铸造为自己的代币，导致抄袭或盗版。
+- 借贷协议

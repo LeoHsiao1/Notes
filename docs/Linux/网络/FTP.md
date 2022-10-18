@@ -14,13 +14,13 @@
   - 主动模式（Acitve mode）
     1. 客户端先随机监听一个端口，发送 PORT 命令给服务器。
     2. 服务器使用 20 端口连接到客户端的该端口，进行通信。
-    - 服务器的防火墙只需要开通一个端口，但客户端的防火墙需要开通一组可能监听的端口。
+        - 服务器的防火墙只需要开通一个端口，但客户端的防火墙需要开通一组可能监听的端口。
   - 被动模式（Passive mode）
     1. 客户端发送 PASV 命令给服务器。
     2. 服务器随机监听一个端口。
     3. 客户端连接到服务器的该端口，进行通信。
-    - 客户端的防火墙不需要开通端口，但服务器的防火墙需要开通 21 端口和一组可能监听的端口，比如 21000~21100 。
-    - 客户端通常采用被动模式。
+        - 客户端的防火墙不需要开通端口，但服务器的防火墙需要开通 21 端口和一组可能监听的端口，比如 21000~21100 。
+        - 主动模式需要服务器访问客户端，不符合常理，因此被动模式更常用。
 - 客户端不会保持 TCP 连接，每次执行指令都会根据通信模式重新建立连接。
 
 ### 用法
@@ -149,12 +149,13 @@ vsftpd 的配置文件是 `/etc/vsftpd/vsftpd.conf` ，内容如下：
 # max_clients=0             # 允许连接的客户端数，设置为 0 则不限制
 # accept_timeout=60         # 使用被动模式连接的客户端的超时时间，单位为秒
 # connect_timeout=60        # 使用主动模式连接的客户端的超时时间
+# use_sendfile=YES
 
 # port_enable=YES           # 允许客户端采用主动模式通信
 # pasv_enable=YES           # 允许客户端采用被动模式通信
-pasv_min_port=0             # 被动模式下，服务器监听的最小端口号，设置为 0 则不限制
-pasv_max_port=0             # 被动模式下，服务器监听的最大端口号
-pasv_address=10.0.0.1       # 被动模式下，服务器的 IP 地址，会让客户端连接到该 IP
+pasv_min_port=0             # 被动模式下，服务器监听的最小端口号。默认为 0 ，即不限制
+pasv_max_port=0             # 被动模式下，服务器监听的最大端口号。默认为 0 ，即不限制
+# pasv_address=10.0.0.1     # 被动模式下，让客户端通过哪个 IP 地址连接到服务器。默认采用当前连接服务器的 IP 地址
 
 # download_enable=YES       # 允许用户下载文件
 write_enable=YES            # 允许用户写文件
@@ -164,9 +165,9 @@ allow_writeable_chroot=YES                  # 允许用户写主目录
 # chroot_list_file=/etc/vsftpd.chroot_list
 # chroot_list_enable=YES                    # 限制 chroot_list_file 中的用户只能访问主目录
 # userlist_file=/etc/vsftpd/user_list       # 黑名单文件，每行记录一个用户名
-# userlist_enable=YES                       # 拒绝 userlist_file 名单中的用户登录
+# userlist_enable=NOS                       # 是否启用黑名单文件，拒绝 userlist_file 中的用户登录
 
-# use_localtime=YES                         # 是否将显示的时间转换到本地时区（默认为 UTC 时区）
+# use_localtime=NO                          # 是否将显示的时间转换到本地时区（默认为 UTC 时区）
 xferlog_enable=YES                          # 开启日志
 xferlog_file=/var/log/vsftpd.log            # 日志文件的路径
 ```
@@ -199,7 +200,7 @@ xferlog_file=/var/log/vsftpd.log            # 日志文件的路径
     guest_enable=YES                        # 启用虚拟用户模式
 
     virtual_use_local_privs=YES             # 让虚拟用户拥有与本地用户相同的权限（默认只拥有匿名用户的权限）
-    pam_service_name=vsftpd.vu              # 采用指定的 PAM 配置文件进行身份认证
+    pam_service_name=vsftpd.vu              # 采用指定的 /etc/pam.d/<name> 配置文件进行身份认证
     user_config_dir=/etc/vsftpd/users_conf  # 读取用户配置的目录
     ```
 
@@ -209,14 +210,14 @@ xferlog_file=/var/log/vsftpd.log            # 日志文件的路径
     vim /etc/vsftpd/users_conf/ftpuser
     ```
     ```ini
-    guest_username=ftpuser
-    local_root=/home/ftpuser    # 本地用户登录之后进入的目录，这里采用用户的家目录
+    guest_username=ftpuser      # 虚拟用户映射到的 ssh 用户名，默认为 ftp
+    local_root=/data/ftpuser    # 本地用户登录之后进入的目录。需要事先创建该目录，并给 ssh 用户分配访问权限
     # local_umask=077
     ```
 
 3. 为每个虚拟用户创建一个同名的 SSH 用户，以便通过 PAM 模块进行身份认证：
     ```sh
-    useradd ftpuser -s /sbin/nologin
+    useradd ftpuser -s /sbin/nologin -d /data/ftpuser
     ```
    创建一个临时的 users 文件，配置虚拟用户名和密码：
     ```sh

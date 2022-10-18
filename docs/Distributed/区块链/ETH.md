@@ -468,7 +468,7 @@
 
 - 自动做市商（Automated Market Maker，AMM）
   - ：基于智能合约，实现自动交易的做市商。
-  - 例如对于 ETH、USDT 两种代币的交易对，AMM 会分别持有一定数量的两种代币，根据做市公式确定两种代币的兑换率。
+  - 例如对于 ETH、USDT 两种代币的交易对，AMM 会分别持有一定数量的两种代币，报价说两种代币的兑换率为多少。
     - 用户可以发送一些 ETH 到 AMM 智能合约，请求兑换为 USDT 。同理，可以将 USDT 兑换为 ETH 。
   - Uniswap 的 API 示例：
     ```js
@@ -488,30 +488,31 @@
 #### 流动性挖矿
 
 - 流动性挖矿（liquidity mining）
-  - ：用户可以发送一些代币存入 AMM 的资金池，供 AMM 用于市场交易，并可以随时提现。此时用户称为流动性提供者（Liquidity Provider，LP）。
+  - ：用户可以发送一些代币存入 AMM 的资金池（又称为流动性池），供 AMM 用于市场交易，并可以随时提现。此时用户称为流动性提供者（Liquidity Provider，LP）。
   - 优点：
     - 给用户提供低比例、低风险的收益。例如 Uniswap 的 AMM 会收取 0.3% 的交易费，按比例分配给所有流动性提供者。
     - 增加 AMM 的资金池，支持更大的交易额，从而增加市场的流动性。
 - 做市公式（market maker formula）
-  - 假设 AMM 资金池中，ETH、USDT 的数量分别为 eth_pool、usdt_pool ，则做市公式可简单表示为 `eth_pool * usdt_pool = k` ，k 是一个常数。
+  - ：AMM 用于确定两种代币的兑换率的公式。
+  - 假设 AMM 流动性池中，ETH、USDT 的数量分别为 eth_pool、usdt_pool ，最简单的一种做市公式是 `eth_pool * usdt_pool = k` ，其中 k 为常数。
     - 当用户请求用 ETH 兑换 USDT 时，AMM 会报价 `eth_price = usdt_pool / eth_pool` ，即 1 ETH 能兑换多少 USDT 。
     - 当用户成功用 ETH 兑换 USDT 时，AMM 持有的 eth_pool 变大、usdt_pool 变小，因此 eth_price 变小，用户会降低卖出 ETH 的意愿。
     - 当 AMM 报价的 eth_price ，比其它交易所的报价明显更高时，一些用户会通过机器人自动交易，从其它交易所购买 ETH ，再找 AMM 兑换成 USDT 。最终机器人赚取了差价，AMM 的报价也恢复到各交易所的平均水平。
-  - Uniswap 要求流动性提供者存入两种数字货币的数量必须符合做市公式的 k ，即两边价值相等。
-  - 结合上述两个公式，可以得到任意 eth_price 时的资金池大小：
+  - Uniswap 要求流动性提供者存入两种代币的数量必须符合做市公式的 k ，即两边价值相等。
+  - 结合上述两个公式，可以得到任意 eth_price 时的流动性池大小：
     ```py
-    eth_liquidity_pool   = sqrt(k / eth_price)
-    token_liquidity_pool = sqrt(k * eth_price)
+    eth_pool  = sqrt(k / eth_price)
+    usdt_pool = sqrt(k * eth_price)
     ```
 - 无常损失（impermanent loss）
-  - ：当用户开始流动性挖矿之后，无论 eth_price 增加、减少，用户能提现的资产都会比原来少一些，这是因为流动性池的倾斜。只要 eth_price 恢复到刚开始的值，用户的资产也会完全复原。
+  - ：当用户开始流动性挖矿之后，无论 eth_price 增加、减少，用户能提现的资产都会比原来少一些，这是因为做市公式导致流动性池的倾斜。只要 eth_price 恢复到刚开始的值，用户的资产就会完全复原。
   - 计算公式：
     ```py
     price_ratio = new_price / old_price
     impermanent_loss = 2 * sqrt(price_ratio) / (1 + price_ratio) — 1
     ```
-  - 假设在 ETH 单价为 1000 USDT 时，用户存入 1 ETH 和等值的 1000 USDT 进行流动性挖矿，占此时 AMM 资金池的 1% 。\
-    当 ETH 单价为 1100 USDT 时，用户按投资比例从 AMM 资金池提现，能得到 sqrt(1000/1100)≈10.95 ETH 和 sqrt(1000*1100)≈1048 USDT ，总价值为 2096 USDT 。\
+  - 假设在 ETH 单价为 1000 USDT 时，用户存入 1 ETH 和等值的 1000 USDT 进行流动性挖矿，占此时 AMM 流动性池的 1% 。\
+    当 ETH 单价为 1100 USDT 时，用户按投资比例从 AMM 流动性池提现，能得到 sqrt(1000/1100)≈10.95 ETH 和 sqrt(1000*1100)≈1048 USDT ，总价值为 2096 USDT 。\
     如果用户没有流动性挖矿，则此时资产价值为 2100 USDT 。
   - 当 eth_price 变为原来的 125% 或 20% 时，无常损失为 0.6% 。
   - 当 eth_price 变为原来的 200% 或 50% 时，无常损失为 5.7% 。

@@ -3,7 +3,7 @@
 ：一个 Web 服务器，提供了配置管理、服务发现的功能。
 - [官方文档](https://nacos.io/zh-cn/docs/quick-start.html)
 - 发音为 `/nɑ:kəʊs/` 。
-- 由阿里巴巴公司开源，采用 Java 开发。
+- 2018 年由阿里巴巴公司开源，采用 Java 开发。
 
 ## 部署
 

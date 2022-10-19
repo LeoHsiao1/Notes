@@ -24,10 +24,6 @@
 
 ## 相关概念
 
-- Scala
-  - ：一种基于 Java 的编译型语言，2004 年发布。
-  - 源代码编译成 Java 字节码之后由 JVM 运行。
-  - 支持面向对象编程、函数式编程，属于静态类型。
 - JMX（Java Management Extensions）
   - ：一组用于监控、管理 Java 应用的 API ，属于 Java 标准库。
     - 将被管理的对象称为 MBean（Managed Bean）。
@@ -52,22 +48,26 @@
   - 开发 Java Web 项目的常用框架：
     - SSH（Spring + Struts + Hibernate）
     - SSM（Spring + SpringMVC + MyBatis）
-- 日志框架
+- Java 的日志框架
   - java.util.logging ：Java 的标准库，是 JDK 内置的日志框架。
   - Log4j ：一个 Apache 开源项目，已停止开发。使用一个配置文件 log4j.properties ，支持自动轮换日志文件。
   - LogBack ：重新实现了 Log4j ，大幅优化。
   - Log4j2 ：对 Log4j 进行了重构优化。
+- Scala
+  - ：一种基于 Java 的编译型语言，2004 年发布。
+  - 源代码编译成 Java 字节码之后由 JVM 运行。
+  - 支持面向对象编程、函数式编程，属于静态类型。
 
 ### GC
 
 ：垃圾回收（Garbage Collection），指销毁 Java 进程中不需要保留的对象，回收其内存。
 
 - Java 进程占用的内存分为几部分：
-  - Heap ：堆内存。主要存储 Java 类的实例对象。
+  - Heap ：堆内存。主要存放 Java 类的实例对象。
   - Direct Memory ：直接内存，用于存放与操作系统交互的数据，比如文件。
-  - Metaspace ：存储 Java 类的元数据，包括常量、注解等。替代了 Java 8 以前的永久代（Permanent）。
+  - Metaspace ：存放 Java 类的元数据，包括常量、注解等。替代了 Java 8 以前的永久代（Permanent）。
   - JVM native ：运行 JVM 本身占用的内存。
-  - Code Cache ：存储根据 Java 字节码生成的机器代码。
+  - Code Cache ：存放根据 Java 字节码生成的机器代码。
   - Thread Stack ：线程堆栈。
 
 - 对象的引用分为四种，从强到弱如下：
@@ -113,25 +113,47 @@
     - 这样能减少内存碎片，但是内存利用率只有 50% 。
   - 分代收集算法
     - ：划分两块内存空间，采用不同的 GC 算法：
-      - 新生代（young）：用于存储寿命较短的对象，适合复制算法。
-      - 老生代（old）：用于存储寿命较长的对象，适合标记-整理算法。
+      - 年轻代（young generation）：又称为新生代（new generation），用于存放寿命较短的对象，适合复制算法。可细分为两种区域：
+        - 伊甸园空间（eden space）：用于存放新创建的对象。
+        - 幸存者空间（survivor space）：用于存放在 young GC 之后幸存、但尚未存入 old 区域的对象。默认有两个 survivor space ，简称为 S0、S1 。
+      - 老生代（old generation）：用于存放寿命较长的对象，适合标记-整理算法。
     - 大部分 Java 对象的寿命都较短，很快就没用了，因此采用分代收集算法的效率较高。
-      - 新创建的对象会先存储到 young 区域，其中大部分会在短期内停止引用而被销毁。
-      - 当 young 区域用满时，会触发一次 young GC ，将存在时间较长的对象移到 old 区域。
-      - 当 old 区域的对象触发 GC 算法时，会被直接删除。
+      - 新创建的对象最初存放在 young 区域的 eden space ，其中大部分会在短期内停止引用而被销毁。
+      - young GC ：当 eden space 内存不足以存入新对象时，会触发一次 GC ，进行以下操作：
+        - 将 eden space 中被标记引用的对象移到 survivor space 。如果 survivor space 内存不足，则直接移到 old 区域。
+        - 将 survivor space 中存在时间较长的对象（即活过了多次 young GC）移到 old 区域。
+        - 按复制算法，交替使用两个 survivor space ，从而减少内存碎片。比如将 S0 中的全部对象复制到 S1 ，然后清空 S0 。
+      - old GC ：当 old 区域的内存不足以存入新对象时，会触发一次 GC ，将存在时间较长的对象删除。
+        - 发生 young GC 之前、之后，都可能判断出 old 区域内存不足，从而触发 old GC 。
+      - full GC ：对 young、old、Permanent 区域进行 GC ，清理全部堆内存。
+        - 不同垃圾收集器触发 full GC 的条件不同。
+
+- STW（Stop The World）
+  - ：GC 过程的一种状态，暂停用户线程，只执行 GC 线程。
+  - STW 状态是不可避免的，不同的 GC 算法可能 STW 时长不同，越短越好。
+  - full GC 的 STW 时间通常最长，导致用户线程的明显停顿。
 
 - JVM 规范不包含 GC ，但 JVM 通常提供了 GC 功能，常见的几种垃圾收集器：
   - Serial GC
-    - ：串行收集。GC 时运行单个 GC 线程，并暂停用户线程。
+    - ：串行收集。GC 时运行单个 GC 线程，全程为 STW 状态。
   - Parallel GC
-    - ：并行收集。GC 时运行多个 GC 线程，并暂停用户线程。
+    - ：并行收集。GC 时运行多个 GC 线程，全程为 STW 状态。
     - 比 Serial 的速度快几倍。
   - Concurrent Mark-Sweep（CMS） GC
     - ：并发收集。GC 时分为多个阶段，部分阶段允许同时运行 GC 线程、用户线程。
-    - 例如 ES 默认采用 CMS GC 算法。
+    - young GC、full GC 全程为 STW 状态，而 old GC 只有部分阶段会 STW 。
+    - 例如 ElasticSearch 默认采用 CMS GC 算法。
   - G1 GC
-    - 类似 CMS 算法，但做了一些优化。
-    - Java 8 默认采用 Parallel 算法，Java 9 开始默认采用 G1 算法。
+    - 类似 CMS 算法，但能减少内存碎片、控制 STW 时长。
+    - 传统 GC 算法的 young、old 区域分别是一块地址连续的内存空间。而 G1 GC 在堆内存中划分大量 region ，分别分配给 eden、survivor、old 区域。
+      - 每个 region 是一小块地址连续的内存空间，体积相同。
+      - 体积巨大的对象（humongous object）可能占用多个地址连续的 region 。
+      - 分代 GC 时只需改变 region 所属的内存区域，属于移动式算法，不需要复制 region 。
+    - G1 GC 有几种模式：
+      - young GC ：清理年轻代。比如将 eden 区域中幸存的 region 分配给 survivor、old 区域。
+      - mixed GC ：清理年轻代，还会清理老生代中垃圾较多（即活动对象较少）的 region ，称为垃圾优先。
+      - full GC ：当老年代内存不足时，清理全部堆内存。
+    - 例如 Java 8 默认采用 Parallel 算法，Java 9 开始默认采用 G1 算法。
 
 ### 关于 Web
 

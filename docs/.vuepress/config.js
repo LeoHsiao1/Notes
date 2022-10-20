@@ -671,8 +671,8 @@ module.exports = {
                             path: "/Network/计算机网络/数据传输"
                         },
                         {
-                            title: "网络分级",
-                            path: "/Network/计算机网络/网络分级"
+                            title: "网络层级",
+                            path: "/Network/计算机网络/网络层级"
                         }
                     ]
                 },

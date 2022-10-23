@@ -571,7 +571,12 @@
   - ：一个去中心化的预言机网络（Decentralized Oracle Networks，DON），于 2019 年开始在以太坊之上运行。
   - Chainlink 发行了一种名为 LINK 的 ERC677 代币（兼容 ERC20 标准）。
     - 用户调用预言机的 API 查询数据时，需要支付 LINK 作为费用。
-    - 用户可运行 Chainlink 节点，加入 Chainlink 网络，提交数据，然后得到 LINK 作为奖励。
+    - 用户可运行 Chainlink 节点，加入 Chainlink 网络，然后出售自己的数据 API ，得到 LINK 作为报酬。
+  - 提供的数据 API 主要分为几类：
+    - Data Feeds ：查询某个数字货币的价格。
+    - Any API ：获取各种链下数据，比如股票、天气。
+    - VRF（Verifiable Random Function，可验证的随机函数）：一种随机数生成器。
+  - 在 <https://market.link> 网站可搜索可用的 API 、节点。
 
 ## 相关历史
 

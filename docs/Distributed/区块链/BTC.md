@@ -1,6 +1,6 @@
 # BTC
 
-：比特币（Bitcoin），一种数字货币，由 BTC 区块链发行。
+- 比特币（Bitcoin，BTC）：一种数字货币，在 BTC 区块链发行。
 - [官方文档](https://developer.bitcoin.org/devguide/index.html)
 
 ## 架构

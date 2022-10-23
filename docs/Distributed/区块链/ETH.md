@@ -4,147 +4,6 @@
 - [官方文档](https://ethereum.org/en/developers/docs/)
 - 与 BTC 相比，以太坊提供了一种图灵完备的脚本语言，允许用户编写去中心化程序，部署在区块链中。
 
-## EVM
-
-- 以太坊虚拟机 (EVM)：由以太坊所有节点共同维护的一个虚拟机，负责执行操作指令，比如转账、部署合约、调用合约等。
-  - 以太坊区块链负责保存 EVM 的当前状态，比如所有账户的余额。而 EVM 会读写区块链的数据。
-  - 用户通过发起交易的方式，请求 EVM 执行某些指令。
-
-- EVM 的操作指令是一种堆栈语言，示例：
-  ```sh
-  POP             # 删除栈顶的一个值
-  PUSH1 <uint8>   # 耗费 3 gas ，将 1 字节的数据压入堆栈
-  PUSH2 <uint16>  # 耗费 3 gas ，将 2 字节的数据压入堆栈
-  PUSH3 <uint24>  # 耗费 3 gas ，将 3 字节的数据压入堆栈
-
-  ADD a b     # 耗费 3 gas ，计算两个数之和
-  MUL a b     # 耗费 5 gas ，计算两个数的乘积
-  SUB a b     # 耗费 3 gas ，计算两个数之差，即 a - b
-  DIV a b     # 耗费 5 gas ，计算两个数的整除
-
-  CALL        # 耗费 0 gas ，调用一个账户 address
-  STOP        # 耗费 0 gas ，停止执行
-  RETURN      # 耗费 0 gas ，停止执行并返回输出数据
-  ```
-  - [官方文档](https://www.evm.codes/)
-
-### MPT
-
-- 在存储层，以太坊以区块为单位记录交易。在抽象层，以太坊以 MPT（Merkle Patricia Trie） 数据结构记录全部账户的数据。
-  - MPT 称为以太坊世界的状态机（world state），结合了两种树形结构的特点：
-    - Merkle tree 哈希树
-      - 每个叶子节点记录一个 ETH 账户的数据，比如余额、合约代码。
-      - 父节点存放了其下所有子节点组合之后的哈希值。
-    - Patricia trie 前缀树
-      - 将前缀相同的账户存放在树的同一条路径上，方便查找。
-  - 打包一个新区块时，会执行一些交易，修改 MPT 中的一些叶子节点。
-  - BTC 需要统计所有历史交易的输入、输出，才能计算出所有账户的 UTXO 即余额。而以太坊需要执行所有历史区块的交易，才能得到最新的 MPT 数据。
-  - 目前以太坊 MPT 有几亿个节点，体积很大，因此以太坊客户端不必将整个 MPT 载入内存，而是根据节点路径从磁盘读取子树。
-
-### 智能合约
-
-- 多次让 EVM 执行请求时，可能会重复使用一些指令。可以将这些指令上传到区块链，供以后重复调用，称为智能合约（Smart Contract）。
-  - 智能合约像 HTTP API ，但用户调用它时不是发出 HTTP 请求，而是发出以太坊交易请求。
-  - 将程序的关键代码片段制作成智能合约，就可以实现去中心化程序（Decentralized Application ，DAPP）。
-
-- 智能合约的工作流程：
-  1. 开发人员编写一个智能合约（通常采用 Solidity 语言），编译成 EVM 字节码之后上传到区块链（称为部署）。
-  2. 某些用户发出以太坊交易请求，调用智能合约的 public 函数。
-
-- 部署智能合约时，会根据部署者的账户地址、账户 nonce 生成一个全网唯一的合约账户地址。
-  - 每个合约账户会在区块链中存储字节码、状态变量等数据。
-  - 智能合约部署之后，永久保存在区块链上，对所有人公开可见、可调用。
-  - 开发者通常会将源代码公布在社区，包含注释，方便大家阅读。而该源代码编译之后的字节码，与区块链中的一致。
-
-- 部署智能合约之后不能修改代码，不像普通软件可以升级版本。因此部署之前应该仔细测试。
-  - 有几种方式间接修改智能合约：
-    - 迁移合约：迁移旧合约的数据到新合约，然后通知用户使用新合约地址。
-    - 数据分离：将代码、数据分别存储到两个合约，称为逻辑合约（logic contract）、存储合约（storage contract），让用户调用逻辑合约。这样更换逻辑合约时，不需要迁移存储合约。
-    - 代理模式：在数据分离的基础上，在存储合约中加入代理代码，成为代理合约。用户访问代理合约时，会间接调用逻辑合约。这样更换逻辑合约时，不需要通知用户。
-  - 在函数中执行 `selfdestruct(address);` 可销毁智能合约：将合约账户的全部 ETH 发送到指定账户，然后在区块链中删除合约账户的代码、存储（不影响历史数据）。
-    - 如果以后有账户发送 ETH 来调用该智能合约，则不会有反应，ETH 也会丢失。
-
-- Solidity 是一种面向对象的高级语言，静态类型。
-- 例：用 Solidity 编写一个智能合约
-  ```js
-  pragma solidity >= 0.7.0;   // 声明语法版本
-
-  // 定义一个智能合约，名为 Coin
-  // 本例定义一种自定义的代币，可调用函数来铸造代币、发送代币
-  contract Coin {
-      // 定义一些状态变量
-      string dapp_name;
-      address public deployer;
-      // 定义 balances 变量，用于记录各个账户的代币余额。它是 mapping 数据类型，将 address 类型映射到 uint 类型
-      mapping (address => uint) public balances;
-
-      // 定义事件消息
-      event Sent(address from, address to, uint amount);
-      // 定义报错消息
-      error InsufficientBalance(uint requested, uint available);
-
-      // 构造函数，用于初始化合约。只会执行一次，就是当合约部署到区块链上时
-      constructor() {
-          deployer = msg.sender;  // 记录合约的部署者
-      }
-
-      // mint() 函数用于铸造 amount 数量的代币，发送给 receiver
-      function mint(address receiver, uint amount) public {
-          require(msg.sender == deployer);  // 要求合约调用者是合约部署者，否则终止函数，不允许铸造代币
-          require(amount < 100);            // 限制一次铸造代币的数量
-          balances[receiver] += amount;     // 修改 balances 变量，增加指定账户的代币余额
-      }
-
-      // send() 函数用于从合约调用者发送 amount 数量的代币，给 receiver
-      function send(address receiver, uint amount) public {
-          // 如果合约调用者的余额不足，则终止函数并报错
-          if (amount > balances[msg.sender])
-              revert InsufficientBalance(amount, balances[msg.sender]);
-          balances[msg.sender] -= amount;
-          balances[receiver] += amount;
-          emit Sent(msg.sender, receiver, amount);
-      }
-  }
-  ```
-
-- 关于变量：
-  - 在函数外创建的变量称为状态变量（State variable），用于记录智能合约的状态数据，每次赋值都会存储到区块链，每次读写都需要消耗较多 gas （比基本算术指令贵 100 倍）。
-  - 在函数内创建的变量称为内存变量（memory variable），不会存储到区块链，因此使用成本低。
-  - 智能合约每次被调用时，都有一些特殊的全局变量可用：
-    ```js
-    block.number  // 当前的区块号
-    msg.data      // 调用者发送的数据
-    msg.sender    // 调用者的账户地址
-    msg.value     // 调用者发送的 ETH 数量，单位为 wei
-    tx.gasprice   // 当前交易的 gas 价格
-    ```
-
-- 常用的关键字：
-  - contract ：用于定义智能合约，像 Java 的类，包含一些变量、函数。
-  - function ：用于定义函数。
-    - 函数不一定需要 return 返回值。
-  - private ：用于声明函数、变量，表示只能在当前合约内访问。也可写作 internal 关键字。
-  - public ：用于声明函数、变量，表示可以被其它合约访问。也可写作 external 关键字。
-    - 编译器会自动为 public 类型的状态变量创建一个同名函数，供其它合约调用来获取状态变量的值。例如 `address public deployer;` 对应的函数为：
-      ```js
-      function deployer() external view returns (address) {
-          return deployer;
-      }
-      ```
-      `mapping (address => uint) public balances;` 对应的函数为：
-      ```js
-      function balances(address account) external view returns (uint) {
-          return balances[account];
-      }
-      ```
-  - returns ：放在函数头的末尾，用于声明函数返回值的类型。
-  - view ：用于声明函数，表示该函数只用于读取，不会修改智能合约的状态，比如修改状态变量、发射事件、调用其它非 view 函数。
-  - event、emit ：用于定义、发送事件。
-    - 智能合约可以发送事件，保存到区块链上。而以太坊客户端可以监听区块链上的事件，从而及时知晓智能合约的执行状态，比如记录日志。
-  - error ：用于定义报错信息。
-  - revert ：用于终止函数，返回报错信息给合约调用者。
-    - 通过 revert、require() 终止函数时，不会保存对状态变量的修改。
-
 ## 区块
 
 - 一个区块的数据结构分为两部分：
@@ -314,11 +173,148 @@
   txHash    # 交易的哈希值
   ```
 
-## 扩展方案
+## EVM
 
-- 随着用户增加、社区发展，人们希望以太坊有更多的功能、更好的性能，因此研究了一些扩展方案。
-- 以太坊改进提案（Ethereum Improvement Proposals ，EIP）：以太坊社区通过提案来讨论一些改进方案。
-  - [全部提案](https://eips.ethereum.org/all)
+- 以太坊虚拟机 (EVM)：由以太坊所有节点共同维护的一个虚拟机，负责执行操作指令，比如转账、部署合约、调用合约等。
+  - 以太坊区块链负责保存 EVM 的当前状态，比如所有账户的余额。而 EVM 会读写区块链的数据。
+  - 用户通过发起交易的方式，请求 EVM 执行某些指令。
+
+- EVM 的操作指令是一种堆栈语言，示例：
+  ```sh
+  POP             # 删除栈顶的一个值
+  PUSH1 <uint8>   # 耗费 3 gas ，将 1 字节的数据压入堆栈
+  PUSH2 <uint16>  # 耗费 3 gas ，将 2 字节的数据压入堆栈
+  PUSH3 <uint24>  # 耗费 3 gas ，将 3 字节的数据压入堆栈
+
+  ADD a b     # 耗费 3 gas ，计算两个数之和
+  MUL a b     # 耗费 5 gas ，计算两个数的乘积
+  SUB a b     # 耗费 3 gas ，计算两个数之差，即 a - b
+  DIV a b     # 耗费 5 gas ，计算两个数的整除
+
+  CALL        # 耗费 0 gas ，调用一个账户 address
+  STOP        # 耗费 0 gas ，停止执行
+  RETURN      # 耗费 0 gas ，停止执行并返回输出数据
+  ```
+  - [官方文档](https://www.evm.codes/)
+
+### MPT
+
+- 在存储层，以太坊以区块为单位记录交易。在抽象层，以太坊以 MPT（Merkle Patricia Trie） 数据结构记录全部账户的数据。
+  - MPT 称为以太坊世界的状态机（world state），结合了两种树形结构的特点：
+    - Merkle tree 哈希树
+      - 每个叶子节点记录一个 ETH 账户的数据，比如余额、合约代码。
+      - 父节点存放了其下所有子节点组合之后的哈希值。
+    - Patricia trie 前缀树
+      - 将前缀相同的账户存放在树的同一条路径上，方便查找。
+  - 打包一个新区块时，会执行一些交易，修改 MPT 中的一些叶子节点。
+  - BTC 需要统计所有历史交易的输入、输出，才能计算出所有账户的 UTXO 即余额。而以太坊需要执行所有历史区块的交易，才能得到最新的 MPT 数据。
+  - 目前以太坊 MPT 有几亿个节点，体积很大，因此以太坊客户端不必将整个 MPT 载入内存，而是根据节点路径从磁盘读取子树。
+
+## 智能合约
+
+- 多次让 EVM 执行请求时，可能会重复使用一些指令。可以将这些指令上传到区块链，供以后重复调用，称为智能合约（Smart Contract）。
+  - 智能合约像 HTTP API ，但用户调用它时不是发出 HTTP 请求，而是发出以太坊交易请求。
+  - 将程序的关键代码片段制作成智能合约，就可以实现去中心化程序（Decentralized Application ，DAPP）。
+
+- 智能合约的工作流程：
+  1. 开发人员编写一个智能合约，编译成 EVM 字节码之后上传到区块链（称为部署）。
+  2. 某些用户发出以太坊交易请求，调用智能合约的 public 函数。
+
+- 部署智能合约时，会根据部署者的账户地址、账户 nonce 生成一个全网唯一的合约账户地址。
+  - 每个合约账户会在区块链中存储字节码、状态变量等数据。
+  - 智能合约部署之后，永久保存在区块链上，对所有人公开可见、可调用。
+  - 开发者通常会将源代码公布在社区，包含注释，方便大家阅读。而该源代码编译之后的字节码，与区块链中的一致。
+
+- 部署智能合约之后不能修改代码，不像普通软件可以升级版本。因此部署之前应该仔细测试。
+  - 有几种方式间接修改智能合约：
+    - 迁移合约：迁移旧合约的数据到新合约，然后通知用户使用新合约地址。
+    - 数据分离：将代码、数据分别存储到两个合约，称为逻辑合约（logic contract）、存储合约（storage contract），让用户调用逻辑合约。这样更换逻辑合约时，不需要迁移存储合约。
+    - 代理模式：在数据分离的基础上，在存储合约中加入代理代码，成为代理合约。用户访问代理合约时，会间接调用逻辑合约。这样更换逻辑合约时，不需要通知用户。
+  - 在函数中执行 `selfdestruct(address);` 可销毁智能合约：将合约账户的全部 ETH 发送到指定账户，然后在区块链中删除合约账户的代码、存储（不影响历史数据）。
+    - 如果以后有账户发送 ETH 来调用该智能合约，则不会有反应，ETH 也会丢失。
+
+### 代码示例
+
+- 开发以太坊智能合约时，通常采用 Solidity 语言。它是一种面向对象的高级语言，静态类型。
+- 例：用 Solidity 编写一个智能合约
+  ```js
+  pragma solidity >= 0.7.0;   // 声明语法版本
+
+  // 定义一个智能合约，名为 Coin
+  // 本例定义一种自定义的代币，可调用函数来铸造代币、发送代币
+  contract Coin {
+      // 定义一些状态变量
+      string dapp_name;
+      address public deployer;
+      // 定义 balances 变量，用于记录各个账户的代币余额。它是 mapping 数据类型，将 address 类型映射到 uint 类型
+      mapping (address => uint) public balances;
+
+      // 定义事件消息
+      event Sent(address from, address to, uint amount);
+      // 定义报错消息
+      error InsufficientBalance(uint requested, uint available);
+
+      // 构造函数，用于初始化合约。只会执行一次，就是当合约部署到区块链上时
+      constructor() {
+          deployer = msg.sender;  // 记录合约的部署者
+      }
+
+      // mint() 函数用于铸造 amount 数量的代币，发送给 receiver
+      function mint(address receiver, uint amount) public {
+          require(msg.sender == deployer);  // 要求合约调用者是合约部署者，否则终止函数，不允许铸造代币
+          require(amount < 100);            // 限制一次铸造代币的数量
+          balances[receiver] += amount;     // 修改 balances 变量，增加指定账户的代币余额
+      }
+
+      // send() 函数用于从合约调用者发送 amount 数量的代币，给 receiver
+      function send(address receiver, uint amount) public {
+          // 如果合约调用者的余额不足，则终止函数并报错
+          if (amount > balances[msg.sender])
+              revert InsufficientBalance(amount, balances[msg.sender]);
+          balances[msg.sender] -= amount;
+          balances[receiver] += amount;
+          emit Sent(msg.sender, receiver, amount);
+      }
+  }
+  ```
+
+- 关于变量：
+  - 在函数外创建的变量称为状态变量（State variable），用于记录智能合约的状态数据，每次赋值都会存储到区块链，每次读写都需要消耗较多 gas （比基本算术指令贵 100 倍）。
+  - 在函数内创建的变量称为内存变量（memory variable），不会存储到区块链，因此使用成本低。
+  - 智能合约每次被调用时，都有一些特殊的全局变量可用：
+    ```js
+    block.number  // 当前的区块号
+    msg.data      // 调用者发送的数据
+    msg.sender    // 调用者的账户地址
+    msg.value     // 调用者发送的 ETH 数量，单位为 wei
+    tx.gasprice   // 当前交易的 gas 价格
+    ```
+
+- 常用的关键字：
+  - contract ：用于定义智能合约，像 Java 的类，包含一些变量、函数。
+  - function ：用于定义函数。
+    - 函数不一定需要 return 返回值。
+  - private ：用于声明函数、变量，表示只能在当前合约内访问。也可写作 internal 关键字。
+  - public ：用于声明函数、变量，表示可以被其它合约访问。也可写作 external 关键字。
+    - 编译器会自动为 public 类型的状态变量创建一个同名函数，供其它合约调用来获取状态变量的值。例如 `address public deployer;` 对应的函数为：
+      ```js
+      function deployer() external view returns (address) {
+          return deployer;
+      }
+      ```
+      `mapping (address => uint) public balances;` 对应的函数为：
+      ```js
+      function balances(address account) external view returns (uint) {
+          return balances[account];
+      }
+      ```
+  - returns ：放在函数头的末尾，用于声明函数返回值的类型。
+  - view ：用于声明函数，表示该函数只用于读取，不会修改智能合约的状态，比如修改状态变量、发射事件、调用其它非 view 函数。
+  - event、emit ：用于定义、发送事件。
+    - 智能合约可以发送事件，保存到区块链上。而以太坊客户端可以监听区块链上的事件，从而及时知晓智能合约的执行状态，比如记录日志。
+  - error ：用于定义报错信息。
+  - revert ：用于终止函数，返回报错信息给合约调用者。
+    - 通过 revert、require() 终止函数时，不会保存对状态变量的修改。
 
 ### ERC20
 
@@ -375,6 +371,14 @@
   - 2017 年，世界上第一个 NFT 交易所 [OpenSea](https://opensea.io/) 创立，随后成为了世界最大的 NFT 交易所。
     - 用户可在 OpenSea 平台上免费铸造 NFT 代币。不过有些用户将现实世界中不归自己所有的艺术品，铸造为自己的代币，导致抄袭或盗版。
 
+## 扩展方案
+
+- 随着用户增加、社区发展，人们希望以太坊有更多的功能、更好的性能，因此研究了一些扩展方案。主要分为两类：
+  - 链上扩展：修改以太坊协议。比如 ETH v2 。
+  - 链下扩展：不修改以太坊协议，而是引入其它技术。比如跨链、layer2 。
+- 以太坊改进提案（Ethereum Improvement Proposals ，EIP）：以太坊社区通过提案来讨论一些改进方案。
+  - [全部提案](https://eips.ethereum.org/all)
+
 ### ETH v2
 
 - 在以太坊早期，开发人员就计划着将以太坊升级到 v2 版本，通过一系列措施解决 TPS 低、交易费高、PoW 浪费能源等问题。
@@ -389,12 +393,6 @@
       - 分片链的优点是方便横向扩容，能将 TPS 提高 n 倍。
 
 - 以太坊 v2 的主链、信标链、分片链分别称为执行层（execution layer）、共识层（consensus layer）、数据层（data layer）。
-
-<!-- ### layer2
-
-- 一般将以太坊主区块链称为 layer1 ，基于主链实现的扩展方案称为 layer2
--->
-
 
 ### 跨链
 
@@ -455,6 +453,14 @@
     - Any API ：获取各种链下数据，比如股票、天气。
     - VRF（Verifiable Random Function，可验证的随机函数）：一种随机数生成器。
   - 在 <https://market.link> 网站可搜索可用的 API 、节点。
+
+<!-- ### layer2
+
+
+
+- 一般将以太坊主区块链称为 layer1 ，基于主链实现的扩展方案称为 layer2
+ -->
+
 
 ## 相关历史
 

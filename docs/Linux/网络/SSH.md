@@ -111,7 +111,7 @@ $ ssh <user>@<host>   # 使用 ssh 协议，以 user 用户（默认为 root ）
       [command]       # 不打开远程主机的 shell ，而是以非交互模式执行一条命令
 
       # 建立 SSH 连接的同时，可以运行一个代理服务器
-      # bind_address 默认为 localhost ，绑定到其它地址时需要在 sshd_config 中启用 GatewayPorts 配置
+      # bind_address 默认为 localhost ，绑定到其它地址时需要在 sshd_config 中设置 GatewayPorts=yes
       -L [bind_address:]<bind_port>:<host>:<port>   # 让本地的 ssh 进程监听 bind_port 端口，将该端口收到的 TCP 数据包传输到远程主机，由后者转发到任意主机的 <host>:<port>
       -R [bind_address:]<bind_port>:<host>:<port>   # 让远程主机的 sshd 进程监听 bind_port 端口，将其 TCP 数据包传输到本机，由后者转发到任意主机的 <host>:<port>
 ```

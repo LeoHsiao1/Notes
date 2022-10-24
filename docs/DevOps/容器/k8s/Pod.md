@@ -162,24 +162,29 @@
 
 ### dns
 
-dnsPolicy 表示容器内采用的 DNS 策略，常见的几种取值：
-- ClusterFirst
-  - ：表示查询一个域名时，优先解析为 k8s 集群内域名。如果不能解析，才尝试解析为集群外域名。
-  - 此时会自动在主机 /etc/resolv.conf 文件的基础上为容器生成 /etc/resolv.conf 文件，内容示例：
-    ```sh
-    nameserver 10.43.0.10     # k8s 集群内的 DNS 服务器，比如 CoreDNS
-    search default.svc.cluster.local svc.cluster.local cluster.local openstacklocal
-    options ndots:5
-    ```
-    - 如果查询同一个命名空间下的短域名，比如 nginx ，则首先尝试解析 nginx.default.svc.cluster.local ，因此第一个 search 域就解析成功。
-    - 如果查询其它命名空间下的域名，即使指定了完整域名比如 redis.db.svc.cluster.local ，其点数为 4 ，因此第一个 search 域会解析失败，第二个 search 域才解析成功，增加了 DNS 请求数。
-- Default
-  - ：用 kubelet 的 --resolv-conf 参数指定的文件作为容器的 /etc/resolv.conf 文件，因此只能解析集群外域名。
-- None
-  - ：不自动为容器生成 /etc/resolv.conf 文件，此时需要 dnsConfig 自定义配置。
+- k8s 的 DNS 组件会创建一些只在 k8s 集群内有效的域名，可供 Pod 内程序进行 DNS 查询。
+  - 建议让 Pod 慎用 DNS 查询。因为：
+    - 进行 DNS 查询需要一定耗时。
+    - Pod 里运行的程序可能不尊重 DNS 查询结果的 TTL ，甚至无限期缓存 DNS 查询结果，直到重启程序。
+  - 例如访问 k8s service_name 时，默认会 DNS 解析到 service_ip ，而不是 pod_ip 。因为 service_ip 一般不变，而 pod_ip 经常变化。
 
-dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
-- 例：
+- dnsPolicy 表示容器内采用的 DNS 策略，常见的几种取值：
+  - ClusterFirst
+    - ：表示查询一个域名时，优先解析为 k8s 集群内域名。如果不能解析，才尝试解析为集群外域名。
+    - 此时会自动在宿主机 /etc/resolv.conf 文件的基础上为容器生成 /etc/resolv.conf 文件，内容示例：
+      ```sh
+      nameserver 10.43.0.10     # k8s 集群内的 DNS 服务器，比如 CoreDNS
+      search default.svc.cluster.local svc.cluster.local cluster.local openstacklocal
+      options ndots:5
+      ```
+      - 如果查询同一个命名空间下的短域名，比如 nginx ，则首先尝试解析 nginx.default.svc.cluster.local ，因此第一个 search 域就解析成功。
+      - 如果查询其它命名空间下的域名，比如 redis.db.svc.cluster.local ，其点数为 4 ，因此第一个 search 域会解析失败，第二个 search 域才解析成功，增加了 DNS 请求数。
+  - Default
+    - ：用 kubelet 的 --resolv-conf 参数指定的文件作为容器的 /etc/resolv.conf 文件，因此只能解析集群外域名。
+  - None
+    - ：不自动为容器生成 /etc/resolv.conf 文件，此时需要用 dnsConfig 自定义配置。
+
+- dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。例：
   ```yml
   kind: Pod
   spec:

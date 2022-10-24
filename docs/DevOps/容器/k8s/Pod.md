@@ -302,6 +302,7 @@ dnsConfig 用于自定义容器内 /etc/resolv.conf 文件中的配置参数。
   - kubelet 重启 Pod 时，并不会重启容器，而是删除旧容器（保留 pause 容器），然后在当前节点上重新创建 Pod 中的所有容器。
   - 如果 Pod 连续重启失败，则重启的间隔时间按 0s、10s、20s、40s 数列增加，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
     - 连续重启时，k8s 会报错 CrashLoopBackOff ，表示 Pod 陷入崩溃循环中。
+    - Pod 不支持限制重启次数，会无限重启。不过 Job 可以通过 backoffLimit 限制重试次数。
   - 如果手动终止 Pod 中的任一容器，则 kubelet 会在 1s 内发现，并将 Pod 标记为 Failed 阶段，等满足重启间隔之后，再根据 restartPolicy 重启 Pod 。
     - 特别地，手动终止 pause 容器时，kubelet 可能过几秒才发现。
 

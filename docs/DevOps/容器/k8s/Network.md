@@ -3,7 +3,7 @@
 ## IP
 
 - k8s 集群内会使用一些虚拟 IP ，称为 Cluster IP、VIP 。
-  - 在 k8s 集群内主机上能访问到 VIP ，在集群外主机上则访问不到。
+  - 在 k8s 集群的任一主机或容器内，都可以访问到这些 VIP ，因为 kube-proxy 会自动路由转发网络流量。在 k8s 集群外的主机上则访问不到。
 
 - k8s 常见的几种 IP ：
   - Node IP
@@ -12,7 +12,7 @@
   - Pod IP
     - ：分配给 Pod 使用的 VIP 。
     - k8s 会给每个 Node 分配一个虚拟 CIDR 子网，给每个 Pod 分配一个当前 CIDR 子网的 VIP 。
-    - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP 。而且重新部署时，会创建新 Pod ，分配新 Pod IP 。因此 Pod IP 不固定，不方便访问，建议通过 Service IP 或 Ingress IP 访问应用。
+    - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP 。而且重新部署时，会创建新 Pod ，分配新 Pod IP 。因此 Pod IP 不固定，不方便访问，建议通过 Service 或 Ingress 访问应用。
     - Pod IP 支持 ICMP 协议，因为绑定了一个虚拟网卡。也支持 TCP/UDP 通信，比较能模拟一个主机。
       - 而 Service IP 不支持 ICMP 协议，只负责 TCP/UDP 端口转发。
   - Service IP
@@ -42,12 +42,12 @@
 
 ## Service 类型
 
-- Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP、UDP 反向代理，代表一个抽象的应用服务，常用于实现服务发现、负载均衡。
+- Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP/UDP 反向代理，代表一个抽象的应用服务，常用于实现服务发现、负载均衡。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
 ### ClusterIP
 
-：默认的 Service 类型，是给 Service 分配一个集群内的 VIP ，将访问 `ClusterIP:Port` 的流量转发到 EndPoints 。
+：给 Service 分配一个集群内的 VIP ，将访问 `ClusterIP:Port` 的流量转发到 EndPoints 。
 - 配置文件示例：
   ```yml
   apiVersion: v1
@@ -56,16 +56,16 @@
     name: redis
     namespace: default
   spec:
-    type: ClusterIP
-    clusterIP: 10.124.0.1   # 给该 Service 分配一个 clusterIP ，允许自行指定。在创建 Service 之后不允许修改，除非重建 Service
-    selector:               # 通过 selector 选中一些 Pod ，进行反向代理
+    # type: ClusterIP       # Service 类型，默认为 ClusterIP
+    clusterIP: 10.43.0.1    # 该 Service 绑定的 clusterIP 。如果创建 Service 时不指定 clusterIP ，则随机分配一个。创建 Service 之后不允许修改 clusterIP ，除非重建 Service
+    selector:               # 通过 selector 选中一些 Pod
       k8s-app: redis
-    ports:                  # 定义一组反向代理规则
+    ports:                  # 让 Service 的端口反向代理到 Pod 的端口
     - name: redis
       port: 6379            # Service 监听的端口，供外部访问
-      protocol: TCP         # 反向代理的协议，默认为 TCP ，还可以填 UDP
-      targetPort: 6379      # 将访问 clusterIP:port 的流量，转发到 pod_ip:targetPort
-      # targetPort: port1   # 可以指定 Pod 的端口名，而不是具体的端口号
+      protocol: TCP         # 反向代理的协议，默认为 TCP ，还可选 UDP
+      targetPort: 6379      # 将访问 service_ip:port 的流量，转发到 pod_ip:targetPort
+      # targetPort: port1   # 可以指定 Pod 的端口名，而不是数字端口号
     - name: sentinel
       port: 26379
       protocol: TCP
@@ -75,11 +75,10 @@
     #   clientIP:                 # 为每个 client IP 创建一个会话。在会话持续时间内，将来自同一个 client IP 的数据包总是转发到同一个 Pod IP
     #     timeoutSeconds: 10800
   ```
-  - 此时可以通过 3 种地址访问 Pod ：
+  - 用户可直接访问 Pod 的端口，也可通过 Service 来访问：
     ```sh
-    service_name:port   # 访问者与 service 在同一命名空间时，service_name 会被自动 DNS 解析到 service_ip 。在不同命名空间时，则不支持
-    service_ip:port     # 在不同命名空间时，也可以通过 service_ip 访问 service
-    pod_ip:targetPort   # 也可以直接访问 Pod
+    pod_ip:targetPort       # 直接访问 Pod 。由于 pod_ip 可能变化，这样访问不方便
+    service_ip:port         # 在 k8s 集群的任一主机或容器内，都可以通过 ClusterIP 访问到 service
     ```
 
 ### NodePort
@@ -94,7 +93,7 @@
     name: redis
     namespace: default
   spec:
-    clusterIP: 10.124.0.1   # NodePort 类型的 service 也会绑定一个 clusterIP
+    clusterIP: 10.43.0.1    # NodePort 类型的 service 也会绑定一个 clusterIP
     ports:
     - nodePort: 31017       # 如果不指定 nodePort ，则随机选取一个端口
       port: 80
@@ -133,6 +132,7 @@
 
 ：给 Service 绑定 k8s 集群外的一个内网或公网 IP ，将访问该 IP 的流量转发到随机一个 Node ，然后路由到 Pod IP 。
 - 一般需要购买云平台的负载均衡器，也可以用 MetalLB 自建。
+<!-- - 考虑到云平台提供的 LoadBalancer 会收费，用户可以自行部署一个 Nginx ，根据不同的 DNS 子域名或端口，转发到不同的 Service ClusterIP 。 -->
 - 例：
   ```yml
   apiVersion: v1
@@ -142,8 +142,8 @@
     namespace: default
   spec:
     type: LoadBalancer
-    clusterIP: 10.124.0.1
-    loadBalancerIP: 123.0.0.1
+    clusterIP: 10.43.0.1
+    loadBalancerIP: 12.0.0.1
     selector:
       k8s-app: redis
     ports:
@@ -193,16 +193,17 @@
 ### Headless
 
 ：配置 `clusterIP: None` 。此时 Service 没有 VIP ，访问 Service 名会被 DNS 解析到随机一个 Pod IP 。
+<!-- 组合使用 StatefulSet 与 Headless Service 时，会为每个 Pod 创建一个 DNS 域名 -->
 
 ## Service 相关
 
-<!-- ### DNS -->
+### DNS
 
-<!-- 创建一个 Service 时，它会创建一个相应的 DNS 条目。此条目的形式为<service-name>.<namespace-name>.svc.cluster.local ，这意味着如果容器仅使用<service-name>，它将解析为命名空间本地的服务。
-考虑到云平台提供的 LoadBalancer 会收费，用户也可自行部署一个 Nginx ，根据不同的 DNS 子域名或端口，转发到不同的 Service ClusterIP
-
-不同 namespace 下的 pod、service 相互隔离，因此不能 dns 解析其它命名空间的 service ，但可以通过 Pod IP、 clusterIP 访问。
--->
+- 创建一个 Service 时，k8s 会自动创建一个相应的 DNS 条目，全名为 `<service-name>.<namespace-name>.svc.cluster.local` 。因此可通过 service_name 访问 service ：
+  ```sh
+  service_name:port                   # 访问者与 service 在同一命名空间时，访问 service_name ，默认会 DNS 解析到 service_ip
+  service_name.svc.cluster.local:port # 访问者与 service 在不同命名空间时，需要访问 service 的完整 DNS 名称，才能解析到 service_ip
+  ```
 
 ### 环境变量
 
@@ -214,14 +215,17 @@
   REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
   ...
   ```
-  Serivce 变化时不会自动更新环境变量，因此不可靠。
+  - Serivce 变化时不会自动更新 Pod 的环境变量，因此不可靠。
 
 ### EndPoints
 
-：端点，Service 的一种子对象，用于跟踪需要反向代理的 pod_ip:targetPort 地址。
-- 每个 Service 最多存在一个 EndPoints 对象，两者同名。
-- 如果一个 Service 不存在 EndPoints 对象，则向 service_ip:port 发送的数据包不会被转发，因此无响应。
-- 创建一个 Service 时，如果指定了 selector ，则会自动创建一个 EndPoints 。如下：
+：端点，Service 的一种子对象，用于跟踪需要反向代理的 Pod 地址。
+- 创建 Service 时，会根据 selector 选中一些 Pod ，自动创建一个与 Service 同名的 EndPoints 对象。
+  - EndPoints 会监听 Service 需要反向代理的所有 Pod 的 pod_ip:targetPort 地址，记录其中 Ready 状态的端点，实现服务发现。
+  - kube-proxy 会从 EndPoints 读取端点，将访问 Service 的流量转发到端点。
+- 创建 Service 时，如果没有 selector ，则不会创建 EndPoints 对象，因此发向 service_ip:port 的数据包不会被转发，导致用户访问端口时无响应。
+  - 此时用户可手动创建 Endpoints 对象，自定义端点地址，从而让 Service 反向代理到任意地址。
+- EndPoints 示例：
   ```sh
   [root@CentOS ~]# kubectl get service redis
   NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)              AGE
@@ -230,16 +234,15 @@
   NAME         ENDPOINTS                        AGE
   redis        10.42.3.6:6379,10.42.3.6:26379   2h
   ```
-  - EndPoints 会监听所有 Pod ，记录 Ready 状态的 Pod 的端点，实现服务发现。
 
 ### EndpointSlices
 
 ：端点分片，Service 的一种子对象，用于将大量端点分片存储。
-- 每个 Service 可以绑定多个 EndpointSlices 对象。
-  - 每个 EndpointSlices 默认最多记录 100 个端点。
-- etcd 中单个对象的最大体积默认为 1.5MB ，因此一个 EndPoints 最多记录 5000 多个端点。并且一个 Service 的 EndPoints 每次变化时，需要全量同步到所有节点的 kube-proxy ，开销较大。
-  - 如果将单个 EndPoints 拆分成多个 EndpointSlice ，则可以增加端点容量、降低同步开销。
-  - k8s v1.19 开始默认启用 EndpointSlices 功能，让 kube-proxy 从 EndpointSlices 读取反向代理的端点，而不是 EndPoints 。
+- EndpointSlices 相比 Endpoints 的优点：
+  - 一个 Service 的 EndPoints 每次变化时，需要全量同步到所有节点的 kube-proxy ，开销较大。如果将单个 EndPoints 拆分成多个 EndpointSlice ，则可以增加端点容量、降低同步开销。
+  - 每个 EndPoints 对象最多记录 1000 个端点，超出的部分会截断。而每个 EndpointSlices 默认最多记录 100 个端点，并且容量满了时，k8s 会自动为 Service 添加 EndpointSlices 。
+  - 每个 Service 最多绑定一个 EndPoints 对象，两者同名。而每个 Service 可以绑定多个 EndpointSlices 对象，名称任意，通过 `kubernetes.io/service-name` 标签记录所属的 Service 。
+- k8s v1.19 开始默认启用 EndpointSlices 功能，创建 Service 时会同时创建 EndPoints 和 EndpointSlices 对象，但实际使用的是 EndpointSlices 。
 
 ## Ingress
 
@@ -271,6 +274,8 @@
     echo '10.0.0.1 test.com' >> /etc/hosts    # 将 ingress 域名解析到任一 k8s node
     curl test.com
     ```
+
+<!-- ingress path 支持正则匹配 -->
 
 ## 访问控制
 

@@ -61,8 +61,8 @@
     selector:               # 通过 selector 选中一些 Pod
       k8s-app: redis
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
-    - name: redis
-      port: 6379            # Service 监听的端口，供外部访问
+    - name: redis           # Service 的端口名。如果 Service 只监听一个端口，才可以省略 name
+      port: 6379            # Service 监听的端口号
       protocol: TCP         # 反向代理的协议，默认为 TCP ，还可选 UDP
       targetPort: 6379      # 将访问 service_ip:port 的流量，转发到 pod_ip:targetPort
       # targetPort: port1   # 可以指定 Pod 的端口名，而不是数字端口号
@@ -70,7 +70,7 @@
       port: 26379
       protocol: TCP
       targetPort: 26379
-    # sessionAffinity: ClientIP   # 会话保持。默认为 None ，即将数据包随机转发到各个 Pod IP
+    # sessionAffinity: ClientIP   # 会话保持的方式。默认为 None ，会将数据包随机转发到各个 Pod IP
     # sessionAffinityConfig:
     #   clientIP:                 # 为每个 client IP 创建一个会话。在会话持续时间内，将来自同一个 client IP 的数据包总是转发到同一个 Pod IP
     #     timeoutSeconds: 10800

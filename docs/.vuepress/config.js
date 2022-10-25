@@ -1464,6 +1464,27 @@ module.exports = {
                             path: "/Distributed/存储/Nextcloud"
                         }
                     ]
+                },
+                {
+                    title: "区块链",
+                    children: [
+                        {
+                            title: "简介",
+                            path: "/Distributed/区块链/简介"
+                        },
+                        {
+                            title: "BTC",
+                            path: "/Distributed/区块链/BTC"
+                        },
+                        {
+                            title: "ETH",
+                            path: "/Distributed/区块链/ETH"
+                        },
+                        {
+                            title: "DeFi",
+                            path: "/Distributed/区块链/DeFi"
+                        }
+                    ]
                 }
             ]
         }

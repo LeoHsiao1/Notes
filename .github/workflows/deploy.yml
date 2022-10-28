@@ -14,11 +14,12 @@ jobs:
         yarn
         yarn vuepress build docs
         mv docs/.vuepress/dist .
+        tar -zcvf dist.tgz dist/
     - uses: actions/upload-artifact@v2
       with:
         name: dist
         path: |
-          dist
+          dist.tgz
         retention-days: 1
 
   copy_dist:
@@ -27,13 +28,13 @@ jobs:
     steps:
     - uses: actions/download-artifact@v2
       with:
-        name: dist
-        path: dist
+        name: dist.tgz
+        path: dist.tgz
     - name: Copy dist
       run: |
         set -eu
-        rm -rf  $DEPLOY_DIR/*
-        cp -r   dist/*  $DEPLOY_DIR
+        rm -rf $DEPLOY_DIR/dist
+        tar -zxvf dist.tgz -C $DEPLOY_DIR
       env:
         DEPLOY_DIR: /data/Notes/
 
@@ -43,8 +44,8 @@ jobs:
     steps:
     - name: Test
       run: |
-        curl https://leohsiao.com --connect-timeout 5
-        curl https://meilisearch.leohsiao.com/health --connect-timeout 5
+        curl https://leohsiao.com --connect-timeout 10
+        curl https://meilisearch.leohsiao.com/health --connect-timeout 10
 
   scrap_docs:
     needs: test_website

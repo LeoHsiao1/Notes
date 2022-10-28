@@ -29,12 +29,12 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
         name: dist.tgz
-        path: .
+        path: artifacts
     - name: Copy dist
       run: |
         set -eu
         rm -rf $DEPLOY_DIR/dist
-        tar -zxvf dist.tgz -C $DEPLOY_DIR
+        tar -zxvf artifacts/dist.tgz -C $DEPLOY_DIR
       env:
         DEPLOY_DIR: /data/Notes/
 

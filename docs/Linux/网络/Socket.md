@@ -1,39 +1,12 @@
 # Socket
 
-：套接字。是一种在内存中创建的文件描述符，并不会实际存储在磁盘上。
-- 使用 Socket ，程序可以用读写文件的方式进行进程间通信。主要有两种用法：
-  - Unix Domain Socket ：用于本机的进程之间通信，保存为一个 Socket 文件，比如 /var/lib/mysql/mysql.sock 。
-  - Network Socket ：用于不同主机的进程之间通信，基于 TCP/UDP 协议通信，用 host:port 表示通信方。
+：套接字。是一种在内存中创建的文件，并不会实际存储在磁盘上。
+- Socket 是类 Unix 系统提供的一种伪文件机制，用于让程序以读写文件的方式实现进程间通信。
+- Socket 主要有两种用法：
+  - Unix Domain Socket ：用于本机的进程之间通信。比如 mysqld 在启动时会创建一个 /var/lib/mysql/mysql.sock 文件，客户端向该文件写入数据，就可以被服务器读取到。
+  - Network Socket ：用于不同主机的进程之间通信。比如进行 TCP/UDP 通信时，通信双方需要各创建一个 Socket ，向一方的 Socket 写入数据，就可以在另一方的 Socket 读取到。
 
 ## TCP
-
-### Socket 状态
-
-- 建立 TCP 连接时的 Socket 状态变化：
-
-  ![](./socket_1.png)
-
-  - `LISTEN`      ：server 正在监听该 Socket ，允许接收 TCP 包。
-  - `SYN_SENT`    ：client 已发出 SYN=1 的 TCP 包，还没有收到 SYN+ACK 包。
-  - `SYN_RECV`    ：server 已收到 SYN 包，还没有收到 ACK 包。
-    - 如果 server 一直未收到 ACK 包，则会在超时之后重新发送 SYN+ACK 包，再次等待。多次超时之后，server 会关闭该连接。
-  - `ESTABLISHED` ：已建立连接。
-
-- 断开 TCP 连接时的 Socket 状态变化：
-
-  ![](./socket_2.png)
-
-  - `FIN-WAIT-1`
-  - `FIN-WAIT-2`
-  - `TIME_WAIT`
-    - 主动关闭方在关闭连接之后，还要等待 2*MSL 时间之后才能变成 CLOSED 状态，避免对方来不及关闭连接。此时该端口占用的资源不会被内核释放。
-    - MSL（Maximum Segment Lifetime）：TCP 段在网络传输中的最大生存时间，超过该时间就会被丢弃。它在 Linux 中的默认值为 30s 。
-    - 一般 HTTP 通信时，服务器发出响应报文之后就会主动关闭连接（除非是长连接），使端口变成 TIME_WAIT 状态。
-      - 如果服务器处理大部分 HTTP 请求的时长，都远低于 TIME_WAIT 时长，就容易产生大量 TIME_WAIT 状态的端口，影响并发性能。
-  - `CLOSE_WAIT`
-    - 例如：HTTP 客户端发送 FIN 包来主动关闭连接时，HTTP 服务器没有马上调用 close() 关闭端口，就会长时间处于 CLOSE_WAIT 状态。
-  - `LAST_ACK`
-  - `CLOSED` ：已关闭连接。
 
 ### 连接队列
 
@@ -60,7 +33,7 @@
     - 如果主机 A 长时间没有收到回复（连 RST 包都没收到），则超出等待时间之后会报错：`Connection timed out`
   - 如果主机 B 的防火墙放通了该端口，但没有进程在监听该 socket ，则会回复一个 RST 包，表示拒绝连接，导致主机 A 报错：`Connection refused`
 
-- 当主机 A 与主机 B 通信过程中，主机 B 突然断开 TCP 连接时：
+- 当主机 A 与主机 B 通信过程中，主机 B 突然关闭 TCP 连接时：
   - 如果主机 A 继续读取数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
   - 如果主机 A 继续发送数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer`
 
@@ -107,7 +80,10 @@
   4. 调用 close() 关闭 Socket 。
 
 - 每个 Socket 连接由五元组 protocol、src_addr、src_port、dst_addr、dst_port 确定，只要其中一项元素不同， Socket 的文件描述符就不同。
-  - 当服务器监听一个 TCP 端口时，可以被任意 dst_addr、dst_port 连接，因此建立的 Socket 连接有 255^4 * 65535 种可能性。
+  - 当 server 监听一个端口时，可以被 client 使用任意 src_addr、src_port 请求连接，因此建立的 Socket 有 `255^4 * 65535` 种可能性，几乎无限。
+  - 当 server 监听一个端口、被同一个 client 请求连接时，client 的 src_addr 固定、可用的端口范围默认为 `10000 ~ 65535` ，因此建立的 Socket 有 55535 种可能性，足够使用。
+    - 一般情况下，client 向同一 server 建立的并发连接数只有几个。
+    - 有的情况下，client 会频繁向 server 发送数据，每次都创建一个新 TCP 连接，发送完数据就关闭连接。而 client 作为主动关闭方， Socket 要等 2*MSL 时长才能关闭，因此新、旧 Socket 会同时存在，平均每秒最多能创建 `55535/60=925` 个新 Socket 。此时建议 client 创建 TCP 连接之后不立即关闭，而是复用一段时间。
 
 - 内核收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
   - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。

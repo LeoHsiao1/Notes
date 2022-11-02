@@ -802,9 +802,10 @@ spec:
   ```
   - 计算关系：
     ```sh
-    memory.capacity = RAM     # 节点的硬件资源容量
-    memory.allocatable = memory.capacity - kube-reserved - system-reserved  # 节点的可分配资源量，等于硬件容量减去保留量
-    memory.available = memory.allocatable - memory.workingSet               # 节点实际用的资源量，这是根据 Cgroup 数据计算的，与 pod.request 无关
+    memory.capacity    = RAM     # 节点的硬件资源量
+    memory.allocatable = memory.capacity - kube-reserved - system-reserved  # 总共可分配的资源量，等于硬件量减去保留量
+    memory.free        = memory.allocatable - sum(pod.requests.memory)      # 剩余可分配的资源量，需要排除已分配给 Pod 的资源
+    memory.available   = memory.allocatable - memory.workingSet             # 实际可用的资源量，这是根据 Cgroup 监控数据计算的，与 pod.requests 无关
     ```
   - nodefs、imagefs 一般都位于主机的主文件系统上（俗称系统盘）。
     - nodefs ：用于存放 /var/lib/kubelet/ 目录。

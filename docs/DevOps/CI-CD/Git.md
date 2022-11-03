@@ -247,41 +247,67 @@ git cherry-pick <commit_hash>...  # 提取多个 commit 的修改内容，拷贝
 
 ## 配置
 
-git 的配置文件有三种，局部的配置会覆盖全局的配置：
-- 系统的配置文件：保存在 `/etc/gitconfig` 。
-- 当前用户的配置文件：保存在 `~/.gitconfig` 。
-- 当前项目的 git 仓库的配置文件：保存在 `.git/config` 。
+- Git 的配置文件有三种，局部的配置会覆盖全局的配置：
+  - 系统的配置文件：保存在 `/etc/gitconfig` 。
+  - 当前用户的配置文件：保存在 `~/.gitconfig` 。
+  - 当前目录的 Git 仓库的配置文件：保存在 `.git/config` 。
 
-配置文件为 INI 格式，下方是一个项目的 git 仓库的配置实例：
-```ini
-[core]
-    repositoryformatversion = 0 # 仓库格式的版本
-    filemode   = true           # 是否保留文件权限中的可执行位
-    bare       = false          # 该仓库是否为裸仓库
-    ignorecase = false          # 是否忽略文件名的大小写
+- 可以用 vim 命令修改 Git 的配置文件，也可以用以下命令修改：
+  ```sh
+  git config
+            --system      # 使用系统的配置文件
+            --global      # 使用当前用户的配置文件
+            --local       # 使用当前 git 仓库的配置文件
 
-[remote "origin"]               # 定义一个远程仓库，名为 origin
-    url    = https://github.com/LeoHsiao1/test.git
-    fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，表示让本地分支 src 跟踪远程分支 dst
+            -l            # --list ，显示配置文件的全部内容
+            -e            # --edit ，在文本编辑器中打开配置文件
 
-[branch "master"]
-    remote = origin
-    merge  = refs/heads/master
-```
+            <key>         # 显示配置文件中某项参数的值
+            <key> <value> # 设置配置文件中某项参数的值
+  ```
 
-可以直接修改配置文件，也可以使用以下命令进行修改：
-```sh
-git config
-          --system      # 使用系统的配置文件
-          --global      # 使用当前用户的配置文件
-          --local       # 使用当前 git 仓库的配置文件
+- Git 配置文件为 INI 格式，下方是一个 Git 仓库的配置示例：
+  ```ini
+  [core]
+      repositoryformatversion = 0 # 仓库格式的版本
+      filemode   = true           # 是否保留文件权限中的可执行位
+      bare       = false          # 该仓库是否为裸仓库
+      ignorecase = false          # 是否忽略文件名的大小写
 
-          -l            # --list ，显示配置文件的全部内容
-          -e            # --edit ，在文本编辑器中打开配置文件
+  [remote "origin"]               # 定义一个远程仓库，名为 origin
+      url    = https://github.com/LeoHsiao1/test.git
+      fetch  = +refs/heads/*:refs/remotes/origin/*    # 格式为 [+]<src>:<dst> ，表示让本地分支 src 跟踪远程分支 dst
 
-          <key>         # 显示配置文件中某项参数的值
-          <key> <value> # 设置配置文件中某项参数的值
-```
+  [branch "master"]
+      remote = origin
+      merge  = refs/heads/master
+  ```
+
+- 通过 git pull、git push 同步 Git 仓库时，会同步受版本控制的所有文件，但不会同步 Git 仓库的配置文件，比如 `.git/config`、`.git/hooks` 。
+  - .gitmodules 文件受版本控制，因此会同步。
+
+### hooks
+
+- 用户可以给 Git 仓库添加一些钩子（hooks），用于在发生某些 Git 操作时，自动执行自定义的 shell 脚本。
+- git hooks 保存在 `.git/hooks` 目录下，例如：
+  ```sh
+  .git/hooks/
+  |-- pre-commit.sample
+  |-- pre-push.sample
+  |-- pre-rebase.sample
+  `-- ...
+  ```
+  默认有一些名为 `<hook_name>.sample` 的 shell 脚本，将脚本重命名为 `<hook_name>` 即可生效。
+
+- 常见的钩子：
+  ```sh
+  pre-commit      # 每次执行 git commit 操作之前，触发该钩子
+  post-commit     # 每次执行 git commit 操作之后，触发该钩子
+  pre-push
+  post-checkout
+  pre-receive     # 用于 Git 服务器，每次执行 git-receive-pack 操作之前，触发该钩子
+  post-receive    # 用于 Git 服务器，每次执行 git-receive-pack 操作之后，触发该钩子
+  ```
 
 ### submodule
 

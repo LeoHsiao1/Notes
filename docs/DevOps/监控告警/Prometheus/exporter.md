@@ -425,11 +425,11 @@ https://etcd.io/docs/v3.5/metrics/
   container_cpu_load_average_10s            # 容器占用 CPU 的 10 秒平均负载
   container_cpu_cfs_throttled_seconds_total # 容器超出 cpu.cfs_quota_us 限额之后申请的 CPU 时长
 
-  container_memory_usage_bytes              # 容器占用的全部内存，包括 RSS、swap、Page Cache 等
-  container_memory_rss                      # 容器的 rss 内存。超过 Cgroup 限制时会被 OOM 杀死
-  container_memory_swap                     # 容器占用的 swap 分区
-  container_memory_cache                    # 容器占用的 Page Cache
-  container_memory_working_set_bytes        # 容器的工作集内存，即最近访问的内存，等于 container_memory_usage_bytes - inactive_page
+  container_memory_usage_bytes              # 容器占用的全部内存，读取自 Cgroup 的 memory.usage_in_bytes 文件，等于 rss + swap + cache
+  container_memory_rss                      # 容器的 rss 内存，读取自 Cgroup 的 memory.stat 文件中的 total_rss 字段
+  container_memory_swap                     # 容器占用的 swap 内存
+  container_memory_cache                    # 容器占用的 Page Cache 内存
+  container_memory_working_set_bytes        # 容器的工作集内存，等于 memory.usage_in_bytes - memory.stat.total_inactive_file
 
   container_file_descriptors                # 打开的文件数
   container_fs_usage_bytes                  # 容器占用的磁盘，包括 rootfs、终端日志，不包括挂载的 volume
@@ -446,9 +446,9 @@ https://etcd.io/docs/v3.5/metrics/
   container_network_transmit_bytes_total                  # 网络发
   container_network_transmit_packets_total
   ```
-  - 假设容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 上限时，不会触发 OOM ，而是停止增长。
-    - 此时容器可以减少 Page Cache ，继续增加 container_memory_working_set_bytes 。
-    - 当 container_memory_working_set_bytes 达到 Cgroup 上限时，会触发 OOM ，杀死容器。
+  - 假设容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 限制的 memory.limit_in_bytes 时，不会触发 OOM ，而是停止增长。
+    - 因为 `container_memory_usage_bytes = rss + swap + cache` ，在总和 container_memory_usage_bytes 不变的情况下，容器可以减少 container_memory_cache ，继续增加 container_memory_rss 。
+    - 当 container_memory_working_set_bytes 达到 Cgroup 内存限制时，会触发 OOM ，杀死容器内进程。
 
 ### jmx_exporter
 

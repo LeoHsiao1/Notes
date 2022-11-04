@@ -60,84 +60,109 @@ pipeline {
 
 ## 变量
 
-- 例：
+Pipeline 中可以创建多种变量，比如 Groovy 变量、Shell 变量。
+
+### Groovy变量
+
+- 在 script{} 中可以执行 Groovy 代码，创建变量：
   ```groovy
   script {
       ID = "1"            // 创建变量
       NAME = "man" + ID   // 拼接字符串
-      echo NAME           // 直接打印 Groovy 的变量
+      echo NAME           // 打印 Groovy 变量
       echo "$ID"          // 字符串定界符为双引号时，支持用 $ 插入变量或表达式的值
       echo '$ID'          // 字符串定界符为双引号时，不支持用 $ 取值
-      sh "echo $ID"       // 执行 sh 语句，字符串定界符为双引号时，会先在 Groovy 解释器中获取 $ 变量的值，再将字符串作为 Shell 命令执行
-      sh 'echo $ID'       // 执行 sh 语句，字符串定界符为单引号时，会直接作为 Shell 命令执行，因此 $ 会读取 Shell 变量
   }
   ```
-- Groovy 语言支持在字符串中用 `$` 插入变量的值，用 `${}` 插入表达式的值。
-  - Jenkins 在执行 Jenkinsfile 之前，会先渲染以双引号作为定界符的字符串，如果其中存在 $ 符号，则尝试对 Groovy 解释器中的变量进行取值。
-    - 如果通过 $ 读取的变量不存在，则会抛出 Groovy 的语法异常：`groovy.lang.MissingPropertyException: No such property`
-    - 如果通过 ${env.A} 方式读取的变量不存在，则会返回 null ，不会报错。
-  - 如果想让 Groovy 将字符串中的 $ 当作普通字符处理，则需要使用单引号作为定界符，或者使用转义字符 `\$` 。
+  - 在 script{} 中创建的变量会在 Groovy 解释器中一直存在，因此在当前 script{} 或 stage{} 结束之后依然可以读取。
+  - Groovy 语言中，字符串的定界符为双引号时，支持用 `$var` 或 `${expression}` 的格式，插入变量或表达式的值。
+    - 如果通过 `$A` 格式读取的变量不存在，则会抛出 Groovy 的语法异常：`groovy.lang.MissingPropertyException: No such property`
+    - 如果通过 `${env.A}` 格式读取的变量不存在，则会返回 null ，不会报错。
+    - 如果想让 Groovy 将字符串中的 `$` 当作普通字符处理，则需要以单引号作为字符串定界符，或者使用转义字符 `\$` 。
+  - Jenkinsfile script{} 中创建的 Groovy 变量名区分大小写，但 environment、parameters 变量名不区分大小写，不过它们加入 shell 环境变量时会区分大小写。
 
-- Jenkinsfile script{} 中创建的 Groovy 变量名区分大小写，但 parameters、environment 变量名不区分大小写，不过它们加入 shell 环境变量时会区分大小写。
+### Shell变量
 
-### 环境变量
+- 每次执行 sh 语句时，Jenkins 会将 Groovy 解释器中的 env、params 字典中的所有变量，加入 Shell 环境变量，因此可以在 Shell 中读取。例：
+  ```groovy
+  script {
+      echo env.NODE_NAME          // 在 Groovy 代码中，通过 env 字典读取
+      echo "${env.NODE_NAME}"     // 在字符串中，通过 $ 取值
 
-- 在 environment{} 中可以定义环境变量，它们会保存为 Groovy 变量和 Shell 环境变量。如下：
+      sh "echo ${env.NODE_NAME}"
+      sh 'echo $NODE_NAME'
+
+      A = 'Hello'                 // 创建 Groovy 变量，可以在 Groovy 脚本中读取，但不会加入 Shell 环境变量
+      env.A = 'Hello'             // 可以直接在 env 字典中添加变量，从而加入 Shell 环境变量
+  }
+  ```
+  - 调试时，可以在 Shell 中执行 `env` ，打印所有 Shell 环境变量。
+
+- 普通的 Groovy 变量不会加入 Shell 环境变量，除非主动执行 withEnv() 语句。例：
+  ```groovy
+  script {
+      ID = "1"
+      sh "echo $ID"   // 字符串定界符为双引号，因此会读取一个名为 ID 的 Groovy 变量，然后执行 sh 命令
+      sh 'echo $ID'   // 字符串定界符为单引号，因此会读取一个名为 ID 的 Shell 变量，会发现不存在
+  }
+  ```
+
+### environment
+
+- 在 environment{} 中可以定义环境变量，这些变量首先会保存为 Groovy 变量，其次会加入 env 字典。例：
   ```groovy
   stage('测试') {
       environment {
           ID = 1
       }
       steps {
-          sh "echo $ID"
-          sh 'echo $ID'
+          echo ID         // 读取 Groovy 变量
+          echo env.ID     // 读取 env 字典中的变量
+          echo "$ID"
+          sh "echo $ID"   // 执行 sh 语句，字符串定界符为双引号时，会先在 Groovy 解释器中根据 $ 读取变量，再将字符串作为 Shell 命令执行
+          sh 'echo $ID'   // 执行 sh 语句，字符串定界符为单引号时，会直接作为 Shell 命令执行，因此 $ 会读取 Shell 变量
       }
   }
   ```
-  - 如果给环境变量赋值为空，则会删除该变量。
-  - 定义在 pipeline.environment{} 中的环境变量会作用于该 pipeline 全局，而定义在 stage.environment{} 中的只作用于该阶段。
-  - 还可以在 Jenkins 系统配置页面，定义作用于所有 Job 的环境变量。或者通过 Folder Properties 插件，在文件夹中定义环境变量。
+  - 定义在 pipeline.environment{} 中的环境变量会作用于 pipeline 全局。而定义在 stage.environment{} 中的只作用于当前 stage ，在当前 stage 结束之后会自动删除。
+  - 还可以在 Jenkins 系统配置页面，定义作用于所有 Job 的环境变量。或者启用 Folder Properties 插件，在 Job 文件夹中定义环境变量。
+  - 如果给 environment 变量赋值为空，则会自动删除该变量。
 
-- 在 environment{} 中可以导入 Jenkins 的凭据作为环境变量：
+### parameters
+
+- 可以通过 params 字典读取 Pipeline 的构建参数。如下：
+  ```sh
+  params.A
+  params.B
+  ```
+
+- 用户启动 Job 时，必须传入构建参数，除非 Job 未定义构建参数，或者构建参数有默认值。
+  - Pipeline 类型的 Job 可以在 parameters{} 中以代码的形式定义构建参数，而其它类型的 Job 只能在 Jenkins Web 页面中定义构建参数。
+  - Pipeline 只支持定义 pipeline.parameters{} ，不支持定义 stage.parameters{} 。
+
+- 在 parameters{} 中可以定义构建参数，这些变量首先会保存为 Groovy 变量，其次会加入 params 字典。例：
   ```groovy
-  environment {
-      ACCOUNT1 = credentials('account1')
+  pipeline {
+      agent any
+      parameters {
+          booleanParam(name: 'B', defaultValue: true, description: '')   // 布尔参数
+          choice(name: 'C', choices: ['A', 'B', 'C'], description: '')   // 单选参数，输入时会显示成下拉框
+          string(name: 'S', defaultValue: 'Hello', description: '')      // 字符串参数，在 Web 页面上输入时不能换行
+          text(name: 'T', defaultValue: 'Hello\nWorld', description: '') // 文本参数，输入时可以换行
+          password(name: 'P', defaultValue: '123456', description: '')   // 密文参数，输入时会显示成密文
+          file(name: 'F', description: '')                               // 文件参数，输入时会显示文件上传按钮
+      }
+      stages {
+          stage('Test') {
+              steps {
+                  echo B
+                  echo "$B"
+                  echo params.B
+              }
+          }
+      }
   }
   ```
-  假设该凭据是 `Username With Password` 类型，值为 `admin:123456` ，则 Jenkins 会在 Shell 中加入三个环境变量：
-  ```sh
-  ACCOUNT1=admin:123456
-  ACCOUNT1_USR=admin
-  ACCOUNT1_PSW=123456
-  ```
-  - 读取其它类型的凭据时，建议打印出 Shell 的所有环境变量，从而发现 Jenkins 加入的环境变量的名字。
-  - 为了保密，如果直接将上述变量打印到 stdout 上，Jenkins 会将它们的值显示成 `****` 。
-
-### 构建参数
-
-- 可以给 Job 声明构建参数，它们会保存为 Groovy 变量和 Shell 环境变量。
-  - 用户在启动 Job 时，必须传入构建参数，除非它们有默认值。
-- Pipeline Job 可以在 pipeline.parameters{} 中以代码的形式定义构建参数，而其它类型的 Job 只能在 Jenkins Web 页面中定义构建参数。如下：
-    ```groovy
-    pipeline {
-        agent any
-        parameters {
-            booleanParam(name: 'A', defaultValue: true, description: '')   // 布尔参数
-            choice(name: 'E', choices: ['A', 'B', 'C'], description: '')   // 单选参数，输入时会显示成下拉框
-            string(name: 'B', defaultValue: 'Hello', description: '')      // 字符串参数，在 Web 页面上输入时不能换行
-            text(name: 'C', defaultValue: 'Hello\nWorld', description: '') // 文本参数，输入时可以换行
-            password(name: 'D', defaultValue: '123456', description: '')   // 密文参数，输入时会显示成密文
-            file(name: 'f1', description: '')                              // 文件参数，输入时会显示文件上传按钮
-        }
-        stages {
-            stage('Test') {
-                steps {
-                    echo "$A"   // 也可通过 $params.A 的格式读取构建参数，避免与环境变量重名
-                }
-            }
-        }
-    }
-    ```
   - 如果定义了 parameters{} ，则会移除在 Jenkins Web 页面中定义的、在上游 Job 中定义的构建参数。
   - 每次修改了 parameters{} 之后，要执行一次 Job 才会在 Jenkins Web 页面上生效。
   - password 类型的参数虽然在输入时显示成密文，但打印到终端上时会显示成明文，不如 Jenkins 的 credentials 安全。
@@ -156,19 +181,13 @@ pipeline {
         string(name: 'file')
     }
     environment {
-        file = file.replaceAll('[^\\w /:,.*_-]', '_').trim()    // 将构建参数赋值给一个环境变量，替换特殊字符
+        file = file.replaceAll('[^\\w /:,.*_-]', '_').trim()    // 将构建参数替换特殊字符，然后赋值给一个环境变量
     }
     ```
 
 ### 内置变量
 
-- 可以通过 params 字典读取 Pipeline 的构建参数。如下：
-  ```sh
-  params.A
-  params.B
-  ```
-
-- 可以通过 env 字典读取 Pipeline 的环境变量。除了用户添加的环境变量，还有 Jenkins 内置的环境变量，比如：
+- env 字典除了用户添加的 environment 变量，还有一些 Jenkins 内置变量，例如：
   ```sh
   env.JENKINS_HOME    # Jenkins 部署的主目录
   env.NODE_NAME       # 节点名
@@ -184,16 +203,6 @@ pipeline {
   env.CHANGE_URL      # 版本的链接
   ```
   - 这些变量的值都是 String 类型。
-  - 这些变量可以按以下格式读取：
-    ```groovy
-    script {
-        echo env.NODE_NAME              // 在 Groovy 代码中，通过 env 字典读取
-        echo "${env.NODE_NAME}"         // 在字符串中，通过 $ 取值
-
-        sh "echo ${env.NODE_NAME}"
-        sh 'echo $NODE_NAME'            // env 字典的内容会导入 Shell 的环境变量，因此可以在 shell 中直接读取
-    }
-    ```
 
 - 可以通过 currentBuild 字典获取当前的构建信息。如下：
   ```sh
@@ -387,7 +396,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
   ```
   - 也可直接执行 git 命令：
     ```groovy
-    withCredentials([gitUsernamePassword(credentialsId:'account_for_git')]){  // 这会自动绑定 git 账号密码到环境变量 GIT_USERNAME、GIT_PASSWORD
+    withCredentials([gitUsernamePassword(credentialsId:'account_for_git')]){  // 这会自动将 git 账号密码保存为 Shell 环境变量 GIT_USERNAME、GIT_PASSWORD
         sh """
             git clone $repository_url
         """
@@ -503,16 +512,6 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 ### script
 
 ：用于执行 Groovy 代码。
-- 可以用赋值号 = 直接创建变量。如下：
-  ```groovy
-  steps {
-      script {
-          A = 1
-      }
-      echo "$A"
-  }
-  ```
-  - 在 script{} 中创建的变量会在 Groovy 解释器中一直存在，因此在该 script{} 甚至该 stage{} 结束之后依然可以读取，但并不会被 Jenkins 加入到 shell 的环境变量中。
 
 - 例：将 shell 命令执行后的 stdout 或返回码赋值给变量
   ```groovy
@@ -618,13 +617,13 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 
 ### withCredentials
 
-：用于调用 Jenkins 的凭据。
+：用于导入 Jenkins 凭据。
 - 例：
   ```groovy
   withCredentials([
       usernamePassword(
           credentialsId: 'credential_1',
-          usernameVariable: 'USERNAME',   // 将凭据的值存到变量中（如果在终端显示该变量的值，Jenkins 会自动隐藏）
+          usernameVariable: 'USERNAME',   // 将凭据的值存到变量中
           passwordVariable: 'PASSWORD'
       )]) {
       sh '''                              // 此时 sh 语句需要用单引号，避免票据变量被导入 shell 的环境变量
@@ -632,17 +631,29 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       '''
   }
   ```
+- 也可以直接将 Jenkins 凭据赋值给环境变量：
+  ```groovy
+  environment {
+      ACCOUNT1 = credentials('account1')
+  }
+  ```
+  假设该凭据是 `Username With Password` 类型，值为 `admin:123456` ，则 Jenkins 会在 Shell 中加入三个环境变量：
+  ```sh
+  ACCOUNT1=admin:123456
+  ACCOUNT1_USR=admin
+  ACCOUNT1_PSW=123456
+  ```
+  - 为了保密，如果直接将上述变量打印到 Shell stdout ，Jenkins 会将它们的值显示成 `****` 。
 
 ### withEnv
 
-：用于给 sh 语句添加环境变量。
+：用于临时添加 Shell 环境变量。
 - 例：
   ```groovy
   withEnv(['A=Hello', 'B=World']) {
         sh 'echo $A $B'
   }
   ```
-- 执行 pipeline 时，默认会将环境变量、params 字典、env 字典等变量，通过 withEnv 添加到 sh 语句的环境变量中。
 
 ## matrix{}
 
@@ -772,7 +783,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       // when{} 子句中的多个条件默认为 allOf{} 的关系
   }
   ```
-  - environment 表达式只能处理环境变量，而 expression{} 能处理环境变量、普通变量。
+  - environment 表达式只能处理环境变量，而 expression{} 能处理环境变量、普通 Groovy 变量。
 
 ## input{}
 

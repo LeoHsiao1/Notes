@@ -2,43 +2,90 @@
 
 ## IP
 
-- k8s 集群内会使用一些虚拟 IP ，称为 Cluster IP、VIP 。
-  - 在 k8s 集群的任一主机或容器内，都可以访问到这些 VIP ，因为 kube-proxy 会自动路由转发网络流量。在 k8s 集群外的主机上则访问不到。
+- k8s 集群内会使用一些虚拟 IP ，称为 Virtual IP、VIP、Cluster IP 。
+- 部署 k8s 集群时，通常需要创建两个 CIDR 子网：
+  - service_cidr ：比如 `10.43.0.0/16`，从中选取 Cluster IP 分配给各个 Service 使用。
+  - pod_cidr ：比如 `10.42.0.0/16` ，从中选取 Cluster IP 分配给各个 Pod 使用。
+    - k8s 会先将 pod_cidr 拆分成一些小的 CIDR 子网，比如 `10.42.0.0/24`、`10.42.1.0/24` ，分配给各个 Node 。然后每当一个 Pod 调度到一个 Node 时，从该 Node 的 CIDR 子网中选取一个 Cluster IP ，绑定到该 Pod 。
+    - 假设一个 Node 管理的 CIDR 子网为 `10.42.1.0/24` ，则可将 10.42.1.1、10.42.1.2 等 Cluster IP 分配给 Pod 。
+      - 调度到该 Node 的 Pod 数量，不能超过 CIDR 子网容量。
+      - CIDR 子网号 10.42.1.0 会分配给该 Node 本身使用，因此在 k8s 集群内访问该 IP 的网络流量会被转发到该 Node IP 。
 
-- k8s 常见的几种 IP ：
+- k8s 几种资源对象的 IP ：
   - Node IP
     - ：集群中一个主机节点的 IP 。
-    - Node IP 一般采用宿主机的 eth0 网口的 IP ，不属于 VIP 。
+    - 每个 Node 原本有一个绑定到 eth0 网卡的内网 IP ，不属于 Cluster IP 。还会使用一个 CIDR 子网号，属于 Cluster IP 。
   - Pod IP
-    - ：分配给 Pod 使用的 VIP 。
-    - k8s 会给每个 Node 分配一个虚拟 CIDR 子网，给每个 Pod 分配一个当前 CIDR 子网的 VIP 。
-    - 一个应用可以部署多个 Pod 实例，拥有不同的 Pod IP 。而且重新部署时，会创建新 Pod ，分配新 Pod IP 。因此 Pod IP 不固定，不方便访问，建议通过 Service 或 Ingress 访问应用。
-    - Pod IP 支持 ICMP 协议，因为绑定了一个虚拟网卡。也支持 TCP/UDP 通信，比较能模拟一个主机。
-      - 而 Service IP 不支持 ICMP 协议，只负责 TCP/UDP 端口转发。
+    - ：分配给 Pod 使用的 Cluster IP 。
+    - 一个应用可以部署多个 Pod 实例，每个 Pod 绑定不同的 Pod IP 。
+      - 重新部署应用时，会创建新 Pod ，分配新 Pod IP 。因此 Pod IP 不固定，不方便访问，通常通过 Service 或 Ingress 访问应用。
+    - Pod IP 支持 TCP/UDP 通信，也支持 ICMP 通信，因为绑定了一个虚拟网卡，能在一定程度上模拟一个主机。
+      - 而 Service IP 只支持 TCP/UDP 端口转发，不支持 ICMP 协议。
   - Service IP
   - Ingress IP
 
-- k8s 常见的几种网络通信：
-  - 同一个 Pod 内，容器之间的通信
-    - 这些容器共享同一个 network namespace、Pod IP 。
-    - 假设容器 A 监听 80 端口，则容器 B 可通过 127.0.0.1:80 访问容器 A 。
-  - Pod 之间的通信
-    - 假设 Pod A 向 Pob B 发送数据包，流程如下：
-      1. Pod A 从自己的 eth0 网口发出数据包，到达宿主机的 veth 网口。
-      2. 宿主机找到数据包的目标 IP 所属的 CIDR 子网，路由转发到相应的 Node 。
-      3. Pod B 从自己的 eth0 网口收到数据包。
-  - Pod 访问 Service
-    - Pod 向 Service 发送数据包时，源地址是 Pod IP ，目的地址是 Service IP 。
-    - Service 返回数据包给 Pod 时，源地址是 Service IP ，目的地址是 Pod IP 。
-  - Pod 访问集群外主机
-    - 此时，宿主机会将 Pod 发出的数据包转发给集群外主机。并将数据包的源 IP 改为宿主机的 Node IP ，即 SNAT 。
+### 路由
 
-- 允许 Pod 被 k8s 集群外主机访问的几种方式：
-  - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网或公网 IP 。
-  - 给 Pod 创建 NodePort 类型的 Service 。
-  - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
-  - 给 Pod 启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace 。
-  - 给集群外主机添加指向 Cluster IP 的路由，例如：`ip route add 10.43.0.0/16 via 10.0.1.1`
+- 在 k8s 集群的任一主机或容器内，都可以访问到 Cluster IP ，因为 kube-proxy 会自动路由转发网络流量，并进行 NAT 转换。
+  - 在 k8s 集群外的主机上则访问不到 Cluster IP ，因为缺乏路由。
+
+- 假设 k8s 集群有以下几个主机：
+  ```sh
+  主机名     eth0 IP     k8s CIDR
+  node-1    10.0.0.1    10.42.0.0/24
+  node-2    10.0.0.2    10.42.1.0/24
+  node-3    10.0.0.3    不在 k8s 集群中，但与 node-1、node-2 在同一内网
+  ```
+  - 在 node-2 上执行 `ssh 10.0.0.1` 可以登录到 node-1 ，此时网络流量的源 IP 为 10.0.0.2 。
+  - 在 node-2 上执行 `ssh 10.42.0.0` 也可以登录到 node-1 ，此时网络流量的源 IP 为 10.42.1.0 ，即 node-2 的 CIDR 子网号。
+  - 在 node-3 上执行 `ssh 10.0.0.2` 可以访问到 node-2 ，但执行 `ssh 10.42.1.0` 会找不到路由。
+
+k8s 常见的几种网络通信：
+- 从 node 发起的通信
+  - 假设从 node-1 访问 node-2 ，发送 IP 协议的数据包：
+    - 如果访问 node-2 的 eth0 IP ，则数据包不经过 kube-proxy 转发，源 IP 为 node-1 的 eth0 IP 。
+    - 如果访问 node-2 的 Cluster IP ，则数据包会经过 kube-proxy 转发，源 IP 为 node-1 的 Cluster IP 。
+  - 假设从 node-1 访问一个 Pod 或 Service ：
+    - 如果目标 Pod 或 Service 位于当前主机，则不必转发数据包，源 IP 不变。
+    - 如果目标 Pod 或 Service 位于其它 k8s 主机，则先将数据包转发到目标主机，源 IP 变为 node-1 的 Cluster IP 。
+
+- 同一个 Pod 中，容器之间的通信
+  - 同一个 Pod 中的所有容器共用一个虚拟网卡、network namespace、Pod IP 。
+  - 假设从 container-1 访问 container-2 ，则数据包的源 IP 、目标 IP 都是当前 Pod IP 。
+  - 假设 container-2 监听 TCP 80 端口，则 container-1 可执行 `curl 127.0.0.1:80` 访问到 container-2 的端口。
+
+- Pod 之间的通信
+  - 每个 Pod 绑定了一个 Cluster IP ，因此可通过 Cluster IP 相互访问。
+  - 假设从 Pod A 访问 Pob B ，则流程如下：
+    1. Pod A 从自己的 eth0 网口发出数据包，被传输到宿主机的 veth 网口。
+    2. Pod A 的宿主机收到数据包，转发给 Pod B 的宿主机。
+        - kube-proxy 事先配置了路由规则：如果数据包的目标 IP 是属于某 CIDR 子网的 Cluster IP ，则路由转发到管理该 CIDR 子网的对应 Node 。
+        - 路由转发时，kube-proxy 会进行 NAT 转换，保持数据包的源 IP 为 Pod A 的 Cluster IP ，目标 IP 为 Pod B 的 Cluster IP 。
+    3. Pod B 的宿主机收到数据包，通过 veth 网口传输给 Pod B 。
+        - 综上，如果 Pod A 与 Pod B 位于不同宿主机，则数据包会经过两次路由转发。
+    4. Pod B 从自己的 eth0 网口收到数据包。
+
+- 访问 Service 的通信
+  - 假设从 Pod A 访问 Service A ，则流程如下：
+    1. Pod A 发出数据包，传输到宿主机的 veth 网口。
+        - 此时数据包的源 IP 为 Pod A 的 Cluster IP ，目标 IP 为 Service A 的 Cluster IP 。
+    2. Pod A 的宿主机收到数据包，kube-proxy 会发现数据包的目标 IP 指向 Service ，于是从相应的 EndPoints 中找到一些可用的 Pod 端点，根据负载均衡算法选用一个 Pod 端点，然后将数据包反向代理到该 Pod 端点。
+        - 该过程是反向代理，不是路由转发，因此数据包的源 IP 不变，目标 IP 变为 Pod IP 。
+    3. kube-proxy 将数据包路由转发到 Pod 端点所在的 Node 。
+    4. Pod 端点收到数据包。
+
+- Pod 与集群外主机的通信
+  - 假设从 Pod A 访问集群外主机 node-3 ，则流程如下：
+    1. Pod A 发出数据包，传输到宿主机的 veth 网口。
+        - 此时数据包的源 IP 是 Pod A 的 Cluster IP 。
+    2. Pod A 的宿主机收到数据包，路由转发给 node-3 。
+        - 因为 node-3 是集群外主机， kube-proxy 会自动将数据包的源 IP 改为宿主机的 eth0 IP ，即 SNAT 。否则 node-3 回复数据包时，会找不到路由而失败。
+  - 默认不能从 k8s 集群外主机访问 Pod ，有几种解决方案：
+    - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网 IP 或公网 IP 。
+    - 给 Pod 创建 NodePort 类型的 Service 。
+    - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
+    - 给 Pod 启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
+    - 给集群外主机添加路由，将访问 Cluster IP 的流量路由到任一 k8s 节点。例如：`ip route add 10.43.0.0/16 via 10.0.1.1`
 
 ## Service 类型
 
@@ -47,7 +94,7 @@
 
 ### ClusterIP
 
-：给 Service 分配一个集群内的 VIP ，将访问 `ClusterIP:Port` 的流量转发到 EndPoints 。
+：给 Service 分配一个 Cluster IP ，将访问 `ClusterIP:Port` 的流量转发到 EndPoints 。
 - 配置文件示例：
   ```yml
   apiVersion: v1
@@ -58,6 +105,10 @@
   spec:
     # type: ClusterIP       # Service 类型，默认为 ClusterIP
     clusterIP: 10.43.0.1    # 该 Service 绑定的 clusterIP 。如果创建 Service 时不指定 clusterIP ，则随机分配一个。创建 Service 之后不允许修改 clusterIP ，除非重建 Service
+    ipFamilies:
+      - IPv4
+    ipFamilyPolicy: SingleStack
+    # externalTrafficPolicy: Cluster  # 路由策略。默认为 Cluster
     selector:               # 通过 selector 选中一些 Pod
       k8s-app: redis
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
@@ -80,6 +131,17 @@
     pod_ip:targetPort       # 直接访问 Pod 。由于 pod_ip 可能变化，这样访问不方便
     service_ip:port         # 在 k8s 集群的任一主机或容器内，都可以通过 ClusterIP 访问到 service
     ```
+
+- Service 反向代理流量到 Pod 时， externalTrafficPolicy 路由策略有两种：
+  - Cluster
+    - ：默认策略，当 kube-proxy 收到访问 Service 的流量时，可以转发给集群内任一 Ready 状态的 Pod 端点。
+  - Local
+    - ：当 kube-proxy 收到访问 Service 的流量时，只能转发给与当前 kube-proxy 同主机的 Ready 状态的 Pod 端点。
+    - 与 Cluster 策略相比， Local 策略避免了跨主机路由转发数据包，耗时更短，而且能保留数据包的源 IP 。但是容易将负载压力集中在当前主机。
+
+
+
+
 
 ### NodePort
 
@@ -192,7 +254,7 @@
 
 ### Headless
 
-：配置 `clusterIP: None` 。此时 Service 没有 VIP ，访问 Service 名会被 DNS 解析到随机一个 Pod IP 。
+：配置 `clusterIP: None` 。此时 Service 没有 Cluster IP ，访问 Service 名会被 DNS 解析到随机一个 Pod IP 。
 <!-- 组合使用 StatefulSet 与 Headless Service 时，会为每个 Pod 创建一个 DNS 域名 -->
 
 ## Service 相关

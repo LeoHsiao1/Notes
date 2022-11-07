@@ -60,7 +60,7 @@ URL 的一般格式为：`protocol://host:port/path/?querystring#fragment`
 - protocol
   - ：采用的通信协议，比如 HTTP、HTTPS、FTP 。
 - host
-  - ：服务器主机，可以是主机名、域名或 IP 地址。
+  - ：服务器主机，可以是主机名或 IP 地址。
   - protocol、host 不区分大小写，但一般小写。
 - port
   - ：端口号。
@@ -140,7 +140,7 @@ cookie: gid=1311812194.1563255462; t=1
 
 ie=UTF-8&wd=1
 ```
-- 请求行：由请求方法名、请求的 URL 路径（域名之后的部分）、协议版本组成。
+- 请求行：由请求方法名、请求的 URI 路径（域名之后的字符串）、协议版本组成。
 - 请求报文的多种 Headers 示例：
   ```sh
   Content-Encoding: gzip                      # 该报文 body 的编码

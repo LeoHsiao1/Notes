@@ -222,7 +222,8 @@ if (y.nodeType == 1) {
 
 ：跨域资源共享（Cross-origin resource sharing），是 W3C 标准定义的一种浏览器功能。
 - 它允许浏览器在访问一个网站时，向其它域名的网站发送 XMLHttpRequest 请求。
-  - 大部分浏览器都支持 CORS 请求。而服务器可能会拒绝接收 CORS 请求，以免用户被 CSRF 攻击。
+  - 当网址 `protocol://host:port/path` 的前三个字段全部相同时，才不算跨域。
+  - 大部分浏览器都支持 CORS 请求。而服务器默认会拒绝接收 CORS 请求，以免用户被 CSRF 攻击。
 - 浏览器将 CORS 请求分为两类：
   - 简单请求
     - ：请求方法为 GET、HEAD 或 POST ，并且请求头只能使用以下 Headers ：

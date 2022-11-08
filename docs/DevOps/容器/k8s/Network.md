@@ -13,9 +13,9 @@
 
 - k8s 几种资源对象的 IP ：
   - Node IP
-    - ：k8s 集群中主机节点的 IP 。
+    - ：k8s 集群中主机节点的 IP ，可以是 eth0 IP 或 Cluster IP 。
     - 每个 Node 原本有一个 eth0 物理网卡，其上绑定一个内网 IP ，用于与 k8s 集群外的主机通信。
-    - 部署 kube-proxy 之后，每个 Node 会增加一个虚拟网卡，其上绑定当前 Pod CIDR 的网络号，用于与 k8s 集群内的 Cluster IP 通信。
+    - 部署 kube-proxy 之后，每个 Node 会增加一个虚拟网卡，其上绑定当前 Pod CIDR 的网络号，属于 Cluster IP ，用于与 k8s 集群内的其它 Cluster IP 通信。
     - 例：查看 Node 的网卡
       ```sh
       [root@CentOS ~]# ip addr
@@ -127,14 +127,15 @@ k8s 常见的几种网络通信：
     - 给 Pod 启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
     - 给集群外主机添加路由，将访问 Cluster IP 的流量路由到任一 k8s 节点。例如：`ip route add 10.43.0.0/16 via 10.0.1.1`
 
-## Service 类型
+## Service
 
-- Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP/UDP 反向代理，代表一个抽象的应用服务，常用于实现服务发现、负载均衡。
+- Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP/UDP 反向代理，常用于实现服务发现、负载均衡。
+- 每个 Service 有一个 EndPoints 子对象，用于记录需要反向代理的 Pod 的 ip:port 。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
 ### ClusterIP
 
-：给 Service 分配一个 Cluster IP ，将访问 `ClusterIP:Port` 的流量反向代理到 EndPoints 。
+：给 Service 分配一个 Cluster IP ，将访问 `ClusterIP:port` 的流量反向代理到 EndPoints 。
 - 配置文件示例：
   ```yml
   apiVersion: v1
@@ -150,8 +151,6 @@ k8s 常见的几种网络通信：
     ipFamilyPolicy: SingleStack
     # externalTrafficPolicy: Cluster  # 从 k8s 外部访问 Service 时的路由策略。默认为 Cluster
     # internalTrafficPolicy: Cluster  # 从 k8s 内部访问 Servier 时的路由策略。默认为 Cluster
-    selector:               # 通过 selector 选中一些 Pod
-      k8s-app: redis
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
     - name: redis           # Service 的端口名。如果 Service 只监听一个端口，才可以省略 name
       port: 6379            # Service 监听的端口号
@@ -162,20 +161,45 @@ k8s 常见的几种网络通信：
       port: 26379
       protocol: TCP
       targetPort: 26379
+    selector:               # 通过 selector 选中一些 Pod
+      k8s-app: redis
     # sessionAffinity: ClientIP   # 会话保持的方式。默认为 None ，会将数据包随机转发到各个 Pod IP
     # sessionAffinityConfig:
     #   clientIP:                 # 为每个 client IP 创建一个会话。在会话持续时间内，将来自同一个 client IP 的数据包总是转发到同一个 Pod IP
     #     timeoutSeconds: 10800
   ```
-- 用户可通过多种方式访问 Pod 的端口：
+
+- 创建 Service 之后，用户可通过多种方式访问 Pod 的端口：
   ```sh
   pod_ip:targetPort     # 直接访问 Pod 。由于 pod_ip 可能变化，这样访问不方便
   service_ip:port       # 在 k8s 集群的任一 node 或 Pod 内，都可以通过 ClusterIP 访问到 Service ，然后流量会被反向代理到 Pod
   service_name:port     # 可通过 DNS 域名访问 Service ，会自动解析到 Service IP ，然后流量会被反向代理到 Pod
   ```
 
+#### DNS
+
+- 创建一个 Service 时，k8s 会自动创建一个相应的 DNS 条目，全名为 `<service-name>.<namespace-name>.svc.cluster.local` 。因此可通过 DNS 名称访问 service ：
+  ```sh
+  service_name:port           # 客户端与 service 在同一命名空间时，可以直接访问 service_name ，会 DNS 解析到 service_ip
+  service_name.default:port   # 客户端与 service 在不同命名空间时，需要访问详细的 DNS 名称，才能查找到 service_ip
+  ```
+
+#### 环境变量
+
+- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
+  ```sh
+  REDIS_SERVICE_HOST=10.43.2.2
+  REDIS_PORT_6379_TCP_PORT=6379
+  REDIS_PORT_6379_TCP_PROTO=tcp
+  REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
+  ...
+  ```
+  - Serivce 变化时不会自动更新 Pod 的环境变量，因此不可靠。
+
+#### TrafficPolicy
+
 - kube-proxy 收到访问 Service 的数据包时，会反向代理到 EndPoints 中的某个 Pod 端点。可配置 externalTrafficPolicy、internalTrafficPolicy 路由策略。
-  - 有几种路由策略：
+  - 路由策略的取值：
     - Cluster
       - ：默认策略，当 kube-proxy 收到指向 Service 的数据包时，可以转发给集群内任一 Ready 状态的 Pod 端点。
     - Local
@@ -189,8 +213,7 @@ k8s 常见的几种网络通信：
 
 ### NodePort
 
-：在所有 Node 上监听一个 Port ，将访问 `NodeIP:Port` 的流量反向代理到 EndPoints 。
-- NodePort 默认的取值范围为 30000~32767 ，以免与系统端口冲突。
+：在所有 Node 上监听一个或多个端口，将访问 `node_ip:port` 的流量交给 Service 处理。
 - 例：
   ```yml
   apiVersion: v1
@@ -199,26 +222,24 @@ k8s 常见的几种网络通信：
     name: redis
     namespace: default
   spec:
-    clusterIP: 10.43.0.1    # NodePort 类型的 service 也会绑定一个 clusterIP
+    type: NodePort
+    clusterIP: 10.43.0.1    # NodePort 类型的 service 也要绑定一个 clusterIP 。如果不指定，则随机分配一个
     ports:
-    - nodePort: 31017       # 如果不指定 nodePort ，则随机选取一个端口
+    - nodePort: 31017       # 在 Node 上监听的端口号。如果不指定，则随机分配一个。取值范围默认为 30000-32767
       port: 80
       protocol: TCP
       targetPort: 80
     selector:
       k8s-app: redis
   ```
+- Service 表示一个抽象的服务，不是一个真实存在的服务器进程，不会在 Node 上监听端口，因此执行 `ss -tapn` 看不到 Service 监听的端口。
+  - kube-proxy 会自动配置 iptables 规则，将访问 Service 的流量转发到 EndPoints 。
+  - 特别地，NodePort 类型的 Service ，会让 kube-proxy 在 Node 上监听端口，因此可能与其它进程监听的端口冲突。
 
-### HostPort
+#### HostPort
 
-：与 NodePort 相似，但只使用 Pod 所在节点的端口。
-- HostPort 不属于 Service 对象，没有监听端口，只是添加 iptables 规则实现端口转发。
-  - HostPort 的取值范围不限。
-  - 如果 HostPort 与 NodePort 端口号相同，则依然可以创建，但优先级更高。
-- 缺点：
-  - 当 Pod 迁移部署到其它节点时，节点 IP 会变化，因此通常将 Pod 固定调度到某个节点。
-  - 同一节点上不允许多个 Pod 使用同一个 HostPort ，否则会被 evicted ，因此以 DaemonSet 方式部署比 Deployment 更合适。
-- HostPort 需要在 Pod 的 spec.containers 里配置，如下：
+：与 NodePort 相似，但只监听 Pod 所在 Node 的端口。
+- HostPort 不属于 Service 对象，而属于 Pod 的配置。如下：
   ```yml
   apiVersion: v1
   kind: Pod
@@ -228,11 +249,15 @@ k8s 常见的几种网络通信：
     containers:
     - name: redis
       image: redis:5.0.6
-      command: ["redis-server /opt/redis/redis.conf"]
       ports:
       - containerPort: 6379
         hostPort: 6379      # 将访问 hostPort 的流量转发到 containerPort
   ```
+  - HostPort 的取值范围不限。
+  - 如果 HostPort 与 NodePort 监听同一个端口号，则依然可以创建，但优先级更高，因此发送到该端口的流量会交给 HostPort 处理。
+- 缺点：
+  - 当 Pod 迁移部署到其它节点时，节点 IP 会变化，因此通常将 Pod 固定调度到某个节点。
+  - 同一节点上不允许多个 Pod 监听同一个 HostPort 端口，否则会冲突而引发 evicted ，因此以 DaemonSet 方式部署比 Deployment 更合适。
 
 ### LoadBalancer
 
@@ -302,33 +327,11 @@ k8s 常见的几种网络通信：
 ：配置 `clusterIP: None` 。此时 Service 没有 Cluster IP ，只能通过 dns_name 访问 Service ，会 DNS 解析到 EndPoints 中的某个 Pod IP 。
 <!-- 组合使用 StatefulSet 与 Headless Service 时，会为每个 Pod 创建一个 DNS 域名 -->
 
-## Service 相关
+## EndPoints
 
-### DNS
-
-- 创建一个 Service 时，k8s 会自动创建一个相应的 DNS 条目，全名为 `<service-name>.<namespace-name>.svc.cluster.local` 。因此可通过 DNS 名称访问 service ：
-  ```sh
-  service_name:port           # 客户端与 service 在同一命名空间时，可以直接访问 service_name ，会 DNS 解析到 service_ip
-  service_name.default:port   # 客户端与 service 在不同命名空间时，需要访问详细的 DNS 名称，才能查找到 service_ip
-  ```
-
-### 环境变量
-
-- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
-  ```sh
-  REDIS_SERVICE_HOST=10.43.2.2
-  REDIS_PORT_6379_TCP_PORT=6379
-  REDIS_PORT_6379_TCP_PROTO=tcp
-  REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
-  ...
-  ```
-  - Serivce 变化时不会自动更新 Pod 的环境变量，因此不可靠。
-
-### EndPoints
-
-：端点，Service 的一种子对象，用于跟踪需要反向代理的 Pod 地址。
+：端点，Service 的一种子对象，用于记录需要反向代理的 Pod 的 ip:port 。
 - 创建 Service 时，会根据 selector 选中一些 Pod ，自动创建一个与 Service 同名的 EndPoints 对象。
-  - EndPoints 会监听 Service 需要反向代理的所有 Pod 的 pod_ip:targetPort 地址，记录其中 Ready 状态的端点，实现服务发现。
+  - EndPoints 会监听 Service 需要反向代理的所有 Pod ，实时记录其中 Ready 状态的 Pod 的 ip:port 端点地址，实现服务发现。
   - kube-proxy 会从 EndPoints 读取端点，将访问 Service 的流量转发到端点。
 - 创建 Service 时，如果没有 selector ，则不会创建 EndPoints 对象，因此发向 service_ip:port 的数据包不会被转发，导致用户访问端口时无响应。
   - 此时用户可手动创建 Endpoints 对象，自定义端点地址，从而让 Service 反向代理到任意地址。

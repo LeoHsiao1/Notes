@@ -57,56 +57,69 @@
 
 - 假设 k8s 集群有以下主机：
   ```sh
-  主机名     eth0 IP     Pod CIDR
-  node-1    10.0.0.1    10.42.0.0/24
-  node-2    10.0.0.2    10.42.1.0/24
-  node-3    10.0.0.3    不在 k8s 集群中，但与 node-1、node-2 在同一内网
+  主机名    eth0 IP     Pod CIDR
+  node1    10.0.0.1    10.42.0.0/24
+  node2    10.0.0.2    10.42.1.0/24
+  node3    10.0.0.3    不在 k8s 集群中，但与 node1、node2 在同一内网
   ```
-  - 在 node-2 上执行 `ssh 10.0.0.1` 可以登录到 node-1 ，此时网络流量的源 IP 为 10.0.0.2 。
-  - 在 node-2 上执行 `ssh 10.42.0.0` 也可以登录到 node-1 ，此时网络流量的源 IP 为 10.42.1.0 ，即 node-2 的 Pod CIDR 的网络号。
-  - 在 node-3 上执行 `ssh 10.0.0.2` 可以访问到 node-2 ，但执行 `ssh 10.42.1.0` 会找不到路由。
+  - 在 node2 上执行 `ssh 10.0.0.1` 可以登录到 node1 ，此时网络流量的源 IP 为 10.0.0.2 。
+  - 在 node2 上执行 `ssh 10.42.0.0` 也可以登录到 node1 ，此时网络流量的源 IP 为 10.42.1.0 ，即 node2 的 Pod CIDR 的网络号。
+  - 在 node3 上执行 `ssh 10.0.0.2` 可以访问到 node2 ，但执行 `ssh 10.42.1.0` 会找不到路由。
 
 k8s 常见的几种网络通信：
-- 从 node 发起的通信
-  - 假设从 node-1 访问 node-2 ，发送 IP 协议的数据包：
-    - 如果访问 node-2 的 eth0 IP ，则数据包不经过 kube-proxy 转发，源 IP 为 node-1 的 eth0 IP 。
-    - 如果访问 node-2 的 Cluster IP ，则数据包会经过 kube-proxy 转发，源 IP 为 node-1 的 Cluster IP 。
-  - 假设从 node-1 访问一个 Pod 或 Service ：
-    - 如果目标 Pod 或 Service 位于当前主机，则不必转发数据包，源 IP 不变。
-    - 如果目标 Pod 或 Service 位于其它 k8s 主机，则先将数据包转发到目标主机，源 IP 变为 node-1 的 Cluster IP 。
+- node 之间的通信
+  - 假设从 node1 访问 node2 ，发送 IP 协议的数据包：
+    - 如果访问 node2 的 eth0 IP ，则数据包不经过 kube-proxy 转发，源 IP 为 node1 的 eth0 IP 。
+    - 如果访问 node2 的 Cluster IP ，则数据包会经过 kube-proxy 转发，源 IP 为 node1 的 Cluster IP 。
 
 - 同一个 Pod 中，容器之间的通信
-  - 同一个 Pod 中的所有容器共用一个虚拟网卡、network namespace、Pod IP ，相当于在同一个主机上运行的多个进程。
-  - 假设从 container-1 访问 container-2 ，则数据包的源 IP 、目标 IP 都是当前 Pod IP 。
-  - 假设 container-2 监听 TCP 80 端口，则 container-1 可执行 `curl 127.0.0.1:80` 访问到 container-2 的端口。
+  - 同一个 Pod 中的所有容器共用一个虚拟网卡、network namespace、Pod IP ，像同一主机内运行的多个进程。
+  - 假设从 container1 访问 container2 ，则数据包的源 IP 、目标 IP 都是当前 Pod IP 。
+  - 假设 container2 监听 TCP 80 端口，则在 container1 中可执行 `curl 127.0.0.1:80` 访问到 container2 的端口。
 
-- Pod 访问 Pod 的通信
-  - 每个 Pod 绑定了一个 Cluster IP ，因此可通过 Cluster IP 相互访问。
-  - 假设从 Pod A 访问 Pob B ，则流程如下：
-    1. Pod A 中某个容器，从该 Pod 的 eth0 网口发出数据包，被传输到宿主机的 veth 网口。
-        - Pod 与宿主机之间通过 veth pair 虚拟网口传递数据包，详见 Docker 网络。
-    2. Pod A 的宿主机收到数据包，转发给 Pod B 的宿主机。
+- Pod 之间的通信
+  - 每个 Pod 绑定了一个 Cluster IP ，因此可通过 Cluster IP 相互访问，像一个个独立的主机。
+  - 假设从 Pod1 访问 Pod2 ，则流程如下：
+    1. Pod1 中某个容器，从该 Pod 的 eth0 网口发出数据包，被传输到宿主机的 veth 网口。
+        - Pod 与宿主机之间通过 veth pair 虚拟网口传输数据包，详见 Docker 网络。
+        - 此时数据包的源 IP 为 Pod1 的 Cluster IP ，目标 IP 为 Pod2 的 Cluster IP 。
+    2. Pod1 的宿主机收到数据包，路由转发给 Pod2 的宿主机。
         - kube-proxy 事先配置了路由规则：如果数据包的目标 IP 是属于某 Pod CIDR 子网的 Cluster IP ，则路由转发到管理该 Pod CIDR 子网的那个 Node 。
-        - 路由转发时，kube-proxy 会进行 NAT 转换，保持数据包的源 IP 为 Pod A 的 Cluster IP ，目标 IP 为 Pod B 的 Cluster IP 。
-    3. Pod B 的宿主机收到数据包，通过 veth 网口传输给 Pod B 。
-        - 综上，如果 Pod A 与 Pod B 位于不同宿主机，则数据包会经过两次路由转发。
-    4. Pod B 中某个容器，从该 Pod 的 eth0 网口收到数据包。
+        - 如果 Pod1 与 Pod2 位于同一宿主机，则不需要路由转发。
+        - Pod 之间通信时，不会进行 NAT ，因此数据包的源 IP 、目标 IP 一直为 Pod IP 。
+    3. Pod2 的宿主机收到数据包，通过 veth 网口传输给 Pod2 。
+    4. Pod2 中某个容器，从该 Pod 的 eth0 网口收到数据包。
 
-- Pod 访问 Service 的通信
-  - 假设从 Pod A 访问 Service A ，则流程如下：
-    1. Pod A 发出数据包，传输到宿主机的 veth 网口。
-        - 此时数据包的源 IP 为 Pod A 的 Cluster IP ，目标 IP 为 Service A 的 Cluster IP 。
-    2. Pod A 的宿主机收到数据包，kube-proxy 会发现数据包的目标 IP 指向 Service ，于是从相应的 EndPoints 中找到一些可用的 Pod 端点，根据负载均衡算法选用一个 Pod 端点，然后将数据包反向代理到该 Pod 端点。
-        - 该过程是反向代理，不是路由转发，因此数据包的源 IP 不变，目标 IP 变为 Pod IP 。
-    3. kube-proxy 将数据包路由转发到 Pod 端点所在的 Node 。
-    4. Pod 端点收到数据包。
+- 访问 Service 的通信
+  - 假设从 Pod1 访问 ClusterIP 类型的 Service ，则流程如下：
+    1. Pod1 发出数据包，被传输到宿主机的 veth 网口。
+        - 此时数据包的源 IP 为 Pod1 的 Cluster IP ，目标 IP 为 Service 的 Cluster IP 。
+    2. Pod1 的宿主机收到数据包，kube-proxy 发现数据包的目标 IP 指向 Service ，于是从相应的 EndPoints 中选用一个 Pod 端点（假设为 Pod2 ），然后将数据包转发到该 Pod 端点。
+        - 此时数据包的源 IP 不变，目标 IP 变为 pod2_ip 。
+    3. kube-proxy 将数据包路由转发到 Pod2 所在的 Node 。
+    4. Pod2 收到数据包。
+  - 假设 node1 上有一个 client 进程（不在 Pod 内），访问一个 Pod ，或访问一个 Service 但反向代理到一个 Pod ：
+    - 如果目标 Pod 位于当前 node ，则直接传输数据包，源 IP 为 node1 的 eth0 IP 。
+    - 如果目标 Pod 位于其它 node ，则先将数据包路由转发到目标主机，源 IP 变为 node1 的 Cluster IP 。
+  - 假设有一个 NodePort 类型的 Service ，监听 node1 的 80 端口，然后在任一主机（包括 k8s 集群外主机）上有一个 client 进程（不在 Pod 内）。则 client 访问 Service 的流程如下：
+    1. client 向 Service 发送数据包。
+        - 此时数据包的源 IP 为 client_ip ，目标 IP 为 node1_ip 。
+    2. node1 收到数据包，反向代理到 Service 的 EndPoints 中的某个 Pod 端点（假设为 Pod2 ）。
+        - 此时数据包的目标 IP 改为 pod_ip 。
+        - 同时会通过 iptables 规则进行 SNAT ，将数据包的源 IP 改为 node1_ip 。
+    3. Pod2 收到数据包，回复另一个数据包给 node1 。
+        - 此时数据包的源 IP 为 pod_ip ，目标 IP 为 node1_ip 。
+        - 如果不进行 SNAT ，Pod2 就会直接回复数据包给客户端，跳过了 node1 的反向代理。client 预期收到来自 node1_ip 的回复，却收到来自 pod2_ip 的数据包，导致不能建立 TCP 连接。
+    4. node1 收到数据包，发送给 client 。
+        - 此时数据包的目标 IP 改为 client_ip 。
+        - 同时会通过 iptables 规则进行 SNAT ，将数据包的源 IP 改为 node1_ip 。
 
 - Pod 与集群外主机的通信
-  - 假设从 Pod A 访问集群外主机 node-3 ，则流程如下：
-    1. Pod A 发出数据包，传输到宿主机的 veth 网口。
-        - 此时数据包的源 IP 是 Pod A 的 Cluster IP 。
-    2. Pod A 的宿主机收到数据包，路由转发给 node-3 。
-        - 因为 node-3 是集群外主机， kube-proxy 会自动将数据包的源 IP 改为宿主机的 eth0 IP ，即 SNAT 。否则 node-3 回复数据包时，会找不到路由而失败。
+  - 假设从 Pod1 访问集群外主机 node3 ，则流程如下：
+    1. Pod1 发出数据包，被传输到宿主机的 veth 网口。
+        - 此时数据包的源 IP 是 Pod1 的 Cluster IP 。
+    2. Pod1 的宿主机收到数据包，路由转发给 node3 。
+        - 因为 node3 是集群外主机，会通过 iptables 规则进行 SNAT ，将数据包的源 IP 改为宿主机的 eth0 IP 。否则 node3 回复数据包时，会找不到路由而失败。
   - 默认不能从 k8s 集群外主机访问 Pod ，有几种解决方案：
     - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网 IP 或公网 IP 。
     - 给 Pod 创建 NodePort 类型的 Service 。
@@ -164,11 +177,12 @@ k8s 常见的几种网络通信：
     - ：默认策略，当 kube-proxy 收到访问 Service 的流量时，可以转发给集群内任一 Ready 状态的 Pod 端点。
   - Local
     - ：当 kube-proxy 收到访问 Service 的流量时，只能转发给与当前 kube-proxy 同主机的 Ready 状态的 Pod 端点。
-    - 与 Cluster 策略相比， Local 策略避免了跨主机路由转发数据包，耗时更短，而且能保留数据包的源 IP 。但是容易将负载压力集中在当前主机。
-
-
-
-
+      - 如果当前主机没有 Ready 状态的 Pod 端点，则丢弃数据包。
+    - 优点：
+      - 避免了跨主机路由转发数据包，耗时更短。
+      - 对于 NodePort 类型的 Service ，使用 Local 策略能保留数据包的源 IP 。
+    - 缺点：
+      - 减少了 Service 的负载均衡效果。
 
 ### NodePort
 

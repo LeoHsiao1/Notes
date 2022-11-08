@@ -261,9 +261,12 @@ k8s 常见的几种网络通信：
 
 ### LoadBalancer
 
-：给 Service 绑定 k8s 集群外的一个内网或公网 IP ，将访问该 IP 的流量转发到随机一个 Node ，然后路由到 Pod IP 。
-- 一般需要购买云平台的负载均衡器，也可以用 MetalLB 自建。
-<!-- - 考虑到云平台提供的 LoadBalancer 会收费，用户可以自行部署一个 Nginx ，根据不同的 DNS 子域名或端口，转发到不同的 Service ClusterIP 。 -->
+：给 Service 绑定 k8s 集群外的一个内网或公网 IP ，便于从集群外主机访问 Service 。
+- 创建 LoadBalancer 类型的 Service 时，一般需要购买云平台的负载均衡器，也可以用 MetalLB 等工具自建。
+- 客户端访问 loadBalancerIP 的流程：
+  1. 客户端发出数据包，目标 IP 为 Service 的 loadBalancerIP 。
+  2. 负载均衡器收到数据包，反向代理到 k8s 集群的随机一个 Node ，并将目标 IP 改为 Service 的 clusterIP 。
+  3. k8s Node 收到数据包，反向代理到 EndPoints 。
 - 例：
   ```yml
   apiVersion: v1
@@ -274,7 +277,7 @@ k8s 常见的几种网络通信：
   spec:
     type: LoadBalancer
     clusterIP: 10.43.0.1
-    loadBalancerIP: 12.0.0.1
+    loadBalancerIP: 1.1.1.1
     selector:
       k8s-app: redis
     ports:

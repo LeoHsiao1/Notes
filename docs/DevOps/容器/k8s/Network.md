@@ -167,11 +167,12 @@ k8s 常见的几种网络通信：
     #   clientIP:                 # 为每个 client IP 创建一个会话。在会话持续时间内，将来自同一个 client IP 的数据包总是转发到同一个 Pod IP
     #     timeoutSeconds: 10800
   ```
-  - 用户可直接访问 Pod 的端口，也可通过 Service 来访问：
-    ```sh
-    pod_ip:targetPort       # 直接访问 Pod 。由于 pod_ip 可能变化，这样访问不方便
-    service_ip:port         # 在 k8s 集群的任一主机或容器内，都可以通过 ClusterIP 访问到 service
-    ```
+- 用户可通过多种方式访问 Pod 的端口：
+  ```sh
+  pod_ip:targetPort     # 直接访问 Pod 。由于 pod_ip 可能变化，这样访问不方便
+  service_ip:port       # 在 k8s 集群的任一 node 或 Pod 内，都可以通过 ClusterIP 访问到 Service ，然后流量会被反向代理到 Pod
+  service_name:port     # 可通过 DNS 域名访问 Service ，会自动解析到 Service IP ，然后流量会被反向代理到 Pod
+  ```
 
 - kube-proxy 收到访问 Service 的数据包时，会反向代理到 EndPoints 中的某个 Pod 端点。可配置 externalTrafficPolicy、internalTrafficPolicy 路由策略。
   - 有几种路由策略：
@@ -185,9 +186,6 @@ k8s 常见的几种网络通信：
     - 如果数据包的源 IP 为 k8s 集群外主机的 IP ，并且目标 IP 为 Service 的 NodePort、loadBalancerIP、externalIP ，则视作 k8s 外部流量，会受 externalTrafficPolicy 影响。
     - 如果数据包的目标 IP 为 Service 的 clusterIP ，则视作 k8s 内部流量，会受 internalTrafficPolicy 影响。
     - 其它情况下，路由策略不会生效，相当于采用 Cluster 策略。
-
-
-
 
 ### NodePort
 
@@ -275,6 +273,7 @@ k8s 常见的几种网络通信：
     type: ExternalName
     externalName: redis.test.com
   ```
+<!-- 此时只允许通过 DNS 域名访问 Service ，不能通过 IP 访问 -->
 
 ### ExternalIPs
 
@@ -300,17 +299,17 @@ k8s 常见的几种网络通信：
 
 ### Headless
 
-：配置 `clusterIP: None` 。此时 Service 没有 Cluster IP ，访问 Service 名会被 DNS 解析到随机一个 Pod IP 。
+：配置 `clusterIP: None` 。此时 Service 没有 Cluster IP ，只能通过 dns_name 访问 Service ，会 DNS 解析到 EndPoints 中的某个 Pod IP 。
 <!-- 组合使用 StatefulSet 与 Headless Service 时，会为每个 Pod 创建一个 DNS 域名 -->
 
 ## Service 相关
 
 ### DNS
 
-- 创建一个 Service 时，k8s 会自动创建一个相应的 DNS 条目，全名为 `<service-name>.<namespace-name>.svc.cluster.local` 。因此可通过 service_name 访问 service ：
+- 创建一个 Service 时，k8s 会自动创建一个相应的 DNS 条目，全名为 `<service-name>.<namespace-name>.svc.cluster.local` 。因此可通过 DNS 名称访问 service ：
   ```sh
-  service_name:port                   # 访问者与 service 在同一命名空间时，访问 service_name ，默认会 DNS 解析到 service_ip
-  service_name.svc.cluster.local:port # 访问者与 service 在不同命名空间时，需要访问 service 的完整 DNS 名称，才能解析到 service_ip
+  service_name:port           # 客户端与 service 在同一命名空间时，可以直接访问 service_name ，会 DNS 解析到 service_ip
+  service_name.default:port   # 客户端与 service 在不同命名空间时，需要访问详细的 DNS 名称，才能查找到 service_ip
   ```
 
 ### 环境变量

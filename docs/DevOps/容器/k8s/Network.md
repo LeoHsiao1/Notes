@@ -134,7 +134,7 @@ k8s 常见的几种网络通信：
 
 ### ClusterIP
 
-：给 Service 分配一个 Cluster IP ，将访问 `ClusterIP:Port` 的流量转发到 EndPoints 。
+：给 Service 分配一个 Cluster IP ，将访问 `ClusterIP:Port` 的流量反向代理到 EndPoints 。
 - 配置文件示例：
   ```yml
   apiVersion: v1
@@ -148,7 +148,8 @@ k8s 常见的几种网络通信：
     ipFamilies:
       - IPv4
     ipFamilyPolicy: SingleStack
-    # externalTrafficPolicy: Cluster  # 路由策略。默认为 Cluster
+    # externalTrafficPolicy: Cluster  # 从 k8s 外部访问 Service 时的路由策略。默认为 Cluster
+    # internalTrafficPolicy: Cluster  # 从 k8s 内部访问 Servier 时的路由策略。默认为 Cluster
     selector:               # 通过 selector 选中一些 Pod
       k8s-app: redis
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
@@ -172,21 +173,25 @@ k8s 常见的几种网络通信：
     service_ip:port         # 在 k8s 集群的任一主机或容器内，都可以通过 ClusterIP 访问到 service
     ```
 
-- Service 反向代理流量到 Pod 时， externalTrafficPolicy 路由策略有两种：
-  - Cluster
-    - ：默认策略，当 kube-proxy 收到访问 Service 的流量时，可以转发给集群内任一 Ready 状态的 Pod 端点。
-  - Local
-    - ：当 kube-proxy 收到访问 Service 的流量时，只能转发给与当前 kube-proxy 同主机的 Ready 状态的 Pod 端点。
-      - 如果当前主机没有 Ready 状态的 Pod 端点，则丢弃数据包。
-    - 优点：
-      - 避免了跨主机路由转发数据包，耗时更短。
-      - 对于 NodePort 类型的 Service ，使用 Local 策略能保留数据包的源 IP 。
-    - 缺点：
-      - 减少了 Service 的负载均衡效果。
+- kube-proxy 收到访问 Service 的数据包时，会反向代理到 EndPoints 中的某个 Pod 端点。可配置 externalTrafficPolicy、internalTrafficPolicy 路由策略。
+  - 有几种路由策略：
+    - Cluster
+      - ：默认策略，当 kube-proxy 收到指向 Service 的数据包时，可以转发给集群内任一 Ready 状态的 Pod 端点。
+    - Local
+      - ：当 kube-proxy 收到指向 Service 的数据包时，只能转发给与当前 kube-proxy 同主机的 Ready 状态的 Pod 端点。如果当前主机没有 Ready 状态的 Pod 端点，则丢弃数据包。
+      - 优点：避免了跨主机路由转发数据包，耗时更短。而且对于 NodePort 类型的 Service ，能保留数据包的源 IP 。
+      - 缺点：减少了 Service 的负载均衡效果。
+  - 生效条件：
+    - 如果数据包的源 IP 为 k8s 集群外主机的 IP ，并且目标 IP 为 Service 的 NodePort、loadBalancerIP、externalIP ，则视作 k8s 外部流量，会受 externalTrafficPolicy 影响。
+    - 如果数据包的目标 IP 为 Service 的 clusterIP ，则视作 k8s 内部流量，会受 internalTrafficPolicy 影响。
+    - 其它情况下，路由策略不会生效，相当于采用 Cluster 策略。
+
+
+
 
 ### NodePort
 
-：在所有 Node 上监听一个 Port ，将访问 `NodeIP:Port` 的流量转发到 EndPoints 。
+：在所有 Node 上监听一个 Port ，将访问 `NodeIP:Port` 的流量反向代理到 EndPoints 。
 - NodePort 默认的取值范围为 30000~32767 ，以免与系统端口冲突。
 - 例：
   ```yml

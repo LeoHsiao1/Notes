@@ -249,10 +249,10 @@
     #   whenDeleted: Retain   # 删除 StatefulSet 时如何处理 PVC 。默认为 Retain 即保留，可改为 Delete
     #   whenScaled: Retain    # 减少 StatefulSet 的 replicas 时如何处理 PVC
   ```
-  - 上例创建了一个 Headless Service ，并配置到 StatefulSet 的 serviceName 。此时会自动给每个 Pod 创建子域名，格式为 `<Pod_name>.<Service_domain>` ，例：
+  - 上例创建了一个 Headless Service ，并配置到 StatefulSet 的 serviceName 。此时会自动给每个 Pod 创建一个 DNS 子域名，例如：
     ```sh
-    nginx-0.nginx.nlp-web.svc.cluster.local
-    nginx-1.nginx.nlp-web.svc.cluster.local
+    nginx-0.nginx.default.svc.cluster.local
+    nginx-1.nginx.default.svc.cluster.local
     ```
     - Deployment 的各个 Pod 可相互替代，而 StatefulSet 的各个 Pod 是独特的，建议通过 DNS 子域名来访问指定的 Pod 。
     - Pod IP 在删除重建 Pod 时会变化，因此不适合用作网络标识。

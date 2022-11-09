@@ -146,9 +146,11 @@ k8s 常见的几种网络通信：
   spec:
     # type: ClusterIP       # Service 类型，默认为 ClusterIP
     clusterIP: 10.43.0.1    # 该 Service 绑定的 clusterIP 。如果创建 Service 时不指定 clusterIP ，则随机分配一个。创建 Service 之后不允许修改 clusterIP ，除非重建 Service
-    ipFamilies:
-      - IPv4
-    ipFamilyPolicy: SingleStack
+    # ipFamilies:
+    #   - IPv4
+    # ipFamilyPolicy: SingleStack
+    # externalIPs:          # 可以给 Service 绑定集群外的多个 IP 。当 k8s node 收到指向 externalIPs 的数据包时，会转发给该 Service 处理
+    #   - None
     # externalTrafficPolicy: Cluster  # 从 k8s 外部访问 Service 时的路由策略。默认为 Cluster
     # internalTrafficPolicy: Cluster  # 从 k8s 内部访问 Servier 时的路由策略。默认为 Cluster
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
@@ -187,6 +189,10 @@ k8s 常见的几种网络通信：
   curl  redis:3306           # 客户端与 service 在同一命名空间时，可以直接访问 service_name ，会 DNS 解析到 service_ip
   curl  redis.default:3306   # 客户端与 service 在不同命名空间时，需要访问详细的 DNS 名称，才能查找到 service_ip
   ```
+
+- 可以给 Service 配置 `clusterIP: None` ，不分配 clusterIP 。这样的 Service 称为 Headless 类型。
+  - 此时只能通过 DNS 名称访问 Service ，会 DNS 解析到 EndPoints 中的某个 Pod IP 。
+  - 组合使用 StatefulSet 与 Headless Service 时，会为每个 Pod 创建一个 DNS 子域名，格式为 `<pod_name>.<service_name>...` 。
 
 #### 环境变量
 
@@ -305,33 +311,6 @@ k8s 常见的几种网络通信：
     type: ExternalName
     externalName: redis.test.com
   ```
-
-### ExternalIPs
-
-：给 Service 分配集群外的 IP ，此时 Service 可以是任意 type 。
-- 例：
-  ```yml
-  apiVersion: v1
-  kind: Service
-  metadata:
-    name: redis
-    namespace: default
-  spec:
-    selector:
-      k8s-app: redis
-    ports:
-    - name: redis
-      port: 6379
-      protocol: TCP
-      targetPort: 6379
-    externalIPs:
-    - 123.0.0.1
-  ```
-
-### Headless
-
-：配置 `clusterIP: None` 。此时 Service 没有 Cluster IP ，只能通过 dns_name 访问 Service ，会 DNS 解析到 EndPoints 中的某个 Pod IP 。
-<!-- 组合使用 StatefulSet 与 Headless Service 时，会为每个 Pod 创建一个 DNS 域名 -->
 
 ## EndPoints
 

@@ -272,7 +272,7 @@ k8s 常见的几种网络通信：
 ### LoadBalancer
 
 ：给 Service 绑定 k8s 集群外的一个内网或公网 IP ，便于从集群外主机访问 Service 。
-- 创建 LoadBalancer 类型的 Service 时，一般需要购买云平台的负载均衡器，也可以用 MetalLB 等工具自建。
+- 创建 LoadBalancer 类型的 Service 之前，需要在 k8s 安装负载均衡器，可以购买云平台的，也可以用 MetalLB 等工具自建。
 - 例：
   ```yml
   apiVersion: v1
@@ -341,9 +341,10 @@ k8s 常见的几种网络通信：
 
 ## Ingress
 
-：一种管理逻辑网络的对象，用于对某些 Service 进行 HTTP、HTTPS 反向代理，常用于实现路由转发。
-- 实现 Ingress 功能的 Controller 有多种，常见的是 Nginx Ingress Controller ，它基于 Nginx 实现 Ingress 功能，会在每个 node 上监听 80、443 端口。
-<!-- - Ingress 不会绑定 Cluster IP ，用户需要将 HTTP 请求发送到 Node 的特定端口，即可访问 Ingress 。 -->
+：一种管理逻辑网络的对象，用于对某些 Service 进行 HTTP、HTTPS 反向代理，常用于实现 URL 路由。
+- 创建 Ingress 之前，需要在 k8s 安装 Ingress Controller ，有多种类型。
+  - 例如 Nginx Ingress Controller ，它基于 Nginx 处理 HTTP 请求，以 DaemonSet 方式部署，在每个 Node 上监听 80、443 端口。
+  - Ingress 不会绑定 Cluster IP 。客户端发送 HTTP 请求到 Node 的特定端口，即可访问 Ingress 。
 - 例：
   ```yml
   apiVersion: networking.k8s.io/v1
@@ -353,25 +354,50 @@ k8s 常见的几种网络通信：
     namespace: default
   spec:
     ingressClassName: nginx
-    rules:                        # Ingress 的入站规则表
-    - host: test.com              # 处理发向该域名的请求
+    rules:                        # Ingress 的 URL 路由规则
+    - host: test.com              # 如果 HTTP 请求的 request_host 匹配该 host ，则交给该 backend 处理，否则不处理。默认不指定 host ，可处理所有 HTTP 请求
       http:                       # 定义 http 类型的转发规则
         paths:
-        - backend:
+        - backend:                # 处理 HTTP 请求的后端（backend），这里采用一个 service
             service:
               name: nginx
               port:
                 number: 80
-          path: /                 # 将发向该 URL 的请求转发到后端（backend）的 Service
+          path: /                 # 如果 HTTP 请求的 request_path 匹配该 path ，则交给该 backend 处理，否则不处理
           pathType: Prefix
+    # defaultBackend: ...
+    # tls:                        # 启用 TLS 加密通信。这需要从一个 secret 对象获取 tls.crt 和 tls.key ，作用于某些 host
+    # - hosts:
+    #     - <host>
+    #   secretName: <name>
   ```
-  - 执行以下命令，即可访问该 ingress ：
+  - 可执行以下命令，测试访问该 Ingress ：
     ```sh
-    echo '10.0.0.1 test.com' >> /etc/hosts    # 将 ingress 域名解析到任一 k8s node
+    echo '10.0.0.1 test.com' >> /etc/hosts    # 将 Ingress 域名解析到任一 k8s node
     curl test.com
     ```
+  - Ingress 中可定义多个 backend 。如果 HTTP 请求的 request_host、request_path 匹配某个 backend ，则交给该 backend 处理，不交给其它 backend 处理。
+    - 如果 HTTP 请求不匹配任何 backend ，则交给 defaultBackend 处理。
 
-<!-- ingress path 支持正则匹配 -->
+- rules[].host 中可使用通配符 * ，匹配任意内容的单个 DNS 字段。
+  - 例如 `host: *.test.com` 匹配 `www.test.com` ，不匹配 `test.com`、`1.www.test.com` 。
+  - 这与 Nginx 的 service_name 中通配符 * 的用法不同。
+
+- pathType 有多种：
+  - Exact
+    - ：完全匹配。要求 request_path 与 path 相同。
+    - 区分大小写。
+    - 例如：
+      - `path: /index` 只能匹配 `/index` ，不匹配 `/index/` 。
+      - `path: /index/` 只能匹配 `/index/` ，不匹配 `/index` 。
+  - Prefix
+    - ：前缀匹配。这会将 request_path 以 / 分割为多个字段，然后检查前几个字段是否与 path 相同。
+    - 例如：
+      - `path: /` 匹配所有 request_path 。
+      - `path: /index` 匹配 `/index`、`/index/`、`/index/1` ，不匹配 `/index.html` 。
+      - `path: /index/` 与 `path: /index` 的匹配效果一样，后缀的 / 可忽略。
+    - 如果 request_path 同时匹配多个 prefix path ，则采用最长的那个。
+  - Nginx Ingress Controller 支持让 path 使用正则表达式。
 
 ## 访问控制
 

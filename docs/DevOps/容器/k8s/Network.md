@@ -152,7 +152,7 @@ k8s 常见的几种网络通信：
     # externalTrafficPolicy: Cluster  # 从 k8s 外部访问 Service 时的路由策略。默认为 Cluster
     # internalTrafficPolicy: Cluster  # 从 k8s 内部访问 Servier 时的路由策略。默认为 Cluster
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
-    - name: redis           # Service 的端口名。如果 Service 只监听一个端口，才可以省略 name
+    - name: redis           # Service 的端口名。如果 Service 只监听一个端口，则可以省略 name
       port: 6379            # Service 监听的端口号
       protocol: TCP         # 反向代理的协议，默认为 TCP ，还可选 UDP
       targetPort: 6379      # 将访问 service_ip:port 的流量，转发到 pod_ip:targetPort
@@ -178,10 +178,14 @@ k8s 常见的几种网络通信：
 
 #### DNS
 
-- 创建一个 Service 时，k8s 会自动创建一个相应的 DNS 条目，全名为 `<service-name>.<namespace-name>.svc.cluster.local` 。因此可通过 DNS 名称访问 service ：
+- 创建一个 Service 时，k8s 会自动创建一个 DNS 名称，全名为 `<service_name>.<namespace_name>.svc.cluster.local` ，解析到 service_ip 。例如：
   ```sh
-  service_name:port           # 客户端与 service 在同一命名空间时，可以直接访问 service_name ，会 DNS 解析到 service_ip
-  service_name.default:port   # 客户端与 service 在不同命名空间时，需要访问详细的 DNS 名称，才能查找到 service_ip
+  redis.default.svc.cluster.local  A  10.43.0.1
+  ```
+  因此可通过 DNS 名称访问 Service ：
+  ```sh
+  curl  redis:3306           # 客户端与 service 在同一命名空间时，可以直接访问 service_name ，会 DNS 解析到 service_ip
+  curl  redis.default:3306   # 客户端与 service 在不同命名空间时，需要访问详细的 DNS 名称，才能查找到 service_ip
   ```
 
 #### 环境变量
@@ -199,21 +203,21 @@ k8s 常见的几种网络通信：
 #### TrafficPolicy
 
 - kube-proxy 收到访问 Service 的数据包时，会反向代理到 EndPoints 中的某个 Pod 端点。可配置 externalTrafficPolicy、internalTrafficPolicy 路由策略。
-  - 路由策略的取值：
-    - Cluster
-      - ：默认策略，当 kube-proxy 收到指向 Service 的数据包时，可以转发给集群内任一 Ready 状态的 Pod 端点。
-    - Local
-      - ：当 kube-proxy 收到指向 Service 的数据包时，只能转发给与当前 kube-proxy 同主机的 Ready 状态的 Pod 端点。如果当前主机没有 Ready 状态的 Pod 端点，则丢弃数据包。
-      - 优点：避免了跨主机路由转发数据包，耗时更短。而且对于 NodePort 类型的 Service ，能保留数据包的源 IP 。
-      - 缺点：减少了 Service 的负载均衡效果。
-  - 生效条件：
-    - 如果数据包的源 IP 为 k8s 集群外主机的 IP ，并且目标 IP 为 Service 的 NodePort、loadBalancerIP、externalIP ，则视作 k8s 外部流量，会受 externalTrafficPolicy 影响。
-    - 如果数据包的目标 IP 为 Service 的 clusterIP ，则视作 k8s 内部流量，会受 internalTrafficPolicy 影响。
-    - 其它情况下，路由策略不会生效，相当于采用 Cluster 策略。
+- TrafficPolicy 的取值：
+  - Cluster
+    - ：默认策略，当 kube-proxy 收到指向 Service 的数据包时，可以转发给集群内任一 Ready 状态的 Pod 端点。
+  - Local
+    - ：当 kube-proxy 收到指向 Service 的数据包时，只能转发给与当前 kube-proxy 同主机的 Ready 状态的 Pod 端点。如果当前主机没有 Ready 状态的 Pod 端点，则丢弃数据包。
+    - 优点：避免了跨主机路由转发数据包，耗时更短。而且对于 NodePort 类型的 Service ，能保留数据包的源 IP 。
+    - 缺点：减少了 Service 的负载均衡效果。
+- TrafficPolicy 的生效条件：
+  - 如果数据包的源 IP 为 k8s 集群外主机的 IP ，并且目标 IP 为 Service 的 NodePort、loadBalancerIP、externalIP ，则视作 k8s 外部流量，会受 externalTrafficPolicy 影响。
+  - 如果数据包的目标 IP 为 Service 的 clusterIP ，则视作 k8s 内部流量，会受 internalTrafficPolicy 影响。
+  - 其它情况下，TrafficPolicy 不会生效，相当于采用 Cluster 策略。
 
 ### NodePort
 
-：在所有 Node 上监听一个或多个端口，将访问 `node_ip:port` 的流量交给 Service 处理。
+：在所有 Node 上监听端口，将访问 `node_ip:port` 的流量交给 Service 处理。
 - 例：
   ```yml
   apiVersion: v1
@@ -263,10 +267,6 @@ k8s 常见的几种网络通信：
 
 ：给 Service 绑定 k8s 集群外的一个内网或公网 IP ，便于从集群外主机访问 Service 。
 - 创建 LoadBalancer 类型的 Service 时，一般需要购买云平台的负载均衡器，也可以用 MetalLB 等工具自建。
-- 客户端访问 loadBalancerIP 的流程：
-  1. 客户端发出数据包，目标 IP 为 Service 的 loadBalancerIP 。
-  2. 负载均衡器收到数据包，反向代理到 k8s 集群的随机一个 Node ，并将目标 IP 改为 Service 的 clusterIP 。
-  3. k8s Node 收到数据包，反向代理到 EndPoints 。
 - 例：
   ```yml
   apiVersion: v1
@@ -278,18 +278,22 @@ k8s 常见的几种网络通信：
     type: LoadBalancer
     clusterIP: 10.43.0.1
     loadBalancerIP: 1.1.1.1
-    selector:
-      k8s-app: redis
     ports:
-      - name: redis
-        port: 6379
+      - port: 6379
         protocol: TCP
         targetPort: 6379
+    selector:
+      k8s-app: redis
   ```
+- 客户端访问 loadBalancerIP 的流程：
+  1. 客户端发出数据包，目标 IP 为 Service 的 loadBalancerIP 。
+  2. 负载均衡器收到数据包，反向代理到 k8s 集群的随机一个 Node ，并将目标 IP 改为 Service 的 clusterIP 。
+  3. k8s Node 收到数据包，反向代理到 EndPoints 。
 
 ### ExternalName
 
-：添加一条集群内的 DNS 规则，将 ServiceName 解析到指定的域名。
+：将 Service 的 DNS 名称解析到一个集群外的域名。
+- k8s 会添加一条 CNAME 类型的 DNS 记录，将 Service 的 DNS 名称解析到 externalName ，而不是 clusterIP 。
 - 例：
   ```yml
   apiVersion: v1
@@ -301,7 +305,6 @@ k8s 常见的几种网络通信：
     type: ExternalName
     externalName: redis.test.com
   ```
-<!-- 此时只允许通过 DNS 域名访问 Service ，不能通过 IP 访问 -->
 
 ### ExternalIPs
 

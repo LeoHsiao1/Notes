@@ -160,17 +160,18 @@
         resource: limits.cpu
   ```
 
-### dns
+### DNS
 
-- k8s 的 DNS 组件会创建一些只在 k8s 集群内有效的域名，可供 Pod 内程序进行 DNS 查询。
-  - 建议让 Pod 慎用 DNS 查询。因为：
-    - 进行 DNS 查询需要一定耗时。
-    - Pod 里运行的程序可能不尊重 DNS 查询结果的 TTL ，甚至无限期缓存 DNS 查询结果，直到重启程序。
-  - 例如访问 k8s service_name 时，默认会 DNS 解析到 service_ip ，而不是 pod_ip 。因为 service_ip 一般不变，而 pod_ip 经常变化。
+- k8s 集群内通常会运行一个 DNS 服务器，比如 CoreDNS 。可以创建一些只在 k8s 集群内有效的域名。
+  - 默认会修改 Pod 内的 /etc/resolv.conf 文件，让 Pod 将 DNS 查询请求发送到该 DNS 服务器。
+  - 例如访问 k8s service_name 时，默认会 DNS 解析到 service_ip 。
+- 建议让 Pod 慎用 DNS 查询。因为：
+  - 进行 DNS 查询需要一定耗时。
+  - Pod 里运行的程序可能不尊重 DNS 查询结果的 TTL ，甚至无限期缓存 DNS 查询结果，直到重启程序。
 
 - dnsPolicy 表示容器内采用的 DNS 策略，常见的几种取值：
   - ClusterFirst
-    - ：表示查询一个域名时，优先解析为 k8s 集群内域名。如果不能解析，才尝试解析为集群外域名。
+    - ：默认值，表示查询一个域名时，优先解析为 k8s 集群内域名。如果不能解析，才尝试解析为集群外域名。
     - 此时会自动在宿主机 /etc/resolv.conf 文件的基础上为容器生成 /etc/resolv.conf 文件，内容示例：
       ```sh
       nameserver 10.43.0.10     # k8s 集群内的 DNS 服务器，比如 CoreDNS
@@ -188,7 +189,7 @@
   ```yml
   kind: Pod
   spec:
-    dnsPolicy: "None"   # 默认取值为 ClusterFirst
+    dnsPolicy: "None"
     dnsConfig:
       nameservers:
       - 8.8.8.8

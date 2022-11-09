@@ -9,27 +9,6 @@
 - 提供了滚动更新、一键回滚、服务发现、负载均衡、自动伸缩等功能，提高部署效率。
 - 支持 Linux、MacOS、Windows 系统。
 
-## 版本
-
-- 2014 年，Google 公司开源了 k8s 项目，它借鉴了 Google 内部的大规模集群管理系统 Borg、Omega 。
-- 2015 年，Google 公司将 k8s 项目捐赠给 CNCF 基金会托管。
-- v1.20
-  - 2020 年 12 月发布。
-  - CRI 弃用了 Docker 引擎，建议改用 containerd 或 CRI-O ，工作效率更高，但不能再通过 docker 命令查看、管理容器。
-    - 这是因为 Docker 没有直接支持 CRI 接口，导致 k8s 只能通过 Dockershim 模块间接与 Docker 通信，但维护该模块比较麻烦，现在停止维护该模块。
-    - 使用 Docker 构建出的镜像符合 OCI 标准，因此依然可以被 containerd 或 CRI-O 运行。
-    - 如果用户继续使用 Docker 运行镜像，则启动 kubelet 时会显示一条警告。
-- v1.22
-  - 2021 年 8 月发布。
-  - 允许在节点上启用 Swap 。
-- v1.23
-  - 2021 年 12 月发布。
-  - 默认启用 PSA（Pod Security admission）服务，在创建 Pod 时根据 Pod 安全标准进行审核。
-- v1.24
-  - 2022 年 4 月发布。
-  - 删除了 Dockershim 模块。
-  - Job suspend 成为正式功能。
-
 ## 架构
 
 ### 组件
@@ -121,3 +100,42 @@
     finalizers:
     - kubernetes.io/pv-protection
     ```
+
+## 版本
+
+- 2014 年，Google 公司开源了 k8s 项目，它借鉴了 Google 内部的大规模集群管理系统 Borg、Omega 。
+- 2015 年，Google 公司将 k8s 项目捐赠给 CNCF 基金会托管。
+- k8s 计划每年发布三四个子版本，更新一些 feature 。
+  - 增加一个 feature 的一般流程：
+    1. 在某个 k8s 版本，首次加入该 feature 的代码，标为 alpha 阶段，默认不启用。可以在启动 k8s 组件时，通过命令行参数 `--feature-gates=feature1=true,feature2=true,...` 启用。
+    2. 在下一个 k8s 版本，将该 feature 标为 beta 阶段，默认启用，可以禁用。此时该 feature 已通过 alpha 试用，但还不稳定，可能发生不兼容变化。
+    3. 再等一个 k8s 版本，将该 feature 标为 stable 阶段（又称为 GA ），不能禁用。
+  - 删除一个 feature 的一般流程：
+    1. 在某个 k8s 版本，将该 feature 标为 deprecated 状态，默认禁用，可以启用。
+    2. 等一两个 k8s 版本之后，将该 feature 的代码从 k8s 删除。
+  - [feature-gates 列表](https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates)
+
+历史版本：
+- v1.20
+  - 2020 年 12 月发布。
+  - 弃用 Dockershim ，因此 CRI 不再支持 Docker 引擎，不能再通过 docker 命令查看、管理 k8s 容器。建议改用 containerd 或 CRI-O ，工作效率更高。
+    - Docker 没有直接支持 CRI 接口，导致 k8s 只能通过 Dockershim 模块间接与 Docker 通信，但维护该模块比较麻烦，现在停止维护该模块。
+    - 使用 Docker 构建的镜像符合 OCI 标准，因此依然可以被 containerd 或 CRI-O 运行。
+- v1.21
+  - 2021 年发布。
+  - 弃用 PodSecurityPolicy ，建议改用 PSA 。
+- v1.22
+  - 2021 年发布。
+  - 允许在节点上启用 Swap 。
+- v1.23
+  - 2021 年发布。
+- v1.24
+  - 2022 年发布。
+  - 删除 Dockershim 。
+  - beta 阶段的 API 不再默认启用。
+  - [GA] Job suspend
+- v1.25
+  - 2022 年发布。
+  - [GA] 支持 Cgroup v2
+  - [GA] Ephemeral Containers
+  - [GA] PSA（Pod Security admission）：用于在创建 Pod 时根据 Pod 安全标准进行审核。

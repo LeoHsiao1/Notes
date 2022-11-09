@@ -2,7 +2,7 @@
 
 ## IP
 
-- k8s 集群内会使用一些虚拟 IP ，称为 Virtual IP、VIP、Cluster IP 。
+- k8s 集群内会建立一些虚拟子网，使用一些虚拟 IP ，称为 Virtual IP、VIP、Cluster IP 。
 - 部署 k8s 集群时，通常需要创建两个 CIDR 子网：
   - service_cidr ：比如 `10.43.0.0/16`，从中选取 Cluster IP 分配给各个 Service 使用。
   - pod_cidr ：比如 `10.42.0.0/16` ，从中选取 Cluster IP 分配给各个 Pod 使用。
@@ -69,8 +69,8 @@
 k8s 常见的几种网络通信：
 - node 之间的通信
   - 假设从 node1 访问 node2 ，发送 IP 协议的数据包：
-    - 如果访问 node2 的 eth0 IP ，则数据包不经过 kube-proxy 转发，源 IP 为 node1 的 eth0 IP 。
-    - 如果访问 node2 的 Cluster IP ，则数据包会经过 kube-proxy 转发，源 IP 为 node1 的 Cluster IP 。
+    - 如果访问 node2 的 eth0 IP ，则数据包不进入 k8s 的虚拟子网，源 IP 为 node1 的 eth0 IP 。
+    - 如果访问 node2 的 Cluster IP ，则数据包会进入 k8s 的虚拟子网，源 IP 为 node1 的 Cluster IP 。
 
 - 同一个 Pod 中，容器之间的通信
   - 同一个 Pod 中的所有容器共用一个虚拟网卡、network namespace、Pod IP ，像同一主机内运行的多个进程。
@@ -94,17 +94,17 @@ k8s 常见的几种网络通信：
   - 假设从 Pod1 访问 ClusterIP 类型的 Service ，则流程如下：
     1. Pod1 发出数据包，被传输到宿主机的 veth 网口。
         - 此时数据包的源 IP 为 Pod1 的 Cluster IP ，目标 IP 为 Service 的 Cluster IP 。
-    2. Pod1 的宿主机收到数据包，kube-proxy 发现数据包的目标 IP 指向 Service ，于是从相应的 EndPoints 中选用一个 Pod 端点（假设为 Pod2 ），然后将数据包转发到该 Pod 端点。
+    2. Pod1 的宿主机收到数据包，kube-proxy 发现数据包的目标 IP 指向 Service ，于是经过 DNAT 之后转发到 Service 的 EndPoints 中的某个 Pod 端点（假设为 Pod2 ）。
         - 此时数据包的源 IP 不变，目标 IP 变为 pod2_ip 。
     3. kube-proxy 将数据包路由转发到 Pod2 所在的 Node 。
     4. Pod2 收到数据包。
-  - 假设 node1 上有一个 client 进程（不在 Pod 内），访问一个 Pod ，或访问一个 Service 但反向代理到一个 Pod ：
+  - 假设 node1 上有一个 client 进程（不在 Pod 内），需要访问一个 Pod ，或访问一个 Service 时反向代理到一个 Pod ：
     - 如果目标 Pod 位于当前 node ，则直接传输数据包，源 IP 为 node1 的 eth0 IP 。
     - 如果目标 Pod 位于其它 node ，则先将数据包路由转发到目标主机，源 IP 变为 node1 的 Cluster IP 。
   - 假设有一个 NodePort 类型的 Service ，监听 node1 的 80 端口，然后在任一主机（包括 k8s 集群外主机）上有一个 client 进程（不在 Pod 内）。则 client 访问 Service 的流程如下：
     1. client 向 Service 发送数据包。
         - 此时数据包的源 IP 为 client_ip ，目标 IP 为 node1_ip 。
-    2. node1 收到数据包，反向代理到 Service 的 EndPoints 中的某个 Pod 端点（假设为 Pod2 ）。
+    2. node1 收到数据包，经过 DNAT 之后转发到 Service 的 EndPoints 中的某个 Pod 端点（假设为 Pod2 ）。
         - 此时数据包的目标 IP 改为 pod_ip 。
         - 同时会通过 iptables 规则进行 SNAT ，将数据包的源 IP 改为 node1_ip 。
     3. Pod2 收到数据包，回复另一个数据包给 node1 。
@@ -131,6 +131,9 @@ k8s 常见的几种网络通信：
 
 - Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP/UDP 反向代理，常用于实现服务发现、负载均衡。
 - 每个 Service 有一个 EndPoints 子对象，用于记录需要反向代理的 Pod 的 ip:port 。
+  - 所有 k8s node 上的 kube-proxy 都会自动配置 iptables 规则，将访问 Service 的流量反向代理到 EndPoints 中的 Pod 。
+- Service 表示一个抽象的服务，不是一个真实存在的服务器进程，不会在 Node 上监听端口，因此执行 `ss -tapn` 看不到 Service 监听的端口。
+  - 特别地，NodePort 类型的 Service ，会让 kube-proxy 在 Node 上监听端口，因此可能与其它进程监听的端口冲突。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
 
 ### ClusterIP
@@ -242,9 +245,6 @@ k8s 常见的几种网络通信：
     selector:
       k8s-app: redis
   ```
-- Service 表示一个抽象的服务，不是一个真实存在的服务器进程，不会在 Node 上监听端口，因此执行 `ss -tapn` 看不到 Service 监听的端口。
-  - kube-proxy 会自动配置 iptables 规则，将访问 Service 的流量转发到 EndPoints 。
-  - 特别地，NodePort 类型的 Service ，会让 kube-proxy 在 Node 上监听端口，因此可能与其它进程监听的端口冲突。
 
 #### HostPort
 

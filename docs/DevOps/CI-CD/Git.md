@@ -46,7 +46,7 @@
 ```sh
 git status                    # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
 
-git add <path>...             # 将指定文件加入缓存区。如果指定一个目录，则递归加入其下所有文件
+git add <path>...             # 将指定路径下的所有文件加入缓存区
         -u                    # 如果有文件不匹配 path ，但已被 git 管理，则也加入缓存区。与 git add . 相比，git add -u 能发现已删除的文件，但不能发现新增的文件
         -A                    # 相当于 git add . 加 git add -u
 
@@ -77,6 +77,9 @@ git commit                      # 将当前缓存区的所有文件提交为一�
 	Date:   Thu Dec 10 09:15:19 2020 +0800
 	```
 	- 该哈希值的长度为 40 位，不过用户只使用前几位也能定位到该版本，比如 git checkout 86e696 。
+- 每次 commit 需要声明一个 Author 和一个 Committer ，分别表示作者、提交者，两者通常相同。
+  - 如果一个人修改文件，委托另一个人提交，则 Author 与 Committer 不同。
+  - 如果提交一个版本之后，通过 `git commit --amend` 多次修改，则 Author 不变，Committer 会更新，指向最后一次提交者。
 - 假设在 git 仓库创建一个分支 test ，提交几个 commit ，然后删除分支 test 。
   - 此时，这些 commit 不在任何 branch 或 tag 的版本树上，称为孤立提交（orphan commit）。可执行 `git gc` 来清理。
 
@@ -156,15 +159,19 @@ git branch          # 显示所有本地分支
 ```sh
 git checkout
         [refs]          # 将当前分支切换到某个 refs 指向的版本，如果不指定则选中当前版本
-              <path>... # 不切换，而是将指定路径的文件改为目标版本的状态
+              <path>... # 不切换，而是将指定路径下的所有文件改为目标版本的状态
         -b <branch>     # 切换到指定分支，如果该分支不存在则自动创建
               <refs>    # 切换分支之后，再将该分支切换到 refs 版本
 ```
 - 如果用 `git checkout` 切换到一个 tag 或 commit ，则不会绑定分支，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
 - 例：
   ```sh
-  git checkout HEAD~1 f1    # 将指定文件回滚到上一个版本
+  # 将文件回滚到上一个版本的状态。如果上一个版本没有修改该文件，则不会回滚
+  git checkout HEAD~1 README.md
 
+  # 将文件回滚到指定时刻的状态
+  git checkout master@{1hourago} README.md
+  git checkout master@{2022-01-01T12:00:00}
   ```
 
 ### tag
@@ -232,8 +239,7 @@ git cherry-pick <commit_hash>...  # 提取多个 commit 的修改内容，拷贝
 ### log
 
 ```sh
-git log [refs]              # 显示某个分支上的 commit 日志，不指定 refs 则采用 HEAD 分支
-        [path]              # 可指定 path ，只显示与指定文件相关的 commit
+git log [refs] [path]       # 显示某个分支上的 commit 日志，不指定 refs 则采用 HEAD 分支。如果指定 path ，则只显示与该 path 下文件相关的 commit
         -n                  # 最多显示 n 个 commit
         --reverse           # 倒序显示各个 commit 。默认按时间从新到旧排序，该选项会从旧到新排序
         --since=<date>      # 只显示指定时刻之后的 commit 。date 可以是 2022-01-01T12:00:00 或 "1 hours ago" 的格式
@@ -244,8 +250,9 @@ git log [refs]              # 显示某个分支上的 commit 日志，不指定
 
 git reflog                  # 显示 Git 仓库的所有 commit 日志
 
-git show [object]           # 显示某个对象的信息
-        --format=full
+git show
+      [refs] --format=full  # 显示指定版本的 commit 内容
+      <refs>:<path>         # 显示指定版本的某个文件的内容
 
 git diff <refs> <refs>      # 显示从一个版本到另一个版本的差异，包括差异文件、文件内增删的每行
         --stat              # 只显示统计信息，包括差异文件列表、增减的行数

@@ -41,41 +41,19 @@
 
 ## 版本
 
-### 查看
-
-```sh
-git status                # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
-
-git log [refs] [path]     # 显示最近一些 commit 的提交日志，不指定 refs 则采用 HEAD 分支，不指定 path 则选中所有文件
-        -n                # 只显示 n 个 commit
-        --show-signature  # 增加显示 GPG 签名
-
-git diff <refs> <refs>    # 显示从第一个版本到第二个版本的差异，包括差异文件、文件内增删的每行
-        --stat            # 只显示统计信息，包括差异文件列表、增减的行数
-        --name-status     # 只显示差异文件列表、文件动作的缩写（比如 A 新增、D 删除、M 修改、R 重命名）
-        --name-only       # 只显示差异文件列表
-        --no-renames      # 不自动识别 rename 动作，直接显示 create、delete
-
-git ls-remote             # 列出远程仓库的所有 refs
-    --heads               # 只列出所有分支，格式如 refs/heads/master
-    --tags                # 只列出所有标签，格式如 refs/tags/v1.0
-
-git for-each-ref
-    --points-at=<name>    # 列出与一个名称相关的所有 refs
-
-git rev-parse --show-toplevel   # 返回 Git 项目的顶级目录
-git gc                          # 清理磁盘文件，比如删除 orphan commit 、删除重复文件
-```
-
 ### 修改
 
 ```sh
-git add <path>...               # 将指定文件加入缓存区。如果指定一个目录，则递归加入其下所有文件
-        -u                      # 如果有文件不匹配 path ，但已被 git 管理，则也加入缓存区。与 git add . 相比，git add -u 能发现已删除的文件，但不能发现新增的文件
-        -A                      # 相当于 git add . 加 git add -u
-git rm <file>                   # 删除某个文件
-      --cached                  # 从缓存区删除
-git mv <src_file> <dst_file>    # 移动文件
+git status                    # 显示当前 git 仓库的状态（包括当前的分支名、缓存区内容）
+
+git add <path>...             # 将指定文件加入缓存区。如果指定一个目录，则递归加入其下所有文件
+        -u                    # 如果有文件不匹配 path ，但已被 git 管理，则也加入缓存区。与 git add . 相比，git add -u 能发现已删除的文件，但不能发现新增的文件
+        -A                    # 相当于 git add . 加 git add -u
+
+git rm <file>                 # 删除某个文件
+      --cached                # 从缓存区删除
+
+git mv <src_file> <dst_file>  # 移动文件
 ```
 - 被修改的文件建议先加入 git 缓存区（称为 stage、index），以便之后提交成一个版本，永久保存到 git 仓库中。
   - 也可以不加入缓存区就直接 git commit 。
@@ -158,7 +136,8 @@ git revert <refs>...    # 自动提交一个新版本来抵消某个历史版本
   - commit ID 也算 refs 。
   - 分支（branch）：指向某个版本，且可以随时改为指向其它版本，相当于指针。常见分支：
     - master ：git 仓库初始化时，默认创建的一个分支，通常用作主分支。
-    - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。还可通过 HEAD~n 的格式指向倒数第 n 个版本，比如 HEAD~0 相当于 HEAD 。
+    - HEAD ：git 仓库内置的一个特殊分支，指向用户当前所处的版本。
+      - 还可通过 HEAD~n 的格式指向 n 次 commit 之前的版本，例如 HEAD~0 指向当前版本，HEAD~1 指向上一个版本。
   - 标签（tag）：指向某个版本，且创建之后不能改为指向其它版本，相当于某个版本的别名。
 
 ### branch
@@ -182,6 +161,11 @@ git checkout
               <refs>    # 切换分支之后，再将该分支切换到 refs 版本
 ```
 - 如果用 `git checkout` 切换到一个 tag 或 commit ，则不会绑定分支，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
+- 例：
+  ```sh
+  git checkout HEAD~1 f1    # 将指定文件回滚到上一个版本
+
+  ```
 
 ### tag
 
@@ -244,6 +228,43 @@ git cherry-pick <commit_hash>...  # 提取多个 commit 的修改内容，拷贝
 ```
 - cherry-pick 适合在差异较大的分支之间拷贝一些 commit 变化，甚至拷贝到其它 Git 仓库。
   - 假设修改了 master 分支的 .gitignore 文件，然后想同步到其它分支。如果采用 merge、rebase 方式，则需要将 master 分支合并到其它分支，可能修改大量文件。而采用 cherry-pick 方式，则只会修改 .gitignore 文件。
+
+### log
+
+```sh
+git log [refs]              # 显示某个分支上的 commit 日志，不指定 refs 则采用 HEAD 分支
+        [path]              # 可指定 path ，只显示与指定文件相关的 commit
+        -n                  # 最多显示 n 个 commit
+        --reverse           # 倒序显示各个 commit 。默认按时间从新到旧排序，该选项会从旧到新排序
+        --since=<date>      # 只显示指定时刻之后的 commit 。date 可以是 2022-01-01T12:00:00 或 "1 hours ago" 的格式
+        --until=<date>      # 只显示指定时刻之前的 commit
+        --author=<pattern>  # 只显示提交者与 pattern 正则匹配的 commit
+        --format=<format>   # 设置每个 commit 的显示格式，比如 oneline、reference、fuller ，还可以是 format:%h,%cI,%s 这样的格式字符串
+        --show-signature    # 增加显示每个 commit 的 GPG 签名
+
+git reflog                  # 显示 Git 仓库的所有 commit 日志
+
+git show [object]           # 显示某个对象的信息
+        --format=full
+
+git diff <refs> <refs>      # 显示从一个版本到另一个版本的差异，包括差异文件、文件内增删的每行
+        --stat              # 只显示统计信息，包括差异文件列表、增减的行数
+        --name-status       # 只显示差异文件列表、文件动作的缩写（比如 A 新增、D 删除、M 修改、R 重命名）
+        --name-only         # 只显示差异文件列表
+        --no-renames        # 不自动识别 rename 动作，直接显示 create、delete
+
+git ls-remote               # 列出远程仓库的所有 refs
+    --heads                 # 只列出所有分支，格式如 refs/heads/master
+    --tags                  # 只列出所有标签，格式如 refs/tags/v1.0
+
+git for-each-ref
+    --points-at=<name>      # 列出与一个名称相关的所有 refs
+
+git rev-parse
+    --show-toplevel         # 返回 Git 项目的顶级目录
+
+git gc                      # 清理磁盘文件，比如删除 orphan commit 、删除重复文件
+```
 
 ## 配置
 

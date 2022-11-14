@@ -1000,6 +1000,14 @@ https://etcd.io/docs/v3.5/metrics/
   kube_service_spec_type
   kube_service_status_load_balancer_ingress
 
+  kube_persistentvolume_status_phase
+  kube_persistentvolume_claim_ref             # PV 的使用者
+  kube_persistentvolume_capacity_bytes        # PV 的容量
+  kubelet_volume_stats_capacity_bytes         # volume 的容量
+  kubelet_volume_stats_used_bytes             # volume 的使用量
+  kube_persistentvolumeclaim_status_phase
+  kube_persistentvolumeclaim_resource_requests_storage_bytes
+
   kube_horizontalpodautoscaler_status_current_replicas
   kube_horizontalpodautoscaler_status_desired_replicas
   kube_horizontalpodautoscaler_spec_min_replicas

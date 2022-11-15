@@ -44,7 +44,7 @@
 - 下载后启动：
   ```sh
   ./alertmanager --config.file=alertmanager.yml
-                # --web.config.file=web.yml                   # web 配置
+                # --web.config.file=web.yml
                 # --web.listen-address "0.0.0.0:9093"         # 监听的地址
                 # --web.external-url "http://10.0.0.1:9093/"  # 供外部访问的 URL
                 # --cluster.listen-address "0.0.0.0:9094"     # 集群监听的地址（默认开启）

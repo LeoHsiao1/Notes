@@ -22,12 +22,15 @@
       container_name: pushgateway
       image: prom/pushgateway:v1.4.1
       restart: unless-stopped
-      # command:
+      command:
+        - --web.config.file=web.yml
       #   - --web.listen-address=:9091
       #   - --web.telemetry-path=/metrics
-      #   - --persistence.file=metrics.bak     # 将指标数据备份到该文件中（默认不会备份，因此重启后会丢失）
+        - --persistence.file=metrics.bak     # 将指标数据备份到该文件中（默认不会备份，因此重启后会丢失）
       ports:
         - 9091:9091
+      volumes:
+        - .:/pushgateway
   ```
 
 ## 配置

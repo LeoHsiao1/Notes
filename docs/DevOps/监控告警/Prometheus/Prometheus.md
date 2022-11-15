@@ -51,7 +51,7 @@
   ```sh
   ./prometheus
               --config.file /etc/prometheus/prometheus.yml  # 使用指定的配置文件
-              # --web.config.file=web.yml                   # web 配置
+              # --web.config.file=web.yml
               # --web.listen-address 0.0.0.0:9090           # 监听的地址
               # --web.external-url http://10.0.0.1:9090/    # 供外部访问的 URL
               # --web.enable-admin-api                      # 启用管理员的 HTTP API .比如删除 tsdb 的数据

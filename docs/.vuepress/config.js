@@ -934,6 +934,10 @@ module.exports = {
                             path: "/Database/简介/数据库"
                         },
                         {
+                            title: "数据表",
+                            path: "/Database/简介/数据表"
+                        },
+                        {
                             title: "事务",
                             path: "/Database/简介/事务"
                         }

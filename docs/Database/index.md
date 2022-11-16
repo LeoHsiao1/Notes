@@ -2,6 +2,7 @@
 
 - 简介
   - [数据库](简介/数据库.md)
+  - [数据表](简介/数据表.md)
   - [事务](简介/事务.md)
 - SQLite
   - [SQLite](SQLite/SQLite.md)

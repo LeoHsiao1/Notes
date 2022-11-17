@@ -30,7 +30,6 @@
   - [配置](Redis/配置.md)
   - [管理单元](Redis/管理单元.md)
   - [数据类型](Redis/数据类型.md)
-  - [其它功能](Redis/其它功能.md)
   - [性能优化](Redis/性能优化.md)
   - [♢ redis](Redis/redis-py.md)
 - ES

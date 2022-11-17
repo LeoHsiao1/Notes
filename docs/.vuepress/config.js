@@ -1050,10 +1050,6 @@ module.exports = {
                             path: "/Database/Redis/数据类型"
                         },
                         {
-                            title: "其它功能",
-                            path: "/Database/Redis/其它功能"
-                        },
-                        {
                             title: "性能优化",
                             path: "/Database/Redis/性能优化"
                         },

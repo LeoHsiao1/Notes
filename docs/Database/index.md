@@ -13,7 +13,7 @@
   - [配置](MySQL/配置.md)
   - [管理单元](MySQL/管理单元.md)
   - [数据类型](MySQL/数据类型.md)
-  - [函数](MySQL/函数.md)
+  - [查询](MySQL/查询.md)
   - [存储引擎](MySQL/存储引擎.md)
   - [性能优化](MySQL/性能优化.md)
   - [♢ PyMySQL](MySQL/PyMySQL.md)

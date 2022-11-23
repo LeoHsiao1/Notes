@@ -976,8 +976,8 @@ module.exports = {
                             path: "/Database/MySQL/管理单元"
                         },
                         {
-                            title: "数据类型",
-                            path: "/Database/MySQL/数据类型"
+                            title: "字段",
+                            path: "/Database/MySQL/字段"
                         },
                         {
                             title: "查询",

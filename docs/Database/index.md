@@ -12,7 +12,7 @@
   - [部署](MySQL/部署.md)
   - [配置](MySQL/配置.md)
   - [管理单元](MySQL/管理单元.md)
-  - [数据类型](MySQL/数据类型.md)
+  - [字段](MySQL/字段.md)
   - [查询](MySQL/查询.md)
   - [存储引擎](MySQL/存储引擎.md)
   - [性能优化](MySQL/性能优化.md)

@@ -21,7 +21,7 @@
 
 - 执行一条 SQL 命令：
   ```py
-  >>> cursor.execute('show tables;')     # 执行一条 SQL 命令
+  >>> cursor.execute('SHOW TABLES;')     # 执行一条 SQL 命令
   5                                      # 返回查询结果的行数
   >>> cursor.fetchone()                  # 提取一行（这会使游标下移一行）
   ('auth_group',)

@@ -11,7 +11,7 @@
 >>> db = sqlite3.connect("db.sqlite3")      # 连接到一个 SQLite 数据库，如果该文件不存在则自动创建
 >>> # db = sqlite3.connect(":memory:")      # 在内存中打开一个数据库
 >>>
->>> db.execute("CREATE table table1(id INTEGER PRIMARY KEY, name TEXT)") # 执行一条 SQL 命令
+>>> db.execute("CREATE TABLE table1(id INTEGER PRIMARY KEY, name TEXT)") # 执行一条 SQL 命令
 <sqlite3.Cursor object at 0x000001715CB4BCE0>
 ```
 
@@ -30,7 +30,7 @@
 
 查：
 ```py
->>> ret = db.execute("select * FROM table1")    # 查询数据，返回一个可迭代对象
+>>> ret = db.execute("SELECT * FROM table1")    # 查询数据，返回一个可迭代对象
 >>> ret
 <sqlite3.Cursor object at 0x000001715CB4BCE0>
 >>> for line in ret:        # 每次迭代返回一行数据（tuple 类型）
@@ -41,7 +41,7 @@
 (3, '140708040237776')
 ...etc...
 >>>
->>> ret = db.execute("select * FROM table1 WHERE id=? AND name=?", (1, "one"))   # 输入 SQL 模板和参数
+>>> ret = db.execute("SELECT * FROM table1 WHERE id=? AND name=?", (1, "one"))   # 输入 SQL 模板和参数
 >>> ret
 <sqlite3.Cursor object at 0x000001715CBDB9D0>
 >>> list(ret)
@@ -50,7 +50,7 @@
 
 改：
 ```py
-db.execute("UPDATE table1 set name=? where id=?", ("one", 1))
+db.execute("UPDATE table1 SET name=? WHERE id=?", ("one", 1))
 ```
 
 删：

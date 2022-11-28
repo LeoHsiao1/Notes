@@ -984,6 +984,10 @@ module.exports = {
                             path: "/Database/MySQL/查询"
                         },
                         {
+                            title: "函数",
+                            path: "/Database/MySQL/函数"
+                        },
+                        {
                             title: "存储引擎",
                             path: "/Database/MySQL/存储引擎"
                         },

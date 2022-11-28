@@ -14,7 +14,7 @@
   - [管理单元](MySQL/管理单元.md)
   - [字段](MySQL/字段.md)
   - [查询](MySQL/查询.md)
-  - [函数](MySQL/函数.md)
+  - [复合操作](MySQL/复合操作.md)
   - [存储引擎](MySQL/存储引擎.md)
   - [性能优化](MySQL/性能优化.md)
   - [♢ PyMySQL](MySQL/PyMySQL.md)

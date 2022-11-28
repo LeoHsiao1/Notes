@@ -984,8 +984,8 @@ module.exports = {
                             path: "/Database/MySQL/查询"
                         },
                         {
-                            title: "函数",
-                            path: "/Database/MySQL/函数"
+                            title: "复合操作",
+                            path: "/Database/MySQL/复合操作"
                         },
                         {
                             title: "存储引擎",

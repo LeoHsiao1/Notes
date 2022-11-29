@@ -399,8 +399,73 @@ k8s 常见的几种网络通信：
     - 如果 request_path 同时匹配多个 prefix path ，则采用最长的那个。
   - Nginx Ingress Controller 支持让 path 使用正则表达式。
 
-## 访问控制
+## NetworkPolicy
 
-- Service Account
-- RBAC
-- NetWorkPolicy ：管控 Pod 之间的网络流量，相当于第四层的 ACL 。
+：网络策略，用于管控 Pod IP 接收、发送的 TCP/UDP 流量，相当于第四层的防火墙。
+- 每个 namespace 之下默认没有 NetworkPolicy ，因此放通所有出、入 Pod 的网络流量。
+  - 如果入方向或出方向存在 NetworkPolicy ，则只会放通与 NetworkPolicy 匹配的网络包，其它网络包则 drop 。
+  - 每个 Pod 内的容器之间总是可以相互通信，不受 NetworkPolicy 限制。
+- 访问 apiserver 等 k8s 组件时，需要通过身份认证、鉴权策略，但没有管控网络流量。
+
+- 例：
+  ```yml
+  apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    name: test
+    namespace: default
+  spec:
+    podSelector: {}   # 该 NetworkPolicy 作用于哪些 Pod 。如果不指定 Pod ，则作用于当前 namespace 的所有 Pod
+    policyTypes:      # NetworkPolicy 的类型，包含 Ingress 则作用于入流量，包含 Egress 则作用于出流量
+    - Ingress
+    - Egress
+    ingress:          # 当有网络包发向 Pod 时，如果源 IP、Port 匹配以下规则，则放通
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                project: test
+          - podSelector:
+              matchLabels:
+                k8s-app: nginx
+          - ipBlock:
+              cidr: 10.42.0.0/16
+              except:
+                - 10.42.1.0/24
+        ports:
+          - protocol: TCP
+            port: 6379
+    egress:             # 当 Pod 发出网络包时，如果目标 IP、Port 匹配以下规则，则放通
+      - to:
+          - ipBlock:
+              cidr: 10.0.0.0/24
+        # ports:
+        #   - protocol: TCP
+        #     port: 80
+  ```
+
+- 下例的 NetworkPolicy 作用于入流量，但不存在 ingress 规则，因此不会放通任何入流量。
+  ```yml
+  apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    name: ingress-allow-none
+    namespace: default
+  spec:
+    podSelector: {}
+    policyTypes:
+    - Ingress
+  ```
+- 下例的 NetworkPolicy 作用于入流量，且 ingress 规则为空时会匹配所有网络包，因此会放通任何入流量。
+  ```yml
+  apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    name: ingress-allow-all
+    namespace: default
+  spec:
+    podSelector: {}
+    ingress:
+    - {}
+    policyTypes:
+    - Ingress
+  ```

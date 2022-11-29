@@ -980,8 +980,12 @@ module.exports = {
                             path: "/Database/MySQL/字段"
                         },
                         {
-                            title: "查询",
-                            path: "/Database/MySQL/查询"
+                            title: "SELECT",
+                            path: "/Database/MySQL/SELECT"
+                        },
+                        {
+                            title: "索引",
+                            path: "/Database/MySQL/索引"
                         },
                         {
                             title: "复合操作",

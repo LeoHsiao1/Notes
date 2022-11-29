@@ -1,0 +1,320 @@
+# SELECT
+
+- SELECT 语句用于获取、计算一个值，默认打印到终端，像 Linux 的 echo 命令。例如：
+  ```sql
+  SELECT 'Hello';          -- 打印一个字符串
+
+  SELECT (1 + 2 - 3)*4;     -- 可进行算术运算
+  SELECT 10/3;              -- 除法运算。该例结果为：3.3333
+  SELECT 10%3;              -- 取模运算。该例结果为：1
+  ```
+  ```sql
+  mysql> SELECT 10/3 > 3;   -- 比较运算的结果为 1 或 0 ，表示 true 或 false
+  +----------+
+  | 10/3 > 3 |
+  +----------+
+  |        1 |
+  +----------+
+  1 row in set (0.00 sec)
+  ```
+- SELECT 语句可以独立执行，也可以附加 FROM、WHERE 等子句（clause），实现多种语法功能。
+  - 同时存在多种子句时，要按 FROM、WHERE、GROUP BY、HAVING、ORDER BY、LIMIT 的顺序排列。
+
+## AS
+
+- SELECT 语句中，可以用 AS 关键字创建别名。
+- 例：
+  ```sql
+  SELECT ROUND(10/3) AS a;
+  SELECT id AS field1 FROM tb1;
+  SELECT id AS field1 FROM tb1 AS table1;
+  ```
+
+## FROM
+
+- `SELECT <field>... FROM <table>...` 用于获取一个或多个数据表中，每条数据的指定字段。
+- 例：
+  ```sql
+  SELECT id FROM tb1;               -- 获取数据表 tb1 中的 id 字段
+  SELECT id,name FROM tb1;          -- 获取多个字段
+  SELECT * FROM tb1;                -- 使用通配符 * 获取所有字段
+  SELECT DISTINCT name FROM tb1;    -- SELECT DISTINCT 会对返回的结果进行去重，保证每一行数据的取值不重复，包括取值为 null 的情况
+  ```
+
+## WHERE
+
+- SELECT FROM 默认会返回数据表中的每条数据的指定字段。可加上 WHERE 子句，只返回匹配查询条件的那些条数据的字段。
+  - UPDATE 语句也可加上 WHERE 子句，只修改匹配查询条件的那些条数据。
+- 例：
+  ```sql
+  SELECT id,name FROM tb1 WHERE id=1;     -- 获取数据表 tb1 中，字段 id 取值为 1 的那条数据的指定字段
+
+  WHERE id=1;                   -- 严格匹配
+  WHERE id is null;             -- 判断 null 值
+
+  WHERE id>1;                   -- 使用比较运算符：=、!=、<、>、<=、>=，另外 <> 等价于 !=
+  WHERE id BETWEEN 0 AND 10;    -- 按取值范围查询，相当于 WHERE id>=0 AND id<=10
+  WHERE id IN (1, 2);           -- 使用 IN 运算符，相当于 WHERE id=1 OR id=2
+  WHERE id NOT IN (1, 2);       -- 使用 NOT 运算符，否定一个查询条件，进行反向查询
+
+  WHERE id=1 AND name='one';    -- 使用 AND 运算符，对两个查询条件取交集
+  WHERE id=1 OR name='one';     -- 使用 OR 运算符，对两个查询条件取并集
+  WHERE (... OR ...) AND ...;   -- 同时使用多个 AND、OR 运算符时，建议加上括号，区分优先级
+  ```
+
+- 比较字符串时，有两种匹配语法：
+  ```sql
+  WHERE name LIKE '<pattern>';      -- 字符串的模糊匹配，判断 pattern 是否匹配 name 字段的值
+  WHERE name REGEXP '<pattern>';    -- 字符串的正则匹配
+  ```
+  - 在模糊匹配的 pattern 中，可用 % 匹配 0 个、1 个或多个任意字符，用 `_` 匹配单个任意字符。如下：
+    ```sql
+    SELECT '' LIKE '%';         -- 结果为：1
+    SELECT 'hello' LIKE '%e%';  -- 结果为：1
+
+    SELECT '' LIKE '_';         -- 结果为：1
+    SELECT '1' LIKE '_';        -- 结果为：0
+    SELECT '11' LIKE '_';       -- 结果为：0
+    ```
+    - '%' 可以匹配空字符串 '' ，但不能匹配 null 。
+  - 模糊匹配要求 pattern 匹配目标字符串的整体值，而正则匹配要求 pattern 匹配目标字符串的部分值。如下：
+    ```sql
+    SELECT 'hello' LIKE 'he';   -- 结果为：0
+    SELECT 'hello' REGEXP 'he'; -- 结果为：1
+    ```
+  - 模糊匹配、正则匹配默认不区分大小写，除非加上 binary 关键字。如下：
+    ```sql
+    SELECT 'hello' LIKE 'Hello';        -- 结果为：1
+    SELECT 'hello' LIKE binary 'Hello'; -- 结果为：0
+    ```
+  - SQL 从客户端传输到服务器时，一些会解释一次转义字符，比如将 `\t` 解释为制表符。因此在正则匹配的 pattern 中使用保留字符、转义字符时，需要再加一个反斜杠前缀。如下：
+    ```sql
+    -- 以下匹配结果都为 1
+    SELECT 'a%b' LIKE 'a\%b';     -- % 在模糊匹配的 pattern 中是保留字符，用 \% 可匹配一个普通的百分号 % ，而不是用作通配符
+    SELECT '\\' LIKE '\\';        -- \ 在 MySQL 所有字符串中都是保留字符，因此要写作转义字符 \\
+    SELECT '\\' REGEXP '\\\\';    -- 在正则表达式中，用 \\\\ 才能匹配一个 \\ ，即一个被转义的 \
+    SELECT 'hello' REGEXP 'he\\w+';
+    ```
+
+## GROUP BY
+
+- SELECT FROM 获取一些数据时，可加上 GROUP BY 子句，将数据分成几组，从而能分组统计。
+- 例：
+  ```sql
+  SELECT name FROM tb1 GROUP BY name;
+  ```
+  - 这会获取 tb1 表中的所有条数据，然后根据 name 字段取值的不同，将所有数据分成几组，每组至少包含一条数据。然后对每组执行 `SELECT name` 。
+  - 上例相当于 `SELECT DISTINCT name FROM tb1;` 。如果存在 null 值，则也会创建一个分组。
+
+- 例：
+  ```sql
+  SELECT name,count(*) FROM tb1 GROUP BY name;    -- 按 name 字段分组，并统计每组的数量
+  SELECT name,count(*) AS num FROM tb1 GROUP BY name HAVING num>2;  -- HAVING 子句的功能像 WHERE 子句，但专用于筛选 GROUP BY 分组之后的数据
+  ```
+
+## ORDER BY
+
+- SELECT FROM 获取一些数据时，默认按读取的先后顺序返回这些数据。可加上 ORDER BY 子句，按指定字段的值进行排序，然后才返回。
+- 例：
+  ```sql
+  SELECT * FROM tb1 ORDER BY id,name;           -- 先按 id 字段排序，如果某两条数据的 id 值相同，再按 name 字段排序
+  SELECT * FROM tb1 ORDER BY id ASC,name DESC;  -- 默认按字段取值的升序（ASC）排列。对某个字段加上 DESC 后缀，则采用降序
+  ```
+
+## LIMIT
+
+- SELECT FROM 获取一些数据时，默认会全部返回。可加上 LIMIT 子句，只返回 n 条数据。
+- 语法：
+  ```sql
+  SELECT <field>... FROM <table>...
+                      [LIMIT <n>]                   -- 最多返回 n 条数据
+                      [LIMIT <offset,n>]            -- 返回从第 offset 条开始的数据（从 0 开始编号），最多返回 n 条
+                      [LIMIT <n> OFFSET <int>]      -- 另一种语法
+  ```
+- 例：
+  ```sql
+  SELECT * FROM tb1 WHERE name LIKE 'a%' LIMIT 10;
+  SELECT * FROM tb1 WHERE name LIKE 'a%' ORDER BY id LIMIT 10 OFFSET 0;
+  ```
+- 一次查询的数据量过大时，会消耗过多时间、内存。此时可改为分页查询：用同一查询条件多次查询，每次通过 LIMIT 只获取部分数据，下一次从 offset 处继续获取数据，直到获取全部数据。
+
+## 子查询
+
+- 可以将一个 SELECT 语句嵌套在另一个 SELECT 语句中，称为子查询（subquery）。
+- 例：
+  ```sql
+  SELECT name FROM tb1 WHERE name IN ( SELECT name FROM tb2 );   -- 查询在 tb1、tb2 表中同时存在的 name
+  ```
+  - 嵌套的子语句不能加分号 ; ，只能在最外层加分号 ; 结尾。
+
+## JOIN
+
+- SELECT 可以同时处理多个数据库、数据表，此时建议加上限定符前缀，避免歧义。如下：
+  ```sql
+  SELECT id FROM tb1,tb2;           -- 同时处理多个数据表，如果 id 字段在多个数据表存在，则会报错：Column 'id' in field list is ambiguous
+  SELECT tb1.id FROM tb1,tb2;       -- 建议注明每个字段所属的数据表，既避免了报错 ambiguous ，又方便阅读
+  SELECT tb1.id FROM tb1,db2.tb2;   -- 同时处理多个数据库，建议注明数据表所属的数据库，否则默认是指当前数据库
+  ```
+
+- SELECT 语句加上 JOIN 子句，可以将多个数据表的数据组合之后再查询，称为联结查询。
+  - 联结查询时，会将 tb1 表的每行数据与 tb2 表的每行数据组合成一行，得到 tb1_rows * tb2_rows 个组合行，称为两个集合相乘的笛卡尔积。然后在笛卡尔积中查询数据。
+  - 例：
+    ```sql
+    mysql> SELECT * FROM author;
+    +----+--------+
+    | id | author |
+    +----+--------+
+    |  1 | alice  |
+    |  2 | bill   |
+    +----+--------+
+    2 rows in set (0.00 sec)
+
+    mysql> SELECT * FROM books;
+    +----+----------+-----------+
+    | id | book     | author_id |
+    +----+----------+-----------+
+    |  1 | cookbook |         1 |
+    +----+----------+-----------+
+    1 row in set (0.00 sec)
+
+    mysql> SELECT * FROM author,books WHERE author.id=books.author_id;  -- WHERE 查询
+    +----+--------+----+----------+-----------+
+    | id | author | id | book     | author_id |
+    +----+--------+----+----------+-----------+
+    |  1 | alice  |  1 | cookbook |         1 |
+    +----+--------+----+----------+-----------+
+    1 row in set (0.00 sec)
+
+    mysql> SELECT * FROM author INNER JOIN books ON author.id=books.author_id;  -- 内联结查询
+    +----+--------+----+----------+-----------+
+    | id | author | id | book     | author_id |
+    +----+--------+----+----------+-----------+
+    |  1 | alice  |  1 | cookbook |         1 |
+    +----+--------+----+----------+-----------+
+    1 row in set (0.00 sec)
+
+    mysql> SELECT * FROM author INNER JOIN books; -- 内联结时如果没有 ON 匹配条件，则会直接返回笛卡尔积的所有组合行
+    +----+--------+----+----------+-----------+
+    | id | author | id | book     | author_id |
+    +----+--------+----+----------+-----------+
+    |  1 | alice  |  1 | cookbook |         1 |
+    |  2 | bill   |  1 | cookbook |         1 |
+    +----+--------+----+----------+-----------+
+    2 rows in set (0.00 sec)
+    ```
+
+### 内联结
+
+- ：生成两个表的笛卡尔积，返回匹配 ON 条件的那些行，即两个集合的交集。
+- MySQL 中，内联结可写作 `JOIN`、`INNER JOIN`、`CROSS JOIN` 。
+- 内联结可不加 ON 条件，而左联结、右联结必须有 ON 条件。
+
+### 左联结
+
+- ：返回左侧表的全部数据行。每行如果匹配 ON 条件，则加上右侧表对应一行的字段。如果不匹配 ON 条件，则依然加上右侧表的一行字段，但每个字段的值为 null 。
+- 例：
+  ```sql
+  mysql> SELECT * FROM author LEFT JOIN books ON author.id=books.author_id;
+  +----+--------+------+----------+-----------+
+  | id | author | id   | book     | author_id |
+  +----+--------+------+----------+-----------+
+  |  1 | alice  |    1 | cookbook |         1 |
+  |  2 | bill   | NULL | NULL     |      NULL |
+  +----+--------+------+----------+-----------+
+  2 rows in set (0.00 sec)
+  ```
+
+### 右联结
+
+- ：返回右侧表的全部数据行。每行如果匹配 ON 条件，则加上左侧表对应一行的字段。如果不匹配 ON 条件，则依然加上左侧表的一行字段，但每个字段的值为 null 。
+- 例：
+  ```sql
+  mysql> SELECT * FROM author RIGHT JOIN books ON author.id=books.author_id;
+  +------+--------+----+----------+-----------+
+  | id   | author | id | book     | author_id |
+  +------+--------+----+----------+-----------+
+  |    1 | alice  |  1 | cookbook |         1 |
+  +------+--------+----+----------+-----------+
+  1 row in set (0.01 sec)
+  ```
+
+### 外联结
+
+- ：相当于将左联结、右联结的结果合并为一张表。
+- 可以用 `LEFT OUTER JOIN` 或 `RIGHT OUTER JOIN` ，将左联结、右联结声明为外联结。
+- 例：
+  ```sql
+  mysql> SELECT * FROM author LEFT OUTER JOIN books ON author.id=books.author_id;
+  +----+--------+------+----------+-----------+
+  | id | author | id   | book     | author_id |
+  +----+--------+------+----------+-----------+
+  |  1 | alice  |    1 | cookbook |         1 |
+  |  2 | bill   | NULL | NULL     |      NULL |
+  +----+--------+------+----------+-----------+
+  2 rows in set (0.00 sec)
+
+  mysql> SELECT * FROM author RIGHT OUTER JOIN books ON author.id=books.author_id;
+  +------+--------+----+----------+-----------+
+  | id   | author | id | book     | author_id |
+  +------+--------+----+----------+-----------+
+  |    1 | alice  |  1 | cookbook |         1 |
+  +------+--------+----+----------+-----------+
+  1 row in set (0.00 sec)
+  ```
+
+### 自然联结
+
+- ：生成两个表的笛卡尔积时，将同名的列重叠成一列，其它列依然组合。
+- 内联结都属于自然联结。
+- 可以用 `NATURAL LEFT JOIN` 或 `NATURAL RIGHT JOIN` ，将左联结、右联结声明为自然联结，此时不允许加 ON 条件。
+- 例：
+  ```sql
+  mysql> SELECT * FROM author NATURAL LEFT JOIN books;
+  +----+--------+----------+-----------+
+  | id | author | book     | author_id |
+  +----+--------+----------+-----------+
+  |  1 | alice  | cookbook |         1 |
+  |  2 | bill   | NULL     |      NULL |
+  +----+--------+----------+-----------+
+  2 rows in set (0.00 sec)
+
+  mysql> SELECT * FROM author NATURAL LEFT OUTER JOIN books;  -- 可以将一个联结同时用 NATURAL、OUTER 声明
+  +----+--------+----------+-----------+
+  | id | author | book     | author_id |
+  +----+--------+----------+-----------+
+  |  1 | alice  | cookbook |         1 |
+  |  2 | bill   | NULL     |      NULL |
+  +----+--------+----------+-----------+
+  2 rows in set (0.00 sec)
+  ```
+
+### 自联结
+
+- ：对同一个表进行联结查询。
+- 例：查询 books 表中，书名以 c 开头的作者，总共写了哪些书
+  ```sql
+  SELECT * FROM books WHERE author in (SELECT author FROM books WHERE name LIKE 'c%');   -- 属于子查询
+  SELECT tb1.* FROM books AS tb1, books AS tb2 WHERE tb1.author=tb2.author AND tb2.name LIKE 'c%'; -- 属于自联结
+  ```
+
+## UNION
+
+- UNION 关键字用于将两个 SELECT 语句返回的数据表，上下合并成一张表。
+  - JOIN 会生成笛卡尔积，而 UNION 只是在第一张表的最后一行数据下方，附加第二张表的全部行数据。
+- UNION 两边的字段数量必须相等，否则会报错。而字段名称可以不同，结果只保留第一张表的字段名。如下：
+  ```sql
+  mysql> SELECT id,author FROM author UNION SELECT id,book FROM books;
+  +----+----------+
+  | id | author   |
+  +----+----------+
+  |  1 | alice    |
+  |  2 | bill     |
+  |  1 | cookbook |
+  +----+----------+
+  3 rows in set (0.00 sec)
+  ```
+- UNION 合并时，会自动去掉取值重复的数据行。因此下例的结果等价于 `SELECT * FROM tb1;`
+  ```sql
+  SELECT * FROM tb1 UNION SELECT * FROM tb1;
+  ```
+  - 如果使用 `UNION ALL` ，则不会去掉重复行。

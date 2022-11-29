@@ -162,9 +162,9 @@
 
 ### DNS
 
-- k8s 集群内通常会运行一个 DNS 服务器，比如 CoreDNS 。可以创建一些只在 k8s 集群内有效的域名。
-  - 默认会修改 Pod 内的 /etc/resolv.conf 文件，让 Pod 将 DNS 查询请求发送到该 DNS 服务器。
-  - 例如访问 k8s service_name 时，默认会 DNS 解析到 service_ip 。
+- k8s 集群内通常会运行一个 DNS 服务器，比如 CoreDNS 。可以创建一些只在 k8s 集群内有效的域名，解析到 pod_ip 或 service_ip 。
+  - 默认会修改每个 Pod 内的 /etc/resolv.conf 文件，让 Pod 将 DNS 查询请求发送到该 DNS 服务器。
+  - 例如在 Pod 内访问 k8s service_name 时，默认会 DNS 解析到 service_ip 。
 - 建议让 Pod 慎用 DNS 查询。因为：
   - 进行 DNS 查询需要一定耗时。
   - Pod 里运行的程序可能不尊重 DNS 查询结果的 TTL ，甚至无限期缓存 DNS 查询结果，直到重启程序。
@@ -181,7 +181,7 @@
       - 如果查询同一个命名空间下的短域名，比如 nginx ，则首先尝试解析 nginx.default.svc.cluster.local ，因此第一个 search 域就解析成功。
       - 如果查询其它命名空间下的域名，比如 redis.db.svc.cluster.local ，其点数为 4 ，因此第一个 search 域会解析失败，第二个 search 域才解析成功，增加了 DNS 请求数。
   - Default
-    - ：用 kubelet 的 --resolv-conf 参数指定的文件作为容器的 /etc/resolv.conf 文件，因此只能解析集群外域名。
+    - ：采用 Pod 的宿主机的 /etc/resolv.conf 文件，因此不能解析 k8s 集群内域名。
   - None
     - ：不自动为容器生成 /etc/resolv.conf 文件，此时需要用 dnsConfig 自定义配置。
 

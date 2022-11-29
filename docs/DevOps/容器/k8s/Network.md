@@ -149,13 +149,17 @@ k8s 常见的几种网络通信：
   spec:
     # type: ClusterIP       # Service 类型，默认为 ClusterIP
     clusterIP: 10.43.0.1    # 该 Service 绑定的 clusterIP 。如果创建 Service 时不指定 clusterIP ，则随机分配一个。创建 Service 之后不允许修改 clusterIP ，除非重建 Service
-    # ipFamilies:
+    clusterIPs:
+      - 10.43.0.1
+    # ipFamilies:           # IP 协议，可以为 IPv4、IPv6
     #   - IPv4
-    # ipFamilyPolicy: SingleStack
+    # ipFamilyPolicy: SingleStack # IP 协议的策略。默认为 SingleStack ，只使用 ipFamilies 中的第一个协议栈，此时 ClusterIPs 只包含一个 IP 地址，与 clusterIP 相同
+
     # externalIPs:          # 可以给 Service 绑定集群外的多个 IP 。当 k8s node 收到指向 externalIPs 的数据包时，会转发给该 Service 处理
     #   - None
     # externalTrafficPolicy: Cluster  # 从 k8s 外部访问 Service 时的路由策略。默认为 Cluster
     # internalTrafficPolicy: Cluster  # 从 k8s 内部访问 Servier 时的路由策略。默认为 Cluster
+
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
     - name: redis           # Service 的端口名。如果 Service 只监听一个端口，则可以省略 name
       port: 6379            # Service 监听的端口号
@@ -166,6 +170,7 @@ k8s 常见的几种网络通信：
       port: 26379
       protocol: TCP
       targetPort: 26379
+
     selector:               # 通过 selector 选中一些 Pod
       k8s-app: redis
     # sessionAffinity: ClientIP   # 会话保持的方式。默认为 None ，会将数据包随机转发到各个 Pod IP

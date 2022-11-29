@@ -1,9 +1,8 @@
 # Volume
 
-- 以卷（volume）方式将文件或目录挂载到容器中，即使容器被删除，volume 也会一直保留。
-- Docker 中的 volume 比较简单，只是挂载宿主机的目录到容器中。而 k8s 中的 volume 分为多种类型。
-- k8s Pod 需要先声明使用几个 volume ，然后才能挂载到 Pod 的容器中。
-  - 同一个 Pod 声明的 volume 可以被所有容器同时挂载，因此容器之间可通过 volume 传递文件。
+- Docker 的 volume 比较简单，只是挂载宿主机的文件、目录到容器中。而 k8s 的 volume 分为多种类型，功能更多。
+- 创建 k8s Pod 时，声明它需要使用的 volume ，就会被 kubelet 自动挂载到 Pod 中。
+  - 同一个 Pod 挂载的所有 volume ，可以被该 Pod 的所有容器同时访问，因此容器之间可通过 volume 传递文件。
 
 ## hostPath
 
@@ -84,7 +83,7 @@ PV 的访问模式：
   - 如果找到了，就把该 PV 与 PVC 一对一绑定，然后挂载到 Pod 上。
   - 如果没找到，则不能部署该 Pod 。
 
-配置示例：
+- 例：一个 PVC
 ```yml
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -120,26 +119,24 @@ spec:
 
 ## ConfigMap
 
-：用于保存配置信息，采用键值对格式，以明文形式保存在 etcd 中。
-- 可以在 Deployment 等控制器中引用 ConfigMap ，导入其中的参数作为环境变量，或 volume 。
-- 修改 ConfigMap 时，不会导致挂载它的 Pod 自动重启。
+：用于记录一些配置参数。
+- 可以在 Deployment 等对象中引用 ConfigMap 中的配置参数，暂存为环境变量或 volume 。
+  - 修改 ConfigMap 时，不会自动更新挂载它的 Pod ，因此 Pod 还会使用旧的配置。
 
-- 配置示例：
+- 例：一个 ConfigMap
   ```yml
   apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: redis-config
-  data:
-    k1: hello
+    name: redis
+  data:               # ConfigMap 的主体数据，可按键值对格式记录多个配置参数
+    k1: hello         # 一个配置参数，名为 k1 ，值为 hello
     k2: world
-    redis.conf: |-
+    redis.conf: |-    # 用 `|-` 传入多行字符串作为 value ，适合挂载为配置文件
       bind 0.0.0.0
       port 6379
       daemonize yes
   ```
-  - data 部分可以包含多个键值对，比如保存多个变量、配置文件。
-  - 用 `|-` 传入多行字符串作为 value 。
 
 - 例：根据 ConfigMap 创建环境变量
   ```yml
@@ -153,23 +150,23 @@ spec:
           image: redis:5.0.6
           command: ["echo", "$K1", "$(K2)"]
           env:
-          - name: K1                      # 创建一个环境变量 K1 ，
-            valueFrom:                    # 它的取值为，
+          - name: K1                # 创建一个环境变量 K1 ，
+            valueFrom:              # 它的取值为，
               configMapKeyRef:
-                name: redis-config        # 名为 redis-config 的 ConfigMap 中，
-                key: k1                   # 参数 k1 的值
-                # optional: false         # 是否可省略。默认为 false ，当 secret.key 不存在时，会拒绝创建 Pod 。如果为 true ，则当 secret.key 不存在时，不会创建该 env 变量
+                name: redis         # 名为 redis 的 ConfigMap 中，
+                key: k1             # 参数 k1 的值
+                # optional: false   # 能否省略该环境变量。默认为 false ，当 secret.key 不存在时，会拒绝创建 Pod 。如果为 true ，则 secret.key 不存在时，不会创建该 env 变量
           - name: K2
             valueFrom:
               configMapKeyRef:
-                name: redis-config
+                name: redis
                 key: k2
           envFrom:
           - configMapRef:
-              name: redis-config          # 导入 ConfigMap 中的所有参数，生成环境变量
+              name: redis           # 导入 ConfigMap 中的所有参数，生成环境变量
   ```
 
-- 例：将 ConfigMap 作为 volume 并挂载
+- 例：根据 ConfigMap 创建 volume 并挂载
   ```yml
   apiVersion: v1
   kind: Deployment
@@ -182,36 +179,38 @@ spec:
           volumeMounts:
           - name: volume1
             mountPath: /opt/redis/volume1     # 将名为 volume1 的存储卷挂载到该目录
+            # readOnly: true        # ConfigMap 挂载时默认为只读模式
           - name: volume2
             mountPath: /opt/redis/volume2
         volumes:
-          - name: volume1             # 创建一个名为 volume1 的卷
+          - name: volume1           # 创建一个名为 volume1 的卷
             configMap:
-              name: redis-config      # 引用的 ConfigMap 名称
+              name: redis           # 引用的 ConfigMap 名称
               items:
-              - key: sentinel.conf    # 引用 ConfigMap 中的哪个参数
-                path: sentinel.conf   # 将该参数的值保存到 mountPath/path 文件中
-          - name: volume2             # 创建一个名为 volume2 的卷
+              - key: redis.conf     # 引用 ConfigMap 中的哪个参数
+                path: redis.conf    # 将该参数的值保存为 path 文件，挂载到容器中的路径为 mountPath/path
+          - name: volume2           # 创建一个名为 volume2 的卷
             configMap:
-              name: redis-config      # 导入名为 redis-config 的 ConfigMap 中的所有参数，生成 volume
+              name: redis           # 导入名为 redis 的 ConfigMap 中的所有参数，生成 volume
   ```
+  - 挂载 configMap 时，会先将 configMap 的参数值保存为宿主机 `/var/lib/kubelet/pods/<pod_id>/../` 目录下的文件，然后将该文件挂载到 Pod 的每个容器中。
 
 ## Secret
 
-：与 ConfigMap 类似，但用于保存密码等私密信息。
-- 保存时会自动将参数值转换成 Base64 编码，挂载时会自动从 Base64 解码。
-- 配置示例：
+：与 ConfigMap 类似，但用于保存密码等私密的配置参数。
+- ConfigMap 对象以明文形式存储在 etcd 中。而 Secret 对象会将配置参数的值经过 Base64 编码之后存储到 etcd ，并且被 Deployment 等对象引用时会自动从 Base64 解码。
+- 例：一个 Secret
   ```yml
   apiVersion: v1
   kind: Secret
   metadata:
-    name: redis-secret
+    name: redis
   type: Opaque
   data:
     username: bGVvCg==
     password: MTIzNDU2Cg==
   ```
-  调用 secret ：
+- 例：根据 secret 创建环境变量
   ```yml
   spec:
     containers:

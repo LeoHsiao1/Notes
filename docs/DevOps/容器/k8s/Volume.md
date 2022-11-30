@@ -78,7 +78,7 @@
     volumes:
     - name: volume-cache
       emptyDir:
-        sizeLimit: 100Mi    # 限制 emptyDir 占用的磁盘空间，超过则驱逐该 Pod 。另外，超过容器的 limits.ephemeral-storage 限制，也会被驱逐
+        sizeLimit: 100Mi    # 限制 emptyDir 占用的磁盘空间，超过则驱逐该 Pod
   ```
 
 ## StorageClass

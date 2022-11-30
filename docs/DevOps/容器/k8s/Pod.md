@@ -300,7 +300,8 @@
     - 在 k8s 中，修改一个 Pod 的配置时，实际上会创建新 Pod 、删除旧 Pod 。
   - Evict Pod
     - ：驱逐，过程与 Delete 一致。
-    - kubelet 会在节点资源不足时自动驱逐 Pod 。此时 Pod 会标记为 evicted 状态、进入 Failed 阶段，不会自动删除。
+    - kubelet 会在节点资源不足时自动驱逐 Pod ，此时 Pod 会标记为 evicted 状态、进入 Failed 阶段。
+    - Deploytment 不会自动删除下级的 evicted Pod ，而 DaemonSet、StatefulSet 会自动删除。
 
 ### 重启
 
@@ -479,7 +480,7 @@ spec:
       resources:
         limits:
           cpu: 500m               # 每秒占用的 CPU 核数
-          ephemeral-storage: 1Gi  # 占用的临时磁盘空间，包括 container rootfs、container log、emptyDir volume、cache
+          ephemeral-storage: 1Gi  # 占用的临时磁盘空间
           memory: 512Mi           # 占用的内存
         requests:
           cpu: 100m
@@ -490,7 +491,7 @@ spec:
   - 创建 Pod 时，如果指定的 requests 大于 limits 值，则创建失败。
   - 调度 Pod 时，会寻找可用资源不低于 Pod requests 的节点。如果不存在，则调度失败。
   - 启动 Pod 时，会创建一个 Cgroup ，根据 Pod limits 设置 cpu.cfs_quota_us、memory.limit_in_bytes 阈值，从而限制 Pod 的资源开销。
-  - k8s v1.8 增加了 ephemeral-storage 功能，不是通过 Cgroup 技术，而是定期统计 Pod 占用的磁盘空间。
+  - k8s v1.8 增加了 ephemeral-storage 功能，不是基于 Cgroup 技术，而是直接监控 Pod 的 container rootfs、container log、emptyDir 占用的磁盘空间。
 
 - 当 Pod 占用的资源超过 limits 时：
   - 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
@@ -832,6 +833,33 @@ spec:
   ```
   - 阈值可以是绝对值、百分比。百分比是指 available / capacity 。
   - 同一指标同时只能配置一个阈值。
+
+- 分析 kubelet 的源代码：
+  - kubelet 启动时，先后启动 cAdvisor、containerManager、evictionManager 等模块。
+  - 调用 evictionManager.Start() 函数即可启动 evictionManager 模块，它会运行一个主循环：
+    ```golang
+    for {
+      if evictedPods := m.synchronize(diskInfoProvider, podFunc); evictedPods != nil {
+        klog.InfoS("Eviction manager: pods evicted, waiting for pod to be cleaned up", "pods", klog.KObjSlice(evictedPods))
+        m.waitForPodsCleanup(podCleanedUpFunc, evictedPods)   // 如果有 Pod 被驱逐，则等待该 Pod 被清理，最多等待 podCleanupTimeout=30s
+      } else {
+        time.Sleep(monitoringInterval)  // 间隔时间默认为 10s ，与 housekeeping-interval 相等
+      }
+    }
+    ```
+    - 每次循环的主要任务是执行 synchronize() ，判断是否要驱逐 Pod ，并返回 evictedPods 数组。流程如下：
+      1. 检查当前节点的所有 Pod ，筛选出非 terminated 状态的 Pod ，记录在 activePods 数组中。
+      2. 检查 activePods ，驱逐占用 ephemeral-storage 超过限制的所有 Pod 。如果有这样的 Pod 被驱逐，则停止执行 synchronize() 。
+          - 如果 Pod 的 emptyDir 占用的磁盘空间超过 emptyDir.sizeLimit 限制，则驱逐该 Pod 。
+          - 如果 Pod 中某个容器占用的磁盘空间超过 limits.ephemeral-storage 限制，则驱逐该 Pod 。
+      3. 检查节点的监控指标，如果低于需要驱逐的阈值 thresholds ，则停止执行 synchronize() 。
+      4. 将 activePods 按需要驱逐的优先级排序，然后从前到后逐个驱逐 Pod ，只要有一个 Pod 驱逐成功，则停止执行 synchronize() 。这样会尽量少地驱逐 Pod 。
+    - cAdvisor 每隔 housekeeping-interval=10s 采集一次监控数据，因此 synchronize() 最迟会读取到 10s 前的监控数据，做出驱逐的决策时不一定准确。
+      - kubelet 每隔 1 分钟监控一次 Pod 占用的磁盘空间，因此驱逐有一定延迟。
+    - 如果有 Pod 被驱逐，则需要等待该 Pod 被清理，直到满足以下条件：
+      - Pod 处于 terminated 状态
+      - Pod 的所有容器已终止
+      - Pod 的所有 volume 已清理
 
 ## 自动伸缩
 

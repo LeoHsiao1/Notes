@@ -41,7 +41,7 @@
           path: /data/redis
           type: Directory
   ```
-- 可选指定 type ，用于在挂载之前确保 hostPath 符合 type 类型。几种 type 取值：
+- hostPath.type 字段用于在挂载之前确保 hostPath 符合某种类型。几种 type 取值：
   ```sh
   ""                  # 默认为空字符串，即不检查。如果 hostPath 不存在，则自动按该路径创建目录
   Directory           # hostPath 必须是一个已存在的目录，否则不能挂载
@@ -52,13 +52,15 @@
   BlockDevice         # hostPath 必须是一个已存在的块设备文件
   CharDevice          # hostPath 必须是一个已存在的字符设备文件
   ```
-  - 如果 kubelet 容器化运行，而不是直接运行在主机上，则 hostPath 会使用 kubelet 容器 rootfs 中的路径，映射到主机的 `/var/lib/kubelet/pods/<pod_uid>/volume-subpaths/<volume_name>/<container_name>/0/` 路径之后再挂载到容器。
-    - 此时要省略 subPath ，才能让 hostPath 使用主机路径。可能还要省略 type 。
+- 如果 kubelet 容器化运行，而不是直接运行在主机上，则 hostPath 会使用 kubelet 容器 rootfs 中的路径，映射到主机的 `/var/lib/kubelet/pods/<pod_uid>/volume-subpaths/<volume_name>/<container_name>/0/` 路径之后再挂载到容器。
+  - 此时要省略 subPath ，才能让 hostPath 使用主机路径。可能还要省略 type 。
+- 容器内进程以非 root 用户运行时，通常只能读取 hostPath ，没有修改权限。可以在宿主机上执行 `chown -R <uid>:<uid> $hostPath` ，调整文件权限。
 
 ## emptyDir
 
 ：用于将宿主机的一个空目录挂载到 Pod 。
 - 每次给一个 Pod 挂载 emptyDir 时，会在宿主机上自动创建一个空目录，路径为 `/var/lib/kubelet/pods/<pod_uid>/volumes/kubernetes.io~empty-dir/<volume_name>` 。
+  - emptyDir 目录的文件权限为 777 ，文件所有者为 root 用户。
   - 如果该 Pod 一直调度在当前 Node ，即使重启 Pod ，也会保留 emptyDir 并继续挂载。
   - 如果该 Pod 从当前 Node 移除，则自动删除 emptyDir 。
 - emptyDir 适合保存一些重要性低的数据，在 Pod 重启时可以不保留，但保留了会更好。比如缓存。

@@ -78,7 +78,11 @@
     volumes:
     - name: volume-cache
       emptyDir:
-        sizeLimit: 100Mi    # 限制 emptyDir 占用的磁盘空间，超过则驱逐该 Pod
+        sizeLimit: 100Mi    # 限制 emptyDir 存储的文件大小，超过则驱逐该 Pod 。即使 emptyDir 未达到 sizeLimit ，也可能达到 limits.ephemeral-storage 而驱逐 Pod
+    - name: volume-tmpfs
+      emptyDir:
+        medium: Memory      # 在内存中创建 emptyDir ，挂载为 tmpfs 文件系统。此时 emptyDir 存储的文件不会占用磁盘，而是占用内存，受 sizeLimit、limits.memory 限制
+        sizeLimit: 100Mi
   ```
 
 ## StorageClass

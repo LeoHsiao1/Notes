@@ -1,12 +1,17 @@
 # Volume
 
-- Docker 的 volume 比较简单，只是挂载宿主机的文件、目录到容器中。而 k8s 的 volume 分为多种类型，功能更多。
-- 创建 k8s Pod 时，声明它需要使用的 volume ，就会被 kubelet 自动挂载到 Pod 中。
-  - 同一个 Pod 挂载的所有 volume ，可以被该 Pod 的所有容器同时访问，因此容器之间可通过 volume 传递文件。
+- 删除容器时，其 top layer 也会被删除，因此容器启动之后修改的文件都会丢失。持久化保存容器内数据的方案之一，是给容器挂载 volume 。
+- Docker 的 volume 比较简单，只是挂载宿主机的文件、目录到容器中。而 k8s 的 volume 分为 hostPath、ConfigMap 等多种类型，功能更多。
+- 创建 k8s Pod 时，挂载 volume 的步骤：
+  1. 在 spec.volumes 字段声明该 Pod 需要挂载的所有 volume ，让 k8s 做好准备。
+      - 这些 volume 可以挂载到容器，也可以不挂载到容器。
+      - 这些 volume 可以同时挂载到该 Pod 的多个容器，使得这些容器可通过 volume 相互传递文件。
+  2. 在 spec.containers[].volumeMounts 字段声明容器的挂载配置，将某 name 的 volume ，挂载到容器内的 mountPath 路径。
+      - 挂载到容器的所有 volume ，必须包含于 Pod spec.volumes 列表。
 
 ## hostPath
 
-：用于将主机某个路径挂载到容器中。
+：用于将宿主机的一个路径挂载到 Pod 。
 - 例：
   ```yml
   apiVersion: v1
@@ -18,9 +23,9 @@
     - image: redis:5.0.6
       name: redis
       volumeMounts:
-      - name: vol-time              # 挂载到容器的 volume 名称，必须与 Pod 声明的 spec.volumes 一致
-        mountPath: /etc/localtime
-        readOnly: true              # 限制容器只能读取 volume ，不能修改
+      - name: vol-time              # 挂载的 volume 名称，必须与 Pod 声明的 spec.volumes 一致
+        mountPath: /etc/localtime   # 将 volume 挂载到容器内的该路径
+        # readOnly: false           # volume 是否为只读模式。默认为 false
       - name: vol-data
         mountPath: /data/redis
       - name: vol-data
@@ -50,12 +55,38 @@
   - 如果 kubelet 容器化运行，而不是直接运行在主机上，则 hostPath 会使用 kubelet 容器 rootfs 中的路径，映射到主机的 `/var/lib/kubelet/pods/<pod_uid>/volume-subpaths/<volume_name>/<container_name>/0/` 路径之后再挂载到容器。
     - 此时要省略 subPath ，才能让 hostPath 使用主机路径。可能还要省略 type 。
 
+## emptyDir
+
+：用于将宿主机的一个空目录挂载到 Pod 。
+- 每次给一个 Pod 挂载 emptyDir 时，会在宿主机上自动创建一个空目录，路径为 `/var/lib/kubelet/pods/<pod_uid>/volumes/kubernetes.io~empty-dir/<volume_name>` 。
+  - 如果该 Pod 一直调度在当前 Node ，即使重启 Pod ，也会保留 emptyDir 并继续挂载。
+  - 如果该 Pod 从当前 Node 移除，则自动删除 emptyDir 。
+- emptyDir 适合保存一些重要性低的数据，在 Pod 重启时可以不保留，但保留了会更好。比如缓存。
+- 例：
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: nginx
+  spec:
+    containers:
+    - name: nginx
+      image: nginx:1.20
+      volumeMounts:
+      - name: volume-cache
+        mountPath: /cache
+    volumes:
+    - name: volume-cache
+      emptyDir:
+        sizeLimit: 100Mi    # 限制 emptyDir 占用的磁盘空间，超过则驱逐该 Pod 。另外，超过容器的 limits.ephemeral-storage 限制，也会被驱逐
+  ```
+
 ## StorageClass
 
 ：存储类。
 - 将不同的物理存储器抽象为存储类，相当于 PV 的模板。
 
-## Persistent Volume（PV）
+### Persistent Volume（PV）
 
 ：持久存储卷。
 - 一个存储类（Volume Class）上可以创建多个 PV 。
@@ -76,11 +107,11 @@ PV 的访问模式：
 给 Pod 挂载云磁盘时，会自动将云磁盘挂载到 Pod 的宿主机，再挂载到容器里。
 -->
 
-## PersistentVolumeClaim（PVC）
+### PersistentVolumeClaim（PVC）
 
 ：持久存储卷声明，代表用户使用存储卷的请求。
 - 当用户给 Pod 挂载 PVC 时，k8s 会寻找符合该 PVC 需求的 PV ，
-  - 如果找到了，就把该 PV 与 PVC 一对一绑定，然后挂载到 Pod 上。
+  - 如果找到了，就把该 PV 与 PVC 一对一绑定，然后挂载到 Pod 。
   - 如果没找到，则不能部署该 Pod 。
 
 - 例：一个 PVC
@@ -110,7 +141,7 @@ spec:
         image: redis:5.0.6
         volumeMounts:
             - name: volume1
-              mountPath: /opt/volume    # 将 volume1 挂载到该目录
+              mountPath: /opt/volume
       volumes:
       - name: volume1    # 创建一个名为 volume1 的卷，基于 pvc1
         persistentVolumeClaim:
@@ -193,7 +224,7 @@ spec:
             configMap:
               name: redis           # 导入名为 redis 的 ConfigMap 中的所有参数，生成 volume
   ```
-  - 挂载 configMap 时，会先将 configMap 的参数值保存为宿主机 `/var/lib/kubelet/pods/<pod_id>/../` 目录下的文件，然后将该文件挂载到 Pod 的每个容器中。
+  - 挂载 configMap 时，会先将 configMap 的参数值保存为宿主机 `/var/lib/kubelet/pods/<pod_uid>/../` 目录下的文件，然后将该文件挂载到容器中。
 
 ## Secret
 

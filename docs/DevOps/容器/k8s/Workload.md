@@ -46,9 +46,9 @@
     ```sh
     nginx-65d9c7f6fc-szgbk
     ```
-    - 因此不能事先知道 Deployment 创建的 Pod name ，通常通过 spec.selector 来筛选 Pod 。
+    - 不能事先知道 Deployment 创建的 Pod name ，因此一般通过 spec.selector 筛选条件来找到 Deployment 创建的 Pod 。
 
-  - 每个 Pod 中，容器的命名格式为 `k8s_<container_name>_<pod_name>_<k8s_namespace>_<pod_uid>_<restart_id>` ，例如：
+  - 每个 Pod 中，容器的命名格式为 `k8s_<container_name>_<pod_name>_<namespace_name>_<pod_uid>_<restart_id>` ，例如：
     ```sh
     k8s_POD_nginx-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0   # Pod 中内置的 pause 容器，其容器名为 POD
     k8s_nginx_nginx-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0

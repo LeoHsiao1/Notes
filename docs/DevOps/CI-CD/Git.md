@@ -239,7 +239,9 @@ git cherry-pick <commit_hash>...  # 提取多个 commit 的修改内容，拷贝
 ### log
 
 ```sh
-git log [refs] [path]       # 显示某个分支上的 commit 日志，不指定 refs 则采用 HEAD 分支。如果指定 path ，则只显示与该 path 下文件相关的 commit
+git log [refs]              # 显示某个分支上的 commit 日志，不指定 refs 则采用 HEAD 分支
+        [path]              # 可选指定 path ，然后向前追溯涉及 path 文件的 commit ，不显示其它 commit 。不过该 path 必须在当前版本存在
+        --full-history -- [path]  # 从 commit 历史中查找涉及 path 文件的所有 commit 。该 path 不必在当前版本存在，因此可以发现 path 什么时候从 Git 仓库删除了
         -n                  # 最多显示 n 个 commit
         --reverse           # 倒序显示各个 commit 。默认按时间从新到旧排序，该选项会从旧到新排序
         --since=<date>      # 只显示指定时刻之后的 commit 。date 可以是 2022-01-01T12:00:00 或 "1 hours ago" 的格式
@@ -248,7 +250,7 @@ git log [refs] [path]       # 显示某个分支上的 commit 日志，不指定
         --format=<format>   # 设置每个 commit 的显示格式，比如 oneline、reference、fuller ，还可以是 format:%h,%cI,%s 这样的格式字符串
         --show-signature    # 增加显示每个 commit 的 GPG 签名
 
-git reflog                  # 显示 Git 仓库的所有 commit 日志
+git reflog                  # 显示 HEAD 分支的变化日志，包括在本机的 checkout、commit、pull 等事件
 
 git show
       [refs] --format=full  # 显示指定版本的 commit 内容

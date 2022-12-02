@@ -267,12 +267,14 @@ k8s 常见的几种网络通信：
       ports:
       - containerPort: 6379
         hostPort: 6379      # 将访问 hostPort 的流量转发到 containerPort
+        # hostIP: 0.0.0.0
+        # protocol: TCP
   ```
   - HostPort 的取值范围不限。
   - 如果 HostPort 与 NodePort 监听同一个端口号，则依然可以创建，但优先级更高，因此发送到该端口的流量会交给 HostPort 处理。
 - 缺点：
   - 当 Pod 迁移部署到其它节点时，节点 IP 会变化，因此通常将 Pod 固定调度到某个节点。
-  - 同一节点上不允许多个 Pod 监听同一个 HostPort 端口，否则会冲突而引发 evicted ，因此以 DaemonSet 方式部署比 Deployment 更合适。
+  - 同一节点上，不允许有两个 Pod 监听同样的 (hostIP, hostPort, protocol) 组合，否则会冲突而引发 evicted 。因此，以 DaemonSet 方式部署监听 HostPort 的 Pod ，比 Deployment 更稳妥。
 
 ### LoadBalancer
 

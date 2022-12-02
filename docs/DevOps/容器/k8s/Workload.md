@@ -261,8 +261,8 @@
     nginx-0.nginx.default.svc.cluster.local
     nginx-1.nginx.default.svc.cluster.local
     ```
-    - Deployment 的各个 Pod 可相互替代，而 StatefulSet 的各个 Pod 是独特的，建议通过 DNS 子域名来访问指定的 Pod 。
-    - Pod IP 在删除重建 Pod 时会变化，因此不适合用作网络标识。
+    - 此时 Service 失去了负载均衡的功能，只能用于服务发现。
+    - Deployment 的各个 Pod 可相互替代，而 StatefulSet 的各个 Pod 是独特的，建议通过 DNS 子域名来访问指定的 Pod 。而 Pod IP 在删除重建 Pod 时会变化，因此不适合用作网络标识。
     - 如果 StatefulSet 不需要被其它服务访问，可省略 serviceName 字段。
 
 - podManagementPolicy 表示管理多个 Pod 时的策略，有两种：

@@ -491,7 +491,7 @@ spec:
   - 创建 Pod 时，如果指定的 requests 大于 limits 值，则创建失败。
   - 调度 Pod 时，会寻找可用资源不低于 Pod requests 的节点。如果不存在，则调度失败。
   - 启动 Pod 时，会创建一个 Cgroup ，根据 Pod limits 设置 cpu.cfs_quota_us、memory.limit_in_bytes 阈值，从而限制 Pod 的资源开销。
-  - k8s v1.8 增加了 ephemeral-storage 功能，不是基于 Cgroup 技术，而是直接监控 Pod 的 container rootfs、container log、emptyDir 占用的磁盘空间。
+  - k8s v1.8 增加了 ephemeral-storage 功能，不是基于 Cgroup 技术，而是直接测量 Pod 的 container rootfs、container log、emptyDir 占用的磁盘空间。
 
 - 当 Pod 占用的资源超过 limits 时：
   - 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。

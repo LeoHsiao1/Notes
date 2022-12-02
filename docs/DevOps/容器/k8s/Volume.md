@@ -156,22 +156,31 @@ spec:
 
 ## ConfigMap
 
-：用于记录一些配置参数。
-- 可以在 Deployment 等对象中引用 ConfigMap 中的配置参数，创建环境变量或 volume 。
+：用于记录一些非私密的配置参数。
+- 常见用例：创建一个 ConfigMap 对象，记录一些配置参数，然后在 Pod 中引用 ConfigMap ，创建环境变量或 volume 。
 - 例：一个 ConfigMap
   ```yml
   apiVersion: v1
   kind: ConfigMap
   metadata:
     name: redis
-  data:               # ConfigMap 的主体数据，可按键值对格式记录多个配置参数
+  data:
     k1: hello         # 一个配置参数，名为 k1 ，值为 hello
     k2: world
-    redis.conf: |-    # 用 `|-` 传入多行字符串作为 value ，适合挂载为配置文件
+    redis.conf: |-    # 可以用 |- 传入多行字符串作为 value ，适合挂载为配置文件
       bind 0.0.0.0
       port 6379
       daemonize yes
+  # binaryData:
+  #   k1: ...
+  # immutable: false  # 可选将 ConfigMap、Secret 声明为不可变类型，此时只能删除该对象，不能修改。
   ```
+  - ConfigMap 没有 spec 字段，主要配置是 data 和 binaryData 字段至少存在一个，其下可以按键值对格式记录多个配置参数。
+    - 每个配置参数的 key 必须是有效的 DNS 子域名。
+    - data 类型的配置参数，其 value 是 utf-8 编码的字符串。
+    - binaryData 类型的配置参数，其 value 是 base64 编码的字符串。引用该 value 时，会自动进行 base64 解码。因此该 value 可用于保存二进制值。
+  - etcd 默认限制了每个客户端请求的最大体积为 1.5MB ，而 k8s 限制了每个 ConfigMap、Secret 对象的最大体积为 1MB （不会进行压缩），超过则不允许创建。
+
 - 例：根据 ConfigMap 创建环境变量
   ```yml
   apiVersion: v1
@@ -228,13 +237,14 @@ spec:
           # defaultMode: 420    # 文件权限，默认为 420 ，这是 YAML 中的十进制数，对应 Linux 的八进制权限 644
   ```
   - 挂载 ConfigMap 的 volume 时，会先将 configMap 的参数值保存为宿主机 `/var/lib/kubelet/pods/<pod_uid>/../` 目录下的文件，然后将该文件以只读模式挂载到容器中。
-  - 如果将 ConfigMap、Secret 作为 volume 直接挂载（不指定 subpath ），则 volume 目录下的各个配置文件采用符号链接、只读模式。修改 ConfigMap、Secret 之后，会在一分钟之内更新 volume 目录下的符号链接，从而更新配置文件。
+  - 如果将 ConfigMap、Secret 作为 volume 直接挂载（不指定 subpath ），则 volume 目录下的各个配置文件采用符号链接、只读模式。修改 ConfigMap、Secret 之后，大概会在一分钟内更新 volume 目录下的符号链接，从而更新配置文件。
     - 其它情况下，修改 ConfigMap、Secret 之后，不会自动更新引用它的环境变量、volume ，除非重启 Pod 。
 
 ## Secret
 
-：与 ConfigMap 类似，但用于保存密码等私密的配置参数。
-- ConfigMap 对象以明文形式存储在 etcd 中。而 Secret 对象会将配置参数的值经过 Base64 编码之后存储到 etcd ，并且被 Deployment 等对象引用时会自动从 Base64 解码。
+：与 ConfigMap 类似，但用于记录密码等私密的配置参数。
+- Secret 存储在 etcd 时跟 ConfigMap 一样没有加密，因此有权访问 etcd 的所有用户都可以查看 Secret 。
+  - 可以加密 etcd 里的数据，或者通过 RBAC 限制有权读取 Secret 的用户。
 - 例：一个 Secret
   ```yml
   apiVersion: v1
@@ -246,6 +256,16 @@ spec:
     username: dGVzdA==
     password: MTIzNDU2Cg==
   ```
+  - Secret 的 data 类型的配置参数，相当于 ConfigMap 的 binaryData 。
+  - Secret 有多种 type ：
+    ```sh
+    Opaque                              # 默认的 Secret 类型，用于记录任意用途的密钥
+    kubernetes.io/tls                   # 用于记录 tls 密钥文件
+    kubernetes.io/ssh-auth
+    kubernetes.io/basic-auth
+    kubernetes.io/dockerconfigjson      # 用于记录 ~/.docker/config.json 文件的值，该 Secret 可用作 Pod 的 imagePullSecrets
+    kubernetes.io/service-account-token
+    ```
 - 例：根据 Secret 创建环境变量
   ```yml
   spec:
@@ -271,9 +291,11 @@ spec:
       volumeMounts:
       - name: vol-secret
         mountPath: /etc/redis.conf
-        subPath: redis.conf
     volumes:
     - name: vol-secret
       secret:
         secretName: redis
+        items:
+        - key: redis.conf
+          path: redis.conf
   ```

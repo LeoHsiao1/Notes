@@ -84,16 +84,21 @@
 - Deployment 的更新部署策略（strategy）有两种：
   - RollingUpdate
     - ：滚动更新，这是默认策略。先创建新 Pod ，等它们可用了，再删除旧 Pod 。
-    - 这可以保证在更新过程中不中断服务。但新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
     - 例：
       ```yml
       strategy:
         type: RollingUpdate
-        rollingUpdate:            # 滚动更新的配置
-          maxUnavailable: 0       # 允许同时不可用的 Pod 数量。可以为整数或百分数，默认为 25%
-          maxSurge: 1             # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数或百分数，默认为 25%
+        rollingUpdate:        # 滚动更新的配置
+          maxUnavailable: 0   # 允许同时不可用的 Pod 数量。可以为整数或百分数，默认为 25%
+          maxSurge: 1         # 为了同时运行新、旧 Pod ，允许 Pod 总数超过 replicas 一定数量。可以为整数或百分数，默认为 25%
       ```
-      滚动更新时，会尽量保持 `replicas - maxUnavailable ≤ availableReplicas ≤ replicas + maxSurge` 。
+      - 滚动更新时，会尽量保持 `replicas - maxUnavailable ≤ availableReplicas ≤ replicas + maxSurge` 。
+    - 优点：
+      - 客户端通过 Service 访问 Deployment 时，总是至少有一个 Ready 状态的 Pod 能接收客户端的请求，从而保证不中断服务。
+    - 缺点：
+      - 短期部署的 Pod 实例会比平时多 maxSurge 个，占用更多服务器资源。
+      - 新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
+      - 旧版本的 Pod 被终止时，可能还有事务未处理完，比如还有客户端的 TCP 连接在传输数据。为了避免事务被中断，可以给 Pod 添加 preStop 钩子，等准备好了才终止 Pod 。
   - Recreate
     - ：直接重建。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
 
@@ -189,7 +194,8 @@
 ：与 Deployment 类似，但适合部署有状态的 Pod 。
 - 相关概念：
   - 无状态应用
-    - ：历史执行的任务不会影响新执行的任务。因此 Pod 可以随时销毁并从镜像重新创建。
+    - ：历史执行的任务不会影响新执行的任务。因此 Pod 可以随时删除，然后从镜像重新创建 Pod ，能同样工作。
+    - 开发应用程序时，建议尽量实现无状态，可以随时启动、停止，方便部署、动态扩缩容。
   - 有状态应用
     - ：历史执行的任务会影响新执行的任务，因此需要存储一些历史数据。
     - 将数据存储在容器中时，会随着容器一起销毁。因此建议将数据存储到挂载卷，或容器外的数据库。

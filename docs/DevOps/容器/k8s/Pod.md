@@ -455,10 +455,10 @@ spec:
             command:
             - /bin/bash
             - -c
-            - echo hello ; sleep 1
+            - echo hello; sleep 1
         preStop:
           httpGet:
-            path: /
+            path: /stop
             port: 80
   ```
 - 启用了 postStart 时，会被 kubelet 在创建容器之后立即执行。

@@ -25,7 +25,7 @@
       volumeMounts:
       - name: vol-time              # 挂载的 volume 名称，必须与 Pod 声明的 spec.volumes 一致
         mountPath: /etc/localtime   # 将 volume 挂载到容器内的该路径
-        # readOnly: false           # volume 是否为只读模式。默认为 false
+        # readOnly: false           # 挂载 volume 时是否为只读模式。默认为 false
       - name: vol-data
         mountPath: /data/redis
       - name: vol-data
@@ -157,9 +157,7 @@ spec:
 ## ConfigMap
 
 ：用于记录一些配置参数。
-- 可以在 Deployment 等对象中引用 ConfigMap 中的配置参数，暂存为环境变量或 volume 。
-  - 修改 ConfigMap 时，不会自动更新挂载它的 Pod ，因此 Pod 还会使用旧的配置。
-
+- 可以在 Deployment 等对象中引用 ConfigMap 中的配置参数，创建环境变量或 volume 。
 - 例：一个 ConfigMap
   ```yml
   apiVersion: v1
@@ -174,63 +172,64 @@ spec:
       port 6379
       daemonize yes
   ```
-
 - 例：根据 ConfigMap 创建环境变量
   ```yml
   apiVersion: v1
-  kind: Deployment
+  kind: Pod
+  metadata:
+    name: redis
   spec:
-    template:
-      spec:
-        containers:
-        - name: redis
-          image: redis:5.0.6
-          command: ["echo", "$K1", "$(K2)"]
-          env:
-          - name: K1                # 创建一个环境变量 K1 ，
-            valueFrom:              # 它的取值为，
-              configMapKeyRef:
-                name: redis         # 名为 redis 的 ConfigMap 中，
-                key: k1             # 参数 k1 的值
-                # optional: false   # 能否省略该环境变量。默认为 false ，当 secret.key 不存在时，会拒绝创建 Pod 。如果为 true ，则 secret.key 不存在时，不会创建该 env 变量
-          - name: K2
-            valueFrom:
-              configMapKeyRef:
-                name: redis
-                key: k2
-          envFrom:
-          - configMapRef:
-              name: redis           # 导入 ConfigMap 中的所有参数，生成环境变量
+    containers:
+    - name: redis
+      image: redis:5.0.6
+      command: ["echo", "$K1", "$(K2)"]
+      env:
+      - name: K1                # 创建一个环境变量 K1 ，
+        valueFrom:              # 它的取值为，
+          configMapKeyRef:
+            name: redis         # 名为 redis 的 ConfigMap 中，
+            key: k1             # 参数 k1 的值
+            # optional: false   # 能否省略该环境变量。默认为 false ，当 secret.key 不存在时，会拒绝创建 Pod 。如果为 true ，则 secret.key 不存在时，不会创建该 env 变量
+      - name: K2
+        valueFrom:
+          configMapKeyRef:
+            name: redis
+            key: k2
+      envFrom:
+      - configMapRef:
+          name: redis           # 导入 ConfigMap 中的所有参数，生成环境变量
   ```
-
 - 例：根据 ConfigMap 创建 volume 并挂载
   ```yml
   apiVersion: v1
-  kind: Deployment
+  kind: Pod
+  metadata:
+    name: redis
   spec:
-    template:
-      spec:
-        containers:
-        - name: redis
-          image: redis:5.0.6
-          volumeMounts:
-          - name: volume1
-            mountPath: /opt/redis/volume1     # 将名为 volume1 的存储卷挂载到该目录
-            # readOnly: true        # ConfigMap 挂载时默认为只读模式
-          - name: volume2
-            mountPath: /opt/redis/volume2
-        volumes:
-          - name: volume1           # 创建一个名为 volume1 的卷
-            configMap:
-              name: redis           # 引用的 ConfigMap 名称
-              items:
-              - key: redis.conf     # 引用 ConfigMap 中的哪个参数
-                path: redis.conf    # 将该参数的值保存为 path 文件，挂载到容器中的路径为 mountPath/path
-          - name: volume2           # 创建一个名为 volume2 的卷
-            configMap:
-              name: redis           # 导入名为 redis 的 ConfigMap 中的所有参数，生成 volume
+    containers:
+    - name: redis
+      image: redis:5.0.6
+      volumeMounts:
+      - name: volume1
+        mountPath: /opt/redis/volume1     # 将名为 volume1 的存储卷挂载到该目录
+        # readOnly: true        # 挂载 ConfigMap、Secret 的 volume 时，总是为只读模式
+      - name: volume2
+        mountPath: /opt/redis/volume2
+    volumes:
+      - name: volume1           # 创建一个名为 volume1 的卷
+        configMap:
+          name: redis           # 引用的 ConfigMap 名称
+          items:
+          - key: redis.conf     # 引用 ConfigMap 中的哪个参数
+            path: redis.conf    # 将该参数的值保存为 path 文件，挂载到容器中的路径为 mountPath/path
+      - name: volume2           # 创建一个名为 volume2 的卷
+        configMap:
+          name: redis           # 导入名为 redis 的 ConfigMap 中的所有参数，生成 volume
+          # defaultMode: 420    # 文件权限，默认为 420 ，这是 YAML 中的十进制数，对应 Linux 的八进制权限 644
   ```
-  - 挂载 configMap 时，会先将 configMap 的参数值保存为宿主机 `/var/lib/kubelet/pods/<pod_uid>/../` 目录下的文件，然后将该文件挂载到容器中。
+  - 挂载 ConfigMap 的 volume 时，会先将 configMap 的参数值保存为宿主机 `/var/lib/kubelet/pods/<pod_uid>/../` 目录下的文件，然后将该文件以只读模式挂载到容器中。
+  - 如果将 ConfigMap、Secret 作为 volume 直接挂载（不指定 subpath ），则 volume 目录下的各个配置文件采用符号链接、只读模式。修改 ConfigMap、Secret 之后，会在一分钟之内更新 volume 目录下的符号链接，从而更新配置文件。
+    - 其它情况下，修改 ConfigMap、Secret 之后，不会自动更新引用它的环境变量、volume ，除非重启 Pod 。
 
 ## Secret
 
@@ -244,10 +243,10 @@ spec:
     name: redis
   type: Opaque
   data:
-    username: bGVvCg==
+    username: dGVzdA==
     password: MTIzNDU2Cg==
   ```
-- 例：根据 secret 创建环境变量
+- 例：根据 Secret 创建环境变量
   ```yml
   spec:
     containers:
@@ -258,4 +257,23 @@ spec:
           secretKeyRef:
             key: password
             name: redis
+  ```
+- 例：根据 Secret 创建 volume 并挂载
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: redis
+  spec:
+    containers:
+    - name: redis
+      image: redis:5.0.6
+      volumeMounts:
+      - name: vol-secret
+        mountPath: /etc/redis.conf
+        subPath: redis.conf
+    volumes:
+    - name: vol-secret
+      secret:
+        secretName: redis
   ```

@@ -87,73 +87,6 @@
         sizeLimit: 100Mi
   ```
 
-## StorageClass
-
-：存储类。
-- 将不同的物理存储器抽象为存储类，相当于 PV 的模板。
-
-### Persistent Volume（PV）
-
-：持久存储卷。
-- 一个存储类（Volume Class）上可以创建多个 PV 。
-
-PV 的访问模式：
-- ReadWriteOnce ：被单主机读写。如果多个 Pod 运行在同一主机，则可以同时读写。
-- ReadOnlyMany ：被多主机只读
-- ReadWriteMany ：被多主机读写
-- ReadWriteOncePod ：在 ReadWriteOnce 的基础上，限制了只能被单个 Pod 读写。
-
-
-<!-- PVC 可以配置多个 accessMode ，比如：
-  accessModes:
-  - ReadWriteOnce
-  - ReadOnlyMany
-可以将磁盘挂载到 ReadOnlyMany (AKA ROX) 中的多个 Pod ，但一次只有一个 Pod 可以以 ReadWriteOnce 模式 (AKA RWO)使用该磁盘
-
-给 Pod 挂载云磁盘时，会自动将云磁盘挂载到 Pod 的宿主机，再挂载到容器里。
--->
-
-### PersistentVolumeClaim（PVC）
-
-：持久存储卷声明，代表用户使用存储卷的请求。
-- 当用户给 Pod 挂载 PVC 时，k8s 会寻找符合该 PVC 需求的 PV ，
-  - 如果找到了，就把该 PV 与 PVC 一对一绑定，然后挂载到 Pod 。
-  - 如果没找到，则不能部署该 Pod 。
-
-- 例：一个 PVC
-```yml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pvc1
-spec:
-  accessModes:
-    - ReadWriteMany   # 该 PVC 的访问模式
-  resources:
-    requests:
-      storage: 10Gi   # 该 PVC 需要的存储空间
-  storageClassName: local-volume  # 该 PVC 需要的存储类
-```
-
-例：在 Deployment 中挂载 PVC
-```yml
-apiVersion: v1
-kind: Deployment
-spec:
-  template:
-    spec:
-      containers:
-      - name: redis
-        image: redis:5.0.6
-        volumeMounts:
-            - name: volume1
-              mountPath: /opt/volume
-      volumes:
-      - name: volume1    # 创建一个名为 volume1 的卷，基于 pvc1
-        persistentVolumeClaim:
-          claimName: pvc1
-```
-
 ## ConfigMap
 
 ：用于记录一些非私密的配置参数。
@@ -299,3 +232,123 @@ spec:
         - key: redis.conf
           path: redis.conf
   ```
+
+## PVC
+
+：持久存储卷声明（PersistentVolumeClaim），用于自动创建 volume ，供 Pod 挂载使用。
+- 用法：
+  1. 用户创建一个 PVC 对象，声明需要一个怎样的 PV 存储卷。
+  2. 用户创建一个 Pod ，挂载上述的 PVC 。
+  3. k8s 调度 Pod 时，会自动将当前 PVC 绑定的 PV 挂载到 Pod 内。
+- 与挂载 HostPath 相比，PVC 的优点：
+  - 能自动创建 volume 来挂载。
+  - 能限制 volume 的磁盘使用量。
+  - 可以保证每个 Pod 的 volume 是隔离的，互不干扰。
+- 每个 PVC 需要绑定一个 PV 。
+  - 创建 PVC 时，用户可以主动指定一个未被使用的 PV ，绑定到该 PVC 。
+  - 如果创建 PVC 时未指定 PV ，k8s 会自动寻找一个符合该 PVC 需求的 PV 。
+    - 比如 PVC 需要 20Gi 的存储空间，则容量为 10Gi 的 PV 不符合要求。
+    - 如果现有的 PV 都不符合需求，默认会自动从 StorageClass 创建 PV 。
+    - 如果一直没有符合需求的 PV ，则该 PVC 一直不可用，导致挂载它的 Pod 不能启动，停留在 Pending 阶段。
+  - PVC 与 PV 一对一绑定，因此即使 Pod 重启、调度到其它主机，也会挂载之前的 PV ，从而持久保存数据。
+- PVC 是一种受 namespace 管理的 k8s 对象，不是 Pod 的子对象。因此删除 Pod 时，不会自动删除它挂载的 PVC 。
+  - 删除 PVC 时，默认会自动删除下级的 PV 对象。
+
+- 例：创建一个 PVC 对象
+  ```yml
+  apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: pvc1
+    finalizers:
+    - kubernetes.io/pvc-protection  # 如果用户请求删除 PVC ，则会等该 PVC 不再被任何 Pod 使用时才删除
+  spec:
+    accessModes:
+      - ReadWriteOnce               # 访问模式
+    resources:
+      requests:
+        storage: 10Gi               # 该 PVC 需求的存储空间，容量低于该值的 PV 都不符合需求
+        # 目前 PVC 只支持声明对容量的需求，计划以后增加 IOPS 等需求
+    storageClassName: test-csi      # 采用的存储类。不源自该存储类的 PV 都不符合需求
+    volumeMode: Filesystem
+    volumeName: pvc-db613389-202f-430e-95d8-9ea4f6cfc6a8  # 该 PVC 绑定的 PV 名称，这里使用 PVC 的 uid
+  ```
+  然后给 Pod 挂载 PVC ：
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: redis
+  spec:
+    containers:
+    - name: redis
+      image: redis:5.0.6
+      volumeMounts:
+        - name: volume1
+          mountPath: /data
+    volumes:
+    - name: volume1
+      persistentVolumeClaim:
+        claimName: pvc1
+  ```
+
+### PV
+
+：持久存储卷（Persistent Volume），是从 StorageClass 创建而来的 volume 。
+- PV 对象的生命周期分为以下几个阶段：
+  ```sh
+  Available     # 该 PV 尚未绑定到 PVC
+  Bound         # 该 PV 已经绑定到某个 PVC
+  Released      # 该 PV 绑定的 PVC 已被删除，但 PV 资源尚未被回收
+  Failed        # 该 PV 的回收（reclamation）失败
+  ```
+- PV 有多种访问模式（accessModes）：
+  - ReadWriteOnce（RWO）：被单主机读写。
+    - 该模式下，如果多个 Pod 运行在同一主机，则允许同时读写同一个 PV 。
+    - 该模式下，以 RollingUpdate 方式重启 Pod 时可能冲突，比如 node1 上的旧 Pod 尚未停止，而 node2 上的新 Pod 也请求挂载同一个 PV 。此时可改用 Recreate 策略。
+    - 一个 PVC 可以同时被多个 Pod 挂载，即一个 PV 可以同时被多个 Pod 访问，只要 accessModes 允许。
+    - 目前一个 PV 只允许同时配置一种 accessMode 。
+  - ReadOnlyMany（ROX）：被多主机只读。
+  - ReadWriteMany（RWX）：被多主机读写。
+  - ReadWriteOncePod（RWOP）：在 ReadWriteOnce 的基础上，限制了只能被单个 Pod 读写。
+- PV 作为 volume 挂载时，有多种模式（volumeMode）：
+  - Filesystem ：默认模式，表示在挂载 volume 之前，会自动创建文件系统。
+  - Block ：表示挂载的 volume 是块设备，没有文件系统。
+
+### StorageClass
+
+：存储类。用于将不同的存储介质抽象为存储类，作为创建 PV 的模板。
+- 在 k8s 中使用 StorageClass 资源时，通常需要安装第三方的存储插件，或者购买公有云平台的存储服务。例如：
+  - hostPath ：k8s 原生支持的一种 PV ，但不能在主机间迁移数据。
+  - local ：k8s 原生支持的一种 PV ，可挂载主机上已挂载的磁盘、分区等存储设备。这种 PV 只能手动创建，不能通过 PVC 自动创建。
+  - csi ：通过 k8s 容器存储接口提供存储卷，兼容性好。
+  - nfs ：基于 NFS 服务器提供存储卷。
+  - cephfs ：基于 Ceph 服务器提供存储卷。
+- StorageClass 的配置文件示例：
+  ```yml
+  apiVersion: storage.k8s.io/v1
+  kind: StorageClass
+  metadata:
+    name: cbs-csi
+  allowVolumeExpansion: true            # 是否支持对已创建的 PV 进行扩容
+  parameters:                           # 一些配置参数，取决于提供 StorageClass 的软件
+    ...
+  provisioner: com.tencent.cloud.csi.cbs
+  reclaimPolicy: Delete
+  volumeBindingMode: WaitForFirstConsumer
+  ```
+  - StorageClass、PV 都是不受 namespace 管理的 k8s 对象，在整个集群的命名唯一。而 PVC 受 namespace 管理。
+  - 假设一个 StorageClass 的容量为 100G ，则可以创建多个 PV ，只要它们的总容量不超过 100G 。
+  - 删除 PV 时需要回收资源，有多种策略（reclaimPolicy）：
+    - Delete ：默认策略，表示直接删除 PV 等资源，释放存储空间。
+    - Recycle ：对 volume 执行 rm -rf * ，然后供以后复用。
+    - Retain ：手动回收。
+- 例如腾讯云 k8s 提供了基于云硬盘的 csi 类型的 StorageClass ，挂载 PVC 的原理如下：
+  1. 创建 PVC 时，自动从 StorageClass 创建一个 PV ，相当于一个云硬盘。
+  2. 当 Pod 调度到某个主机时，将 PV 存储设备接入该主机，挂载到宿主机的某个目录。例如：
+      ```sh
+      [root@CentOS]# df -hT | grep pvc
+      /dev/vde       ext4       99G   84G   16G  85% /var/lib/kubelet/plugins/kubernetes.io/csi/pv/pvc-0ad73317-6f8d-419c-a93c-ce9badf7e3fe/globalmount
+      /dev/vdf       ext4      9.8G  424M  9.4G   5% /var/lib/kubelet/plugins/kubernetes.io/csi/pv/pvc-db613389-202f-430e-95d8-9ea4f6cfc6a8/globalmount
+      ```
+      然后将宿主机的 PV 目录挂载到 Pod 容器里，作为 volume 。

@@ -264,7 +264,7 @@
 
 ## PVC
 
-：持久存储卷声明（PersistentVolumeClaim），用于自动创建 volume ，供 Pod 挂载使用。
+：持久存储卷声明（Persistent Volume Claim），用于自动创建 volume ，供 Pod 挂载使用。
 - 用法：
   1. 用户创建一个 PVC 对象，声明需要一个怎样的 PV 存储卷。
   2. 用户创建一个 Pod ，挂载上述的 PVC 。
@@ -272,7 +272,7 @@
 - 与挂载 HostPath 相比，PVC 的优点：
   - 能自动创建 volume 来挂载。
   - 能限制 volume 的磁盘使用量。
-  - 可以保证每个 Pod 的 volume 是隔离的，互不干扰。
+  - 可以隔离每个 Pod 的 volume ，互不干扰。此时 volume 更像一个独立的磁盘设备，使得 Pod 更像一个独立的主机。
 - 每个 PVC 需要绑定一个 PV 。
   - 创建 PVC 时，用户可以主动指定一个未被使用的 PV ，绑定到该 PVC 。
   - 如果创建 PVC 时未指定 PV ，k8s 会自动寻找一个符合该 PVC 需求的 PV 。
@@ -355,8 +355,37 @@
 
 ### PV
 
-：持久存储卷（Persistent Volume），是从 StorageClass 创建而来的 volume 。
-- PV 对象的生命周期分为以下几个阶段：
+：持久存储卷（Persistent Volume），一种通过 PVC 挂载的 volume 。
+- 例：
+  ```yml
+  apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    name: test-pv
+  spec:
+    capacity:
+      storage: 10Gi
+    volumeMode: Filesystem
+    accessModes:
+      - ReadWriteOnce
+    persistentVolumeReclaimPolicy: Delete
+    # hostPath:         # hostPath 类型的 PV ，可挂载宿主机上的文件、目录
+    #   path: /tmp
+    local:              # local 类型的 PV ，可挂载宿主机上的磁盘设备、分区
+      path: /dev/vdc
+    nodeAffinity:       # 限制 local PV 只挂载某个主机的 path 。k8s 会限制使用该 PV 的 Pod 也只能调度到该 node
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - node-1
+  ```
+  - k8s 原生可创建 hostPath、local 两种 PV ，用于挂载宿主机上的 path ，但不能在主机间迁移数据，因此实用性低。更常见的用法是从 StorageClass 创建可迁移的 PV 。
+  - PV、StorageClass 都是不受 namespace 管理的 k8s 对象，在整个集群的命名唯一。而 PVC 受 namespace 管理。
+
+- PV 对象的生命周期分为多个阶段：
   ```sh
   Available     # 该 PV 尚未绑定到 PVC
   Bound         # 该 PV 已经绑定到某个 PVC
@@ -379,13 +408,11 @@
 ### StorageClass
 
 ：存储类。用于将不同的存储介质抽象为存储类，作为创建 PV 的模板。
-- 在 k8s 中使用 StorageClass 资源时，通常需要安装第三方的存储插件，或者购买公有云平台的存储服务。例如：
-  - hostPath ：一种 k8s 原生的 PV ，可挂载主机上的文件、目录，但不能在主机间迁移数据。
-  - local ：一种 k8s 原生的 PV ，可挂载主机上已挂载的磁盘、分区等存储设备。这种 PV 只能手动创建，不能通过 PVC 自动创建。
-  - csi ：通过 k8s 容器存储接口提供存储卷，兼容性好。
-  - nfs ：基于 NFS 服务器提供存储卷。
-  - cephfs ：基于 Ceph 服务器提供存储卷。
-- StorageClass 的配置文件示例：
+- 在 k8s 中使用 StorageClass 时，通常需要安装第三方的存储插件，或者购买公有云平台的存储服务。例如：
+  - csi ：通过 k8s 容器存储接口提供 StorageClass ，兼容性好。
+  - nfs ：基于 NFS 服务器提供 StorageClass 。
+  - cephfs ：基于 Ceph 服务器提供 StorageClass 。
+- 例：一个 StorageClass
   ```yml
   apiVersion: storage.k8s.io/v1
   kind: StorageClass
@@ -398,7 +425,6 @@
   reclaimPolicy: Delete
   volumeBindingMode: WaitForFirstConsumer # 插件 PV 之后什么时候挂载。默认为 Immediate ，表示立即挂载，此时可能尚未确定 Pod 被调度到哪个主机
   ```
-  - StorageClass、PV 都是不受 namespace 管理的 k8s 对象，在整个集群的命名唯一。而 PVC 受 namespace 管理。
   - 假设一个 StorageClass 的容量为 100G ，则可以创建多个 PV ，只要它们的总容量不超过 100G 。
   - 有的 StorageClass 支持创建卷快照（VolumeSnapshots），备份 volume 某个时刻的数据。
 - 删除 PV 时需要回收相关资源，有多种策略（reclaimPolicy）：

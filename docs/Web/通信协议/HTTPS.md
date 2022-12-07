@@ -17,7 +17,8 @@
 ## SSL
 
 - 90 年代，网景公司发布了 SSL（Secure Sockets Layer ，安全套接字层）协议，用于加密传输 HTTP 报文。
-  - SSL 工作在传输层与应用层之间。
+  - SSL 工作在传输层与应用层之间，将应用层报文加密之后再通过传输层传输。
+  - 不止是 HTTP 协议，应用层一般协议的报文都可以使用 SSL 加密传输。
   - SSLv1 版本未公开发布，在发布了 SSLv2、SSLv3 版本之后，出现了更安全的 TLS（Transport Layer Security ，安全传输层）协议，有时也统称为 SSL 协议。
     - 目前建议使用 TLSv1.2 或 TLSv1.3 协议，弃用存在一些已知漏洞的 SSLv2、SSLv3、TLSv1.0、TLSv1.1 协议。
 

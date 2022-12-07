@@ -154,3 +154,6 @@
   key1
   Hello
   ```
+  ```sh
+  etcdctl get / --prefix --keys-only    # 查看所有 key
+  ```

@@ -205,8 +205,7 @@
 ## Secret
 
 ：与 ConfigMap 类似，但用于记录密码等私密的配置参数。
-- Secret 存储在 etcd 时跟 ConfigMap 一样没有加密，因此有权访问 etcd 的所有用户都可以查看 Secret 。
-  - 可以加密 etcd 里的数据，或者通过 RBAC 限制有权读取 Secret 的用户。
+- 不过 Secret 存储在 etcd 时默认没有加密，因此安全性与 ConfigMap 一样。需要在启动 apiserver 时启用加密功能。
 - 例：一个 Secret
   ```yml
   apiVersion: v1
@@ -361,7 +360,7 @@
   apiVersion: v1
   kind: PersistentVolume
   metadata:
-    name: test-pv
+    name: pv1
   spec:
     capacity:
       storage: 10Gi

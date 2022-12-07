@@ -87,6 +87,35 @@
         sizeLimit: 100Mi
   ```
 
+## downwardAPI
+
+：用于将一些 k8s 字段的值保存为文件，作为 volume 挂载。
+- 例：
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: nginx
+  spec:
+    containers:
+    - name: nginx
+      image: nginx:1.20
+      volumeMounts:
+      - name: podinfo
+        mountPath: /etc/podinfo
+    volumes:
+      - name: podinfo
+        downwardAPI:
+          items:
+            - path: labels
+              fieldRef:
+                fieldPath: metadata.labels
+            - path: annotations
+              fieldRef:
+                fieldPath: metadata.annotations
+  ```
+- Pod 内进程有时需要知道一些 k8s 信息，比如当前的 Pod labels、namespace 。此时可使用 downwardAPI ，不过使用环境变量更方便，详见 [env](./Pod.md#env) 。
+
 ## ConfigMap
 
 ：用于记录一些非私密的配置参数。

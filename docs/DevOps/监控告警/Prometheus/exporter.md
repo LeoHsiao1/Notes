@@ -33,14 +33,6 @@
 ### etcd
 
 - 本身集成了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
-- 指标示例：
-  ```sh
-  ```
-
-https://etcd.io/docs/v3.5/metrics/
-<!-- 请监控backend_commit_duration_seconds（p99 持续时间应小于 25 毫秒）以确认磁盘相当快 -->
-
-
 
 ### Grafana
 
@@ -497,6 +489,29 @@ https://etcd.io/docs/v3.5/metrics/
 
 ：用于从 JMX 端口获取监控指标。
 - [GitHub](https://github.com/prometheus/jmx_exporter)
+- 用法：
+  1. 下载 jmx_exporter 的 jar 文件。
+  2. 创建 jmx_exporter 的配置文件：
+      ```yml
+      rules:
+      - pattern: "jvm.*"    # 这里只采集 JVM 的监控指标，不监控其它 bean
+      ```
+  3. 在 Java 程序的启动命令中加入 `-javaagent:jmx_prometheus_javaagent-0.17.2.jar=8081:config.yaml` ，即可在 8081 端口提供 exporter 指标。
+- 指标示例：
+  ```sh
+  jvm_memory_bytes_committed{area="heap"}     # JVM 从操作系统申请的内存量，分为 heap、nonheap
+  jvm_memory_bytes_used{area="heap"}          # JVM 内存的实际用量，分为 heap、nonheap
+  jvm_memory_bytes_used / jvm_memory_bytes_committed  # JVM 内存的实际用量，占申请量的百分比
+
+  jvm_memory_pool_bytes_committed             # JVM 内存池，分为 Metaspace、Eden Space、Survivor Space 等
+  jvm_memory_pool_bytes_used
+  jvm_memory_pool_bytes_used / jvm_memory_pool_bytes_committed
+
+  delta(jvm_gc_collection_seconds_count[1m])  # GC 次数（每分钟）
+  delta(jvm_gc_collection_seconds_sum[1m])    # GC 耗时（每分钟）
+  jvm_classes_loaded_total                    # JVM 累计加载的 class 数量
+  jmx_scrape_duration_seconds                 # JMX 本次采集监控指标的耗时
+  ```
 
 ### node_exporter
 

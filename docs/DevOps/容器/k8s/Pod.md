@@ -470,7 +470,7 @@ spec:
 
 ## 资源配额
 
-- Pod 中的容器默认可以占用主机的全部 CPU、内存，可能导致主机宕机。建议限制其资源配额，例：
+- Pod 中的容器默认可以占用主机的全部 CPU、内存，可能导致主机资源不足。建议限制 Pod 的资源配额，例：
   ```yml
   kind: Pod
   spec:
@@ -509,6 +509,40 @@ spec:
     - 如果 requests 等于 limits 且多于实际开销，就容易浪费节点资源。
     - 如果 requests 等于 limits 且少于实际开销，Pod 就容易资源不足。
     - 如果分配较少 requests、较多 limits ，就难以预测 Pod 的资源开销。如果多个这样的 Pod 调度到同一个节点上，limits 之和会超过节点总资源，可能耗尽节点资源。
+
+### QoS
+
+- k8s 在调度 Pod 时有几种 QoS （服务质量，Quality of Service）。
+  - 用户不能主动选择 QoS 。k8s 会自动根据 Pod 的 resources 配置，给 Pod 分配一种 qosClass 。
+- Pod 的 qosClass 有三种，服务质量从高到低排列如下：
+  - Guaranteed
+    - ：有保证的服务质量。
+    - 需要 Pod 中每个容器都配置了 requests.cpu、limits.cpu 且两者相等，都配置了 requests.memory、limits.memory 且两者相等。
+    - 例如用以下配置创建 Pod ：
+      ```yml
+      resources:
+        limits:
+          memory: 200Mi
+          cpu: 100m
+        requests:
+          memory: 200Mi
+          cpu: 100m
+      ```
+      查看 Pod 的状态，可见：
+      ```yml
+      status:
+        qosClass: Guaranteed
+      ```
+  - Burstable
+    - ：不稳定的服务质量。
+    - 需要 Pod 不满足 Guaranteed QoS 的条件，且至少有一个容器配置了 requests.cpu、limits.cpu、requests.memory、limits.memory 至少一项。即 Pod 有 resources 配置但不严格。
+  - BestEffort
+    - ：尽力而为的服务质量。
+    - 需要 Pod 中所有容器都没有配置 requests.cpu、limits.cpu、requests.memory、limits.memory 。此时 k8s 不能预测、限制 Pod 的 cpu、memory 开销，只能尽力而为。
+- qosClass 的影响：
+  - 发生节点压力驱逐时，优先驱逐 BestEffort、Burstable 类型的 Pod 。如果不存在这两种 Pod ，才驱逐 Guaranteed 类型的 Pod 。
+  - 服务质量越低，容器被 Cgroup 设置的 oom_score_adj 分数越大，越可能在主机内存紧张时被 OOM 杀死。
+    - Guaranteed 类型的 oom_score_adj 为 -997 ，Burstable 类型的是根据公式 `min(max(2, 1000-(1000*memoryRequestBytes)/machineMemoryCapacityBytes), 999)` 计算，BestEffort 类型的为 1000 。
 
 ### RuntimeClass
 

@@ -70,6 +70,12 @@
   - Code Cache ：存放根据 Java 字节码生成的机器代码。
   - Thread Stack ：线程堆栈。
 
+- Java 进程从操作系统申请的内存空间会用作 Heap、Metaspace 等，统称为 committed_memory 。
+  - 申请的内存空间不一定实际使用、存放了数据。JVM 内部实际使用的内存称为 used_memory ，它小于等于 committed_memory 。
+  - 在 JVM 外部、操作系统的视角， committed_memory 全部属于 Java 进程占用的内存，会计入主机的 used 内存。
+  - Java GC 的目的，是在 committed_memory 中减少 used_memory ，从而腾出内存空间来写入新数据。
+    - 一般不会减少 committed_memory ，也不会将 committed_memory 中的空闲内存释放给操作系统，而是留给 JVM 自己以后使用。因为释放内存、重新申请内存的开销都较大。
+
 - 对象的引用分为四种，从强到弱如下：
   - 强引用（Strong Reference）
     - ：指向一些必须保留的对象，比如 `Object obj = new Object()` 。

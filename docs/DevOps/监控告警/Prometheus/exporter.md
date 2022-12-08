@@ -124,9 +124,11 @@ https://etcd.io/docs/v3.5/metrics/
 - 在 prometheus.yml 中添加配置：
   ```yml
   scrape_configs:
+
+  # 采集每个 apiserver 的监控指标
   - job_name: k8s-apiserver
     kubernetes_sd_configs:        # 从 k8s 的 HTTP API 发现配置
-    - role: endpoints             # 将每个 service endpoints 作为 target
+    - role: endpoints             # 将 service 的每个 endpoints 作为 target ，比如 __address__="10.42.1.1:8080"
       api_server: https://apiserver
       authorization:
         credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -136,8 +138,8 @@ https://etcd.io/docs/v3.5/metrics/
       # namespaces:               # 要监控的 namespace ，默认监控所有 namespace
       #   names:
       #   - default
-    # - role: pod                 # 将 pod_ip:expose_port 作为 target
-    # - role: service             # 将 service_ip:expose_port 作为 target
+    # - role: pod                 # 将每个 pod_ip:expose_port 作为 target ，比如 __address__="10.42.1.1:8080" 。如果 Pod 未声明 port ，则为 __address__="10.42.1.1"
+    # - role: service             # 将每个 service_ip:expose_port 作为 target
     # - role: ingress             # 将每个 ingress path 作为 target
     # 通过 kubernetes_sd_configs 获取 target 之后，以下配置用于采集这些 target
     scheme: https
@@ -153,14 +155,12 @@ https://etcd.io/docs/v3.5/metrics/
           __meta_kubernetes_service_name,
           __meta_kubernetes_endpoint_port_name,
         ]
-      regex: default;kubernetes;https
-    # - action: replace             # 将 __meta* 标签重命名，从而被 Prometheus 保存
-    #   source_labels: [__meta_kubernetes_pod_ip]
-    #   target_label: pod_ip
+      regex: default;kubernetes;https   # 要求完全正则匹配
 
+  # 采集每个 kubelet 的监控指标
   - job_name: k8s-node
     kubernetes_sd_configs:
-    - role: node                  # 将 node_ip:kubelet_port 作为 target
+    - role: node                  # 将每个 node_ip:kubelet_port 作为 target
       api_server: https://apiserver
       authorization:
         credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -172,9 +172,10 @@ https://etcd.io/docs/v3.5/metrics/
     tls_config:
       insecure_skip_verify: true
 
+  # 访问每个 kubelet 集成的 cadvisor ，从而采集所有容器的监控指标
   - job_name: k8s-cadvisor
     kubernetes_sd_configs:
-    - role: node                  # 将 node_ip:kubelet_port 作为 target
+    - role: node
       api_server: https://apiserver
       authorization:
         credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -186,6 +187,48 @@ https://etcd.io/docs/v3.5/metrics/
       credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
     tls_config:
       insecure_skip_verify: true
+
+  # 如果 service 中某个端口名称以 exporter 开头，则采集监控指标
+  - job_name: k8s-service
+    kubernetes_sd_configs:
+    - role: service
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_service_port_name]
+      action: keep
+      regex: exporter.*
+    # __metrics_path__ 默认为 /metrics ，但允许在 annotation 中自定义路径 prometheus.io/path: 'xx'
+    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__
+      regex: (.+)
+    - source_labels: [__meta_kubernetes_namespace]    # 将 __meta* 标签重命名为普通标签，才会被 Prometheus 保存
+      action: replace
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_service_name]
+      action: replace
+      target_label: service
+    # 保存 k8s 对象的 label 到 Prometheus
+    # - action: labelmap
+    #   regex: __meta_kubernetes_pod_label_(.+)
+
+  # 如果 Pod 中某个 containerPort 端口名称以 exporter 开头，则采集监控指标
+  - job_name: k8s-pod
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_container_port_name]
+      action: keep
+      regex: exporter.*
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__
+      regex: (.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: pod
   ```
 
 #### 指标

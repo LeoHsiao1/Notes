@@ -937,7 +937,7 @@ spec:
   ```
 - kube-controller-manager 默认每隔 15s 执行一次 HPA 伸缩。
 - HPA 适合控制 Deployment 类型的 Pod 。而 StatefulSet 一般不适合改变 Pod 数量，DaemonSet 则不能改变 Pod 数量。
-- 安装 k8s-prometheus-adapter 之后可使用自定义的 metrics 。
+- 安装 k8s-prometheus-adapter 之后可将 Prometheus 存储的监控指标传给 apiserver ，从而使用各种各样的 metrics 来控制 HPA 。
 
 ### VPA
 

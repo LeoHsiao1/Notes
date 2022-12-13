@@ -45,7 +45,7 @@
 - Grafana 可以创建多个仪表盘（Dashboard）页面，每个 DashBoard 页面可以显示多个面板（Panel）。
   - 可以将 Dashboard 或 Panel 导出 JSON 配置文件。
   - 可以给 Dashboard 加上 tags 来分类管理，也可以创建 Folder 来分组管理。
-  - [官方及社区分享的 Dashboard ](https://grafana.com/grafana/dashboards)
+  - 配置 Dashboard 时，可参考 [社区分享的 Dashboard](https://grafana.com/grafana/dashboards) ，但它们可能不美观、版本较老、缺少指标。建议自己手动配置监控图表，使它更符合使用需求。
 - Grafana 支持从多种外部数据源获取数据，用于绘图显示，比如 MySQL、influxdb、Elasticsearch、Prometheus 。
   - 默认有一个 TestData DB 数据源可供试用。
   - 某些数据源自带了一些 Dashboard 模板，可以导入试用。

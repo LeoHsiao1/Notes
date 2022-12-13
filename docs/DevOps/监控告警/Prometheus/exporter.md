@@ -252,7 +252,6 @@
 ### Prometheus
 
 - 本身集成了 exporter 格式的 API ，默认的 metrics_path 为 `/metrics` 。
-- 在 Grafana 上显示指标时，可参考 Prometheus 数据源自带的 "Prometheus Stats" 仪表盘。
 - 指标示例：
   ```sh
   prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息

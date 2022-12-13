@@ -349,9 +349,10 @@ k8s 常见的几种网络通信：
 ## Ingress
 
 ：一种管理逻辑网络的对象，用于对某些 Service 进行 HTTP、HTTPS 反向代理，常用于实现 URL 路由。
-- 创建 Ingress 之前，需要在 k8s 安装 Ingress Controller ，有多种类型。
-  - 例如 Nginx Ingress Controller ，它基于 Nginx 处理 HTTP 请求，以 DaemonSet 方式部署，在每个 Node 上监听 80、443 端口。
-  - Ingress 不会绑定 Cluster IP 。客户端发送 HTTP 请求到 Node 的特定端口，即可访问 Ingress 。
+- 创建 Ingress 之前，需要在 k8s 安装 Ingress Controller ，有多种类型。例如 Nginx Ingress Controller ，其原理如下：
+  - 以 DaemonSet 方式部署 Pod ，每个 Pod 内运行一个 Nginx 服务器，默认监听 Node 的 80、443 端口。
+  - 当用户修改了 Ingress 对象时，会自动更新 Nginx 配置文件，然后执行 nginx -s reload 。
+
 - 例：
   ```yml
   apiVersion: networking.k8s.io/v1
@@ -378,6 +379,7 @@ k8s 常见的几种网络通信：
     #     - <host>
     #   secretName: <name>
   ```
+  - Ingress 不会绑定 Cluster IP 。客户端发送 HTTP 请求到 Node 的特定端口，即可访问 Ingress 。
   - 可执行以下命令，测试访问该 Ingress ：
     ```sh
     echo '10.0.0.1 test.com' >> /etc/hosts    # 将 Ingress 域名解析到任一 k8s node

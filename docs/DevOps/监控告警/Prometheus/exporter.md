@@ -273,6 +273,9 @@
 
   ALERTS{alertname="xxx", alertstate="pending|firing"}            # 存在的警报
   ALERTS_FOR_STATE{alertname="xxx"}                               # 警报开始的时间戳（这是 pending 状态的开始时间，不能区分 firing 状态）
+
+  count({job="xx"}) by(__name__)    # 列出所有指标名
+  count({job="xx"}) by(__name__) unless on(__name__) count({job="xx"} offset 6h) by(__name__) # 找到比 6h 之前多出的指标（适合更新 exporter 版本时，发现指标的变化）
   ```
 
 ### ZooKeeper
@@ -497,6 +500,7 @@
       - pattern: "jvm.*"    # 这里只采集 JVM 的监控指标，不监控其它 bean
       ```
   3. 在 Java 程序的启动命令中加入 `-javaagent:jmx_prometheus_javaagent-0.17.2.jar=8081:config.yaml` ，即可在 8081 端口提供 exporter 指标。
+      - jmx_exporter 作为 javaagent 运行时几乎不会增加 Java 进程的 CPU 开销，除非 Prometheus 的采集间隔很短。
 - 指标示例：
   ```sh
   jvm_memory_bytes_committed{area="heap"}     # JVM 从操作系统申请的内存量，分为 heap、nonheap
@@ -966,9 +970,9 @@
 
 #### 部署
 
-- 用官方配置文件部署：
+- 先看 kube-state-metrics 的官方文档，找到与当前 k8s 版本兼容的 kube-state-metrics 版本。然后部署：
   ```sh
-  version=2.2.4
+  version=2.4.2
   wget https://github.com/kubernetes/kube-state-metrics/archive/refs/tags/v${version}.tar.gz
   tar -xf v${version}.tar.gz
   cd kube-state-metrics-${version}/examples/standard
@@ -1052,8 +1056,9 @@
   kube_cronjob_status_last_schedule_time      # 上次触发的时刻
   kube_cronjob_status_active                  # 正在运行的 Pod 实例数
 
-  kube_endpoint_address_available             # 可用的 endpoint 数量
-  kube_endpoint_address_not_ready             # 不可用的 endpoint 数量
+  kube_endpoint_ports                         # 某个 service endpoint 的端口信息，比如 {port_name="mysql", port_number="3306", port_protocol="TCP"}
+  kube_endpoint_address_available             # endpoint 的可用端点数
+  kube_endpoint_address_not_ready             # endpoint 的不可用端点数
 
   kube_service_spec_type
   kube_service_status_load_balancer_ingress

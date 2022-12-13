@@ -117,26 +117,26 @@
 
 历史版本：
 - v1.20
-  - 2020 年 12 月发布。
+  - 于 2020 年 12 月发布。
   - 弃用 Dockershim ，因此 CRI 不再支持 Docker 引擎，不能再通过 docker 命令查看、管理 k8s 容器。建议改用 containerd 或 CRI-O ，工作效率更高。
     - Docker 没有直接支持 CRI 接口，导致 k8s 只能通过 Dockershim 模块间接与 Docker 通信，但维护该模块比较麻烦，现在停止维护该模块。
     - 使用 Docker 构建的镜像符合 OCI 标准，因此依然可以被 containerd 或 CRI-O 运行。
 - v1.21
-  - 2021 年发布。
+  - 于 2021 年 4 月发布。
   - 弃用 PodSecurityPolicy ，建议改用 PSA 。
 - v1.22
-  - 2021 年发布。
+  - 于 2021 年 8 月发布。
   - 允许在节点上启用 Swap 。
 - v1.23
-  - 2021 年发布。
+  - 于 2021 年 12 月发布。
   - [GA] 支持 IPv6 协议
 - v1.24
-  - 2022 年发布。
+  - 于 2022 年 5 月发布。
   - 删除 Dockershim 。
   - beta 阶段的 API 不再默认启用。
   - [GA] Job suspend
 - v1.25
-  - 2022 年发布。
+  - 于 2022 年 8 月发布。
   - [GA] 支持 Cgroup v2
   - [GA] Ephemeral Containers
   - [GA] PSA（Pod Security admission）：用于在创建 Pod 时根据 Pod 安全标准进行审核。

@@ -254,7 +254,7 @@ k8s 常见的几种网络通信：
 #### HostPort
 
 ：与 NodePort 相似，但只监听 Pod 所在 Node 的端口。
-- HostPort 不属于 Service 对象，而属于 Pod 的配置。如下：
+- HostPort 不是一种 Service 对象，而是 Pod 的配置。如下：
   ```yml
   apiVersion: v1
   kind: Pod

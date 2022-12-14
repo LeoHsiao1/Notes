@@ -862,11 +862,11 @@
   elasticsearch_process_max_files_descriptors
   elasticsearch_process_open_files_count
 
-  # 关于 JVM
-  elasticsearch_jvm_memory_max_bytes                              # JVM 内存总量
-  elasticsearch_jvm_memory_used_bytes                             # JVM 已用内存
-  sum(elasticsearch_jvm_gc_collection_seconds_count) without(gc)  # GC 累计次数
-  elasticsearch_jvm_gc_collection_seconds_sum                     # GC 累计耗时
+  # 关于 JVM ，可参考 jmx_exporter
+  elasticsearch_jvm_memory_used_bytes / elasticsearch_jvm_memory_max_bytes
+  elasticsearch_jvm_memory_pool_used_bytes / elasticsearch_jvm_memory_pool_max_bytes
+  delta(elasticsearch_jvm_gc_collection_seconds_count[1m])  # GC 次数（每分钟）
+  delta(elasticsearch_jvm_gc_collection_seconds_sum[1m])    # GC 耗时（每分钟）
 
   # 关于 thread pool
   elasticsearch_thread_pool_threads_count

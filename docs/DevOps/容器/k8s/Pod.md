@@ -78,7 +78,8 @@
 
 - Pod 中的容器分为两种类型：
   - 普通容器
-    - 辅助容器（Sidecar）：一些辅助用途的普通容器，不运行业务服务，而是负责采集日志、监控告警等辅助功能。
+    - 一般 Pod 中只有一个普通容器，用于运行一个业务应用。
+    - 辅助容器（Sidecar）：一些辅助用途的普通容器，不运行业务应用，而是负责采集日志、监控告警等辅助功能。
   - init 容器
     - ：在创建 Pod 之后最先启动，执行一些初始化任务，执行完成之后就退出。
     - 可以给一个 Pod 设置多个 init 容器，它们会按顺序先后运行。
@@ -245,7 +246,7 @@
   - Pending
     - ：Pod 已创建，但尚未运行。
   - Running
-    - ：运行中，即 kubelet 在运行该 Pod 的所有容器。
+    - ：运行中，表示 Pod 中至少有一个非 init 容器处于 running 状态。
   - Succeeded
     - ：Pod 中的所有容器都已经正常终止。又称为 Completed 状态。
   - Failed
@@ -254,7 +255,7 @@
     - ：状态未知。
     - 例如 apiserver 与 kubelet 断开连接时，就不知道 Pod 的状态。
 
-- 一般的 Pod 会按顺序经过 Pending、Running、Succeeded 阶段，但也可能在几个阶段之间反复切换。
+- 一般 Pod 会按顺序经过 Pending、Running、Succeeded 阶段，但也可能在几个阶段之间反复切换。
 - k8s 定义了上述几个 Pod phase ，不过通常还会用 Scheduled、terminated 等状态（status）来形容 Pod 。
 
 ### 启动

@@ -158,7 +158,7 @@
     #   password: <string>
     # proxy_url: <string>
     # tls_config:
-    #   insecure_skip_verify: false   # 是否不认证 HTTPS 证书
+    #   insecure_skip_verify: false   # 是否跳过认证 HTTPS 证书
     static_configs:
     - targets:                        # 一组监控对象的 IP:Port
       - 10.0.0.1:9090

@@ -142,11 +142,9 @@
     relabel_configs:              # 每个 target 有一些元数据标签 __meta* ，Prometheus 采集之后不会保存
     - action: keep                # 根据标签筛选 target ，保留匹配的 target ，丢弃其它 target
       source_labels:
-        [
-          __meta_kubernetes_namespace,
-          __meta_kubernetes_service_name,
-          __meta_kubernetes_endpoint_port_name,
-        ]
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_service_name
+      - __meta_kubernetes_endpoint_port_name
       regex: default;kubernetes;https   # 要求完全正则匹配
 
   # 采集每个 kubelet 的监控指标
@@ -185,19 +183,19 @@
     kubernetes_sd_configs:
     - role: service
     relabel_configs:
-    - source_labels: [__meta_kubernetes_service_port_name]
-      action: keep
+    - action: keep
+      source_labels: [__meta_kubernetes_service_port_name]
       regex: exporter.*
     # __metrics_path__ 默认为 /metrics ，但允许在 annotation 中自定义路径 prometheus.io/path: 'xx'
-    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
-      action: replace
+    - action: replace
+      source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
       target_label: __metrics_path__
       regex: (.+)
-    - source_labels: [__meta_kubernetes_namespace]    # 将 __meta* 标签重命名为普通标签，才会被 Prometheus 保存
-      action: replace
+    - action: replace
+      source_labels: [__meta_kubernetes_namespace]    # 将 __meta* 标签重命名为普通标签，才会被 Prometheus 保存
       target_label: namespace
-    - source_labels: [__meta_kubernetes_service_name]
-      action: replace
+    - action: replace
+      source_labels: [__meta_kubernetes_service_name]
       target_label: service
     # 保存 k8s 对象的 label 到 Prometheus
     # - action: labelmap
@@ -208,18 +206,18 @@
     kubernetes_sd_configs:
     - role: pod
     relabel_configs:
-    - source_labels: [__meta_kubernetes_pod_container_port_name]
-      action: keep
+    - action: keep
+      source_labels: [__meta_kubernetes_pod_container_port_name]
       regex: exporter.*
-    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-      action: replace
+    - action: replace
+      source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
       target_label: __metrics_path__
       regex: (.+)
-    - source_labels: [__meta_kubernetes_namespace]
-      action: replace
+    - action: replace
+      source_labels: [__meta_kubernetes_namespace]
       target_label: namespace
-    - source_labels: [__meta_kubernetes_pod_name]
-      action: replace
+    - action: replace
+      source_labels: [__meta_kubernetes_pod_name]
       target_label: pod
   ```
 

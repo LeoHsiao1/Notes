@@ -308,3 +308,5 @@ Content-Type: text/html; charset=utf-8
   - Basic Auth 没有通过 Cookie 记录用户登录状态，因此浏览器重启之后，用户需要重新登录。
 - 优点：过程简单，容易实现。
 - 缺点：通过 HTTP Header 将用户名、密码以明文方式传输，容易泄露。
+- URL 中，`username:password@host:port` 三个字段的组合称为 authority 。
+  - 比如 URL 为 `http://test:123456@127.0.0.1:80/index.html` 时，authority 为 `test:123456@127.0.0.1:80` 。

@@ -50,6 +50,10 @@
       - 再采用同一个加密算法，生成的相同会话密钥。然后发送 Change Cipher Spec 消息。
       - 再发送 Finished 消息，表示握手完成。
 
+- SNI（Server Name Indication，服务器名称指示）
+  - 同一个 IP 地址的 server 可能同时运行多个 Web 网站，需要选择将哪个网站的 TLS 证书发送给 client 。因此，TLS 握手的第一步，client 发送的 Client Hello 消息中应该包含 SNI 信息，说明自己想访问的网站域名是什么。
+  - 发送 SNI 信息时未被加密，第三方可能发现 client 访问的域名地址，进行审查、拦截。因此有一些额外的措施来提高安全性。比如加密的 SNI、加密的 Client Hello 。
+
 ### TLSv1.3
 
 - 2018 年发布。

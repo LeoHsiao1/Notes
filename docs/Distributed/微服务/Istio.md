@@ -86,10 +86,12 @@
 
 ### Virtual Service
 
+<!--
 - 原理：
   - Istio 会利用 k8s 的服务发现机制，自动发现所有 Service、EndPoints 。
-    <!-- 访问 Service IP 时，Istio 会取代 k8s 来实现反向代理？ -->
-    - 一个 Service 有多个 EndPoints 时，Istio 默认采用轮询算法来分配流量，实现负载均衡。
+
+    访问 Service IP 时，Istio 会取代 k8s 来实现反向代理？
+-->
 
 - 虚拟服务（Virtual Service）
   - ： Istio 提供的一种 k8s 对象，用于配置路由规则，将某请求流量路由到某 upstream 。
@@ -152,7 +154,8 @@
 
 - 路由规则的详细示例：
   ```yml
-  - match:
+  - name: route-v1        # 可选给路由规则命名，会记录在访问日志中
+    match:
     - uri:
         prefix: /api/v1
     rewrite:              # 可以在路由转发之前，修改 uri
@@ -177,12 +180,22 @@
         response:
           remove:
           - version
-    name: route-v1        # 可选给路由规则命名，会记录在访问日志中
+
     timeout: 5s           # 将 HTTP 请求路由转发给 upstream 时，如果超过一定时长未返回 HTTP 响应，则请求失败。默认不限制超时
     retries:              # 路由转发给 upstream 时，如果转发 HTTP 请求失败，是否自动重试
       attempts: 3         # 最多重试几次。重试间隔大概为 25ms
       perTryTimeout: 3s   # 每次重试的超时时间。默认继承上级的 timeout
       retryOn: connect-failure,refused-stream,503 # 在这些情况下才自动重试
+
+    fault:                # 故意注入故障，用于测试系统的稳定性。此时不能配置 timeout、retries
+      delay:              # delay 类型的故障。按 percentage 百分比选取一些 HTTP 请求，增加它们的延迟
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+      abort:              # abort 类型的故障。按 percentage 百分比选取一些 HTTP 请求，返回表示失败的状态码
+        percentage:
+          value: 50
+        httpStatus: 500
   ```
   - 处理流量时，可选的操作除了 route ，还有 redirect 等：
     ```yml
@@ -238,8 +251,3 @@
         exact: v1
   ```
 
-
-
-
-
-<!-- - 目标规则（Destination Rule） -->

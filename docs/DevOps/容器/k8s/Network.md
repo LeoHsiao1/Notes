@@ -126,6 +126,7 @@ k8s 常见的几种网络通信：
     - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
     - 给 Pod 启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
     - 给集群外主机添加路由，将访问 Cluster IP 的流量路由到任一 k8s 节点。例如：`ip route add 10.43.0.0/16 via 10.0.1.1`
+    - 如果 k8s 集群内有大量 HTTP 服务器需要暴露，供集群外主机访问。使用 Ingress 比 NodePort、LoadBalancer 更好，因为可配置复杂的路由规则，甚至提供 API Gateway 的功能。
 
 ## Service
 
@@ -349,9 +350,16 @@ k8s 常见的几种网络通信：
 ## Ingress
 
 ：一种管理逻辑网络的对象，用于对某些 Service 进行 HTTP、HTTPS 反向代理，常用于实现 URL 路由。
-- 创建 Ingress 之前，需要在 k8s 安装 Ingress Controller ，有多种类型。例如 Nginx Ingress Controller ，其原理如下：
-  - 以 DaemonSet 方式部署 Pod ，每个 Pod 内运行一个 Nginx 服务器，默认监听 Node 的 80、443 端口。
-  - 当用户修改了 Ingress 对象时，会自动更新 Nginx 配置文件，然后执行 nginx -s reload 。
+- 创建 Ingress 之前，需要在 k8s 安装 Ingress Controller ，有多种软件：
+  - Nginx Ingress Controller
+    - 原理：
+      - 以 DaemonSet 方式部署 Pod ，每个 Pod 内运行一个 Nginx 服务器，默认监听 Node 的 80、443 端口。
+      - 当用户修改了 Ingress 对象时，会自动更新 Nginx 配置文件，然后执行 nginx -s reload 。
+    - 缺点：
+      - nginx -s reload 加载大量配置时，可能耗时十几秒。
+      - 除了路由功能，其它方面的功能少。
+  - APISIX Ingress Controller ：功能更多。
+  - Istio Ingress
 
 - 例：
   ```yml
@@ -406,7 +414,7 @@ k8s 常见的几种网络通信：
       - `path: /index` 匹配 `/index`、`/index/`、`/index/1` ，不匹配 `/index.html` 。
       - `path: /index/` 与 `path: /index` 的匹配效果一样，后缀的 / 可忽略。
     - 如果 request_path 同时匹配多个 prefix path ，则采用最长的那个。
-  - Nginx Ingress Controller 支持让 path 使用正则表达式。
+  - Nginx Ingress Controller 支持让 path 采用正则表达式。
 
 ## NetworkPolicy
 

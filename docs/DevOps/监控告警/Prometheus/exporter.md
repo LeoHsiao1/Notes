@@ -207,6 +207,9 @@
     - role: pod
     relabel_configs:
     - action: keep
+      source_labels: [__meta_kubernetes_pod_phase]
+      regex: Running
+    - action: keep
       source_labels: [__meta_kubernetes_pod_container_port_name]
       regex: exporter.*
     - action: replace

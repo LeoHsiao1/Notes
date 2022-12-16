@@ -94,7 +94,7 @@
 -->
 
 - 虚拟服务（Virtual Service）
-  - ： Istio 提供的一种 k8s 对象，用于配置路由规则，将某请求流量路由到某 upstream 。
+  - ：Istio 提供的一种 k8s 对象，用于配置路由规则，将某请求流量路由到某 upstream 。
   - k8s 原生的 Service 不支持配置路由规则，会将流量均匀分配给每个 EndPoints 。而 VirtualService 提供了复杂的路由规则。
   - 详细配置见 [官方文档](https://istio.io/latest/docs/reference/config/networking/virtual-service/)
 
@@ -250,4 +250,39 @@
       version:              # 选择 queryParams 中的一个字段，进行匹配
         exact: v1
   ```
+
+
+### DestinationRule
+
+- 目标规则（Destination Rule）
+  - ：Istio 提供的一种 k8s 对象，用于定义 upstream ，可分成多组（subset）。
+  - 如果一个 VirtualService 将流量路由到某个 destination 的 subset ，则需要事先创建 DestinationRule 对象。
+
+- 例：
+  ```yml
+  apiVersion: networking.istio.io/v1alpha3
+  kind: DestinationRule
+  metadata:
+    name: test-destination-rule
+  spec:
+    host: nginx             # upstream 地址，通常填一个 k8s Service 的 DNS 名称，这会自动发现其下所有 Pod Endpoints
+    # trafficPolicy:        # 设置所有 subsets 的负载均衡策略，即如何将请求流量分配给多个 Pod
+    #   loadBalancer:
+    #     simple: RANDOM    # 默认为 RANDOM
+    subsets:                # 将 upstream 分成多组
+    - name: v1              # 第一组 upstream ，组名为 v1 ，指向 k8s 中匹配以下 labels 的 Pod
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2
+      # trafficPolicy:      # 给该 subset 单独设置负载均衡策略
+      #   loadBalancer:
+      #     simple: ROUND_ROBIN
+  ```
+
+
+
+
+
 

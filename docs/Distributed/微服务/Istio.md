@@ -3,14 +3,14 @@
 ：一个 Service Mesh 框架，通常部署在 k8s 集群中。
 - [官方文档](https://istio.io/latest/docs/)
 - 发音为 `/iss-tee-oh/` 。
-- 原生的 k8s 缺乏管理 Pod 流量的能力，而 Istio 提供了服务发现、负载均衡、动态路由、熔断、可观测性等功能，更擅长微服务架构。
+- 原生的 k8s 缺乏管理 Pod 网络流量的能力，而 Istio 提供了服务发现、负载均衡、动态路由、熔断、可观测性等功能，更擅长微服务架构。
 
 ## 原理
 
 - Istio 系统包含以下组件：
   - envoy ：一个代理软件，担任数据平面（data plane）。
-    - 在 k8s Pod 中添加一个 init 类型的容器，名为 istio-init 。负责设置 iptables 规则，将服务的出入流量转发到 Envoy 。
-    - 在 k8s Pod 中添加一个 sidecar 类型的容器，名为 istio-proxy 。负责运行 envoy 和 pilot-agent ，以透明代理的方式转发当前 Pod 收发的网络包。
+    - 在每个 k8s Pod 中添加一个 init 类型的容器，名为 istio-init 。负责设置 iptables 规则，将服务的出入流量转发到 Envoy 。
+    - 在每个 k8s Pod 中添加一个 sidecar 类型的容器，名为 istio-proxy 。负责运行 envoy 和 pilot-agent ，以透明代理的方式转发当前 Pod 收发的网络包。
   - istiod ：担任控制平面（control plane），包含以下组件：
     - pilot ：负责配置、引导启动 envoy 。
     - citadel ：负责颁发证书、轮换证书。
@@ -143,7 +143,7 @@
     - nginx.default     # k8s 创建的 DNS 名称可以用 FQDN 格式，或短域名。如果省略命名空间，则会在 VirtualService 所在命名空间寻址
     - test.com
     - *.test.com
-    gateways:           # 将 VirtualService 绑定到网关。这些网关处理网络流量时，就会采用该 VirtualService
+    gateways:           # 将 VirtualService 绑定到网关。使得这些网关处理流量时，采用该 VirtualService 的路由规则
     - ingress-gateway
     http:               # 如果请求流量是 HTTP 报文，且 headers 包含 username: test ，则路由到 v1 服务，否则路由到 v2 服务
     - match:
@@ -214,7 +214,7 @@
           remove:
           - version
 
-    timeout: 5s           # 将 HTTP 请求路由转发给 upstream 时，如果超过一定时长未返回 HTTP 响应，则请求失败。默认不限制超时
+    timeout: 5s           # 将 HTTP 请求路由转发给 upstream 时，如果超过一定时长未返回 HTTP 响应，则认为请求失败，Envoy 会返回 HTTP 503 响应。默认不限制超时
     retries:              # 路由转发给 upstream 时，如果转发 HTTP 请求失败，是否自动重试
       attempts: 3         # 最多重试几次。重试间隔大概为 25ms
       perTryTimeout: 3s   # 每次重试的超时时间。默认继承上级的 timeout
@@ -298,7 +298,7 @@
     name: test-destination-rule
   spec:
     host: nginx             # upstream 地址，通常填一个 k8s Service 的 DNS 名称，这会自动发现其下所有 Pod Endpoints
-    # trafficPolicy:        # 设置所有 subsets 的负载均衡策略，即如何将请求流量分配给多个 Pod
+    # trafficPolicy:        # 设置所有 subsets 的负载均衡策略
     #   loadBalancer:
     #     simple: RANDOM    # 默认为 RANDOM
     subsets:                # 将 upstream 分成多组
@@ -308,12 +308,13 @@
     - name: v2
       labels:
         version: v2
-      # trafficPolicy:      # 给该 subset 单独设置负载均衡策略
-      #   loadBalancer:
-      #     simple: ROUND_ROBIN
+      trafficPolicy:
+        loadBalancer:       # 给该 subset 单独设置负载均衡策略
+          simple: ROUND_ROBIN
+        connectionPool:
+          tcp:
+            connectTimeout: 2s
   ```
-
-
 
 
 <!--
@@ -354,6 +355,27 @@
     trafficPolicy:            # 注册了外部服务之后，可像网格内服务一样添加配置
       connectionPool:
         tcp:
-          connectTimeout: 1s
+          connectTimeout: 2s
   ```
+
+### Sidecar
+
+- 边车（Sidecar）
+  - ：Istio 提供的一种 k8s 对象，用于配置每个 Pod 中以 Sidecat 形式运行的 istio-proxy 代理。
+- 例：
+  ```yml
+  apiVersion: networking.istio.io/v1alpha3
+  kind: Sidecar
+  metadata:
+    name: default
+    namespace: istio-config # 该 Sidecar 配置所处的命名空间
+  spec:
+    egress:                 # 管理该命名空间中所有 Pod 的出流量，只允许发送到这些地址
+    - hosts:
+      - ./*                 # 允许发送到同一命名空间的任意服务
+      - default/*           # 允许发送到 default 命名空间的任意服务
+  ```
+  - 每个 k8s 命名空间只能有 0 或 1 个 Sidecar 配置生效。
+    - Istio 的 rootNamespace 默认为 istio-config 。在此命名空间创建的 Sidecar 配置，默认会作用于所有命名空间，除非专门给某个命名空间创建了 Sidecar 配置。
+
 

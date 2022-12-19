@@ -3,7 +3,7 @@
 ：一个 Service Mesh 框架，通常部署在 k8s 集群中。
 - [官方文档](https://istio.io/latest/docs/)
 - 发音为 `/iss-tee-oh/` 。
-- 原生的 k8s 缺乏管理 Pod 网络流量的能力，而 Istio 提供了动态路由、熔断、TLS 加密通信、可观测性等功能，更擅长微服务架构。
+- 原生的 k8s 缺乏管理 Pod 网络流量的能力，而 Istio 提供了动态路由、熔断、TLS 加密通信、权限控制、可观测性等功能，更擅长微服务架构。
 
 ## 原理
 
@@ -15,17 +15,15 @@
     - pilot ：负责配置、引导启动 envoy 。
     - citadel ：负责颁发证书、轮换证书。
     - galley ：负责管理、分发 Istio 的配置。
-  <!-- - operator ：供用户管理 Istio 。 -->
   - istioctl ：命令行客户端。
   - kiali ：提供了对 Istio 的 Web 管理页面。还支持显示流量图表、链路追踪，此时采用 Prometheus、jaeger 作为数据源。
-  - jaeger ：一个 Web 服务器，用于链路追踪。可以不安装。
+  - jaeger ：一个 Web 服务器，用于链路追踪。可以不安装。Istio 也支持用 Zipkin 作为链路追踪的后端。
 
 <!--
 不会管理 DaemonSet 类型的 Pod ？
  -->
 
-- k8s 集群安装了 Istio 之后，可使用附带的 Istio Ingress 暴露服务到 k8s 集群外，也可使用 APISIX 等其它类型的 Ingress 。
-  - 虽然这样访问 Pod 的流量要经过多层代理转发，但一般只增加了几毫秒耗时。
+- k8s 集群安装 Istio 之后，Istio 提供了多种 CRD ，用户可创建这些 CRD 来控制 Istio 。
 
 ## 部署
 
@@ -75,21 +73,23 @@
           in_cluster_url: http://grafana:3000/
       ```
 
-4. 如下，给一个 k8s 命名空间添加 label ，指示 istio 管理该命名空间。这样以后新建每个 Pod 时会自动添加 istio sidebar 。
+4. 如下，给一个 k8s 命名空间添加 label ，指示 istio 管理该命名空间。这样以后新建每个 Pod 时会自动添加 istio-proxy 。
     ```sh
     kubectl label namespace default istio-injection=enabled
     ```
 
-## 用法
+## 流量管理
 
 ### Gateway
 
 - 网关（Gateway）
-  - ：用于管理 Istio 整个服务网格接收、发出的网络流量。
-  - 安装 Istio 时，可选择启用 ingressGateways、egressGateways 两个方向的网关。
+  - ：Istio 的一种 CRD ，用于管理 Istio 整个服务网格接收、发出的网络流量。
   - 用法：
     1. 创建 Gateway 对象，可配置第 4~6 层的网络，比如 TCP 负载均衡、TLS 。
     2. 创建 VirtualService 对象，绑定到 Gateway 对象。这样就会根据 VirtualService 路由规则，处理网关出入的流量。
+  - 安装 Istio 时，可选择启用 ingressGateways、egressGateways 两个方向的网关。
+  - 创建了 Gateway 之后，用户可使用安装 Istio 附带的 Istio Ingress 暴露服务到 k8s 集群外，也可使用 APISIX 等其它类型的 Ingress 。
+    - 虽然 Istio 使得访问 Pod 的流量要经过多层代理转发，但一般只增加了几毫秒耗时。
 
 - 例：
   ```yml
@@ -127,7 +127,7 @@
 ### VirtualService
 
 - 虚拟服务（Virtual Service）
-  - ：Istio 提供的一种 k8s 对象，用于配置路由规则，将某请求流量路由到某 upstream 。
+  - ：Istio 的一种 CRD ，用于配置路由规则，将某请求流量路由到某 upstream 。
   - k8s 原生的 Service 不支持配置路由规则，会将流量均匀分配给每个 EndPoints 。而 VirtualService 提供了复杂的路由规则。
   - 详细配置见 [官方文档](https://istio.io/latest/docs/reference/config/networking/virtual-service/)
 
@@ -287,7 +287,7 @@
 ### DestinationRule
 
 - 目标规则（Destination Rule）
-  - ：Istio 提供的一种 k8s 对象，用于给 upstream 定义多个子集（subset），即分组。
+  - ：Istio 的一种 CRD ，用于给 upstream 定义多个子集（subset），即分组。
   - 如果一个 VirtualService 将流量路由到某个 destination 的 subset ，则需要事先创建 DestinationRule 对象。
 
 - 例：
@@ -345,7 +345,7 @@
 ### ServiceEntry
 
 - 服务条目（Service Entry）
-  - ：Istio 提供的一种 k8s 对象，用于将自定义的服务注册到 Istio 。
+  - ：Istio 的一种 CRD ，用于将自定义的服务注册到 Istio 。
   - Istio 会利用 k8s 的服务发现机制，自动发现所有 Service、EndPoints 并注册到 Istio ，可作为 destination 管理。而其它服务，比如 k8s 集群内的非网格服务、k8s 集群外的服务，则需要以 Service entries 的方式注册到 Istio 。
 - 例：创建 ServiceEntry
   ```yml
@@ -380,7 +380,7 @@
 ### Sidecar
 
 - 边车（Sidecar）
-  - ：Istio 提供的一种 k8s 对象，用于配置每个 Pod 中以 Sidecat 形式运行的 istio-proxy 代理。
+  - ：Istio 的一种 CRD ，用于配置每个 Pod 中的 istio-proxy 代理。
 - 例：
   ```yml
   apiVersion: networking.istio.io/v1alpha3
@@ -397,4 +397,88 @@
   - 每个 k8s 命名空间只能有 0 或 1 个 Sidecar 配置生效。
     - Istio 的 rootNamespace 默认为 istio-config 。在此命名空间创建的 Sidecar 配置，默认会作用于所有命名空间，除非专门给某个命名空间创建了 Sidecar 配置。
 
+## 通信安全
+
+### PeerAuthentication
+
+- PeerAuthentication 是 Istio 的一种 CRD ，用于在 Pod 之间启用双向 TLS 认证，实现很安全的通信，不过会大幅增加系统的复杂度、运维难度。
+- 原理：
+  - 每个 Pod 中的 istio-proxy 在启动时，会从 istiod 申请 TLS 证书。还会自动轮换 TLS 证书，从而避免过期。
+  - 两个 Pod 相互通信时，双方的 istio-proxy 先进行 TLS 握手，验证双方的身份、访问权限，然后通过 TLS 连接进行加密通信。
+
+- 例：
+  ```yml
+  apiVersion: security.istio.io/v1beta1
+  kind: PeerAuthentication
+  metadata:
+    name: test
+    namespace: default  # 指定该 PeerAuthentication 作用于哪个命名空间
+  spec:
+    selector:           # 如果不选择 Pod ，则作用于该命名空间的所有 Pod
+      matchLabels:
+        app: nginx
+    mtls:               # mtls 是 Mutual TLS 的缩写，即双向 TLS
+      mode: STRICT
+  ```
+  - 通信模式有多种：
+    - STRICT ：严格模式。Pod 只准接收 TLS 加密流量。
+    - PERMISSIVE ：宽容模式。Pod 允许接收 TLS 加密流量、 TCP 明文流量。
+    - DISABLE ：禁用双向 TLS 认证。
+
+### AuthorizationPolicy
+
+- AuthorizationPolicy 是 Istio 的一种 CRD ，用于控制对服务的访问权限。
+- 例：
+  ```yml
+  apiVersion: security.istio.io/v1beta1
+  kind: AuthorizationPolicy
+  metadata:
+    name: test-deny
+    namespace: default
+  spec:
+  selector:
+    matchLabels:
+      app: nginx
+      version: v1
+  action: DENY
+  rules:
+  - from:                 # 如果不指定 from 流量来源，则默认选中所有来源
+    - source:
+        notNamespaces:    # 拒绝非 default 命名空间发来的请求
+        - default
+  ```
+  ```yml
+  apiVersion: security.istio.io/v1beta1
+  kind: AuthorizationPolicy
+  metadata:
+    name: test-allow
+    namespace: default
+  spec:
+  selector:
+    matchLabels:
+      app: nginx
+      version: v1
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces:         # 允许来自指定 namespace 的请求
+        - default
+    - source:
+        principals:         # 允许来自指定 Service Account 的请求
+        - cluster.local/ns/default/sa/test
+        - *                 # 通配符 * 表示任意通过 TLS 身份认证的 source
+    to:
+    - operation:
+        methods:            # 允许 HTTP 流量
+        - GET
+        paths:
+        - /api/*
+    - operation:
+        ports:              # 允许 TCP 流量
+        - 3306
+  ```
+  - 请求流量被 AuthorizationPolicy 拒绝时，会导致 TLS 握手失败。
+  - 如果一个 Pod 不存在 ALLOW 策略，则默认允许所有请求。如果存在 ALLOW 策略，则只允许满足条件的请求。
+  - 一个请求同时匹配多种策略时，DENY 策略的优先级高于 ALLOW 策略。
 

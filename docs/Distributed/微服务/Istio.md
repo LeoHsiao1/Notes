@@ -312,3 +312,48 @@
       #   loadBalancer:
       #     simple: ROUND_ROBIN
   ```
+
+
+
+
+<!--
+    访问 Service IP 时，Istio 会取代 kube-proxy 来实现反向代理？
+-->
+
+
+
+### ServiceEntry
+
+- 服务条目（Service Entry）
+  - ：Istio 提供的一种 k8s 对象，用于将自定义的服务注册到 Istio 。
+  - Istio 会利用 k8s 的服务发现机制，自动发现所有 Service、EndPoints 并注册到 Istio ，可作为 destination 管理。而其它服务，比如 k8s 集群内的非网格服务、k8s 集群外的服务，则需要以 Service entries 的方式注册到 Istio 。
+- 例：创建 ServiceEntry
+  ```yml
+  apiVersion: networking.istio.io/v1alpha3
+  kind: ServiceEntry
+  metadata:
+    name: test2
+  spec:
+    hosts:
+    - *.test2.com
+    ports:
+    - name: https
+      number: 443
+      protocol: HTTPS
+    location: MESH_EXTERNAL   # 添加一个在服务网格外部的服务，通过 DNS 解析地址
+    resolution: DNS
+  ```
+  然后创建相关的 DestinationRule ：
+  ```yml
+  apiVersion: networking.istio.io/v1alpha3
+  kind: DestinationRule
+  metadata:
+    name: test2
+  spec:
+    host: *.test2.com
+    trafficPolicy:            # 注册了外部服务之后，可像网格内服务一样添加配置
+      connectionPool:
+        tcp:
+          connectTimeout: 1s
+  ```
+

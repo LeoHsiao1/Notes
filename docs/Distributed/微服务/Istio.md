@@ -3,7 +3,7 @@
 ：一个 Service Mesh 框架，通常部署在 k8s 集群中。
 - [官方文档](https://istio.io/latest/docs/)
 - 发音为 `/iss-tee-oh/` 。
-- 原生的 k8s 缺乏管理 Pod 网络流量的能力，而 Istio 提供了服务发现、负载均衡、动态路由、熔断、可观测性等功能，更擅长微服务架构。
+- 原生的 k8s 缺乏管理 Pod 网络流量的能力，而 Istio 提供了动态路由、熔断、TLS 加密通信、可观测性等功能，更擅长微服务架构。
 
 ## 原理
 
@@ -315,6 +315,25 @@
           tcp:
             connectTimeout: 2s
   ```
+
+- 添加以下配置，可在负载过大时自动熔断服务，让 Envoy 返回 HTTP 503 响应：
+  ```yml
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100           # 限制 TCP 并发连接数
+      http:
+        http1MaxPendingRequests: 10   # 限制等待建立 TCP 连接的 HTTP 请求数，超过则返回熔断响应。默认为 1024
+        http2MaxRequests: 1024        # 限制同时活动的请求数，适用于 http/1.1 和 http/2
+        maxRequestsPerConnection: 0   # 限制每个 TCP 连接可传输的 HTTP 请求数。默认为 0 ，表示不限制
+        idleTimeout: 1h               # 如果一个 TCP 长时间没有活动的 HTTP 请求，则关闭连接
+    # outlierDetection:               # 用于自动从负载均衡池弹出不健康实例
+    #   consecutive5xxErrors: 5       # 如果某个实例连续多少次返回的响应是 HTTP 5xx ，则将该实例从负载均衡池弹出。默认为 5
+    #   interval: 10s                 # 每隔多久检查一次所有实例。默认为 10s
+    #   baseEjectionTime: 30s         # 从负载均衡池弹出不健康实例时，至少弹出多久。默认为 30s
+    #   maxEjectionPercent: 10        # 最多允许弹出负载均衡池中多少百分比的实例。默认为 10%
+  ```
+
 
 
 <!--

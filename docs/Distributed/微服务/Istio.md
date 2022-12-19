@@ -15,8 +15,6 @@
     - pilot ：负责配置、引导启动 envoy 。
     - citadel ：负责颁发证书、轮换证书。
     - galley ：负责管理、分发 Istio 的配置。
-  - ingressGateways ：负责管理 k8s 集群接收的网络包。
-  - egressGateways ：负责管理 k8s 集群发出的网络包。
   <!-- - operator ：供用户管理 Istio 。 -->
   - istioctl ：命令行客户端。
   - kiali ：提供了对 Istio 的 Web 管理页面。还支持显示流量图表、链路追踪，此时采用 Prometheus、jaeger 作为数据源。
@@ -84,14 +82,49 @@
 
 ## 用法
 
-### Virtual Service
+### Gateway
 
-<!--
-- 原理：
-  - Istio 会利用 k8s 的服务发现机制，自动发现所有 Service、EndPoints 。
+- 网关（Gateway）
+  - ：用于管理 Istio 整个服务网格接收、发出的网络流量。
+  - 安装 Istio 时，可选择启用 ingressGateways、egressGateways 两个方向的网关。
+  - 用法：
+    1. 创建 Gateway 对象，可配置第 4~6 层的网络，比如 TCP 负载均衡、TLS 。
+    2. 创建 VirtualService 对象，绑定到 Gateway 对象。这样就会根据 VirtualService 路由规则，处理网关出入的流量。
 
-    访问 Service IP 时，Istio 会取代 k8s 来实现反向代理？
--->
+- 例：
+  ```yml
+  apiVersion: networking.istio.io/v1alpha3
+  kind: Gateway
+  metadata:
+    name: test-gateway
+  spec:
+    selector:
+      istio: ingressgateway   # 采用默认的 Istio Controller
+    servers:
+    - hosts:
+      - *
+      port:
+        number: 31400
+        name: tcp
+        protocol: TCP         # TCP 协议
+    - hosts:
+      - *.test.com
+      port:
+        name: http
+        number: 80
+        protocol: HTTP        # HTTP 协议
+    - hosts:
+      - *.test.com
+      port:
+        name: https
+        number: 443
+        protocol: HTTPS       # HTTPS 协议
+      tls:
+        mode: SIMPLE
+        credentialName: test-cert
+  ```
+
+### VirtualService
 
 - 虚拟服务（Virtual Service）
   - ：Istio 提供的一种 k8s 对象，用于配置路由规则，将某请求流量路由到某 upstream 。
@@ -107,11 +140,11 @@
   spec:
     hosts:              # 如果请求流量的目标地址匹配该 hosts 数组，则采用该 VirtualService 的路由规则
     - 10.0.0.1          # 该数组中的 host 不必是一个实际可访问的地址。格式可以是 IP 地址、DNS 名称，还可以使用通配符 *
-    - test.com
     - nginx.default     # k8s 创建的 DNS 名称可以用 FQDN 格式，或短域名。如果省略命名空间，则会在 VirtualService 所在命名空间寻址
-    - *
-    # gateways:         # 当请求流量来自该网关时，才采用该 VirtualService
-    # - ingress-gateway
+    - test.com
+    - *.test.com
+    gateways:           # 将 VirtualService 绑定到网关。这些网关处理网络流量时，就会采用该 VirtualService
+    - ingress-gateway
     http:               # 如果请求流量是 HTTP 报文，且 headers 包含 username: test ，则路由到 v1 服务，否则路由到 v2 服务
     - match:
       - uri:
@@ -251,11 +284,10 @@
         exact: v1
   ```
 
-
 ### DestinationRule
 
 - 目标规则（Destination Rule）
-  - ：Istio 提供的一种 k8s 对象，用于定义 upstream ，可分成多组（subset）。
+  - ：Istio 提供的一种 k8s 对象，用于给 upstream 定义多个子集（subset），即分组。
   - 如果一个 VirtualService 将流量路由到某个 destination 的 subset ，则需要事先创建 DestinationRule 对象。
 
 - 例：
@@ -280,9 +312,3 @@
       #   loadBalancer:
       #     simple: ROUND_ROBIN
   ```
-
-
-
-
-
-

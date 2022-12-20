@@ -9,13 +9,10 @@
 
 - 使用 Istio 的步骤：
   1. 在 k8s 集群安装 Istio 。
-  2. 选择一些 Pod ，被 Istio 注入 Envoy 代理，从而被 Istio 管理网络流量。
+  2. 选择一些 Pod ，被 Istio 注入 Envoy 代理，从而加入 Service Mesh ，被 Istio 管理网络流量。
   3. Istio 提供了多种 CRD ，用户可创建这些 CRD 来控制 Istio 的网络流量。
 - Istio 系统包含以下组件：
   - envoy ：一个代理软件，担任数据平面（data plane）。
-    - 在每个 k8s Pod 中添加一个 init 类型的容器，名为 istio-init 。负责设置 iptables 规则，将服务的出入流量转发到 envoy 。
-    - 在每个 k8s Pod 中添加一个 sidecar 类型的容器，名为 istio-proxy 。负责担任透明代理，拦截当前 Pod 收发的网络包，过滤、修改之后再放行。
-      - istio-proxy 容器内，采用 UID 为 1337 的普通用户，运行 envoy 和 pilot-agent 进程。
   - istiod ：担任控制平面（control plane），包含以下组件：
     - pilot ：负责配置、引导启动 envoy 。
     - citadel ：负责颁发证书、轮换证书。
@@ -77,10 +74,10 @@
 
 ## 流量管理
 
-### Pod准备
+### 注入代理
 
 - 想让 Istio 管理某些 Pod 的网络流量时，需要满足以下条件：
-  - 给 Pod 注入 Envoy 代理。
+  - 给 Pod 注入 Envoy 代理，从而加入 Service Mesh 。
   - 一个 Pod 应该至少属于一个 k8s Service ，即使 Pod 不暴露端口。
     - 如果一个 Pod 属于多个 k8s Service ，则不能暴露同一个端口，即使通信协议不同。
   - 给 Pod 添加以下标签，方便被 Istio 监控、链路追踪：
@@ -91,7 +88,14 @@
     ```
   - Pod 内保留 `15000~15100` 端口不使用，供 Sidecar 专用。
 
-- Istio 支持给 Pod 自动注入 sidecar 类型的 Envoy 代理，从而用 Service Mesh 技术管理 Pod 的网络流量。
+- 给 Pod 注入 Envoy 代理时的主要原理：
+  - 在每个 Pod 中添加一个 init 类型的容器，名为 istio-init 。负责设置 iptables 规则，将 Pod 的出入流量转发到 Envoy 。
+  - 在每个 Pod 中添加一个 sidecar 类型的容器，名为 istio-proxy 。负责担任透明代理，拦截当前 Pod 收发的网络包，过滤、修改之后再放行。
+    - istio-proxy 容器内，采用 UID 为 1337 的普通用户，运行 envoy 和 pilot-agent 进程。
+    - Pod 的出入流量都会经过 Sidecar 代理，相当于在 k8s 原生的 kube-proxy 网络层之上加了一个代理层。这样流量要经过多层代理转发，但一般只增加了几毫秒耗时。
+    - Pod 内各容器之间的通信，不会经过 Sidecar 。
+
+- Istio 支持自动给 Pod 注入 Envoy 代理。
   - 原理：用户新建一个 Pod 时，Istio 自动从一个名为 istio-sidecar-injector 的 ConfigMap 中读取 YAML 模板，据此修改 Pod 的配置，添加 istio-init、istio-proxy 容器和 volumes 等配置。
   - 方式一：给一个 k8s 命名空间添加以下 label ，就会让 Istio 自动注入该命名空间中所有新建的 Pod 。
     ```sh
@@ -99,11 +103,81 @@
     ```
   - 方式二：创建一个 Pod 时添加一个标签 `sidecar.istio.io/inject: "true"` ，就会单独注入该 Pod 。
 
+### Sidecar
+
+- 边车（Sidecar）
+  - ：Istio 的一种 CRD ，用于配置每个 Pod 中的 istio-proxy 代理。
+- 例：
+  ```yml
+  apiVersion: networking.istio.io/v1alpha3
+  kind: Sidecar
+  metadata:
+    name: default
+    namespace: istio-config # 该 Sidecar 配置所处的命名空间
+  spec:
+    egress:                 # 管理该命名空间中所有 Pod 的出流量，只允许发送到这些地址
+    - hosts:
+      - "./*"               # 允许发送到同一命名空间的任意服务
+      - "default/*"         # 允许发送到 default 命名空间的任意服务
+  ```
+  - 每个 k8s 命名空间只能有 0 或 1 个 Sidecar 配置生效。
+  - Istio 的 rootNamespace 默认为 istio-config 。在此命名空间创建的 Sidecar 配置，默认会作用于所有命名空间，除非专门给某个命名空间创建了 Sidecar 配置。
+
+- 例：在 k8s 内运行一个监听 80 端口的 Nginx 应用，然后在一个被注入 Envoy 代理的 Pod 内，测试访问 Nginx
+  ```sh
+  $ curl 10.42.0.10 -I        # Service Mesh 内的 Pod ，默认可以访问任意 IP ，不管目标 IP 是否在 Service Mesh 内、k8s 集群内
+  HTTP/1.1 200 OK
+  content-length: 612
+  content-type: text/html
+  server: envoy               # Pod 发出的流量都会经过 istio-proxy ，因此 HTTP 响应报文由当前 Pod 的 Sidecar 返回
+
+  $ curl 10.42.0.10:443 -I    # 这里访问错误的端口，导致 TCP 连接失败，因此 Sidecar 返回 HTTP 503 响应
+  HTTP/1.1 503 Service Unavailable
+  content-length: 145
+  content-type: text/plain
+  server: istio-envoy
+
+  $ curl 10.42.0.10:443       # 查看报错内容
+  upstream connect error or disconnect/reset before headers. reset reason: connection failure, transport failure reason: delayed connect error: 111
+
+  $ curl 1.1.1.1 -I           # 访问 k8s 集群外一个不可达的 IP ，Sidecar 也是返回 HTTP 503 响应
+  HTTP/1.1 503 Service Unavailable
+  ```
+
+- Istio 转发 HTTP 流量时，是根据 headers 中的 Host 字段进行路由。
+  - 比如 `curl 10.0.0.1 -H "Host: nginx.default"` 会被路由到 nginx.default 处，不考虑 IP 地址 10.0.0.1 。
+  - 比如 `curl <pod_ip>` 直接访问 Pod 时，流量虽然会经过 istio-proxy ，但不会获得 Istio 路由等功能。
+  - 转发 TCP、HTTPS 流量时，不知道 Host 字段，因此只能根据 IP 地址进行路由。
+
+- Envoy 支持代理 TCP、UDP、HTTP、gRPC 等多种协议的流量，但 Istio 只会代理基于 TCP 的流量，比如 TCP、HTTP、gRPC 。
+  - Istio 不会代理非基于 TCP 的流量，比如 UDP 。这些流量不会被 Sidecar 拦截，而是被 Pod 直接收发。同理，这些流量不会经过 ingressgateway、egressgateway 。
+  - Istio 能自动检测网络流量采用的协议，比如 HTTP/1.0 和 HTTP/2 协议。如果检测不出，则当作 TCP 原始流量处理。
+  - istio-proxy 收到客户端的 HTTP 请求时，默认采用 HTTP/1.1 协议转发 HTTP 请求给 upstream 。除非在 Pod 所属的 Service 中，声明端口采用的协议：
+    ```yml
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: nginx
+      namespace: default
+    spec:
+      ports:
+      - appProtocol: http     # 可用 appProtocol 字段声明协议
+        name: http-web        # 也可用 name: <protocol>-xx 的格式声明协议
+        port: 80
+      - appProtocol: https
+        name: https-web
+        port: 443
+    ```
+    - 声明 tcp 时，表示将 TCP 原始流量转发给 upstream 。
+    - 声明 http 时，表示将 HTTP/1.1 明文流量转发给 upstream 。
+    - 声明 http2 时，表示将 HTTP/2 明文流量转发给 upstream 。
+    - 声明 https 时，表示将 TLS 加密流量转发给 upstream 。Sidecar 不会解密 TLS 流量，而 ingressgateway、egressgateway 可以解密 TLS 流量。
+
 ### VirtualService
 
 - 虚拟服务（Virtual Service）
-  - ：Istio 的一种 CRD ，用于配置路由规则，将某请求流量路由到某 upstream 。
-  - k8s 原生的 Service 不支持配置路由规则，会将流量均匀分配给每个 EndPoints 。而 VirtualService 提供了复杂的路由规则。
+  - ：Istio 的一种 CRD ，用于配置路由规则，将某些请求流量路由到某些 upstream 。
+  - k8s 原生的 Service 不支持配置路由规则，会将流量随机分配给每个 EndPoints 。而 VirtualService 提供了复杂的路由规则。
   - 详细配置见 [官方文档](https://istio.io/latest/docs/reference/config/networking/virtual-service/)
 
 - 例：根据 HTTP 请求的 uri 取值，路由到不同 upstream
@@ -114,33 +188,61 @@
     name: test-route
     namespace: default
   spec:
+    # gateways:         # 可选将 VirtualService 绑定到当前命名空间的某个网关。使得这些网关处理流量时，采用该 VirtualService 的路由规则
+    # - test-gateway
     hosts:              # 如果请求流量的目标地址匹配该 hosts 数组，则采用该 VirtualService 的路由规则
     - 10.0.0.1          # 指定的 host 不必是一个实际可访问的地址。格式可以是 IP 地址、DNS 名称，还可以使用通配符 *
     - nginx.default     # k8s 创建的 DNS 名称可以用 FQDN 格式，或短域名。如果省略命名空间，则会在 VirtualService 所在命名空间寻址
     - test.com
     - "*.test.com"
-    gateways:           # 将 VirtualService 绑定到网关。使得这些网关处理流量时，采用该 VirtualService 的路由规则
-    - ingress-gateway
-    http:               # 如果请求流量是 HTTP 报文，且 headers 包含 username: test ，则路由到 v1 服务，否则路由到 v2 服务
-    - match:
+    http:
+    - match:            # 如果请求流量是 HTTP 报文，且 uri 为指定前缀，则路由到 nginx 服务的 v1 分组
       - uri:
           prefix: /api/v1
       route:
-      - destination:
+      - destination:    # 这里 upstream 是一个 subset ，需要事先创建 DestinationRule 对象来定义 subset ，否则有请求路由到此时会返回 HTTP 503 响应
           host: nginx
           subset: v1
     - route:
-      - destination:
+      - destination:    # 这里 upstream 是一个名为 nginx 的域名，通常是 k8s Service
           host: nginx
-          subset: v2
   ```
   - 每个虚拟服务可以定义一组 route 规则。
     - 处理流量时，会从上到下检查各个 route 规则。如果流量匹配一个 route 规则，则立即生效，否则继续检查后面的 route 规则。
   - 如果一个 route 规则没有 match 条件，则会匹配所有流量，除非这些流量先匹配了前面的 route 规则。
     - 如果一个请求不匹配任何 route 规则，则会返回 HTTP 404 响应。
     - 建议在每个虚拟服务的最后定义一个没有 match 条件的 route 规则，作为默认路由。
+  - VirtualService 默认不绑定 Gateway ，因此路由规则会作用于 Service Mesh 中所有 Pod 出入的流量。
+    - 修改了路由规则之后，会立即同步到所有 istio-proxy 。
+    - 如果将 VirtualService 绑定到 Gateway ，则只会作用于该 Gateway 出入的流量。
+  - 例：在一个被注入 Envoy 代理的 Pod 内，测试访问上述 VirtualService
+    ```sh
+    $ curl 10.0.0.1/ -I     # 这里目标 IP 匹配上述 VirtualService 的 hosts 数组，因此按上述 VirtualService 的路由规则处理流量
+    HTTP/1.1 200 OK
+
+    $ curl nginx -I         # 这里会解析 nginx 域名，发现跟 nginx.default 指向同一个 k8s Service ，因此匹配上述 VirtualService
+    HTTP/1.1 200 OK
+
+    $ curl 10.0.0.2/ -I     # 这里目标 IP 不匹配上述 VirtualService ，也访问不到该 IP 地址，因此 Sidecar 返回 HTTP 503 响应
+    HTTP/1.1 503 Service Unavailable
+
+    curl test.com -I        # 这里会先解析 test.com 域名，指向 k8s 集群外的一个 IP ，然后建立 TCP 连接失败
+    curl: (7) Failed to connect to test.com port 80 after 153 ms: Connection refused
+
+    $ curl 10.0.0.2/ -H 'Host: test.com' -I   # 这里请求一个不存在的 IP ，但 Sidecar 会根据 Host 字段进行路由，因此匹配上述 VirtualService
+    HTTP/1.1 200 OK
+    ```
 
 - VirtualService 可对 http、tls、tcp 三种流量进行路由：
+  ```yml
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1
+    route:
+    - destination:
+        host: nginx
+  ```
   ```yml
   tls:
   - match:
@@ -149,7 +251,7 @@
       - test.com
     route:
     - destination:
-        host: nginx
+        host: nginx.default
   ```
   ```yml
   tcp:
@@ -161,10 +263,6 @@
         port:
           number: 27017
   ```
-  - Istio 转发 HTTP 流量时，是根据 headers 中的 Host 字段进行路由。
-    - 比如 `curl 10.0.0.1 -H "Host: nginx.default"` 会被路由到 nginx.default 处，不考虑 IP 地址 10.0.0.1 。
-    - 比如 `curl <pod_ip>` 直接访问 Pod 时，流量虽然会经过 istio-proxy ，但不会获得 Istio 路由等功能。
-    - 转发 TCP、HTTPS 流量时，不知道 Host 字段，因此只能根据 IP 地址进行路由。
 
 - 路由规则的详细示例：
   ```yml
@@ -249,17 +347,22 @@
     headers:
       username:
         exact: test
+
   - uri:                    # 对 uri 进行匹配。匹配语法为 StringMatch ，可选 exact、prefix、regex 三种匹配方式
       exact: /index.html    # 字符串完全匹配
       # prefix: /index      # 字符串前缀匹配
       # regex: /index.*     # 字符串正则匹配，采用 Google RE2 语法
     # ignoreUriCase: false  # 是否不区分 uri 的大小写，默认为 false
+
   - port: 80
+
   - method:                 # 对 HTTP 请求方法进行匹配，匹配语法为 StringMatch
       exact: GET
+
   - headers:
       username:             # 选择 headers 中的一个字段，进行匹配，匹配语法为 StringMatch
         exact: test
+
   - queryParams:
       version:              # 选择 queryParams 中的一个字段，进行匹配
         exact: v1
@@ -269,7 +372,6 @@
 
 - 目标规则（Destination Rule）
   - ：Istio 的一种 CRD ，用于给 upstream 定义多个子集（subset），即分组。
-  - 如果一个 VirtualService 将流量路由到某个 destination 的 subset ，则需要事先创建 DestinationRule 对象。
 
 - 例：
   ```yml
@@ -359,9 +461,7 @@
   - 为了将 k8s 集群内服务暴露到集群外，用户可使用 Istio Ingress Gateway ，也可使用 APISIX 等其它类型的 Ingress 。
 
 - 使用步骤：
-  1. 安装 Istio 时，可附带安装 ingressgateway、egressgateway 两个方向的网关。
-      - 它们以 Deployment 方式部署，Pod 内只运行了一个 istio-proxy 容器。
-      - 它们会创建一个 LoadBalancer 类型的 Service ，监听 80、443 等多个端口，供集群外主机访问。
+  1. 安装 Istio 时，可附带安装 ingressgateway、egressgateway 两个方向的网关程序。
   2. 创建 Gateway 对象，控制 ingressgateway、egressgateway 如何处理第 4~6 层的网络流量，比如 TCP 负载均衡、TLS 。
   3. 创建 VirtualService 对象，绑定到 Gateway 对象。这样就会根据 VirtualService 路由规则，处理网关出入的流量。
 
@@ -374,7 +474,7 @@
     namespace: default
   spec:
     selector:
-      istio: ingressgateway   # 选择具有该 label 的 Pod ，即选择该 Gateway 对象绑定的 Gateway 实体
+      istio: ingressgateway   # 选择具有该 label 的 Pod ，即选择该 Gateway 对象绑定的网关程序
     servers:
     - hosts:
       - "*"
@@ -399,49 +499,13 @@
         credentialName: test-cert
   ```
 
-### Sidecar
-
-- 边车（Sidecar）
-  - ：Istio 的一种 CRD ，用于配置每个 Pod 中的 istio-proxy 代理。
-- 例：
-  ```yml
-  apiVersion: networking.istio.io/v1alpha3
-  kind: Sidecar
-  metadata:
-    name: default
-    namespace: istio-config # 该 Sidecar 配置所处的命名空间
-  spec:
-    egress:                 # 管理该命名空间中所有 Pod 的出流量，只允许发送到这些地址
-    - hosts:
-      - "./*"               # 允许发送到同一命名空间的任意服务
-      - "default/*"         # 允许发送到 default 命名空间的任意服务
-  ```
-  - 每个 k8s 命名空间只能有 0 或 1 个 Sidecar 配置生效。
-    - Istio 的 rootNamespace 默认为 istio-config 。在此命名空间创建的 Sidecar 配置，默认会作用于所有命名空间，除非专门给某个命名空间创建了 Sidecar 配置。
-
-- Envoy 支持代理 TCP、UDP、HTTP、gRPC 等多种协议的流量，但 Istio 只会代理基于 TCP 的流量，比如 TCP、HTTP、gRPC 。
-  - Istio 不会代理非基于 TCP 的流量，比如 UDP 。这些流量不会被 Sidecar 拦截，而是被 Pod 直接收发。同理，这些流量不会经过 ingressgateway、egressgateway 。
-  - Istio 能自动检测网络流量采用的协议，比如 HTTP/1.0 和 HTTP/2 协议。如果检测不出，则当作 TCP 原始流量处理。
-  - istio-proxy 收到客户端的 HTTP 请求时，默认采用 HTTP/1.1 协议转发 HTTP 请求给 upstream 。除非在 Pod 所属的 Service 中，声明端口采用的协议：
-    ```yml
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: nginx
-      namespace: default
-    spec:
-      ports:
-      - appProtocol: http     # 可用 appProtocol 字段声明协议
-        name: http-web        # 也可用 name: <protocol>-xx 的格式声明协议
-        port: 80
-      - appProtocol: https
-        name: https-web
-        port: 443
+- Gateway 是一种 k8s CRD 对象，而 ingressgateway、egressgateway 才是实际运行的网关程序。
+  - 它们分别以 Deployment 方式部署，Pod 内只运行了一个 istio-proxy 容器。
+  - 它们分别绑定一个 LoadBalancer 类型的 Service ，监听 80、443 等多个端口，供集群外主机访问。例如通过以下方式访问：
+    ```sh
+    curl $loadBalancerIP:$port -H "Host: test.com"
+    curl $nodeIP:$nodePort     -H "Host: test.com"
     ```
-    - 声明 tcp 时，表示将 TCP 原始流量转发给 upstream 。
-    - 声明 http 时，表示将 HTTP/1.1 明文流量转发给 upstream 。
-    - 声明 http2 时，表示将 HTTP/2 明文流量转发给 upstream 。
-    - 声明 https 时，表示将 TLS 加密流量转发给 upstream 。Sidecar 不会解密 TLS 流量，而 ingressgateway、egressgateway 可以解密 TLS 流量。
 
 ## 通信安全
 

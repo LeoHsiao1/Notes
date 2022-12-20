@@ -363,7 +363,7 @@ k8s 常见的几种网络通信：
       - nginx -s reload 加载大量配置时，可能耗时十几秒。
       - 除了路由功能，其它方面的功能少。
   - APISIX Ingress Controller ：功能更多。
-  - Istio Ingress
+  - Istio Ingress Gateway
 
 - 例：
   ```yml

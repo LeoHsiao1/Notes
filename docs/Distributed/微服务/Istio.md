@@ -143,6 +143,30 @@
         credentialName: test-cert
   ```
 
+- Envoy 支持代理 TCP、UDP、HTTP、gRPC 等多种协议的流量，但 Istio 只会代理基于 TCP 的流量，比如 TCP、HTTP、gRPC 。
+  - Istio 不会代理非基于 TCP 的流量，比如 UDP 。这些流量不会被 Sidecar 拦截，而是被 Pod 直接收发。同理，这些流量不会经过 ingressgateway、egressgateway 。
+  - Istio 能自动检测网络流量采用的协议，比如 HTTP/1.0 和 HTTP/2 协议。如果检测不出，则当作 TCP 原始流量处理。
+  - istio-proxy 收到客户端的 HTTP 请求时，默认采用 HTTP/1.1 协议转发 HTTP 请求给 upstream 。除非在 Pod 所属的 Service 中，声明端口采用的协议：
+    ```yml
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: nginx
+      namespace: default
+    spec:
+      ports:
+      - appProtocol: http     # 可用 appProtocol 字段声明协议
+        name: http-web        # 也可用 name: <protocol>-xx 的格式声明协议
+        port: 80
+      - appProtocol: https
+        name: https-web
+        port: 443
+    ```
+    - 声明 tcp 时，表示将 TCP 原始流量转发给 upstream 。
+    - 声明 http 时，表示将 HTTP/1.1 明文流量转发给 upstream 。
+    - 声明 http2 时，表示将 HTTP/2 明文流量转发给 upstream 。
+    - 声明 https 时，表示将 TLS 加密流量转发给 upstream 。Sidecar 不会解密 TLS 流量，而 ingressgateway、egressgateway 可以解密 TLS 流量。
+
 ### VirtualService
 
 - 虚拟服务（Virtual Service）
@@ -203,7 +227,10 @@
         port:
           number: 27017
   ```
-
+  - Istio 转发 HTTP 流量时，是根据 headers 中的 Host 字段进行路由。
+    - 比如 `curl 10.0.0.1 -H "Host: nginx.default"` 会被路由到 nginx.default 处，不考虑 IP 地址 10.0.0.1 。
+    - 比如 `curl <pod_ip>` 直接访问 Pod 时，流量虽然会经过 istio-proxy ，但不会获得 Istio 路由等功能。
+    - 转发 TCP、HTTPS 流量时，不知道 Host 字段，因此只能根据 IP 地址进行路由。
 
 - 路由规则的详细示例：
   ```yml

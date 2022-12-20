@@ -164,7 +164,8 @@ k8s 常见的几种网络通信：
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
     - name: redis           # Service 的端口名。如果 Service 只监听一个端口，则可以省略 name
       port: 6379            # Service 监听的端口号
-      protocol: TCP         # 反向代理的协议，默认为 TCP ，还可选 UDP
+      protocol: TCP         # Service 监听端口时采用的协议。默认为 TCP ，还可选 UDP
+      # appProtocol: tcp    # Service 将监听的流量转发给 Pod 时采用的协议。这是 k8s 1.18 增加的字段，偏向于注释，不会影响 kube-proxy 的行为，而是影响 Istio 等插件
       targetPort: 6379      # 将访问 service_ip:port 的流量，转发到 pod_ip:targetPort
       # targetPort: port1   # 可以指定 Pod 的端口名，而不是数字端口号
     - name: sentinel

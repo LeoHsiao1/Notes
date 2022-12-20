@@ -7,23 +7,24 @@
 
 ## 原理
 
+- 使用 Istio 的步骤：
+  1. 在 k8s 集群安装 Istio 。
+  2. 选择一些 Pod ，被 Istio 注入 Envoy 代理，从而被 Istio 管理网络流量。
+  3. Istio 提供了多种 CRD ，用户可创建这些 CRD 来控制 Istio 的网络流量。
 - Istio 系统包含以下组件：
   - envoy ：一个代理软件，担任数据平面（data plane）。
-    - 在每个 k8s Pod 中添加一个 init 类型的容器，名为 istio-init 。负责设置 iptables 规则，将服务的出入流量转发到 Envoy 。
-    - 在每个 k8s Pod 中添加一个 sidecar 类型的容器，名为 istio-proxy 。负责运行 envoy 和 pilot-agent ，以透明代理的方式转发当前 Pod 收发的网络包。
+    - 在每个 k8s Pod 中添加一个 init 类型的容器，名为 istio-init 。负责设置 iptables 规则，将服务的出入流量转发到 envoy 。
+    - 在每个 k8s Pod 中添加一个 sidecar 类型的容器，名为 istio-proxy 。负责担任透明代理，拦截当前 Pod 收发的网络包，过滤、修改之后再放行。
+      - istio-proxy 容器内，采用 UID 为 1337 的普通用户，运行 envoy 和 pilot-agent 进程。
   - istiod ：担任控制平面（control plane），包含以下组件：
     - pilot ：负责配置、引导启动 envoy 。
     - citadel ：负责颁发证书、轮换证书。
     - galley ：负责管理、分发 Istio 的配置。
   - istioctl ：命令行客户端。
+  - cni ：可选插件。先在 k8s 集群安装一个主流的 CNI 插件，然后安装 Istio CNI 插件，可替代 istio-init 。
   - kiali ：提供了对 Istio 的 Web 管理页面。还支持显示流量图表、链路追踪，此时采用 Prometheus、jaeger 作为数据源。
-  - jaeger ：一个 Web 服务器，用于链路追踪。可以不安装。Istio 也支持用 Zipkin 作为链路追踪的后端。
-
-<!--
-不会管理 DaemonSet 类型的 Pod ？
- -->
-
-- k8s 集群安装 Istio 之后，Istio 提供了多种 CRD ，用户可创建这些 CRD 来控制 Istio 。
+  - jaeger ：一个 Web 服务器，用于链路追踪，可以不安装。Istio 也支持用 Zipkin 作为链路追踪的后端。
+- 为 Envoy 开发插件时，有 C++、Lua、WebAssembly 等多种方式，目前最常见的方式是 WebAssembly ，即编译出 WASM 形式的插件。
 
 ## 部署
 
@@ -41,12 +42,13 @@
     istioctl install --set profile=demo -y      # 采用 demo 配置来安装，这会启用 istiod、ingressGateways、egressGateways
     # istioctl install --set profile=default -y # 采用 default 配置来安装，这不会启用 egressGateways ，减少开销
     ```
-    - 这会在 k8s 中创建一个 istio-system 命名空间，以 Deployment 方式部署 istiod 等应用。
+    - 这会在 k8s 中创建一个 istio-system 命名空间，以 Deployment 方式部署 istiod、ingressgateway 等应用。
     - 卸载 Istio 的命令：
       ```sh
       istioctl uninstall --purge
       kubectl delete namespace istio-system
       ```
+    - 升级 Istio 的版本时，建议不要跨小版本升级，比如不要从 1.6.x 升级到 1.8.x 。详细的升级方式见 [官方文档](https://istio.io/latest/docs/setup/upgrade/canary/) 。
 
 3. 安装 kiali 套件：
     ```sh
@@ -73,23 +75,40 @@
           in_cluster_url: http://grafana:3000/
       ```
 
-4. 如下，给一个 k8s 命名空间添加 label ，指示 istio 管理该命名空间。这样以后新建每个 Pod 时会自动添加 istio-proxy 。
+## 流量管理
+
+### Pod准备
+
+- 想让 Istio 管理某些 Pod 的网络流量时，需要满足以下条件：
+  - 给 Pod 注入 Envoy 代理。
+  - 一个 Pod 应该至少属于一个 k8s Service ，即使 Pod 不暴露端口。
+    - 如果一个 Pod 属于多个 k8s Service ，则不能暴露同一个端口，即使通信协议不同。
+  - 给 Pod 添加以下标签，方便被 Istio 监控、链路追踪：
+    ```yml
+    labels:
+      app: xx
+      version: xx
+    ```
+  - Pod 内保留 `15000~15100` 端口不使用，供 Sidecar 专用。
+
+- Istio 支持给 Pod 自动注入 sidecar 类型的 Envoy 代理，从而用 Service Mesh 技术管理 Pod 的网络流量。
+  - 原理：用户新建一个 Pod 时，Istio 自动从一个名为 istio-sidecar-injector 的 ConfigMap 中读取 YAML 模板，据此修改 Pod 的配置，添加 istio-init、istio-proxy 容器和 volumes 等配置。
+  - 方式一：给一个 k8s 命名空间添加以下 label ，就会让 Istio 自动注入该命名空间中所有新建的 Pod 。
     ```sh
     kubectl label namespace default istio-injection=enabled
     ```
-
-## 流量管理
+  - 方式二：创建一个 Pod 时添加一个标签 `sidecar.istio.io/inject: "true"` ，就会单独注入该 Pod 。
 
 ### Gateway
 
 - 网关（Gateway）
   - ：Istio 的一种 CRD ，用于管理 Istio 整个服务网格接收、发出的网络流量。
-  - 用法：
-    1. 创建 Gateway 对象，可配置第 4~6 层的网络，比如 TCP 负载均衡、TLS 。
-    2. 创建 VirtualService 对象，绑定到 Gateway 对象。这样就会根据 VirtualService 路由规则，处理网关出入的流量。
-  - 安装 Istio 时，可选择启用 ingressGateways、egressGateways 两个方向的网关。
-  - 创建了 Gateway 之后，用户可使用安装 Istio 附带的 Istio Ingress 暴露服务到 k8s 集群外，也可使用 APISIX 等其它类型的 Ingress 。
-    - 虽然 Istio 使得访问 Pod 的流量要经过多层代理转发，但一般只增加了几毫秒耗时。
+  - 使用步骤：
+    1. 安装 Istio 时，可附带安装 ingressgateway、egressgateway 两个方向的网关。它们以 Deployment 方式部署，Pod 内只运行了一个 istio-proxy 容器。
+    2. 创建 Gateway 对象，控制 ingressgateway、egressgateway 如何处理第 4~6 层的网络流量，比如 TCP 负载均衡、TLS 。
+    3. 创建 VirtualService 对象，绑定到 Gateway 对象。这样就会根据 VirtualService 路由规则，处理网关出入的流量。
+    4. 为了让 Gateway 接收 k8s 集群外流量，用户可使用安装 Istio 附带的 Istio Ingress 暴露服务到 k8s 集群外，也可使用 APISIX 等其它类型的 Ingress 。
+        - 虽然 Istio 使得访问 Pod 的流量要经过多层代理转发，但一般只增加了几毫秒耗时。
 
 - 例：
   ```yml
@@ -99,7 +118,7 @@
     name: test-gateway
   spec:
     selector:
-      istio: ingressgateway   # 采用默认的 Istio Controller
+      istio: ingressgateway   # 选择具有该 label 的 Deployment 形式的 Gateway
     servers:
     - hosts:
       - *
@@ -139,7 +158,7 @@
     name: test-route
   spec:
     hosts:              # 如果请求流量的目标地址匹配该 hosts 数组，则采用该 VirtualService 的路由规则
-    - 10.0.0.1          # 该数组中的 host 不必是一个实际可访问的地址。格式可以是 IP 地址、DNS 名称，还可以使用通配符 *
+    - 10.0.0.1          # 指定的 host 不必是一个实际可访问的地址。格式可以是 IP 地址、DNS 名称，还可以使用通配符 *
     - nginx.default     # k8s 创建的 DNS 名称可以用 FQDN 格式，或短域名。如果省略命名空间，则会在 VirtualService 所在命名空间寻址
     - test.com
     - *.test.com
@@ -184,6 +203,7 @@
         port:
           number: 27017
   ```
+
 
 - 路由规则的详细示例：
   ```yml
@@ -337,7 +357,7 @@
 
 
 <!--
-    访问 Service IP 时，Istio 会取代 kube-proxy 来实现反向代理？
+    访问 Service IP 时，Istio 会取代 kube-proxy 来实现反向代理？还在在 kube-proxy 之上工作？
 -->
 
 

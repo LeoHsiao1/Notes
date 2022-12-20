@@ -294,7 +294,9 @@ k8s 常见的几种网络通信：
     clusterIP: 10.43.0.1
     loadBalancerIP: 1.1.1.1
     ports:
-      - port: 6379
+      - name: redis
+        nodePort: 31212
+        port: 6379
         protocol: TCP
         targetPort: 6379
     selector:
@@ -302,8 +304,9 @@ k8s 常见的几种网络通信：
   ```
 - 客户端访问 loadBalancerIP 的流程：
   1. 客户端发出数据包，目标 IP 为 Service 的 loadBalancerIP 。
-  2. 负载均衡器收到数据包，反向代理到 k8s 集群的随机一个 Node ，并将目标 IP 改为 Service 的 clusterIP 。
+  2. 负载均衡器收到数据包，反向代理到 k8s 集群中随机一个 Node 的 nodePort ，并将目标 IP 改为 Service 的 clusterIP 。
   3. k8s Node 收到数据包，反向代理到 EndPoints 。
+- 使用 NodePort 类型的 Service 时，客户端通常访问固定一个 Node IP ，存在单点故障的风险。而使用 LoadBalancer 类型的 Service 时，客户端依然访问固定一个 IP ，但流量会被分散到所有 k8s Node ，实现负载均衡。
 
 ### ExternalName
 

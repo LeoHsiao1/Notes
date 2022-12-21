@@ -94,11 +94,13 @@
       ```
       - 滚动更新时，会尽量保持 `replicas - maxUnavailable ≤ availableReplicas ≤ replicas + maxSurge` 。
     - 优点：
-      - 客户端通过 Service 访问 Deployment 时，总是至少有一个 Ready 状态的 Pod 能接收客户端的请求，从而保证不中断服务。
+      - 客户端通过 Service 访问 Deployment 时，总是至少有一个 Ready 状态的 Pod 能接收客户端的请求，从而保证不中断服务（实际上新请求不会中断，旧请求可能被中断）。
+      - 执行 `kubectl rollout restart <deployment>` 命令，则会按 strategy 策略重启 Deployment ，可实现滚动重启，又称为热重启。
     - 缺点：
       - 短期部署的 Pod 实例会比平时多 maxSurge 个，占用更多服务器资源。
       - 新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
-      - 旧版本的 Pod 被终止时，可能还有事务未处理完，比如还有客户端的 TCP 连接在传输数据。为了避免事务被中断，可以给 Pod 添加 preStop 钩子，等准备好了才终止 Pod 。
+      - 旧 Pod 被终止时，不会接受新请求，但可能还有旧请求未处理完，比如还有客户端的 TCP 连接在传输数据。
+        - 可以给容器添加 preStop 钩子，等准备好了才终止容器。这样能实现零中断的滚动更新。
   - Recreate
     - ：直接重建。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
 

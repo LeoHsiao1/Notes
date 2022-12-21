@@ -79,9 +79,9 @@
           in_cluster_url: http://grafana:3000/
       ```
 
-## 流量管理
+## 代理
 
-### 注入代理
+### 注入Pod
 
 - 想让 Istio 管理某些 Pod 的网络流量时，需要满足以下条件：
   - 给 Pod 注入 Envoy 代理，从而加入 Service Mesh 。
@@ -110,26 +110,6 @@
     ```
   - 方式二：创建一个 Pod 时添加一个标签 `sidecar.istio.io/inject: "true"` ，就会单独注入该 Pod 。
 
-### Sidecar
-
-- 边车（Sidecar）
-  - ：Istio 的一种 CRD ，用于配置每个 Pod 中的 istio-proxy 代理。
-- 例：
-  ```yml
-  apiVersion: networking.istio.io/v1alpha3
-  kind: Sidecar
-  metadata:
-    name: default
-    namespace: istio-config # 该 Sidecar 配置所处的命名空间
-  spec:
-    egress:                 # 管理该命名空间中所有 Pod 的出流量，只允许发送到这些地址
-    - hosts:
-      - "./*"               # 允许发送到同一命名空间的任意服务
-      - "default/*"         # 允许发送到 default 命名空间的任意服务
-  ```
-  - 每个 k8s 命名空间只能有 0 或 1 个 Sidecar 配置生效。
-  - Istio 的 rootNamespace 默认为 istio-config 。在此命名空间创建的 Sidecar 配置，默认会作用于所有命名空间，除非专门给某个命名空间创建了 Sidecar 配置。
-
 - 例：在 k8s 内运行一个监听 80 端口的 Nginx 应用，然后在一个被注入 Envoy 代理的 Pod 内，测试访问 Nginx
   ```sh
   $ curl 10.42.0.10 -I        # Service Mesh 内的 Pod ，默认可以访问任意 IP ，不管目标 IP 是否在 Service Mesh 内、k8s 集群内
@@ -150,6 +130,8 @@
   $ curl 1.1.1.1 -I           # 访问 k8s 集群外一个不可达的 IP ，Sidecar 也是返回 HTTP 503 响应
   HTTP/1.1 503 Service Unavailable
   ```
+
+### istio-proxy
 
 - Istio 转发 HTTP 流量时，是根据 headers 中的 Host 字段进行路由。
   - 比如 `curl 10.0.0.1 -H "Host: nginx.default"` 会被路由到 nginx.default 处，不考虑 IP 地址 10.0.0.1 。
@@ -179,6 +161,23 @@
     - 声明 http 时，表示将 HTTP/1.1 明文流量转发给 upstream 。
     - 声明 http2 时，表示将 HTTP/2 明文流量转发给 upstream 。
     - 声明 https 时，表示将 TLS 加密流量转发给 upstream 。Sidecar 不会解密 TLS 流量，而 ingressgateway、egressgateway 可以解密 TLS 流量。
+
+- 关于滚动部署。
+  - k8s 滚动部署 Pod 时，新请求会交给新 Pod 处理，而旧请求依然交给旧 Pod 处理。需要采取一些措施避免中断旧请求，比如给业务容器添加 preStop 钩子，等准备好了才终止容器。
+  - 使用 Istio 时，增加了一个问题：
+    - 终止 Pod 时，k8s 会同时终止业务容器和 Sidecar 容器。即使业务容器因为 preStop 没有立即终止，Sidecar 也会立即终止，不再处理 Pod 的出入流量，导致旧请求中断。
+  - 上述问题的解决方案：
+    - 可以修改 istio-sidecar-injector 中的 Sidecar 模板，添加 preStop ，sleep 几秒再终止容器。
+    - Istio v1.5 开始，当 Sidecar 被要求终止时，会进入一个优雅终止阶段，
+      - 原理：调用 Envoy 的 `/drain_listeners?inboundonly` 接口，不再接受入方向的新连接，但入方向的现有连接、出方向的连接依然放通。
+      - 该阶段会持续 `terminationDrainDuration: 5s` 时长，然后才终止 Sidecar 容器。该时长不能超过 Pod 的 terminationGracePeriodSeconds 。
+  - Envoy 本身支持热重启（hot restart），流程如下：
+    1. 使用新的代码、配置，运行一个新 Envoy 进程，处理新的网络连接。
+    2. 旧 Envoy 进程不再接受新连接，并等待现有连接结束，该过程称为 Drain 。最后终止旧 Envoy 进程。
+        - 保持现有连接的超时时间为 --drain-time-s=600s 。
+        - 保持旧 Envoy 进程的超时时间为 --parent-shutdown-time-s=900s 。
+
+## 流量管理
 
 ### VirtualService
 
@@ -367,7 +366,7 @@
       exact: GET
 
   - headers:
-      username:             # 选择 headers 中的一个字段，进行匹配，匹配语法为 StringMatch
+      username:             # 选择 headers 中的一个字段，进行匹配，匹配语法为 StringMatch 。字段名采用小写
         exact: test
 
   - queryParams:
@@ -510,6 +509,25 @@
     curl $loadBalancerIP:$port -H "Host: test.com"
     curl $nodeIP:$nodePort     -H "Host: test.com"
     ```
+
+### Sidecar
+
+- Istio 提供了一种名为 Sidecar 的 CRD ，用于配置每个 Pod 中的 Sidecar 。
+- 例：
+  ```yml
+  apiVersion: networking.istio.io/v1alpha3
+  kind: Sidecar
+  metadata:
+    name: default
+    namespace: istio-config # 该 Sidecar 配置所处的命名空间
+  spec:
+    egress:                 # 管理该命名空间中所有 Pod 的出流量，只允许发送到这些地址
+    - hosts:
+      - "./*"               # 允许发送到同一命名空间的任意服务
+      - "default/*"         # 允许发送到 default 命名空间的任意服务
+  ```
+  - 每个 k8s 命名空间只能有 0 或 1 个 Sidecar 配置生效。
+  - Istio 的 rootNamespace 默认为 istio-config 。在此命名空间创建的 Sidecar 配置，默认会作用于所有命名空间，除非专门给某个命名空间创建了 Sidecar 配置。
 
 ## 通信安全
 

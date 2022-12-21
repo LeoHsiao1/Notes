@@ -371,7 +371,7 @@
 ### DestinationRule
 
 - 目标规则（Destination Rule）
-  - ：Istio 的一种 CRD ，用于给 upstream 定义多个子集（subset），即分组。
+  - ：Istio 的一种 CRD ，用于给 upstream 添加一些配置参数。比如划分多个子集（subset），即分组。
 
 - 例：
   ```yml
@@ -428,31 +428,28 @@
   apiVersion: networking.istio.io/v1alpha3
   kind: ServiceEntry
   metadata:
-    name: test2
+    name: test1
     namespace: default
   spec:
     hosts:
-    - "*.test2.com"
+    - mongodb
+    addresses:
+    - 192.168.0.1
     ports:
-    - name: https
-      number: 443
-      protocol: HTTPS
-    location: MESH_EXTERNAL   # 添加一个在服务网格外部的服务，通过 DNS 解析地址
-    resolution: DNS
+    - name: mongodb
+      number: 27017
+      protocol: tcp
+    location: MESH_EXTERNAL # upstream 是否位于 Service Mesh 内
+    resolution: STATIC      # 服务发现方式。这里表示 upstream 的 endpoints 地址是固定值
+    endpoints:
+    - address: 10.0.0.1
+    # - address: 10.0.0.2
+    # exportTo:             # 将该 ServiceEntry 导出到指定命名空间。默认会导出到所有命名空间，对所有 VirtualService 可见
+    # - "."
   ```
-  然后创建相关的 DestinationRule ：
-  ```yml
-  apiVersion: networking.istio.io/v1alpha3
-  kind: DestinationRule
-  metadata:
-    name: test2
-  spec:
-    host: "*.test2.com"
-    trafficPolicy:            # 注册了外部服务之后，可像网格内服务一样添加配置
-      connectionPool:
-        tcp:
-          connectTimeout: 2s
-  ```
+  - 此时执行 `curl 192.168.0.1:27017` ，流量会被路由到 `10.0.0.1:27017` ，即使 192.168.0.1 并不属于 k8s 的 Cluster IP 。
+  - 此时可创建 VirtualService 对象，调用这个名为 mongodb 的 destination 。或者创建 DestinationRule 对象，给该 destination 添加一些配置参数。
+  - upstream 除了指向 IP 地址，也可指向域名并自动 DNS 解析，也可通过 workloadSelector 指向一些 Pod 。详见 [官方文档](https://istio.io/latest/docs/reference/config/networking/service-entry/) 。
 
 ### Gateway
 

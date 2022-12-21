@@ -7,9 +7,9 @@
   - 原生的 k8s 可以编排大量容器，但缺乏管理 Pod 网络流量的能力。而 Istio 提供了动态路由、熔断、TLS 加密通信、权限控制、可观测性等功能，更擅长微服务架构。
   - 用 Service Mesh 技术治理微服务更方便，与编程语言解耦，不需要修改业务代码即可管理网络流量。
 - 缺点：
-  - 对于一般的微服务项目，Istio 的主要用途是标签路由、熔断。其它功能没必要，还增加了系统的复杂度。
-  - Istio 的动态路由主要擅长处理 HTTP 流量，对原始 TCP 流量的路由功能少，还不能处理非 TCP 流量。
-  - Service Mesh 技术给系统增加了一个代理层，出入流量需要经过多层代理转发，增加了几毫秒延迟。
+  - 一般的微服务项目只会用到 Istio 的动态路由功能。其它功能没必要，还增加了系统的复杂度。
+  - Istio 的动态路由擅长处理 HTTP 流量，对 TCP、gRPC 的功能少，对 UDP 不支持。
+  - Istio 给系统增加了一个代理层，出入流量需要经过多层代理转发，增加了几毫秒延迟。
 
 ## 原理
 
@@ -28,7 +28,9 @@
   - cni ：可选插件。先在 k8s 集群安装一个主流的 CNI 插件，然后安装 Istio CNI 插件，可替代 istio-init 。
   - kiali ：提供了对 Istio 的 Web 管理页面。还支持显示流量图表、链路追踪，此时采用 Prometheus、jaeger 作为数据源。
   - jaeger ：一个 Web 服务器，用于链路追踪，可以不安装。Istio 也支持用 Zipkin 作为链路追踪的后端。
-- 为 Envoy 开发插件时，有 C++、Lua、WebAssembly 等多种方式，目前最常见的方式是 WebAssembly ，即编译出 WASM 形式的插件。
+- 为 Envoy 开发插件时，有 C++、Lua、WebAssembly 等多种方式。
+  - 目前最常见的方式是 WebAssembly ，即编译出 WASM 形式的插件。
+  - 也可通过 EnvoyFilter 自定义 Envoy 配置。
 
 ## 部署
 
@@ -85,14 +87,15 @@
 
 - 想让 Istio 管理某些 Pod 的网络流量时，需要满足以下条件：
   - 给 Pod 注入 Envoy 代理，从而加入 Service Mesh 。
-  - 一个 Pod 应该至少属于一个 k8s Service ，即使 Pod 不暴露端口。
-    - 如果一个 Pod 属于多个 k8s Service ，则不能暴露同一个端口，即使通信协议不同。
+  - 一个 Pod 应该至少绑定一个 k8s Service ，即使 Pod 不暴露端口。这样方便用作 destination 。
+    - 如果一个 Pod 绑定多个 k8s Service ，则不能暴露同一个端口，即使通信协议不同。
   - 给 Pod 添加以下标签，方便被 Istio 监控、链路追踪：
     ```yml
     labels:
       app: xx
       version: xx
     ```
+  - Pod 没有配置 `hostNetwork: true` 。
   - Pod 内保留 `15000~15100` 端口不使用，供 Sidecar 专用。
 
 - 给 Pod 注入 Envoy 代理时，通常采用 Sidecar 方式，原理如下：
@@ -196,6 +199,8 @@
   spec:
     # gateways:         # 可选将 VirtualService 绑定到当前命名空间的某个网关。使得这些网关处理流量时，采用该 VirtualService 的路由规则
     # - test-gateway
+    # exportTo:         # 将该 VirtualService 导出到指定命名空间
+    # - "*"             # 默认为 * ，表示导出到所有命名空间，可被所有 Pod 访问。改为 . 则只导出到当前命名空间
     hosts:              # 如果请求流量的目标地址匹配该 hosts 数组，则采用该 VirtualService 的路由规则
     - 10.0.0.1          # 指定的 host 不必是一个实际可访问的地址。格式可以是 IP 地址、DNS 名称，还可以使用通配符 *
     - nginx.default     # k8s 创建的 DNS 名称可以用 FQDN 格式，或短域名。如果省略命名空间，则会在 VirtualService 所在命名空间寻址
@@ -219,7 +224,7 @@
     - 如果一个请求不匹配任何 route 规则，则会返回 HTTP 404 响应。
     - 建议在每个虚拟服务的最后定义一个没有 match 条件的 route 规则，作为默认路由。
   - VirtualService 默认不绑定 Gateway ，因此路由规则会作用于 Service Mesh 中所有 Pod 出入的流量。
-    - 修改了路由规则之后，会立即同步到所有 istio-proxy 。
+    - 修改了路由规则之后，会立即同步到所有 istio-proxy 。集群很大时，同步耗时可能有几秒。
     - 如果将 VirtualService 绑定到 Gateway ，则只会作用于该 Gateway 出入的流量。
   - 例：在一个被注入 Envoy 代理的 Pod 内，测试访问上述 VirtualService
     ```sh
@@ -315,6 +320,10 @@
           value: 50
         httpStatus: 500
   ```
+  - 使用 weight 可实现灰度发布。
+    - 不过 weight 是控制客户端访问某个版本的 upstream 的概率。如果一个客户端重复发出请求，则可能访问到不同版本的 upstream 。
+    - 如果要指定一些客户端访问某个版本的 upstream ，可采用 headers 标签路由的方式。
+  。每个客户端有一定概率访问到某版本的 upstream ，但不能
   - 处理流量时，可选的操作除了 route ，还有 redirect 等：
     ```yml
     redirect:         # 返回重定向报文
@@ -450,8 +459,8 @@
     endpoints:
     - address: 10.0.0.1
     # - address: 10.0.0.2
-    # exportTo:             # 将该 ServiceEntry 导出到指定命名空间。默认会导出到所有命名空间，对所有 VirtualService 可见
-    # - "."
+    # exportTo:
+    # - "*"
   ```
   - 此时执行 `curl 192.168.0.1:27017` ，流量会被路由到 `10.0.0.1:27017` ，即使 192.168.0.1 并不属于 k8s 的 Cluster IP 。
   - 此时可创建 VirtualService 对象，调用这个名为 mongodb 的 destination 。或者创建 DestinationRule 对象，给该 destination 添加一些配置参数。
@@ -501,6 +510,7 @@
         mode: SIMPLE
         credentialName: test-cert
   ```
+  - 以上示例是使用 ingressgateway ，处理入方向的流量。用户也可使用 egressgateway ，处理出方向的流量，比如禁止访问公网地址。
 
 - Gateway 是一种 k8s CRD 对象，而 ingressgateway、egressgateway 才是实际运行的网关程序。
   - 它们分别以 Deployment 方式部署，Pod 内只运行了一个 istio-proxy 容器。
@@ -512,7 +522,10 @@
 
 ### Sidecar
 
-- Istio 提供了一种名为 Sidecar 的 CRD ，用于配置每个 Pod 中的 Sidecar 。
+- 边车（Sidecar）
+  - ：Istio 的一种 CRD ，用于配置每个 Pod 中的 Sidecar 。
+  - 每个 k8s 命名空间只能有 0 或 1 个 Sidecar 配置生效。
+  - Istio 的 rootNamespace 默认为 istio-config 。在此命名空间创建的 Sidecar 配置，会作用于所有命名空间，除非专门给某个命名空间创建了 Sidecar 配置。
 - 例：
   ```yml
   apiVersion: networking.istio.io/v1alpha3
@@ -526,8 +539,12 @@
       - "./*"               # 允许发送到同一命名空间的任意服务
       - "default/*"         # 允许发送到 default 命名空间的任意服务
   ```
-  - 每个 k8s 命名空间只能有 0 或 1 个 Sidecar 配置生效。
-  - Istio 的 rootNamespace 默认为 istio-config 。在此命名空间创建的 Sidecar 配置，默认会作用于所有命名空间，除非专门给某个命名空间创建了 Sidecar 配置。
+
+### EnvoyFilter
+
+- EnvoyFilter
+  - ：Istio 的一种 CRD ，用于给 Envoy 添加一些过滤器，从而自定义 Envoy 配置。
+  - 每个 k8s 命名空间可以有多个 EnvoyFilter 生效。
 
 ## 通信安全
 

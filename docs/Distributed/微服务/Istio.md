@@ -3,7 +3,13 @@
 ：一个 Service Mesh 框架，通常部署在 k8s 集群中。
 - [官方文档](https://istio.io/latest/docs/)
 - 发音为 `/iss-tee-oh/` 。
-- 原生的 k8s 缺乏管理 Pod 网络流量的能力，而 Istio 提供了动态路由、熔断、TLS 加密通信、权限控制、可观测性等功能，更擅长微服务架构。
+- 优点：
+  - 原生的 k8s 可以编排大量容器，但缺乏管理 Pod 网络流量的能力。而 Istio 提供了动态路由、熔断、TLS 加密通信、权限控制、可观测性等功能，更擅长微服务架构。
+  - 用 Service Mesh 技术治理微服务更方便，与编程语言解耦，不需要修改业务代码即可管理网络流量。
+- 缺点：
+  - 对于一般的微服务项目，Istio 的主要用途是标签路由、熔断。其它功能没必要，还增加了系统的复杂度。
+  - Istio 的动态路由主要擅长处理 HTTP 流量，对原始 TCP 流量的路由功能少，还不能处理非 TCP 流量。
+  - Service Mesh 技术给系统增加了一个代理层，出入流量需要经过多层代理转发，增加了几毫秒延迟。
 
 ## 原理
 
@@ -11,11 +17,12 @@
   1. 在 k8s 集群安装 Istio 。
   2. 选择一些 Pod ，被 Istio 注入 Envoy 代理，从而加入 Service Mesh ，被 Istio 管理网络流量。
   3. Istio 提供了多种 CRD ，用户可创建这些 CRD 来控制 Istio 的网络流量。
-- Istio 系统包含以下组件：
+- Istio 系统包含以下软件：
   - envoy ：一个代理软件，担任数据平面（data plane）。
-  - istiod ：担任控制平面（control plane），包含以下组件：
-    - pilot ：负责配置、引导启动 envoy 。
-    - citadel ：负责颁发证书、轮换证书。
+  - istiod ：担任控制平面（control plane），包含多个软件：
+    - pilot-discovery ：运行在 istiod 容器中，提供服务发现的功能。
+    - pilot-agent ：运行在 istio-proxy 容器中，负责引导启动 envoy 、实时修改 envoy 的配置。
+    - citadel ：负责颁发证书。
     - galley ：负责管理、分发 Istio 的配置。
   - istioctl ：命令行客户端。
   - cni ：可选插件。先在 k8s 集群安装一个主流的 CNI 插件，然后安装 Istio CNI 插件，可替代 istio-init 。
@@ -88,11 +95,11 @@
     ```
   - Pod 内保留 `15000~15100` 端口不使用，供 Sidecar 专用。
 
-- 给 Pod 注入 Envoy 代理时的主要原理：
+- 给 Pod 注入 Envoy 代理时，通常采用 Sidecar 方式，原理如下：
   - 在每个 Pod 中添加一个 init 类型的容器，名为 istio-init 。负责设置 iptables 规则，将 Pod 的出入流量转发到 Envoy 。
   - 在每个 Pod 中添加一个 sidecar 类型的容器，名为 istio-proxy 。负责担任透明代理，拦截当前 Pod 收发的网络包，过滤、修改之后再放行。
     - istio-proxy 容器内，采用 UID 为 1337 的普通用户，运行 envoy 和 pilot-agent 进程。
-    - Pod 的出入流量都会经过 Sidecar 代理，相当于在 k8s 原生的 kube-proxy 网络层之上加了一个代理层。这样流量要经过多层代理转发，但一般只增加了几毫秒耗时。
+    - Pod 的出入流量都会经过 Sidecar 代理，相当于在 k8s 原生的 kube-proxy 网络层之上加了一个代理层。
     - Pod 内各容器之间的通信，不会经过 Sidecar 。
 
 - Istio 支持自动给 Pod 注入 Envoy 代理。
@@ -151,7 +158,7 @@
 
 - Envoy 支持代理 TCP、UDP、HTTP、gRPC 等多种协议的流量，但 Istio 只会代理基于 TCP 的流量，比如 TCP、HTTP、gRPC 。
   - Istio 不会代理非基于 TCP 的流量，比如 UDP 。这些流量不会被 Sidecar 拦截，而是被 Pod 直接收发。同理，这些流量不会经过 ingressgateway、egressgateway 。
-  - Istio 能自动检测网络流量采用的协议，比如 HTTP/1.0 和 HTTP/2 协议。如果检测不出，则当作 TCP 原始流量处理。
+  - Istio 能自动检测网络流量采用的协议，比如 HTTP/1.0 和 HTTP/2 协议。如果检测不出，则当作原始 TCP 流量处理。
   - istio-proxy 收到客户端的 HTTP 请求时，默认采用 HTTP/1.1 协议转发 HTTP 请求给 upstream 。除非在 Pod 所属的 Service 中，声明端口采用的协议：
     ```yml
     apiVersion: v1
@@ -233,7 +240,7 @@
     HTTP/1.1 200 OK
     ```
 
-- VirtualService 可对 http、tls、tcp 三种流量进行路由：
+- VirtualService 可对 http、tls、tcp 三种流量进行路由，不过对 http 流量的路由规则最多样。
   ```yml
   http:
   - match:

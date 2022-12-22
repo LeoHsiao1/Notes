@@ -8,11 +8,11 @@
 命令：
 ```sh
 $ curl <URL>...                   # 访问指定网址（默认为 GET 方法），并将 HTTP 响应内容打印到 stdout
-      -X POST                     # 使用指定类型的 HTTP 方法
-      -H "Connection: Keep-Alive" # 加上 header（可以重复使用该命令选项）
-      -b "name=leo"               # 加上 cookies
-      -I                          # 只显示 response header ，这会发出 HEAD 请求
-      -L                          # 如果 HTTP 响应报文是重定向，则自动跟随
+      -X POST                     # --request ，使用指定类型的 HTTP 方法
+      -H "Connection: Keep-Alive" # --header ，加上 header（可以重复使用该命令选项）
+      -b "name=leo"               # --cookie ，加上 cookies
+      -I                          # --head ，发送 HEAD 请求
+      -L                          # --location ，如果 HTTP 响应报文是重定向，则自动跟随
 
       # 关于下载
       -o <PATH>                   # --output ，将 URL 指向的资源保存为指定路径的文件

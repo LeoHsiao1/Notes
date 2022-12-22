@@ -52,7 +52,6 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
       -x socks5://10.0.0.1:1080
 ```
 - 如果 URL 包含特殊字符，则要用单引号或双引号作为定界符，以免引发歧义。
-- 用 `curl ip:port` 也可以测试网络端口能否连通，与 telnet 类似。
 - 使用 curl 时，默认不会显示进度表。
   - 通过 -o 或 -O 选项下载文件时，会显示进度表。
   - 将 stdout 从终端重定向到其它位置时，会通过 stderr 显示一个进度表。如下：
@@ -71,6 +70,10 @@ $ curl <URL>...                   # 访问指定网址（默认为 GET 方法）
       ```sh
       curl 127.0.0.1 2> /dev/null
       ```
+- 虽然 curl 命令提供的 HTTP 客户端的功能少，不如浏览器。但日常工作中经常要用 curl 命令下载文件，或进行测试。
+  - 执行 `curl <ip>:<port>` ，可测试本机能否向某个端口建立 TCP 连接。这里也可用 telnet 命令测试。
+  - 执行 `curl cip.cc` ，可查询本机使用的公网 IP 、地理位置。
+  - 执行 `curl -v -X GET https://httpbin.org/get -H "accept: application/json"` ，可测试本机发出的 HTTP headers 有哪些。
 
 ## wget
 

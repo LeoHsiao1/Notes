@@ -1481,6 +1481,10 @@ module.exports = {
                             path: "/Distributed/微服务/简介"
                         },
                         {
+                            title: "APISIX",
+                            path: "/Distributed/微服务/APISIX"
+                        },
+                        {
                             title: "Istio",
                             path: "/Distributed/微服务/Istio"
                         }

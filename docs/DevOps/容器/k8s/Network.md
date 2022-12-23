@@ -129,7 +129,7 @@ k8s 常见的几种网络通信：
     - 如果 k8s 集群内有大量服务需要暴露，供集群外主机访问。则与其为每个服务分别创建 NodePort、LoadBalancer ，不如创建一个 Ingress ，实现所有需求。有的 Ingress 还提供 API Gateway 等额外功能。
   - 如果 Pod 需要访问一些集群外地址，则可采用以下措施，将外部地址转换成 k8s Service 。这样便于像访问 k8s 内部 Service 一样访问 k8s 外部地址，外部地址变化时还只需修改 Service 配置。
     - 假设外部地址为域名，则可创建 externalName 类型的 Service 。
-    - 假设外部地址为 IP ，则可创建一个指向该 IP 的 Endpoints 。
+    - 假设外部地址为 IP ，则可创建指向该 IP 的 Endpoints 。
 
 ## Service
 
@@ -154,13 +154,13 @@ k8s 常见的几种网络通信：
     # type: ClusterIP       # Service 类型，默认为 ClusterIP
     clusterIP: 10.43.0.1    # 该 Service 绑定的 clusterIP 。如果创建 Service 时不指定 clusterIP ，则随机分配一个。创建 Service 之后不允许修改 clusterIP ，除非重建 Service
     clusterIPs:
-      - 10.43.0.1
+    - 10.43.0.1
     # ipFamilies:           # IP 协议，可以为 IPv4、IPv6
-    #   - IPv4
+    # - IPv4
     # ipFamilyPolicy: SingleStack # IP 协议的策略。默认为 SingleStack ，只使用 ipFamilies 中的第一个协议栈，此时 ClusterIPs 只包含一个 IP 地址，与 clusterIP 相同
 
     # externalIPs:          # 可以给 Service 绑定集群外的多个 IP 。当 k8s node 收到指向 externalIPs 的数据包时，会转发给该 Service 处理
-    #   - None
+    # - None
     # externalTrafficPolicy: Cluster  # 从 k8s 外部访问 Service 时的路由策略。默认为 Cluster
     # internalTrafficPolicy: Cluster  # 从 k8s 内部访问 Servier 时的路由策略。默认为 Cluster
 
@@ -199,8 +199,8 @@ k8s 常见的几种网络通信：
   ```
   因此可通过 DNS 名称访问 Service ：
   ```sh
-  curl  redis:3306           # 客户端与 service 在同一命名空间时，可以直接访问 service_name ，会 DNS 解析到 service_ip
-  curl  redis.default:3306   # 客户端与 service 在不同命名空间时，需要访问详细的 DNS 名称，才能查找到 service_ip
+  curl  redis:6379           # 客户端与 service 在同一命名空间时，可以直接访问 service_name ，会 DNS 解析到 service_ip
+  curl  redis.default:6379   # 客户端与 service 在不同命名空间时，需要访问详细的 DNS 名称，才能查找到 service_ip
   ```
 
 - 可以给 Service 配置 `clusterIP: None` ，不分配 clusterIP 。这样的 Service 称为 Headless 类型。
@@ -211,10 +211,10 @@ k8s 常见的几种网络通信：
 
 - 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
   ```sh
-  REDIS_SERVICE_HOST=10.43.2.2
+  REDIS_SERVICE_HOST=10.43.0.1
   REDIS_PORT_6379_TCP_PORT=6379
   REDIS_PORT_6379_TCP_PROTO=tcp
-  REDIS_PORT_6379_TCP=tcp://10.43.2.2:6379
+  REDIS_PORT_6379_TCP=tcp://10.43.0.1:6379
   ...
   ```
   - Serivce 变化时不会自动更新 Pod 的环境变量，因此不可靠。
@@ -337,17 +337,79 @@ k8s 常见的几种网络通信：
 - 创建 Service 时，会根据 selector 选中一些 Pod ，自动创建一个与 Service 同名的 EndPoints 对象。
   - EndPoints 会监听 Service 需要反向代理的所有 Pod ，实时记录其中 Ready 状态的 Pod 的 ip:port 端点地址，实现服务发现。
   - kube-proxy 会从 EndPoints 读取端点，将访问 Service 的流量转发到端点。
-- 创建 Service 时，如果没有 selector ，则不会创建 EndPoints 对象，因此发向 service_ip:port 的数据包不会被转发，导致用户访问端口时无响应。
-  - 此时用户可手动创建 Endpoints 对象，自定义端点地址，从而让 Service 反向代理到任意地址。
-- EndPoints 示例：
+- 例：上文给 Redis 创建了 Cluster 类型的 Service ，可查看其 Service 以及自动创建的 EndPoints ：
   ```sh
   [root@CentOS ~]# kubectl get service redis
   NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)              AGE
-  redis        ClusterIP   10.43.2.2    <none>        6379/TCP,26379/TCP   2h
+  redis        ClusterIP   10.43.0.1    <none>        6379/TCP,26379/TCP   2h
   [root@CentOS ~]# kubectl get endpoints redis
-  NAME         ENDPOINTS                        AGE
-  redis        10.42.3.6:6379,10.42.3.6:26379   2h
+  NAME         ENDPOINTS                            AGE
+  redis        10.42.3.6:6379,10.42.3.6:26379,...   2h
   ```
+  查看 EndPoints 的详细配置：
+  ```yml
+  apiVersion: v1
+  kind: Endpoints
+  metadata:
+    name: redis
+    namespace: default
+  subsets:              # subsets 字段之下可包含多组端点 addresses
+  - addresses:
+    - ip: 10.42.3.6     # 每组 addresses 可包含多个 IP ，这里是 Ready 状态的 Pod IP ，这些 IP 暴露同样的一组 ports
+      nodeName: node-1
+      targetRef:
+        kind: Pod
+        name: redis-7a27dc4c5b-njf7b
+        namespace: default
+        uid: d24dddca-7362-424c-8740-284f693b86f5
+    - ip: 10.42.3.7
+      nodeName: node-2
+      targetRef:
+        kind: Pod
+        name: redis-79c9c6bd9d-zcsvv
+        namespace: default
+        uid: d23f3d5e-7b46-4405-bd0c-ab21170d0c8e
+    ports:                # 自动创建 EndPoints 时，会拷贝 Service 的 ports 配置
+    - name: redis
+      port: 6379
+      protocol: TCP
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+  ```
+  - 上例的 Endpoints 有两个可用端点，因此执行 `curl 10.43.0.1:6379` 时，流量会被转发到 `10.42.3.6:6379` 或 `10.42.3.7:6379` 。
+
+- 创建 Service 时，如果没有 selector ，则不会创建 EndPoints 对象，因此发向 service_ip:port 的数据包不会被转发，导致用户访问端口时无响应。
+  - 此时用户可手动创建 Endpoints 对象，自定义端点地址，从而让 Service 反向代理到任意地址。
+  - 虽然是手动创建的 Endpoints ，但删除 Service 时，会自动删除与它同名的 Endpoints 。
+- 例：手动创建一个 Service 和 EndPoints ，反向代理到 k8s 集群外的 mysql
+  ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: mysql
+    namespace: default
+  spec:
+    clusterIP: 10.43.0.2
+    ports:
+    - port: 3306
+      protocol: TCP
+      targetPort: 3306
+    type: ClusterIP
+  ---
+  apiVersion: v1
+  kind: Endpoints
+  metadata:
+    name: mysql
+    namespace: default
+  subsets:
+  - addresses:
+    - ip: 10.0.0.5
+    ports:
+    - port: 3306
+      protocol: TCP
+  ```
+  - 此时执行 `curl mysql:3306` ，首先 DNS 解析到 10.43.0.2 ，然后流量被转发到 `curl 10.0.0.5:3306` 。
 
 ### EndpointSlices
 

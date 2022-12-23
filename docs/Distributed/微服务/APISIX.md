@@ -2,27 +2,30 @@
 
 - ：一个 API 网关。
 - [官方文档](https://apisix.apache.org/docs/)
-- 2019 年开源，由 ASF 基金会管理。
+- 2019 年由深圳支流科技公司开源，后来交给 ASF 基金会管理。
 - 特点：
-  - 提供了动态路由、负载均衡、限流等功能。
+  - 基于 openresty 管理网络流量，支持 TCP、UDP、HTTP 等多种协议的反向代理，不过最常用的是 HTTP 。
+  - 提供了动态路由、负载均衡、限流、身份认证等功能。
   - 支持动态更新，可在运行时更新配置、插件，不需重启。
   - 性能高。用作反向代理时，单核 CPU 的 QPS 为 18000 ，平均延迟为 0.2ms 。
 
-## 原理
+## 架构
 
 - APISIX 系统需要部署以下软件：
-  - apisix ：包含以下模块：
-    - openresty ：APISIX 基于它来收发、管理 HTTP 流量。因此部署 apisix 进程时，实际上是运行多个 Nginx 进程。
+  - apisix ：一个 HTTP 服务器，包含以下模块：
+    - openresty ：APISIX 基于它来收发、管理网络流量。因此部署 apisix 进程时，实际上是运行多个 Nginx 进程。
     - core ：APISIX 的核心代码。
-    - plugin runtime ：运行一些插件。
-      - APISIX 内置了一些插件，用户也可添加 Lua、Java、Golang、Python、JS 等语言开发的插件，还支持 WASM 插件。
-  - dashboard ：提供对 APISIX 的 Web 管理页面。
+    - plugin runtime ：插件的运行时。
+      - APISIX 内置了缓存、限流、身份认证、可观测性等插件，用户也可添加其它插件。
+      - 插件可采用 Lua、Java、Golang、Python、JS 等语言开发，还支持 WASM 插件。
+  - dashboard ：一个 Web 服务器，提供对 APISIX 的 Web 管理页面。
+    - 默认监听 9000 端口，账号密码为 admin、admin 。
+    - 可嵌入 Grafana 图表。
   - etcd ：APISIX 默认将配置文件等数据存储在自身，可以改为存储到 etcd 数据库，从而可部署多个 apisix 实例，实现高可用。
-  <!-- - Prometheus、Grafana ：用于获取可观测性 -->
 - apisix 进程通常监听多个 TCP 端口：
   - 9080 ：用于接收一般的 HTTP 请求。
   - 9443 ：用于接收一般的 HTTPS 请求。
-  - 9180 ：提供 HTTP 协议的 admin API ，用于修改 APISIX 的配置。详见 [官方文档](https://apisix.apache.org/docs/apisix/admin-api/) 。
+  - 9180 ：提供 HTTP 协议的 admin API ，用于修改 APISIX 的配置，客户端需要使用 key 进行身份认证。详见 [官方文档](https://apisix.apache.org/docs/apisix/admin-api/) 。
   - 9090 ：提供 HTTP 协议的 control API ，用于查询 APISIX 的配置、运行状态。
   - 9091 ：提供 exporter 接口，供 Prometheus 采集监控指标，URI 为 /apisix/prometheus/metrics 。
 
@@ -35,10 +38,10 @@ APISIX 有多种部署方式：
   docker run -d --name apisix \
       -p 9080:9080 \
       -e APISIX_STAND_ALONE=true \
-      apache/apisix:3.0.0-debian
+      apache/apisix:2.15.1-debian
   ```
 - 通过 docker-compose 部署，参考 [官方示例](https://github.com/apache/apisix-docker/blob/master/example/docker-compose.yml) 。
-- 通过 k8s Ingress Controller 部署，然后作为 Ingress 使用。
+- 在 k8s 集群安装 k8s Ingress Controller 。
 
 ### 版本
 
@@ -49,10 +52,45 @@ APISIX 有多种部署方式：
 
 ## 用法
 
-### route
+- Nginx 处理 HTTP 请求时主要使用 server、location 等配置，而 APISIX 设计了以下对象：
+  - route
+    - ：表示路由规则，类似于 Nginx 的 location 。
+  - upstream
+    - ：表示被 APISIX 反向代理的上游服务，类似于 Nginx 的 upstream 。
+    - 创建一个 upsteam 对象之后，可以被多个 route 反向代理。
+  - service
+    - ：表示一个抽象的服务，可绑定多个 route 路由规则。类似于 Nginx 的 server 。
+  - consumer
+    - ：用于标识一个客户端。允许给不同 consumer 的客户端发来的 HTTP 请求，采用不同的插件配置。
+    - Nginx 可通过 HTTP 请求的 client_ip、headers 分辨客户端的类型，返回不同的 HTTP 响应。而 APISIX 除了这些功能，还可根据插件过滤 HTTP 请求。
+  - consumer group
+    - ：用于标识一组客户端，使它们采用相同的插件配置。
+
+- 有多种修改 APISIX 配置的方式：
+  - 向 admin API 发送 HTTP 请求。例：
+    ```sh
+    curl -X PUT http://127.0.0.1:9180/apisix/admin/routes/1 -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -d '
+    {
+      "name": "route-1",
+      "methods": ["GET"],
+      "host": "test.com",
+      "uri": "/test/*",
+      "upstream": {
+        "type": "roundrobin",
+        "nodes": {
+          "httpbin.org:80": 1
+        }
+      }
+    }'
+    ```
+    - 这会创建一个 id 为 1 的 route ，规则为：当收到 HTTP 请求时，如果 methods、host、uri 符合描述，则将该 HTTP 请求转发给 upstream 。
+  - 在 Dashbaord 的 Web 页面上配置。不过目前 Web 页面尚未覆盖所有 admin API 。
+  - 安装 k8s Ingress Controller 之后，创建 Ingress 或 CRD 对象来配置 APISIX 。
 
 
 
+<!-- ### route -->
 
-### upstream
+
+<!-- ### upstream -->
 

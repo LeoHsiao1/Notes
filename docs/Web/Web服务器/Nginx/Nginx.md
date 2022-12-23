@@ -3,10 +3,11 @@
 ：一个轻量级的 HTTP 服务器。
 - [官方文档](http://nginx.org/en/docs/)
 - 读音相当于 engine x 。
+- 于 2004 年发布，采用 C 语言开发。
 - 特点：
-  - 支持反向代理、负载均衡。
-  - 不仅支持 HTTP、HTTPS 协议，也支持 IMAP、POP3、SMTP 协议。
-  - 支持第四层的 TCP 代理、第七层的 HTTP 代理。
+  - 一般用作静态服务器，处理静态文件的效率高。也可用作动态服务器，支持 FastCGI、WSGI 应用。
+  - 支持 HTTP、HTTPS 协议，还支持 IMAP、POP3、SMTP 协议。
+  - 支持反向代理、负载均衡。支持第四层的 TCP 代理、第七层的 HTTP 代理。
 
 ## 部署
 

@@ -121,12 +121,15 @@ k8s 常见的几种网络通信：
     2. Pod1 的宿主机收到数据包，路由转发给 node3 。
         - 因为 node3 是集群外主机，会通过 iptables 规则进行 SNAT ，将数据包的源 IP 改为宿主机的 eth0 IP 。否则 node3 回复数据包时，会找不到路由而失败。
   - 默认不能从 k8s 集群外主机访问 Pod ，有几种解决方案：
-    - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网 IP 或公网 IP 。
-    - 给 Pod 创建 NodePort 类型的 Service 。
-    - 给 Pod 绑定 HostPort ，并固定调度到某个 Node 。
-    - 给 Pod 启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
+    - 修改 Pod 的配置，绑定 HostPort ，并固定调度到某个 Node 。
+    - 修改 Pod 的配置，启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
     - 给集群外主机添加路由，将访问 Cluster IP 的流量路由到任一 k8s 节点。例如：`ip route add 10.43.0.0/16 via 10.0.1.1`
-    - 如果 k8s 集群内有大量 HTTP 服务器需要暴露，供集群外主机访问。使用 Ingress 比 NodePort、LoadBalancer 更好，因为可配置复杂的路由规则，甚至提供 API Gateway 的功能。
+    - 给 Pod 创建 NodePort 类型的 Service 。
+    - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网 IP 或公网 IP 。
+    - 如果 k8s 集群内有大量服务需要暴露，供集群外主机访问。则与其为每个服务分别创建 NodePort、LoadBalancer ，不如创建一个 Ingress ，实现所有需求。有的 Ingress 还提供 API Gateway 等额外功能。
+  - 如果 Pod 需要访问一些集群外地址，则可采用以下措施，将外部地址转换成 k8s Service 。这样便于像访问 k8s 内部 Service 一样访问 k8s 外部地址，外部地址变化时还只需修改 Service 配置。
+    - 假设外部地址为域名，则可创建 externalName 类型的 Service 。
+    - 假设外部地址为 IP ，则可创建一个指向该 IP 的 Endpoints 。
 
 ## Service
 
@@ -306,12 +309,11 @@ k8s 常见的几种网络通信：
   1. 客户端发出数据包，目标 IP 为 Service 的 loadBalancerIP 。
   2. 负载均衡器收到数据包，反向代理到 k8s 集群中随机一个 Node 的 nodePort ，并将目标 IP 改为 Service 的 clusterIP 。
   3. k8s Node 收到数据包，反向代理到 EndPoints 。
-- 使用 NodePort 类型的 Service 时，客户端通常访问固定一个 Node IP ，存在单点故障的风险。而使用 LoadBalancer 类型的 Service 时，客户端依然访问固定一个 IP ，但流量会被分散到所有 k8s Node ，实现负载均衡。
+- 使用 NodePort 类型的 Service 时，客户端通常访问固定一个 Node IP ，存在单点故障的风险。而使用 LoadBalancer 类型的 Service 时，客户端依然访问固定一个 loadBalancerIP ，但流量会被分散到所有 k8s Node ，实现负载均衡。
 
 ### ExternalName
 
 ：将 Service 的 DNS 名称解析到一个集群外的域名。
-- k8s 会添加一条 CNAME 类型的 DNS 记录，将 Service 的 DNS 名称解析到 externalName ，而不是 clusterIP 。
 - 例：
   ```yml
   apiVersion: v1
@@ -323,6 +325,11 @@ k8s 常见的几种网络通信：
     type: ExternalName
     externalName: redis.test.com
   ```
+  - k8s 会添加一条 CNAME 类型的 DNS 记录，将该 Service 的 DNS 名称解析到 externalName ，而不是 clusterIP 。
+  - 因此上例中，执行 `ping redis.default` ，相当于执行 `ping redis.test.com` ，DNS 解析结果是 externalName 对应的 IP 。
+  - externalName 字段必须填一个可被 DNS 解析的名称，不能填 IP 。
+    - 如果是 k8s 内部的 DNS 名称，则必须为 FQDN 格式。
+    - 如果该值不能被 DNS 解析，则创建该 Service 时会成功，但执行 `ping redis.default` 时会报错 bad address ，表示不能 DNS 解析。
 
 ## EndPoints
 

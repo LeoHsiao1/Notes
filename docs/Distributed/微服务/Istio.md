@@ -39,8 +39,7 @@
     VERSION=1.13.9
     wget https://github.com/istio/istio/releases/download/$VERSION/istio-$VERSION-linux-amd64.tar.gz
     tar -xf istio-$VERSION-linux-amd64.tar.gz
-    cp istio-$VERSION/bin/istioctl /usr/bin/istioctl
-    chmod +x /usr/bin/istioctl
+    install istio-$VERSION/bin/istioctl /usr/bin/
     ```
 2. 安装 Istio ：
     ```sh

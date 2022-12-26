@@ -2,12 +2,11 @@
 
 - ：一个 API 网关。
 - [官方文档](https://apisix.apache.org/docs/)
-- 2019 年由深圳支流科技公司开源，后来交给 ASF 基金会管理。
+- 2019 年由深圳支流科技公司开源，后来交给 ASF 基金会管理。企业版称为 API7 。
 - 特点：
   - 基于 openresty 管理网络流量，支持 TCP、UDP、HTTP 等多种协议的反向代理，不过最常用的是 HTTP 。
   - 提供了动态路由、负载均衡、限流、身份认证等功能。
   - 支持动态更新，可在运行时更新配置、插件，不需重启。
-  - 性能高。用作反向代理时，单核 CPU 的 QPS 为 18000 ，平均延迟为 0.2ms 。
 
 ## 架构
 
@@ -16,11 +15,11 @@
     - openresty ：APISIX 基于它来收发、管理网络流量。因此部署 apisix 进程时，实际上是运行多个 Nginx 进程。
     - core ：APISIX 的核心代码。
     - plugin runtime ：插件的运行时。
-      - APISIX 内置了缓存、限流、身份认证、可观测性等插件，用户也可添加其它插件。
+      - APISIX 内置了缓存、限流、身份认证、可观测性等插件，用户也可添加其它插件，实现丰富的功能。
       - 插件可采用 Lua、Java、Golang、Python、JS 等语言开发，还支持 WASM 插件。
   - dashboard ：一个 Web 服务器，提供对 APISIX 的 Web 管理页面。
     - 默认监听 9000 端口，账号密码为 admin、admin 。
-    - 可嵌入 Grafana 图表。
+    - 可在 Web 页面嵌入 Grafana 图表。
   - etcd ：APISIX 默认将配置文件等数据存储在自身，可以改为存储到 etcd 数据库，从而可部署多个 apisix 实例，实现高可用。
 - apisix 进程通常监听多个 TCP 端口：
   - 9080 ：用于接收一般的 HTTP 请求。
@@ -41,7 +40,34 @@ APISIX 有多种部署方式：
       apache/apisix:2.15.1-debian
   ```
 - 通过 docker-compose 部署，参考 [官方示例](https://github.com/apache/apisix-docker/blob/master/example/docker-compose.yml) 。
-- 在 k8s 集群安装 k8s Ingress Controller 。
+- 在 k8s 集群安装 APISIX Ingress Controller ：
+  ```sh
+  wget https://github.com/apache/apisix-helm-chart/releases/download/apisix-0.12.1/apisix-0.12.1.tgz
+  helm install apisix apisix-0.12.1.tgz \
+      --create-namespace --namespace ingress-apisix \
+      --set gateway.type=NodePort \
+      --set ingress-controller.enabled=true \
+      --set ingress-controller.config.apisix.serviceNamespace=ingress-apisix
+
+  wget https://github.com/apache/apisix-helm-chart/releases/download/apisix-dashboard-0.7.0/apisix-dashboard-0.7.0.tgz
+  helm install apisix-dashboard apisix-dashboard-0.7.0.tgz \
+      --create-namespace --namespace ingress-apisix
+  ```
+  - 这会在 ingress-apisix 命名空间部署以下 Pod ：
+    ```sh
+    apisix                      # Deployment 类型
+    apisix-dashboard            # Deployment 类型
+    apisix-ingress-controller   # Deployment 类型
+    apisix-etcd                 # StatefulSet 类型，有 3 个实例，挂载 PVC 。如果当前 k8s 不支持 PVC ，则可改为其它类型的 volume
+    ```
+  - 这会创建多个 Service ：
+    ```sh
+    apisix-admin                # ClusterIP 类型，反向代理 apisix ，供管理员调用 admin API
+    apisix-dashboard            # ClusterIP 类型，反向代理 dashboard
+    apisix-etcd                 # ClusterIP 类型，反向代理 etcd
+    apisix-gateway              # NodePort 类型（也可改成 LoadBalancer 类型），反向代理 apisix ，供一般客户端访问
+    apisix-ingress-controller   # ClusterIP 类型，反向代理 ingress-controller
+    ```
 
 ### 版本
 
@@ -74,7 +100,7 @@ APISIX 有多种部署方式：
       "name": "route-1",
       "methods": ["GET"],
       "host": "test.com",
-      "uri": "/test/*",
+      "uri": "/*",
       "upstream": {
         "type": "roundrobin",
         "nodes": {
@@ -84,13 +110,41 @@ APISIX 有多种部署方式：
     }'
     ```
     - 这会创建一个 id 为 1 的 route ，规则为：当收到 HTTP 请求时，如果 methods、host、uri 符合描述，则将该 HTTP 请求转发给 upstream 。
-  - 在 Dashbaord 的 Web 页面上配置。不过目前 Web 页面尚未覆盖所有 admin API 。
-  - 安装 k8s Ingress Controller 之后，创建 Ingress 或 CRD 对象来配置 APISIX 。
-
-
-
-<!-- ### route -->
-
-
-<!-- ### upstream -->
-
+    - 测试访问：
+      ```sh
+      curl 127.0.0.1:9080/get -H "Host: test.com"
+      ```
+  - 在 Dashboard 的 Web 页面上配置。不过目前 Web 页面尚未覆盖所有 admin API 。
+  - 在 k8s 集群安装 APISIX Ingress Controller 之后，除了上述两种配置方式，也可创建 ApisixRoute、ApisixUpstream 等 CRD 对象。
+    - APISIX CRD 对象的语法与 k8s Ingress 相似，但功能更多。
+    - apisix-ingress-controller 会通过 kube-apiserver 监视所有 APISIX CRD 对象的变化。发现变化时，自动将 CRD 对象转换成 APISIX 原生配置，并通过 admin API 导入 APISIX ，但不支持导出。
+    - 例：
+      ```yml
+      apiVersion: apisix.apache.org/v2
+      kind: ApisixRoute
+      metadata:
+        name: route-1
+        namespace: default
+      spec:
+        http:
+        - name: rule-1
+          match:
+            hosts:
+            - test.com
+            paths:
+            - /*
+          upstreams:                    # 收到请求流量时，反向代理到 ApisixUpstream
+          - name: upstream-1
+          # plugins:
+          #   ...
+      ---
+      apiVersion: apisix.apache.org/v2
+      kind: ApisixUpstream
+      metadata:
+        name: upstream-1
+        namespace: default
+      spec:
+        externalNodes:
+        - type: Domain
+          name: httpbin.org
+      ```

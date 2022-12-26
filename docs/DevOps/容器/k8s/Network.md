@@ -465,11 +465,9 @@ k8s 常见的几种网络通信：
     #     - <host>
     #   secretName: <name>
   ```
-  - Ingress 不会绑定 Cluster IP 。客户端发送 HTTP 请求到 Node 的特定端口，即可访问 Ingress 。
-  - 可执行以下命令，测试访问该 Ingress ：
+  - 创建 Ingress 之后，客户端发送 HTTP 请求到任意节点的 NodePort ，就会按 Ingress 规则处理。例如：
     ```sh
-    echo '10.0.0.1 test.com' >> /etc/hosts    # 将 Ingress 域名解析到任一 k8s node
-    curl test.com
+    curl 10.0.0.1:80/get -H "Host: test.com"
     ```
   - Ingress 中可定义多个 backend 。如果 HTTP 请求的 request_host、request_path 匹配某个 backend ，则交给该 backend 处理，不交给其它 backend 处理。
     - 如果 HTTP 请求不匹配任何 backend ，则交给 defaultBackend 处理。

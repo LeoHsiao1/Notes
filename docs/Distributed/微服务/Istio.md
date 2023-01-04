@@ -3,12 +3,9 @@
 ：一个 Service Mesh 框架，通常部署在 k8s 集群中。
 - [官方文档](https://istio.io/latest/docs/)
 - 发音为 `/iss-tee-oh/` 。
-- 优点：
+- 特点：
   - 原生的 k8s 可以编排大量容器，但缺乏管理 Pod 网络流量的能力。而 Istio 提供了动态路由、熔断、TLS 加密通信、权限控制、可观测性等功能，更擅长微服务架构。
-  - 用 Service Mesh 技术治理微服务更方便。
-- 缺点：
-  - 一般的微服务项目只会用到 Istio 的动态路由功能。其它功能没必要，还增加了系统的复杂度。
-  - Istio 的动态路由擅长处理 HTTP 流量，对 TCP、gRPC 的功能少，对 UDP 不支持。
+  - Istio 擅长 HTTP、TCP 反向代理，且支持动态路由。不支持 UDP 流量。
   - Istio 给系统增加了一个代理层，出入流量需要经过多层代理转发，增加了几毫秒延迟。
 
 ## 原理
@@ -164,7 +161,7 @@
     - 声明 http2 时，表示将 HTTP/2 明文流量转发给 upstream 。
     - 声明 https 时，表示将 TLS 加密流量转发给 upstream 。Sidecar 不会解密 TLS 流量，而 ingressgateway、egressgateway 可以解密 TLS 流量。
 
-- 关于滚动部署。
+- 关于滚动部署：
   - k8s 滚动部署 Pod 时，新请求会交给新 Pod 处理，而旧请求依然交给旧 Pod 处理。需要采取一些措施避免中断旧请求，比如给业务容器添加 preStop 钩子，等准备好了才终止容器。
   - 使用 Istio 时，增加了一个问题：
     - 终止 Pod 时，k8s 会同时终止业务容器和 Sidecar 容器。即使业务容器因为 preStop 没有立即终止，Sidecar 也会立即终止，不再处理 Pod 的出入流量，导致旧请求中断。
@@ -202,7 +199,7 @@
     # - "*"             # 默认为 * ，表示导出到所有命名空间，可被所有 Pod 访问。改为 . 则只导出到当前命名空间
     hosts:              # 如果请求流量的目标地址匹配该 hosts 数组，则采用该 VirtualService 的路由规则
     - 10.0.0.1          # 指定的 host 不必是一个实际可访问的地址。格式可以是 IP 地址、DNS 名称，还可以使用通配符 *
-    - nginx.default     # k8s 创建的 DNS 名称可以用 FQDN 格式，或短域名。如果省略命名空间，则会在 VirtualService 所在命名空间寻址
+    - nginx.default     # k8s 创建的 DNS 名称可以用 FQDN 格式，或短域名。建议不要省略命名空间，否则会在 VirtualService 所在命名空间寻址
     - test.com
     - "*.test.com"
     http:
@@ -319,10 +316,35 @@
           value: 50
         httpStatus: 500
   ```
-  - 使用 weight 可实现灰度发布。
-    - 不过 weight 是控制客户端访问某个版本的 upstream 的概率。如果一个客户端重复发出请求，则可能访问到不同版本的 upstream 。
-    - 如果要指定一些客户端访问某个版本的 upstream ，可采用 headers 标签路由的方式。
-  。每个客户端有一定概率访问到某版本的 upstream ，但不能
+  - match 匹配条件有多种：
+    ```yml
+    match:                # match 数组中可包含多组条件，它们是 OR 的关系。流量只要满足其中一组条件，就会采用当前 route 规则
+    - name: v1            # 可选给匹配条件命名，会记录在访问日志中
+      uri:                # 这组条件包含了 uri、headers 两个条件，它们是 AND 的关系。流量需要同时满足它们，才算满足这组条件
+        prefix: /api/v1
+      headers:
+        username:
+          exact: test
+
+    - uri:                    # 对 uri 进行匹配。匹配语法为 StringMatch ，可选 exact、prefix、regex 三种匹配方式
+        exact: /index.html    # 字符串完全匹配
+        # prefix: /index      # 字符串前缀匹配
+        # regex: /index.*     # 字符串正则匹配，采用 Google RE2 语法
+      # ignoreUriCase: false  # 是否不区分 uri 的大小写，默认为 false
+
+    - port: 80
+
+    - method:                 # 对 HTTP 请求方法进行匹配，匹配语法为 StringMatch
+        exact: GET
+
+    - headers:
+        username:             # 选择 headers 中的一个字段，进行匹配，匹配语法为 StringMatch 。字段名采用小写
+          exact: test
+
+    - queryParams:
+        version:              # 选择 queryParams 中的一个字段，进行匹配
+          exact: v1
+    ```
   - 处理流量时，可选的操作除了 route ，还有 redirect 等：
     ```yml
     redirect:         # 返回重定向报文
@@ -352,35 +374,10 @@
       value: 100.0    # 默认为 100.0
     ```
 
-- match 匹配条件的详细示例：
-  ```yml
-  match:                # match 数组中可包含多组条件，它们是 OR 的关系。流量只要满足其中一组条件，就会采用当前 route 规则
-  - name: v1            # 可选给匹配条件命名，会记录在访问日志中
-    uri:                # 这组条件包含了 uri、headers 两个条件，它们是 AND 的关系。流量需要同时满足它们，才算满足这组条件
-      prefix: /api/v1
-    headers:
-      username:
-        exact: test
-
-  - uri:                    # 对 uri 进行匹配。匹配语法为 StringMatch ，可选 exact、prefix、regex 三种匹配方式
-      exact: /index.html    # 字符串完全匹配
-      # prefix: /index      # 字符串前缀匹配
-      # regex: /index.*     # 字符串正则匹配，采用 Google RE2 语法
-    # ignoreUriCase: false  # 是否不区分 uri 的大小写，默认为 false
-
-  - port: 80
-
-  - method:                 # 对 HTTP 请求方法进行匹配，匹配语法为 StringMatch
-      exact: GET
-
-  - headers:
-      username:             # 选择 headers 中的一个字段，进行匹配，匹配语法为 StringMatch 。字段名采用小写
-        exact: test
-
-  - queryParams:
-      version:              # 选择 queryParams 中的一个字段，进行匹配
-        exact: v1
-  ```
+- 关于动态路由：
+  - 存在多个 upstream 时，可通过 weight 实现灰度发布。
+    - 不过 weight 是控制客户端访问不同 upstream 的概率。同一个客户端重复发出请求时，可能访问到不同的 upstream ，因此不能隔离访问流量。
+  - 如果想让某些客户端固定访问某个 upstream ，可根据 uri、headers 等取值选择 upstream ，实现标签路由。
 
 ### DestinationRule
 
@@ -414,7 +411,7 @@
             connectTimeout: 2s
   ```
 
-- 添加以下配置，可在负载过大时自动熔断服务，让 Envoy 返回 HTTP 503 响应：
+- 可选添加以下关于熔断的配置：
   ```yml
   trafficPolicy:
     connectionPool:
@@ -431,6 +428,7 @@
     #   baseEjectionTime: 30s         # 从负载均衡池弹出不健康实例时，至少弹出多久。默认为 30s
     #   maxEjectionPercent: 10        # 最多允许弹出负载均衡池中多少百分比的实例。默认为 10%
   ```
+  - 综上，Istio 可以限制并发连接数，也可以在 upstream 未通过健康检查时触发熔断，让 Envoy 返回 HTTP 503 响应。
 
 ### ServiceEntry
 
@@ -446,7 +444,7 @@
     namespace: default
   spec:
     hosts:
-    - mongodb
+    - mongodb.default
     addresses:
     - 192.168.0.1
     ports:

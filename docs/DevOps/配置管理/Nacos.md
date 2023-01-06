@@ -4,6 +4,12 @@
 - [官方文档](https://nacos.io/zh-cn/docs/quick-start.html)
 - 发音为 `/nɑ:kəʊs/` 。
 - 2018 年由阿里巴巴公司开源，采用 Java 开发。
+- 优点：
+  - 在中国比较流行，与 Spring Cloud 框架的搭配较好。
+- 缺点：
+  - 功能、性能不如 Consul 。
+  - 启动慢，可能要几分钟。
+  - Web 端、API 需要分别启用密码认证，而用户容易遗漏后者，留下安全隐患。
 
 ## 部署
 
@@ -24,9 +30,9 @@
       restart: unless-stopped
       environment:
         MODE: standalone
-        NACOS_AUTH_ENABLE: true   # Nacos 默认给 Web 端启用了密码认证，但 API 未启用密码认证，需要主动开启
-        # JVM_XMS: 1g
-        # JVM_XMX: 1g
+        NACOS_AUTH_ENABLE: 'true'   # Nacos 默认给 Web 端启用了密码认证，但 API 未启用密码认证，需要主动开启
+        # JVM_XMS: 1G
+        # JVM_XMX: 1G
       ports:
         - 8848:8848
   ```

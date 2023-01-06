@@ -19,7 +19,7 @@
   services:
     elasticsearch:
       container_name: minio
-      image: minio/minio:RELEASE.2022-01-28T02-28-16Z
+      image: minio/minio:RELEASE.2022-10-24T18-35-07Z
       command:
         - server
         - /data
@@ -33,6 +33,11 @@
       volumes:
         - ./data:/data
   ```
+
+### 版本
+
+- MinIO 以日期作为版本号。
+- 2022 年，MinIO 宣布弃用 Gateway 模块、旧的文件系统模式。旧版本不能兼容升级到 RELEASE.2022-10-29T06-21-33Z, 或更高版本，只能用 mc 命令导出、导入 MinIO 数据。
 
 ## 用法
 

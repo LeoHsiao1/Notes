@@ -116,7 +116,7 @@ hello
 
 ### 系统环境变量
 
-关于时间：
+CMD 终端可使用一些系统内置的环境变量。比如关于时间：
 ```batch
 D:\>echo %date%       :: 当前日期
 2020/12/21 周一
@@ -141,6 +141,9 @@ D:\
 
 D:\>echo %PATH%       :: 寻找可执行文件的目录
 C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;...
+
+D:\>echo %USERNAME%   :: 用户名
+Leo
 
 D:\>echo %HOMEPATH%   :: 用户的家目录
 \Users\Leo

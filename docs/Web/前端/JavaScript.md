@@ -245,7 +245,6 @@ if (y.nodeType == 1) {
           Access-Control-Allow-Credentials: true            # 是否允许发送 cookie ，默认为 false
           ```
           如果浏览器发现响应报文中没有包含 Access-Control-Allow-Origin 字段，则认为 CORS 请求失败，不管响应状态码。
-
   - 非简单请求
     - 工作流程：
       1. 先发送一个预检请求（preflight request），申请向服务器发送 CORS 请求。例：
@@ -258,12 +257,25 @@ if (y.nodeType == 1) {
       2. 如果服务器通过预检请求，则返回 HTTP 204 响应报文，并添加以下形式的 Header ：
           ```sh
           Access-Control-Allow-Origin: http://test.com
-          Access-Control-Allow-Methods: GET, POST, PUT      # 允许额外使用的 CORS 请求方法
+          Access-Control-Allow-Methods: GET, POST, OPTIONS  # 允许额外使用的 CORS 请求方法
           Access-Control-Allow-Headers: Content-Type        # 允许额外使用的 CORS 请求头
           Access-Control-Max-Age: 86400                     # 该预检结果的有效时长，单位 s 。在此期间，不用再发送预检请求
           ```
       3. 浏览器发现预检通过，才发送 CORS 请求。
       4. 服务器收到 CORS 请求，返回响应。
+
+- 例：给 Nginx 服务器添加配置，允许 CORS 请求
+  ```sh
+  location / {
+      add_header Access-Control-Allow-Origin * always;
+      add_header Access-Control-Allow-Credentials true;
+      add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+      add_header Access-Control-Allow-Headers 'Content-Type,User-Agent,X-Requested-With';
+      if ($request_method = 'OPTIONS') {
+          return 204;
+      }
+  }
+  ```
 
 ## 绘制图表
 

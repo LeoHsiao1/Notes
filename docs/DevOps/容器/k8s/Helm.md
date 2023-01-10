@@ -23,16 +23,6 @@
 - Chart 中的配置文件通常使用 Golang Template 模板语法，需要渲染之后才能得到最终的配置文件，称为 Release 。
   - 渲染时，传入不同的模板变量，就可以从一个 Chart 模板创建不同的 Release 实例。在不冲突的情况下，可以部署到同一个 k8s 中。
 
-- Helm 将 Release 部署到 k8s 中时，如果包含多种 k8s 对象，则会按以下顺序创建：
-  ```sh
-  Namespace
-  NetworkPolicy
-  ServiceAccount
-  Secret
-  ConfigMap
-  ...
-  ```
-
 ## 安装
 
 - 下载二进制包：
@@ -77,7 +67,7 @@ helm
     search repo <string>  # 在已添加的所有仓库中，搜索名称包含该字符串的 Chart 。这会使用本机缓存的仓库信息进行搜索，因此需要事先执行 helm repo update
     search hub <string>   # 在 artifacthub.io 搜索 Chart ，这会实时查询远程仓库
     pull <chart>          # 下载 Chart 到本机。可以指定位于远程的 Chart URL ，或位于仓库的 Chart name
-    push <path> <repo>    # 指定位于本机的 Chart ，上传到仓库
+    push <chart> <repo>   # 指定位于本机的 Chart ，上传到仓库
 
     # 关于 Release
     list                      # 列出当前 k8s 中的所有 Release
@@ -131,7 +121,8 @@ helm
   ├── Chart.yaml          # 记录该 Chart 的简介信息
   ├── .helmignore         # 记录一些文件路径，在打包 Chart 时忽略
   ├── README.md
-  ├── templates           # 存放该 k8s 应用的配置文件，通常使用 Golang Template 模板语法
+  ├── crds/               # 存放 CRD 的定义文件，不支持使用 Golang Template 模板语法，被 helm install 之后也不支持 upgrade、uninstall
+  ├── templates/          # 存放该 k8s 应用的配置文件，通常使用 Golang Template 模板语法
   │   ├── deployment.yaml
   │   ├── NOTES.txt       # 用 helm install 部署该 Chart 时，显示一些提示语
   │   └── service.yaml
@@ -144,7 +135,7 @@ helm
   name: mysite
   description: A Helm chart for Kubernetes
   type: application
-  version: 0.1.0          # 该 Chart 自身的版本
+  version: 0.1.0          # 该 Chart 本身的版本
   appVersion: "1.16.0"    # 该 Chart 要部署的 k8s 应用的版本
   ```
 
@@ -174,3 +165,38 @@ helm
     spec:
       ...
   ```
+
+### Hook
+
+- Release 被 helm 部署到 k8s 中时，如果包含多种 k8s 对象，则会按以下顺序创建：
+  ```sh
+  Namespace
+  NetworkPolicy
+  ServiceAccount
+  Secret
+  ConfigMap
+  ...
+  ```
+  使用 helm 钩子，可以在正常部署顺序之外，执行一些操作。
+
+- 可以给 chart/templates/ 目录下一些 k8s 对象添加 hook 注释，将它们声明为 helm 钩子，在特定阶段执行。
+  - 例如将一个 k8s Job 声明为钩子：
+    ```yml
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: "{{ .Release.Name }}"
+      annotations:
+        "helm.sh/hook": pre-install,post-delete,pre-upgrade,pre-rollback  # 表示在哪些阶段执行该 hook
+        "helm.sh/hook-weight": "-5"                   # 该 hook 的权重，可以为正数、负数。同一阶段存在多个 hook 时，会先执行权重更大的 hook
+        "helm.sh/hook-delete-policy": hook-succeeded  # 表示何时删除该 hook 。默认为 before-hook-creation ，即在执行新 hook 之前删除旧的 hook
+    ```
+  - 例如 helm install 命令的执行流程如下：
+    1. helm 进程从 Chart 文件渲染出 Release 文件，并取出其中的 Hook 。
+    2. 执行 pre-install 阶段的所有 hook 。
+        - 按照 weight 从大到小的顺序依次执行 hook 。等一个 hook 执行完毕（比如 k8s Job 变为 Complete 状态），才执行下一个 hook 。
+    3. 创建 Release 包含的所有 k8s 对象。
+    4. 执行 post-install 阶段的所有 hook 。
+    5. helm 进程退出。
+  - Hook 不包含在 Release 中，执行之后通常会被删除。
+  - 通过 helm 钩子可以执行一些自定义的操作，比如在部署 k8s 应用时执行 SQL ，但还是没有 shell 脚本方便。

@@ -21,7 +21,7 @@
   - artifacthub.io 汇总了很多个 repo 仓库的 Chart 。
 
 - Chart 中的配置文件通常使用 Golang Template 模板语法，需要渲染之后才能得到最终的配置文件，称为 Release 。
-  - 传入不同的模板变量时，可以从一个 Chart 模板渲染出多个 Release 实例，可以部署到同一个 k8s 中。
+  - 渲染时，传入不同的模板变量，就可以从一个 Chart 模板创建不同的 Release 实例。在不冲突的情况下，可以部署到同一个 k8s 中。
 
 - Helm 将 Release 部署到 k8s 中时，如果包含多种 k8s 对象，则会按以下顺序创建：
   ```sh
@@ -55,16 +55,18 @@
 ```sh
 helm
     # 关于制作 Chart
-    create <name>     # 创建一个新的 Chart 目录，会包含一些模板文件
-    lint <chart>      # 检查一个 Chart 的语法是否正确
-    package           # 将一个 Chart 目录打包成一个 .tgz 文件
-    template [NAME] [CHART]         # 将 Chart 渲染成 Release
-        > release.yml               # 将渲染结果保存到一个文件中
-        -x templates/configmap.yaml # 只渲染指定模板文件
-
-    # 关于查看 Chart
+    create <name>         # 创建一个新的 Chart 目录，会包含一些模板文件
+    lint <chart>...       # 检查 Chart 的语法是否正确
+    template <name> <chart>   # 将一个 Chart 渲染成指定 name 的 Release
+        --set key1=value1,... # 渲染时，传入一些模板变量。可多次使用该选项，比如 --set ids={1,2,3},servers[0].port=80
+        -f values.yaml        # --values ，从 YAML 文件导入模板变量
+        --version <string>    # 存在多个版本的 Chart 时，选择其中一个版本。默认会选择最新的一个版本
+        > release.yml         # 渲染的 Release 默认会输出到 stdout ，可以保存到一个文件中
+    package <path>            # 将一个 Chart 目录打包成一个 .tgz 压缩包，命名格式为 <name>-<version>.tgz ，这会读取 Chart.yaml 中的简介信息
     show
-        chart <chart>     # 查看简介信息，源自 Chart.yaml 文件
+        chart  <chart>    # 查看 Chart 中的 Chart.yaml
+        readme <chart>    # 查看 README.md
+        values <chart>    # 查看 value.yaml
 
     # 关于仓库
     repo
@@ -72,30 +74,32 @@ helm
         remove [name]...  # 删除仓库
         update [name]...  # 获取仓库的最新信息。如果不指定 name ，则更新所有仓库
         list              # 列出所有仓库
-    search repo <string>  # 在已添加的所有仓库中，搜索名称包含该字符串的 Chart 。这会使用本机缓存的仓库信息进行搜索，可能需要执行 helm repo update
+    search repo <string>  # 在已添加的所有仓库中，搜索名称包含该字符串的 Chart 。这会使用本机缓存的仓库信息进行搜索，因此需要事先执行 helm repo update
     search hub <string>   # 在 artifacthub.io 搜索 Chart ，这会实时查询远程仓库
-    pull <chart>          # 下载 Chart 到本机。可以指定位于远程的 Chart 文件的 URL ，或位于仓库的 Chart 名称
-    push <path> <repo>    # 指定位于本机的 Chart 文件的路径，上传到仓库
+    pull <chart>          # 下载 Chart 到本机。可以指定位于远程的 Chart URL ，或位于仓库的 Chart name
+    push <path> <repo>    # 指定位于本机的 Chart ，上传到仓库
 
     # 关于 Release
-    install <name> <chart>    # 将一个 Chart 渲染成指定名称的 Release ，然后部署到 k8s 。可以指定位于本机的 Chart 文件的路径、位于远程的 Chart 文件的 URL ，或位于仓库的 Chart 名称
-        --set key1=value1,... # 在渲染 Release 时，输入一些变量。可多次使用该选项
-        -f values.yaml        # --values ，从 YAML 文件导入变量
+    list                      # 列出当前 k8s 中的所有 Release
+    install <name> <chart>    # 将一个 Chart 渲染成指定 name 的 Release ，然后部署到 k8s 。可使用 helm template 命令的 --set 等命令行参数
         --create-namespace    # 如果 Release 使用的 k8s 命名空间不存在，则自动创建
         --dry-run             # 模拟执行命令，但并不会实际部署 Release
         -g                    # --generate-name ，自动命名 Release 。此时可省略 install <name> <chart> 中的 name ，因此可以重复 install ，不会命名冲突
-        --version <string>    # 如果 Chart 包含多个版本，则部署指定的一个版本。默认会部署最新的一个版本
         --wait                # 等待 Release 成功启动，比如 Pod 变为 Ready 状态。默认不会等待，创建 Release 包含的所有 k8s 对象之后，就结束 helm 命令
         --timeout 5m          # 当前命令执行的超时时间
     uninstall <release>...    # 卸载 k8s 中的 Release 。等价于 helm delete 命令
         --wait                # 等待所有相关的 k8s 资源被删除
-    upgrade <release> <chart> # 升级一个 Release
-    list                      # 列出当前 k8s 中的所有 Release
+    upgrade <release> <chart>
+        # 升级 k8s 中一个 Release 。可使用 helm template 命令的 --set 等命令行参数
+        # upgrade 命令会比较当前 Release 与 Chart 的差异，然后对 Release 做出修改。因此 upgrade 时使用的 Chart name ，与 install 时可以不同，但 upgrade 过程更不可控
+    rollback <release> [revision]
+        # 将 Release 回滚到指定版本。如果未指定 revision ，则回滚到上一个版本
+        # Release 在 install 之后的版本号为 revision=1 ，每次 upgrade、rollback ，都会使 revision 加 1
 
-    --debug           # 打印调试信息
+    --debug               # 打印调试信息
     --kubeconfig ~/.kube/config
-    -n default        # --namespace ，指定 k8s 命名空间
-    -A                # --all-namespaces ，指定所有 k8s 命名空间
+    -n default            # --namespace ，指定 k8s 命名空间
+    -A                    # --all-namespaces ，指定所有 k8s 命名空间
 ```
 - 例：
   ```sh
@@ -109,6 +113,13 @@ helm
   HELM_CACHE_HOME="~/.cache/helm"       # Helm 的缓存文件目录
   HELM_CONFIG_HOME="~/.config/helm"     # Helm 的配置文件目录
   HELM_DATA_HOME="~/.local/share/helm"  # Helm 的数据文件目录
+  ```
+- 可以指定多种位置的 Chart ：
+  ```sh
+  helm install nginx bitnami/nginx      # 指定位于仓库的 Chart name
+  helm install nginx nginx-13.2.21.tgz  # 指定位于本机的 Chart 压缩包
+  helm install nginx nginx              # 指定位于本机的 Chart 目录
+  helm install nginx https://xxx/charts/nginx-13.2.21.tgz   # 指定位于远程的 Chart URL
   ```
 
 ## Chart

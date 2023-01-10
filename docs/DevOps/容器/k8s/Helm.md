@@ -13,8 +13,8 @@
 ## 原理
 
 - 使用流程：
-  1. 用户准备一个要部署到 k8s 中的应用（比如一个 Web 服务器），编写所有配置文件（比如 deployment.yaml ），并按特定格式存放在一个目录下，称为 chart 。
-  3. 用 helm 命令读取 chart 目录或压缩包，渲染成 release ，然后部署到 k8s 中。
+  1. 用户准备一个要部署到 k8s 中的应用（比如一个 Nginx 服务器），编写所有配置文件（比如 deployment.yaml、service.yaml ），并按特定格式存放在一个目录下，称为 chart 。
+  2. 用 helm 命令读取 chart 目录或压缩包，渲染成 release ，然后部署到 k8s 中。
 
 - 通常将 chart 目录打包成一个 .tgz 压缩包，方便传输。
   - 给 helm 客户端添加 repo 仓库之后，就可以在本机、远程仓库之间上传、下载 chart 压缩包。
@@ -71,16 +71,17 @@ helm
 
     # 关于 release
     list                      # 列出当前 k8s 中的所有 release
-    install <name> <chart>    # 将一个 chart 渲染成指定 name 的 release ，然后部署到 k8s 。可使用 helm template 命令的 --set 等命令行参数
+    install <name> <chart>    # 将一个 chart 渲染成指定 name 的 release ，然后部署到 k8s 。兼容 helm template 的命令行参数
         --create-namespace    # 如果 release 使用的 k8s 命名空间不存在，则自动创建
         --dry-run             # 模拟执行命令，但并不会实际部署 release
         -g                    # --generate-name ，自动命名 release 。此时可省略 install <name> <chart> 中的 name ，因此可以重复 install ，不会命名冲突
         --wait                # 等待 release 成功启动，比如 Pod 变为 Ready 状态。默认不会等待，创建 release 包含的所有 k8s 对象之后，就结束 helm 命令
         --timeout 5m          # 当前命令执行的超时时间
+        --atomic              # 启用 --wait 选项，并且在部署失败时，自动删除该 release 创建的所有 k8s 对象，从而实现原子性操作
     uninstall <release>...    # 卸载 k8s 中的 release 。等价于 helm delete 命令
-        --wait                # 等待所有相关的 k8s 资源被删除
+        --wait                # 等待所有相关的 k8s 对象被删除
     upgrade <release> <chart>
-        # 升级 k8s 中一个 release 。可使用 helm template 命令的 --set 等命令行参数
+        # 升级 k8s 中一个 release 。兼容 helm install 的命令行参数
         # upgrade 命令会比较当前 release 与 chart 的差异，然后对 release 做出修改。因此 upgrade 时使用的 chart name ，与 install 时可以不同，但 upgrade 过程更不可控
     rollback <release> [revision]
         # 将 release 回滚到指定版本。如果未指定 revision ，则回滚到上一个版本
@@ -95,7 +96,7 @@ helm
   ```sh
   helm repo add bitnami https://charts.bitnami.com/bitnami
   helm search repo nginx
-  helm install nginx bitnami/nginx -n test --wait
+  helm install nginx bitnami/nginx -n test --atomic
   ```
 - 执行 helm 命令时，会读取一些环境变量作为配置参数。例如：
   ```sh

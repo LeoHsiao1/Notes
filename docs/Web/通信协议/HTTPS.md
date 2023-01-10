@@ -1,10 +1,10 @@
 # HTTPS
 
-：安全超文本传输协议（Secure Hypertext Transfer Protocol），是让 HTTP 协议基于 SSL/TLS 协议加密通信。
+：安全超文本传输协议（Secure Hypertext Transfer Protocol）。
+- HTTP 协议是明文通信，因此可能泄露隐私、被篡改。而 HTTPS 协议是基于 SSL/TLS 协议加密通信，很安全。
 
 ## 原理
 
-- HTTP 协议采用明文传输报文，不安全，可能被泄露、篡改。而 HTTPS 协议是在 SSL/TLS 加密信道中传输 HTTP 报文，很安全。
 - 工作流程：
   1. client 访问 server 的 TCP 端口，进行 TCP 握手。
   2. client 与 server 进行 SSL 握手，建立加密的通信信道。
@@ -52,7 +52,7 @@
 
 - SNI（Server Name Indication，服务器名称指示）
   - 同一个 IP 地址的 server 可能同时运行多个 Web 网站，需要选择将哪个网站的 TLS 证书发送给 client 。因此，TLS 握手的第一步，client 发送的 Client Hello 消息中应该包含 SNI 信息，说明自己想访问的网站域名是什么。
-  - 发送 SNI 信息时未被加密，第三方可能发现 client 访问的域名地址，进行审查、拦截。因此有一些额外的措施来提高安全性。比如加密的 SNI、加密的 Client Hello 。
+  - 发送 SNI 信息时未被加密，第三方可能发现 client 访问的域名地址，进行审查、拦截。因此有一些额外的措施来提高安全性。比如加密的 SNI、加密的 Client Hello、加密的 DNS 。
 
 ### TLSv1.3
 

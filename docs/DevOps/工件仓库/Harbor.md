@@ -1,9 +1,9 @@
 # Harbor
 
-：一个 Web 服务器，提供了 Docker 镜像仓库。
+：一个 Web 服务器，提供了容器镜像仓库。
 - [官方文档](https://goharbor.io/docs/2.2.0/)
 - 采用 Golang 开发，由 VMware 公司开源。
-- 支持存储 Docker Image 和 Helm Chart 。
+- 支持存储 container image 和 Helm chart 。
 
 ## 同类产品
 
@@ -25,7 +25,7 @@
   sh install.sh
                 # --with-notary       # 启用 notary ，检查镜像的数字签名。这需要 Harbor 采用 HTTPS
                 --with-trivy          # 启用 trivy 漏洞扫描器
-                --with-chartmuseum    # 启用 Chart 仓库
+                --with-chartmuseum    # 启用 chart 仓库
   ```
   - 部署之后，会生成一个配置文件 harbor.yml 。
   - Harbor 包含 harbor-core、harbor-db、registry、Nginx、Redis 等多个服务，基于 docker-compose 启动。
@@ -42,7 +42,7 @@
 ## 功能
 
 - 项目（Projects）
-  - 每个项目是一个命名空间（namespace），其下可以存储多个镜像。
+  - 每个项目是一个命名空间（namespace），其下可以存储一些 image 或 Helm chart 。
     - 默认存储在本机文件系统中。以 layer 为单位进行存储，因此存储多个相似的镜像时，只会占用少量存储空间。
   - 拉取镜像的命令格式如下：
     ```sh

@@ -220,11 +220,11 @@ if (y.nodeType == 1) {
 
 ### CORS
 
-：跨域资源共享（Cross-origin resource sharing），是 W3C 标准定义的一种浏览器功能。
-- 它允许浏览器在访问一个网站时，向其它域名的网站发送 XMLHttpRequest 请求。
+：跨域资源共享（Cross-Origin Resource Sharing），是 W3C 标准定义的一种浏览器功能。
+- 浏览器在访问一个网站时，如果向其它域名的网站发送 XMLHttpRequest 请求，称为跨域请求，则存在被 CSRF 攻击的风险。
   - 当网址 `protocol://host:port/path` 的前三个字段全部相同时，才不算跨域。
-  - 大部分浏览器都支持 CORS 请求。而服务器默认会拒绝接收 CORS 请求，以免用户被 CSRF 攻击。
-- 浏览器将 CORS 请求分为两类：
+  - 大部分浏览器默认会拒绝发送跨域请求。需要服务器主动给 HTTP 响应报文添加特定的 header ，表示服务器愿意接受该 CORS 请求，浏览器才会发送 CORS 请求。
+- 浏览器发出的 CORS 请求分为两类：
   - 简单请求
     - ：请求方法为 GET、HEAD 或 POST ，并且请求头只能使用以下 Headers ：
       ```sh
@@ -261,18 +261,23 @@ if (y.nodeType == 1) {
           Access-Control-Allow-Headers: Content-Type        # 允许额外使用的 CORS 请求头
           Access-Control-Max-Age: 86400                     # 该预检结果的有效时长，单位 s 。在此期间，不用再发送预检请求
           ```
-      3. 浏览器发现预检通过，才发送 CORS 请求。
+      3. 浏览器发现预检通过，于是接着发送 CORS 请求。接下来的流程像 CORS 简单请求。
       4. 服务器收到 CORS 请求，返回响应。
 
 - 例：给 Nginx 服务器添加配置，允许 CORS 请求
   ```sh
   location / {
-      add_header Access-Control-Allow-Origin * always;
+      # 允许 CORS 简单请求
+      add_header Access-Control-Allow-Origin *;
       add_header Access-Control-Allow-Credentials true;
-      add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
-      add_header Access-Control-Allow-Headers 'Content-Type,User-Agent,X-Requested-With';
+
+      # 允许 CORS 预检请求
       if ($request_method = 'OPTIONS') {
           return 204;
+          add_header Access-Control-Allow-Origin *;
+          add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+          add_header Access-Control-Allow-Headers 'Content-Type,User-Agent,X-Requested-With';
+          add_header Access-Control-Max-Age 86400;
       }
   }
   ```

@@ -1225,6 +1225,10 @@ module.exports = {
                                     collapsable: false,
                                     children: [
                                         {
+                                            title: "Kustomize",
+                                            path: "/DevOps/容器/k8s/插件/Kustomize"
+                                        },
+                                        {
                                             title: "Helm",
                                             path: "/DevOps/容器/k8s/插件/Helm"
                                         }

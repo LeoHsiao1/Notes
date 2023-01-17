@@ -26,7 +26,7 @@
     - [Volume](容器/k8s/Volume.md)
     - [权限](容器/k8s/权限.md)
     - [插件](容器/k8s/插件.md)
-    - [Helm](容器/k8s/Helm.md)
+      - [Helm](容器/k8s/插件/Helm.md)
 - 配置管理
   - [简介](配置管理/简介.md)
   - [Ansible](配置管理/Ansible.md)

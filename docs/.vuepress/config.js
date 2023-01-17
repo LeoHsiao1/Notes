@@ -1221,11 +1221,14 @@ module.exports = {
                                 },
                                 {
                                     title: "插件",
-                                    path: "/DevOps/容器/k8s/插件"
-                                },
-                                {
-                                    title: "Helm",
-                                    path: "/DevOps/容器/k8s/Helm"
+                                    path: "/DevOps/容器/k8s/插件",
+                                    collapsable: false,
+                                    children: [
+                                        {
+                                            title: "Helm",
+                                            path: "/DevOps/容器/k8s/插件/Helm"
+                                        }
+                                    ]
                                 }
                             ]
                         }

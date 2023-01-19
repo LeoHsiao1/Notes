@@ -25,7 +25,7 @@
     - [Network](容器/k8s/Network.md)
     - [Volume](容器/k8s/Volume.md)
     - [权限](容器/k8s/权限.md)
-    - [插件](容器/k8s/插件.md)
+    - [扩展](容器/k8s/扩展.md)
       - [Kustomize](容器/k8s/插件/Kustomize.md)
       - [Helm](容器/k8s/插件/Helm.md)
 - 配置管理

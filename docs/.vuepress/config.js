@@ -1220,8 +1220,8 @@ module.exports = {
                                     path: "/DevOps/容器/k8s/权限"
                                 },
                                 {
-                                    title: "插件",
-                                    path: "/DevOps/容器/k8s/插件",
+                                    title: "扩展",
+                                    path: "/DevOps/容器/k8s/扩展",
                                     collapsable: false,
                                     children: [
                                         {

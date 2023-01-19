@@ -1,7 +1,7 @@
 # Kustomize
 
 ：k8s 官方提供的一个命令行工具，用于对一些 YAML 配置文件进行组合、修改。
-- kubectl 命令集成了 kustomize ，可执行命令 `kubectl kustomize -h` 。也可以单独下载 kustomize 的二进制文件，然后安装。
+- kubectl 命令集成了 kustomize ，可执行命令 `kubectl kustomize -h` 。也可以单独下载 kustomize 编译后的可执行文件。
 
 ## 示例
 

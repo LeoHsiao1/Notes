@@ -272,7 +272,7 @@
 
 ### 终止
 
-- 如果 Pod 中所有容器从 running 状态变为 terminated 状态，则称该 Pod 处于终止（terminated）状态。
+- 如果 Pod 中所有容器已终止运行，处于 terminated 状态，则认为整个 Pod 处于终止（terminated）状态。
   - Pod 终止并不是暂停。此时容器内进程已退出、消失，不能恢复运行。
   - Pod 终止之后，可能触发 restartPolicy ，也可能被 Deployment、Job 等控制器自动删除。如果没有删除，则会一直占用 Pod IP 等资源。
     - kube-controller-manager 会在 terminated pod 数量达到 terminated-pod-gc-threshold 阈值时，删除它们。
@@ -372,7 +372,7 @@ status:
   ```sh
   waiting       # 等待一些条件才能启动。比如拉取镜像、挂载数据卷、等待重启间隔
   running       # 正在运行
-  terminated    # 已终止
+  terminated    # 已终止运行
   ```
 
 - Pod 的状态主要取决于其中容器的状态。
@@ -893,8 +893,7 @@ spec:
       - kubelet 每隔 1 分钟监控一次 Pod 占用的磁盘空间，因此驱逐有一定延迟。
     - 如果有 Pod 被驱逐，则需要等待该 Pod 被清理，直到满足以下条件：
       - Pod 处于 terminated 状态
-      - Pod 的所有容器已终止
-      - Pod 的所有 volume 已清理
+      - Pod 的所有 volume 已被清理（包括删除、回收）
 
 ## 自动伸缩
 

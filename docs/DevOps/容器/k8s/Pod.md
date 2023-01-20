@@ -910,8 +910,8 @@ spec:
   1. 创建一个 HPA 对象，监控 Pod 的一些 metrics 指标。
   2. HPA 自动增加、减少 Pod 的 replicas 数量，使得 metrics 指标接近指定数值。算法为：
       ```sh
-      rate = metrics 当前值 / metrics 期望值
-      replicas 期望值 = ceil(replicas 当前值 * rate )   # ceil 即向上取整
+      rate = metrics_当前值 / metrics_期望值
+      replicas_期望值 = ceil(replicas_当前值 * rate )   # ceil 即向上取整
       ```
 - 配置示例：
   ```yml
@@ -935,9 +935,10 @@ spec:
       kind: Deployment
       name: nginx
   ```
-- kube-controller-manager 默认每隔 15s 执行一次 HPA 伸缩。
-- HPA 适合控制 Deployment 类型的 Pod 。而 StatefulSet 一般不适合改变 Pod 数量，DaemonSet 则不能改变 Pod 数量。
-- 安装 k8s-prometheus-adapter 之后可将 Prometheus 存储的监控指标传给 apiserver ，从而使用各种各样的 metrics 来控制 HPA 。
+  - kube-controller-manager 默认每隔 15s 执行一次 HPA 伸缩。
+  - HPA 适合控制 Deployment 类型的 Pod 。而 StatefulSet 一般不适合改变 Pod 数量，DaemonSet 则不能改变 Pod 数量。
+  - HPA 原生的 metrics 种类少，而且取值不会为负数，因此 HPA 不能缩放到 replicas=0 。
+    - 安装 k8s-prometheus-adapter 之后可将 Prometheus 存储的监控指标传给 apiserver ，从而使用各种各样的 metrics 来控制 HPA ，还能让 HPA 缩放到 replicas=0 。
 
 ### VPA
 

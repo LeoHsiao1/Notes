@@ -963,10 +963,10 @@
 - [GitHub](https://github.com/kubernetes/kube-state-metrics)
 - kube-state-metrics 会缓存所有 k8s 对象的状态数据。并监听 k8s event ，据此更新发生变化的部分数据。
   - 优点：
-    - 减少了每次采集监控指标的耗时。
+    - 每次采集监控指标时，是增量采集而不是全量采集，减少了耗时。
   - 缺点：
-    - 占用一定内存。
-    - 删除一个 Pod 之后，kube-state-metrics 会继续输出该 Pod 的监控指标，大概持续 3 分钟。
+    - 缓存增加了内存开销。
+    - 删除一个 Pod 之后，kube-state-metrics 会根据缓存继续输出该 Pod 的监控指标，大概 3 分钟之后才停止。
 
 #### 部署
 

@@ -913,7 +913,7 @@ spec:
       rate = metrics_当前值 / metrics_期望值
       replicas_期望值 = ceil(replicas_当前值 * rate )   # ceil 即向上取整
       ```
-- 配置示例：
+- 一个 HPA 对象的配置示例：
   ```yml
   apiVersion: autoscaling/v2beta2
   kind: HorizontalPodAutoscaler
@@ -923,22 +923,42 @@ spec:
   spec:
     maxReplicas: 10           # Pod 自动伸缩的最大数量
     minReplicas: 1            # 最小数量
-    metrics:                  # 监控指标
+    metrics:                  # 获取监控指标
     - resource:
         name: cpu
         target:
           averageValue: 100m
-          type: AverageValue  # 全部 Pod 的 metrics 平均值
-      type: Resource
-    scaleTargetRef:           # 要控制的 Pod
+          type: AverageValue  # 获取全部 Pod 的 cpu 平均使用量
+    - resource:
+        name: memory
+        target:
+          averageUtilization: 80
+          type: Utilization   # 获取全部 Pod 的 memory 平均使用率（即使用量占 requests 的百分比）
+        type: Resource
+    scaleTargetRef:           # 选择要控制的 Pod
       apiVersion: apps/v1
       kind: Deployment
       name: nginx
+  status:
+    currentMetrics:           # 记录 metrics 的当前值
+    - resource:
+        current:
+          averageUtilization: 50
+          averageValue: "52618582"
+        name: memory
+      type: Resource
+    - resource:
+        current:
+          averageValue: 1m
+        name: cpu
+      type: Resource
+    currentReplicas: 1        # 当前的 replicas 值
+    desiredReplicas: 1        # 期望的 replicas 值
   ```
+  - HPA 适合控制 Deployment 类型的 Pod 数量。而 DaemonSet 不能改变 Pod 数量，StatefulSet 是有状态应用，不适合自动伸缩。
   - kube-controller-manager 默认每隔 15s 执行一次 HPA 伸缩。
-  - HPA 适合控制 Deployment 类型的 Pod 。而 StatefulSet 一般不适合改变 Pod 数量，DaemonSet 则不能改变 Pod 数量。
-  - HPA 原生的 metrics 种类少，而且取值不会为负数，因此 HPA 不能缩放到 replicas=0 。
-    - 安装 k8s-prometheus-adapter 之后可将 Prometheus 存储的监控指标传给 apiserver ，从而使用各种各样的 metrics 来控制 HPA ，还能让 HPA 缩放到 replicas=0 。
+  - HPA 原生的 metrics 种类少，只监控了 Pod 的 cpu、memory 开销。当 Pod 没有运行时就不能获取 metrics ，因此不能缩放到 replicas=0 。
+    - 安装 k8s-prometheus-adapter 之后可将 Prometheus 存储的监控指标传给 apiserver ，从而能使用各种各样的 metrics 来控制 HPA ，能缩放到 replicas=0 。
 
 ### VPA
 

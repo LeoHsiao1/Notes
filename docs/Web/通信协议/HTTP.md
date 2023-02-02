@@ -18,21 +18,23 @@
 
 - 1996 年发布。
 - 特点：无连接。
-  - ：server 每次回复响应报文之后，server 和 client 就可以断开 TCP 连接。
-  - 因此每次 client 发出请求报文时，都要重新建立 TCP 连接，在网络延迟较大时有明显耗时。
-  - 如果在报文 Headers 中添加 `Connection: keep-alive` ，则会保持 TCP 连接，直到 server 或 client 主动断开连接。
-    - 使用长连接时，可通过一个 TCP 连接，先后传输多个 HTTP 报文，即串行传输，避免了多次 TCP 握手的耗时。
-    - 服务器通常会限制长连接的数量、存在时间。
+  - client 访问 server 时，需要先建立 TCP 连接，再发送 HTTP 请求报文。而 server 发送响应报文之后，就会主动关闭该 TCP 连接。
+    - 因此每次 HTTP 通信之后，不会长时间保持 TCP 连接，称为无连接。
+  - 缺点：
+    - client 多次发送 HTTP 请求时，需要多次建立 TCP 连接，耗时较大。
+    - server 因为主动关闭 TCP 连接，会产生大量 TIME-WAIT 状态的 Socket ，浪费内存。
+  - 建议进行以下配置，启用 TCP 长连接，使得 client 可复用同一个 TCP 连接，传输多个 HTTP 请求报文、响应报文，性能更好。
+    - 修改 server 的配置，允许 TCP 长连接。
+    - 让 client 在 HTTP 请求报文 Headers 中加入 `Connection: keep-alive` ，申请保持 TCP 长连接。
 
 - 特点：无状态。
-  - ：HTTP 协议不会记录通信过程中的任何信息，每次通信都是独立的。
-  - 尽管如此，server 或 client 的程序可以自己记录通信过程中的一些信息。
-    - 比如 server 可以通过 IP 地址、cookie 记录 client 的身份。
+  - HTTP 协议不会记录通信过程中的任何信息，每次 HTTP 通信都是独立的。
+  - 尽管如此，server 或 client 的程序可以自己记录通信过程中的一些信息。比如 server 可以记录 client 的 IP、cookie 。
 
 ### HTTP/1.1
 
 - 1997 年发布。向下兼容 HTTP/1.0 。
-- 默认启用 TCP 长连接，除非在报文 Headers 中添加 `Connection: close` 。
+- 默认启用 TCP 长连接，除非在请求报文 Headers 中加入 `Connection: close` 。
 - 增加 PUT、DELETE 等请求方法。
 - 增加 Host、Upgrade、Cache-Control 等 Headers 。
 

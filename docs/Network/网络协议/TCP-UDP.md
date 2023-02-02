@@ -70,13 +70,13 @@
   - `FIN-WAIT-2`
   - `TIME-WAIT`
     - 主动关闭方在第 3 步之后，已关闭 TCP 连接，但 Socket 尚未关闭，还要等待 2*MSL 时间才能变成 CLOSED 状态，从而避免对方来不及关闭连接。
-    - MSL（Maximum Segment Lifetime）：TCP 段在网络传输中的最大生存时间，超过该时长就会被丢弃。
+    - MSL（Maximum Segment Lifetime）：TCP 段在网络传输中的最大生存时间，超过该时长则会被丢弃。
       - RFC 793 定义的 MSL 为 2 分钟，而 Linux 中 MSL 通常为 30 秒。
-    - 考虑到一个 server 通常会被大量 client 请求连接，建议 server 不要主动关闭 TCP 连接，避免产生大量 TIME-WAIT 状态的 Socket ，占用一定内存。这样有两种结果：
+    - 如果一个 server 被大量 client 建立 TCP 连接，则建议 server 不要主动关闭 TCP 连接，避免产生大量 TIME-WAIT 状态的 Socket ，浪费内存。这样有两种结果：
       - client 主动关闭连接，则 server 可立即关闭 Socket ，而 client 要保留 TIME-WAIT 状态的 Socket 一段时间。
-      - client 不主动关闭连接，则 server 可等 TCP 连接长时间未用于传输数据时将它主动关闭。
+      - client 不主动关闭连接，则 server 可等 TCP 连接长时间空闲、未用于传输数据，才主动关闭它。
   - `CLOSE-WAIT`
-    - 在第 2 步，如果被动关闭方没有立即调用 close() 关闭端口，就会长时间处于 CLOSE-WAIT 状态。
+    - 在第 2 步，如果被动关闭方没有立即调用 close() 关闭端口，则会长时间处于 CLOSE-WAIT 状态。
   - `LAST-ACK`
   - `CLOSED` ：TCP、Socket 都已关闭。
 

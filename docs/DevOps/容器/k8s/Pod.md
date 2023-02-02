@@ -1,10 +1,7 @@
 # Pod
 
+- Docker 以容器为单位部署应用，而 k8s 以 Pod 为单位部署应用。
 - 一个 Pod 包含一个或多个容器，又称为容器组。
-  - Docker 以容器为单位部署应用，而 k8s 以 Pod 为单位部署应用。
-- 当用户向 apiserver 请求创建一个 Pod 之后，会自动执行以下流程：
-  1. kube-scheduler 决定将该 Pod 调度到哪个节点上。
-  2. 由指定节点的 kubelet 运行该 Pod 。
 
 ## 配置
 
@@ -15,7 +12,7 @@
   metadata:
     name: curl
     namespace: default
-  spec:                           # Pod 的规格
+  spec:                           # Pod 的规格，表示期望 k8s 将该 Pod 部署成什么样子
     containers:                   # 在 Pod 中定义一组容器
     - command:
       - ping
@@ -238,7 +235,22 @@
 
 ## 生命周期
 
-- 一个对象从创建到存在、删除的过程称为生命周期（lifecycle）。
+- 一个对象从创建到存在、删除的过程称为生命周期（lifecycle）。这里分析下 Pod 的生命周期。
+
+### 创建
+
+- 从用户角度来看，创建 Pod 的流程：
+  1. 用户编写 Pod 的配置文件，声明 Pod 的期望状态。
+  2. 用户执行命令 `kubectl apply -f xx.yml` ，创建 Pod 。
+  3. k8s 自动部署该 Pod 。
+
+- 从 k8s 角度来看，创建 Pod 的流程：
+  1. 客户端发送请求到 apiserver ，请求创建一个 Pod 。
+  2. apiserver 检查客户端请求是否有效，包括身份认证、鉴权、准入控制等。如果有效，才继续下一步。
+  3. apiserver 创建 Pod ，将配置信息保存到 etcd 数据库。
+  4. kube-scheduler 一直通过 watch 机制监听 apiserver 的 event ，发现有新建的 Pod 就自动管理，决定将该 Pod 调度到哪个节点上。
+  5. 每个节点的 kubelet 一直通过 watch 机制监听 apiserver 的 event ，发现有新调度到当前节点的 Pod 就自动部署，包括拉取镜像、创建容器等工作。
+  6. kubelet 保持运行 Pod ，定期上报节点状态、Pod 状态到 apiserver 。
 
 ### phase
 
@@ -266,9 +278,9 @@
   - 拉取镜像
     - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间按 0s、10s、20s、40s 数列增加，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
   - 创建容器
-    - 比如根据镜像配置容器、挂载数据卷。
+    - kubelet 会调用 CRI 组件来创建容器，调用 CNI 组件来配置容器的网络，调用 CSI 组件来挂载数据卷。
   - 启动容器
-    - 先启动 init 容器，再启动标准容器。
+    - kubelet 会先启动 init 容器，再启动标准容器。
 
 ### 终止
 

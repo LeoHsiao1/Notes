@@ -26,8 +26,9 @@
     - [Volume](容器/k8s/Volume.md)
     - [权限](容器/k8s/权限.md)
     - [扩展](容器/k8s/扩展.md)
-      - [Kustomize](容器/k8s/插件/Kustomize.md)
-      - [Helm](容器/k8s/插件/Helm.md)
+      - [CNI](容器/k8s/扩展/CNI.md)
+      - [Kustomize](容器/k8s/扩展/Kustomize.md)
+      - [Helm](容器/k8s/扩展/Helm.md)
 - 配置管理
   - [简介](配置管理/简介.md)
   - [Ansible](配置管理/Ansible.md)

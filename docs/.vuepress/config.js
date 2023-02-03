@@ -1225,12 +1225,16 @@ module.exports = {
                                     collapsable: false,
                                     children: [
                                         {
+                                            title: "CNI",
+                                            path: "/DevOps/容器/k8s/扩展/CNI"
+                                        },
+                                        {
                                             title: "Kustomize",
-                                            path: "/DevOps/容器/k8s/插件/Kustomize"
+                                            path: "/DevOps/容器/k8s/扩展/Kustomize"
                                         },
                                         {
                                             title: "Helm",
-                                            path: "/DevOps/容器/k8s/插件/Helm"
+                                            path: "/DevOps/容器/k8s/扩展/Helm"
                                         }
                                     ]
                                 }

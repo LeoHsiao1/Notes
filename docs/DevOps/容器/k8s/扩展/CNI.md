@@ -34,11 +34,14 @@
 
 - ：一个 CNI 软件，2016 年发布。
 - [GitHub](https://github.com/projectcalico/calico)
+- 架构：
+  - 在每个主机运行一个守护进程 felix ，负责管理网络流量，可配置路由规则、ACL 规则。
+  - felix 可使用 k8s 自带的 etcd 数据库，不必单独部署数据库。
 - Flannel 主要提供了虚拟网络的功能，而 Calico 提供了两大功能：
   - 虚拟网络
   - 网络策略
     - Calico 支持 k8s NetworkPolicy ，因此可集成 Istio 等服务网格，管理微服务的流量。
-- Calico 的虚拟网络有多种模式：
+- Calico 虚拟网络有多种模式：
   - VXLAN
   - IP-in-IP
     - 在每个主机上创建一个虚拟网口 tunl0 ，担任 OSI 3 层的网桥，连通各个主机。
@@ -49,9 +52,7 @@
     - 当本机某个 Pod 发出一个 OSI 3 层的 IP 数据包时，如果目标 IP 属于其它主机的虚拟子网，则直接路由转发给该主机。因此 Calico 实现了纯三层的虚拟网络。
     - 优点：不像 VXLAN、IP-in-IP 模式那样添加一层 overlay 网络，而是直接路由，效率更高。
     - 缺点：要求所有主机位于以太网的同一子网。如果主机 A 发送网络包给主机 B 时，需要经过第三方主机路由转发，则第三方主机不知道 Calico 的 BGP 路由，会丢弃这个指向虚拟 IP 的数据包。
-- 架构：
-  - 在每个主机运行一个守护进程 felix ，负责管理网络流量，可配置路由规则、ACL 规则。
-  - felix 可使用 k8s 自带的 etcd 数据库，不必单独部署数据库。
+- Calico 默认基于 Linux iptables 控制网络流量，也可改用 eBPF 技术，性能更高。
 
 ## Canal
 

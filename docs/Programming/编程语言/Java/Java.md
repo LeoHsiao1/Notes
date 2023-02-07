@@ -8,7 +8,7 @@
 - 1991 年，Sun 公司的 James Gosling 等人开始研发一种适用于单片机系统的编程语言。
   - 他们将 C++ 语言进行简化，抛弃了多继承、指针等复杂功能，并提高程序的兼容性。
   - 他们将这种语言取名为 Oak ，介绍给硬件厂商，但并没有受到欢迎。
-- 1995 年，Sun 公司发现 Oak 语言在互联网上的应用优势——它容易移植到不同平台上运行。于是将它改名为 Java 重新发布，终于成功推广。
+- 1995 年，Sun 公司发现 Oak 语言在互联网上的应用优势：它容易移植到不同平台上运行。于是将它改名为 Java 重新发布，终于成功推广。
 - 2010 年，Sun 公司被 Oracle（甲骨文）公司收购。
 - 从 2019 年 1 月开始，使用 Java 8 及以上版本的 Oracle JDK 需要付费。因此推荐使用 OpenJDK 。
 
@@ -54,9 +54,9 @@
   - LogBack ：重新实现了 Log4j ，大幅优化。
   - Log4j2 ：对 Log4j 进行了重构优化。
 - Scala
-  - ：一种基于 Java 的编译型语言，2004 年发布。
-  - 源代码编译成 Java 字节码之后由 JVM 运行。
-  - 支持面向对象编程、函数式编程，属于静态类型。
+  - ：一种基于 Java 的编译型语言，于 2004 年发布。
+  - 将源代码编译成 Java 字节码，然后由 JVM 运行。
+  - 支持面向对象编程、函数式编程，属于静态类型语言。
 
 ### GC
 
@@ -64,13 +64,13 @@
 
 - Java 进程占用的内存分为几部分：
   - Heap ：堆内存。主要存放 Java 类的实例对象。
-  - Direct Memory ：直接内存，用于存放与操作系统交互的数据，比如文件。
+  - Direct Memory ：直接内存，存放与操作系统交互的数据，比如文件。
   - Metaspace ：存放 Java 类的元数据，包括常量、注解等。替代了 Java 8 以前的永久代（Permanent）。
   - JVM native ：运行 JVM 本身占用的内存。
   - Code Cache ：存放根据 Java 字节码生成的机器代码。
   - Thread Stack ：线程堆栈。
 
-- Java 进程从操作系统申请的内存空间会用作 Heap、Metaspace 等，统称为 committed_memory 。
+- Java 进程运行时，会从操作系统申请一些内存空间，划分为 Heap、Metaspace 等区域，统称为 committed_memory 。
   - 申请的内存空间不一定实际使用、存放了数据。JVM 内部实际使用的内存称为 used_memory ，它小于等于 committed_memory 。
   - 在 JVM 外部、操作系统的视角， committed_memory 全部属于 Java 进程占用的内存，会计入主机的 used 内存。
   - Java GC 的目的，是在 committed_memory 中减少 used_memory ，从而腾出内存空间来写入新数据。
@@ -79,13 +79,14 @@
 - 对象的引用分为四种，从强到弱如下：
   - 强引用（Strong Reference）
     - ：指向一些必须保留的对象，比如 `Object obj = new Object()` 。
-    - 即使内存不足，强引用也不会被回收。
+    - 即使内存不足，强引用也不会被 GC 算法回收。
+    - 强引用是造成内存泄漏的主要原因。
   - 软引用（Soft Reference）
     - ：指向一些可能有用，但不是必须保留的对象。
-    - 当内存不足时，会被回收。
+    - 当内存不足时，会被 GC 算法回收。
   - 弱引用（Weak Reference）
     - ：指向一些不需要保留的对象。
-    - 每次执行垃圾回收时，都会被回收。
+    - 每次 GC 时，都会被回收。
   - 虚引用（Phantom Reference）
     - ：最弱的引用，相当于没有引用。
     - 不能用于获取对象的实例，主要用于判断对象是否被垃圾回收。
@@ -119,7 +120,7 @@
     - 这样能减少内存碎片，但是内存利用率只有 50% 。
   - 分代收集算法
     - ：划分两块内存空间，采用不同的 GC 算法：
-      - 年轻代（young generation）：又称为新生代（new generation），用于存放寿命较短的对象，适合复制算法。可细分为两种区域：
+      - 年轻代（young generation）：又称为新生代（new generation），用于存放寿命较短的对象，适合复制算法。细分为两种区域：
         - 伊甸园空间（eden space）：用于存放新创建的对象。
         - 幸存者空间（survivor space）：用于存放在 young GC 之后幸存、但尚未存入 old 区域的对象。默认有两个 survivor space ，简称为 S0、S1 。
       - 老生代（old generation）：用于存放寿命较长的对象，适合标记-整理算法。
@@ -135,7 +136,7 @@
         - 不同垃圾收集器触发 full GC 的条件不同。
 
 - STW（Stop The World）
-  - ：GC 过程的一种状态，暂停用户线程，只执行 GC 线程。
+  - ：GC 过程中的一种状态，暂停用户线程，只执行 GC 线程。
   - STW 状态是不可避免的，不同的 GC 算法可能 STW 时长不同，越短越好。
   - full GC 的 STW 时间通常最长，导致用户线程的明显停顿。
 
@@ -150,7 +151,7 @@
     - young GC、full GC 全程为 STW 状态，而 old GC 只有部分阶段会 STW 。
     - 例如 ElasticSearch 默认采用 CMS GC 算法。
   - G1 GC
-    - 类似 CMS 算法，但能减少内存碎片、控制 STW 时长。
+    - ：类似 CMS 算法，但能减少内存碎片、控制 STW 时长。
     - 传统 GC 算法的 young、old 区域分别是一块地址连续的内存空间。而 G1 GC 在堆内存中划分大量 region ，分别分配给 eden、survivor、old 区域。
       - 每个 region 是一小块地址连续的内存空间，体积相同。
       - 体积巨大的对象（humongous object）可能占用多个地址连续的 region 。
@@ -164,7 +165,7 @@
 ### 关于 Web
 
 - JSP（Java Server Pages）
-  - ：一个动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
+  - ：一种动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。
   - 例：
     ```html
     <p>
@@ -173,7 +174,7 @@
     ```
 
 - Servlet
-  - ：一种提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
+  - ：一个提供 Web 应用服务的 Java 程序，本质上是实现了 javax.servlet.Servlet 接口的 Java 类。
   - 可以运行在支持 Servlet 规范的 Web 服务器中，比如 Tomcat、Jetty 。
 
 - Netty
@@ -190,7 +191,7 @@
     - 对象的控制权从程序员手中，转交给了程序自身，因此称为控制反转（Inversion of Control ，IoC）。
     - 例：
       ```java
-      @Component              // 使用 Component 注解，将该类定义为 Bean ，默认命名为开头小写的类名，即 phone
+      @Component              // 使用 Component 注解，将该类定义为 Bean 。创建对象时，会根据类名来默认命名（开头小写），比如 phone
       public class Phone {
           ...
       }
@@ -204,10 +205,9 @@
       }
       ```
 
-- Spring Boot
+- [Spring Boot](https://spring.io/projects/spring-boot)
   - ：一个基于 Spring Framework 4.0 的轻量级框架，于 2014 年发布。
-  - [官方文档](https://spring.io/projects/spring-boot)
-  - 增加了一些默认配置，简化了开发的过程，可以快速开发单个应用。
+  - 增加了一些默认配置，简化了开发流程，可以快速开发单个应用。
 
 - Spring Cloud
   - ：一个基于 Spring Boot 的微服务框架，于 2015 年发布。

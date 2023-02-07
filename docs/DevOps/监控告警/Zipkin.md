@@ -12,6 +12,7 @@
   3. Zipkin 统计分析所有监控数据，比如绘制树形图、散点图。
 
 - 例：Zipkin 显示的一个 trace
+
   ![](./Zipkin.png)
 
 - 业务服务需要在代码中使用 Zipkin 客户端库，封装服务 API ，从而发送监控数据到 Zipkin 。负责发送、接收的模块分别称为 Reporter、Collector 。

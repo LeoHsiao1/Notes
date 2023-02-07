@@ -146,12 +146,12 @@ git revert <refs>...    # 自动提交一个新版本来抵消某个历史版本
 ### branch
 
 ```sh
-git branch          # 显示所有本地分支
-        -a          # 增加显示 tracked 的远程分支，分支命名格式为 remotes/origin/<branch>
-        -v          # 显示每个分支所在的版本
-        <branch>    # 新建一个分支，默认以 HEAD 分支为源
-          -d        # 删除分支，需要该分支已合并到其它分支
-          -D        # 强制删除分支
+git branch              # 显示所有本地分支
+        -a              # 增加显示 tracked 的远程分支，分支命名格式为 remotes/origin/<branch>
+        -v              # 显示每个分支所在的版本
+        <branch> [src_refs] # 新建一个分支，源版本默认为 HEAD 分支
+          -d            # 删除分支，需要该分支已合并到其它分支
+          -D            # 强制删除分支
 ```
 
 ### checkout
@@ -160,8 +160,9 @@ git branch          # 显示所有本地分支
 git checkout
         [refs]          # 将当前分支切换到某个 refs 指向的版本，如果不指定则选中当前版本
               <path>... # 不切换，而是将指定路径下的所有文件改为目标版本的状态
-        -b <branch>     # 切换到指定分支，如果该分支不存在则自动创建
-              <refs>    # 切换分支之后，再将该分支切换到 refs 版本
+        -b <branch>     # 先创建指定的分支，再切换过去。如果该分支已存在，则报错
+              <refs>    # 创建新分支时，使用指定的 refs 版本
+        -B <branch>     # 先创建指定的分支，再切换过去。如果该分支已存在，则不会报错
 ```
 - 如果用 `git checkout` 切换到一个 tag 或 commit ，则不会绑定分支，会提示：`You are in 'detached HEAD' state.` 。此时可以执行 `git fetch` ，但不能执行 `git pull` ，否则会报错：`You are not currently on a branch`
 - 例：
@@ -172,6 +173,13 @@ git checkout
   # 将文件回滚到指定时刻的状态
   git checkout master@{1hourago} README.md
   git checkout master@{2022-01-01T12:00:00}
+
+  # 在本地创建一个分支 dev ，切换过去，并跟踪远程分支 dev
+  git checkout -b dev origin/dev
+
+  # checkout 时，如果本地不存在该名称的 refs ，而远程仓库存在，则会自动新建一个本地 refs ，跟踪远程 refs
+  git fetch
+  git checkout dev
   ```
 
 ### tag
@@ -185,7 +193,8 @@ git tag                 # 显示已有的所有标签
 ### merge
 
 ```sh
-git merge <branch>  # 将指定分支的所有版本合并到当前分支
+git merge <branch>        # 将指定分支的所有版本合并到当前分支
+        -m "Merge branch" # 加上备注信息
 ```
 - 合并时，如果目标分支不包含当前分支没有的版本，则合并后当前分支不会变化。否则，合并后会产生一个新版本，以解决两个分支的差异。
 
@@ -428,6 +437,7 @@ git fetch [name 或 URL]         # 拉取远程仓库的最新内容（包括分
         --dry-run
 
 git pull [name 或 URL]          # 先 fetch 远程仓库，然后将所有 tracked 的远程分支合并到本地分支
+        origin master           # 拉取远程仓库的 master 分支，合并到本地的 HEAD 分支
 
 git push [name 或 URL]          # 推送本地仓库到远程仓库。默认会推送所有 tracked 分支，但不会推送 tag
         --force                 # 强制推送，即清空远程仓库后再上传本地仓库

@@ -131,6 +131,3 @@ class Popen(args,           # 待执行的命令
   Hello
   (None, None)
   ```
-
-
-

@@ -105,22 +105,22 @@ import os
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))    # 该 Django 项目的根目录（绝对路径）
-SECRET_KEY = 'yN2bbFQmn9etInrrP7bWTBhHZ74WGhokCWpc5a0EZ9g7tV7WNO'         # 用于加密签名，应该使用一个较长的随机值并保密
+SECRET_KEY = '******'               # 用于加密签名，应该使用一个较长的随机值并保密
 
 DEBUG = True            # 是否开启调试模式
 # 调试模式下，当 Django 抛出异常时会在 Web 页面显示详细的调试信息
-# 不应该在正式环境开启调试模式，否则会泄露服务器的配置、源代码
+# 在生产环境应该关闭调试模式，否则会泄露服务器的配置、源代码
 
 ALLOWED_HOSTS = ['*']   # 限制 HTTP 请求头部中的 Host 字段，如果不匹配则返回 HTTP 400 响应，用于避免 CSRF 攻击。例如：['*.test.com', 'localhost']
 
-INSTALLED_APPS = [                 # 声明启用的 Web 应用
-    'django.contrib.admin',        # 用于显示管理页面
-    'django.contrib.auth',         # 用于用户的身份认证
-    'django.contrib.contenttypes', # 启用 contenttypes 框架
-    'django.contrib.sessions',     # 用于创建 session
-    'django.contrib.messages',     # 启用消息框架，用于在浏览器中显示提示信息
-    'django.contrib.staticfiles',  # 用于管理静态文件
-    'app1.apps.App1Config',        # 启用一个自定义的 Web 应用
+INSTALLED_APPS = [                  # 声明启用的 Web 应用
+    'django.contrib.admin',         # 用于显示管理页面
+    'django.contrib.auth',          # 用于用户的身份认证
+    'django.contrib.contenttypes',  # 启用 contenttypes 框架
+    'django.contrib.sessions',      # 用于创建 session
+    'django.contrib.messages',      # 启用消息框架，用于在浏览器中显示提示信息
+    'django.contrib.staticfiles',   # 用于管理静态文件
+    'app1.apps.App1Config',         # 启用一个自定义的 Web 应用
 ]
 # 这里的路径不是文件的绝对路径，而是 Python 包的导入路径
 # Django 会将 BASE_DIR 加入 Python 的 sys.path 中，因此可以直接通过包名导入 Web 应用，比如 import app1

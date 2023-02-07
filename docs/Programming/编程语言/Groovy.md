@@ -18,7 +18,7 @@
 
 ### 静态类型
 
-- 可以用基本数据类型的关键字定义变量，属于静态类型。如下：
+- 可用基本数据类型的关键字定义变量，属于静态类型。如下：
   ```groovy
   byte    x = 1
   char    x = 'A'
@@ -34,11 +34,11 @@
 
 ### 动态类型
 
-- 可以用 `def` 关键字定义 Object 类型的变量，甚至可以省略该关键字。
+- 可用关键字 `def` 定义 Object 类型的变量，也可以省略该关键字。
   - Object 类型的变量可以存储各种类型的值。
   - 例：
     ```groovy
-    a = 1
+    def a = 1
     b = 'Hello'
     println a + b
     // 显示：1Hello
@@ -143,7 +143,7 @@
 - 列表支持嵌套，从而可以创建多维列表。
 - 例：
   ```groovy
-  List a = [1, 2]       // 可省略 List 关键字
+  List a = [1, 2]       // 可省略关键字 List
   a << 'Hello'          // 追加元素
   println a
   // 显示：[1, 2, Hello]
@@ -163,7 +163,7 @@
 
 - 例：
   ```groovy
-  def map = [a:1, b:'Hello', c:[1, 2]]  // 可省略 def 关键字
+  def map = [a:1, b:'Hello', c:[1, 2]]  // 可省略关键字 def
   println map
   // 显示：[a:1, b:Hello, c:[1, 2]]
   println map['a']      // 通过索引取值
@@ -269,14 +269,18 @@
 
 ## 函数
 
-- 用 `print()` 显示一个值，用 `println()` 显示一个值并换行。
+- 内置函数：
+  ```groovy
+  print(x)      // 打印一个值
+  println(x)    // 打印一个值并换行
+  ```
 - 调用函数时，可以省略最外层的括号。如下：
   ```groovy
   println("Hello")
   println "Hello"
   ```
 
-- 用 `def` 关键字定义函数：
+- 可用关键字 `def` 定义函数：
   ```groovy
   def fun1(a, b = 0) {
       return a+b
@@ -284,19 +288,19 @@
 
   println fun1(2)
   ```
-- 可以给函数形参设置默认值。
-- 函数中最后一个执行的表达式的值会被用作 return 返回值。如下：
-  ```groovy
-  def fun1(x) {
-      if(x == 1) {
-          true
-      } else {
-          false
-      }
-  }
+  - 可以给函数形参设置默认值。
+  - 如果函数中没有 return 语句，则最后一个执行的表达式的值会被用作 return 返回值。如下：
+    ```groovy
+    def fun1(x) {
+        if(x == 1) {
+            true
+        } else {
+            false
+        }
+    }
 
-  println fun1(2)
-  ```
+    println fun1(2)
+    ```
 
 ## 类
 
@@ -325,24 +329,20 @@
 
 - 例：
   ```groovy
-  script {
-      try {
-          ...
-      }catch (Exception e) {
-          ...
-      }catch(any){
-          ...
-      }
-      finally {
-          ...
-      }
+  try {
+      ...
+  }catch (Exception e) {
+      ...
+  }catch(any){
+      ...
+  }
+  finally {
+      ...
   }
   ```
 
-- 可以用 `assert` 关键字定义断言。
-  - 如果条件满足则无影响，如果条件不满足则抛出异常。
-  - 例：
-    ```groovy
-    assert 1 > 3
-    assert 1 in [1, 2, 3]
-    ```
+- 可用关键字 `assert` 声明断言。如果表达式结果为 false ，则抛出异常。例：
+  ```groovy
+  assert 1 > 3
+  assert 1 in [1, 2, 3]
+  ```

@@ -3,7 +3,7 @@
 ：实用报表提取语言（Practical Extraction and Report Language），一种脚本语言。
 - [官方文档](https://www.perl.org/docs.html)
 - 1987 年由加州大学伯克利分校的 Larry Wall 发布，借鉴了 C、shell、awk 等语言的特性。
-- 内置了正则表达式，因此最初适用于文本处理。后来已扩展成为通用的编程语言，可用于 Web 开发、GUI 编程。
+- 内置了正则表达式，因此适用于文本处理。最初只有这一种用途，后来扩展成为通用的编程语言，可用于 Web 开发、GUI 编程。
 
 ## 语法特点
 

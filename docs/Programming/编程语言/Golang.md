@@ -50,7 +50,7 @@ func main() {
   fmt.Print("Hello")                    // 打印一个值到终端
   fmt.Println("Hello")                  // 打印一个值并换行
   fmt.Println("Hello\nWorld", 1, 3.14)  // 可以打印任意个值
-  fmt.Printf("%d, %d\n", 1, 2)        // 格式化输出
+  fmt.Printf("%d, %d\n", 1, 2)          // 格式化输出
   ```
 - Golang 要求左花括号 `{` 不能独占一行，如下：
   ```go
@@ -449,7 +449,7 @@ string      // 字符串类型，采用 UTF-8 编码
       fmt.Println("function end")
   }
 
-  fun1() 
+  fun1()
   ```
   - defer 语句只能在一个函数内使用，在该函数退出时才执行。
   - 如果有多个 defer 语句，则按后进先出的顺序执行。
@@ -490,13 +490,13 @@ string      // 字符串类型，采用 UTF-8 编码
   ```
   - 创建协程的当前线程，称为主线程。
   - 协程会共享主线程的内存，但不会共享 stdin、stdout 。
-  - 当主线程退出时，其下的所有协程会被自动终止。
+  - 当主线程退出时，其下所有协程会被自动终止。
 
 - 协程之间可以通过 channel 类型的变量进行通信：
   ```go
   func fun1(ch chan int){
       for i := 0; i < 100; i++ {
-          ch <- i               // 写入一个值到通道。如果通道的缓冲区没有可用空间，则一直等待，陷入阻塞
+          ch <- i               // 写入一个值到通道。如果通道的缓冲区没有可用空间，则一直等待写入，陷入阻塞
       }
       close(ch)                 // 关闭通道。只有发送者能关闭通道
   }
@@ -504,7 +504,7 @@ string      // 字符串类型，采用 UTF-8 编码
   func main() {
       ch := make(chan int, 10)  // 用关键字 chan 创建一个通道，其数据类型为 int ，缓冲区可存储 10 个 int 型值
       go fun1(ch)               // 创建协程，并传递通道以便通信
-      for value := range ch {   // 遍历通道。如果通道为空，则一直等待，陷入阻塞，除非通道被关闭
+      for value := range ch {   // 遍历通道。如果通道为空，则一直等待读取，陷入阻塞，除非通道被关闭
           fmt.Println(value)
       }
   }
@@ -514,22 +514,20 @@ string      // 字符串类型，采用 UTF-8 编码
     value, ok := <-ch           // 从通道取出一个值，如果 ok 为 false 则说明通道已被关闭
     ```
 
-- 可以用 select 语句同时处理多个通道：
+- 可以用 for + select 语句同时读取多个通道：
   ```go
   for {
-      select {
-      case ch <- 1:
-          fmt.Println("写入一次")
-      case <- quit:
-          fmt.Println("终止执行")
-          return
-      default:
-          fmt.Println("sleep ...")
-          time.Sleep(1000 * time.Millisecond)
-      }
-      }
+    select {
+        case ch := <- 1:
+            fmt.Println("写入一次")
+        case <- quit:
+            fmt.Println("终止执行")
+            return
+        default:
+            fmt.Println("sleep ...")
+            time.Sleep(1000 * time.Millisecond)
+    }
   }
   ```
-  - select 语句会检查哪个 case 条件满足，都不满足则执行 default 语句块。
-  - 如果没有 default 语句，则 select 语句会保持阻塞，直到某个 case 条件满足，才执行相应的语句块。
-
+  - 这里 select 语句会检查哪个 case 条件满足，执行相应的语句块，都不满足则执行 default 语句块。
+  - 如果没有 default 语句，则 select 语句会阻塞等待，直到某个 case 条件满足。

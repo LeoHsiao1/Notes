@@ -93,7 +93,7 @@
 ：XML 文档对象模型（XML Document Object Model），是一个访问 XML 格式文本的 API 标准。
 - 通常研究的是 XML DOM ，有时也研究 HTML DOM 。
 - DOM 将 XML 文档表示成一个树形结构，XML 中的每个元素都表示成一个单一的节点（元素的值也表示成子节点）。
-  - 例如，下方表示节点 book 拥有一个属性节点 category、一个元素节点 year ，节点 year 拥有一个值为"2000"的文本节点。
+  - 例如，下方表示节点 book 拥有一个属性节点 category、一个元素节点 year ，节点 year 拥有一个值为 "2000" 的文本节点。
     ```xml
     <book category="web">
         <year>2000</year>
@@ -205,7 +205,7 @@ if (y.nodeType == 1) {
 
 ：异步 JS 和 XML（Asynchronous JavaScript and XML）
 - 传统的网页是静态网页，每次改变网页内容时都要重新生成一个 HTML 文件，让浏览器重新加载网页。
-  - 使用 AJAX 技术，可以让浏览器在后台向服务器发出请求，然后改变网页的某些内容，实现动态网页。
+  - 使用 AJAX 技术，可以让浏览器在后台向服务器发出请求，然后改变网页的部分内容，实现动态网页。
   - 使用 AJAX 技术，可以实现异步请求，让 JS 不用等待服务器的响应就继续执行。
 - XMLHttpRequest() 是常用的 JS 异步请求 API ，大部分浏览器都支持。如下：
     ```js

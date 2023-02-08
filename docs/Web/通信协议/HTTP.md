@@ -6,13 +6,13 @@
 
 - 属于应用层协议，基于 TCP 通信。
 - 采用 C/S 架构，工作流程如下：
-  1. client 访问 server 的 TCP 端口，进行 TCP 握手。
+  1. client 访问 server 的 TCP 端口，建立 TCP 连接。
   2. client 发送 HTTP 请求报文。
   3. server 回复 HTTP 响应报文。
 
 ## 版本
 
-- HTTP 协议存在多个版本，服务器、客户端程序不一定兼容该协议的所有版本、特性。
+- HTTP 协议存在多个版本，服务器、客户端程序不一定兼容所有版本、特性。
 
 ### HTTP/1.0
 
@@ -44,7 +44,7 @@
 - 采用二进制格式传输报文。
 - 压缩报文 header 。大幅减小其体积。
 - 要求 HTTP header 采用小写。
-- 支持 TCP 连接的多路复用：可通过同一个 TCP 连接，并行传输多个指向同一个域名的 HTTP 请求，互不干扰。
+- 支持 TCP 连接的多路复用：可通过同一个 TCP 连接，并行传输多个指向同一个域名的 HTTP 请求，互不干扰。比 HTTP/1.1 长连接的串行传输，效率更高。
 - 支持服务器主动推送报文到客户端。
 
 ## URI
@@ -98,7 +98,7 @@ HTTP/1.0 定义了 GET、HEAD、POST 三种请求方法，HTTP/1.1 增加了六�
 
 - PUT
   - ：用于向（根据 URL 指定的）资源更新数据。
-  - POST 偏向于新增数据，而 PUT 偏向于用新数据覆盖原数据，通常具有幂等性。
+  - POST 偏向于新增资源，而 PUT 偏向于修改资源，用新数据覆盖原数据，通常具有幂等性。
 - DELETE
   - ：用于删除资源。
 - CONNECT
@@ -311,4 +311,4 @@ Content-Type: text/html; charset=utf-8
 - 优点：过程简单，容易实现。
 - 缺点：通过 HTTP Header 将用户名、密码以明文方式传输，容易泄露。
 - URL 中，`username:password@host:port` 三个字段的组合称为 authority 。
-  - 比如 URL 为 `http://test:123456@127.0.0.1:80/index.html` 时，authority 为 `test:123456@127.0.0.1:80` 。
+  - 例如 URL 为 `http://test:123456@127.0.0.1:80/index.html` 时，authority 为 `test:123456@127.0.0.1:80` 。

@@ -88,16 +88,15 @@ HTML4 采用以下方式控制文本的显示样式：
   - `color` ：字体颜色
   - `bgcolor` ：背景色
 - 例：
+  ```html
+  <div align="center">
+      <font size="3" color="red">Text</font>
+  </div>
+  ```
 
-    ```html
-    <div align="center">
-        <font size="3" color="red">Text</font>
-    </div>
-    ```
+HTML5 提倡弃用上述标签，改用 css 设置显示样式。
 
-HTML5 提倡将它们都改用 css 设置显示样式。
-
-其它标签。
+其它标签：
 - 标签 `<span>` ：对文本中的某部分单独设置样式。
 
     ```html
@@ -223,37 +222,37 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
     - 如果设置 method="POST"，则浏览器会将表单数据放在报文 body 中发送。例如：`username=Leo&password=123456`
 
 - `type="button"` ：普通按钮。点击后会执行属性 onclick 指定的动作。
-    ```html
-    <input type="button" onclick="alert('Hello World!')" value="Button 1">
-    ```
+  ```html
+  <input type="button" onclick="alert('Hello World!')" value="Button 1">
+  ```
 
 - `type="radio"` ：单选按钮
-    ```html
-    <form>
-        <input type="radio" name="sex" value="male">Male<br>
-        <input type="radio" name="sex" value="female">Female<br>
-    </form>
-    ```
+  ```html
+  <form>
+      <input type="radio" name="sex" value="male">Male<br>
+      <input type="radio" name="sex" value="female">Female<br>
+  </form>
+  ```
   - 属性 name 表示该选项显示的名字。
   - 属性 value 表示该选项在 POST body 中的值。
 
 - `type="checkbox"` ：复选按钮
-    ```html
-    <form>
-        <input type="checkbox" name="sex" value="male">Male<br>
-        <input type="checkbox" name="sex" value="female">Female<br>
-    </form>
-    ```
+  ```html
+  <form>
+      <input type="checkbox" name="sex" value="male">Male<br>
+      <input type="checkbox" name="sex" value="female">Female<br>
+  </form>
+  ```
 
-- 下拉框
-    ```html
-    <form>
-        <select name="sex">
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-        </select>
-    </form>
-    ```
+- 下拉框：
+  ```html
+  <form>
+      <select name="sex">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+      </select>
+  </form>
+  ```
 
 - `type="number"` ：只允许输入数字。
 - `type="color"` ：输入颜色。点击该按钮会打开一个颜色选择对话框。
@@ -353,8 +352,8 @@ ordered list ，用标签 `<ol>` 和 `<li>` 声明。
   - 弃用 font 等标签，弃用 align、color、bgcolor 等属性。
   - 增加了一些功能。
   - 增加了一些语义元素，实现顾名思义的用途。例如：标签 `<section>` 用于划分一组内容。
-- 中国互联网上流行制作一些 HTML 5 网页，专供手机端用户查看，实现 PPT、小游戏等效果。简称为 H5 页面。
-  - 交互性强，通常需要用户点击或滑动手机屏幕，触发网页内容的变化。
+- 中国互联网上流行制作一些 HTML 5 网页，专供手机端用户查看，实现 PPT、小游戏等效果。通常称为 H5 页面。
+  - 它们交互性强，通常需要用户点击或滑动手机屏幕，触发网页内容的变化。
 
 ## 相关工具
 

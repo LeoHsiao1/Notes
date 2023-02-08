@@ -4,7 +4,7 @@
 - https://python3-cookbook.readthedocs.io/zh_CN/latest/
 
 
- 
+
 基本语法
 代码规范
 ## Python代码通常采用PEP8规范。
@@ -54,7 +54,7 @@ This module collects some functions and classes as follows:
 ## 使用Python的一些高级语法虽然能使代码更优雅、简洁，但是也可能导致代码的阅读门槛变高。
 ##
 ##
- 
+
 输入输出
 ## print(value, ..., sep=' ', end='\n', file=sys.stdout, flush=False)
 - 功能：将value参数的值显示到终端。
@@ -82,7 +82,7 @@ x=
 ##
 ##
 ##
- 
+
 运算符
 ## 算术运算符。
 >>> 1 + 2        # 加
@@ -197,7 +197,7 @@ False
 ##
 ##
 ##
- 
+
 选择结构
 ## Python的选择结构只有if语句。
 ## if语句：一般格式如下：
@@ -210,7 +210,7 @@ statement_block
 ##
 ##
 ##
- 
+
 循环结构
 ## Python的循环结构只有for语句和while语句。
 - 可以用break跳出当前层循环，用continue跳到下一次循环。
@@ -288,7 +288,7 @@ NameError: name 'a' is not defined
 ##
 ##
 ##
- 
+
 变量与对象
 ## Python是纯面向对象的语言，所有标识符、常量都是以对象（某个类的实例）的形式保存，都可以赋值给变量。
 - 创建一个对象时，Python会自动分配存储空间，并在修改对象时自动调整容量。
@@ -358,7 +358,7 @@ True
 ##
 ##
 ##
- 
+
 变量的作用域
 ## Python中，变量的作用域分为四种级别。
 - 局部作用域（Local）
@@ -382,8 +382,8 @@ l = 1        # 局部作用域
 >>> x
 1
 - Python中，在局部作用域中可以直接读取外部变量的值（如果不重名的话），但是不可以直接修改外部变量。
-  - 如果是外部非全局变量，要用 nonlocal 关键字声明才能修改。
-  - 如果是全局变量，要用 global 关键字声明才能修改。
+  - 如果是外部非全局变量，要用关键字 nonlocal 声明才能修改。
+  - 如果是全局变量，要用关键字 global 声明才能修改。
   - 例：
 >>> a = 1
 >>> def fun1():
@@ -407,7 +407,7 @@ b = 3
 ##
 ##
 ##
- 
+
 基本数据类型
 ## Python的基本数据类型。
 - 可变类型（可读可写）：list、set、dict。
@@ -460,7 +460,7 @@ False
 
 类型提示：typing 模块
 
- 
+
 bool
 ## bool：布尔型。取值为True或Flase（首字母大写）。
 - True、Flase在底层是以数字1、0存储。
@@ -486,7 +486,7 @@ False
 ##
 ##
 ##
- 
+
 数字
 ## int：整数。
 >>> 1 + 2
@@ -534,7 +534,7 @@ SyntaxError: invalid token
 ##
 ##
 ##
- 
+
 数制的转换
 ## 将其它进制的字符串转换成int型数字。
 - 使用int()即可转换。
@@ -568,7 +568,7 @@ ValueError: invalid literal for int() with base 2: '0bb100'
 ##
 ##
 ##
- 
+
 list
 ## list：列表类型，按顺序存储一组元素。
 - 可以用中括号 [ ] 创建list，各个元素之间用逗号分隔。
@@ -587,7 +587,7 @@ list
 ##
 ##
 ##
- 
+
 增查
 ## 增。
 - list.append(object) -> None
@@ -653,7 +653,7 @@ ValueError: 3 is not in list
 ##
 ##
 ##
- 
+
 改删
 ## 改。
 - list.sort(key=None, reverse=False) -> None
@@ -710,7 +710,7 @@ IndexError: pop from empty list
 ##
 ##
 ##
- 
+
 列表生成式
 ## 列表生成式：通过遍历某个序列来生成列表。
 >>> [i for i in range(5)]
@@ -733,7 +733,7 @@ IndexError: pop from empty list
 ##
 ##
 ##
- 
+
 tuple
 ## tuple：元组类型，相当于只读的list。
 - 可以用小括号 ( ) 创建tuple，各个元素之间用逗号分隔。
@@ -767,7 +767,7 @@ TypeError: 'tuple' object does not support item assignment
 ##
 ##
 ##
- 
+
 str、bytes
 ## Python中没有字符类型，只有字符串类型。一个字符就是一个长度为1的字符串。
 ## Python3中，解释器在内存中处理字符串时默认采用str类型，与外部交互时才转换成bytes类型。
@@ -850,7 +850,7 @@ b'www.\\u4f60\\u597d.com'                        # 该字符串的内容被改�
 ##
 ##
 ##
- 
+
 查
 ## 查。
 - str.count(sub, start: int=..., stop: int=...) -> int
@@ -944,7 +944,7 @@ True
 ##
 ##
 ##
- 
+
 改
 ## 改。
 - str.replace(old: str, new: str, count: int=...) -> str
@@ -996,7 +996,7 @@ TypeError: sequence item 0: expected str instance, int found
 ##
 ##
 ##
- 
+
 格式化字符串
 ## str.format(*args: Any, **kwargs: Any) -> str
 - 功能：以str为基础，生成一个经过格式化的字符串。
@@ -1097,7 +1097,7 @@ TypeError: sequence item 0: expected str instance, int found
 ##
 ##
 ##
- 
+
 字符串的转换
 ## 字符串的转换。
 - 可以用int()把int格式的字符串转换成int型对象。
@@ -1165,7 +1165,7 @@ b'H'
 
 
 
- 
+
 序列
 ## 序列（sequence）：包括list、tuple、str、bytes。
 - 序列支持索引和切片。
@@ -1184,7 +1184,7 @@ TypeError: unsupported operand type(s) for +: 'dict' and 'dict'
 ##
 ##
 ##
- 
+
 索引
 ## 索引：用 [下标] 选取一个元素。
 - [0]指向第一个元素，[n]指向第n+1个元素。
@@ -1222,7 +1222,7 @@ True
 ##
 ##
 ##
- 
+
 切片
 ## 切片：用 [头下标:尾下标] 选取一部分元素，区间为 [头下标, 尾下标) 。
 >>> list1 = [1, 2, 3]
@@ -1263,8 +1263,8 @@ wrd                        # 提取索引为0、2、4的元素
 [5, 4, 3, 2, 1]
 >>> list2[::-2]
 [5, 3, 1]
-## list类型的切片结果可以被修改。
-- 修改切片结果会改变原list。
+
+可以对切片赋值，这会修改原list
 >>> list2
 >>> list1[0:2] = [1, 2, 3]    # 赋值时，元素个数不必一致
 >>> list1
@@ -1275,7 +1275,8 @@ wrd                        # 提取索引为0、2、4的元素
 >>> del list1[:]                # 可以用关键字del直接删除选中的元素
 >>> list1
 []
-- 如果把切片结果赋值给其它变量，则得到的是该片段的浅拷贝，相当于list.copy()。
+
+可以将切片赋值给其它变量，这会得到该片段的浅拷贝，相当于 list.copy() 。
 >>> list1 = [1, 2, 3]
 >>> list2 = list1[:]
 >>> list1 is list2
@@ -1286,7 +1287,7 @@ False
 ##
 ##
 ##
- 
+
 set
 ## set：集合类型，无序地存储一些元素，并且会自动去重。
 - 可以用 {value1, value2, ...} 的格式创建set。
@@ -1315,7 +1316,7 @@ set()
 ##
 ##
 ##
- 
+
 增查改删
 ## 增。
 - set.add(x) -> None
@@ -1402,7 +1403,7 @@ KeyError: 'pop from an empty set'
 ##
 ##
 ##
- 
+
 dict
 ## dict：字典类型，存储一些键值对形式的元素。
 
@@ -1445,7 +1446,7 @@ KeyError: 'time'
 ##
 ##
 ##
- 
+
 查改删
 ## 查。
 - dict.keys()
@@ -1550,7 +1551,7 @@ RuntimeError: dictionary changed size during iteration
 ##
 ##
 ##
- 
+
 函数
 ## 函数。
 - Python中定义函数的一般格式为：
@@ -1577,10 +1578,15 @@ NameError: name 'os' is not defined
 >>> funs = [lambda x: x + i for i in range(5)]
 >>> funs[0](0)
 4
-  - 将外部变量作为形参的默认值传入函数，就会在定义函数时就将它的值保存到函数的__defaults__属性中。
->>> funs = [lambda x, i=i: x + i for i in range(5)]
->>> funs[0](0)
+  - 将外部变量作为形参的默认值传入函数，就会在定义函数时就将它的值保存到函数的内置属性__defaults__中。
+>>> funs = [lambda x=i: x for i in range(5)]
+>>> funs[0]()
 0
+>>> funs[1]()
+1
+>>> funs[1](0)
+0
+
 ## 高阶函数：可以接受函数作为输入参数，或者以函数作为返回值。
 ## 嵌套函数：在一个函数中定义另一个函数。
 ## 匿名函数：用关键字lambda定义，只有一个形参列表和一行表达式（相当于return语句），没有函数名。
@@ -1608,13 +1614,13 @@ def fun1():
         print(x)
 return fun2
   - 该变量称为自由变量：可以在作用域之外的位置被访问。
-- Python中使用装饰器时，就会把被装饰的函数变成闭包函数。
+- Python 使用装饰器时，就会把被装饰的函数变成闭包函数。
 
 闭包就是可以使用参数的代码片段，在闭包内创建的变量在闭包被调用的范围内同样可以被引用。
 ##
 ##
 ##
- 
+
 函数参数
 ## 在C语言中，调用函数时如果实参列表与形参列表不一致就会报错。但是在Python中，函数的参数比较灵活。
 ## 实参的类型：
@@ -1693,7 +1699,7 @@ H e l l o
 ##
 ##
 ##
- 
+
 装饰器
 ## 装饰函数：体现装饰模式的函数，用于向某个函数附加功能而不改变其原本内容。
 - 例如，已存在函数fun1()，如下：
@@ -1751,7 +1757,7 @@ def fun1():
 >>> fun1.__name__
 'wrapper'
   - 可以用@wraps(func)装饰wrapper()函数，从而拷贝func的__name__、__doc__等元属性。
-- 如果想给装饰器本身传入参数，还要在定义装饰器时外加一层函数。如下：
+- 如果想给装饰器本身传入参数，还要在定义装饰器时外加一层函数，组成双层装饰器。如下：
 >>> from functools import wraps
 >>> def debug(level=None):
 ...     print("Decorator was set.")    # 装饰器的外层函数中的语句会在用 @ 指定装饰器时执行
@@ -1760,8 +1766,8 @@ def fun1():
 ...         def wrapper(*args, **kwargs):
 ...             print("[DEBUG]: enter {}()".format(func.__name__))
 ...             return func(*args, **kwargs)
-...         return wrapper
-...     return decorator
+...         return wrapper    # 第一层装饰器
+...     return decorator      # 第二层装饰器
 ...
 >>> @debug(level=3)    # 该句会先执行函数debug(level=3)，然后用它的返回值作为装饰器，即@__decorator
 ... def fun1(x, y):
@@ -1814,7 +1820,7 @@ unsupported operand type(s) for +: 'int' and 'str'
 ##
 ##
 ##
- 
+
 类
 ## 使用class关键字可以定义类。
 - 例如：
@@ -1849,7 +1855,7 @@ init...
 ##
 ##
 ##
- 
+
 类的成员
 ## 类中定义的变量称为类的“属性”，类中定义的函数称为类的“方法”，它们都属于类的“成员”。
 - 属性的分类：
@@ -1883,7 +1889,7 @@ AttributeError: 'Test' object has no attribute '__c'
 ##
 ##
 ##
- 
+
 类的属性
 ## 类的属性。
 - 实例变量：每个实例对象各有一份，互不影响。
@@ -1902,15 +1908,15 @@ AttributeError: type object 'Test' has no attribute 'num'
 >>> Test(1).getNum()
 1
 - 类变量：所有实例对象共用一份。
-  - 定义类时，既可以在方法内访问（此时可以通过cls指针或self指针访问），也可以在方法外访问。
+  - 定义类时，既可以在方法内访问（此时可以通过指针 cls 或 self 访问），也可以在方法外访问。
   - 定义类之后，既可以通过 "对象名.成员名" 的方式访问，也可以通过 "类名.成员名" 的方式访问。
 >>> class Test:
 ...     num = 0                # 在方法外访问类变量
 ...     def __new__(cls):
-...         cls.num = 1        # 在方法内通过cls指针访问类变量
+...         cls.num = 1        # 在方法内通过指针 cls 访问类变量
 ...         return super().__new__(cls)
 ...     def getNum(self):
-...         return self.num    # 在方法内通过self指针访问类变量
+...         return self.num    # 在方法内通过 self 访问类变量
 ...     def setNum(self, n):
 ...         self.num = n
 ...
@@ -1951,7 +1957,7 @@ AttributeError: type object 'Test' has no attribute '__id'
 ##
 ##
 ##
- 
+
 类的方法
 ## 类的方法。
 - 实例方法：第一个参数必须是self。
@@ -1979,10 +1985,10 @@ TypeError: getNum() missing 1 required positional argument: 'self'
 0
 - 静态方法：用装饰器 @staticmethod定义，不必传入self或cls参数，相当于一个独立的函数。
   - 静态方法既可以通过 "对象名.成员名" 的方式访问，也可以通过 "类名.成员名" 的方式访问。如下：
->>> Test.static_getNum()
-0
->>> Test().static_getNum()
-0
+    >>> Test().static_getNum()  # 此时传入了参数 self
+    0
+    >>> Test.static_getNum()    # 此时不传入参数 self 或 cls
+    0
   - 通过 "对象名.方法名" 的方式访问时，装饰器会把自动传入的参数self拦截下来，因此没有装饰器就会出错。如下：
 >>> class Test:
 ...     def static_getNum():
@@ -2005,7 +2011,7 @@ TypeError: 'int' object is not callable
 ##
 ##
 ##
- 
+
 类的内置方法
 ## 类的内置方法：以两个下划线 __ 开头、两个下划线 __ 结尾，可以被重载。
 - 又称为魔法方法。
@@ -2091,7 +2097,7 @@ __str__
 -1
 >>> Test() - Test()
 0
-## 实现了__enter__() 和 __exit__()方法的对象支持用with关键字进行上下文管理。
+## 实现了__enter__() 和 __exit__()方法的对象支持用关键字 with 进行上下文管理。
 - 例：
 class Test:
     def __init__(self, filename, mode='r'):
@@ -2214,7 +2220,7 @@ True
 ##
 ##
 ##
- 
+
 类的继承
 ## 在定义类名时，在类名后加上括号并填入某个类名，就可以让当前类继承某个类的成员。
 - Python3中，所有类都隐式地继承object类。
@@ -2226,22 +2232,37 @@ True
 ...     pass
 ...
 
-- 子类继承父类的类变量之后，会保留相同的引用。但是修改子类的类变量，会导致它们不再关联。
+- 子类继承父类的类变量之后，会保留相同的引用。
 
 >>> Person.num, Man.num
 (0, 0)
 >>> Person.num is Man.num   # 此时子类的类变量，与父类的类变量，实际上是引用同一个对象
 True
->>> Person.num = 1          # 改变父类的类变量的引用，会导致子类的类变量也变化
+
+>>> Person.num = []         # 改变父类的类变量的引用，会导致子类的类变量也变化，因为子类与父类的类变量依然引用同一个对象
 >>> Person.num, Man.num
-(1, 1)
->>> Person.num = [0]        # 修改父类的类变量，会导致子类的类变量也变化
->>> Man.num.append(2)
+([], [])
+>>> Person.num is Man.num
+True
+
+>>> Person.num.append(0)    # 修改父类的类变量的值，子类与父类的类变量依然引用同一个对象
 >>> Person.num, Man.num
-([0, 2], [0, 2])
->>> Man.num = 2             # 但是，如果改变子类的类变量的引用，会导致子类与父类的该类变量从此取消关联
+([0], [0])
+>>> Person.num is Man.num
+True
+
+>>> Man.num.append(1)       # 修改子类的类变量的值，子类与父类的类变量依然引用同一个对象
 >>> Person.num, Man.num
-([0, 2], 2)
+([0, 1], [0, 1])
+>>> Person.num is Man.num
+True
+
+>>> Man.num = [2]           # 但是，改变子类的类变量的引用，会与父类的该类变量从此取消关联
+>>> Person.num, Man.num
+([0, 1], [2])
+>>> Person.num is Man.num
+False
+
 
 
 
@@ -2256,7 +2277,7 @@ AttributeError: type object 'Man' has no attribute 'name'
 
 
 C++等语言中支持定义多个名称相同、形参列表不同的方法，实现更丰富的多态性。如下，当调用 Test.get(x=1) 时，根据输入的实参与哪个形参列表匹配，从而判断调用哪个方法。
-但在Python中不支持这样的多态性，只有同名的方法中只有最后一个定义的方法会生效。
+但Python不支持这样的多态性，同名的多个方法中，只有最后一个定义的方法会生效。
 
 class Test:
 
@@ -2270,7 +2291,7 @@ class Test:
         pass
 
 ##
- 
+
 多继承
 ## Python的类支持多继承。如下：
 >>> class A:
@@ -2327,10 +2348,10 @@ A end
 ##
 ##
 ##
- 
+
 元类
 ## 一般的类实际上是type类的实例。当Python解释器执行到class定义语句时，实际上是调用type()创建该类。
-- 在代码中使用type()可以动态创建类，使程序更加灵活。
+- 在代码中可用type()动态创建类，使程序更加灵活。
 ## class type(name: str, bases: Tuple[type, ...], dict: Dict[str, Any]) -> a new type
 - 功能：创建一个类。（实际上是type类的实例）
 - name参数是类名，bases参数是一个包含所有父类的元组，dict参数是一个包含所有方法名及其绑定的函数的字典。
@@ -2361,13 +2382,13 @@ hello
 ##
 ##
 ##
- 
+
 迭代器
 ## 迭代：遍历某个对象中的所有元素。
 - 不同的容器实现了迭代器接口之后，就可以使用相同的API进行遍历。
 ## 可迭代对象（iterable）：具有__iter__()方法。可以被for语句遍历，不能被next()遍历。
 - __iter__()：返回一个迭代器。
-  - for语句在遍历可迭代对象时，就是先调用对象的__iter__()方法，获得迭代器，再调用next()方法进行遍历。
+  - for语句在遍历可迭代对象时，就是先调用对象的__iter__()方法，获得迭代器。
   - 例：
 >>> list1 = [1, 2, 3]
 >>> list1.__iter__()
@@ -2417,7 +2438,7 @@ hello
 ##
 ##
 ##
- 
+
 生成器
 ## 生成器（generator）：Python特有的一种迭代器。
 - 使用yield关键字给出函数的返回值时，函数会返回一个生成器。
@@ -2454,7 +2475,7 @@ StopIteration
 ##
 ##
 ##
- 
+
 异常处理
 ## Python程序的错误分为两种。
 - SyntaxError：语法错误，在编译时报出错误。
@@ -2492,8 +2513,8 @@ pass            # 即使有return语句，也会在return之前先执行finally�
 inside
 exit
 ## 抛出异常。
-- 使用关键字raise可以抛出已捕捉的异常。
 - 使用“raise X”的格式可以主动抛出一个异常。X可以是一个异常类或者异常的实例。
+- 在 except 语句块中，单独使用关键字raise ，会抛出已捕捉的异常。
 >>> raise NameError
 NameError
 >>> raise NameError('test...')
@@ -2581,13 +2602,13 @@ SyntaxError: invalid syntax
 ##
 ##
 ##
- 
+
 内置函数
 ## Python解释器启动时会自动导入builtins模块，它提供了一些内置函数。
 ##
 ##
 ##
- 
+
 关于底层
 ## def id(object) -> int
 - 功能：返回对象的唯一ID。
@@ -2640,7 +2661,7 @@ True
 "b'Hello'"
 ##
 ##
- 
+
 关于执行代码
 ## def exec(src, globals=..., locals=...) -> None
 - 功能：执行一段代码。
@@ -2686,7 +2707,7 @@ SyntaxError: invalid syntax
 ##
 ##
 ##
- 
+
 关于类
 ## class type(object) -> className
 - 功能：返回对象的类型（即类名）。
@@ -2734,7 +2755,7 @@ False
 ##
 ##
 ##
- 
+
 关于类的成员
 ## 反射：根据类的成员的名称字符串，获得它的引用。
 - 使用反射可以让Python程序在运行时更加动态。
@@ -2783,7 +2804,7 @@ AttributeError: 'str' object attribute 'encode' is read-only
 ##
 ##
 ##
- 
+
 关于迭代
 ## class range(stop: int) -> iterable
 class range(start: int, stop: int, step: int=...) -> iterable
@@ -2807,7 +2828,7 @@ range(0, 5)
 >>> list(range(1, 10, -2))
 []
 ## class enumerate(iterable, start=0) -> iterator
-- 功能：枚举一个可迭代对象，返回一个迭代器。每个迭代的元素是一个元组 (index, iterable[index]) 。
+- 功能：枚举一个可迭代对象，返回一个迭代器。每次迭代返回一个元组 (n, iterable[n]) ，包含序号 n 和第 n 个元素。
 - 常用于生成带序号的序列。
 - 例：
 >>> list(enumerate("Hello"))
@@ -2844,15 +2865,17 @@ range(0, 5)
 >>> list(zip(*zip(range(5), "Hellooo")))        # zip(* )是zip的逆过程，可实现二维矩阵的转置
 [(0, 1, 2, 3, 4), ('H', 'e', 'l', 'l', 'o')]
 ## def map(func, *iterable) -> iterable
-- 功能：返回一个生成器，每次迭代会取出各个iterable的第n个元素，传给func函数执行，返回函数的返回值。
+- 功能：返回一个生成器，每次迭代会取出各个iterable的第n个元素，传给func函数执行，然后返回函数的返回值。
 - 例：
->>> map(print, range(3))
+>>> map(print, range(5))
 <map object at 0x7fa35e250dd8>
->>> list(map(print, range(3)))
-0
-1
-2
-[None, None, None]
+>>> list(map(print, range(5), 'hello'))
+0 h
+1 e
+2 l
+3 l
+4 o
+[None, None, None, None, None]
 - map()比zip()更灵活、功能更强。例如用它们实现二维矩阵的转置：
 >>> list(zip([1, 2, 3, 4], [5, 6, 7]))
 [(1, 5), (2, 6), (3, 7)]
@@ -2861,7 +2884,7 @@ range(0, 5)
 ##
 ##
 ##
- 
+
 关于计算
 
 幂运算
@@ -2927,7 +2950,7 @@ TypeError: '>' not supported between instances of 'int' and 'str'
 >>> max(d, key=d.get)
 'c'
 
-- min()函数的原理与max()类似，只不过是找出最小值。
+- min()函数的原理与max()类似，不过是找出最小值。
 
 ## def sum(iterable, start=0) -> value
 - 功能：将可迭代对象中的各个元素相加求和。
@@ -2958,7 +2981,7 @@ True
 ##
 ##
 ##
- 
+
 常用模块
 
 [Python 的内置模块列表](https://docs.python.org/3.8/py-modindex.html)
@@ -3095,7 +3118,7 @@ True
 ##
 ##
 ##
- 
+
 ♢ sys
 ## sys：Python的标准库，提供了一些与Python解释器进行交互的方法。
 - 例：
@@ -3148,7 +3171,7 @@ hello5
 ##
 ##
 ##
- 
+
 ♢ psutil
 ## psutil：Python的第三方库，用于查看系统的硬件信息、运行状态。
 - 安装：pip install psutil
@@ -3245,7 +3268,7 @@ psutil.net_connections(kind="tcp")
 ##
 ##
 ##
- 
+
 ♢ platform
 ## platform：Python的标准库，用于获取当前运行平台的信息。
 - 关于Python解释器。
@@ -3269,7 +3292,7 @@ psutil.net_connections(kind="tcp")
 ##
 ##
 ##
- 
+
 关于时间
 
 常见概念：
@@ -3366,7 +3389,7 @@ while 1:
 ##
 ##
 ##
- 
+
 ♢ datetime
 ## datetime：Python的标准库，基于time模块封装了一些API，适合处理日期、切换时区、计算两个日期的差或和。
 - 时区要用pytz模块选择：
@@ -3474,7 +3497,7 @@ datetime.datetime(2019, 5, 31, 4, 0, 0, 505080)
 ##
 ##
 ##
- 
+
 ♢ apscheduler
 ## apscheduler：Python的第三方库，用于执行定时任务。
 - 安装：pip install apscheduler
@@ -3517,7 +3540,7 @@ job.remove()
 ##
 ##
 ##
- 
+
 ♢ celery
 ## celery：Python的第三方库，是一个分布式的任务队列，常用于执行大量的异步任务、定时任务。
 - 安装：pip install celery
@@ -3574,13 +3597,13 @@ cel.conf.beat_schedule = {
 ##
 ##
 ##
- 
+
 关于数据
 
 ##
 ##
 ##
- 
+
 ♢ string
 ## string：Python的标准库，提供了一些常用的字符集合。
 - 关于数字。
@@ -3612,7 +3635,7 @@ cel.conf.beat_schedule = {
 ##
 ##
 ##
- 
+
 ♢ collections
 ## collections：Python的标准库，提供了一些容器类。
 - 可迭代对象、迭代器。
@@ -3623,7 +3646,7 @@ True
 True
 ##
 ##
- 
+
 关于调试
 ♢ traceback
 ## traceback：Python的标准库，用于获取stack的信息。
@@ -3641,7 +3664,7 @@ except :                                # 使用时不需要实例化异常类
 ##
 ##
 ##
- 
+
 ♢ inspect
 ## inspect：Python的标准库，提供了一些查询对象属性、查看堆栈的方法，常用于调试。
 ## 判断对象的类型。
@@ -3739,7 +3762,7 @@ OrderedDict([('a', 1)])
 ##
 ##
 ##
- 
+
 
 ♢ pytest
 ## pytest：Python的第三方库，是一个开源的Python单元测试框架。
@@ -3864,7 +3887,7 @@ if __name__ =="__main__":
 
 
 
- 
+
 关于运行
 ♢ argparse
 ## argparse：Python的标准库，用于处理启动脚本时输入的命令行参数。
@@ -3941,7 +3964,7 @@ pyinstaller  D:\1\1.py     # 打包成一个文件夹，包含一堆运行库
 ##
 ##
 ##
- 
+
 其它模块
 ♢ functools
 ## functools：Python的标准库，提供了一些功能函数、装饰器。
@@ -3965,7 +3988,7 @@ TypeError: fun1() got multiple values for argument 'c'
 ##
 ##
 ##
- 
+
 
 
 
@@ -3981,17 +4004,16 @@ TypeError: fun1() got multiple values for argument 'c'
   - 尽量不要强制杀死子进程，应该让它自己自愿结束，清理自己占用的资源。因为子线程可能正在执行一些不宜中断的操作，比如拿到了某个资源的锁、打开了某个文件还没有关闭、创建了孙线程还没有关闭。
   - 当主进程异常终止时（比如被kill -9），子进程就会变成没人管的孤儿进程。
 - 把子线程设置成daemon，当主进程退出时它们就会被系统自动终止。
-- 让子线程自己判断是否要结束运行。
-  - 这样子线程的独立性强。
-- 等子线程处理完所有业务，运行结束。
+- 等子线程处理完所有业务，自然结束。
   - 这需要事先确定子线程不会无限运行。
+- 让子线程自己定期判断，是否要结束运行。
 
 
 ## CPython早先引入了GIL（Global Interpreter Lock，全局解释锁）机制。
 - 为了保证多线程之间不冲突，同一时间只有一个线程拿到GIL运行，当该线程暂时不用执行字节码时（比如等待IO响应时）就会把GIL传递给其它线程，或者隔一小段时间后解释器会抢走这个GIL给其它线程（这可能中断正在执行的某个任务，所以以防万一，还是要加锁来保证线程安全）。
 - 由于GIL机制，CPython程序同时只能使用CPU的一个核。因此，处理IO密集型任务时，用多线程能提高效率；处理CPU密集型任务时，用多进程或协程才能提高效率。
 
- 
+
 ♢ threading
 ## threading：Python的标准库，用于创建多线程。
 ## 第一种创建线程的方法：直接调用类Thread()。
@@ -4037,7 +4059,7 @@ RuntimeError: cannot set daemon status of active thread
   - 用 t.ident 可以获得线程的 ID 。
 
 Python 的 threading 库没有提供杀死线程的方法，只能等线程自行退出。因此设计线程时必须让它能够自行退出。
-如果不能自行退出，则只能使用 multiprocessing 库创建子进程，可以从外部杀死。
+如果不能自行退出，则只能使用 multiprocessing 库创建子进程，可以用 p.terminate() 杀死。
 
 
 
@@ -4087,7 +4109,7 @@ RuntimeError: cannot release un-acquired lock
 ##
 ##
 ##
- 
+
 ♢ queue
 ## queue：Python的标准库，用于创建线程间通信的队列。
 - queue模块提供了三种队列，都是基于生产者-消费者模式，自身实现了线程锁，是线程安全的。
@@ -4155,7 +4177,7 @@ class Item:
 ##
 ##
 ##
- 
+
 ♢ multiprocessing
 ## multiprocessing：Python的标准库，用于创建多进程。
 - class Process(group=None, target=None, name=None, args:Iterable, kwargs:Mapping[Any, Any], daemon:bool)
@@ -4184,7 +4206,7 @@ False
 2798
 ## 进程池：用于限制进程的最大运行数量。当进程池满了时，新增的进程会被挂起，直到进程池有空位时才开始运行。
 - 例：
->>> pool = multiprocessing.Pool(2)            # 创建一个大小为2的进程池（默认等于CPU核数）
+>>> pool = multiprocessing.Pool(2)          # 创建一个大小为2的进程池（默认等于CPU核数）
 >>> for i in range(5):
 ...     pool.apply_async(fun1, (i,))        # 往进程池中添加进程
 ...
@@ -4199,7 +4221,7 @@ False
   - 功能：异步地创建进程。
   - 调用apply_async()函数会立即完成，不会等子进程运行结束，不会阻塞当前进程。
 ## 进程之间的通信方式（Inter-Process Communication，IPC）。
-- multiprocessing模块提供了进程之间通信的队列Queue类，用法与queue模块相同。
+- multiprocessing模块提供了进程之间通信的队列类Queue，用法与类queue相似。
 >>> q = multiprocessing.Queue()
 >>> q.put("hello")
 >>> q.get()
@@ -4207,15 +4229,16 @@ False
 ##
 ##
 ##
- 
+
 ♢ asyncio
 ## 协程：即协同程序，又称为异步函数。是指系统在执行某个函数时中断，转去运行另一个函数。
-- 协程可以达到多线程并行工作的效果，但它依然是在一个线程内运行，不用担心线程安全，而且比切换线程的开销小很多。
+- 协程可以达到多线程并行工作的效果，但它依然是在一个线程内运行。
+- 优点：用户可以控制多个协程切换执行的顺序，不用担心线程安全，而且比切换线程的开销小很多。
 - 协程常用于实现异步IO。
 
 
 
-## Python中可以用async关键字创建协程，使用await关键字实现异步工作。
+## Python中可以用关键字async创建协程，用关键字await实现异步工作。
 - Python的协程是通过生成器实现的。
 - await只能在async函数中使用。
   - await只能调用实现了__await__()方法的对象。
@@ -4251,27 +4274,27 @@ False
 ##
 ##
 ##
- 
 
 
 
-##
-##
-##
- 
-
-##
-##
- 
 
 ##
 ##
 ##
 
+
+##
+##
+
+
 ##
 ##
 ##
- 
+
+##
+##
+##
+
 表格
 ♢ csv
 ## 将数据保存成表格时，可保存为CSV类型或Excel类型。
@@ -4357,7 +4380,7 @@ register_dialect("excel", excel)
 ##
 ##
 ##
- 
+
 ♢ openpyxl
 ## openpyxl：Python的第三方库，用于读写xlsx/xlsm文件。
 - 安装：pip install openpyxl
@@ -4492,7 +4515,7 @@ ws1['A2'].Font=font1
 27
 
 
- 
+
 
 ##
 ##
@@ -4532,7 +4555,7 @@ w1.attributes("-topmost", True,     # 使该窗口置顶
 ##
 ##
 ##
- 
+
 控件
 ## 显示控件（widget）。
 - 在tkinter中，每个控件都有三种布局方法：pack()、grid()、place()。例如：
@@ -4632,7 +4655,7 @@ messagebox.askyesno("ask","是or否")
 ##
 ##
 ##
- 
+
 绑定事件
 ## 每个控件都可以用方法bind()在某个事件上绑定一个函数，一旦该事件发生就调用该函数，并将一个event对象传给函数。例如：
 # 在L1的<ButtonPress-1>事件上绑定一个函数print()
@@ -4697,7 +4720,7 @@ E1.event_generate("<Key-Return>", when="tail")        # when="tail"是为了让�
 ##
 ##
 ##
- 
+
 ♢ PyQt5
 ## PyQt5：Python的第三方库，使得Python可以调用Qt5的大部分API。
 - 安装：pip install PyQt5==5.10 PyQt5-sip==12.7.0
@@ -4723,7 +4746,7 @@ sys.exit(app.exec())            # 进入app的主循环，一旦app结束就终�
 ##
 ##
 ##
- 
+
 Qtcore模块
 ##
 ##
@@ -4755,7 +4778,7 @@ Qtcore模块
 ##
 ##
 ##
- 
+
 处理事件
 ## 为了让Qt程序处理用户触发的事件，可以设置信号与槽函数，也可以重载控件的某种事件的处理函数。
 ## 信号与槽函数：将控件的某个信号绑定到一个槽函数。
@@ -4813,7 +4836,7 @@ class Example(QWidget):
 ##
 ##
 
- 
+
 QTime类
 ## QTime类。
 - 例：
@@ -4867,7 +4890,7 @@ PyQt5.QtCore.QDateTime(2019, 10, 9, 22, 19, 14, 330)
 ##
 ##
 ##
- 
+
 QtWidgets模块
 QApplication类
 ## QApplication类：用于创建Qt应用（它采用单例模式）。需要导入：from PyQt5.QtWidgets import QApplication
@@ -4891,7 +4914,7 @@ QApplication类
 ##
 ##
 ##
- 
+
 QWidget类
 ## QWidget类：用于创建普通窗口。需要导入：from PyQt5.QtWidgets import QWidget
 - QWidget是所有窗口的基类，是QDialog、QMainWindow、QFrame的父类。
@@ -4950,7 +4973,7 @@ w.setToolTip('This is a <font color="red">tip</font>.')
 ##
 ##
 ##
- 
+
 QMainWindow类
 ## QMainWindow类：用于创建包含菜单栏、工具栏、状态栏的经典风格的窗口。
 - w = QMainWindow(parent: QWidget = None)
@@ -5019,7 +5042,7 @@ w.exit_tool.addAction(exit_action)
 ##
 ##
 ##
- 
+
 坐标、尺寸
 ## 坐标。
 - w.pos() -> QPoint
@@ -5115,7 +5138,7 @@ PyQt5.QtCore.QSize(1920, 1080)
 PyQt5.QtCore.QRect(0, 0, 1920, 1030)
 ##
 ##
- 
+
 布局
 ## 设置控件的位置时，使用布局方法比使用绝对坐标更好，因为使用布局方法可以适应窗口的伸缩变化，而且在不同平台上的显示效果都一致。
 - 不可以直接将多个水平布局、垂直布局组合在一起，但可以将一个布局嵌套成另一个布局中的元素。
@@ -5176,7 +5199,7 @@ for position, name in zip(positions, names):
 ##
 ##
 ##
- 
+
 控件
 按钮
 ## QPushButton类：普通按钮。
@@ -5229,7 +5252,7 @@ True
 ##
 ##
 ##
- 
+
 关于输入
 ## QLineEdit类：单行输入框，用于输入一行字符串。
 - QLineEdit(parent: QWidget = None)
@@ -5345,7 +5368,7 @@ calendar.clicked[QDate].connect(getDate)
 ##
 ##
 ##
- 
+
 关于输出
 ## QLabel类：标签，用于显示一个只读的字符串。
 - QLabel(parent: QWidget = None)
@@ -5378,7 +5401,7 @@ QLabel(str, parent: QWidget = None)
 ##
 ##
 ##
- 
+
 关于布局
 ## QFrame类：框架，用于将多个控件组合在一起。
 ## QSplitter类：分割器。插入到控件之间，从而用户用户拖动控件的边界。
@@ -5423,7 +5446,7 @@ hbox.addWidget(splitter2)
 ##
 ##
 ##
- 
+
 对话框
 ## QDialog类：所有对话框窗口的基类。
 ## QInputDialog类：输入对话框。
@@ -5485,7 +5508,7 @@ True
 ##
 ##
 ##
- 
+
 QtGui模块
 ## QFont类：用于选择字体。
 - 例：
@@ -5533,7 +5556,7 @@ color: rgb(255, 85, 0);
 -
 ##
 ##
- 
+
 ♢ pyqt5-tools
 ## pyqt5-tools：Python的第三方库，提供了Qt的一些工具。
 - 安装：pip install PyQt5-tools==5.10.1.1.3
@@ -5595,7 +5618,7 @@ pyinstaller mainwindow.py -w -i resource/img/logo.ico
 ##
 ##
 ##
- 
+
 designer
 ##
 ##

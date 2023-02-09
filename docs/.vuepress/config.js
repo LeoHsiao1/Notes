@@ -491,11 +491,29 @@ module.exports = {
                         },
                         {
                             title: "文件处理",
-                            path: "/Linux/文件/文件处理"
+                            path: "/Linux/文件/文件处理/文件处理",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "拷贝文件",
+                                    path: "/Linux/文件/文件处理/拷贝文件"
+                                },
+                                {
+                                    title: "压缩文件",
+                                    path: "/Linux/文件/文件处理/压缩文件"
+                                }
+                            ]
                         },
                         {
                             title: "文本处理",
-                            path: "/Linux/文件/文本处理"
+                            path: "/Linux/文件/文本处理/文本处理",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "修改文本",
+                                    path: "/Linux/文件/文本处理/修改文本"
+                                }
+                            ]
                         },
                         {
                             title: "文件属性",

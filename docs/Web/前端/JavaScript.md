@@ -282,6 +282,22 @@ if (y.nodeType == 1) {
   }
   ```
 
+- 例：在浏览器执行以下 JS 代码，发出 CORS 请求
+  ```js
+  fetch('https://test.com/api', {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              userId: '***'
+          }),
+      })
+      .then((res)=>{console.log(res);})
+      .catch(err=>{ console.error(err);})
+  ```
+
 ## 绘制图表
 
 常见的用于绘制图表的 JS 库如下：

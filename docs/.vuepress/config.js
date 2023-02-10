@@ -991,7 +991,18 @@ module.exports = {
                         },
                         {
                             title: "配置",
-                            path: "/Database/MySQL/配置"
+                            path: "/Database/MySQL/配置/配置",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "日志",
+                                    path: "/Database/MySQL/配置/日志"
+                                },
+                                {
+                                    title: "存储引擎",
+                                    path: "/Database/MySQL/配置/存储引擎"
+                                }
+                            ]
                         },
                         {
                             title: "管理单元",
@@ -1002,20 +1013,19 @@ module.exports = {
                             path: "/Database/MySQL/字段"
                         },
                         {
-                            title: "SELECT",
-                            path: "/Database/MySQL/SELECT"
-                        },
-                        {
-                            title: "索引",
-                            path: "/Database/MySQL/索引"
-                        },
-                        {
-                            title: "复合操作",
-                            path: "/Database/MySQL/复合操作"
-                        },
-                        {
-                            title: "存储引擎",
-                            path: "/Database/MySQL/存储引擎"
+                            title: "查询",
+                            path: "/Database/MySQL/查询/查询",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "索引",
+                                    path: "/Database/MySQL/查询/索引"
+                                },
+                                {
+                                    title: "复合操作",
+                                    path: "/Database/MySQL/查询/复合操作"
+                                }
+                            ]
                         },
                         {
                             title: "性能优化",

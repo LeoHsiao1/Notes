@@ -519,9 +519,22 @@ Git 属于软件配置管理（Source Code Management ，SCM）工具，同类�
   - 支持只拉取或提交指定路径的目录、文件，而不必拉取整个代码仓库。
 - Mercurial ：采用 Python 开发。
 
+### GPG 签名
+
+GitHub、GitLab 等平台支持生成 commit ID 的数字签名，保存在 commit comment 中。步骤如下：
+1. 用户生成一对 GPG 私钥、公钥，在其中记录自己的用户名、邮箱地址。
+2. 用户使用私钥签署每个 commit 。
+    ```sh
+    git config --global user.signingkey ******
+    git commit -S -m "..."
+    git push
+    ```
+3. 用户在平台的设置页面登记 GPG 公钥，平台会自动验证各个 commit 的签名是否有效。
+    - 如果有效，则显示一个 Verified 标志，证明该 commit 是由该用户提交的，并且 commit 内容没有被篡改。
+
 ### git flow
 
-：一种流行的 git 使用策略，适合管理复杂的项目。
+：一种 Git 使用策略，适合管理复杂的项目。
 - 在 git 仓库中至少使用以下两个分支：
   - master 分支：用于保存正式发布的版本。
   - dev 分支：用于保存开发环境的版本。平时的代码都提交到 dev 分支，发布稳定版本时才合并到 master 分支。
@@ -552,15 +565,13 @@ Git 属于软件配置管理（Source Code Management ，SCM）工具，同类�
   [TEST] ...
   ```
 
-### GPG 签名
+### monorepo
 
-GitHub、GitLab 等平台支持生成 commit ID 的数字签名，保存在 commit comment 中。步骤如下：
-1. 用户生成一对 GPG 私钥、公钥，在其中记录自己的用户名、邮箱地址。
-2. 用户使用私钥签署每个 commit 。
-    ```sh
-    git config --global user.signingkey ******
-    git commit -S -m "..."
-    git push
-    ```
-3. 用户在平台的设置页面登记 GPG 公钥，平台会自动验证各个 commit 的签名是否有效。
-    - 如果有效，则显示一个 Verified 标志，证明该 commit 是由该用户提交的，并且 commit 内容没有被篡改。
+- polyrepo ：一种管理方案，将不同项目的代码分别用一个代码仓库中。
+- monorepo ：一种管理方案，将不同项目的代码放到同一个代码仓库中。
+  - 优点：
+    - 方便用户获取所有项目的代码。
+    - 方便统一管理所有项目，比如复用一些配置文件。
+  - 缺点：
+    - 不同项目的代码没有权限隔离，不安全。
+    - 单个仓库的体积很大，不方便存储。

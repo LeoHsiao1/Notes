@@ -37,10 +37,6 @@ client 提供了与 Redis 大部分命令同名的方法，例如：
   - `def hget(name, key)`
   - `def hgetall(name) -> dict`
 
-> TODO:待补充
-
-
-
 ## 连接到主从+哨兵集群
 
 连接到哨兵：

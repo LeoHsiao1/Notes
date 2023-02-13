@@ -503,11 +503,13 @@
       - jmx_exporter 作为 javaagent 运行时几乎不会增加 Java 进程的 CPU 开销，除非 Prometheus 的采集间隔很短。
 - 指标示例：
   ```sh
-  jvm_memory_bytes_committed{area="heap"}     # JVM 从操作系统申请的内存量，分为 heap、nonheap
-  jvm_memory_bytes_used{area="heap"}          # JVM 内存的实际用量，分为 heap、nonheap
-  jvm_memory_bytes_used / jvm_memory_bytes_committed  # JVM 内存的实际用量，占申请量的百分比
+  jvm_memory_bytes_max                        # JVM 内存允许的最大容量，分为 heap、nonheap 两块内存区域
+  jvm_memory_bytes_committed{area="heap"}     # JVM 内存的当前容量，即从操作系统申请的内存量
+  jvm_memory_bytes_used{area="heap"}          # JVM 内存的使用量，即当前容量中存放了有效数据的部分
+  jvm_memory_bytes_used / jvm_memory_bytes_committed  # JVM 内存的使用量，占当前容量的百分比
 
-  jvm_memory_pool_bytes_committed             # JVM 内存池，分为 Metaspace、Eden Space、Survivor Space 等
+  jvm_memory_pool_bytes_max                   # JVM 内存池，分为 Metaspace、Eden Space、Survivor Space 等区域
+  jvm_memory_pool_bytes_committed
   jvm_memory_pool_bytes_used
   jvm_memory_pool_bytes_used / jvm_memory_pool_bytes_committed
 

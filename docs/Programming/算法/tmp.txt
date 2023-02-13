@@ -41,10 +41,27 @@ int sum(int b, int n){
 ## 待做的算法
 
 
-实现等差数列求和公式
+### 判断质数
 
-判断任意一个数是否是质数
+```py
+# 通过循环，检查每一个小于 n 的数，能否对 n 整除
+def is_prime(n:int=1):
+    if not isinstance(n, int) or n % 1 != 0 or n <= 1:
+        return ValueError('The number entered must be a positive integer and greater than 1')
+    for i in range(2, n):
+        if n % i == 0:
+            print(f'{n} is divisible by {i}')
+            return False
+    return True
 
+>>> is_prime(17)
+True
+>>> is_prime(18)
+18 is divisible by 2
+False
+```
+
+### 计算利率
 
 递归求利率
 int sum(int start,float rate,int n)

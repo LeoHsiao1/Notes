@@ -46,8 +46,8 @@ int sum(int b, int n){
 ```py
 # 通过循环，检查每一个小于 n 的数，能否对 n 整除
 def is_prime(n:int=1):
-    if not isinstance(n, int) or n % 1 != 0 or n <= 1:
-        return ValueError('The number entered must be a positive integer and greater than 1')
+    if not isinstance(n, int) or n <= 1:
+        return ValueError('The number entered must be a integer and greater than 1')
     for i in range(2, n):
         if n % i == 0:
             print(f'{n} is divisible by {i}')
@@ -60,14 +60,6 @@ True
 18 is divisible by 2
 False
 ```
-
-### 计算利率
-
-递归求利率
-int sum(int start,float rate,int n)
-每次调用函数只计算一次利率，n极大时可以求出自然常数
-
-
 
 ### 爬楼梯问题
 
@@ -82,6 +74,8 @@ int sum(int start,float rate,int n)
 ```py
 # 动态规划法：从第一位往后依次计算：f(0),f(1),f(2)...f(n) ，通过循环来迭代计算每一位，通过一个字典存储每一位的计算结果
 def get_nums(n: int = 0):
+    if not isinstance(n, int):
+        return ValueError('The number entered must be a integer')
     cache = {}
     for i in range(n+1):
         if i <= 0:

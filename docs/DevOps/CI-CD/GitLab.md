@@ -8,11 +8,11 @@
 
 ## 架构
 
-- GitLab 内置的主要服务：
+- GitLab 的内部服务：
   - puma ：一个 HTTP 服务器。
   - workhorse ：反向代理 puma ，用于加速体积较大的 HTTP 请求，比如静态文件、上传文件。
   - sidekiq ：负责在后台执行任务。
-  - gitaly ：负责处理 git 请求。收到用户访问 Git 仓库的请求时，会去访问磁盘中的 Git 仓库。
+  - gitaly ：负责处理 Git 请求。收到用户访问 Git 仓库的请求时，会去访问磁盘中的 Git 仓库。
 
 - GitLab 依赖的外部服务：
   - redis
@@ -34,7 +34,7 @@
       hostname: gitlab.example.com
       ports:
         - 80:80
-        - '1022:22'   # YAML 的一个特别语法：如果冒号 : 右侧的数小于 60 ，则视作 60 进制数，此时需要声明为字符串
+        - '1022:22'
       volumes:
         - ./config:/etc/gitlab
         - ./data:/var/opt/gitlab
@@ -48,7 +48,6 @@
   - 激活步骤：
     1. 部署 gitlab-ee 。
     2. 进入 admin 页面，点击 Subscription ，输入激活码，或者上传许可证文件。
-  - [破解教程](https://conf.top/post/506/)
 
 ## 配置
 
@@ -119,7 +118,7 @@
   - Reporter ：测试人员，有 Git 仓库的只读权限，可以编辑任务看板。
   - Guest ：只能读取 issue、wiki、CI/CD 等信息。不能读取 Git 仓库，除非该项目是公开的。
 - CI/CD
-  - GitLab 支持在代码仓库中添加一个 .gitlab-ci.yml 文件，配置要执行的 CI/CD 流水线。
+  - GitLab 支持在代码仓库中添加一个 .gitlab-ci.yml 文件，配置要执行的 CI/CD 流水线。类似于 GitHub Actions 。
 
 ## API
 

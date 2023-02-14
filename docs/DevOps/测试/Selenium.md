@@ -4,14 +4,11 @@
 - [官网](https://www.selenium.dev/)
 - 发音为 `/səˈliːniəm/` 。
 - Selenium 项目提供了多个工具：
-  - WebDriver
+  - WebDriver ：一个 HTTP 服务器，用于调用 Firefox、Chrome 等浏览器的 API 来访问网站。
   - IDE ：一个浏览器插件，用于记录用户在浏览器中的操作，记录成 Selenium 命令，便于快速创建测试用例。
-  - Grid
+  - Grid ：一个 Web 服务器，采用 Java 开发，用于在多个主机上执行 WebDriver 任务。
 
 ## WebDriver
-
-：一个 HTTP 服务器，用于调用浏览器的 API 来访问网站。
-- 支持调用 Firefox、Chrome 等浏览器。
 
 ### 安装
 
@@ -80,9 +77,7 @@
 
 ## Grid
 
-：一个 Web 服务器，采用 Java 开发，用于在多个主机上执行 WebDriver 任务。
-
-## 架构
+### 架构
 
 - Grid 包含以下组件：
   - Node
@@ -103,7 +98,7 @@
 
 - Grid 可以部署成分布式集群，也可以以 Standalone 模式部署单节点。
 
-## 部署
+### 部署
 
 - 下载 jar 包，然后执行：
   ```sh

@@ -9,12 +9,11 @@
 
 - 架构：
   - 部署多个 Consul agent 进程，组成分布式集群。
-  - 业务程序向一个 agent 发出请求，使用 Consul 的功能。
+  - 业务程序向任一 agent 发出请求，使用 Consul 的功能。
 
 - agent 又称为 node ，有两种运行模式：
   - client
     - ：普通的 agent 。
-    - 业务程序访问任一 agent ，都能使用 Consul 的功能。
   - server
     - ：比 client 多了维护集群的责任。
     - 一个 Consul 集群至少要有 1 个 server 节点，负责存储集群数据。
@@ -53,244 +52,6 @@
 - Consul 启用 Connect 功能时，会在服务之间启用 TLS 加密通信。
   - 支持透明代理服务的流量，实现 Service Mesh 。
   - 支持用 Intention 功能允许、禁止服务之间的网络连通。
-
-## 用法
-
-### 服务发现
-
-- 服务发现的工作流程：
-  1. 访问 agent ，注册服务。
-  2. 访问 agent ，通过 HTTP 或 DNS 端口查询已注册的服务。
-
-- Consul 集群将已注册的所有节点、服务的信息保存在一个称为 catalog 的命名空间中，可以通过 API 访问。
-  - 注销一个对象，就会从 catalog 删除其存在。
-  - Consul 的设计是在每个主机上部署一个 agent ，让每个主机上的业务程序访问本机的 agent 进行服务注册。
-    - 一个 agent 变为 left 状态时，会自动注销该 agent 上注册的所有服务。
-  - agent 会将自己注册为名为 consul 的服务，但不存在健康检查。
-
-- 一个 service 的信息示例：
-  ```json
-  {
-      "ID": "django",                 // 该服务在当前 agent 上的唯一 ID 。如果未指定，则采用服务名
-      "Service": "django",            // 服务名。注册服务时只有该字段是必填的
-      "Address": "10.0.0.1",          // 服务的 IP 地址或主机名。如果未指定，则采用当前 agent 的 IP 地址
-      "Port": 80,
-      "Datacenter": "dc1",            // 该服务所属的数据中心
-      "TaggedAddresses": {            // 可以给服务附加多个地址
-          "lan": {                    // LAN 地址，供同一数据中心的其它服务访问。默认为 IPv4 类型
-              "Address": "10.0.0.1",
-              "Port": 80
-          },
-          "wan": {                    // WAN 地址，供其它数据中心的服务访问。默认为 IPv4 类型
-              "Address": "10.0.0.1",
-              "Port": 80
-          }
-      },
-      "Tags": [                       // 可以给服务加上一些字符串类型的标签
-          "test"
-      ],
-      "enable_tag_override": false,   // 是否允许其它 agent 修改该服务的 tag
-      "Meta": {                       // 可以给服务加上一些键值对类型的元数据，默认为 false
-          "description": "This is for test."
-      },
-      "checks": [],                   // 健康检查的任务，默认为空
-      "Weights": {                    // 该服务存在其它实例时，指定其在 DNS SRV 响应中的权重，默认为 1
-          "Passing": 1,
-          "Warning": 1
-      }
-  }
-  ```
-
-#### 健康检查
-
-- 每个 agent 会定期进行健康检查，并更新 catalog 中的信息。
-- 健康检查的对象分为两种：
-  - 节点：该 agent 本身，是否运行、可连接。
-  - 服务：该 agent 上注册的各个服务。
-
-- 健康检查的结果分为多种：
-  - passing ：健康。
-  - warning ：存在异常，但依然工作。
-  - failing、critical ：不健康。
-
-- 每个节点默认启用 Serf 类型的监控检查，而每个服务可启用以下类型的健康检查：
-  - Script ：指定一个 shell 命令，定期执行一次。
-    - 如果退出码为 0 则视作 passing ，为 1 则视作 warning ，为其它值则视作 failing 。
-    - 执行时的 stdout、stderr 会被记录到检查结果的 output 字段，可在 Web UI 查看。
-    ```json
-    {
-        "args": ["/usr/bin/curl", "127.0.0.1"],
-        // "id": "xx",
-        // "name": "xx",
-        // "interval": "5s",                    // 每隔 interval 时间执行一次
-        // "timeout": "10s",                    // 每次检查的超时时间
-        // "status": "critical",                 // 在第一次健康检查之前，服务的默认状态
-        // "deregister_critical_service_after": "30s"  // 如果服务实例变为 critical 状态超过一定时间，则注销。默认禁用该功能
-    }
-    ```
-  - HTTP ：指定一个 URL ，定期发出一个 HTTP 请求。
-    - 如果状态码为 200 则视作 passing ，为 429 则视作 warning ，为其它值则视作 failing 。
-    ```json
-    {
-        "http": "http://localhost/health",
-        "method": "POST",                       // 请求方法，默认为 GET
-        "header": {"Content-Type": ["application/json"]},
-        "body": "{\"check\": \"is_running\"}"
-    }
-    ```
-  - TCP ：指定主机名和端口，定期尝试建立一次 TCP 连接。
-    - 如果连接成功则视作 success ，否则视作 critical 。
-    ```json
-    {
-        "tcp": "localhost:80"
-    }
-    ```
-  - Alias ：指定另一个节点或服务，跟随其状态。
-    ```json
-    {
-        "alias_node": "node1",    // 目标节点。默认为当前节点
-        "alias_service": "web"    // 目标服务。如果不指定则跟随节点的状态
-    }
-    ```
-  - Docker ：通过 docker exec 执行 shell 脚本。
-  - TTL ：要求服务在一定时间内向 agent 的特定 URL 发送 HTTP 请求，超时则视作异常。
-  - gRPC
-
-- 一个服务要通过自身的健康检查（如果要求检查），并且所在 agent 也通过健康检查，才标记为健康状态。
-  - 非健康状态的服务不会被自动删除。
-
-#### DNS
-
-- Consul 支持通过 DNS 请求查询节点、服务的地址。
-- 域名格式如下：
-  ```sh
-  <node>.node[.datacenter].<domain>               # 节点的域名
-  [tag.]<service>.service[.datacenter].<domain>   # 服务的域名
-  ```
-  - 如果不指定数据中心，则默认采用当前 agent 的数据中心。
-  - 查询服务时，可以加上 tag 进行筛选。
-    - 如果有多个健康的服务实例，则根据权重随机选择一个，返回其地址。
-    - 如果不存在健康的服务实例，则查询结果为空。
-  - DNS 记录为 A 类型，查询服务时还支持 SRV 类型。
-  - DNS 记录的 TTL 默认为 0 。
-- 例：
-  ```sh
-  dig @10.0.0.1 -p 8600 +short node1.node.consul          # 查询节点
-  dig @10.0.0.1 -p 8600 +short node1.node.dc2.consul      # 查询其它数据中心的节点
-  dig @10.0.0.1 -p 8600 +short django.service.consul      # 查询服务
-  dig @10.0.0.1 -p 8600 +short django.service.consul  SRV # 查询 DNS SRV 记录
-  ```
-
-### 配置管理
-
-- Consul 提供了 Key/Value 形式的数据存储功能，常用于存储配置信息。
-  - 如果 key 以 / 结尾，则会创建一个文件夹
-  - value 的长度不能超过 512KB 。
-
-- Consul 集群的所有节点都拥有一份 KV 数据的副本，供用户访问。
-  - server 节点才有权修改 KV 数据。如果用户向 client 节点发出写请求，则会被转发到 server 节点。
-
-- 提供了 acquire、release 功能，用于锁定、解锁与 session 关联的 key 。
-
-### watch
-
-- Consul 提供了 watch 功能，用于监视某些事件，当事件发生时执行 handler 任务。
-  - 可以监视节点、服务、KV 的变化，或者用户自定义的事件。
-  - handler 有两种类型：
-    - 执行 shell 脚本
-    - 发送 HTTP 请求
-- 例：在 Consul 配置文件中添加 watch 的配置
-  ```json
-  {
-    "watches": [                  // 定义一组 watch
-      {
-        "type": "key",            // watch 类型为 key
-        "key": "redis/config",    // 指定要监视的 key
-        "handler_type": "script",
-        "args": ["/usr/bin/my_handler.sh", "-redis"]
-      },
-      {
-        "type": "service",        // watch 类型为 service
-        "service": "redis",       // 指定要监视的服务名
-        "passingonly": true,      // 添加筛选条件，只监视健康的服务
-        "handler_type": "http",
-        "http_handler_config": {
-          "path": "http://10.0.0.1/watch/handler",
-          "method": "POST"
-        }
-      }
-    ]
-  }
-  ```
-
-### CLI
-
-- 使用 consul 命令行工具可以启动 agent 服务器，也可以作为客户端与 agent 交互。用法：
-  ```sh
-  consul
-        agent                           # 启动 agent 进程，在前台运行
-            -server                     # 采用 server 运行模式
-            -config-file <file>         # 指定配置文件
-            -config-dir /consul/config  # 指定配置目录，加载该目录下的配置文件
-
-        members                         # 列出所有节点
-        force-leave <node>              # 强制让一个节点 leave ，进入 left 状态。但如果它依然运行，则可能重新加入集群
-            --prune                     # 删除节点。默认会等待 reconnect_timeout 长时间无响应才删除
-        operator
-            raft                        # 操作 raft 协议
-                list-peers              # 列出所有 raft 节点
-                remove-peer -address="10.0.0.1:8300" # 删除一个 raft 节点
-
-        catalog                   # 访问 catalog
-            datacenters           # 列出所有数据中心
-            nodes                 # 列出所有节点
-              -service <service>  # 只显示指定服务所在的节点
-              -detailed
-            services              # 列出所有服务
-              -node <node>        # 只显示指定节点上的服务
-              -tags               # 增加显示 tags
-
-        kv                        # 访问 KV 数据
-            get <key>             # 读取一个 key ，返回其 value
-              -keys               # 访问前缀匹配的所有 key ，不包括子 key
-              -recurse            # 递归访问文件夹中的子 key
-            put <key> [value]
-            delete <key>
-            export [prefix]       # 导出前缀匹配的所有 key ，包括子 key 。返回值为 JSON 格式
-            import [data]         # 导入 key 。输入必须为 JSON 格式
-              -prefix [prefix]    # 只导入前缀匹配的 key
-
-        snapshot                  # 访问 snapshot 功能
-            save    <file>        # 保存一个快照文件，包含集群当前的 catalog、kv、acl 等数据
-            restore <file>        # 导入一个快照文件
-            inspect <file>        # 查看快照的信息
-  ```
-
-### API
-
-- agent 提供了一些 Restful API ：
-  ```sh
-  # 关于 agent
-  GET   /v1/agent/members           # 获取所有 agent 的信息
-  PUT   /v1/agent/reload            # 让当前 agent 重新加载其配置文件
-  PUT   /v1/agent/leave             # 让当前 agent 正常退出集群
-  GET   /v1/agent/checks            # 获取当前 agent 上所有健康检查的结果信息
-  GET   /v1/agent/services                        # 获取当前 agent 上注册的所有服务的信息
-  GET   /v1/agent/service/<serivce.id>            # 获取当前 agent 上注册的指定服务的信息
-  PUT   /v1/agent/service/register                # 注册服务，这会调用 /v1/catalog/register
-  PUT   /v1/agent/service/deregister/<serivce.id> # 注销服务，这会调用 /v1/catalog/deregister
-
-  # 关于 catalog
-  PUT   /v1/catalog/register        # 在 catalog 中注册对象
-  PUT   /v1/catalog/deregister      # 在 catalog 中注销对象
-  GET   /v1/catalog/nodes           # 列出所有节点
-  GET   /v1/catalog/services        # 列出所有服务
-
-  # 关于 Key/Value
-  GET     /v1/kv/<key>              # 获取指定的 key 的信息，包括 key、value
-  PUT     /v1/kv/<key>              # 创建 key ，如果该 key 已存在则更新它
-  DELETE  /v1/kv/<key>              # 删除 key
-  ```
 
 ## 部署
 
@@ -515,3 +276,241 @@ Consul 支持为 HTTP、RPC 通信设置 ACL 规则，主要概念如下：
     }
     ```
     DNS 请求不支持传递 token ，因此建议将该策略分配给 Anonymous token 。
+
+## 用法
+
+### 服务发现
+
+- 服务发现的工作流程：
+  1. 业务程序访问 agent ，将自己注册为一个服务实例。
+  2. 业务程序访问 agent ，通过 HTTP 或 DNS 端口查询已注册的服务。
+
+- Consul 集群将已注册的所有节点、服务的信息保存在一个称为 catalog 的命名空间中，可以通过 API 访问。
+  - 注销一个对象，就会从 catalog 删除其存在。
+  - Consul 的设计是在每个主机上部署一个 agent ，让每个主机上的业务程序访问本机的 agent 进行服务注册。
+    - 一个 agent 变为 left 状态时，会自动注销该 agent 上注册的所有服务。
+  - agent 会将自己注册为名为 consul 的服务，但不进行健康检查。
+
+- 一个 service 的信息示例：
+  ```json
+  {
+      "ID": "django",                 // 该服务在当前 agent 上的唯一 ID 。如果未指定，则采用服务名
+      "Service": "django",            // 服务名。注册服务时只有该字段是必填的
+      "Address": "10.0.0.1",          // 服务的 IP 地址或主机名。如果未指定，则采用当前 agent 的 IP 地址
+      "Port": 80,
+      "Datacenter": "dc1",            // 该服务所属的数据中心
+      "TaggedAddresses": {            // 可以给服务附加多个地址
+          "lan": {                    // LAN 地址，供同一数据中心的其它服务访问。默认为 IPv4 类型
+              "Address": "10.0.0.1",
+              "Port": 80
+          },
+          "wan": {                    // WAN 地址，供其它数据中心的服务访问。默认为 IPv4 类型
+              "Address": "10.0.0.1",
+              "Port": 80
+          }
+      },
+      "Tags": [                       // 可以给服务加上一些字符串类型的标签
+          "test"
+      ],
+      "enable_tag_override": false,   // 是否允许其它 agent 修改该服务的 tag
+      "Meta": {                       // 可以给服务加上一些键值对类型的元数据，默认为 false
+          "description": "This is for test."
+      },
+      "checks": [],                   // 健康检查的任务，默认为空
+      "Weights": {                    // 该服务存在其它实例时，指定其在 DNS SRV 响应中的权重，默认为 1
+          "Passing": 1,
+          "Warning": 1
+      }
+  }
+  ```
+
+#### 健康检查
+
+- 每个 agent 会定期进行健康检查，并更新 catalog 中的信息。
+- 健康检查的对象分为两种：
+  - 节点：该 agent 本身，是否运行、可连接。
+  - 服务：该 agent 上注册的各个服务。
+
+- 健康检查的结果分为多种：
+  - passing ：健康。
+  - warning ：存在异常，但依然工作。
+  - failing、critical ：不健康。
+
+- 每个节点默认启用 Serf 类型的监控检查，而每个服务可启用以下类型的健康检查：
+  - Script ：指定一个 shell 命令，定期执行一次。
+    - 如果退出码为 0 则视作 passing ，为 1 则视作 warning ，为其它值则视作 failing 。
+    - 执行时的 stdout、stderr 会被记录到检查结果的 output 字段，可在 Web UI 查看。
+    ```json
+    {
+        "args": ["/usr/bin/curl", "127.0.0.1"],
+        // "id": "xx",
+        // "name": "xx",
+        // "interval": "5s",                    // 每隔 interval 时间执行一次
+        // "timeout": "10s",                    // 每次检查的超时时间
+        // "status": "critical",                 // 在第一次健康检查之前，服务的默认状态
+        // "deregister_critical_service_after": "30s"  // 如果服务实例变为 critical 状态超过一定时间，则注销。默认禁用该功能
+    }
+    ```
+  - HTTP ：指定一个 URL ，定期发出一个 HTTP 请求。
+    - 如果状态码为 200 则视作 passing ，为 429 则视作 warning ，为其它值则视作 failing 。
+    ```json
+    {
+        "http": "http://localhost/health",
+        "method": "POST",                       // 请求方法，默认为 GET
+        "header": {"Content-Type": ["application/json"]},
+        "body": "{\"check\": \"is_running\"}"
+    }
+    ```
+  - TCP ：指定主机名和端口，定期尝试建立一次 TCP 连接。
+    - 如果连接成功则视作 success ，否则视作 critical 。
+    ```json
+    {
+        "tcp": "localhost:80"
+    }
+    ```
+  - Alias ：指定另一个节点或服务，跟随其状态。
+    ```json
+    {
+        "alias_node": "node1",    // 目标节点。默认为当前节点
+        "alias_service": "web"    // 目标服务。如果不指定则跟随节点的状态
+    }
+    ```
+  - Docker ：通过 docker exec 执行 shell 脚本。
+  - TTL ：要求服务在一定时间内向 agent 的特定 URL 发送 HTTP 请求，超时则视作异常。
+  - gRPC
+
+- 一个服务要通过自身的健康检查（如果要求检查），并且所在 agent 也通过健康检查，才标记为健康状态。
+  - 非健康状态的服务不会被自动删除。
+
+#### DNS
+
+- Consul 支持通过 DNS 请求查询节点、服务的地址。
+- 域名格式如下：
+  ```sh
+  <node>.node[.datacenter].<domain>               # 节点的域名
+  [tag.]<service>.service[.datacenter].<domain>   # 服务的域名
+  ```
+  - 如果不指定数据中心，则默认采用当前 agent 的数据中心。
+  - 查询服务时，可以加上 tag 进行筛选。
+    - 如果有多个健康的服务实例，则根据权重随机选择一个，返回其地址。
+    - 如果不存在健康的服务实例，则查询结果为空。
+  - DNS 记录为 A 类型，查询服务时还支持 SRV 类型。
+  - DNS 记录的 TTL 默认为 0 。
+- 例：
+  ```sh
+  dig @10.0.0.1 -p 8600 +short node1.node.consul          # 查询节点
+  dig @10.0.0.1 -p 8600 +short node1.node.dc2.consul      # 查询其它数据中心的节点
+  dig @10.0.0.1 -p 8600 +short django.service.consul      # 查询服务
+  dig @10.0.0.1 -p 8600 +short django.service.consul  SRV # 查询 DNS SRV 记录
+  ```
+
+### 配置管理
+
+- Consul 提供了 Key/Value 形式的数据存储功能，常用于存储配置信息。
+  - 如果 key 以 / 结尾，则会创建一个文件夹。
+  - value 的长度不能超过 512KB 。
+
+- Consul 集群的所有节点都拥有一份 KV 数据的副本，供用户访问。
+  - server 节点才有权修改 KV 数据。如果用户向 client 节点发出写请求，则会被转发到 server 节点。
+
+- 提供了 acquire、release 功能，用于锁定、解锁与 session 关联的 key 。
+
+### watch
+
+- Consul 提供了 watch 功能，用于监视某些事件，当事件发生时执行 handler 任务。
+  - 可以监视节点、服务、KV 的变化，或者用户自定义的事件。
+  - handler 有两种类型：
+    - 执行 shell 脚本
+    - 发送 HTTP 请求
+- 例：在 Consul 配置文件中添加 watch 的配置
+  ```json
+  {
+    "watches": [                  // 定义一组 watch
+      {
+        "type": "key",            // watch 类型为 key
+        "key": "redis/config",    // 指定要监视的 key
+        "handler_type": "script",
+        "args": ["/usr/bin/my_handler.sh", "-redis"]
+      },
+      {
+        "type": "service",        // watch 类型为 service
+        "service": "redis",       // 指定要监视的服务名
+        "passingonly": true,      // 添加筛选条件，只监视健康的服务
+        "handler_type": "http",
+        "http_handler_config": {
+          "path": "http://10.0.0.1/watch/handler",
+          "method": "POST"
+        }
+      }
+    ]
+  }
+  ```
+
+### CLI
+
+- 使用 consul 命令行工具可以启动 agent 服务器，也可以作为客户端与 agent 交互。用法：
+  ```sh
+  consul
+        agent                           # 启动 agent 进程，在前台运行
+            -server                     # 采用 server 运行模式
+            -config-file <file>         # 指定配置文件
+            -config-dir /consul/config  # 指定配置目录，加载该目录下的配置文件
+
+        members                         # 列出所有节点
+        force-leave <node>              # 强制让一个节点 leave ，进入 left 状态。但如果它依然运行，则可能重新加入集群
+            --prune                     # 删除节点。默认会等待 reconnect_timeout 长时间无响应才删除
+        operator
+            raft                        # 操作 raft 协议
+                list-peers              # 列出所有 raft 节点
+                remove-peer -address="10.0.0.1:8300" # 删除一个 raft 节点
+
+        catalog                   # 访问 catalog
+            datacenters           # 列出所有数据中心
+            nodes                 # 列出所有节点
+              -service <service>  # 只显示指定服务所在的节点
+              -detailed
+            services              # 列出所有服务
+              -node <node>        # 只显示指定节点上的服务
+              -tags               # 增加显示 tags
+
+        kv                        # 访问 KV 数据
+            get <key>             # 读取一个 key ，返回其 value
+              -keys               # 访问前缀匹配的所有 key ，不包括子 key
+              -recurse            # 递归访问文件夹中的子 key
+            put <key> [value]
+            delete <key>
+            export [prefix]       # 导出前缀匹配的所有 key ，包括子 key 。返回值为 JSON 格式
+            import [data]         # 导入 key 。输入必须为 JSON 格式
+              -prefix [prefix]    # 只导入前缀匹配的 key
+
+        snapshot                  # 访问 snapshot 功能
+            save    <file>        # 保存一个快照文件，包含集群当前的 catalog、kv、acl 等数据
+            restore <file>        # 导入一个快照文件
+            inspect <file>        # 查看快照的信息
+  ```
+
+### API
+
+- agent 提供了一些 Restful API ：
+  ```sh
+  # 关于 agent
+  GET   /v1/agent/members           # 获取所有 agent 的信息
+  PUT   /v1/agent/reload            # 让当前 agent 重新加载其配置文件
+  PUT   /v1/agent/leave             # 让当前 agent 正常退出集群
+  GET   /v1/agent/checks            # 获取当前 agent 上所有健康检查的结果信息
+  GET   /v1/agent/services                        # 获取当前 agent 上注册的所有服务的信息
+  GET   /v1/agent/service/<serivce.id>            # 获取当前 agent 上注册的指定服务的信息
+  PUT   /v1/agent/service/register                # 注册服务，这会调用 /v1/catalog/register
+  PUT   /v1/agent/service/deregister/<serivce.id> # 注销服务，这会调用 /v1/catalog/deregister
+
+  # 关于 catalog
+  PUT   /v1/catalog/register        # 在 catalog 中注册对象
+  PUT   /v1/catalog/deregister      # 在 catalog 中注销对象
+  GET   /v1/catalog/nodes           # 列出所有节点
+  GET   /v1/catalog/services        # 列出所有服务
+
+  # 关于 Key/Value
+  GET     /v1/kv/<key>              # 获取指定的 key 的信息，包括 key、value
+  PUT     /v1/kv/<key>              # 创建 key ，如果该 key 已存在则更新它
+  DELETE  /v1/kv/<key>              # 删除 key
+  ```

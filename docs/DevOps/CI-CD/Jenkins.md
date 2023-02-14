@@ -76,7 +76,7 @@
     - 通过 API 或上游 job 触发一个 job 时，会在构建队列中等待一段时间才执行，称为静默期。如果在静默期内多次触发该 job ，则会被构建队列自动去重。
   - 默认将当前节点的 `$JENKINS_HOME/workspace/$JOB_NAME` 目录作为工作目录（称为 workspace ）。
     - 执行 Job 之前、之后都不会自动清空工作目录，建议用户主动清理。
-    - 如果将一个 Job 并发执行多个实例，则生成的工作目录会自动添加 @1、@2 格式的后缀。
+    - 如果将一个 Job 并发执行多个实例，则会生成多个工作目录，添加 @2、@3 格式的后缀。
   - 默认在 shell 中加入环境变量 `BUILD_ID=xxxxxx` ，当执行完 Job 之后就自动杀死所有环境变量 BUILD_ID 值与其相同的进程。
     - 可以在 shell 中声明环境变量 `JENKINS_NODE_COOKIE=dontkillme` ，阻止 Jenkins 杀死当前 shell 创建的进程。
 
@@ -125,14 +125,13 @@
     - failure ：执行失败，显示为红色。
     - unstable ：不稳定，显示为黄色，比如测试不通过。
     - aborted ：放弃执行，显示为灰色。比如达到超时时间、被用户主动取消。
-  - Console Output 中，如果打印一个以 `http://` 开头的字符串，则会自动显示成超链接。
+  - Console Output 中，如果打印一个以 `http://` 开头的字符串，则会被显示成超链接。
 
 ### 管理节点
 
 - 用户可以添加一些主机、Docker 容器作为 Jenkins 的运行环境，称为节点（node）、代理（agent）、slave 。
   - Jenkins 服务器所在的节点称为 master ，而其它节点称为 slave ，这些节点都可以用于运行 Job 。
   - 在每个节点上，Jenkins 都需要使用一个目录存储数据。可以指定 `/opt/jenkins/` 目录，或者创建 jenkins 用户，然后使用 `/home/jenkins/` 目录。
-  - 增加节点有利于实现 Jenkins 的横向扩容。
 - 添加 slave 节点时，建议通过 SSH 密钥连接。步骤如下：
   1. 安装 `SSH Build Agents` 插件。
   2. 在 slave 节点上安装 JDK 。
@@ -148,7 +147,7 @@
 
 ### 管理权限
 
-安装 `Role-based Authorization Strategy` 插件之后便可以实现基于角色的用户权限控制。用法：
+安装 `Role-based Authorization Strategy` 插件之后便可实现基于角色的用户权限控制。用法：
 1. 进入 ` 全局安全配置 ` 页面，将授权策略改为 `Role-Based Strategy` 。
 2. 进入 `Manage Jenkins -> Manage Users` 页面，创建一个用户账号。
 3. 进入 `Manage Jenkins -> Manage and Assign Roles -> Manage Roles` 页面，创建角色。
@@ -161,8 +160,7 @@
 
 推荐做法：
 - 只有 admin 用户拥有最高权限，比如进行 Jenkins 的系统设置。
-- Jenkins 只能以 Job 为单位划分权限，因此应该给一个项目开发、测试、正式环境的构建任务分别创建 Job ，而不是通过构建参数选择它们。
-  - 虽然这样会产生很多 Job ，但 Job 之间可以相互调用。
+- Jenkins 只能以 Job 为单位划分权限，因此应该给开发、测试、正式环境的构建任务分别创建 Job ，而不是通过构建参数选择它们。
 - 给每个或每组 Job 创建两种项目角色，按需要分配给各个用户。
   - `*_user` ：只是使用该 Job ，拥有 Job 的 Build、Cancel、Read 权限。
   - `*_editor` ：允许编辑该 Job ，拥有大部分权限。
@@ -189,8 +187,8 @@
   - Jenkins 自带的邮件通知功能比较简陋，不推荐使用。
 - Job Configuration History
   - 用于记录各个 Job 以及系统配置的变更历史。
-  - 原理：将每次修改后的 XML 配置文件保存一个副本到 jenkins_home/config-history/ 目录下。
-  - 建议在 Jenkins 系统管理页面，限制该插件保留变更历史的数量。
+  - 原理：将每次修改后的 XML 配置文件保存一个副本到 `$jenkins_home/config-history/` 目录下。
+  - 建议在 Jenkins 系统管理页面，限制该插件的变更历史的保留数量。
 - Folder Properties
   - 用于在 Folder 中定义一些环境变量，称为属性，供其下的 Job 调用。
   - 需要在 Pipeline 的 options 中加入 withFolderProperties() ，才会在 stages 阶段载入 Folder 变量。

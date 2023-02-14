@@ -9,7 +9,7 @@
 
 - Docker Hub
   - ：Docker 官方的镜像仓库，地址为 `https://hub.docker.com` 。
-  - 公开的镜像不需登录就可以 Pull ，但 Push 镜像时需要登录。
+  - 公开的镜像不需登录就可以 pull ，但 push 镜像时需要登录。
 - Docker Registry
   - ：一个提供私有镜像仓库的服务器，由 Docker 官方开源。
   - 功能比 Harbor 少，没有提供 Web UI 。
@@ -75,11 +75,11 @@
   - ：用于定义一些远程的仓库服务器，供其它功能调用。
 
 - 复制（Replications）
-  - ：用于在本地 Harbor 仓库与其它远程仓库之间 Push 或 Pull 镜像。
+  - ：用于在本地 Harbor 仓库与其它远程仓库之间 push 或 pull 镜像。
   - 拉取 Docker Hub 的官方镜像时，需要指定源命名空间为 library ，比如 `library/hello-world` 。
-  - Pull 镜像时，如果不指定存储到哪个命名空间，则默认采用源命名空间的名称。
+  - pull 镜像时，如果不指定存储到哪个命名空间，则默认采用源命名空间的名称。
     - 如果不存在该命名空间则自动创建，且访问级别为 Private 。
-  - Pull 镜像时，指定的源镜像名支持模糊匹配。如下：
+  - pull 镜像时，指定的源镜像名支持模糊匹配。如下：
     ```sh
     library/*                 # 匹配 library 目录下的所有镜像，但不包括子目录
     library/*/*               # 匹配两级子目录

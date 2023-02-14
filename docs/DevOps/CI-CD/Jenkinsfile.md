@@ -98,7 +98,7 @@ Pipeline 中可以创建多种变量，比如 Groovy 变量、Shell 变量。
   ```
   - 调试时，可以在 Shell 中执行 `env` ，打印所有 Shell 环境变量。
 
-- 普通的 Groovy 变量不会加入 Shell 环境变量，除非主动执行 withEnv() 语句。例：
+- 普通的 Groovy 变量不会加入 Shell 环境变量，除非执行 withEnv() 语句。例：
   ```groovy
   script {
       ID = "1"
@@ -306,7 +306,7 @@ Pipeline 中可以创建多种变量，比如 Groovy 变量、Shell 变量。
 pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一个或多个 stage{} ，表示执行的各个阶段。
 - Jenkins 会按先后顺序执行各个 stage{} ，并在 Web 页面上显示执行进度。
 - 每个 stage{} 的名称不能重复。
-- 每个 stage{} 中有且必须定义一个以下类型的语句块：
+- 每个 stage{} 中必须定义一个以下类型的语句块，且只能定义一个：
   ```sh
   stages{}
   steps{}
@@ -657,7 +657,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 
 ## matrix{}
 
-：包含一个 axes{} 和 stages{} ，用于将一个 stages{} 在不同场景下并行执行一次，相当于执行多个实例。
+：包含一个 axes{} 和一个 stages{} ，用于将一个 stages{} 在不同参数的情况下，并行执行一次。
 - 可用范围：stage{}
 - 每个并行任务称为一个 Branch 。
   - 只要有一个并行执行的任务失败了，最终结果就是 Failure 。
@@ -691,7 +691,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 
 ## parallel{}
 
-：包含多个 stage{} ，用于并行执行多个任务。
+：包含多个 stage{} ，会并行执行。
 - 可用范围：stage{}
 - 例：
   ```groovy
@@ -710,6 +710,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       }
   }
   ```
+- matrix{} 用于并行执行同一个任务，只是参数不同。而 parallel{} 用于并行执行多个不同的任务。
 
 ## options{}
 
@@ -724,11 +725,11 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
                                 artifactNumToKeepStr: '10')   // 限制 build 归档文件的保留数量
 
       disableConcurrentBuilds()           // 不允许同时执行该 job ，会排队执行
-      lock('resource-1')                  // 获取全局锁（此时不支持附加语句块）
+      lock('resource-1')                  // 获取全局锁
       parallelsAlwaysFailFast()           // 用 matrix{}、parallel{} 执行并发任务时，如果有某个任务失败，则立即放弃执行其它任务
       quietPeriod(5)                      // 设置静默期，默认为 5 秒
-      retry(3)
-      timeout(time: 60, unit: 'SECONDS')
+      retry(3)                            // 最多尝试执行 3 次（包括第一次执行）
+      timeout(time: 60, unit: 'SECONDS')  // 执行整个 Job 的超时时间
       timestamps()                        // 输出内容到终端时，加上时间戳
   }
   ```

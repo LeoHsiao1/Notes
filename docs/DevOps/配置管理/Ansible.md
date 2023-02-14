@@ -20,7 +20,7 @@
 ### ansible
 
 ```sh
-ansible 
+ansible
         <pattern> [-m <name>] [-a <args>]  # 在远程主机上执行一个模块（默认是采用 command 模块），并给模块传入参数
         --version                          # 显示版本、配置文件的位置
 ```
@@ -181,7 +181,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       - ( A == '1' ) or (A == 'Hello' and B == '2')  # 使用逻辑运算符
       - not (A == '2' and B == "2")
   ```
-  - 注意 `1` 表示数字 1 ，而 `'1'` 表示字符串 1 。 
+  - 注意 `1` 表示数字 1 ，而 `'1'` 表示字符串 1 。
   - 判断变量的值时，如果该变量未定义，则会报错。
 
 - task 可以通过 with_items 选项迭代一组 item 变量，每次迭代就循环执行一次模块。如下：
@@ -297,7 +297,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     - shell: echo {{step1_result}}
       # 直接打印，则是一个 JSON 对象，如下：
       # {changed: True, end: 2020-06-08 13:50:28.332773, stdout: f1, cmd: ls f1, rc: 0, start: 2020-06-08 13:50:28.329216, stderr: , delta: 0:00:00.003557, stdout_lines: [f1], stderr_lines: [], failed: False}
-    
+
     - shell: echo {{step1_result.stdout}}
 
     - shell: echo "step1 failed!"
@@ -331,8 +331,8 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - 幂等性可以保证对同一个 host 重复执行一个 playbook 时，只会产生一次效果，不会因为重复执行而出错。比如使用 yum 模块安装软件时，它会检查是否已经安装，如果已经安装就不执行。
   - 重复执行幂等性模块时，只有第一次的执行结果中的 "changed" 参数为 true ，表示成功将 host 改变成了目标状态。之后重复执行时，"changed" 参数应该总是为 false 。
 - 例如：
-  - 使用 command、shell、raw 模块时可以自由地执行命令，通用性强，但不保证幂等性。
-  - 使用 copy 等具体的模块可以保证幂等性，但通用性差，需要分别学习它们的用法，而且可能出现 Python 版本兼容问题。
+  - 使用 command、shell、raw 模块时可以自由地执行 shell 命令，通用性强，但不保证幂等性。
+  - 使用 file、copy 模块可以保证幂等性，但通用性差，需要分别学习它们的用法。
 
 ### 关于执行命令
 
@@ -343,45 +343,38 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
   - ping 模块会测试能否通过 ssh 登录 host ，并检查是否有可用的 Python 解释器，如果操作成功则返回 pong 。
 
 - 用 command、shell、raw 模块可以在 host 上执行 shell 命令：
-  
-  - 
-    ```yml
-    command: /tmp/test.sh chdir=/tmp/
-    ```
-    调用模块时也可以写作以下格式：
-    ```yml
-    command:
-      cmd: /tmp/test.sh
-      # chdir: /tmp/      # 执行该命令之前，先切换到指定目录（可以是绝对路径或相对路径）
-      # creates: /tmp/f1  # 如果该文件存在，则跳过该任务（这样有利于实现幂等性）
-      # removes: /tmp/f1  # 如果该文件不存在，则跳过该任务
-    ```
-  - 
-    ```yml
-    shell:
-      cmd: ls | grep ssh
-      # executable: /bin/sh   # 指定要执行 shell 命令的可执行文件
-      # chdir: /tmp/
-      # creates: /tmp/f1
-      # removes: /tmp/f1
-    ```
-    shell 模块时会在 Python 中调用 subprocess.Popen(cmd, shell=True) ，新建一个 shell 终端来执行 cmd 命令。\
-    而 command 模块是调用 subprocess.Popen(cmd, shell=False) ，不在 shell 终端中执行 cmd 命令。因此可以防止 shell 注入攻击，但是不支持管道符等 shell 语法。如下：
-    ```sh
-    [root@CentOS ~]# ansible localhost -a 'echo $PWD | wc -l >> f1 && echo $PWD'
-    localhost | CHANGED | rc=0 >>
-    /etc/ansible | wc -l >> f1 && echo /etc/ansible
-    ```
-    如果 command 模块中调用了 shell 环境变量，则会在执行命令之前就完成替换。
+  - command 模块是在 Python 中调用 `subprocess.Popen(cmd, shell=False)` 来执行 cmd 命令。
+    - 不是直接在 shell 终端执行命令。因此可以防止 shell 注入攻击，但是不支持管道符等 shell 语法。例如：
+      ```sh
+      [root@CentOS ~]# ansible localhost -a 'echo $PWD | wc -l >> f1 && echo $PWD'
+      localhost | CHANGED | rc=0 >>
+      /etc/ansible | wc -l >> f1 && echo /etc/ansible
+      ```
+    - 如果 command 模块中调用了 shell 环境变量，则会在执行命令之前就完成替换。
+  - shell 模块是调用 `subprocess.Popen(cmd, shell=True)` ，新建一个 shell 终端来执行 cmd 命令。
+  - raw 模块是通过 ssh 向 host 发送 shell 命令。适用于 host 上没有安装 Python 解释器，而无法使用 command、shell 模块的情况。
 
-  - 
-    ```yml
-    raw: echo hello
-    # args:
-    #   executable: /bin/bash   # 指定解释器
-    ```
-    raw 模块是通过 ssh 直接向 host 发送 shell 命令。适用于 host 上没有安装 Python 解释器，而无法使用 command、shell 模块的情况。
-    
+- command 模块：
+  ```yml
+  command: /tmp/test.sh chdir=/tmp/
+  ```
+  也可以写作以下格式：
+  ```yml
+  command:
+    cmd: /tmp/test.sh
+    # chdir: /tmp/      # 执行该命令之前，先切换到指定目录（可以是绝对路径或相对路径）
+    # creates: /tmp/f1  # 如果该文件存在，则跳过该任务（这样有利于实现幂等性）
+    # removes: /tmp/f1  # 如果该文件不存在，则跳过该任务
+  ```
+- shell 模块：
+  ```yml
+  shell:
+    cmd: ls | grep ssh
+    # executable: /bin/sh   # 指定要执行 shell 命令的可执行文件
+    # chdir: /tmp/
+    # creates: /tmp/f1
+    # removes: /tmp/f1
+  ```
   - 按以下格式可以给模块输入多行字符串：
     ```yml
     shell: |
@@ -390,6 +383,12 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
       touch f1
     ```
     注意输入的内容要缩进一层。
+- raw 模块：
+  ```yml
+  raw: echo hello
+  # args:
+  #   executable: /bin/bash   # 指定解释器
+  ```
 
 - 在 host 上执行脚本：
   ```yml
@@ -486,7 +485,7 @@ Ansible 将待执行任务（称为 task）的配置信息保存在 .yml 文件�
     # insertafter: EOF            # 将 block 插入到该正则表达式的最后一个匹配项之后（默认取值为 EOF ，即插入到文件末尾）
     # insertbefore: BOF           # 将 block 插入到该正则表达式的最后一个匹配项之前（取值为 BOF 则插入到文件开头）
     # marker: # {mark} ANSIBLE MANAGED BLOCK    # 设置该 block 的标记语，其中 {mark} 会被 marker_begin 或 marker_end 替换
-    # marker_begin: BEGIN 
+    # marker_begin: BEGIN
     # marker_end: END
   ```
   - 上例中最终插入的 block 如下：
@@ -650,7 +649,7 @@ Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当�
 ## role
 
 - 处理大型任务时，可以将一些 playbook、配置文件整合在一个目录下，称为 role 。
-- 可以到官方的 roles 分享平台 <galaxy.ansible.com> 上寻找可用的 roles ，然后用 ansible-galaxy 命令下载 roles 。命令如下：
+- 可以到官方的 roles 分享平台 galaxy.ansible.com 上寻找可用的 roles ，然后用 ansible-galaxy 命令下载 roles 。命令如下：
   ```sh
   ansible-galaxy
                 install <name>
@@ -713,6 +712,6 @@ Ansible Tower 提供了 Ansible 的 Web UI ，采用 Django 开发，其开源�
   默认访问地址为 <http://localhost:80> ，用户名、密码为 admin 、 password 。
 
 - 用法：
-  - 可以在 Web 页面上方便地调用大量 playbook ，不过不能直接在 Web 页面上编辑 playbook 。因此只适合管理已稳定可用的 playbook 。
+  - 可以在 Web 页面上方便地调用大量 playbook ，不过不能直接在 Web 页面上编辑 playbook 。因此只适合管理稳定不变的 playbook 。
   - 以 Project 为单位执行任务，可以从 Git、SVN 仓库或本地目录导入 playbook 文件。
   - 删除一个机构时，会自动删除其下的 Inventory 等配置。

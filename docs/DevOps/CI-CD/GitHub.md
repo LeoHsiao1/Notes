@@ -35,7 +35,7 @@
         useradd github
         su - github
         ```
-  - 使用自己的 Runner 时，要小心 workflows 中执行了恶意代码。
+  - 如果在开源项目使用自己的 Runner ，则需要提防别人在 workflows 中执行恶意代码。
 
 ## workflows
 

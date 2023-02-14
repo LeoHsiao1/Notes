@@ -445,6 +445,12 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 - 打印字符串时，要加上双引号 " 或单引号 ' 作为定界符（除非是纯数字组成的字符串），否则会被当作 Groovy 的变量名。
   - 例如：`echo ID` 会被当作 `echo "$ID"` 执行。
   - 使用三引号 """ 或 ''' 包住时，可以输入换行的字符串。
+- 在 Console Output 中显示一个字符串时，如果以 http:// 开头，则会自动显示成超链接。
+  - 也可用以下代码，主动显示超链接：
+    ```groovy
+    import hudson.console.ModelHyperlinkNote
+    echo hudson.console.ModelHyperlinkNote.encodeTo('https://baidu.com', 'baidu')
+    ```
 
 ### emailext
 

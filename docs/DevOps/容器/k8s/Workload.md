@@ -291,7 +291,7 @@
 ## Job
 
 ：一次性任务，适合部署运行一段时间就会自行终止的 Pod 。
-- 创建 Job 之后，它会立即创建指定个 Pod 副本，而 Pod 会被自动调度、运行。
+- 创建 Job 之后，它会立即创建指定个 Pod 副本，这些 Pod 会被自动调度、运行。
 - 例：用以下配置创建一个 Job
   ```yml
   apiVersion: batch/v1
@@ -322,7 +322,7 @@
     namespace: default
   spec:
     backoffLimit: 6     # 重试次数，默认为 6
-    completions: 1      # 完成数量，默认为 1 。当 Job 下级的 Succeeded Pod 达到该数量时，Job 变为 Complete 状态
+    completions: 1      # 完成数量，默认为 1 。表示存在多少个 Succeeded Pod 时，Job 变为 Complete 状态
     parallelism: 1      # 并行数量，默认为 1 。表示最多存在多少个 Running Pod 。如果为 0 ，则不创建 Pod
     # suspend: false    # 是否暂停 Job
     # activeDeadlineSeconds: 0    # Job 执行的超时时间，超过则终止 Job ，变为 Failed 状态。默认不限制
@@ -385,7 +385,7 @@
     - 采用 `restartPolicy: OnFailure` 时，Job 每次重试，会重启 Failed Pod 。
       - Pod 的 `status.containerStatuses[0].restartCount` 字段记录了 Pod 被 restartPolicy 重启的次数。如果 `sum_all_pod_restartCount ≥ backoffLimit` ，则 Job 停止重试。
       - 因此最多可能运行 `parallelism + backoffLimit` 次 Pod 。不过最后一次重启时，Pod 刚启动几秒，就会因为 restartCount 达到阈值而被终止。相当于少了一次重试。
-    - 如果主动删除 Pod ，导致 Job 自动创建新 Pod ，不会消耗重试次数。
+    - 如果主动删除 Pod ，导致 Job 自动创建新 Pod ，则不会消耗重试次数。
   - Job 达到 backoffLimit 限制时，会停止重试，变为 Failed 状态，自动删除所有 Running Pod ，保留其它 Pod 。
     - 特别地，如果采用 `restartPolicy: OnFailure` ，则会删除所有 Pod ，不方便保留现场、看日志。
     - 因此，建议让 Job 采用 `restartPolicy: Never` 。

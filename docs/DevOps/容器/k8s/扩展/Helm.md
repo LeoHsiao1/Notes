@@ -197,7 +197,7 @@ helm
   ```
   使用 helm 钩子，可以在正常部署顺序之外，执行一些操作。
 
-- 可以给 chart/templates/ 目录下一些 k8s 对象添加 hook 注释，将它们声明为 helm 钩子，在特定阶段执行。
+- 可以给 `chart/templates/` 目录下一些 k8s 对象添加 hook 注释，将该对象声明为 helm 钩子，在特定阶段执行。
   - 例如将一个 k8s Job 声明为钩子：
     ```yml
     apiVersion: batch/v1

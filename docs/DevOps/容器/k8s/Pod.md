@@ -60,14 +60,14 @@
   - 如果输出到容器内的日志文件，可以增加一个 sidecar 容器，执行 `tail -f xx.log` 命令，将日志采集到容器终端。
 
 - Static Pod 是一种特殊的 Pod ，由 kubelet 管理，不受 apiserver 控制，不能调用 ConfigMap 等对象。
-  - 用法：启动 kubelet 时加上 --pod-manifest-path=/etc/kubernetes/manifests 参数，然后将 Pod 的配置文件保存到该目录下。kubelet 会定期扫描配置文件，启动 Pod 。
+  - 用法：启动 kubelet 时加上参数 `--pod-manifest-path=/etc/kubernetes/manifests`，然后将 Pod 的配置文件保存到该目录下。kubelet 会定期扫描配置文件，启动 Pod 。
   - 例如用 kubeadm 部署 k8s 集群时，会以 Static Pod 的形式运行 kube-apiserver、kube-scheduler 等 k8s 组件。
 
 ### containers
 
 - 一个 Pod 中可以运行多个容器，特点：
   - 各个容器必须设置不同的 name 。
-  - 容器内的主机名等于 Pod name ，模拟一个虚拟机。
+  - 容器内的主机名等于 Pod name ，模拟一个独立的虚拟机。
   - 所有容器会被部署到同一个节点上。
     - 所有容器共享一个 Network namespace ，可以相互通信。绑定同一个 Pod IP ，因此不能监听同一个端口号。
     - 所有容器共享挂载的所有 volume 。
@@ -102,10 +102,10 @@
   ```
 
 - 关于资源配额：
-  - 如果多个 init 容器定义了一种配额，比如 limits/requests.cpu ，则采用各个 init 容器中取值最大的该种配额，作为有效值，作用于所有 init 容器的运行过程。
-  - 对于整个 Pod ，一种配额的有效值（决定了调度），采用以下两者的较大值：
-    - 所有普通容器的该种配额的总和
-    - init 容器的该种配额的有效值
+  - 如果多个 init 容器定义了一种配额，比如 requests.cpu、limits.cpu ，则采用各个 init 容器中取值最大的该种配额，作为有效值，作用于所有 init 容器的运行过程。
+  - 调度 Pod 时，节点的可用资源必须大于以下两者的较大值：
+    - 所有普通容器的 requests 配额的总和
+    - init 容器的 requests 配额的有效值
 
 - 临时容器（Ephemeral Containers）
   - ：一种临时存在的容器，便于人工调试。
@@ -209,7 +209,7 @@
   - 在抢占成功之前，如果出现另一个可调度节点，则停止抢占。
   - 在抢占成功之前，如果出现另一个 priority 更高的 Pod ，则优先调度它。而当前 Pod 会重新调度。
 - PriorityClass
-  - ：一种不受命名空间管理的对象，用于配置 Pod priority 。
+  - ：一种不受命名空间管理的 k8s 对象，用于配置 Pod priority 。
   - 例：创建一个 PriorityClass
     ```yml
     apiVersion: scheduling.k8s.io/v1
@@ -260,9 +260,9 @@
   - Running
     - ：运行中，表示 Pod 中至少有一个非 init 容器处于 running 状态。
   - Succeeded
-    - ：Pod 中的所有容器都已经正常终止。又称为 Completed 状态。
+    - ：Pod 中所有容器都已经正常终止。又称为 Completed 状态。
   - Failed
-    - ：Pod 中的所有容器都已经终止，且至少有一个容器是异常终止。
+    - ：Pod 中所有容器都已经终止，且至少有一个容器是异常终止。
   - Unkown
     - ：状态未知。
     - 例如 apiserver 与 kubelet 断开连接时，就不知道 Pod 的状态。
@@ -274,7 +274,7 @@
 
 - 一个新建的 Pod ，主要经过以下步骤，才能从 Pending 阶段进入 Running 阶段。
   - 调度节点
-    - Pod 被调度到一个节点之后，不能迁移到其它节点。如果在其它节点创建新的 Pod ，即使采用相同的 Pod name ，但 UID 也会不同。
+    - Pod 被调度到一个节点之后，不能迁移部署到其它节点。可以在其它节点部署一个同名的 Pod ，但 UID 总是不同。
   - 拉取镜像
     - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间按 0s、10s、20s、40s 数列增加，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
   - 创建容器
@@ -308,7 +308,7 @@
   - Delete Pod
     - 流程如下：
       1. apiserver 将 Pod 标记为 Terminating 状态。
-      2. kubelet 发现 Terminating 状态之后终止 Pod ，删除其中的容器，然后通知 apiserver 。
+      2. kubelet 发现 Pod 变为 Terminating 状态，于是终止 Pod ，删除其中的容器，然后通知 apiserver 。
       3. apiserver 从 etcd 数据库删除 Pod 。
     - 在 k8s 中，修改一个 Pod 的配置时，实际上会创建新 Pod 、删除旧 Pod 。
   - Evict Pod
@@ -521,11 +521,12 @@ spec:
   - 假设一个 Pod 运行时通常只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期需要 2 核 CPU 。
     - 如果 requests 等于 limits 且多于实际开销，就容易浪费节点资源。
     - 如果 requests 等于 limits 且少于实际开销，Pod 就容易资源不足。
-    - 如果分配较少 requests、较多 limits ，就难以预测 Pod 的资源开销。如果多个这样的 Pod 调度到同一个节点上，limits 之和会超过节点总资源，可能耗尽节点资源。
+    - 如果分配较少 requests、较多 limits ，就难以预测 Pod 的资源开销。如果多个这样的 Pod 调度到同一个节点上，limits 之和可能超过节点总资源，高峰期可能耗尽节点资源。
+    - 这种情况，可采用 VPA 等措施，控制 Pod 的资源配额。
 
 ### QoS
 
-- k8s 在调度 Pod 时有几种 QoS （服务质量，Quality of Service）。
+- k8s 在调度 Pod 时有几种 QoS（Quality of Service，服务质量）。
   - 用户不能主动选择 QoS 。k8s 会自动根据 Pod 的 resources 配置，给 Pod 分配一种 qosClass 。
 - Pod 的 qosClass 有三种，服务质量从高到低排列如下：
   - Guaranteed
@@ -548,7 +549,7 @@ spec:
       ```
   - Burstable
     - ：不稳定的服务质量。
-    - 需要 Pod 不满足 Guaranteed QoS 的条件，且至少有一个容器配置了 requests.cpu、limits.cpu、requests.memory、limits.memory 至少一项。即 Pod 有 resources 配置但不严格。
+    - 需要 Pod 不满足 Guaranteed QoS 的条件，但至少有一个容器配置了 requests.cpu、limits.cpu、requests.memory、limits.memory 至少一项。即 Pod 有 resources 配置但不严格。
   - BestEffort
     - ：尽力而为的服务质量。
     - 需要 Pod 中所有容器都没有配置 requests.cpu、limits.cpu、requests.memory、limits.memory 。此时 k8s 不能预测、限制 Pod 的 cpu、memory 开销，只能尽力而为。
@@ -591,7 +592,7 @@ spec:
 
 ### LimitRange
 
-- 可以创建 LimitRange 对象，设置每个容器的资源配额的取值范围。例：
+- 可以创建 LimitRange 对象，设置单个容器的资源配额的默认值、取值范围。例：
   ```yml
   apiVersion: v1
   kind: LimitRange
@@ -619,7 +620,7 @@ spec:
 
 ### ResourceQuota
 
-- 可以创建 ResourceQuota 对象，限制一个 namespace 中所有 Pod 的资源总配额。例：
+- 可以创建 ResourceQuota 对象，限制一个 namespace 中全部 Pod 的资源总配额。例：
   ```yml
   apiVersion: v1
   kind: ResourceQuota
@@ -628,7 +629,7 @@ spec:
     namespace: default
   spec:
     hard:
-      requests.cpu: "10"                # 限制所有 Pod 的 requests 资源的总和
+      requests.cpu: "10"                # 限制全部 Pod 的 requests 资源的总和
       limits.cpu: "20"
       requests.memory: 1Gi
       limits.memory: 2Gi
@@ -654,7 +655,7 @@ spec:
   #       values:
   #         - high
   ```
-  - 创建 Pod 时，如果指定的 limits、requests 超过总配额，则创建失败。
+  - 创建 Pod 时，如果该 Pod 加上已调度 Pod 的 limits、requests 超过总配额，则创建失败。
   - terminated 状态的 Pod 不会占用 cpu、memory、pods 等资源配额，但会占用 storage 等资源配额。
   - 安装 Nvidia 插件可让 kubelet 识别出主机上的 GPU ，然后分配给 Pod 。
     - 每个容器可以分配整数个 GPU ，不支持小数。
@@ -666,7 +667,7 @@ spec:
 
 ### nodeSelector
 
-：节点选择器，用于筛选可调度节点。
+：节点选择器，表示只允许将 Pod 调度到某些节点。
 - 用法：先给节点添加 Label ，然后在 Pod spec 中配置该 Pod 需要的 Node Label 。
 - 例：
   ```yml
@@ -680,12 +681,14 @@ spec:
 
 ### nodeAffinity
 
-：节点的亲和性，表示将 Pod 优先调度在哪些节点上，比 nodeSelector 更灵活。
+：节点的亲和性，表示将 Pod 优先调度到某些节点，比 nodeSelector 更灵活。
 - 亲和性的几种类型：
-  - preferredDuringScheduling ：为 Pod 调度节点时，优先调度到满足条件的节点上。如果没有这样的节点，则调度到其它节点上。（软性要求）
-  - requiredDuringScheduling ：为 Pod 调度节点时，只能调度到满足条件的节点上。如果没有这样的节点，则不可调度。（硬性要求）
-  - IgnoredDuringExecution ：当 Pod 已调度之后，不考虑亲和性，因此不怕节点的标签变化。（软性要求）
-  - RequiredDuringExecution ：当 Pod 已调度之后，依然考虑亲和性。如果节点的标签变得不满足条件，则可能驱逐 Pod 。（硬性要求，尚不支持）
+  ```sh
+  preferredDuringScheduling   # 为 Pod 调度节点时，优先调度到满足条件的节点上。如果没有这样的节点，则调度到其它节点上（软性要求）
+  requiredDuringScheduling    # 为 Pod 调度节点时，只能调度到满足条件的节点上。如果没有这样的节点，则不可调度（硬性要求）
+  IgnoredDuringExecution      # 当 Pod 已调度之后，不考虑亲和性，因此不怕节点的标签变化（软性要求）
+  RequiredDuringExecution     # 当 Pod 已调度之后，依然考虑亲和性。如果节点的标签变得不满足条件，则可能驱逐 Pod （硬性要求，尚不支持）
+  ```
 - 例：
   ```yml
   kind: Pod
@@ -751,7 +754,7 @@ spec:
 
 ### topology
 
-- 可以根据某个 label 的多种取值，将所有节点划分为多个拓扑域。
+：根据某个 label 取值的不同，将所有节点划分为多个拓扑域。
 
 - 例：
   ```yml
@@ -771,7 +774,7 @@ spec:
 
 ### Taint、Tolerations
 
-：污点、容忍度，表示避免将 Pod 调度到哪些节点上，与亲和性相反。
+：污点、容忍度，表示避免将 Pod 调度到某些节点上，与亲和性相反。
 - 可以给节点添加一些标签作为污点（Taint），然后给 Pod 添加一些标签作为容忍度（Tolerations）。kube-scheduler 不会将 Pod 调度到有污点的节点上，除非 Pod 能容忍该污点。
 - 例：
   1. 给节点添加污点：
@@ -809,8 +812,8 @@ spec:
   - NoExecute ：如果 Pod 不容忍该污点，则不调度到该节点上。如果已经调度了，则驱逐该 Pod 。
     - 可以额外设置 tolerationSeconds ，表示即使 Pod 容忍该污点，也最多只能保留指定秒数，超时之后就会被驱逐，除非在此期间污点消失。
 - 在 Tolerations 中：
-  - 当 operator 为 Equal 时，如果 effect、key、value 与 Taint 的相同，则匹配该 Taint 。
-  - 当 operator 为 Exists 时，如果 effect、key 与 Taint 的相同，则匹配该 Taint 。
+  - 当 operator 为 Equal 时，如果 effect、key、value 与 Taint 的相同，才匹配该 Taint 。
+  - 当 operator 为 Exists 时，如果 effect、key 与 Taint 的相同，才匹配该 Taint 。
   - 如果不指定 key ，则匹配 Taint 的所有 key 。
   - 如果不指定 effect ，则匹配 Taint 的所有 effect 。
 - 例：当节点不可用时，node controller 可能自动添加以下 NoExecute 类型的污点
@@ -830,7 +833,7 @@ spec:
 ### 节点压力驱逐
 
 - 节点压力驱逐（Node-pressure Eviction）：当节点可用资源低于阈值时，kubelet 会驱逐该节点上的 Pod 。
-  - kube-scheduler 会限制每个节点上，所有 pod.request 的资源之和不超过 allocatable 。但 Pod 实际占用的资源可能更多，用 pod.limit 限制也不可靠，因此需要驱逐 Pod ，避免整个主机的资源耗尽。
+  - kube-scheduler 会限制每个节点上所有 pod.request 的资源之和不超过 allocatable 。但 Pod 实际占用的资源可能更多，用 pod.limit 限制也不可靠，因此需要驱逐 Pod ，避免整个主机的资源耗尽。
   - 决定驱逐的资源主要是内存、磁盘，并不考虑 CPU 。
   - 驱逐过程：
     1. 给节点添加一个 NoSchedule 类型的污点，不再调度新 Pod 。
@@ -861,7 +864,7 @@ spec:
     - nodefs ：用于存放 /var/lib/kubelet/ 目录。
     - imagefs ：用于存放 /var/lib/docker/ 目录，主要包括 docker images、container rootfs、container log 数据。
   - 修改了节点的系统盘大小之后，可以重启 kubelet ，让它更新 capacity 。
-  - kubelet 发出驱逐信号时，会给节点添加以下 condition 状态：
+  - kubelet 发出驱逐信号时，会给节点添加以下几种 condition 状态：
     ```sh
     MemoryPressure
     DiskPressure

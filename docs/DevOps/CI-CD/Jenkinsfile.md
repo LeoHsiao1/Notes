@@ -448,8 +448,8 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 - 在 Console Output 中显示一个字符串时，如果以 http:// 开头，则会自动显示成超链接。
   - 也可用以下代码，主动显示超链接：
     ```groovy
-    import hudson.console.ModelHyperlinkNote
-    echo hudson.console.ModelHyperlinkNote.encodeTo('https://baidu.com', 'baidu')
+    import hudson.console.HyperlinkNote
+    echo hudson.console.HyperlinkNote.encodeTo('https://baidu.com', 'baidu')
     ```
 
 ### emailext

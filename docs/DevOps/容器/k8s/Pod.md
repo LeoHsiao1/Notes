@@ -258,7 +258,7 @@
   - Pending
     - ：Pod 已创建，但尚未运行。
   - Running
-    - ：运行中，表示 Pod 中至少有一个非 init 容器处于 running 状态。
+    - ：运行中。表示 Pod 中所有 init 容器已执行完，所有普通容器已创建，且至少有一个普通容器处于 running 状态。
   - Succeeded
     - ：Pod 中所有容器都已经正常终止。又称为 Completed 状态。
   - Failed
@@ -272,15 +272,16 @@
 
 ### 启动
 
-- 一个新建的 Pod ，主要经过以下步骤，才能从 Pending 阶段进入 Running 阶段。
+- 一个新建的 Pod ，需要经过以下流程，才能从 Pending 阶段进入 Running 阶段。
   - 调度节点
-    - Pod 被调度到一个节点之后，不能迁移部署到其它节点。可以在其它节点部署一个同名的 Pod ，但 UID 总是不同。
+    - 这决定了将 Pod 部署到哪个节点上。
+    - 每个 Pod 在创建之后，只会被调度一次。一旦 Pod 被调度到一个节点，就会一直运行直到被删除，不能迁移部署到其它节点。
   - 拉取镜像
     - 如果拉取镜像失败，则 Pod 报错 ImagePullBackOff ，会每隔一段时间重试拉取一次。间隔时间按 0s、10s、20s、40s 数列增加，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
   - 创建容器
     - kubelet 会调用 CRI 组件来创建容器，调用 CNI 组件来配置容器的网络，调用 CSI 组件来挂载数据卷。
   - 启动容器
-    - kubelet 会先启动 init 容器，再启动标准容器。
+    - kubelet 会先启动 init 容器，再启动普通容器。
 
 ### 终止
 
@@ -295,14 +296,14 @@
 
 - Pod 终止的常见原因：
   - Pod 自行终止，进入 Succeeded 或 Failed 阶段。
-  - kubelet 主动终止 Pod 。
-    - 一般流程如下：
-      1. 向容器内主进程发送 SIGTERM 信号。
-      2. 等待宽限期（terminationGracePeriodSeconds）之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
+  - kubelet 主动终止 Pod 。一般流程如下：
+    1. kubelet 发现 Pod 变为 Terminating 状态，于是主动终止 Pod 。
+    2. kubelet 向容器内 1 号进程发送 SIGTERM 信号，然后等待容器终止。
+    4. 等待宽限期（terminationGracePeriodSeconds）时长之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
   - Linux 内核主动终止 Pod 。
-    - 比如因为 OOM 杀死容器、用 kill 命令杀死容器内主进程。
-    - 此时宽限期不生效，Pod 会突然终止，可能中断正在执行的事务，甚至丢失数据。
-  - 主机宕机，导致 Pod 容器终止。
+    - 比如因为 OOM 杀死容器内 1 号进程、用 kill 命令杀死容器内 1 号进程。
+    - 这种情况不受 kubelet 控制，因此宽限期不生效。Pod 会立即终止，可能中断正在执行的事务，甚至丢失数据。
+  - 主机宕机，导致所有 Pod 终止。
 
 - 用户可调用 apiserver 的以下几种 API ，让 kubelet 终止 Pod ，称为自愿中断（voluntary disruptions）。
   - Delete Pod
@@ -388,7 +389,6 @@ status:
   ```
 
 - Pod 的状态主要取决于其中容器的状态。
-  - 当所有容器启动成功，变为 running 状态时，Pod 才从 Pending 阶段进入 Running 阶段。
   - 当所有容器处于 running 状态，并通过 readinessProbe 检查时，Pod 才处于 Running 阶段、Ready 状态。
   - 当任一容器变为 terminated 状态时，kubelet 会将 Pod 取消 Ready 状态，并触发 restartPolicy 。
 
@@ -401,12 +401,12 @@ status:
   - startupProbe
     - ：启动探针，用于探测容器是否已成功启动。如果探测结果为 Failure ，则触发 restartPolicy 。
     - 适用于启动耗时较久的容器。
-  - livenessProbe
-    - ：存活探针，用于探测容器是否正常运行。如果探测结果为 Failure ，则触发 restartPolicy 。
-    - 适用于运行时可能故障，且需要主动重启的容器。
   - readinessProbe
     - ：就绪探针，用于探测容器是否就绪。如果探测结果为 Success ，则将 Pod 标记为 Ready 状态 。
     - 适用于运行可能故障，且不需要重启的容器。
+  - livenessProbe
+    - ：存活探针，用于探测容器是否正常运行。如果探测结果为 Failure ，则触发 restartPolicy 。
+    - 适用于运行时可能故障，且需要主动重启的容器。
 - 探针每次的探测结果有三种：
   ```sh
   Success
@@ -439,10 +439,6 @@ spec:
       # timeoutSeconds: 1       # 每次探测的超时时间
       # failureThreshold: 3     # 容器处于 Success 时，连续多少次探测为 Failure ，才判断容器为 Failure
       # successThreshold: 1     # 容器处于 Failure 时，连续多少次探测为 Success ，才判断容器为 Success
-    livenessProbe:
-      tcpSocket:
-        port: 80
-      periodSeconds: 3
     readinessProbe:
       httpGet:
         path: /health
@@ -451,12 +447,36 @@ spec:
         httpHeaders:            # 给请求报文添加 Headers
         - name: X-Custom-Header
           value: hello
+    livenessProbe:
+      tcpSocket:
+        port: 80
+      periodSeconds: 3
 ```
 - 定义了 startupProbe 探针时，容器必须在 `initialDelaySeconds + failureThreshold × periodSeconds` 时长内成功启动，否则会触发 restartPolicy ，陷入死循环。
 
-### postStart、preStop
+### hook
 
-- 可以给 Pod 中的每个容器定义 postStart、preStop 钩子，在启动、终止时增加操作。例：
+- k8s 支持添加钩子（hook），用于当容器生命周期发生某些事件时，执行自定义的操作。
+  - hook 可执行的操作类型有 exec、tcpSocket、httpGet ，像探针。
+
+- 目前可添加两种 hook ：
+  - postStart ：在启动容器时执行。使得 kubelet 启动容器的流程变成这样：
+    1. 创建容器。
+    2. 在容器内执行 ENTRYPOINT 作为 1 号进程，执行 postStart 作为普通进程。
+        - postStart 与 ENTRYPOINT 是异步执行的，不能控制先后执行的顺序。
+    3. 等 postStart 执行成功之后，kubelet 才会将容器的状态改为 Running 。
+        - 如果 postStart 执行结果为 Failure ，则触发 restartPolicy 。
+        - 如果容器的 postStart 一直在执行，则该容器会阻塞在 ContainerCreating 状态。此时 Pod 不能正常终止，需要执行 `kubectl delete --force $pod` 。
+    4. 按 startupProbe、readinessProbe、livenessProbe 的顺序执行探针。
+
+  - preStop ：在终止容器时执行。使得 kubelet 终止容器的流程变成这样：
+    1. kubelet 发现 Pod 变为 Terminating 状态，于是主动终止 Pod 。
+        - kubelet 主动终止 Pod 时，才会执行 preStop 钩子。如果容器已自行终止，进入 terminated 状态，则不会执行 preStop 钩子。
+    2. kubelet 开始执行 preStop 钩子，然后等待容器终止。
+    3. 如果 preStop 执行完，则向容器内 1 号进程发送 SIGTERM 信号，然后继续等待容器终止。
+    3. 等待宽限期（terminationGracePeriodSeconds）时长之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
+
+- 例：
   ```yml
   kind: Pod
   spec:
@@ -474,12 +494,8 @@ spec:
             path: /stop
             port: 80
   ```
-- 启用了 postStart 时，会被 kubelet 在创建容器之后立即执行。
-  - 如果 postStart 执行结果为 Failure ，则触发 restartPolicy 。
-  - postStart 与容器的 ENTRYPOINT 是异步执行的，执行顺序不能确定。不过只有等 postStart 执行成功之后，kubelet 才会将容器的状态标为 Running 。
-- 启用了 preStop 时，kubelet 终止 Pod 的流程如下：
-  1. 先执行 preStop 钩子。
-  2. 超过宽限期之后，如果容器依然未终止，则发送 SIGTERM 信号并再宽限 2 秒，最后发送 SIGKILL 信号。
+  - Hook 执行命令产生的 stdout、stderr 不会输出到容器终端，除非主动重定向，比如 `run.sh 1> /proc/1/fd/1  2> /proc/1/fd/2`
+  - 如果 Hook 执行失败，则会记录一个 Warning 级别的 k8s event ，比如 FailedPostStartHook、FailedPreStopHook 。
 
 ## 资源配额
 

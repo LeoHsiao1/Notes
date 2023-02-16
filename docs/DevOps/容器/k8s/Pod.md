@@ -394,20 +394,34 @@ status:
 
 ### 探针
 
-- Pod 默认未定义探针，因此经常遇到以下问题：
-  - 容器刚启动时，可能还在初始化，kubelet 就会认为 Pod 处于 Ready 状态，过早接入 Service 的访问流量。
-  - 容器运行一段时间之后突然故障，kubelet 却不能发现，依然接入 Service 的访问流量。
+- Pod 有时会遇到以下问题，推荐的解决方案是使用探针。
+  - 容器刚启动时，可能还在初始化，kubelet 就认为 Pod 处于 Ready 状态，过早接入 Service 的访问流量。
+  - 容器运行期间突然故障，kubelet 却不能发现，依然接入 Service 的访问流量。
 - 可以给 Pod 定义三种不同用途的探针，让 kubelet 定期对容器进行健康检查：
   - startupProbe
-    - ：启动探针，用于探测容器是否已成功启动。如果探测结果为 Failure ，则触发 restartPolicy 。
+    - ：启动探针，用于判断容器是否已启动成功。如果探针结果为 Failure ，则触发 restartPolicy 。
     - 适用于启动耗时较久的容器。
   - readinessProbe
-    - ：就绪探针，用于探测容器是否就绪。如果探测结果为 Success ，则将 Pod 标记为 Ready 状态 。
-    - 适用于运行可能故障，且不需要重启的容器。
+    - ：就绪探针，用于探测容器是否就绪。如果探测结果为 Success ，则将 Pod 标记为 Ready 状态。
+    - 适用于运行期间可能故障，且不需要重启的容器。
   - livenessProbe
     - ：存活探针，用于探测容器是否正常运行。如果探测结果为 Failure ，则触发 restartPolicy 。
-    - 适用于运行时可能故障，且需要主动重启的容器。
-- 探针每次的探测结果有三种：
+    - 适用于运行期间可能故障，且需要重启的容器。
+- 定义了探针时，会按以下顺序执行：
+  1. 创建容器，执行启动命令 ENTRYPOINT 。
+  2. 执行 startupProbe 探针，判断容器是否已启动成功。如果启动成功，才执行另外两个探针。
+  3. 执行 readinessProbe、livenessProbe 探针，判断容器运行期间是否故障。
+      - 这两个探针会周期性执行、并发执行。
+
+- 探针可执行多种操作：
+  ```sh
+  exec        # 在容器中执行指定的命令，如果命令的退出码为 0 ，则探测结果为 Success
+  tcpSocket   # 访问容器的指定 TCP 端口，如果能建立 TCP 连接（不必保持），则探测结果为 Success
+  httpGet     # 向容器的指定端口、URL 发出 HTTP GET 请求，如果收到响应报文，且状态码为 2xx 或 3xx ，则探测结果为 Success
+  grpc
+  ```
+  - 执行 exec 操作时，产生的 stdout、stderr 不会输出到容器终端，除非主动重定向，例如： `run.sh 1> /proc/1/fd/1  2> /proc/1/fd/2`
+- 每次执行探针时，探测结果有三种：
   ```sh
   Success
   Failure
@@ -415,13 +429,7 @@ status:
   ```
   - Pod 默认未定义探针，相当于探测结果一直为 Success 。
   - Pod 定义了探针时，探测结果默认为 Failure ，需要探测成功，才能变为 Success 。
-- 探针有多种实现方式：
-  ```sh
-  exec        # 在容器中执行指定的命令，如果命令的退出码为 0 ，则探测结果为 Success
-  tcpSocket   # 访问容器的指定 TCP 端口，如果能建立 TCP 连接（不必保持），则探测结果为 Success
-  httpGet     # 向容器的指定端口、URL 发出 HTTP GET 请求，如果收到响应报文，且状态码为 2xx 或 3xx ，则探测结果为 Success
-  grpc
-  ```
+  - 如果探测结果为 Failure ，则会记录一个 Warning 级别的 k8s event ，例如： `Unhealthy: Readiness probe failed`
 
 例：
 ```yml
@@ -457,17 +465,18 @@ spec:
 ### hook
 
 - k8s 支持添加钩子（hook），用于当容器生命周期发生某些事件时，执行自定义的操作。
-  - hook 可执行的操作类型有 exec、tcpSocket、httpGet ，像探针。
+  - hook 可执行 exec、httpGet 等类型的操作，像探针。
 
 - 目前可添加两种 hook ：
   - postStart ：在启动容器时执行。使得 kubelet 启动容器的流程变成这样：
     1. 创建容器。
-    2. 在容器内执行 ENTRYPOINT 作为 1 号进程，执行 postStart 作为普通进程。
+    2. 在容器内执行启动命令 ENTRYPOINT 作为 1 号进程，执行 postStart 作为普通进程。
         - postStart 与 ENTRYPOINT 是异步执行的，不能控制先后执行的顺序。
     3. 等 postStart 执行成功之后，kubelet 才会将容器的状态改为 Running 。
         - 如果 postStart 执行结果为 Failure ，则触发 restartPolicy 。
         - 如果容器的 postStart 一直在执行，则该容器会阻塞在 ContainerCreating 状态。此时 Pod 不能正常终止，需要执行 `kubectl delete --force $pod` 。
-    4. 按 startupProbe、readinessProbe、livenessProbe 的顺序执行探针。
+    4. 执行 startupProbe 探针。
+    5. 执行 readinessProbe、livenessProbe 探针。
 
   - preStop ：在终止容器时执行。使得 kubelet 终止容器的流程变成这样：
     1. kubelet 发现 Pod 变为 Terminating 状态，于是主动终止 Pod 。
@@ -494,8 +503,6 @@ spec:
             path: /stop
             port: 80
   ```
-  - Hook 执行命令产生的 stdout、stderr 不会输出到容器终端，除非主动重定向，比如 `run.sh 1> /proc/1/fd/1  2> /proc/1/fd/2`
-  - 如果 Hook 执行失败，则会记录一个 Warning 级别的 k8s event ，比如 FailedPostStartHook、FailedPreStopHook 。
 
 ## 资源配额
 

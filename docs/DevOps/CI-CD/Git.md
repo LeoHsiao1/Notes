@@ -250,8 +250,8 @@ git rebase
 git cherry-pick <commit_hash>...  # 提取多个 commit 的修改内容，拷贝提交到当前分支。支持提交到其它 Git 仓库
         -n                        # 只更新文件，不提交
 ```
-- cherry-pick 适合在差异较大的分支之间拷贝一些 commit 变化，甚至拷贝到其它 Git 仓库。
-- 假设修改了 master 分支的 .gitignore 文件，然后想同步到其它分支。如果采用 merge、rebase 方式，则需要将 master 分支的所有版本合并到其它分支，可能修改大量文件。而采用 cherry-pick 方式，则只会修改 .gitignore 文件。
+- merge 与 rebase 方式都是将一个分支的所有 commit ，合并到另一个分支。而 cherry-pick 只是拷贝部分 commit ，因此适合处理差异较大、不能合并的两个分支，甚至拷贝到其它 Git 仓库的分支。
+  - 假设修改了 master 分支的 .gitignore 文件，然后想同步到其它分支。如果采用 merge、rebase 方式，则需要将 master 分支的所有 commit 合并到其它分支，可能修改大量文件。而采用 cherry-pick 方式，则只会修改 .gitignore 文件。
 
 ### log
 

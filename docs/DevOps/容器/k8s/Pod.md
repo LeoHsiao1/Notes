@@ -299,7 +299,7 @@
   - kubelet 主动终止 Pod 。一般流程如下：
     1. kubelet 发现 Pod 变为 Terminating 状态，于是主动终止 Pod 。
     2. kubelet 向容器内 1 号进程发送 SIGTERM 信号，然后等待容器终止。
-    4. 等待宽限期（terminationGracePeriodSeconds）时长之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
+    4. 等待宽限期（terminationGracePeriodSeconds）时长之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。因为有宽限期，这称为优雅地终止。
   - Linux 内核主动终止 Pod 。
     - 比如因为 OOM 杀死容器内 1 号进程、用 kill 命令杀死容器内 1 号进程。
     - 这种情况不受 kubelet 控制，因此宽限期不生效。Pod 会立即终止，可能中断正在执行的事务，甚至丢失数据。
@@ -864,7 +864,7 @@ spec:
           # tolerationSeconds: 3600
       ```
 - 污点的效果分为三种：
-  - PreferNoSchedule ：如果 Pod 不容忍该污点，则优先调度到其它节点上，除非其它节点不可用，或者已经调度了。
+  - PreferNoSchedule ：如果 Pod 不容忍该污点，则尽量不调度到该节点上，除非其它节点不可用，或者已经调度到该节点。
   - NoSchedule ：如果 Pod 不容忍该污点，则不调度到该节点上。如果已经调度了，则继续运行该 Pod 。
   - NoExecute ：如果 Pod 不容忍该污点，则不调度到该节点上。如果已经调度了，则驱逐该 Pod 。
     - 可以额外设置 tolerationSeconds ，表示即使 Pod 容忍该污点，也最多只能保留指定秒数，超时之后就会被驱逐，除非在此期间污点消失。

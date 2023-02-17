@@ -48,13 +48,13 @@
     ```
     - 不能事先知道 Deployment 创建的 Pod name ，因此一般通过 spec.selector 筛选条件来找到 Deployment 创建的 Pod 。
 
-  - 每个 Pod 中，容器的命名格式为 `k8s_<container_name>_<pod_name>_<namespace_name>_<pod_uid>_<restart_id>` ，例如：
+  - 每个 Pod 中，容器的命名格式为 `k8s_<container_name>_<pod_name>_<namespace_name>_<pod_uid>_<restart_count>` ，例如：
     ```sh
     k8s_POD_nginx-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0   # Pod 中内置的 pause 容器，其容器名为 POD
     k8s_nginx_nginx-65d9c7f6fc-szgbk_default_c7e3e169-08c9-428f-9a62-0fb5d14336f8_0
     ```
     - Pod_id 是一个在当前 ReplicaSet 之下唯一的编号，长度为 5 字符。而 pod_uid 是一个在整个 k8s 集群唯一的编号，长度为 36 字符。
-    - Pod 重启时，会创建一组新的容器，容器名末尾的 restart_id 从 0 开始递增。
+    - 因为 restartPolicy 重启容器时，会创建一个新的容器，容器名末尾的 restart_count 从 0 开始递增。
 
 - spec.selector 是必填字段，称为标签选择器，用于与 spec.template.metadata.labels 进行匹配，从而筛选 Pod 进行管理，筛选结果可能有任意个（包括 0 个）。
   - 当 selector 中没有设置筛选条件时，默认选中所有对象。

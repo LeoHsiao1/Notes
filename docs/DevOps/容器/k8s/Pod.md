@@ -319,15 +319,14 @@
 
 ### 重启
 
-- Pod 终止时，如果启用了 restartPolicy ，则会被 kubelet 自动重启。
-  - kubelet 重启 Pod 时，并不会重启容器，而是删除旧容器（保留 pause 容器），然后在当前节点上重新创建 Pod 中的所有容器。
-  - 如果 Pod 连续重启失败，则重启的间隔时间按 0s、10s、20s、40s 数列增加，最大为 5min 。Pod 成功运行 10min 之后会重置间隔时间。
-    - 连续重启时，k8s 会报错 CrashLoopBackOff ，表示 Pod 陷入崩溃循环中。
-    - Pod 不支持限制重启次数，会无限重启。不过 Job 可以通过 backoffLimit 限制重试次数。
-  - 如果手动终止 Pod 中的任一容器，则 kubelet 会在 1s 内发现，并将 Pod 标记为 Failed 阶段，等满足重启间隔之后，再根据 restartPolicy 重启 Pod 。
-    - 特别地，手动终止 pause 容器时，kubelet 可能过几秒才发现。
+- kubelet 启动一个 Pod 之后，会一直运行其中的所有容器，直到容器终止，即容器从 running 状态变为 terminated 状态。
+  - 任一容器终止之后，都会根据 restartPolicy 判断是否自动重启。
+  - 重启容器时，实际上是创建一个新的容器实例，而旧的容器实例会被 kubelet 根据垃圾回收策略自动删除。
+  - 如果容器连续重启失败，则重启的间隔时间按 0s、10s、20s、40s 数列增加，最大为 5min 。容器成功运行 10min 之后会重置间隔时间。
+    - 如果 Pod 中包含多个容器，则每个容器的重启间隔会分别计算。所有容器的重启次数之和，记作 Pod 的重启次数。
+    - Pod 不支持限制重启次数，会无限重启。而 Job 可通过 backoffLimit 限制重试次数。
 
-- Pod 的重启策略（restartPolicy）分为多种：
+- Pod 的重启策略（restartPolicy）分为三种：
   ```sh
   Always     # 当容器终止时，总是会自动重启。这是默认策略
   OnFailure  # 只有当容器异常终止时，才会自动重启
@@ -335,6 +334,41 @@
   ```
   - Deployment、Daemonset、StatefulSet 适合部署长期运行的 Pod ，挂掉了就自动重启，除非被删除。因此 restartPolicy 只能为 Always 。
   - Job 适合部署运行一段时间就会自行终止的 Pod ，因此 restartPolicy 只能为 Never 或 OnFailure 。
+
+- 例：
+  1. 部署一个名为 kafka 的 Pod ，包含 kafka、exporter 两个容器，restartPolicy 为 always 。
+  2. 执行命令 `docker ps -a | grep kafka` ，可见节点上存在 3 个容器：
+      ```sh
+      Up 5 minutes   k8s_exporter_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0
+      Up 5 minutes   k8s_kafka_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0
+      Up 5 minutes   k8s_POD_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0      # 每个 Pod 都会先创建一个 pause 容器
+      ```
+  3. 用 `docker stop` 终止 kafka 容器，则 kubelet 会立即创建一个新的 kafka 容器：
+      ```sh
+      Up 3 seconds              k8s_exporter_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_1  # 新容器，末尾的 restart_count 为 1
+      Exited (2) 4 seconds ago  k8s_exporter_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0  # 旧容器已终止，退出码为 2
+      Up 5 minutes              k8s_kafka_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0
+      Up 5 minutes              k8s_POD_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0
+      ```
+  4. 再用 `docker stop` 终止 kafka 容器，此时容器的状态如下：
+      ```yml
+      state:
+        terminated:                           # 容器处于 terminated 状态
+          containerID: docker://223a2fd66e35d391275594a4e174ab01de5e72bc6b965bfc768eed4c041bd21a
+          exitCode: 2
+          finishedAt: "2020-01-17T02:58:18Z"
+          reason: Error                       # 处于当前状态的原因是 Error ，表示异常终止
+          startedAt: "2020-01-17T02:57:45Z"
+      ```
+      kubelet 会等待 10s 才创建一个新的 kafka 容器，此时容器的状态如下：
+      ```yml
+      state:
+        waiting:                              # 容器处于 waiting 状态
+          message: back-off 10s restarting failed
+          reason: CrashLoopBackOff            # 处于当前状态的原因是 CrashLoopBackOff ，表示从崩溃到重启的循环
+      ```
+      - 上例只终止一个容器，Pod 内还有其它普通容器在运行，因此 Pod 一直处于 Running 阶段。
+      - 如果同时终止 Pod 内所有容器，则 Pod 会进入 Failed 阶段，也会根据 restartPolicy 重启。
 
 ### 状态
 
@@ -351,7 +385,6 @@ status:
     status: "True"
     lastProbeTime: null
     lastTransitionTime: "2021-12-01T08:21:24Z"
-  ...
   containerStatuses:      # 容器的状态
   - containerID: docker://2bc5f548736046c64a10d9162024ed102fba0565ff742e16cd032c7a1b75cc29
     image: nginx:1.20
@@ -359,6 +392,7 @@ status:
     name: nginx
     ready: true
     restartCount: 0       # Pod 被 restartPolicy 重启的次数
+    started: true
     state:
       running:
         startedAt: "2021-12-01T08:21:23Z"
@@ -385,7 +419,7 @@ status:
   ```sh
   waiting       # 等待一些条件才能启动。比如拉取镜像、挂载数据卷、等待重启间隔
   running       # 正在运行
-  terminated    # 已终止运行
+  terminated    # 已终止运行，包括正常终止、异常终止
   ```
 
 - Pod 的状态主要取决于其中容器的状态。

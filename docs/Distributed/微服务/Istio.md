@@ -167,7 +167,7 @@
     - 终止 Pod 时，k8s 会同时终止业务容器和 Sidecar 容器。即使业务容器因为 preStop 没有立即终止，Sidecar 也会立即终止，不再处理 Pod 的出入流量，导致旧请求中断。
   - 上述问题的解决方案：
     - 可以修改 istio-sidecar-injector 中的 Sidecar 模板，添加 preStop ，sleep 几秒再终止容器。
-    - Istio v1.5 开始，当 Sidecar 被要求终止时，会进入一个优雅终止阶段，
+    - Istio v1.5 开始，当 Sidecar 被要求终止时，会进入一个优雅终止阶段。
       - 原理：调用 Envoy 的 `/drain_listeners?inboundonly` 接口，不再接受入方向的新连接，但入方向的现有连接、出方向的连接依然放通。
       - 该阶段会持续 `terminationDrainDuration: 5s` 时长，然后才终止 Sidecar 容器。该时长不能超过 Pod 的 terminationGracePeriodSeconds 。
   - Envoy 本身支持热重启（hot restart），流程如下：
@@ -219,8 +219,8 @@
   - 如果一个 route 规则没有 match 条件，则会匹配所有流量，除非这些流量先匹配了前面的 route 规则。
     - 如果一个请求不匹配任何 route 规则，则会返回 HTTP 404 响应。
     - 建议在每个虚拟服务的最后定义一个没有 match 条件的 route 规则，作为默认路由。
+  - 修改了路由规则之后，会立即同步到所有 istio-proxy 。集群很大时，同步耗时可能有几秒。
   - VirtualService 默认不绑定 Gateway ，因此路由规则会作用于 Service Mesh 中所有 Pod 出入的流量。
-    - 修改了路由规则之后，会立即同步到所有 istio-proxy 。集群很大时，同步耗时可能有几秒。
     - 如果将 VirtualService 绑定到 Gateway ，则只会作用于该 Gateway 出入的流量。
   - 例：在一个被注入 Envoy 代理的 Pod 内，测试访问上述 VirtualService
     ```sh

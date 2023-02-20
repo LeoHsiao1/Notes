@@ -1092,14 +1092,16 @@
   services:
     mongodb_exporter:
       container_name: mongodb_exporter
-      image: bitnami/mongodb-exporter:0.20.7
+      image: bitnami/mongodb-exporter:0.37.0
       command:
         # - --web.listen-address=:9216
         # - --web.telemetry-path=/metrics
+        # - --log.level=error
         - --mongodb.uri=mongodb://127.0.0.1:27017/admin
-        - --mongodb.collstats-colls=db1.col1,db1.col2     # 监控指定集合，可以只指定库名
-        # - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引
-        # - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的其它集合
+        - --mongodb.collstats-colls=db1.col1,db1.col2   # 监控指定集合的状态，可以只指定库名
+        - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引的状态
+        - --collect-all                                 # 启用全部监控指标，包括 dbstats、collstats、indexstats、replicasetstatus 等
+        - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的其它集合
       restart: unless-stopped
       ports:
         - 9216:9216
@@ -1118,10 +1120,18 @@
   mongodb_sys_cpu_num_cpus                                # 主机的 CPU 核数
 
   # 关于 collection
-  {__name__=~'mongodb_.*_storageStats_count'         , database="xx", collection="xx"}  # 文档数
-  {__name__=~'mongodb_.*_storageStats_size'          , database="xx", collection="xx"}  # 体积，单位 bytes
-  {__name__=~'mongodb_.*_storageStats_storageSize'   , database="xx", collection="xx"}  # 占用的磁盘空间
-  {__name__=~'mongodb_.*_storageStats_totalIndexSize', database="xx", collection="xx"}  # 索引的体积
+  mongodb_collstats_storageStats_count{database="xx", collection="xx"}  # 该 collection 的文档数
+  mongodb_collstats_storageStats_size                     # 该 collection 的体积，单位 bytes
+  mongodb_collstats_storageStats_storageSize              # 该 collection 占用的磁盘空间，默认会压缩
+  delta(mongodb_collstats_latencyStats_reads_ops[1m])     # 该 collection 读操作的数量（每分钟）
+  delta(mongodb_collstats_latencyStats_reads_latency[1m]) # 该 collection 读操作的延迟（每分钟），单位为微秒
+  mongodb_collstats_latencyStats_write_ops
+  mongodb_collstats_latencyStats_write_latency
+
+  # 关于 index
+  mongodb_collstats_storageStats_nindexes                 # 该 collection 的 index 数量
+  mongodb_collstats_storageStats_totalIndexSize           # 该 collection 的 index 体积
+  delta(mongodb_indexstats_accesses_ops[1m])   # index 被访问次数
 
   # 关于操作
   delta(mongodb_ss_opcounters[1m])                        # 执行各种操作的数量

@@ -13,6 +13,7 @@
 - v4.0 ：2018 年发布。
   - 原本 mongo 不支持事务操作，只是保证了 CRUD 操作的原子性。现在开始支持事务。客户端可以调用 startTransaction()、commitTransaction() 等函数创建事务，在一个事务中处理多个文档。
 - v4.2
+  - 对于副本集群，函数 rs.slaveOk() 改名为 rs.secondaryOk() 。
   - 对于分片集群，支持分布式事务。
 - v4.4
   - mongod 日志改为 JSON 格式。

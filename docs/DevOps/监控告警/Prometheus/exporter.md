@@ -928,7 +928,7 @@
 
         # - --sasl.enabled                # 是否启用 SASL/PLAIN 认证，默认为 false
         # - --sasl.mechanism=plain
-        # - --sasl.username=xx
+        # - --sasl.username=***
         # - --sasl.password=******
 
         # - --topic.filter=.*             # 通过正则表达式筛选要监控的 topic ，例如 filter=^[^_].*
@@ -957,7 +957,69 @@
   kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
   kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
   ```
-  - 不支持监控 Topic 占用的磁盘空间。
+  - kafka_exporter 没有监控 Topic 占用的磁盘空间，而 kminion 提供了该监控指标。
+
+### kminion
+
+：用于监控 Kafka 。
+- [GitHub](https://github.com/redpanda-data/kminion)
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    kminion:
+      container_name: kminion
+      image: vectorized/kminion:v2.2.1
+      restart: unless-stopped
+      environment:
+        CONFIG_FILEPATH: /app/kminion.yml
+      ports:
+        - 8080:8080
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ./kminion.yml:/app/kminion.yml
+  ```
+  配置文件 kminion.yml 示例：
+  ```yml
+  kafka:
+    brokers: ["10.0.0.1:9092"]
+    sasl:
+      enabled: true
+      mechanism: PLAIN
+      username: ***
+      password: ******
+  # minion:
+  #   consumerGroups:
+  #     allowedGroups: [".*"]   # 通过正则表达式筛选要监控的对象
+  #     ignoredGroups: []
+  #   topics:
+  #     allowedTopics: [".*"]
+  #     ignoredTopics: []
+  #     infoMetric:
+  #       configKeys: ["cleanup.policy"]  # 监控 topic 的一些配置参数
+  ```
+- 指标示例：
+  ```sh
+  # 关于 broker
+  kminion_kafka_cluster_info{broker_count="x", cluster_id="***", cluster_version="xx", controller_id="x"}   # kafka 集群的信息
+  kminion_kafka_broker_log_dir_size_total_bytes{broker_id="x"}    # broker 占用的磁盘空间
+
+  # 关于 topic
+  kminion_kafka_topic_info{topic_name="xx", cleanup_policy="delete", partition_count="6", replication_factor="1"} # topic 的信息
+  kminion_kafka_topic_log_dir_size_total_bytes  # topic 在所有 broker 总共占用的磁盘空间，包括 replica
+  kminion_kafka_topic_partition_high_water_mark{topic_name="xx", partition_id="x"}  # 单个分区的 HW 偏移量
+
+  # 关于 consumer group
+  kminion_kafka_consumer_group_info{group_id="xx", coordinator_id="xx", protocol="range", protocol_type="consumer", state="Stable"} # 消费组的信息
+  kminion_kafka_consumer_group_members{group_id="xx"} # 消费组的成员数
+
+  # 某个 consumer group 对于某个 topic 的监控指标
+  kminion_kafka_consumer_group_topic_members{group_id="xx", topic_name="xx"}  # 被 assigned partitions 的成员数。如果低于该 group 的成员数，则说明有成员空闲
+  kminion_kafka_consumer_group_topic_lag{group_id="xx", topic_name="xx"}  # 消费的滞后量，是所有分区的 lag 之和
+  kminion_kafka_consumer_group_topic_partition_lag{group_id="xx", topic_name="xx", partition_id="x"}  # 单个分区的 lag
+  kminion_kafka_consumer_group_topic_offset_sum # 消费的偏移量，是所有分区的 committed offset 之和
+  ```
 
 ### kube-state-metrics
 

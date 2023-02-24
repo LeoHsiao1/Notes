@@ -170,7 +170,7 @@
   - job_name: node_exporter
     file_sd_configs:                  # 从文件读取配置，这样修改配置时不必重启 Prometheus
     - files:
-      - targets/node_exporter*.json
+      - targets/node_exporter*.json   # 文件路径的最后一个字段可使用通配符 *
       # refresh_interval: 5m          # 每隔多久重新读取一次
   ```
 - Prometheus 从每个监控对象处抓取指标数据时，默认会自动加上 `job: "$job_name"`、`instance: "$target"` 两个标签。

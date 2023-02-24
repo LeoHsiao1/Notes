@@ -1034,7 +1034,8 @@ spec:
 
 ### VPA
 
-：Pod 的纵向伸缩（Vertical Pod Autoscaler），即自动增加、减少 Pod 的 request、limit 资源配额。
+：Pod 的纵向伸缩（Vertical Pod Autoscaler），即自动增加、减少 Pod 的 requests、limits 资源配额。
+- 目前 Pod 的资源配额是静态配置，想修改的话只能创建新 Pod ，导致 Pod 内应用程序重启。有的公司修改了 k8s 源代码，能在 Pod 运行时动态修改资源配额。
 
 ### CA
 

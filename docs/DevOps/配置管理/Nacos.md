@@ -26,7 +26,7 @@
   services:
     nacos:
       container_name: nacos
-      image: nacos/nacos-server:v2.0.4
+      image: nacos/nacos-server:v2.2.0
       restart: unless-stopped
       environment:
         MODE: standalone
@@ -48,7 +48,14 @@
     MYSQL_SERVICE_DB_NAME: nacos
     MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
     ```
-    需要执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/master/distribution/conf/nacos-mysql.sql)
+  - 需要在 MySQL 中为 nacos 专门创建一个数据库、账号：
+    ```sql
+    create database nacos;
+    create user nacos@'%' identified by '******';
+    grant  all on nacos.* to nacos@'%';
+    flush privileges;
+    ```
+    然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.0/distribution/conf/mysql-schema.sql)
 
 ## 用法
 

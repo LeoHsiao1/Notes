@@ -340,8 +340,8 @@
   processors:
     - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
         when.not.contains.tags: forwarded # 如果该日志不属于转发的
-    - add_docker_metadata: ~              # 如果存在 Docker 环境，则自动添加容器、镜像的信息。默认将 labels 中的点 . 替换成下划线 _
-    - add_kubernetes_metadata: ~          # 如果存在 k8s 环境，则则自动添加 Pod 等信息
+    # - add_docker_metadata: ~            # 如果存在 Docker 环境，则自动添加容器、镜像的信息。默认将 labels 中的点 . 替换成下划线 _
+    # - add_kubernetes_metadata: ~        # 如果存在 k8s 环境，则自动添加 Pod 等信息
     - drop_event:                         # 丢弃 event ，如果它满足条件
         when:
           regexp:
@@ -473,30 +473,32 @@
     ```yml
     filebeat.autodiscover:
       providers:
-        - type: docker                # 声明一个自动发现的日志源，为 docker 类型。这会调用内置 docker 变量模板
-          # templates:
-          #   - condition:            # 只采集满足该条件的日志
-          #       contains:
-          #         docker.container.name: elasticsearch
-          #     config:
-          #       - type: container   # 该 container 是指 filebeat.inputs 类型，不是指 providers 类型
-          #         paths:
-          #           - /var/lib/docker/containers/${data.docker.container.id}/*.log
-          # hints.enabled: false      # 是否启用 hints ，从 Docker 容器的 Labels 加载配置
-          # hints.default_config:     # 设置默认的 hints 配置
-          #   enabled: true           # 是否采集容器的日志，默认为 true 。如果禁用，则需要容器启用 co.elastic.logs/enabled 配置
-          #   type: container
-          #   paths:
-          #     - /var/lib/docker/containers/${data.docker.container.id}/*.log
+        # - type: docker                # 声明一个自动发现的日志源，为 docker 类型。这会调用内置 docker 变量模板
+        #   templates:
+        #     - condition:            # 只采集满足该条件的日志
+        #         contains:
+        #           docker.container.name: elasticsearch
+        #       config:
+        #         - type: container   # 该 container 是指 filebeat.inputs 类型，不是指 providers 类型
+        #           paths:
+        #             - /var/lib/docker/containers/${data.docker.container.id}/*.log
+        #   hints.enabled: false      # 是否启用 hints ，从 Docker 容器的 Labels 加载配置
+        #   hints.default_config:     # 设置默认的 hints 配置
+        #     enabled: true           # 是否采集容器的日志，默认为 true 。如果禁用，则需要容器启用 co.elastic.logs/enabled 配置
+        #     type: container
+        #     paths:
+        #       - /var/lib/docker/containers/${data.docker.container.id}/*.log
 
         - type: kubernetes
-          # hints.enabled: false      # 从 k8s Pod 的 Annotations 加载配置
-          # hints.default_config:
-          #   type: container
-          #   paths:
-          #     - /var/log/containers/*${data.kubernetes.container.id}.log
+          node: ${NODE_NAME}
+          hints.enabled: true     # 从 k8s Pod 的 Annotations 加载配置
+          hints.default_config:
+            type: container
+            paths:
+              - /var/log/containers/*-${data.kubernetes.container.id}.log   # CRI 标准的日志路径
+            fields_under_root: true
     ```
-  - provider 为 docker 类型时，可以引用以下变量：
+  - provider 为 docker 类型时，可引用一些变量，比如：
     ```sh
     docker.container.id
     docker.container.image

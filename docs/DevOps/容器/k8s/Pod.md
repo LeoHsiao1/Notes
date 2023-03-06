@@ -873,19 +873,23 @@ spec:
   - 当 operator 为 Exists 时，如果 effect、key 与 Taint 的相同，才匹配该 Taint 。
   - 如果不指定 key ，则匹配 Taint 的所有 key 。
   - 如果不指定 effect ，则匹配 Taint 的所有 effect 。
-- 例：当节点不可用时，node controller 可能自动添加以下 NoExecute 类型的污点
-  ```sh
-  node.kubernetes.io/not-ready            # 节点未准备好
-  node.kubernetes.io/unschedulable        # 节点不可调度
-  node.kubernetes.io/unreachable          # node controller 访问不到该节点
-  node.kubernetes.io/network-unavailable  # 节点的网络配置错误，不能正常 Pod 通信
-
-  # 节点压力驱逐
-  node.kubernetes.io/disk-pressure
-  node.kubernetes.io/memory-pressure
-  node.kubernetes.io/pid-pressure
+- 当节点在某方面异常时，node controller 可能自动添加一些污点。例如：
+  ```yml
+  taints:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready       # 节点不处于 ready 状态
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable     # 节点与 apiserver 断开连接
+  - effect: NoSchedule
+    key: node.kubernetes.io/unschedulable   # 节点不可用于调度 Pod 。例如执行 kubectl cordon 命令时会添加该污点
+  - effect: NoSchedule
+    key: node.kubernetes.io/disk-pressure   # 节点磁盘不足，触发压力驱逐
+  - effect: NoSchedule
+    key: node.kubernetes.io/memory-pressure # 节点内存不足，触发压力驱逐
+  - effect: NoSchedule
+    key: node.kubernetes.io/pid-pressure    # 节点 PID 不足，触发压力驱逐
   ```
-  - DaemontSet 类型的 Pod 默认会添加对上述几种污点的容忍度，因此当节点出现这些故障时，也不会被驱逐。
+  - DaemontSet 类型的 Pod 默认会添加对上述 6 种污点的容忍度，因此在这些情况下并不会被驱逐。
 
 ### 节点压力驱逐
 
@@ -893,9 +897,8 @@ spec:
   - kube-scheduler 会限制每个节点上所有 pod.request 的资源之和不超过 allocatable 。但 Pod 实际占用的资源可能更多，用 pod.limit 限制也不可靠，因此需要驱逐 Pod ，避免整个主机的资源耗尽。
   - 决定驱逐的资源主要是内存、磁盘，并不考虑 CPU 。
   - 驱逐过程：
-    1. 给节点添加一个 NoSchedule 类型的污点，不再调度新 Pod 。
-    2. 驱逐该节点上的 Pod 。
-    3. 驱逐一些 Pod 之后，如果不再满足驱逐阈值，则停止驱逐。
+    1. 给节点添加一个 NoSchedule 类型的污点，避免调度新 Pod 。
+    2. 驱逐该节点上已调度的 Pod 。一次驱逐一个 Pod ，直到不满足节点压力驱逐的阈值。
   - 优先驱逐这些 Pod ：
     - 实际占用内存、磁盘多于 requests 的 Pod ，按差值排序。
     - Priority 较低的 Pod 。

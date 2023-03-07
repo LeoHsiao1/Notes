@@ -19,7 +19,7 @@
   services:
     opensearch:
       container_name: opensearch
-      image: opensearchproject/opensearch:1.1.0
+      image: opensearchproject/opensearch:2.6.0
       restart: unless-stopped
       ports:
         - 9200:9200
@@ -33,7 +33,7 @@
   services:
     opensearch_dashboards:
       container_name: opensearch_dashboards
-      image: opensearchproject/opensearch-dashboards:1.1.0
+      image: opensearchproject/opensearch-dashboards:2.6.0
       restart: unless-stopped
       # environment:
       #   NODE_OPTIONS: --max-old-space-size=2048   # 如果查询的数据过大，需要增加 node.js 最大占用内存

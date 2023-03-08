@@ -13,7 +13,7 @@
 
 - 运行流程：
   1. 在每个监控对象的主机上运行一个负责采集监控指标的程序，通过 HTTP API 输出纯文本格式的监控指标，作为 exporter 。
-  2. Prometheus 服务器定期向每个 exporter 发出 HTTP GET 请求，获取监控指标，然后存储到自己的时序数据库 TSDB 中。。
+  2. Prometheus 服务器定期向每个 exporter 发送 HTTP GET 请求，获取监控指标，然后存储到自己的时序数据库 TSDB 中。。
       - Prometheus 属于离散采样，可能有遗漏、有延迟、有误差。
       - exporter 一般收到 HTTP 请求时才采集一次当前时刻的监控指标，不负责存储数据。
 
@@ -86,7 +86,7 @@
       volumes:
         - .:/prometheus
   ```
-  需要先配置挂载目录的权限：
+  需要调整挂载目录的权限：
   ```sh
   mkdir data
   chown -R 65534 .
@@ -117,7 +117,7 @@
 
 ### 示例
 
-以下是用 Prometheus 监控自身的步骤：
+下例是让 Prometheus 监控自身的步骤：
 1. 在配置文件 prometheus.yml 中加入监控任务：
     ```yml
     global:
@@ -130,10 +130,10 @@
     # rule_files:                   # 导入 rules 文件
     # - rules_1.yml
 
-    scrape_configs:
-    - job_name: prometheus
+    scrape_configs:                 # 配置需要监控的对象，称为 targets
+    - job_name: prometheus          # 声明一个监控任务，常用于监控同一种 targets
       static_configs:
-      - targets:
+      - targets:                    # 可声明多个 targets 的地址
         - 10.0.0.1:9090
     ```
 
@@ -141,12 +141,12 @@
    - 在 Status -> Targets 页面，可以看到所有监控对象及其状态。
    - 在 Graph 页面，执行一个查询表达式即可获得监控数据，比如 `go_goroutines` 。
 
-### 监控对象
+### scrape_configs
 
-- 例：在 prometheus.yml 中配置需要监控的对象（称为 targets ）
+- scrape_configs 的详细配置：
   ```yml
   scrape_configs:
-  - job_name: prometheus              # 一项监控任务的名字（可以包含多组监控对象）
+  - job_name: prometheus
     # honor_labels: false
     # metrics_path: /metrics
     # follow_redirects: true          # 是否跟随状态码为 3xx 的重定向
@@ -163,9 +163,13 @@
     - targets:                        # 一组监控对象的 IP:Port
       - 10.0.0.1:9090
       - 10.0.0.1:9091
-      # labels:                       # 为这些监控对象的数据加上额外的标签
+      # labels:                       # 从 targets 采集监控指标时，添加额外的标签
       #   nodename: CentOS-1
-    - targets: ['10.0.0.2:9090']      # 下一组监控对象
+    - targets: ['10.0.0.2:9090']      # 第二组监控对象
+    # relabel_configs:
+    #  - <relabel_config>
+    # metric_relabel_configs:
+    #  - <relabel_config>
 
   - job_name: node_exporter
     file_sd_configs:                  # 从文件读取配置，这样修改配置时不必重启 Prometheus
@@ -173,17 +177,6 @@
       - targets/node_exporter*.json   # 文件路径的最后一个字段可使用通配符 *
       # refresh_interval: 5m          # 每隔多久重新读取一次
   ```
-- Prometheus 从每个监控对象处抓取指标数据时，默认会自动加上 `job: "$job_name"`、`instance: "$target"` 两个标签。
-  还会自动记录以下指标：
-  ```sh
-  up{job="$job_name", instance="$target"}                       # 该监控对象是否在线（取值 1、0 分别代表在线、离线）
-  scrape_samples_scraped{job="$job_name", instance="$target"}   # 本次抓取的指标数
-  scrape_duration_seconds{job="$job_name", instance="$target"}  # 本次抓取的耗时
-  ```
-- 给抓取的指标添加标签时，如果原指标中已存在同名 label ，则根据 honor_labels 的值进行处理：
-  - `honor_labels: false` ：默认值，将原指标中的同名 label 改名为 `exported_<label_name>` ，再添加新标签。
-  - `honor_labels: true` ：保留原指标不变，不添加新标签。
-- 考虑到监控对象的 IP 地址不方便记忆，而且可能变化，应该添加 nodename 等额外的标签便于筛选。
 - 通过 file_sd_configs 方式读取的文件可以是 YAML 或 JSON 格式，如下：
   ```yml
   - targets:
@@ -212,13 +205,47 @@
       }
   }]
   ```
+- Prometheus 会将采集到的 metrics 加工之后再保存。假设 targets 的原 metrics 如下：
+  ```sh
+  http_requests_total{code="200"} 162
+  http_requests_total{code="500"} 0
+  ```
+  则 Prometheus 最终保存的 metrics 如下：
+  ```sh
+  # Prometheus 默认会为每个 metrcis 添加 job: "$job_name"、instance: "$target" 两个标签
+  http_requests_total{code="200", job="prometheus", instance="10.0.0.1:9090"} 162
+  http_requests_total{code="500", job="prometheus", instance="10.0.0.1:9090"} 0
 
-### Rules
+  # Prometheus 会为每个 targets 添加如下三个 metrics
+  up{job="prometheus", instance="10.0.0.1:9090"} 1                          # 该监控对象是否在线。取值 1、0 分别代表在线、离线
+  scrape_samples_scraped{job="prometheus", instance="10.0.0.1:9090"} 2      # 本次抓取的指标数
+  scrape_duration_seconds{job="prometheus", instance="10.0.0.1:9090"} 0.01  # 本次抓取的耗时
+  ```
+  - 原 metrics 中的 label 如果以 __ 开头，则采集之后不会保存。
+  - 用户可通过 static_configs[].labels 添加额外的标签。比如 instance 中的 IP 地址不方便记忆，可添加 nodename 标签。
+  - 给 metrics 添加 label 时，如果原 metrics 中已存在同名的 label ，则根据 honor_labels 进行处理：
+    - `honor_labels: false` ：默认值，将原 label 改名为 `exported_<label_name>` ，再添加新 label 。
+    - `honor_labels: true` ：保留原 label 不变，不添加新 label 。
+  - 用户可通过 relabel_configs 在采集之前修改 label ，通过 metric_relabel_configs 在采集之后修改 label 。如下：
+    ```sh
+    metric_relabel_configs:
+    - action: replace   # action 默认为 replace ，是将 source_labels 多个标签的值用 separator 拼接成一个字符串，然后正则匹配，生成字符串 replacement ，最后保存到 target_label
+      source_labels: [<label>, ...]
+      separator: ;
+      regex: (.+)
+      replacement: $1
+      target_label: <label>
+    - action: keep      # keep 动作：如果 source_labels 的值与 regex 完全正则匹配，则保留该 label ，否则不保留
+      source_labels: [nodename]
+      regex: .*test.*
+    ```
 
-- 规则分为两类：
+### rules
+
+- Prometheus 可配置两种规则：
   - Recording Rules ：用于将某个查询表达式的结果保存为新指标。这样可以避免在用户查询时才计算，减少开销。
   - Alerting Rules ：用于在满足某个条件时进行告警。（它只是产生警报，需要由 Alertmanager 加工之后转发给用户）
-- 可以在 prometheus.yml 中导入自定义的 rules.yml 文件，格式如下：
+- 用户可在 prometheus.yml 中导入自定义的 rules.yml 文件，格式如下：
   ```yml
   groups:
   - name: recording_rules               # 规则组的名称

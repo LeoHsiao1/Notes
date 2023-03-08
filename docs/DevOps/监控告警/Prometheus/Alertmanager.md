@@ -69,7 +69,7 @@
       volumes:
         - .:/alertmanager
   ```
-  需要先配置挂载目录的权限：
+  需要调整挂载目录的权限：
   ```sh
   mkdir data
   chown -R 65534 .

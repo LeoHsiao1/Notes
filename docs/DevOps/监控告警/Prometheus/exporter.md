@@ -1182,17 +1182,17 @@
   mongodb_sys_cpu_num_cpus                                # 主机的 CPU 核数
 
   # 关于 collection
-  mongodb_collstats_storageStats_count{database="xx", collection="xx"}  # 该 collection 的文档数
-  mongodb_collstats_storageStats_size                     # 该 collection 的体积，单位 bytes
-  mongodb_collstats_storageStats_storageSize              # 该 collection 占用的磁盘空间，默认会压缩
-  delta(mongodb_collstats_latencyStats_reads_ops[1m])     # 该 collection 读操作的数量（每分钟）
-  delta(mongodb_collstats_latencyStats_reads_latency[1m]) # 该 collection 读操作的延迟（每分钟），单位为微秒
+  mongodb_collstats_storageStats_count{database="xx", collection="xx"}  # collection 全部文档的数量
+  mongodb_collstats_storageStats_size                     # collection 全部文档的体积，单位 bytes
+  mongodb_collstats_storageStats_storageSize              # collection 全部文档占用的磁盘空间，默认会压缩
+  delta(mongodb_collstats_latencyStats_reads_ops[1m])     # collection 读操作的数量（每分钟）
+  delta(mongodb_collstats_latencyStats_reads_latency[1m]) # collection 读操作的延迟（每分钟），单位为微秒
   mongodb_collstats_latencyStats_write_ops
   mongodb_collstats_latencyStats_write_latency
 
   # 关于 index
-  mongodb_collstats_storageStats_nindexes                 # 该 collection 的 index 数量
-  mongodb_collstats_storageStats_totalIndexSize           # 该 collection 的 index 体积
+  mongodb_collstats_storageStats_nindexes                 # collection 的 index 数量
+  mongodb_collstats_storageStats_totalIndexSize           # collection 的 index 占用的磁盘空间
   delta(mongodb_indexstats_accesses_ops[1m])   # index 被访问次数
 
   # 关于操作

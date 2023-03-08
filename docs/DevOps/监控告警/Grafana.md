@@ -33,7 +33,7 @@
         - ./grafana.db:/var/lib/grafana/grafana.db
         - ./plugins:/var/lib/grafana/plugins
   ```
-  需要配置挂载目录的权限：
+  需要调整挂载目录的权限：
   ```sh
   chown -R 472 .
   ```

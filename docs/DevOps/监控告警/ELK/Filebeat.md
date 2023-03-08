@@ -340,8 +340,8 @@
   processors:
     - add_host_metadata:                  # 添加当前主机的信息，包括 os、hostname、ip 等
         when.not.contains.tags: forwarded # 如果该日志不属于转发的
-    # - add_docker_metadata: ~            # 如果存在 Docker 环境，则自动添加容器、镜像的信息。默认将 labels 中的点 . 替换成下划线 _
-    # - add_kubernetes_metadata: ~        # 如果存在 k8s 环境，则自动添加 Pod 等信息
+    - add_docker_metadata: ~            # 如果存在 Docker 环境，则自动添加容器、镜像的信息。默认将 labels 中的点 . 替换成下划线 _
+    - add_kubernetes_metadata: ~        # 如果存在 k8s 环境，则自动添加 Pod 等信息
     - drop_event:                         # 丢弃 event ，如果它满足条件
         when:
           regexp:
@@ -473,7 +473,7 @@
     ```yml
     filebeat.autodiscover:
       providers:
-        # - type: docker                # 声明一个自动发现的日志源，为 docker 类型。这会调用内置 docker 变量模板
+        # - type: docker              # 声明一个自动发现的日志源，为 docker 类型。这会调用内置 docker 变量模板
         #   templates:
         #     - condition:            # 只采集满足该条件的日志
         #         contains:
@@ -487,7 +487,7 @@
         #     enabled: true           # 是否采集容器的日志，默认为 true 。如果禁用，则需要容器启用 co.elastic.logs/enabled 配置
         #     type: container
         #     paths:
-        #       - /var/lib/docker/containers/${data.docker.container.id}/*.log
+        #       - /var/lib/docker/containers/${data.docker.container.id}/*.log  # Docker 引擎的日志路径
 
         - type: kubernetes
           node: ${NODE_NAME}

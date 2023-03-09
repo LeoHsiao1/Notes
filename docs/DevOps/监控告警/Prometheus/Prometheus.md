@@ -45,7 +45,7 @@
 
 - 下载二进制版：
   ```sh
-  wget https://github.com/prometheus/prometheus/releases/download/v2.27.1/prometheus-2.27.1.linux-amd64.tar.gz
+  wget https://github.com/prometheus/prometheus/releases/download/v2.42.0/prometheus-2.42.0.linux-amd64.tar.gz
   ```
   解压后启动：
   ```sh
@@ -77,7 +77,7 @@
   services:
     prometheus:
       container_name: prometheus
-      image: prom/prometheus:v2.27.1
+      image: prom/prometheus:v2.42.0
       restart: unless-stopped
       command:
         - --web.external-url=http://10.0.0.1:9090
@@ -257,8 +257,9 @@
   - name: alerting_rules                # 规则组的名称
     rules:
     - alert: 测试告警-1                  # 定义一个告警规则
-      expr: go_goroutines > 100         # 设置告警条件（只要表达式的执行结果是矢量，就会报警）
-      for: 5m                           # 连续满足条件 5 分钟之后才告警
+      expr: go_goroutines > 100         # 设置告警条件。只要表达式的执行结果是矢量，就视作满足条件
+      for: 5m                           # 如果持续满足告警条件 5 分钟，则触发告警
+      # keep_firing_for: 1m             # Prometheus v2.42.0 增加的配置参数，表示触发告警之后，如果不再满足告警条件，则告警至少持续多久才能关闭。这样可以避免告警轰炸
       # labels:
       #   severity: error
       annotations:

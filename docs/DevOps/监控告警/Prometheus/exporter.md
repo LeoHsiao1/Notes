@@ -918,13 +918,13 @@
   services:
     kafka_exporter:
       container_name: kafka_exporter
-      image: danielqsj/kafka-exporter:v1.4.2
+      image: danielqsj/kafka-exporter:v1.6.0
       restart: unless-stopped
       command:
         # - --web.listen-address=:9308
         # - --web.telemetry-path=/metrics
         - --kafka.server=10.0.0.1:9092    # broker 的地址，可以多次使用该选项
-        - --kafka.version=2.2.0
+        - --kafka.version=2.8.0
 
         # - --sasl.enabled                # 是否启用 SASL/PLAIN 认证，默认为 false
         # - --sasl.mechanism=plain

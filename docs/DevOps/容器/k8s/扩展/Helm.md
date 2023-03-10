@@ -34,7 +34,7 @@
   2. 用 helm 命令读取 chart 目录或压缩包，渲染成 release ，然后部署到 k8s 中。
 
 - 通常将 chart 目录打包成一个 .tgz 压缩包，方便传输。
-  - 给 helm 客户端添加 repo 仓库之后，就可以在本机、远程仓库之间上传、下载 chart 压缩包。
+  - 给 helm 客户端添加 repo 仓库之后，就可以在本机、远程仓库之间推送、拉取 chart 压缩包。
   - artifacthub.io 汇总了很多个 repo 仓库的 chart 。
 
 - chart 中的配置文件通常使用 Golang Template 模板语法，需要渲染之后才能得到最终的配置文件，称为 release 。
@@ -52,10 +52,15 @@
 
 ### 版本
 
-- Helm v2 采用 C/S 架构。
-  - 客户端名为 helm ，负责管理 chart 。
-  - 服务器名为 tiller ，会将客户端发来的 chart 渲染成 release ，然后传给 k8s apiserver 进行部署。
-- Helm v3 于 2019 年 11 月发布，与 Helm v2 不兼容，移除了 Tiller ，成为了一个纯客户端工具。
+- v2.0
+  - 采用 C/S 架构。
+    - 客户端名为 helm ，负责管理 chart 。
+    - 服务器名为 tiller ，会将客户端发来的 chart 渲染成 release ，然后传给 k8s apiserver 进行部署。
+- v3.0
+  - 于 2019 年发布，与 Helm v2 不兼容，移除了 Tiller ，成为了一个纯客户端工具。
+  - helm 支持使用两种类型的远程仓库：
+    - chart repository ：专用于存储 chart 压缩包，不能存储 Docker 镜像。
+    - OCI registry ：v3.8.0 开始，helm 支持使用符合 OCI 标准的 Docker 镜像仓库。这样就不必专门部署 chart repository 服务器。
 
 ## 命令
 
@@ -75,7 +80,7 @@ helm
         readme <chart>    # 查看 README.md
         values <chart>    # 查看 value.yaml
 
-    # 关于仓库
+    # 关于 chart repository
     repo
         add [name] [url]  # 添加一个远程仓库
         remove [name]...  # 删除仓库
@@ -83,12 +88,12 @@ helm
         list              # 列出所有仓库
     search repo <string>  # 在已添加的所有仓库中，搜索名称包含该字符串的 chart 。这会使用本机缓存的仓库信息进行搜索，因此需要事先执行 helm repo update
     search hub <string>   # 在 artifacthub.io 搜索 chart ，这会实时查询远程仓库
-    pull <chart>          # 下载 chart 到本机。可以指定位于远程的 chart URL ，或位于仓库的 chart name
-    push <chart> <repo>   # 指定位于本机的 chart ，上传到仓库
+    pull <chart>          # 拉取 chart 到本机。可以指定位于远程仓库的 chart name ，或者 chart URL
+    push <chart> <repo>   # 指定位于本机的 chart ，推送到仓库
 
     # 关于 release
     list                      # 列出当前 k8s 中的所有 release
-    install <name> <chart>    # 将一个 chart 渲染成指定 name 的 release ，然后部署到 k8s 。兼容 helm template 的命令行参数
+    install <release> <chart> # 将一个 chart 渲染成指定名称的 release ，然后部署到 k8s 。兼容 helm template 的命令行参数
         --create-namespace    # 如果 release 使用的 k8s 命名空间不存在，则自动创建
         --dry-run             # 模拟执行命令，但并不会实际部署 release
         -g                    # --generate-name ，自动命名 release 。此时可省略 install <name> <chart> 中的 name ，因此可以重复 install ，不会命名冲突
@@ -97,11 +102,9 @@ helm
         --atomic              # 启用 --wait 选项，并且在部署失败时，自动删除该 release 创建的所有 k8s 对象，从而实现原子性操作
     uninstall <release>...    # 卸载 k8s 中的 release 。等价于 helm delete 命令
         --wait                # 等待所有相关的 k8s 对象被删除
-    upgrade <release> <chart>
-        # 升级 k8s 中一个 release 。兼容 helm install 的命令行参数
+    upgrade <release> <chart> # 升级 k8s 中一个 release 。兼容 helm install 的命令行参数
         # upgrade 命令会比较当前 release 与 chart 的差异，然后对 release 做出修改。因此 upgrade 时使用的 chart name ，与 install 时可以不同，但 upgrade 过程更不可控
-    rollback <release> [revision]
-        # 将 release 回滚到指定版本。如果未指定 revision ，则回滚到上一个版本
+    rollback <release> [revision] # 将 release 回滚到指定版本。如果未指定 revision ，则回滚到上一个版本
         # release 在 install 之后的版本号为 revision=1 ，每次 upgrade、rollback ，都会使 revision 加 1
 
     --debug               # 打印调试信息
@@ -124,10 +127,17 @@ helm
   ```
 - 可以指定多种位置的 chart ：
   ```sh
-  helm install nginx bitnami/nginx      # 指定位于仓库的 chart name
+  helm install nginx bitnami/nginx      # 指定位于远程仓库的 chart name
   helm install nginx nginx-13.2.21.tgz  # 指定位于本机的 chart 压缩包
   helm install nginx nginx              # 指定位于本机的 chart 目录
-  helm install nginx https://xxx/charts/nginx-13.2.21.tgz   # 指定位于远程的 chart URL
+  helm install nginx https://xxx/charts/nginx-13.2.21.tgz   # 指定位于 chart URL
+  ```
+- 使用 OCI registry 的示例：
+  ```sh
+  helm registry login arbor.test.com -u test              # 登录远程仓库
+  helm push nginx-12.0.tgz oci://harbor.test.com/test     # 指定位于本机的 chart ，推送到仓库。注意 URL 必须以 oci:// 协议开头
+  helm pull oci://harbor.test.com/ops/nginx --version 12.0
+  helm install release-nginx oci://harbor.test.com/ops/nginx --version 12.0
   ```
 
 ## chart

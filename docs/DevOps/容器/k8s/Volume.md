@@ -119,7 +119,8 @@
 ## ConfigMap
 
 ：用于记录一些非私密的配置参数。
-- 常见用例：创建一个 ConfigMap 对象，记录一些配置参数，然后在 Pod 中引用 ConfigMap ，创建环境变量或 volume 。
+- 常见用途：创建一个 ConfigMap 对象，记录一些配置参数，然后在 Pod 中引用 ConfigMap ，创建环境变量或 volume 。
+  - 如果需要挂载大型文件或很多文件到 Pod 中，则不适合用 ConfigMap 。可考虑用 hostPath、PV ，或者将这些文件打包成一个 Docker 镜像，以 Sidecar 方式运行。
 - 例：一个 ConfigMap
   ```yml
   apiVersion: v1

@@ -18,26 +18,32 @@
 
 - 下载官方发行版：
   ```sh
-  wget https://github.com/goharbor/harbor/releases/download/v2.4.0/harbor-online-installer-v2.4.0.tgz
+  wget https://github.com/goharbor/harbor/releases/download/v2.7.1/harbor-online-installer-v2.7.1.tgz
   ```
   解压后，使用其中的脚本：
   ```sh
   sh install.sh
+                # --with-chartmuseum  # 启用 chart repository
                 # --with-notary       # 启用 notary ，检查镜像的数字签名。这需要 Harbor 采用 HTTPS
                 --with-trivy          # 启用 trivy 漏洞扫描器
-                --with-chartmuseum    # 启用 chart 仓库
   ```
-  - 部署之后，会生成一个配置文件 harbor.yml 。
-  - Harbor 包含 harbor-core、harbor-db、registry、Nginx、Redis 等多个服务，基于 docker-compose 启动。
+  - 这会基于 docker-compose 部署 Harbor ，包含 harbor-core、harbor-db、registry、Nginx、Redis 等多个服务。
     - 不会将日志输出到 docker 容器，而是保存到日志目录。
     - 部署时至少需要 4G 内存。
-  - 修改配置之后需要执行：
+  - 部署之后，会生成一个配置文件 harbor.yml 。如果修改配置文件，则需要执行：
     ```sh
-    ./prepare --with-trivy  --with-chartmuseum
-    docker-compose down
+    ./prepare --with-trivy
     docker-compose up -d
     ```
-- 用启用 HTTPS 的 Nginx 反向代理 Harbor 时，需要在 Nginx 中加入 `proxy_set_header X-Forwarded-Proto $scheme;` ，并在 `harbor/common/config/nginx/nginx.conf` 中删除相同配置。
+- 用 Nginx 的 HTTPS 端口反向代理 Harbor 时，需要在 Nginx 中加入 `proxy_set_header X-Forwarded-Proto $scheme;` ，并在 `harbor/common/config/nginx/nginx.conf` 中删除相同配置。
+
+### 版本
+
+- v2.6.0
+  - 于 2022 年发布。
+  - 增加缓存层（cache layer），但默认禁用。它用于将客户端对 repository、artifact 等信息的查询结果缓存在 Redis 中，从而减少查询耗时。不会缓存 image blob 。
+  - 弃用 notary ，建议改用 cosign 。
+  - 弃用 chartmuseum 。因为 helm v3.8.0 连接到符合 OCI 标准的 Docker 镜像仓库就可以推送、拉取 chart ，不需要专门的 chartmuseum 仓库。
 
 ## 功能
 

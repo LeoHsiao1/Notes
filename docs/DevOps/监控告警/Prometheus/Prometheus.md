@@ -11,35 +11,47 @@
 
 ## 原理
 
-- 运行流程：
-  1. 在每个需要监控的主机上运行一个负责采集监控指标的程序，称为 exporter 。它能通过 HTTP API 输出纯文本格式的监控指标，称为 metrics 。
-  2. Prometheus 服务器定期向每个 exporter 发送 HTTP GET 请求，获取 metrics ，然后存储到自己的时序数据库 TSDB 中。。
+- 架构：
+  - 在每个需要监控的主机上运行一个负责采集监控指标的程序，称为 exporter 。它能通过 HTTP API 输出纯文本格式的监控指标，称为 metrics 。
+  - Prometheus 定期向每个 exporter 发送 HTTP GET 请求，获取 metrics ，然后存储到自己的时序数据库 TSDB 中。。
       - Prometheus 属于离散采样，可能有遗漏、有延迟、有误差。
       - exporter 一般收到 HTTP 请求时才采集一次当前时刻的 metrics ，不负责存储数据。
 
-- 关于 TSDB ：
-  - 数据默认保存在 `${prometheus}/data` 目录下，目录结构如下：
-    ```sh
-    data/
-    ├── 01E728KFZWGDM7HMY6M2D26QJD/   # 一个 block 目录
-    │   ├── chunks
-    │   │   └── 000001                # 压缩后的数据，是二进制文件
-    │   ├── index
-    │   ├── meta.json
-    │   └── tombstones
-    ├── 01BKGTZQ1HHWHV8FBJXW1Y3W0K/
-    ├── lock
-    ├── queries.active
-    └── wal/
-        ├── 00000003                 # 预写日志文件
-        ├── 00000004
-        └── checkpoint.000002/       # 最近一个转存到 chunks 的预写日志的编号
-    ```
-  - Prometheus 每次采集到 metrics 数据之后，会按以下流程处理：
-    1. 先将 metrics 数据写入 wal/ 目录下的预写日志文件。
-        - wal/ 目录下可能存在多个预写日志文件，每个文件最大为 128 MB 。
-    2. 每隔两个小时，创建一个随机编号的 block 目录，将 wal/ 目录下的数据经过压缩之后，转存到 `${block}/chunks/` 目录下。
-        - 如果转存成功，则清空 wal/ 目录下的预写日志文件，并更新 checkpoint 。
+- Prometheus 采集 metrics 的方式有多种：
+  - exporter
+    - ：最基础的方式。让程序监听一个符合 exporter 格式的 HTTP 端口，然后 Prometheus 定期发送 GET 请求到该端口，采集 metrics 。
+  - pushgateway
+    - ：程序将 metrics 通过 POST 请求发送到 pushgateway ，然后 Prometheus 定期从 pushgateway 采集 metrics 。
+  - 第三方媒介
+    - ：程序将 metrics 定期写入文件、数据库等媒介，然后 node_exporter 等工具收集这些 metrics ，加入自己 exporter 端口的响应中。
+
+- Prometheus 的时序数据库 TSDB 默认存储在 `${prometheus}/data/` 目录下，目录结构如下：
+  ```sh
+  data/
+  ├── 01E728KFZWGDM7HMY6M2D26QJD/   # 一个 block 目录
+  │   ├── chunks
+  │   │   └── 000001                # 压缩后的数据文件
+  │   ├── index
+  │   ├── meta.json
+  │   └── tombstones
+  ├── 01BKGTZQ1HHWHV8FBJXW1Y3W0K/
+  ├── lock
+  ├── queries.active
+  └── wal/
+      ├── 00000003                  # 预写日志文件
+      ├── 00000004
+      └── checkpoint.000002/        # 最近一个转存到 chunks 的预写日志的编号
+  ```
+
+- Prometheus 处理 metrics 数据的流程：
+  1. 采集到一批 metrics 数据，暂时保存在内存中，同时写入 wal/ 目录下的预写日志文件。
+      - wal/ 目录下可能存在多个预写日志文件，每个文件最大为 128 MB 。
+      - 如果 Prometheus 重启，则会读取预写日志文件，重新将数据载入内存。
+      - metrics 中每条数据会被分配一个唯一的 seriesId ，并对 labels 建立倒排索引，因此根据 labels 查询 metrics 时速度很快。
+  2. 每隔两个小时，创建一个随机编号的 block 目录，将 wal/ 目录下两小时范围内的数据，压缩之后转存到 `${block}/chunks/` 目录下。
+      - 如果转存成功，则更新 checkpoint ，并删除 wal/ 目录下编号不超过 checkpoint 的预写日志文件。
+      - chunks/ 目录下可能存在多个数据文件，每个文件最大为 512 MB ，一段时间后可能被进一步压缩，时间相邻的文件还可能被合并。
+      - 如果用户请求删除 chunks 中的数据，则会将待删除的数据记录在 tombstones 文件中，等下一次压缩、合并数据文件时才实际删除。
 
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
 - Prometheus 及其插件都采用 UTC 时间，不支持修改时区。用户可自行将查询结果中的时间字符串改成本地时区。
@@ -63,7 +75,7 @@
               # --web.enable-lifecycle                      # 启用 reload、quit 等 HTTP API
               # --web.enable-remote-write-receiver
 
-              # --storage.tsdb.retention.time=15d           # TSDB 的最大保存时长
+              # --storage.tsdb.retention.time=15d           # chunks/ 目录下数据文件的最大保存时长
               # --storage.tsdb.retention.size=500GB         # TSDB 的最大保存体积
               # --query.timeout=2m                          # 每次查询的超时时间
               # --query.max-samples=50000000                # 每次查询时最多将多少个指标载入内存，如果超过该数量，则查询失败
@@ -100,7 +112,7 @@
 
 ### 集群
 
-Prometheus 集群有多种部署方案：
+Prometheus 部署单节点时就有很高性能，但某些情况下需要部署集群，有多种方案：
 - federate
   - 原理：
     1. 按普通方式部署一些 Prometheus ，担任子节点。
@@ -128,7 +140,9 @@ Prometheus 集群有多种部署方案：
   - 原理：
     1. 部署一个 Prometheus ，担任父节点，加上命令行选项 --web.enable-remote-write-receiver 。
     2. 部署一些 Prometheus ，担任子节点，添加 remote_write 配置：将本机采集到的 metrics ，发送到 Prometheus 父节点的 /api/v1/write 路由。
-  <!-- - remote write 与 federate 相似，都是将 metrics 汇总存储到一个 Promtheus 。但优点在于： -->
+  - remote write 与 federate 相似，都是将 metrics 汇总存储到一个 Promtheus ，但 remote write 更可靠：
+    - federate 方式可能重复采集某个时刻的 metrics ，也可能遗漏采集某个时刻的 metrics 。
+    - remote write 方式会为每个 remote 创建一个 metrics 推送队列，如果推送失败则自动重试。除非持续失败 2 小时，预写日志文件被压缩。
 
 - remote read
   - 原理：
@@ -145,12 +159,7 @@ Prometheus 集群有多种部署方案：
     - agent 禁用了本地存储、查询、警报功能，因此开销更低。
     - agent 采集到的 metrics 会先缓存在 `${storage.agent.path}/wal/` 目录，只要转发成功，就立即删除。
 
-<!-- 
-- thanos
-  - thanos 是一种高可用的集群架构。而上述几种集群架构，主要用于横向扩容 -->
 
-
-<!-- 除非必要，否则不要扩展 Prometheus。单普罗米修斯效率高 -->
 
 
 

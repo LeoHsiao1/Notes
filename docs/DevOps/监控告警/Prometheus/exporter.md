@@ -4,10 +4,6 @@
 - 主流软件大多提供了自己的 exporter 程序，比如 mysqld_exporter、redis_exporter 。有的软件甚至本身就集成了 exporter 格式的 HTTP API 。
   - 没必要为所有软件部署 exporter 程序，因为有的监控指标较少，不如自制。
   - Prometheus 提供了多种编程语言的库，供用户开发 exporter 程序。例如 Python 的第三方库 prometheus-client 。
-- Prometheus 可通过多种方式采集监控指标：
-  - exporter 方式：程序监听一个符合 exporter 格式的 HTTP 端口，然后 Prometheus 定期发送 GET 请求到该端口，采集监控指标。
-  - pushgateway 方式：程序将监控指标通过 POST 请求发送到 pushgateway ，然后 Prometheus 定期从 pushgateway 采集监控指标。
-  - 代理方式：程序将监控指标定期写入文件、数据库等媒介，然后 node_exporter 等工具收集这些监控指标，加入自己 exporter 端口的响应中。
 
 ## 集成类型
 

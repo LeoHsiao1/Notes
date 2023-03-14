@@ -137,6 +137,13 @@ Prometheus 集群有多种部署方案：
   - 向 Prometheus 子节点发送的查询请求，不是 PromQL 格式，而是 protobuf 格式，只能根据时间范围、标签查询 metrics 。
   - 警报和记录规则评估仅使用本​​地 TSDB 。
 
+- agent
+  - Prometheus v2.32.0 增加了 agent 工作模式，原理如下：
+    1. 部署一个 Prometheus ，担任父节点。
+    2. 部署一些 Prometheus ，担任子节点，加上命令行选项 --enable-feature=agent ，负责采集 metrics 并转发到 Prometheus 父节点。
+  - agent 与 remote write 架构相似，但优点如下：
+    - agent 禁用了本地存储、查询、警报功能，因此开销更低。
+    - agent 采集到的 metrics 会先缓存在 `${storage.agent.path}/wal/` 目录，只要转发成功，就立即删除。
 
 <!-- 
 - thanos

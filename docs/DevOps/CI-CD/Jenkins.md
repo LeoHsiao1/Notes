@@ -207,7 +207,7 @@
   ```py
   from jenkinsapi.jenkins import Jenkins
 
-  jk = Jenkins('http://10.0.0.1:8080', username='xx', password='xx', useCrumb=True)
+  jk = Jenkins('http://10.0.0.1:8080', username='xx', password='xx', use_crumb=True)
   ```
   - useCrumb 表示在 POST 请求中包含 Crumb 参数，避免 CSRF 攻击。
 

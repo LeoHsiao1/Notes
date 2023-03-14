@@ -12,10 +12,10 @@
 ## 原理
 
 - 运行流程：
-  1. 在每个监控对象的主机上运行一个负责采集监控指标的程序，通过 HTTP API 输出纯文本格式的监控指标，作为 exporter 。
-  2. Prometheus 服务器定期向每个 exporter 发送 HTTP GET 请求，获取监控指标，然后存储到自己的时序数据库 TSDB 中。。
+  1. 在每个需要监控的主机上运行一个负责采集监控指标的程序，称为 exporter 。它能通过 HTTP API 输出纯文本格式的监控指标，称为 metrics 。
+  2. Prometheus 服务器定期向每个 exporter 发送 HTTP GET 请求，获取 metrics ，然后存储到自己的时序数据库 TSDB 中。。
       - Prometheus 属于离散采样，可能有遗漏、有延迟、有误差。
-      - exporter 一般收到 HTTP 请求时才采集一次当前时刻的监控指标，不负责存储数据。
+      - exporter 一般收到 HTTP 请求时才采集一次当前时刻的 metrics ，不负责存储数据。
 
 - 关于 TSDB ：
   - 数据默认保存在 `${prometheus}/data` 目录下，目录结构如下：
@@ -42,6 +42,8 @@
 - Prometheus 及其插件都采用 UTC 时间，不支持修改时区。用户可以自行将查询结果中的时间字符串改成本地时区。
 
 ## 部署
+
+### 单节点
 
 - 下载二进制版：
   ```sh
@@ -94,24 +96,27 @@
 
 ### 集群
 
-- Prometheus 支持抓取其它 Prometheus 的数据，因此可以部署成集群。
-- 在 prometheus.yml 中按如下格式定义一个 job ，即可抓取其它 Prometheus 的数据：
-  ```yml
-  scrape_configs:
-  - job_name: federate
-    honor_labels: true            # 设置 true ，以保存原指标中的 job 、instance 标签
-    metrics_path: /federate
-    params:
-      match[]:                    # 指定筛选表达式。至少指定一个，指定多个时会分别抓取
-        - "{job!=''}"
-        - go_goroutines
-    static_configs:
-      - targets:                  # 目标 Prometheus 的地址
-        - 10.0.0.2:9090
-        - 10.0.0.3:9090
-  ```
-  - 只能抓取目标 Prometheus 最新时刻的指标，就像抓取一般的 exporter 。
-  - 如果目标 Prometheus 掉线一段时间，则重新连接之后并不会同步掉线期间的指标。
+Prometheus 有多种集群架构：
+- federate
+  - 原理：一个 Prometheus 通过 federate 接口，抓取其它 Prometheus 已采集的 metrics 。
+  - 配置示例：
+    ```yml
+    scrape_configs:
+    - job_name: federate
+      honor_labels: true            # 设置 true ，以保存原指标中的 job 、instance 标签
+      metrics_path: /federate       # 抓取的路由
+      params:
+        match[]:                    # 指定筛选表达式。至少需要指定一个，如果指定多个则取并集
+          - "{job!=''}"
+          - go_goroutines
+      static_configs:
+        - targets:                  # 目标 Prometheus 的地址
+          - 10.0.0.2:9090
+          - 10.0.0.3:9090
+    ```
+    - 只能抓取目标 Prometheus 最新采集的 metrics 。如果目标 Prometheus 掉线一段时间，则重新连接之后，并不会抓取掉线期间的 metrics 。
+- remote write
+- remote read
 
 ## 配置
 
@@ -163,7 +168,7 @@
     - targets:                        # 一组监控对象的 IP:Port
       - 10.0.0.1:9090
       - 10.0.0.1:9091
-      # labels:                       # 从 targets 采集监控指标时，添加额外的标签
+      # labels:                       # 从 targets 采集 metrics 时，添加额外的标签
       #   nodename: CentOS-1
     - targets: ['10.0.0.2:9090']      # 第二组监控对象
     # relabel_configs:
@@ -288,7 +293,7 @@
     }
     ```
 - 当异常开始时，Prometheus 会产生 `"status": "firing"` 的警报。当异常结束时，还会产生 `"status": "resolved"` 的警报。
-  - startsAt 参数表示警报的开始时间，但根据 alerting_rules ，可能等监控指标持续异常一段时间之后才产生警报。
+  - startsAt 参数表示警报的开始时间。根据 alerting_rules ，可能等 metrics 持续异常一段时间之后才产生警报。
   - resolved 类型的警报中，会增加一个 endsAt 参数。
 
 - 在 Web 页面上可以看到 Alerting Rules 的状态：

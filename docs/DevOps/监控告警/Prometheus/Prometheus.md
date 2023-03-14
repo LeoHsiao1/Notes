@@ -31,12 +31,15 @@
     ├── lock
     ├── queries.active
     └── wal/
-        ├──00000003
-        └──checkpoint.000002/
+        ├── 00000003                 # 预写日志文件
+        ├── 00000004
+        └── checkpoint.000002/       # 最近一个转存到 chunks 的预写日志的编号
     ```
-  - 最新获得的数据尚未写入 tsdb ，会暂时保存在 wal/ 目录下。
-  - 每隔两个小时会创建一个随机编号的 block 目录，将 wal/ 目录下的数据经过压缩之后保存到 `xxx_block/chunks` 目录下。此时才算写入 tsdb 。
-  - 每过一段时间， block 目录还会被进一步压缩、合并。
+  - Prometheus 每次采集到 metrics 数据之后，会按以下流程处理：
+    1. 先将 metrics 数据写入 wal/ 目录下的预写日志文件。
+        - wal/ 目录下可能存在多个预写日志文件，每个文件最大为 128 MB 。
+    2. 每隔两个小时，创建一个随机编号的 block 目录，将 wal/ 目录下的数据经过压缩之后，转存到 `${block}/chunks/` 目录下。
+        - 如果转存成功，则清空 wal/ 目录下的预写日志文件，并更新 checkpoint 。
 
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
 - Prometheus 及其插件都采用 UTC 时间，不支持修改时区。用户可自行将查询结果中的时间字符串改成本地时区。
@@ -56,8 +59,9 @@
               # --web.config.file=web.yml
               # --web.listen-address 0.0.0.0:9090           # 监听的地址
               # --web.external-url http://10.0.0.1:9090/    # 供外部访问的 URL
-              # --web.enable-admin-api                      # 启用管理员的 HTTP API .比如删除 tsdb 的数据
+              # --web.enable-admin-api                      # 启用管理员的 HTTP API ，比如删除数据
               # --web.enable-lifecycle                      # 启用 reload、quit 等 HTTP API
+              # --web.enable-remote-write-receiver
 
               # --storage.tsdb.retention.time=15d           # TSDB 的最大保存时长
               # --storage.tsdb.retention.size=500GB         # TSDB 的最大保存体积
@@ -96,27 +100,52 @@
 
 ### 集群
 
-Prometheus 有多种集群架构：
+Prometheus 集群有多种部署方案：
 - federate
-  - 原理：一个 Prometheus 通过 federate 接口，抓取其它 Prometheus 已采集的 metrics 。
+  - 原理：
+    1. 按普通方式部署一些 Prometheus ，担任子节点。
+    2. 部署一个 Prometheus ，担任父节点，添加 scrape_configs 配置：通过 federate 接口，抓取各个 Prometheus 子节点已采集的 metrics 。
   - 配置示例：
     ```yml
     scrape_configs:
     - job_name: federate
-      honor_labels: true            # 设置 true ，以保存原指标中的 job 、instance 标签
-      metrics_path: /federate       # 抓取的路由
+      honor_labels: true        # 设置 true ，以保存原指标中的 job 、instance 标签
+      metrics_path: /federate   # 抓取的路由
       params:
-        match[]:                    # 指定筛选表达式。至少需要指定一个，如果指定多个则取并集
+        match[]:                # 指定筛选表达式。至少需要指定一个，如果指定多个则取并集
           - "{job!=''}"
           - go_goroutines
       static_configs:
-        - targets:                  # 目标 Prometheus 的地址
+        - targets:              # 目标 Prometheus 的地址
           - 10.0.0.2:9090
           - 10.0.0.3:9090
     ```
     - 只能抓取目标 Prometheus 最新采集的 metrics 。如果目标 Prometheus 掉线一段时间，则重新连接之后，并不会抓取掉线期间的 metrics 。
+  - 假设在多个机房存在 exporter ，用一个 Prometheus 通过公网采集 metrics 。则可能存在一些问题：网速慢、偶尔超过 scrape_timeout 、偶尔断网。
+    - 此时建议在每个机房部署一个 Prometheus 子节点，通过内网采集 metrics ，然后汇总到 Prometheus 父节点。
+
 - remote write
+  - 原理：
+    1. 部署一个 Prometheus ，担任父节点，加上命令行选项 --web.enable-remote-write-receiver 。
+    2. 部署一些 Prometheus ，担任子节点，添加 remote_write 配置：将本机采集到的 metrics ，发送到 Prometheus 父节点的 /api/v1/write 路由。
+  <!-- - remote write 与 federate 相似，都是将 metrics 汇总存储到一个 Promtheus 。但优点在于： -->
+
 - remote read
+  - 原理：
+    1. 按普通方式部署一些 Prometheus ，担任子节点。
+    2. 部署一个 Prometheus ，担任父节点，添加 remote_read 配置：当本机需要查询 metrics 时，允许发送查询请求到各个 Prometheus 子节点的 /api/v1/read 路由，然后汇总它们查询到的 metrics 。
+  - 向 Prometheus 子节点发送的查询请求，不是 PromQL 格式，而是 protobuf 格式，只能根据时间范围、标签查询 metrics 。
+  - 警报和记录规则评估仅使用本​​地 TSDB 。
+
+
+<!-- 
+- thanos
+  - thanos 是一种高可用的集群架构。而上述几种集群架构，主要用于横向扩容 -->
+
+
+<!-- 除非必要，否则不要扩展 Prometheus。单普罗米修斯效率高 -->
+
+
 
 ## 配置
 

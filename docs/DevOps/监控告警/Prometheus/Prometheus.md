@@ -39,7 +39,7 @@
   - 每过一段时间， block 目录还会被进一步压缩、合并。
 
 - Prometheus 的图表功能很少，建议将它的数据交给 Grafana 显示。
-- Prometheus 及其插件都采用 UTC 时间，不支持修改时区。用户可以自行将查询结果中的时间字符串改成本地时区。
+- Prometheus 及其插件都采用 UTC 时间，不支持修改时区。用户可自行将查询结果中的时间字符串改成本地时区。
 
 ## 部署
 
@@ -304,21 +304,21 @@ Prometheus 有多种集群架构：
 
 - 可参考的告警规则：[awesome-prometheus-alerts](https://github.com/samber/awesome-prometheus-alerts)
 
-## 指标
+## metrcis
 
-- 每条指标数据是如下格式的字符串：
-    ```sh
-    <metric_name>{<label_name>=<label_value>, ...}     metric_value
-    ```
+- metrcis 中每条数据是如下格式的字符串：
+  ```sh
+  <metric_name>{<label_name>=<label_value>, ...}     metric_value
+  ```
   例如：
-    ```sh
-    go_goroutines{instance="10.0.0.1:9090", job="prometheus"}    80
-    ```
+  ```sh
+  go_goroutines{instance="10.0.0.1:9090", job="prometheus"}    80
+  ```
   - metric_name 必须匹配正则表达式 `[a-zA-Z_:][a-zA-Z0-9_:]*` ，一般通过 Recording Rules 定义的指标名称才包含冒号 : 。
   - 标签（label）的作用是便于筛选指标。
   - label_value 可以包含任意 Unicode 字符。
 
-- 根据用途的不同对指标分类：
+- 根据用途的不同对 metrcis 分类：
   - Counter ：计数器，数值单调递增。
   - Gauge ：仪表，数值可以任意加减变化。
   - Histogram ：直方图。将时间平均分成一段段区间，将每段时间内的多个采样点取平均值再返回（由 Server 计算），相当于从散点图变成直方图。例如：
@@ -332,16 +332,16 @@ Prometheus 有多种集群架构：
     - `http_request_duration_microseconds{handler="prometheus",quantile="0.9"}  3525.421` 表示 HTTP 请求中，排在 90% 位置处的耗时。
     - `http_request_duration_microseconds{handler="prometheus",quantile="0.99"}  3657.138` 表示 HTTP 请求中，排在 99% 位置处的耗时。
 
-- 根据是否随时间变化对指标分类：
+- 根据是否随时间变化对 metrcis 分类：
   - 标量（scalar）：包含一个或一些散列的值。
   - 矢量（vector）：包含一系列随时间变化的值。
     - 一个矢量由 n≥1 个时间序列组成，显示成曲线图时有 n 条曲线，在每个时刻处最多有 n 个数据点（又称为元素），不过也可能缺少数据点（为空值）。
 
-## 查询
+## PromQL
 
-- Prometheus 提供了一种查询语言 PromQL ，使得用户可以通过一个查询表达式，就查询到指标数据，还可以进行加工计算。
+- Prometheus 提供了一种查询语言 PromQL ，用于编写查询 metrics 的表达式，还可进行加工计算。
   - 用户在 Graph 页面执行一个查询表达式之后，默认会将查询到的数据显示成表格（Table），用户也可以切换显示成曲线图（Graph）。
-  - 显示曲线图的开销要大得多，可能会导致 Web 页面卡顿。
+  - 显示曲线图的开销要大得多，可能导致 Web 页面卡顿。
   - 大部分标量都不支持显示成曲线图。
 
 - 查询表达式中，选取指标的语法如下：

@@ -112,7 +112,7 @@
 
 ### 集群
 
-Prometheus 部署单节点时就有很高性能，但某些情况下需要部署集群，有多种方案：
+Prometheus 集群有多种部署方案：
 - federate
   - 原理：
     1. 按普通方式部署一些 Prometheus ，担任子节点。
@@ -159,9 +159,16 @@ Prometheus 部署单节点时就有很高性能，但某些情况下需要部署
     - agent 禁用了本地存储、查询、警报功能，因此开销更低。
     - agent 采集到的 metrics 会先缓存在 `${storage.agent.path}/wal/` 目录，只要转发成功，就立即删除。
 
-
-
-
+- [thanos](https://github.com/thanos-io/thanos)
+  - ：一套第三方软件，基于 Prometheus 搭建分布式监控系统。包含多个组件：
+    - Sidecar ：为每个 Prometheus 部署一个 Sidecar ，将该 Prometheus 采集的 metrics 发送到 S3 云存储。
+    - Receiver ：接收 Prometheus 通过 remote write 发送的 metrics ，然后保存到云存储。
+    - Compactor ：压缩云存储中的 metrics 数据。
+    - Ruler ：对云存储中的 metrics 执行 recording rules 和 alerting rules 。
+    - Query ：实现 Prometheus 的查询 API ，被 Query Frontend 调用。
+    - Query Frontend ：供用户访问，执行 PromQL 查询表达式。
+  - federate 等集群方案主要用于横向扩容 Prometheus 集群，依然存在单点故障的风险。而 thanos 能给每个组件部署多实例，实现高可用。
+    - 不过 Prometheus 单节点就有很高性能，一般不需要用到 thanos 。
 
 ## 配置
 

@@ -259,7 +259,7 @@ git cherry-pick <commit_hash>...  # 提取多个 commit 的修改内容，拷贝
 git log [refs]              # 显示某个分支上的 commit 日志，不指定 refs 则采用 HEAD 分支
         [path]              # 可选指定 path ，然后向前追溯涉及 path 文件的 commit ，不显示其它 commit 。不过该 path 必须在当前版本存在
         --full-history -- [path]  # 从 commit 历史中查找涉及 path 文件的所有 commit 。该 path 不必在当前版本存在，因此可以发现 path 什么时候从 Git 仓库删除了
-        -n                  # 最多显示 n 个 commit
+        -n <int>            # 最多显示多少个 commit
         --reverse           # 倒序显示各个 commit 。默认按时间从新到旧排序，该选项会从旧到新排序
         --since=<date>      # 只显示指定时刻之后的 commit 。date 可以是 2022-01-01T12:00:00 或 "1 hours ago" 的格式
         --until=<date>      # 只显示指定时刻之前的 commit

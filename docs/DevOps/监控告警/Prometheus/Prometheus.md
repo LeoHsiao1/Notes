@@ -1,13 +1,12 @@
 # Prometheus
 
-：一个 Web 服务器，可以采集大量对象的监控指标。
+：一个 Web 服务器，用于采集大量对象的监控指标，然后供用户查询。
 - [官方文档](https://prometheus.io/docs/introduction/overview/)
 - 采用 Golang 开发。
 - 由 SoundCloud 公司的前 Google 员工于 2015 年发布，它起源于 Google 内部用于监控 Borg 系统的 Borgmon 系统。
 - 特点：
-  - 采集文本格式的监控指标。
-  - 可以给指标数据添加一些键值对格式的标签，从而便于筛选。
-  - 可监控主机、进程、容器等多种对象，可扩展性高，而且自带查询语言，配置比较灵活。
+  - 采集文本格式的监控指标。每条数据包含一个指标名、一些键值对格式标签。
+  - 可监控主机、进程、容器等多种对象。
 
 ## 原理
 
@@ -159,7 +158,7 @@ Prometheus 集群有多种部署方案：
     - agent 禁用了本地存储、查询、警报功能，因此开销更低。
     - agent 采集到的 metrics 会先缓存在 `${storage.agent.path}/wal/` 目录，只要转发成功，就立即删除。
 
-- [thanos](https://github.com/thanos-io/thanos)
+- [Thanos](https://github.com/thanos-io/thanos)
   - ：一套第三方软件，基于 Prometheus 搭建分布式监控系统。包含多个组件：
     - Sidecar ：为每个 Prometheus 部署一个 Sidecar ，将该 Prometheus 采集的 metrics 发送到 S3 云存储。
     - Receiver ：接收 Prometheus 通过 remote write 发送的 metrics ，然后保存到云存储。
@@ -167,8 +166,14 @@ Prometheus 集群有多种部署方案：
     - Ruler ：对云存储中的 metrics 执行 recording rules 和 alerting rules 。
     - Query ：实现 Prometheus 的查询 API ，被 Query Frontend 调用。
     - Query Frontend ：供用户访问，执行 PromQL 查询表达式。
-  - federate 等集群方案主要用于横向扩容 Prometheus 集群，依然存在单点故障的风险。而 thanos 能给每个组件部署多实例，实现高可用。
+  - federate 等集群方案主要用于横向扩容 Prometheus 集群，依然存在单点故障的风险。而 thanos 可给每个组件部署多实例，实现高可用。
     - 不过 Prometheus 单节点就有很高性能，一般不需要用到 thanos 。
+
+- [VictoriaMetrics](https://github.com/VictoriaMetrics/VictoriaMetrics)
+  - ：一个监控工具。可完全替代 Prometheus ，也可用作 Prometheus 的存储层，通过 remote write 写入数据，并且兼容 Prometheus 的查询 API 。
+  - 与 Prometheus 相比，优点如下：
+    - 采集大量 metrics 时，占用的 CPU、内存、磁盘更少。
+    - 除了单节点部署，也支持集群部署，可通过部署多实例来实现高可用。
 
 ## 配置
 

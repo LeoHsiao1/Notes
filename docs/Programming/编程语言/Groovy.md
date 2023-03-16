@@ -2,7 +2,7 @@
 
 ：一种基于 Java 的脚本语言。
 - [官方文档](https://groovy-lang.org/documentation.html)
-- 2007 年由 James Strachan 发布，后来交给 ASF 管理。
+- 2007 年由 James Strachan 发布，后来交给 ASF 基金会管理。
 
 ## 语法特点
 

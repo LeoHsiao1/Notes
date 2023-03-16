@@ -7,8 +7,7 @@
   - 解耦了第三方程序与 Prometheus ，允许它们异步工作。
 - 缺点：
   - 原本 Prometheus 采集 exporter 时，才会触发一次 metrics 生成。而使用 Pushgateway ，不能控制第三方程序生成 metrics 的间隔时间。
-  - Pushgateway 只会记录当前时刻的 metrics ，不会记录历史时刻的 metrics 。
-  - 如果第三方程序离线，则 Pushgateway 记录的是最后一次推送的 metrics 。因此不能直接判断第三方程序是否在线，需要根据 push_time_seconds 进行判断。
+  - 如果第三方程序离线，则 Pushgateway 会一直记录最后一次推送的 metrics ，导致 Prometheus 采集到的 metrics 是过时的。需要根据 push_time_seconds 进行判断。
 
 ## 部署
 

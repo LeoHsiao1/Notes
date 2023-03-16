@@ -741,10 +741,6 @@ module.exports = {
                         {
                             title: "Socket",
                             path: "/Network/网络协议/Socket"
-                        },
-                        {
-                            title: "MQTT",
-                            path: "/Network/网络协议/MQTT"
                         }
                     ]
                 },
@@ -1484,6 +1480,10 @@ module.exports = {
                         {
                             title: "Pulsar",
                             path: "/Distributed/消息队列/Pulsar"
+                        },
+                        {
+                            title: "MQTT",
+                            path: "/Distributed/消息队列/MQTT"
                         }
                     ]
                 },

@@ -1,18 +1,11 @@
 # MQTT
 
-：消息队列遥测传输协议（Message Queuing Telemetry Transport），常用于物联网通信。
-- 属于应用层协议，基于 TCP 通信。
-- 适用于低带宽、不可靠网络中的通信。
-- 采用 C/S 架构。
-  - mqtt server 又称为 mqtt broker ，常见的服务器软件有 ActiveMQ、mosquitto、EMQ 等。
-  - mqtt client 与 mqtt broker 建立连接之后就构成了一个会话（Session）。
-- 采用发布/订阅（publish/subscribe）模式。
-  - mqtt client 可以发布消息到 mqtt broker 的某个 topic 下（此时称为 Publisher），也可以订阅 mqtt broker 的某个 topic 下的消息（此时称为 Subscriber）。
-- [MQTT 官方标准](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html)
+- MQTT 是一个主要用于物联网通信的 MQ 协议。
+- [MQTT v5.0 官方标准](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html)
 
 ## 报文
 
-- MQTT 协议的报文有多种类型，比如 PUBLISH、SUBSCRIBE 等。
+- MQTT 协议以报文为单位传输消息。报文有多种类型，比如 PUBLISH、SUBSCRIBE 等。
 - 一个 MQTT 报文的内容分为三部分：
   - 固定报头（Fixed header）：存在于所有报文中。
   - 可变报头（Variable header）：存在于某些报文中。
@@ -27,14 +20,14 @@
 ## Topic
 
 - mqtt broker 通过 topic 来分组管理消息。
-- topic 的语法
+- topic 的语法：
   - 采用 UTF-8 编码。
-  - 可以用 / 分隔出多层目录。
+  - 可用 / 分隔出多层目录。
 - 当某个 Publisher 向某个 topic 发送消息时，mqtt broker 会立即将消息推送给订阅该 topic 的所有 Subscriber 。
   - Publisher 发布消息时，必须要指定一个 topic 的完整名字。
   - Subscriber 在订阅时，必须要发送一个主题过滤器（Topic Filter）。
 
-## Topic Filter
+### Topic Filter
 
 - 主题过滤器是一个字符串，可以是某个 topic 的完整名字，也可以使用通配符。
   - `+` ：单层通配符，匹配该层的所有主题。

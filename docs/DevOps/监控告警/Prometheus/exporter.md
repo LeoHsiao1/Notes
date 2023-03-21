@@ -549,6 +549,9 @@
   # 关于内存
   node_memory_MemTotal_bytes                    # 内存总量，单位 bytes
   node_memory_MemAvailable_bytes                # 内存可用量，CentOS 7 以上版本才支持该指标
+  1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes # 内存使用率
+  node_memory_Buffers_bytes
+  node_memory_Cached_bytes
   node_memory_SwapTotal_bytes                   # swap 内存总量
   node_memory_SwapFree_bytes                    # swap 内存可用量
 
@@ -1178,7 +1181,7 @@
   mongodb_sys_cpu_num_cpus                                # 主机的 CPU 核数
 
   # 关于 collection
-  mongodb_collstats_storageStats_count{database="xx", collection="xx"}  # collection 全部文档的数量
+  mongodb_collstats_storageStats_count{database="xx", collection="xx"}  # collection 全部文档的数量，不包括已标记为 deleted 的文档
   mongodb_collstats_storageStats_size                     # collection 全部文档的体积，单位 bytes
   mongodb_collstats_storageStats_storageSize              # collection 全部文档占用的磁盘空间，默认会压缩
   delta(mongodb_collstats_latencyStats_reads_ops[1m])     # collection 读操作的数量（每分钟）
@@ -1284,7 +1287,9 @@
         # REDIS_USER: ***
         REDIS_PASSWORD: ******
         # REDIS_EXPORTER_IS_CLUSTER: 'false'    # 目标 redis 是否为集群模式
-        # REDIS_EXPORTER_CHECK_KEYS: db0=key1,db1=key1  # 在指定 db 中通过 SCAN 命令查找一些 key ，然后监控它们的值、长度
+        # REDIS_EXPORTER_CHECK_SINGLE_KEYS: db0=test,db1=test   # 在指定 db 中基于 SCAN 命令查找一些 key ，然后监控它们的值、长度
+        # REDIS_EXPORTER_CHECK_KEYS: db0=test*                  # 通过通配符，监控多个 key 的值、长度
+        # REDIS_EXPORTER_COUNT_KEYS: db0=test*                  # 通过通配符，监控多个 key 的数量
       ports:
         - 9121:9121
       volumes:
@@ -1322,5 +1327,6 @@
   # 关于 key
   delta(redis_expired_keys_total[1m])         # 每分钟过期的 key 数量
   redis_evicted_keys_total                    # 被 maxmemory-policy 驱逐的 key 数量
+  redis_keys_count{db="db0", key="test*"}     # 根据 REDIS_EXPORTER_COUNT_KEYS 监控的 key 数量
   ```
   - 这些监控指标主要从 Redis 的 `INFO` 命令获得。

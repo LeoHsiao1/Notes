@@ -66,7 +66,7 @@ ELK 系统还可以选择加入以下软件：
 
 - Fluentd
   - ：一个命令行工具，用于日志采集。类似于 Logstash ，也有丰富的插件。
-  - 2011 年首次发布，由 Treasure Data 公司采用 Ruby 开发。
+  - 2011 年由 Treasure Data 公司发布，采用 Ruby 开发。
   - 采集的数据解析为 JSON 对象，可以输出到 ES、MongoDB、Kafka 等。
   - 可以替换 ELK 系统中的 Logstash ，组成 EFK 。
 

@@ -24,7 +24,7 @@
 
 ### 版本
 
-- 2013 年，dotCloud 公司首次发布 Docker 软件。
+- 2013 年，dotCloud 公司发布 Docker 软件。
 - 2017 年 3 月，Docker 的软件版本号从 v1.13 升级到 17.03 ，从数字编号改为日期格式。并且分为两种发行版：
   - Docker CE ：社区版（Community Edition），免费提供。
   - Docker EE ：企业版（Enterprise Edition），增加了一些收费的功能。

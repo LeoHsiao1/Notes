@@ -11,14 +11,14 @@
 - 创建 Redis 客户端：
   ```py
   >>> import redis
-  >>> client = redis.Redis(host='127.0.0.1', port=6379, db=0, password='', decode_responses=True)
+  >>> client = redis.Redis(host='127.0.0.1', port=6379, password='******', db=0, decode_responses=True)
   >>> client.ping()
   True
   ```
   - Redis 服务器的响应消息默认是 bytes 类型，设置 decode_responses=True 会将它转换成 str 类型。
   - 如果要创建多个 Redis 客户端，则可让它们共用一个连接池，避免重复建立连接的开销。如下：
     ```py
-    >>> pool = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0, password='', decode_responses=True)
+    >>> pool = redis.ConnectionPool(host='127.0.0.1', port=6379, password='******', db=0, decode_responses=True)
     >>> client = redis.Redis(connection_pool=pool)
     ```
 
@@ -33,7 +33,7 @@
 
 - 通过哨兵连接到 master ：
   ```py
-  >>> master = sentinel.master_for('master1', socket_timeout=1, password='******', db=0)
+  >>> master = sentinel.master_for('master1', password='******', db=0, socket_timeout=1)
   >>> master
   Redis<SentinelConnectionPool<service=master1(master)>
   >>> master.set('key1', 'Hello')
@@ -44,7 +44,7 @@
 
 - 通过哨兵连接到 slave ：
   ```py
-  >>> slave = sentinel.slave_for('master1', socket_timeout=1, password='******', db=0)
+  >>> slave = sentinel.slave_for('master1', password='******', db=0, socket_timeout=1)
   >>> slave.get('key1')
   b'Hello'
   >>> slave.info()

@@ -1287,8 +1287,8 @@
         # REDIS_USER: ***
         REDIS_PASSWORD: ******
         # REDIS_EXPORTER_IS_CLUSTER: 'false'    # 目标 redis 是否为集群模式
-        # REDIS_EXPORTER_CHECK_SINGLE_KEYS: db0=test,db1=test   # 在指定 db 中基于 SCAN 命令查找一些 key ，然后监控它们的值、长度
-        # REDIS_EXPORTER_CHECK_KEYS: db0=test*                  # 通过通配符，监控多个 key 的值、长度
+        # REDIS_EXPORTER_CHECK_SINGLE_KEYS: db0=test,db1=test   # 在指定 db 中基于 SCAN 命令查找一些 key ，然后监控它们的 value 的 size
+        # REDIS_EXPORTER_CHECK_KEYS: db0=test*                  # 通过通配符，监控多个 key 的 value 的 size
         # REDIS_EXPORTER_COUNT_KEYS: db0=test*                  # 通过通配符，监控多个 key 的数量
       ports:
         - 9121:9121
@@ -1328,5 +1328,6 @@
   delta(redis_expired_keys_total[1m])         # 每分钟过期的 key 数量
   redis_evicted_keys_total                    # 被 maxmemory-policy 驱逐的 key 数量
   redis_keys_count{db="db0", key="test*"}     # 根据 REDIS_EXPORTER_COUNT_KEYS 监控的 key 数量
+  redis_key_size{db="db0", key="test*"}       # 根据 REDIS_EXPORTER_CHECK_SINGLE_KEYS 监控的 value 的 size
   ```
   - 这些监控指标主要从 Redis 的 `INFO` 命令获得。

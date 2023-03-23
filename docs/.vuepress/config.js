@@ -723,8 +723,8 @@ module.exports = {
                             path: "/Network/网络协议/简介"
                         },
                         {
-                            title: "网络体系结构",
-                            path: "/Network/网络协议/网络体系结构"
+                            title: "网络模型",
+                            path: "/Network/网络协议/网络模型"
                         },
                         {
                             title: "IP",

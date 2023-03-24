@@ -138,9 +138,34 @@ Prometheus 集群有多种部署方案：
   - 原理：
     1. 部署一个 Prometheus ，担任父节点，加上命令行选项 --web.enable-remote-write-receiver 。
     2. 部署一些 Prometheus ，担任子节点，添加 remote_write 配置：将本机采集到的 metrics ，发送到 Prometheus 父节点的 /api/v1/write 路由。
-  - remote write 与 federate 相似，都是将 metrics 汇总存储到一个 Promtheus ，但 remote write 更可靠：
+  - remote write 与 federate 相似，都是将 metrics 汇总存储到一个 Prometheus ，但 remote write 更可靠：
     - federate 方式可能重复采集某个时刻的 metrics ，也可能遗漏采集某个时刻的 metrics 。
-    - remote write 方式会为每个 remote 创建一个 metrics 推送队列，如果推送失败则自动重试。除非持续失败 2 小时，预写日志文件被压缩。
+    - remote write 方式会为每个 remote 创建一个 metrics 推送队列（queue）。
+      - 如果队列中的 metrics 推送失败，则自动重试。除非持续失败 2 小时，WAL 预写日志文件被压缩。
+      - 每个 queue 分成多个分片（shard），可以并发推送。
+      - 普通部署方案，会在 scrape 瞬间对 Prometheus 造成很大负载。而通过队列推送，负载很平稳。
+  - 配置示例：
+    ```yml
+    scrape_configs: ...
+    remote_write:
+      - url: https://prometheus.test.com/api/v1/write
+        # enable_http2: true
+        # remote_timeout: 30s     # 每次发送 HTTP 请求给 remote 的超时时间
+        # basic_auth:
+        #   username: ***
+        #   password: ***
+        write_relabel_configs:    # 在发送 metrics 之前，修改 label
+          - <relabel_config>
+        # queue_config:           # 配置推送队列
+          # capacity: 2500        # 从 WAL 读取 metrics 到 queue 时，每个 shard 最多缓冲多少条 metrics ，如果缓冲区满了则暂停读取 WAL
+          # max_shards: 200       # 当前 queue 最多划分多少个 shard
+          # min_shards: 1         # 当前 queue 启动时初始有多少个 shard 。如果滞后了很多 metrics 需要推送，则会自动增加 shard 数量，从而增加推送速度
+          # max_samples_per_send: 500   # 每个 shard 每次最多推送多少条 metrics 。建议将 capacity 设置为 max_samples_per_send 的几倍
+          # batch_send_deadline: 5s     # 每个 shard 等待缓冲了 max_samples_per_send 条 metrics 才推送一次，如果等待超时，即使数量不足也推送一次
+          # min_backoff: 30ms           # 连续推送失败时，重试间隔从 min_backoff 开始增加，每次倍增，最大为 max_backoff
+          # max_backoff: 5s
+    ```
+    - 整个 queue 占用的内存大概为 `number_of_shards * (capacity + max_samples_per_send)` 。1K 条 metrics 大概占用 50KB 内存。
 
 - remote read
   - 原理：
@@ -150,12 +175,13 @@ Prometheus 集群有多种部署方案：
   - 警报和记录规则评估仅使用本​​地 TSDB 。
 
 - agent
-  - Prometheus v2.32.0 增加了 agent 工作模式，原理如下：
-    1. 部署一个 Prometheus ，担任父节点。
-    2. 部署一些 Prometheus ，担任子节点，加上命令行选项 --enable-feature=agent ，负责采集 metrics 并转发到 Prometheus 父节点。
-  - agent 与 remote write 架构相似，但优点如下：
-    - agent 禁用了本地存储、查询、警报功能，因此开销更低。
-    - agent 采集到的 metrics 会先缓存在 `${storage.agent.path}/wal/` 目录，只要转发成功，就立即删除。
+  - Prometheus v2.32.0 增加了 agent 工作模式，起源于 Grafana agent ，原理如下：
+    1. 按 remote_write 方案部署 Prometheus 。
+    2. 给 Prometheus 子节点加上命令行选项 --enable-feature=agent 。
+  - agent 与 remote write 相比，优点如下：
+    - agent 禁用了本地存储 TSDB ，因此占用磁盘更少。采集到的 metrics 会先缓存在 `data-agent/wal/` 目录，只要转发成功，就立即删除。
+    - agent 禁用了查询、警报功能，因此占用内存更少。
+
 - [Thanos](https://github.com/thanos-io/thanos)
   - ：一套第三方软件，基于 Prometheus 搭建分布式监控系统。包含多个组件：
     - Sidecar ：为每个 Prometheus 部署一个 Sidecar ，将该 Prometheus 采集的 metrics 发送到 S3 云存储。
@@ -381,15 +407,12 @@ Prometheus 集群有多种部署方案：
   - exporter 输出的 metrics 没有时间戳，而 Prometheus 采集 metrics 时会自动记录当前的时间戳。而采集通常有几秒的延迟，因此记录的时间戳不是很准确。
   - 将 metric_name 记录到内置标签 `__name__` ，比如 `go_goroutines{instance="10.0.0.1:9090", job="prometheus"}` 会记录成 `{__name__="go_goroutines", instance="10.0.0.1:9090", job="prometheus"}` ，因此 samples 完全是通过 labels 来标识的。
   - 对于一条 sample ，比如 `go_goroutines{instance="10.0.0.1:9090", job="prometheus"}` ，在不同时刻采集一次，就得到了它在不同时刻的取值，组成一个时间序列（time series），可用于监控 sample 取值随时间变化的趋势。
-
   - 对每条 sample 的 labels 集合值计算哈希，然后将该哈希值记作 seriesId ，用作该 time series 在 TSDB 数据库的主键。
     - 新增一条 sample 时，如果它的 seriesId 在 TSDB 已存在，则添加到已有的 time series 。
     - 同一 seriesId 之下的各个 sample ，拥有相同的 labels 集合值，只能通过时间戳区分。
     - Prometheus 定义了一种数据结构 memSeries ，用于存储某个 seriesId 在一段时间范围内的全部 sample 数据。
-    - seriesId 的数量称为基数。采集、查询时涉及的基数越大，则处理的 memSeries 越多，占用的内存越多。
-
+    - seriesId 的数量称为基数。采集、查询时涉及的基数越大，则处理的 memSeries 越多，占用的 CPU、内存越多。
   - 从 labels 向 seriesId 建立倒排索引，因此根据 labels 查询 metrics 的速度很快。例如记录含有 `job="prometheus"` 标签的 seriesId 有 11、22、33 等。
-
 
 - 根据用途的不同对 metrics 分类：
   - Counter
@@ -558,7 +581,7 @@ Prometheus 集群有多种部署方案：
   sort(go_goroutines)       # 按指标值升序排列
   sort_desc(go_goroutines)  # 按指标值降序排列
   ```
-  - 在 Promtheus 的 Table 视图中，显示的指标默认是无序的，只能通过 sort() 函数按指标值排序。不支持按 label 进行排序。
+  - 在 Prometheus 的 Table 视图中，显示的指标默认是无序的，只能通过 sort() 函数按指标值排序。不支持按 label 进行排序。
   - 在 Graph 视图中，显示的图例是按第一个标签的值进行排序的，且不受 sort() 函数影响。
 
 - 修改矢量的标签：

@@ -46,7 +46,6 @@
   1. 采集到一批 metrics 数据，暂时保存在内存中，同时写入 wal/ 目录下的预写日志文件。
       - wal/ 目录下可能存在多个预写日志文件，每个文件最大为 128 MB 。
       - 如果 Prometheus 重启，则会读取预写日志文件，重新将数据载入内存。
-      - metrics 中每条数据会被分配一个唯一的 seriesId ，并对 labels 建立倒排索引，因此根据 labels 查询 metrics 时速度很快。
   2. 每隔两个小时，创建一个随机编号的 block 目录，将 wal/ 目录下两小时范围内的数据，压缩之后转存到 `${block}/chunks/` 目录下。
       - 如果转存成功，则更新 checkpoint ，并删除 wal/ 目录下编号不超过 checkpoint 的预写日志文件。
       - chunks/ 目录下可能存在多个数据文件，每个文件最大为 512 MB ，一段时间后可能被进一步压缩，时间相邻的文件还可能被合并。
@@ -157,7 +156,6 @@ Prometheus 集群有多种部署方案：
   - agent 与 remote write 架构相似，但优点如下：
     - agent 禁用了本地存储、查询、警报功能，因此开销更低。
     - agent 采集到的 metrics 会先缓存在 `${storage.agent.path}/wal/` 目录，只要转发成功，就立即删除。
-
 - [Thanos](https://github.com/thanos-io/thanos)
   - ：一套第三方软件，基于 Prometheus 搭建分布式监控系统。包含多个组件：
     - Sidecar ：为每个 Prometheus 部署一个 Sidecar ，将该 Prometheus 采集的 metrics 发送到 S3 云存储。
@@ -172,7 +170,7 @@ Prometheus 集群有多种部署方案：
 - [VictoriaMetrics](https://github.com/VictoriaMetrics/VictoriaMetrics)
   - ：一个监控工具。可完全替代 Prometheus ，也可用作 Prometheus 的存储层，通过 remote write 写入数据，并且兼容 Prometheus 的查询 API 。
   - 与 Prometheus 相比，优点如下：
-    - 采集大量 metrics 时，占用的 CPU、内存、磁盘更少。
+    - 采集、查询基数很大的 metrics 时，性能比 Prometheus 更好。
     - 除了单节点部署，也支持集群部署，可通过部署多实例来实现高可用。
 
 ## 配置
@@ -274,7 +272,7 @@ Prometheus 集群有多种部署方案：
   ```
   则 Prometheus 最终保存的 metrics 如下：
   ```sh
-  # Prometheus 默认会为每个 metrcis 添加 job: "$job_name"、instance: "$target" 两个标签
+  # Prometheus 默认会为每个 metrics 添加 job: "$job_name"、instance: "$target" 两个标签
   http_requests_total{code="200", job="prometheus", instance="10.0.0.1:9090"} 162
   http_requests_total{code="500", job="prometheus", instance="10.0.0.1:9090"} 0
 
@@ -288,9 +286,11 @@ Prometheus 集群有多种部署方案：
   - 给 metrics 添加 label 时，如果原 metrics 中已存在同名的 label ，则根据 honor_labels 进行处理：
     - `honor_labels: false` ：默认值，将原 label 改名为 `exported_<label_name>` ，再添加新 label 。
     - `honor_labels: true` ：保留原 label 不变，不添加新 label 。
-  - 用户可通过 relabel_configs 在采集之前修改 label ，通过 metric_relabel_configs 在采集之后修改 label 。如下：
+  - 用户可通过 relabel_configs 在采集之前修改 label ，通过 metric_relabel_configs 在采集之后修改 label 。例：
     ```sh
     metric_relabel_configs:
+    - replacement: test
+      target_label: project   # 添加一个 label ，名称为 project ，取值为 test
     - action: replace   # action 默认为 replace ，是将 source_labels 多个标签的值用 separator 拼接成一个字符串，然后正则匹配，生成字符串 replacement ，最后保存到 target_label
       source_labels: [<label>, ...]
       separator: ;
@@ -361,37 +361,61 @@ Prometheus 集群有多种部署方案：
 
 - 可参考的告警规则：[awesome-prometheus-alerts](https://github.com/samber/awesome-prometheus-alerts)
 
-## metrcis
+## metrics
 
-- metrcis 中每条数据是如下格式的字符串：
+- Prometheus 采集的监控指标称为 metrics ，它是纯文本格式，每条数据是如下格式的字符串：
   ```sh
   <metric_name>{<label_name>=<label_value>, ...}     metric_value
   ```
   例如：
   ```sh
   go_goroutines{instance="10.0.0.1:9090", job="prometheus"}    80
+  go_goroutines{instance="10.0.0.2:9090", job="prometheus"}    90
   ```
   - metric_name 必须匹配正则表达式 `[a-zA-Z_:][a-zA-Z0-9_:]*` ，一般通过 Recording Rules 定义的指标名称才包含冒号 : 。
-  - 标签（label）的作用是便于筛选指标。
-  - label_value 可以包含任意 Unicode 字符。
+  - 存在多条用途相同的监控数据时，可使用同一个 metric_name 、不同的标签（label），然后通过 labels 来筛选。
+  - label_value 可包含 Unicode 字符。
+  - 一个监控对象 exporter 可能输出多种名称的 metrics 。而每个 metrics 可能存在 labels 集合值不同的多个实例 samples ，又称为指标样本。
 
-- 根据用途的不同对 metrcis 分类：
-  - Counter ：计数器，数值单调递增。
-  - Gauge ：仪表，数值可以任意加减变化。
-  - Histogram ：直方图。将时间平均分成一段段区间，将每段时间内的多个采样点取平均值再返回（由 Server 计算），相当于从散点图变成直方图。例如：
-    - `prometheus_http_request_duration_seconds_count{}  10` 表示 HTTP 请求的样本总数有 10 个。
-    - `prometheus_http_request_duration_seconds_sum{}  0.1` 表示 HTTP 请求的耗时总和为 0.1s 。
-    - `prometheus_http_request_duration_seconds_bucket{le="60"}  10` 表示 HTTP 请求中，耗时低于 60s 的有 10 个。
-  - Summary ：汇总。将所有采样点按数值从小到大排列，然后返回其中几个关键位置的采样点的值（由 exporter 计算），相当于正态分布图。例如：
-    - `..._count`
-    - `..._sum`
-    - `http_request_duration_microseconds{handler="prometheus",quantile="0.5"}  3246.518` 表示 HTTP 请求中，排在 50% 位置处的耗时（即中位数）。
-    - `http_request_duration_microseconds{handler="prometheus",quantile="0.9"}  3525.421` 表示 HTTP 请求中，排在 90% 位置处的耗时。
-    - `http_request_duration_microseconds{handler="prometheus",quantile="0.99"}  3657.138` 表示 HTTP 请求中，排在 99% 位置处的耗时。
+- Prometheus 采集 metrics 时，会进行以下处理：
+  - exporter 输出的 metrics 没有时间戳，而 Prometheus 采集 metrics 时会自动记录当前的时间戳。而采集通常有几秒的延迟，因此记录的时间戳不是很准确。
+  - 将 metric_name 记录到内置标签 `__name__` ，比如 `go_goroutines{instance="10.0.0.1:9090", job="prometheus"}` 会记录成 `{__name__="go_goroutines", instance="10.0.0.1:9090", job="prometheus"}` ，因此 samples 完全是通过 labels 来标识的。
+  - 对于一条 sample ，比如 `go_goroutines{instance="10.0.0.1:9090", job="prometheus"}` ，在不同时刻采集一次，就得到了它在不同时刻的取值，组成一个时间序列（time series），可用于监控 sample 取值随时间变化的趋势。
 
-- 根据是否随时间变化对 metrcis 分类：
-  - 标量（scalar）：包含一个或一些散列的值。
-  - 矢量（vector）：包含一系列随时间变化的值。
+  - 对每条 sample 的 labels 集合值计算哈希，然后将该哈希值记作 seriesId ，用作该 time series 在 TSDB 数据库的主键。
+    - 新增一条 sample 时，如果它的 seriesId 在 TSDB 已存在，则添加到已有的 time series 。
+    - 同一 seriesId 之下的各个 sample ，拥有相同的 labels 集合值，只能通过时间戳区分。
+    - Prometheus 定义了一种数据结构 memSeries ，用于存储某个 seriesId 在一段时间范围内的全部 sample 数据。
+    - seriesId 的数量称为基数。采集、查询时涉及的基数越大，则处理的 memSeries 越多，占用的内存越多。
+
+  - 从 labels 向 seriesId 建立倒排索引，因此根据 labels 查询 metrics 的速度很快。例如记录含有 `job="prometheus"` 标签的 seriesId 有 11、22、33 等。
+
+
+- 根据用途的不同对 metrics 分类：
+  - Counter
+    - ：计数器，数值单调递增。
+  - Gauge
+    - ：仪表，数值可以任意加减变化。
+  - Histogram
+    - ：直方图。将时间平均分成一段段区间，将每段时间内的多个采样点取平均值再返回（由 Server 计算），相当于从散点图变成直方图。
+    - 例如 `prometheus_http_request_duration_seconds_count{}  10` 表示 HTTP 请求的样本总数有 10 个。
+    - 例如 `prometheus_http_request_duration_seconds_sum{}  0.1` 表示 HTTP 请求的耗时总和为 0.1s 。
+    - 例如 `prometheus_http_request_duration_seconds_bucket{le="60"}  10` 表示 HTTP 请求中，耗时低于 60s 的有 10 个。
+  - Summary
+    - ：汇总。将所有采样点按数值从小到大排列，然后返回其中几个关键位置的采样点的值（由 exporter 计算），相当于正态分布图。
+    - 例如 `..._count`、`..._sum` 后缀。
+    - 例如 `http_request_duration_microseconds{handler="prometheus",quantile="0.5"}  3246.518` 表示 HTTP 请求中，排在 50% 位置处的耗时（即中位数）。
+    - 例如 `http_request_duration_microseconds{handler="prometheus",quantile="0.9"}  3525.421` 表示 HTTP 请求中，排在 90% 位置处的耗时。
+    - 例如  `http_request_duration_microseconds{handler="prometheus",quantile="0.99"}  3657.138` 表示 HTTP 请求中，排在 99% 位置处的耗时。
+  - exemplar
+    - ：在 metrics 之后附加 traceID 等信息，便于链路追踪。
+    - 该功能默认禁用。
+
+- 根据是否随时间变化对 metrics 分类：
+  - 标量（scalar）
+    - ：包含一个或一些散列的值。
+  - 矢量（vector）
+    - ：包含一系列随时间变化的值。
     - 一个矢量由 n≥1 个时间序列组成，显示成曲线图时有 n 条曲线，在每个时刻处最多有 n 个数据点（又称为元素），不过也可能缺少数据点（为空值）。
 
 ## PromQL
@@ -406,7 +430,7 @@ Prometheus 集群有多种部署方案：
   go_goroutines                                   # 查询具有该名称的指标
   {job="prometheus"}                              # 查询具有指定标签值的指标
   {job!~'_.*', job!~'prometheus'}                 # 支持查询重复的指标名
-  {__name__="go_goroutines", job='prometheus'}    # 通过内置的 __name__ 标签，可以匹配指标名
+  {__name__="go_goroutines", job='prometheus'}    # 通过内置标签 __name__ 可匹配指标名
 
   go_goroutines{job ="prometheus"}                # 查询该名称、该标签值的指标
   go_goroutines{job!="prometheus"}                # 要求具有 job 标签，且值不等于 prometheus

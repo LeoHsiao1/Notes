@@ -159,7 +159,7 @@ Prometheus 集群有多种部署方案：
         # queue_config:           # 配置推送队列
           # capacity: 2500        # 从 WAL 读取 metrics 到 queue 时，每个 shard 最多缓冲多少条 metrics ，如果缓冲区满了则暂停读取 WAL
           # max_shards: 200       # 当前 queue 最多划分多少个 shard
-          # min_shards: 1         # 当前 queue 启动时初始有多少个 shard 。如果滞后了很多 metrics 需要推送，则会自动增加 shard 数量，从而增加推送速度
+          # min_shards: 1         # 当前 queue 启动时初始有多少个 shard 。如果 Prometheus 认为推送速度慢，则会自动增加 shard 数量
           # max_samples_per_send: 500   # 每个 shard 每次最多推送多少条 metrics 。建议将 capacity 设置为 max_samples_per_send 的几倍
           # batch_send_deadline: 5s     # 每个 shard 等待缓冲了 max_samples_per_send 条 metrics 才推送一次，如果等待超时，即使数量不足也推送一次
           # min_backoff: 30ms           # 连续推送失败时，重试间隔从 min_backoff 开始增加，每次倍增，最大为 max_backoff

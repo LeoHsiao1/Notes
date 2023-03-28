@@ -37,13 +37,13 @@ TCP segment 的结构如下：
 
 ![](./tcp.jpg)
 
-- Source Port ：源端口，长度为 16 bit 。
-- Dest Port ：目标端口，16 bit 。
-- Seq number ：序列号，32 bit 。表示已发送的最后一个字节的序列号。
-- Ack number ：确认号，32 bit 。表示预计接收的下一个字节的序列号。
-- Data offset ：偏移量，4 bit 。表示 payload 的起始坐标，即 TCP headers 的总长度。
-- Reserved ：保留给未来使用，3 bit ，默认值为 0 。
-- Flag ：标志符，9 bit 。每个 bit 代表一个标志位，默认值为 0 。
+- Source Port ：源端口，占 16 bit 空间。
+- Dest Port ：目标端口，占 16 bit 。
+- Seq number ：序列号，占 32 bit 。表示已发送的最后一个字节的序列号。
+- Ack number ：确认号，占 32 bit 。表示预计接收的下一个字节的序列号。
+- Data offset ：偏移量，占 4 bit 。表示 payload 的起始坐标，即 TCP headers 的总长度。
+- Reserved ：保留给未来使用，占 3 bit ，默认值为 0 。
+- Flag ：标志符，占 9 bit 。每个 bit 代表一个标志位，默认值为 0 。
   - NS
   - CWR
   - ECE
@@ -61,8 +61,8 @@ TCP segment 的结构如下：
   - RST=1 ：表示拒绝 TCP 连接，不愿意接收对方发送的数据包。
   - SYN=1 ：表示请求建立 TCP 连接。
   - FIN=1 ：表示请求关闭 TCP 连接，但依然愿意接收对方发送的数据包，直到正式关闭连接。
-- Window size ：表示自己接收窗口的大小，16 bit 。
-- Checksum ：校验和，16 bit 。
+- Window size ：表示本机接收窗口的大小，占 16 bit 。
+- Checksum ：校验和，占 16 bit 。
   - 计算方法：
     1. 将 TCP headers 中的 Checksum 清零。
     2. 在 TCP headers 之前加上 12 bytes 的伪头部，包含几个字段：Source IP、Dest IP、1 个 保留字节、protocol（传输层协议号）、length（原 headers + payload 的长度）。
@@ -72,10 +72,12 @@ TCP segment 的结构如下：
   - MSS（Maximum Segment Size）：允许传输的 TCP 包的最大体积。
     - 以太网中，IP 包的最大体积 MTU 通常设置为 1500 Bytes 。考虑到 TCP 包封装成 IP 包时需要添加 metadata ，因此通常将 MSS 设置为 1460 bytes 。
     - 如果一个 IP 包超过 MTU ，则会被拆分成多个 IP 包。如果一个 TCP 包超过 MSS ，则会被丢弃。
+    - TCP 三次握手时，通信双方可通过 SYN 包协商 MSS、Window Scaling、SACK-permitted 的值，然后作用于本次 TCP 通信的所有数据包。
   - Window Scaling ：用于扩展 Windows size 的大小。
-  - SACK（Selective Acknowledgements）
-  - Timestamps
-  - Nop
+  - SACK ：用于选择性确认。
+  - SACK-permitted ：表示本机启用了 SACK 功能。
+  - Timestamps ：时间戳，用于计算 TCP 包的传输耗时、 RTT 。
+  - Nop ：表示空内容，用作各个 Options 之间的分隔符。
 - Payload ：载体，即该数据包负责传递的数据。
   - payload 之前的其它数据都只是用于描述 TCP 数据包的元数据，称为 TCP headers 。
 
@@ -135,6 +137,19 @@ TCP segment 的结构如下：
 
 
 
+#### 顺序控制
+
+- TCP 通信时，会记录当前已传输的数据的 bytes 序列号。
+  - 假设主机 A 想通过 TCP 协议传输 1 MB 数据给主机 B ，则需要发送多个 TCP 包。比如第一个 TCP 包的 payload 包含第 0~1000 bytes 的数据，第二个 TCP 包的 payload 包含第 1000~2000 bytes 的数据，以此类推。
+  - 有了序列号，发送方可同时发送多个数据包，不必控制发送顺序，反正接收方能根据序列号对这些数据包排序。
+  - 建立 TCP 连接时，双方会各自生成一个随机的序列号作为起点，称为 ISN（Initial Sequence Number）。
+    - 此后每次通过 TCP payload 传输 n bytes 的数据，记录的序列号就增加 n 。
+
+- 选择性确认（Selective Acknowledgements，SACK）
+  - TCP 的 Ack number 表示已收到小于该序列号的所有数据。但可能出现乱序的情况，比如接收方已收到第 0~100、200~500 bytes 的数据，未收到第 100~200 bytes 的数据。
+    - 此时，发送方只能从 Seq number = 100 处重新发送，重传第 100~500 bytes 的数据，导致重复发送大量数据，加剧网络拥塞。
+    - 如果开启 SACK 功能，则接收方可声明自己已收到第 0~100、200~500 bytes 的数据，因此发送方可以判断出接收方缺少哪些范围的数据，只需重新发送第 100~200 bytes 的数据。
+
 
 #### 差错控制
 
@@ -167,8 +182,8 @@ TCP segment 的结构如下：
 
 - 接收窗口
   - ：指接收方的接收缓冲区的容量，单位 bytes 。
-  - TCP headers 中用 Window size 描述接收窗口的大小，占 16 bit 的空间，因此接收窗口最大为 65535 bytes 。
-    - 如果需要进一步增加窗口大小，可在 TCP Options 中添加 Window Scaling 参数，占 14 bit 的空间。
+  - TCP headers 中用 Window size 描述接收窗口的大小，占 16 bit 空间，因此接收窗口最大为 65535 bytes 。
+    - 如果需要进一步增加窗口大小，可在 TCP Options 中添加 Window Scaling 参数，占 14 bit 空间。
     - 此时用 Window size 与 Window Scaling 的乘积表示接收窗口的大小，因此接收窗口最大为 2^16 * 2^14 = 1 GB 。
   - 一般而言，网络带宽高时，增加接收窗口的大小，能提高网速。
     - 但网络带宽低、丢包率高时，增加接收窗口的大小，可能增加丢包率，加剧网络拥塞。

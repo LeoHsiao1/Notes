@@ -72,12 +72,14 @@ TCP segment 的结构如下：
   - MSS（Maximum Segment Size）：允许传输的 TCP 包的最大体积。
     - 以太网中，IP 包的最大体积 MTU 通常设置为 1500 Bytes 。考虑到 TCP 包封装成 IP 包时需要添加 metadata ，因此通常将 MSS 设置为 1460 bytes 。
     - 如果一个 IP 包超过 MTU ，则会被拆分成多个 IP 包。如果一个 TCP 包超过 MSS ，则会被丢弃。
-    - TCP 三次握手时，通信双方可通过 SYN 包协商 MSS、Window Scaling、SACK-permitted 的值，然后作用于本次 TCP 通信的所有数据包。
-  - Window Scaling ：用于扩展 Windows size 的大小。
+    - TCP 三次握手时，通信双方可通过 SYN 包协商 MSS、Windows scale、SACK-permitted 的值，然后作用于本次 TCP 通信的所有数据包。
+  - Windows scale ：用于扩展 Windows size 的大小。
   - SACK ：用于选择性确认。
   - SACK-permitted ：表示本机启用了 SACK 功能。
-  - Timestamps ：时间戳，用于计算 TCP 包的传输耗时、 RTT 。
-  - Nop ：表示空内容，用作各个 Options 之间的分隔符。
+  - Timestamps ：时间戳，占 32 bit 。
+    - 该时间戳不表示 Unix 时间，而是通常每隔几十 ms 就递增 1 。
+    - 常用于计算 TCP 包的传输耗时、 RTT ，防止序号回绕。
+  - Nop ：表示 no-operation ，用作各个 Options 之间的分隔符。
 - Payload ：载体，即该数据包负责传递的数据。
   - payload 之前的其它数据都只是用于描述 TCP 数据包的元数据，称为 TCP headers 。
 
@@ -135,8 +137,6 @@ TCP segment 的结构如下：
 - 建立 TCP 连接之后，通信双方就可以开始传输包含自定义 payload 的数据包。
 - 一般将 TCP 连接保持一段时间，供双方多次通信，称为 keepalive 。等双方不再使用时，才关闭 TCP 连接。
 
-
-
 #### 顺序控制
 
 - TCP 通信时，会记录当前已传输的数据的 bytes 序列号。
@@ -144,6 +144,20 @@ TCP segment 的结构如下：
   - 有了序列号，发送方可同时发送多个数据包，不必控制发送顺序，反正接收方能根据序列号对这些数据包排序。
   - 建立 TCP 连接时，双方会各自生成一个随机的序列号作为起点，称为 ISN（Initial Sequence Number）。
     - 此后每次通过 TCP payload 传输 n bytes 的数据，记录的序列号就增加 n 。
+
+
+
+- 防止序号回绕（Protection Against Wrapped Sequences，PAWS）
+  - ：TCP headers 中用 32 bit 空间记录序列号。如果序列号的取值达到最大值，则从 0 开始重新递增，称为回绕。此时接收窗口中同时存在新旧 TCP 包，需要判断它们的先后顺序。
+  - 通常每传输 4 GB 数据，序列号就回绕一次。
+  - 常见的解决方案是，比较两个 TCP 包 headers 中的 timestamp ，从而判断它们的先后顺序。不过极低的概率下，timestamp 与序列号会同时发生回绕。
+
+
+<!-- 接收方回复的 ACK=1 的 TCP 包，总是 payload 为空 -->
+
+<!--
+一种劫持 TCP 连接的攻击方式：
+ISN 似乎是黑客最喜欢“劫持”TCP 连接的方式 -->
 
 - 选择性确认（Selective Acknowledgements，SACK）
   - TCP 的 Ack number 表示已收到小于该序列号的所有数据。但可能出现乱序的情况，比如接收方已收到第 0~100、200~500 bytes 的数据，未收到第 100~200 bytes 的数据。
@@ -182,9 +196,10 @@ TCP segment 的结构如下：
 
 - 接收窗口
   - ：指接收方的接收缓冲区的容量，单位 bytes 。
-  - TCP headers 中用 Window size 描述接收窗口的大小，占 16 bit 空间，因此接收窗口最大为 65535 bytes 。
-    - 如果需要进一步增加窗口大小，可在 TCP Options 中添加 Window Scaling 参数，占 14 bit 空间。
-    - 此时用 Window size 与 Window Scaling 的乘积表示接收窗口的大小，因此接收窗口最大为 2^16 * 2^14 = 1 GB 。
+  - TCP headers 中的 Window size 表示本机接收窗口的大小，占 16 bit 空间，因此接收窗口最大为 65535 bytes 。
+    - 如果需要进一步增加窗口大小，可在 TCP Options 中添加 Windows scale 参数，占 14 bit 空间。
+    - 此时用 Window size 与 Windows scale 的乘积表示接收窗口的大小，因此接收窗口最大为 2^16 * 2^14 = 1 GB 。
+    - 每次发出一个 TCP 包，就可修改 Window size 的大小，而 Windows scale 在三次握手时就确定不变了。
   - 一般而言，网络带宽高时，增加接收窗口的大小，能提高网速。
     - 但网络带宽低、丢包率高时，增加接收窗口的大小，可能增加丢包率，加剧网络拥塞。
 

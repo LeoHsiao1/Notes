@@ -25,8 +25,8 @@
 
 - 假设 client 想与某个 server 按 TCP 协议进行通信（比如传输一张图片），通常流程如下：
   1. client 事先知道 server 的 IP 地址、监听的端口号。
-  2. 建立连接：client 发送几个特殊的 TCP 数据包给 server ，请求用 client 的随机一个端口，连接到 server 的指定一个端口。
-  3. 正式通信：双方端口组成一个全双工信道，可以发送任意个包含任意 Payload 的 TCP 数据包。
+  2. 建立连接：client 发送几个特殊的 TCP 包给 server ，请求用 client 的随机一个端口，连接到 server 的指定一个端口。
+  3. 正式通信：双方端口组成一个全双工信道，可以发送任意个包含任意 payload 的 TCP 包。
 
 - 在类 Unix 系统中进行 TCP/UDP 通信时，通信双方需要各创建一个 Socket 文件，以读写文件的方式进行通信。
   - 比如 client 向本机的 Socket 文件写入数据，会被自动传输到 server 端的 Socket 文件，被 server 读取到数据。
@@ -39,9 +39,9 @@ TCP segment 的结构如下：
 
 - Source Port ：源端口，长度为 16 bit 。
 - Dest Port ：目标端口，16 bit 。
-- Seq number ：序列号，32 bit 。表示发送方已发送的最后一个字节的序列号。
-- Ack number ：确认号，32 bit 。表示接收方期望收到的下一个字节的序列号。
-- Data offset ：偏移量，4 bit 。表示 Payload 的起始坐标，即 TCP headers 的总长度。
+- Seq number ：序列号，32 bit 。表示已发送的最后一个字节的序列号。
+- Ack number ：确认号，32 bit 。表示预计接收的下一个字节的序列号。
+- Data offset ：偏移量，4 bit 。表示 payload 的起始坐标，即 TCP headers 的总长度。
 - Reserved ：保留给未来使用，3 bit ，默认值为 0 。
 - Flag ：标志符，9 bit 。每个 bit 代表一个标志位，默认值为 0 。
   - NS
@@ -61,17 +61,23 @@ TCP segment 的结构如下：
   - RST=1 ：表示拒绝 TCP 连接，不愿意接收对方发送的数据包。
   - SYN=1 ：表示请求建立 TCP 连接。
   - FIN=1 ：表示请求关闭 TCP 连接，但依然愿意接收对方发送的数据包，直到正式关闭连接。
-- Window size
+- Window size ：表示自己接收窗口的大小，16 bit 。
 - Checksum ：校验和，16 bit 。
   - 计算方法：
     1. 将 TCP headers 中的 Checksum 清零。
     2. 在 TCP headers 之前加上 12 bytes 的伪头部，包含几个字段：Source IP、Dest IP、1 个 保留字节、protocol（传输层协议号）、length（原 headers + payload 的长度）。
     3. 计算整个 TCP 数据包（包括伪头部、原 headers、payload）的 Checksum ，记录到 TCP headers 中。
 - Urgent pointer
-- Options
-- Payload ：载体，即该数据包要传递的实际数据。
-  - Payload 之前的其它数据都只是用于描述 TCP 数据包的元数据，称为 TCP headers 。
-  - 以太网中网卡的 MTU 通常设置为 1500 Bytes ，因此如果一个 TCP 数据包超过该长度，需要拆分成多个 IP 数据包才能传输。
+- Options ：在 TCP headers 的末尾可添加一些额外的配置参数，实现扩展功能。例如：
+  - MSS（Maximum Segment Size）：允许传输的 TCP 包的最大体积。
+    - 以太网中，IP 包的最大体积 MTU 通常设置为 1500 Bytes 。考虑到 TCP 包封装成 IP 包时需要添加 metadata ，因此通常将 MSS 设置为 1460 bytes 。
+    - 如果一个 IP 包超过 MTU ，则会被拆分成多个 IP 包。如果一个 TCP 包超过 MSS ，则会被丢弃。
+  - Window Scaling
+  - SACK（Selective Acknowledgements）
+  - Timestamps
+  - Nop
+- Payload ：载体，即该数据包负责传递的数据。
+  - payload 之前的其它数据都只是用于描述 TCP 数据包的元数据，称为 TCP headers 。
 
 ### 建立连接
 
@@ -128,7 +134,6 @@ TCP segment 的结构如下：
 - 一般将 TCP 连接保持一段时间，供双方多次通信，称为 keepalive 。等双方不再使用时，才关闭 TCP 连接。
 
 
-
 #### 差错控制
 
 - 确认
@@ -157,6 +162,11 @@ TCP segment 的结构如下：
   - ：如果发送方发送一个数据包之后，没有收到 ACK 包，但之后发送的 3 个数据包都收到 ACK 包，则认为前一个数据包发送失败，不等超时就重传。
 
 #### 流量控制
+
+- 接收窗口
+  - ：指接收方的接收缓冲区的容量，单位 bytes 。
+
+  - TCP headers 中用 16 bit 的空间记录 Window size ，因此接收窗口最大为 65535 bytes 。
 
 - 发送窗口
   - ：指发送方最多有多少个数据包已发送但未收到 ACK 确认。

@@ -143,7 +143,7 @@ TCP segment 的结构如下：
   - 如果本机通过 TCP payload 发送了 n bytes 的数据，则将本机记录的 Seq number 增加 n 。
   - 如果本机通过 TCP payload 接收了 n bytes 的数据，则将本机记录的 Ack number 增加 n 。
   - 刚建立 TCP 连接时，双方会分别随机生成一个 Seq number 的初始值，称为 ISN（Initial Sequence Number）。而本机的 Ack number 的初始值取决于对方的 ISN 。
-  - 利用序列号，发送方可同时发送多个数据包（只要不超过发送窗口），不必控制发送顺序，反正接收方能根据序列号对这些数据包排序。
+  - 优点：利用序列号，发送方可同时发送多个数据包（只要不超过发送窗口），不必控制发送顺序，反正接收方能根据序列号对这些数据包排序。
 
 - 例：主机 A 向主机 B 发送一个 HTTP 请求，并收到一个 HTTP 响应，其下层的 TCP 通信过程如下
   - 首先 TCP 三次握手：
@@ -179,20 +179,23 @@ TCP segment 的结构如下：
         - payload 长度为 0 。
 
 - 防止序号回绕（Protection Against Wrapped Sequences，PAWS）
-  - ：TCP headers 中用 32 bit 空间记录序列号。如果序列号的取值达到最大值，则从 0 开始重新递增，称为回绕。此时接收窗口中同时存在新旧 TCP 包，需要判断它们的先后顺序。
+  - ：TCP headers 中用 32 bit 空间记录序列号，如果序列号的取值达到最大值，则从 0 开始重新递增，称为回绕。此时接收窗口中同时存在新旧 TCP 包，需要判断它们的先后顺序。
   - 通常每传输 4 GB 数据，序列号就回绕一次。
   - 常见的解决方案是，比较两个 TCP 包 headers 中的 timestamp ，从而判断它们的先后顺序。不过极低的概率下，timestamp 与序列号会同时发生回绕。
-
-
-<!--
-一种劫持 TCP 连接的攻击方式：
-ISN 似乎是黑客最喜欢“劫持”TCP 连接的方式 -->
 
 - 选择性确认（Selective Acknowledgements，SACK）
   - TCP 的 Ack number 表示已收到小于该序列号的所有数据。但可能出现乱序的情况，比如接收方已收到第 0-100、200-500 bytes 的数据，未收到第 100-200 bytes 的数据。
     - 此时，发送方只能从 Seq number = 100 处重新发送，重传第 100-500 bytes 的数据，导致重复发送大量数据，加剧网络拥塞。
     - 如果开启 SACK 功能，则接收方可声明自己已收到第 0-100、200-500 bytes 的数据，因此发送方可以判断出接收方缺少哪些范围的数据，只需重新发送第 100-200 bytes 的数据。
 
+- TCP 会话劫持（TCP Session Hijack）
+  - ：一种网络攻击方式。假设主机 A 与主机 B 已建立 TCP 连接，攻击者可以运行主机 C ，窃听到当前的 Seq number、Ack number ，从而冒充主机 A 与主机 B 通信。
+    - 同时，攻击者对真正的主机 A 进行 DoS 攻击，使它不能与主机 B 通信。
+    - 如果攻击者担任主机 A 与主机 B 的通信中间人，比如路由器，则更容易冒充主机 A 。
+  - 对策：
+    - 随机生成 ISN ，减少被预测的概率。不过依然难以避免被窃听。
+    - 启用 SSL 协议，加密 TCP 包中的 payload 。
+    - 启用 IPsec 协议，加密 IP 包中的 payload ，即 TCP segment 。
 
 #### 差错控制
 

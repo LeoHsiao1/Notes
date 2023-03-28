@@ -79,9 +79,9 @@ TCP segment 的结构如下：
   - Timestamps ：时间戳，占 32 bit 。
     - 该时间戳不表示 Unix 时间，而是通常每隔几十 ms 就递增 1 。
     - 常用于计算 TCP 包的传输耗时、 RTT ，防止序号回绕。
-  - Nop ：表示 no-operation ，用作各个 Options 之间的分隔符。
-- Payload ：载体，即该数据包负责传递的数据。
-  - payload 之前的其它数据都只是用于描述 TCP 数据包的元数据，称为 TCP headers 。
+  - Nop ：表示 No-Operation ，用作各个 Options 之间的分隔符。
+- Payload ：负载，即该数据包负责传递的数据。
+  - payload 之前的数据都只是用于描述 TCP 数据包的元数据，称为 TCP headers 。
 
 ### 建立连接
 
@@ -90,9 +90,9 @@ TCP segment 的结构如下：
   ![](./socket_1.png)
 
   1. client 发送一个 SYN=1 的 TCP 包给 server ，表示请求连接到 server 的指定一个 TCP 端口。
-  2. server 收到后，回复一个 SYN=1、ACK=1 的 TCP 包，表示允许连接。
+  2. server 收到后，回复一个 ACK=1、SYN=1 的 TCP 包，表示接受对方的连接，且自己也请求连接。
       - 如果 client 收到该包，就证明自己发送的包能被对方接收，而对方发送的包也能被自己接收。因此从 client 的角度来看，判断双方能相互通信。
-  3. client 收到后，发送一个 ACK=1 的 TCP 包，表示正式建立连接。
+  3. client 收到后，发送一个 ACK=1 的 TCP 包，表示接受对方的连接，从而正式建立连接。
       - 如果 server 收到该包，则从 server 的角度来看，判断双方能相互通信。
       - 如果 server 一直未收到 ACK 包，处于 SYN_RECV 状态，则会在超时之后重新发送 SYN+ACK 包，再次等待。多次超时之后，server 会关闭该连接。
 
@@ -139,13 +139,44 @@ TCP segment 的结构如下：
 
 #### 顺序控制
 
-- TCP 通信时，会记录当前已传输的数据的 bytes 序列号。
-  - 假设主机 A 想通过 TCP 协议传输 1 MB 数据给主机 B ，则需要发送多个 TCP 包。比如第一个 TCP 包的 payload 包含第 0~1000 bytes 的数据，第二个 TCP 包的 payload 包含第 1000~2000 bytes 的数据，以此类推。
-  - 有了序列号，发送方可同时发送多个数据包，不必控制发送顺序，反正接收方能根据序列号对这些数据包排序。
-  - 建立 TCP 连接时，双方会各自生成一个随机的序列号作为起点，称为 ISN（Initial Sequence Number）。
-    - 此后每次通过 TCP payload 传输 n bytes 的数据，记录的序列号就增加 n 。
+- TCP 通信时，双方会分别记录 Seq number、Ack number 两个序列号。
+  - 如果本机通过 TCP payload 发送了 n bytes 的数据，则将本机记录的 Seq number 增加 n 。
+  - 如果本机通过 TCP payload 接收了 n bytes 的数据，则将本机记录的 Ack number 增加 n 。
+  - 刚建立 TCP 连接时，双方会分别随机生成一个 Seq number 的初始值，称为 ISN（Initial Sequence Number）。而本机的 Ack number 的初始值取决于对方的 ISN 。
+  - 利用序列号，发送方可同时发送多个数据包（只要不超过发送窗口），不必控制发送顺序，反正接收方能根据序列号对这些数据包排序。
 
-
+- 例：主机 A 向主机 B 发送一个 HTTP 请求，并收到一个 HTTP 响应，其下层的 TCP 通信过程如下
+  - 首先 TCP 三次握手：
+    1. 主机 A 发送一个 SYN=1 的 TCP 包，表示请求连接。其中：
+        - Seq number = 1000 ，假设这是主机 A 的 ISN 。
+        - Ack number = 0 ，因为还没收到过数据。
+        - payload 长度为 0 。
+    2. 主机 B 回复一个 ACK=1、SYN=1 的 TCP 包，表示接受连接。其中：
+        - Seq number = 2000 ，假设这是主机 B 的 ISN 。
+        - Ack number = 1001 ，表示收到了主机 A 的 Seq number ，预计接收的下一个字节的序列号。
+        - payload 长度为 0 。
+    3. 主机 A 发送一个 ACK=1 的 TCP 包，正式建立连接。其中：
+        - Seq number = 1001 。TCP 握手阶段有点特殊，虽然没有发送 payload ，但双方发出 ACK=1 包时，都会将 Seq number 增加 1 。
+        - Ack number = 2001 ，表示收到了主机 B 的 Seq number ，预计接收的下一个字节的序列号。
+        - payload 长度为 0 。
+  - 然后发送 HTTP 请求：
+    1. 主机 A 发送一个 ACK=1 的 TCP 包，包含 400 bytes 的 HTTP 请求报文。其中：
+        - Seq number = 1001 ，与上一步相同。
+        - Ack number = 2001 ，与上一步相同。
+        - payload 长度为 400 bytes 。发送之后，会将本机的 Seq number 增加到 1401 。
+    2. 主机 B 回复一个 ACK=1 的 TCP 包。其中：
+        - Seq number = 2001 。
+        - Ack number = 1401 ，增加了 400 。
+        - payload 长度为 0 。
+  - 最后收到 HTTP 响应：
+    1. 主机 B 发送一个 ACK=1 的 TCP 包，包含 500 bytes 的 HTTP 响应报文。其中：
+        - Seq number = 2001 ，与上一步相同。
+        - Ack number = 1401 ，与上一步相同。
+        - payload 长度为 500 bytes 。发送之后，会将本机的 Seq number 增加到 2501 。
+    2. 主机 A 回复一个 ACK=1 的 TCP 包。其中：
+        - Seq number = 1401 。
+        - Ack number = 2501 ，增加了 500 。
+        - payload 长度为 0 。
 
 - 防止序号回绕（Protection Against Wrapped Sequences，PAWS）
   - ：TCP headers 中用 32 bit 空间记录序列号。如果序列号的取值达到最大值，则从 0 开始重新递增，称为回绕。此时接收窗口中同时存在新旧 TCP 包，需要判断它们的先后顺序。
@@ -153,16 +184,14 @@ TCP segment 的结构如下：
   - 常见的解决方案是，比较两个 TCP 包 headers 中的 timestamp ，从而判断它们的先后顺序。不过极低的概率下，timestamp 与序列号会同时发生回绕。
 
 
-<!-- 接收方回复的 ACK=1 的 TCP 包，总是 payload 为空 -->
-
 <!--
 一种劫持 TCP 连接的攻击方式：
 ISN 似乎是黑客最喜欢“劫持”TCP 连接的方式 -->
 
 - 选择性确认（Selective Acknowledgements，SACK）
-  - TCP 的 Ack number 表示已收到小于该序列号的所有数据。但可能出现乱序的情况，比如接收方已收到第 0~100、200~500 bytes 的数据，未收到第 100~200 bytes 的数据。
-    - 此时，发送方只能从 Seq number = 100 处重新发送，重传第 100~500 bytes 的数据，导致重复发送大量数据，加剧网络拥塞。
-    - 如果开启 SACK 功能，则接收方可声明自己已收到第 0~100、200~500 bytes 的数据，因此发送方可以判断出接收方缺少哪些范围的数据，只需重新发送第 100~200 bytes 的数据。
+  - TCP 的 Ack number 表示已收到小于该序列号的所有数据。但可能出现乱序的情况，比如接收方已收到第 0-100、200-500 bytes 的数据，未收到第 100-200 bytes 的数据。
+    - 此时，发送方只能从 Seq number = 100 处重新发送，重传第 100-500 bytes 的数据，导致重复发送大量数据，加剧网络拥塞。
+    - 如果开启 SACK 功能，则接收方可声明自己已收到第 0-100、200-500 bytes 的数据，因此发送方可以判断出接收方缺少哪些范围的数据，只需重新发送第 100-200 bytes 的数据。
 
 
 #### 差错控制

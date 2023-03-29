@@ -1,16 +1,45 @@
 # Socket
 
-：套接字。是一种在内存中创建的文件，并不会实际存储在磁盘上。
-- Socket 是类 Unix 系统提供的一种伪文件机制，用于让程序以读写文件的方式实现进程间通信。
+：套接字，是类 Unix 系统提供的一套 API ，用于进行 TCP/UDP 通信，工作在会话层。
+
+## 用法
+
+- 程序调用 Socket 的 API 时，会在内存中创建一个文件，没有实际存储在磁盘上。程序可通过读写 Socket 文件的方式，进行 TCP/UDP 通信。
 - Socket 主要有两种用法：
-  - Unix Domain Socket ：用于本机的进程之间通信。比如 mysqld 在启动时会创建一个 /var/lib/mysql/mysql.sock 文件，客户端向该文件写入数据，就可以被服务器读取到。
-  - Network Socket ：用于不同主机的进程之间通信。比如进行 TCP/UDP 通信时，通信双方需要各创建一个 Socket ，向一方的 Socket 写入数据，就可以在另一方的 Socket 读取到。
+  - Unix Domain Socket ：用于本机的进程之间通信。例如 mysqld 服务器在启动时会创建一个 /var/lib/mysql/mysql.sock 文件，客户端可读写该文件，从而与服务器交互。
+  - Network Socket ：用于不同主机的进程之间通信。例如进行 TCP/UDP 通信时，通信双方需要各创建一个 Socket 文件，向一方的 Socket 写入数据，就会自动进行 TCP/UDP 传输，然后在另一方的 Socket 读取到。
+- client 向 server 请求建立 TCP 连接时，只需知道 server 的 `IP:PORT` 地址，比如 `10.0.0.1:80` 。
+  - IP ：IPv4 或 IPv6 地址，用于定位主机。
+  - PORT ：端口号，用于定位主机上的进程。
+    - 同一 IP 的主机上可能有多个进程，分别监听了不同的 TCP 端口。
+
+- 例：
+  1. 假设主机 A 的 IP 为 10.0.0.1 ，其上有一个进程 B ，创建一个 Socket 文件，监听 TCP 80 端口。
+  2. 如果其它主机上的进程想与进程 B 通信，就创建一个 Socket 文件，发送 TCP 包，目标地址为 10.0.0.1:80 。
+  3. 主机 A 收到 TCP 包，发现它的目标端口是 TCP 80 ，于是将 TCP 转发到监听该端口的进程 B 的 Socket 文件。
+  4. 进程 B 从 Socket 文件读取到 TCP 包。
+
+### 端口号
+
+- 端口号在 TCP/UDP 数据包中存储为 16 bit 的无符号整数，因此取值范围为 0~65535 。
+- 如果进程申请监听端口 0 ，则会被随机分配一个可用端口来监听。例：
+  ```sh
+  [root@CentOS ~]# python3 -m http.server 0
+  Serving HTTP on 0.0.0.0 port 33720 (http://0.0.0.0:33720/) ...
+  ```
+- 小于 1024 的端口通常被系统服务、标准通信协议使用，不建议普通进程使用。例如：
+  - FTP 协议     ：20、21
+  - SSH 协议     ：22
+  - telnet 协议  ：23
+  - SMTP 协议    ：25
+  - HTTP 协议    ：80
+  - HTTPS 协议   ：443
 
 ## TCP
 
 ### 连接队列
 
-- 建立 TCP 连接时，server 方的内核会为每个 Socket 维护 SYN、accept 两个连接队列。
+- 建立 TCP 连接时，server 方的 Linux 内核会为每个 Socket 维护 SYN、accept 两个连接队列。
   - 当连接变为 SYN_RECV 状态时，将连接信息存入 SYN 队列，又称为半连接队列。
     - 此时每个连接占用 304 bytes 内存。
     - 查看半连接的数量：
@@ -21,7 +50,7 @@
     - 然后等待进程主动调用 accept() 函数，取出连接。
 
 - 当队列满了时，Socket 不能接收新连接。
-  - 内核默认会在 SYN 队列满了时启用 SYN Cookies 功能，从而抵抗 SYN Flood 攻击。
+  - Linux 内核默认会在 SYN 队列满了时启用 SYN Cookies 功能，从而抵抗 SYN Flood 攻击。
     - 原理：将 SYN_RECV 状态的连接信息不存入 SYN 队列，而是在 server 回复的 SYN+ACK 包中包含一个 cookie 信息。client 之后发出 ACK 包时如果包含该 cookie ，则允许建立连接。
     - 该功能不符合 TCP 协议，与某些服务不兼容。
 
@@ -73,19 +102,20 @@
         // SHUT_RDWR ：停止接收和发送
   ```
 
-- TCP 服务器的通信流程示例：
+- 调用 Socket 时，通常需要编写以下代码：
   1. 调用 socket() 创建 Socket ，然后用 bind() 绑定，用 listen() 监听，等待客户端建立 TCP 连接。
   2. 调用 accept() ，接收客户端的连接。
   3. 调用 read()、write() 读写 Socket 。
   4. 调用 close() 关闭 Socket 。
 
 - 每个 Socket 连接由五元组 protocol、src_addr、src_port、dst_addr、dst_port 确定，只要其中一项元素不同， Socket 的文件描述符就不同。
+  - 同一 IP 的主机上可能存在多个进程。如果使用相同 protocol ，则只能绑定不同端口。如果使用不同 protocol ，则可以绑定相同端口。
   - 当 server 监听一个端口时，可以被 client 使用任意 src_addr、src_port 请求连接，因此建立的 Socket 有 `255^4 * 65535` 种可能性，几乎无限。
   - 当 server 监听一个端口、被同一个 client 请求连接时，client 的 src_addr 固定、可用的端口范围默认为 `10000 ~ 65535` ，因此建立的 Socket 有 55535 种可能性，足够使用。
     - 一般情况下，client 向同一 server 建立的并发连接数只有几个。
     - 有的情况下，client 会频繁访问 server ，每次创建一个新的 TCP 连接，传输完数据就关闭连接。而 client 作为主动关闭方， Socket 要等 2*MSL 时长才能关闭，因此新、旧 Socket 会同时存在，平均每秒最多能创建 `55535/60=925` 个新 Socket 。此时建议 client 创建 TCP 连接之后不立即关闭，而是复用一段时间。
 
-- 内核收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
+- Linux 内核收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
   - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
   - 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`
   - 如果 bind 的端口小于 1024 ，则需要 root 权限。

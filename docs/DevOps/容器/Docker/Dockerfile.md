@@ -202,8 +202,7 @@
   - 在容器中，dockerd 会将所有命令都从 exec 格式转换成 shell 格式，然后执行。
 - 例：
   ```sh
-  RUN set -eu   ;\
-      echo "Hello World!" ;\
+  RUN echo Hello && \
       touch f1
   RUN ["/bin/echo", "hello"]
   ```
@@ -337,9 +336,8 @@
       WORK_DIR=/opt
 
   # 创建用户及目录
-  RUN set -eu ;\
-      useradd $USER -u $USER_ID -m -s /bin/bash ;\
-      mkdir -p $WORK_DIR ;\
+  RUN useradd $USER -u $USER_ID -m -s /bin/bash && \
+      mkdir -p $WORK_DIR && \
       chown -R $USER:$USER $WORK_DIR
 
   # 其它配置
@@ -351,8 +349,8 @@
   # 构建阶段
   FROM maven:3.8.4-jdk-8 AS builder
   WORKDIR $WORK_DIR
-  RUN git clone $GIT_REPO .   ;\
-      git checkout $GIT_REFS  ;\
+  RUN git clone $GIT_REPO .   && \
+      git checkout $GIT_REFS  && \
       mvn clean package
 
   # 最终阶段
@@ -402,7 +400,7 @@
 - 例：使用 tini
   ```dockerfile
   ...
-  RUN wget https://github.com/krallin/tini/releases/download/v0.19.0/tini -O /usr/bin/tini ;\
+  RUN wget https://github.com/krallin/tini/releases/download/v0.19.0/tini -O /usr/bin/tini && \
       chmod +x /usr/bin/tini
   ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
   CMD ["-jar", "test.jar"]
@@ -480,11 +478,11 @@ docker build <PATH>|<URL>
   - cache ：用于挂载缓存目录，类似于数据卷。
     ```sh
     RUN --mount=type=cache,target=/app/node_modules,id=/app/node_modules \
-        cd /app   ;\
+        cd /app   && \
         npm install
 
     RUN --mount=type=cache,target=/app/node_modules,sharing=locked \
-        cd /app   ;\
+        cd /app   && \
         npm run build
     ```
     - cache 会在第一次挂载时自动创建。当构建结束，且不存在引用它的镜像时，自动删除。
@@ -507,8 +505,8 @@ docker build <PATH>|<URL>
     FROM nginx
 
     LABEL maintainer=test
-    RUN set -eu   ;\
-        echo Hello
+    RUN echo Hello && \
+        touch f1
 
     CMD ["nginx"]
     ```
@@ -523,7 +521,7 @@ docker build <PATH>|<URL>
     ---> Running in 144c44cb0874                    # 在一个中间容器内运行
     Removing intermediate container 144c44cb0874    # 删除中间容器
     ---> 94cb9642d8d7                               # 步骤结束，生成一个中间镜像（这里是将中间容器提交为中间镜像）
-    Step 3/4 : RUN set -eu;     touch f1
+    Step 3/4 : RUN echo Hello && touch f1
     ---> Running in a1150f37fb12
     Removing intermediate container a1150f37fb12
     ---> 4da89ebe5fe6
@@ -544,8 +542,8 @@ docker build <PATH>|<URL>
       - 用 docker push 推送最终镜像时，不会推送中间镜像。
     - 大部分 Dockerfile 指令不会生成新的 layer ，只是修改了配置而生成新的中间镜像。
     - 执行 RUN 指令时，可能修改文件，添加一层新的非空 layer ，保存到镜像配置的 rootfs.diff_ids 列表。
-      - 建议尽量减少 RUN 指令的数量，避免增加大量 layer 。比如将多条 RUN 指令合并成一条，但合并了经常不命中缓存的命令时，又会增加构建耗时。
-      - 安装软件之后，记得删除缓存。例如：
+      - 建议尽量减少 RUN 指令的数量，避免增加大量 layer ，占用过多磁盘空间。比如将多条 RUN 指令合并成一条，但合并了经常不命中缓存的命令时，又会增加构建耗时。
+      - 安装软件之后，应该删除缓存。例如：
         ```dockerfile
         RUN yum update && \
             yum install -y vim && \
@@ -558,7 +556,10 @@ docker build <PATH>|<URL>
             apt clean && \
             rm -rf /var/lib/apt/lists/*
         ```
-      - 在构建时，使用 shell 的 rm 命令只能删除当前 layer 的文件。不能删除之前 layer 的文件，只是添加一层新的 layer ，覆盖原 layer 中的文件。
+        ```dockerfile
+        RUN pip install -r requirements.txt --no-cache-dir
+        ```
+      - 构建镜像时，使用 shell 的 rm 命令只能删除当前 layer 的文件。不能删除之前 layer 的文件，只是添加一层新的 layer ，覆盖原 layer 中的文件，因此之前的 layer 依然占用了磁盘空间。
 
 3. 再次构建镜像：
     ```sh
@@ -567,9 +568,9 @@ docker build <PATH>|<URL>
     Step 1/4 : FROM nginx
     ---> ea335eea17ab
     Step 2/4 : LABEL maintainer=test
-    ---> Using cache                            # 使用缓存
+    ---> Using cache                            # 该 step 使用了缓存
     ---> 94cb9642d8d7
-    Step 3/4 : RUN set -eu;     touch f1
+    Step 3/4 : RUN echo Hello && touch f1
     ---> Using cache
     ---> 4da89ebe5fe6
     Step 4/4 : CMD ["nginx"]

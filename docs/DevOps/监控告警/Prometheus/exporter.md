@@ -225,10 +225,23 @@
 - 指标示例：
   ```sh
   # 关于 apiserver
-  apiserver_request_duration_seconds_count      # 各种 HTTP 请求的次数
-  apiserver_request_duration_seconds_sum        # 各种 HTTP 请求的耗时
+  irate(process_cpu_seconds_total[1m])  # 占用 CPU 核数
+  process_resident_memory_bytes         # 占用 RSS 内存
+  sum(delta(apiserver_request_total{code=~"4.*|5.*"}[1m])) by(code, resource, verb) # 失败的 HTTP 请求数
+  sum(delta(apiserver_request_duration_seconds_count[1m])) by(resource, verb)     # 各种 HTTP 请求的数量（每分钟）
+  sum(delta(apiserver_request_duration_seconds_sum[1m])) by(resource, verb)       # 各种 HTTP 请求的耗时（每分钟）
+  sum(delta(apiserver_response_sizes_sum[1m])) by(resource, verb)                 # 各种 HTTP 响应的体积（每分钟）
+  sum(apiserver_current_inflight_requests) by(request_kind)   # 读/写请求的正在执行数量
+  sum(apiserver_current_inqueue_requests) by(request_kind)    # 读/写请求的等待执行数量
+  sum(apiserver_storage_objects) by(resource)                 # 各种 resource 的数量
+  sum(apiserver_registered_watchers) by(kind)                 # 各种 watcher 的数量
+  sum(delta(apiserver_watch_events_total[1m])) by(kind)       # 各种 watch event 的数量（每分钟）
+  sum(delta(apiserver_watch_events_sizes_sum[1m])) by(kind)   # 各种 watch event 的体积（每分钟）
+
+  # 关于 etcd
   etcd_request_duration_seconds_count
   etcd_request_duration_seconds_sum
+  etcd_db_total_size_in_bytes
 
   # 关于 kubelet
   kubernetes_build_info                                                     # k8s 版本信息
@@ -254,7 +267,7 @@
   prometheus_build_info{branch="HEAD", goversion="go1.14.2", instance="10.0.0.1:9090", job="prometheus", revision="ecee9c8abfd118f139014cb1b174b08db3f342cf", version="2.18.1"}  # 版本信息
 
   time() - process_start_time_seconds                             # 运行时长（s）
-  rate(process_cpu_seconds_total[1m])                             # 占用 CPU 核数
+  irate(process_cpu_seconds_total[1m])                            # 占用 CPU 核数
   process_resident_memory_bytes                                   # 占用内存
   prometheus_tsdb_storage_blocks_bytes                            # tsdb block 占用的磁盘空间
   sum(delta(prometheus_http_requests_total[1m])) by (code)        # 每分钟收到 HTTP 请求的次数

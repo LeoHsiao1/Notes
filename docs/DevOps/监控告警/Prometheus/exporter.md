@@ -1193,6 +1193,11 @@
   # 关于主机
   mongodb_sys_cpu_num_cpus                                # 主机的 CPU 核数
 
+  # 关于 WiredTiger
+  mongodb_ss_wt_cache_bytes_currently_in_the_cache        # 缓存的总量
+  1 - delta(mongodb_ss_wt_cache_pages_read_into_cache[1m]) / delta(mongodb_ss_wt_cache_pages_requested_from_the_cache[1m])  # 缓存的命中率
+  mongodb_ss_wt_cache_tracked_dirty_bytes_in_the_cache    # 缓存的 dirty 量
+
   # 关于 collection
   mongodb_collstats_storageStats_count{database="xx", collection="xx"}  # collection 全部文档的数量，不包括已标记为 deleted 的文档
   mongodb_collstats_storageStats_size                     # collection 全部文档的体积，单位 bytes

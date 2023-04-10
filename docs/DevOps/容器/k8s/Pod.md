@@ -31,7 +31,7 @@
   spec:
     containers:
     - name: nginx
-      image: nginx:1.20
+      image: nginx:1.23
       # imagePullPolicy: Always         # 拉取镜像的策略。默认为 Always ，表示每次创建容器时都要 pull 镜像。可选 IfNotPresent ，表示本机不存在该镜像时才拉取
       args:                             # 容器的启动命令，这会覆盖 Dockerfile 的 CMD 指令
       - nginx
@@ -92,7 +92,7 @@
   spec:
     containers:                 # 普通容器
     - name: nginx
-      image: nginx:1.20
+      image: nginx:1.23
     initContainers:             # init 容器
     - name: init
       image: busybox:latest
@@ -387,7 +387,7 @@ status:
     lastTransitionTime: "2021-12-01T08:21:24Z"
   containerStatuses:      # 容器的状态
   - containerID: docker://2bc5f548736046c64a10d9162024ed102fba0565ff742e16cd032c7a1b75cc29
-    image: nginx:1.20
+    image: nginx:1.23
     imageID: docker-pullable://nginx@sha256:db3c9eb0f9bc7143d5995370afc23f7434f736a5ceda0d603e0132b4a6c7e2cd
     name: nginx
     ready: true
@@ -546,7 +546,7 @@ spec:
   spec:
     containers:
     - name: nginx
-      image: nginx:1.20
+      image: nginx:1.23
       resources:
         limits:
           cpu: 500m               # 每秒占用的 CPU 核数

@@ -73,7 +73,7 @@
   spec:
     containers:
     - name: nginx
-      image: nginx:1.20
+      image: nginx:1.23
       volumeMounts:
       - name: volume-cache
         mountPath: /cache
@@ -99,7 +99,7 @@
   spec:
     containers:
     - name: nginx
-      image: nginx:1.20
+      image: nginx:1.23
       volumeMounts:
       - name: podinfo
         mountPath: /etc/podinfo

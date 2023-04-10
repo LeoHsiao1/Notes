@@ -38,7 +38,7 @@
       spec:                         # Pod 的规格
         containers:                 # 定义该 Pod 中的容器
         - name: nginx               # 该 Pod 中的第一个容器名
-          image: nginx:1.20
+          image: nginx:1.23
   ```
 - Deployment 会自动创建 ReplicaSet 对象，用于运行指定数量的 Pod 副本。
   - 删除一个 Deployment 时，会级联删除其下级对象 ReplicaSet ，和 ReplicaSet 的下级对象 Pod 。
@@ -184,7 +184,7 @@
       spec:
         containers:
         - name: nginx
-          image: nginx:1.20
+          image: nginx:1.23
   ```
 - DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
 - DaemonSet 的更新部署策略（strategy）有两种：
@@ -256,7 +256,7 @@
       spec:
         containers:
         - name: nginx
-          image: nginx:1.20
+          image: nginx:1.23
     # updateStrategy:         # 更新部署的策略，与 DaemonSet 的 strategy 相似。默认为 RollingUpdate ，可改为 OnDelete
     #   type: RollingUpdate
     #   rollingUpdate:

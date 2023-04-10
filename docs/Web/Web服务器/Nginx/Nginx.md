@@ -39,7 +39,7 @@
   services:
     nginx :
       container_name: nginx
-      image: nginx:1.20
+      image: nginx:1.23
       restart: unless-stopped
       ports:
         - 80:80

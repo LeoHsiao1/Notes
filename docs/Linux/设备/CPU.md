@@ -290,7 +290,7 @@ $ uptime      # 显示系统运行时长、CPU 平均负载
 
 ### perf
 
-：用于查看各个事件占用的 CPU 时长。
+：用于测试执行一条命令，查看各个事件占用的 CPU 时长。
 
 ```sh
 $ perf top    # 显示占用 CPU 的各个事件（采样分析）
@@ -315,7 +315,7 @@ $ perf top    # 显示占用 CPU 的各个事件（采样分析）
   - 在显示窗口中，可按方向键上下选择事件，按回车键进入子菜单。
 
 ```sh
-$ perf record <命令>    # 记录执行某条命令时，其中各个事件的 CPU 使用率
+$ perf record <command> # 记录执行某条命令时，其中各个事件的 CPU 使用率
 
 $ perf report           # 显示 perf record 记录的信息
 ```
@@ -339,7 +339,7 @@ $ perf report           # 显示 perf record 记录的信息
   ```
 
 ```sh
-$ perf stat <命令>      # 分析某条命令占用 CPU 的过程
+$ perf stat <command>   # 分析某条命令占用 CPU 的过程
 ```
 - 例：
   ```sh

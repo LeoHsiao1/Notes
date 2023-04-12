@@ -9,36 +9,35 @@
 - 缺点：
   - 功能、性能不如 Consul 。
   - 启动慢，可能要几分钟。
-  - Web 端、API 需要分别启用密码认证，而用户容易遗漏后者，留下安全隐患。
 
 ## 部署
 
-- 下载二进制包，解压后以单机模式启动：
+- 下载 Nacos 的二进制包并解压，然后以单机模式启动：
   ```sh
   sh startup.sh -m standalone
   ```
-  - 访问 `http://127.0.0.1:8848/nacos/` 即可登录 Nacos 的 Web 页面，默认账号、密码为 nacos、nacos 。
 
-- 或者用 Docker 部署：
+- 或者用 Docker 部署单机模式的 Nacos ：
   ```yml
   version: "3"
 
   services:
     nacos:
       container_name: nacos
-      image: nacos/nacos-server:v2.2.0
+      image: nacos/nacos-server:v2.2.1
       restart: unless-stopped
       environment:
         MODE: standalone
-        NACOS_AUTH_ENABLE: 'true'   # Nacos 默认给 Web 端启用了密码认证，但 API 未启用密码认证，需要主动开启
+        NACOS_AUTH_ENABLE: 'true'
         # JVM_XMS: 1G
         # JVM_XMX: 1G
       ports:
         - 8848:8848     # HTTP 端口，供客户端访问
         - 9848:9848     # gRPC 端口，供客户端访问
-        # - 9849:9849   # gRPC 端口，供 Nacos 多实例之间访问
+        # - 9849:9849   # gRPC 端口，供 Nacos 集群节点之间通信
+        # - 7848:7848   # gRPC 端口，供 Nacos 集群节点之间 Raft 选举
   ```
-  - Nacos 默认将数据存储在自己目录中，可配置以下环境变量，将数据存储到 MySQL 中：
+  - Nacos 默认采用内置数据库 Derby ，将数据存储在本机目录中，可配置以下环境变量，将数据存储到 MySQL 中：
     ```yml
     SPRING_DATASOURCE_PLATFORM: mysql
     MYSQL_SERVICE_HOST: 10.0.0.1
@@ -55,7 +54,19 @@
     grant  all on nacos.* to nacos@'%';
     flush privileges;
     ```
-    然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.0/distribution/conf/mysql-schema.sql)
+    然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.1/distribution/conf/mysql-schema.sql)
+
+- Nacos 启动慢，重启时容易导致所有微服务不可用，因此在生产环境建议部署集群模式的 Nacos ，参考 [官方示例](https://github.com/nacos-group/nacos-k8s) 。
+  - Nacos 集群的各节点通过 Raft 协议实现分布式一致性。自动选出一个节点担任 leader ，其它节点担任 follower 。
+  - Nacos v1.4.1 开始，用 sofa-jraft 库代替了自研的 Raft 实现，但存在一些 [issue](https://github.com/alibaba/nacos/issues/5343) 。
+  - 可执行命令 `curl 127.0.0.1:8848/nacos/v1/core/cluster/self` 查看集群状态。
+
+- Nacos 默认的安全性低，需要用户主动配置。
+  - 访问 `http://127.0.0.1:8848/nacos/` 即可登录 Nacos 的 Web 页面，默认账号、密码为 nacos、nacos ，需要用户修改密码。
+  - Nacos 的 Web 页面默认启用了密码认证，但 API 未启用密码认证，需要用户主动配置 NACOS_AUTH_ENABLE=true ，而很多用户会忽视这点。
+    - 原理：每次客户端登录成功之后，Nacos 会根据 token.secret.key 生成一个 accessToken ，分配给客户端使用，并根据 token.expire.seconds 设置有效期。
+    - 即使启用了 NACOS_AUTH_ENABLE ，但一些配置参数采用默认值的话，容易被爆破。因此 Nacos v2.2.0 取消了 token.secret.key、nacos.core.auth.server.identity.key、nacos.core.auth.server.identity.value 的默认值，需要用户主动配置。
+  - 即使完成了上述安全措施，也不应该将 Nacos 暴露到公网。因为它可能存在其它安全漏洞，而且可能有人频繁尝试登录 Nacos ，造成很大 CPU 负载。
 
 ## 用法
 

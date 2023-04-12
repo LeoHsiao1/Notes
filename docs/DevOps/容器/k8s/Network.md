@@ -176,7 +176,8 @@ k8s 常见的几种网络通信：
       protocol: TCP
       targetPort: 26379
 
-    selector:               # 通过 selector 选中一些 Pod
+    # publishNotReadyAddresses: false # 是否将非 Ready 状态的 Pod 端点加入 EndPoints 。默认为 false
+    selector:                     # 通过 selector 选中一些 Pod
       k8s-app: redis
     # sessionAffinity: ClientIP   # 会话保持的方式。默认为 None ，会将数据包随机转发到各个 Pod IP
     # sessionAffinityConfig:

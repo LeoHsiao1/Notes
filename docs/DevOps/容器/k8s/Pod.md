@@ -607,6 +607,7 @@ spec:
   - Burstable
     - ：不稳定的服务质量。
     - 需要 Pod 不满足 Guaranteed QoS 的条件，但至少有一个容器配置了 requests.cpu、limits.cpu、requests.memory、limits.memory 至少一项。即 Pod 有 resources 配置但不严格。
+    - 一般而言，大部分类型的 Pod 只能满足 Burstable 的条件，不能满足 Guaranteed 的严格条件。
   - BestEffort
     - ：尽力而为的服务质量。
     - 需要 Pod 中所有容器都没有配置 requests.cpu、limits.cpu、requests.memory、limits.memory 。此时 k8s 不能预测、限制 Pod 的 cpu、memory 开销，只能尽力而为。
@@ -969,6 +970,10 @@ spec:
     - 如果有 Pod 被驱逐，则需要等待该 Pod 被清理，直到满足以下条件：
       - Pod 处于 terminated 状态
       - Pod 的所有 volume 已被清理（包括删除、回收）
+
+- 减少节点压力驱逐的措施：
+  - 让 Pod 的 requests 资源贴近实际开销，并且 requests 与 limits 的差距尽量小，有利于 k8s 预测 Pod 开销、分散 Pod 负载到各个节点。
+  - 给一些重要的应用配置 Guaranteed QoS ，或者单独部署到一些节点，避免与其它 Pod 抢占资源。
 
 ## 自动伸缩
 

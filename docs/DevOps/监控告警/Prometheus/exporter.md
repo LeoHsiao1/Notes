@@ -1089,9 +1089,10 @@
   *_annotations
   *_labels
 
-  kube_node_role{role="worker"}                             # node 节点类型
-  kube_node_status_condition{condition="xx", status="true"} # node 是否处于某种状态
-  kube_node_status_allocatable{resource="cpu", unit="core"} # node 各种资源的容量
+  kube_node_role{role="worker"}                                           # node 节点类型
+  kube_node_status_condition{condition="Ready", status="true"}            # node 是否处于 Ready 状态
+  kube_node_status_condition{condition!~"Ready", status=~"true|unknown"}  # node 是否处于异常状态
+  kube_node_status_allocatable{resource="cpu", unit="core"}               # node 各种资源的容量
 
   kube_pod_owner{owner_kind="ReplicaSet", owner_name="xx"}  # 父资源
   kube_pod_status_scheduled{condition="true"} # Pod 是否已被调度。这包括停止运行但未删除的 Pod

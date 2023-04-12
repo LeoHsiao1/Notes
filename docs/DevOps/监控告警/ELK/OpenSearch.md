@@ -33,26 +33,23 @@
       container_name: opensearch_dashboards
       image: opensearchproject/opensearch-dashboards:2.6.0
       restart: unless-stopped
-      # environment:
-      #   NODE_OPTIONS: --max-old-space-size=2048   # 如果查询的数据过大，需要增加 node.js 最大占用内存
       ports:
         - 5601:5601
       volumes:
         - ./config:/usr/share/opensearch-dashboards/config
         - ./data:/usr/share/opensearch-dashboards/data
   ```
-  - 可以先用 docker run 启动一个容器，将其中的 config 目录拷贝出来，修改之后再挂载。
   - 容器内以非 root 用户运行服务，需要调整挂载目录的权限：
     ```sh
-    mkdir -p  config data
-    chown -R  1000  .
+    mkdir -p data
+    chown -R 1000 .
     ```
 
 ## 配置
 
 - elasticsearch.yml 的配置示例：
   ```yml
-  cluster.name: test
+  cluster.name: cluster-1
   discovery.type: single-node
   node.name: node-1
   network.host: 0.0.0.0
@@ -67,11 +64,11 @@
   server.host: 0.0.0.0
   server.name: opensearch_dashboards
 
-  elasticsearch.hosts: ['https://10.0.0.1:9200']  # 连接 ES 时采用 HTTPS 协议
-  elasticsearch.ssl.verificationMode: none        # 不验证 ES 的 SSL 证书是否有效
-  elasticsearch.username: kibanaserver
-  elasticsearch.password: ******
-  elasticsearch.requestHeadersWhitelist: [securitytenant,Authorization]
+  opensearch.hosts: ['https://10.0.0.1:9200']  # 连接 ES 时采用 HTTPS 协议
+  opensearch.ssl.verificationMode: none        # 不验证 ES 的 SSL 证书是否有效
+  opensearch.username: kibanaserver
+  opensearch.password: ******
+  opensearch.requestHeadersWhitelist: [securitytenant,Authorization]
 
   opensearch_security.cookie.secure: false        # 当前端采用 HTTPS 时启用它
   opensearch_security.cookie.ttl: 86400000        # cookie 的有效期，单位 ms ，默认为 1 小时

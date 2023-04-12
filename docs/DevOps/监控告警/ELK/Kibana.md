@@ -1,32 +1,54 @@
 # Kibana
 
+：一个基于 node.js 运行的 Web 服务器，用于查询、管理 ES 。
+
 ## 部署
 
-1. 下载二进制版：
+- 下载二进制版：
+  ```sh
+  wget https://artifacts.elastic.co/downloads/kibana/kibana-7.10.0-linux-x86_64.tar.gz
+  ```
+  解压后运行：
+  ```sh
+  bin/kibana
+  ```
+
+- 或者用 docker-compose 部署：
+  ```yml
+  version: '3'
+
+  services:
+    kibana:
+      container_name: kibana
+      image: kibana:7.10.0
+      restart: unless-stopped
+      ports:
+        - 5601:5601
+      volumes:
+        - ./config:/usr/share/kibana/config
+        - ./data:/usr/share/kibana/data
+  ```
+  - 容器内以非 root 用户运行服务，需要调整挂载目录的权限：
     ```sh
-    wget https://artifacts.elastic.co/downloads/kibana/kibana-7.10.0-linux-x86_64.tar.gz
+    mkdir -p data
+    chown -R 1000 .
     ```
 
-2. 解压后，编辑配置文件 config/kibana.yml ：
-    ```yml
-    server.port: 5601           # Kibana 监听的端口
-    server.host: '0.0.0.0'      # Kibana 监听的 IP
-    server.name: kibana         # 服务器显示的名称
+## 配置
 
-    elasticsearch.hosts: ['http://10.0.0.1:9200']   # 要连接的 ES 地址。可以指定多个 host ，但必须属于同一 ES 集群
-    # elasticsearch.username: 'admin'
-    # elasticsearch.password: '123456'
+Kibana 的配置文件位于 `config/kibana.yml` ，内容示例：
+```yml
+server.port: 5601           # Kibana 监听的端口
+server.host: 0.0.0.0        # Kibana 监听的 IP
+server.name: kibana         # 服务器显示的名称
 
-    # kibana.index: '.kibana'   # 在 ES 中创建该索引，存储 Kibana 的数据
-
-    i18n.locale: 'zh-CN'        # 让 Kibana 网站显示中文
-    ```
-    - 如果 ES 集群包含多个节点，为了对 Kibana 发向 ES 的查询请求进行负载均衡，建议在 Kibana 所在主机上部署一个 ES 节点，只担任 coordinating 角色，然后让 Kibana 将查询请求都发给它。
-
-3. 启动：
-    ```sh
-    bin/kibana
-    ```
+elasticsearch.hosts: ['http://10.0.0.1:9200']   # 要连接的 ES 地址。可以指定多个 host ，但必须属于同一 ES 集群
+elasticsearch.ssl.verificationMode: none        # 不验证 ES 的 SSL 证书是否有效
+# elasticsearch.username: kibana_system         # 让 Kibana 通过该账号访问 ES
+# elasticsearch.password: ******
+# kibana.index: '.kibana'   # 在 ES 中创建该索引，用于存储 Kibana 的数据
+```
+- 如果 ES 集群包含多个节点，为了让 Kibana 发向 ES 的查询请求实现负载均衡，可以额外部署一个 ES 节点，只担任 coordinating 角色，然后让 Kibana 将查询请求都发给它。
 
 ## 用法
 

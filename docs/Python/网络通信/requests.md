@@ -106,10 +106,19 @@
 
 ### 代理服务器
 
-```py
->>> proxies = {"http": "http://10.10.1.10:3128", "https": "http://10.10.1.10:1080", 'http://10.20.1.128': 'http://10.10.1.10:5323'}
->>> r = requests.get("http://example.org", proxies=proxies)
-```
+- requests 支持使用 HTTP 协议的代理服务器：
+  ```py
+  proxies = {"http": "http://10.0.0.1:1080", "https": "http://10.0.0.1:1081"}
+  r = requests.get("http://example.org", proxies=proxies)
+  ```
+
+- 也可使用 SOCKS 协议的代理服务器。需要先安装 `pip install requests[socks]` ，然后配置：
+  ```py
+  proxies = {
+      'http': 'socks5://user:password@host:port',
+      'https': 'socks5://user:password@host:port'
+  }
+  ```
 
 ## 关于响应报文
 

@@ -317,13 +317,18 @@ Prometheus 集群有多种部署方案：
     metric_relabel_configs:
     - replacement: test
       target_label: project   # 添加一个 label ，名称为 project ，取值为 test
-    - action: replace   # action 默认为 replace ，是将 source_labels 多个标签的值用 separator 拼接成一个字符串，然后正则匹配，生成字符串 replacement ，最后保存到 target_label
+    - action: replace         # action 默认为 replace ，是将 source_labels 多个标签的值用 separator 拼接成一个字符串，如果与 regex 正则匹配，则生成字符串 replacement ，赋值给 target_label 。如果不正则匹配，则不操作
       source_labels: [<label>, ...]
       separator: ;
       regex: (.+)
       replacement: $1
       target_label: <label>
-    - action: keep      # keep 动作：如果 source_labels 的值与 regex 完全正则匹配，则保留该 label ，否则不保留
+    - action: replace         # 这条规则是当 project 取值为空时，设置默认值
+      source_labels: project
+      regex: ^$
+      replacement: test
+      target_label: project
+    - action: keep            # keep 动作：如果 source_labels 的值与 regex 完全正则匹配，则保留该 label ，否则不保留
       source_labels: [nodename]
       regex: .*test.*
     ```

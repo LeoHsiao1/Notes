@@ -90,7 +90,7 @@
   - 输入的数据包含多个图例时，会显示成多条曲线。
   - 启用 Stack 选项，会将多个曲线堆叠显示。再启用 Percent 选项，则会将它们按百分比显示。
 - Time Series ：时间序列。
-  - v8 版本新增的图表，用于取代 Graph 图表。
+  - ：Grafana v8.0 新增的图表，用于取代 Graph 图表。
 - Stat ：数值。适合显示单个图例的值，还可以选择在背景中显示其变化曲线。
 - Gauge ：度量。适合显示单个图例的值，并在背景中显示其取值范围。
 - Bar Gauge ：条形图。
@@ -99,7 +99,7 @@
 - Diagram ：流程图。
 - Heatmap ：热图。适合显示大量同类型数据，方便看出各种数值的分布位置。
 - Geomap ：地图。
-  - v8.1 版本新增的图表。
+  - ：Grafana v8.1 新增的图表。
   - 支持根据经纬度坐标，在地图上给每个 ip 描点。
   - 当用户浏览时，会向第三方网站发出 GET 请求，获取地图图片。
 - Text ：显示一段文本，支持 Markdown 格式。
@@ -118,7 +118,7 @@
 
 ### Transform
 
-：Grafana 7.0 新增的模块，用于在 Panel 作出显示之前转换 Query 的数据，包括多种功能。
+：Grafana v7.0 新增的模块，用于在 Panel 作出显示之前转换 Query 的数据，包括多种功能。
 
 筛选显示的数据：
 - Filter data by query
@@ -182,41 +182,38 @@
   1. 进入 Alerting 页面，创建至少一个 "Notification Channel" ，表示发送告警信息到哪里。
   2. 进入任意 Panel 的编辑页面，添加 Alert 告警规则。
 
-- 在 Alerting 页面可以看到用户创建的所有 Alert Rule 。
-- 在 Panel 的 Alert 编辑页面，
+- 在 Panel 的 Alert 页面：
   - 点击 "State history" 可以查看告警历史。
-  - 点击 "Test Rule" 可以测试告警条件。
+  - 点击 "Test Rule" 可以测试告警规则。
+  - 只有 Graph 类型的 Panel 支持添加告警规则。
+  - 在 Panel 中使用变量时，不支持添加告警规则。[相关 Issue](https://github.com/grafana/grafana/issues/6557)
 
-- Grafana 内部集成了一个 Alertmanager ，用于对警报进行分组管理。
-  - 只有 Graph 类型的 pannel 支持设置告警。
-  - 在 pannel 中使用变量时，不支持设置告警。
+- 告警规则示例：
+  - 下例是一种 Alert 的触发条件：
+    ```
+    Evaluate every 1m, For 5m
+    ```
+    - 它表示每隔 1m 查询一次，如果满足告警规则，则将该 Panel 从 OK 状态标为 Pending 状态；如果保持 Pending 状态超过 5m ，则标为 Alerting 状态，并发送告警信息。
+    - 如果该 Panel 一直处于 Alerting 状态，Grafana 不会再重复告警，除非用户手动暂停再启用其 Alert Rule 。
+    - 如果该 Panel 不再满足告警规则，Grafana 会立即将它的状态标为 OK ，并且默认也会发送一条告警消息。除非在配置"Notification Channel"时，勾选 "Disable Resolve Message" 。
+  - 下例是一种 Alert 的告警规则：
+    ```
+    WHEN avg() OF query(A, 5m, now-1m) IS ABOVE 10
+    ```
+    它表示查询最近 5 分钟之内、1 分钟之前的图例 A 的数据，看平均值是否大于 10 。
+    如果图例 A 包含多个 Metric ，则只要有一个 Metric 的值符合条件就会告警。
+    截止时间设置成 now-1m 是为了避免最近 1 分钟之内尚未采集到数据，导致报错：NO DATA
+  - 下例是查询最后一次数据，因此不必担心尚未采集到数据：
+    ```
+    WHEN last() OF query(A, 5m, now) IS ABOVE 10
+    ```
+  - 下例是查询当前数据减去 5 分钟之前的数据的差值（可能为负）：
+    ```
+    WHEN diff() OF query(A, 5m, now) IS ABOVE 10
+    ```
 
-告警规则示例：
-- 下例是一种 Alert 的触发条件：
-  ```
-  Evaluate every 1m, For 5m
-  ```
-  - 它表示每隔 1m 查询一次，如果满足告警条件，则将该 Panel 从 OK 状态标为 Pending 状态；如果保持 Pending 状态超过 5m ，则标为 Alerting 状态，并发送告警信息。
-  - 如果该 Panel 一直处于 Alerting 状态，Grafana 不会再重复告警，除非用户手动暂停再启用其 Alert Rule 。
-  - 如果该 Panel 不再满足告警条件，Grafana 会立即将它的状态标为 OK ，并且默认也会发送一条告警消息。除非在配置"Notification Channel"时，勾选 "Disable Resolve Message" 。
-
-- 下例是一种 Alert 的告警条件：
-  ```
-  WHEN avg() OF query(A, 5m, now-1m) IS ABOVE 10
-  ```
-  它表示查询最近 5 分钟之内、1 分钟之前的图例 A 的数据，看平均值是否大于 10 。
-  如果图例 A 包含多个 Metric ，则只要有一个 Metric 的值符合条件就会告警。
-  截止时间设置成 now-1m 是为了避免最近 1 分钟之内尚未采集到数据，导致报错：NO DATA
-
-- 下例是查询最后一次数据，因此不必担心尚未采集到数据：
-  ```
-  WHEN last() OF query(A, 5m, now) IS ABOVE 10
-  ```
-
-- 下例是查询当前数据减去 5 分钟之前的数据的差值（可能为负）：
-  ```
-  WHEN diff() OF query(A, 5m, now) IS ABOVE 10
-  ```
+- 在 Alerting 页面可以查看所有 Alert Rule 。但不能分组管理，因此 Grafana 管理大量警报时很麻烦。
+  - Grafana v9.0 开始，默认启用了一个内部集成的 Alertmanager ，用于对警报进行分组管理，弥补了上述缺陷。
 
 ## 插件
 

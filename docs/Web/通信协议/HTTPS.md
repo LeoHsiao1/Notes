@@ -52,8 +52,11 @@
       - 再发送 Finished 消息，表示握手完成。
 
 - SNI（Server Name Indication，服务器名称指示）
-  - 同一个 IP 地址的 server 可能同时运行多个 Web 网站，需要选择将哪个网站的 TLS 证书发送给 client 。因此，TLS 握手的第一步，client 发送的 Client Hello 消息中应该包含 SNI 信息，说明自己想访问的网站域名是什么。
-  - 发送 SNI 信息时未被加密，第三方可能发现 client 访问的域名地址，进行审查、拦截。可采取一些措施来提高安全性。比如加密的 SNI、加密的 Client Hello、加密的 DNS 。
+  - 同一个 IP 地址的 server 可能同时运行多个 Web 网站，拥有多个 SSL 证书。因此，在 SSL 握手时 server 需要判断使用哪个 SSL 证书。
+    - 为了解决该问题，通常在 TLS 握手的第一步，在 client 发送的 Client Hello 消息中包含 SNI 信息，说明 client 想访问的 Host 目标域名是什么，于是 server 可找到对应的 SSL 证书。
+    - 如果没有 SNI 信息，server 一般会使用一个默认的 SSL 证书，可能握手失败。
+  - 发送的 SNI 信息默认未加密，第三方可能发现 client 访问的域名地址，进行审查、拦截。
+    - 可采取一些措施来提高安全性。比如加密的 SNI、加密的 Client Hello、加密的 DNS 。
 
 ### TLSv1.3
 

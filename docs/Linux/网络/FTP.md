@@ -283,3 +283,31 @@ xferlog_file=/var/log/vsftpd.log
     auth      required pam_userdb.so  db=/etc/vsftpd/vusers
     account   required pam_userdb.so  db=/etc/vsftpd/vusers
     ```
+
+## sftp
+
+：安全文件传输协议（Secure File Transfer Protocol），是基于 SSH 协议进行加密通信，兼容 FTP 的大部分功能。
+- 优点：
+  - sftp 与 ftp 相比，更安全。且服务器更简单，只需监听 SSH 22 端口，不需要监听 FTP 端口。
+  - sftp 与 scp 相比，功能更多。
+- 例：运行 sftp 服务器
+  ```sh
+  docker run -d --rm -p 1022:22 \
+      --name sftp \
+      atmoz/sftp:alpine-3.7 \
+      root:123456:::upload      # 创建一个用户、密码，并在用户家目录下创建一个 upload 目录，分配访问权限
+  ```
+- 例：使用 sftp 客户端
+  ```sh
+  [root@CentOS ~]# ssh -p 1022 root@10.0.0.1
+  This service allows sftp connections only.      # 使用 ssh 客户端会拒绝连接
+  Connection to 10.0.0.1 closed.
+  [root@CentOS ~]# sftp -P 1022 root@10.0.0.1
+  Connecting to 10.0.0.1...
+  sftp> pwd
+  Remote working directory: /
+  sftp> ls -alh
+  drwxr-xr-x    0 0        0            4.0K Apr 6 16:41 .
+  drwxr-xr-x    0 0        0            4.0K Apr 6 16:41 ..
+  drwxr-xr-x    0 1000     100          4.0K Apr 6 16:41 upload
+  ```

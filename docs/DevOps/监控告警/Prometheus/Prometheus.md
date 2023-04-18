@@ -110,77 +110,81 @@
 
 ### 集群
 
-Prometheus 集群有多种部署方案：
+- 以普通方式部署的 Prometheus 单节点就有很高性能，足够监控几千台服务器。但某些情况下需要部署 Prometheus 集群：
+  - 如果存在多个机房，用一个 Prometheus 通过公网采集这些服务器的 metrics 。则可能存在一些问题：网络带宽低、网络延迟偶尔超过 scrape_timeout 、偶尔断网。
+    - 此时建议采用 federate、agent 等集群方案。大致原理是在每个机房部署一个 Prometheus 子节点，通过内网采集 metrics 。然后将所有 Prometheus 子节点的数据，通过公网汇总到一个 Prometheus 父节点。
+  - 如果存在海量监控指标，导致 Prometheus 采集慢、查询慢，则可考虑 Thanos、VictoriaMetrics 等集群方案。
+
+Prometheus 的多种集群部署方案：
 - federate
-  - 原理：
+  - 部署流程：
     1. 按普通方式部署一些 Prometheus ，担任子节点。
-    2. 部署一个 Prometheus ，担任父节点，添加 scrape_configs 配置：通过 federate 接口，抓取各个 Prometheus 子节点已采集的 metrics 。
-  - 配置示例：
-    ```yml
-    scrape_configs:
-    - job_name: federate
-      honor_labels: true        # 设置 true ，以保存原指标中的 job 、instance 标签
-      metrics_path: /federate   # 抓取的路由
-      params:
-        match[]:                # 指定筛选表达式。至少需要指定一个，如果指定多个则取并集
-          - "{job!=''}"
-          - go_goroutines
-      static_configs:
-        - targets:              # 目标 Prometheus 的地址
-          - 10.0.0.2:9090
-          - 10.0.0.3:9090
-    ```
+    2. 部署一个 Prometheus ，担任父节点，添加 scrape_configs 配置：通过 federate 接口，抓取各个 Prometheus 子节点已采集的 metrics 。配置示例：
+        ```yml
+        scrape_configs:
+        - job_name: federate
+          honor_labels: true        # 设置 true ，以保存原指标中的 job 、instance 标签
+          metrics_path: /federate   # 抓取的路由
+          params:
+            match[]:                # 指定筛选表达式。至少需要指定一个，如果指定多个则取并集
+              - "{job!=''}"
+              - go_goroutines
+          static_configs:
+            - targets:              # 目标 Prometheus 的地址
+              - 10.0.0.2:9090
+              - 10.0.0.3:9090
+        ```
+  - 缺点：
     - 只能抓取目标 Prometheus 最新采集的 metrics 。如果目标 Prometheus 掉线一段时间，则重新连接之后，并不会抓取掉线期间的 metrics 。
-  - 假设在多个机房存在 exporter ，用一个 Prometheus 通过公网采集 metrics 。则可能存在一些问题：网速慢、偶尔超过 scrape_timeout 、偶尔断网。
-    - 此时建议在每个机房部署一个 Prometheus 子节点，通过内网采集 metrics ，然后汇总到 Prometheus 父节点。
 
 - remote write
-  - 原理：
-    1. 部署一个 Prometheus ，担任父节点，加上命令行选项 --web.enable-remote-write-receiver 。
-    2. 部署一些 Prometheus ，担任子节点，添加 remote_write 配置：将本机采集到的 metrics ，发送到 Prometheus 父节点的 /api/v1/write 路由。
+  - 部署流程：
+    1. 部署一个 Prometheus ，担任父节点，添加命令行选项 --web.enable-remote-write-receiver 。
+    2. 部署一些 Prometheus ，担任子节点，添加 remote_write 配置：将本机采集到的 metrics ，发送到 Prometheus 父节点的 /api/v1/write 路由。配置示例：
+        ```yml
+        scrape_configs: ...
+        remote_write:
+          - url: https://prometheus.test.com/api/v1/write
+            # enable_http2: true
+            # remote_timeout: 30s     # 每次发送 HTTP 请求给 remote 的超时时间
+            # basic_auth:
+            #   username: ***
+            #   password: ***
+            write_relabel_configs:    # 在发送 metrics 之前，修改 label
+              - <relabel_config>
+            # queue_config:           # 配置推送队列
+              # capacity: 2500        # 从 WAL 读取 metrics 到 queue 时，每个 shard 最多缓冲多少条 metrics ，如果缓冲区满了则暂停读取 WAL
+              # max_shards: 200       # 当前 queue 最多划分多少个 shard
+              # min_shards: 1         # 当前 queue 启动时初始有多少个 shard 。如果 Prometheus 认为推送速度慢，则会自动增加 shard 数量
+              # max_samples_per_send: 500   # 每个 shard 每次最多推送多少条 metrics 。建议将 capacity 设置为 max_samples_per_send 的几倍
+              # batch_send_deadline: 5s     # 每个 shard 等待缓冲了 max_samples_per_send 条 metrics 才推送一次，如果等待超时，即使数量不足也推送一次
+              # min_backoff: 30ms           # 连续推送失败时，重试间隔从 min_backoff 开始增加，每次倍增，最大为 max_backoff
+              # max_backoff: 5s
+        ```
+        - 整个 queue 占用的内存大概为 `number_of_shards * (capacity + max_samples_per_send)` 。1K 条 metrics 大概占用 50KB 内存。
   - remote write 与 federate 相似，都是将 metrics 汇总存储到一个 Prometheus ，但 remote write 更可靠：
     - federate 方式可能重复采集某个时刻的 metrics ，也可能遗漏采集某个时刻的 metrics 。
     - remote write 方式会为每个 remote 创建一个 metrics 推送队列（queue）。
       - 如果队列中的 metrics 推送失败，则自动重试。除非持续失败 2 小时，WAL 预写日志文件被压缩。
       - 每个 queue 分成多个分片（shard），可以并发推送。
       - 普通部署方案，会在 scrape 瞬间对 Prometheus 造成很大负载。而通过队列推送，负载很平稳。
-  - 配置示例：
-    ```yml
-    scrape_configs: ...
-    remote_write:
-      - url: https://prometheus.test.com/api/v1/write
-        # enable_http2: true
-        # remote_timeout: 30s     # 每次发送 HTTP 请求给 remote 的超时时间
-        # basic_auth:
-        #   username: ***
-        #   password: ***
-        write_relabel_configs:    # 在发送 metrics 之前，修改 label
-          - <relabel_config>
-        # queue_config:           # 配置推送队列
-          # capacity: 2500        # 从 WAL 读取 metrics 到 queue 时，每个 shard 最多缓冲多少条 metrics ，如果缓冲区满了则暂停读取 WAL
-          # max_shards: 200       # 当前 queue 最多划分多少个 shard
-          # min_shards: 1         # 当前 queue 启动时初始有多少个 shard 。如果 Prometheus 认为推送速度慢，则会自动增加 shard 数量
-          # max_samples_per_send: 500   # 每个 shard 每次最多推送多少条 metrics 。建议将 capacity 设置为 max_samples_per_send 的几倍
-          # batch_send_deadline: 5s     # 每个 shard 等待缓冲了 max_samples_per_send 条 metrics 才推送一次，如果等待超时，即使数量不足也推送一次
-          # min_backoff: 30ms           # 连续推送失败时，重试间隔从 min_backoff 开始增加，每次倍增，最大为 max_backoff
-          # max_backoff: 5s
-    ```
-    - 整个 queue 占用的内存大概为 `number_of_shards * (capacity + max_samples_per_send)` 。1K 条 metrics 大概占用 50KB 内存。
 
 - remote read
-  - 原理：
+  - 部署流程：
     1. 按普通方式部署一些 Prometheus ，担任子节点。
     2. 部署一个 Prometheus ，担任父节点，添加 remote_read 配置：当本机需要查询 metrics 时，允许发送查询请求到各个 Prometheus 子节点的 /api/v1/read 路由，然后汇总它们查询到的 metrics 。
-  - 向 Prometheus 子节点发送的查询请求，不是 PromQL 格式，而是 protobuf 格式，只能根据时间范围、标签查询 metrics 。
-  - 警报和记录规则评估仅使用本​​地 TSDB 。
+  - 缺点：
+    - 向 Prometheus 子节点发送的查询请求，不是 PromQL 格式，而是 protobuf 格式，只能根据时间范围、标签查询 metrics ，因此查询的效率不高。
+    - 即使给 Prometheus 添加了 remote_read 配置，执行 recording rules 和 alerting rules 时，只会使用本地 TSDB 的 metrics ，不会读取其它 Prometheus 的 metrics 。
 
 - agent
-  - Prometheus v2.32.0 增加了 agent 工作模式，起源于 Grafana agent ，原理如下：
-    1. 按 remote_write 方案部署 Prometheus 。
-    2. 给 Prometheus 子节点加上命令行选项 --enable-feature=agent 。
-  - agent 与 remote write 相比，优点如下：
+  - Prometheus v2.32.0 增加了 agent 工作模式，起源于 Grafana agent 。
+  - agent 模式是 remote write 模式的基础上，减少 Prometheus 子节点的开销：
     - agent 禁用了本地存储 TSDB ，因此占用磁盘更少。采集到的 metrics 会先缓存在 `data-agent/wal/` 目录，只要转发成功，就立即删除。
     - agent 禁用了查询、警报功能，因此占用内存更少。
+  - 部署流程：
+    1. 按 remote_write 方案部署 Prometheus 集群。
+    2. 给 Prometheus 子节点添加命令行选项 --enable-feature=agent 。
 
 - [Thanos](https://github.com/thanos-io/thanos)
   - ：一套第三方软件，基于 Prometheus 搭建分布式监控系统。包含多个组件：
@@ -191,12 +195,11 @@ Prometheus 集群有多种部署方案：
     - Query ：实现 Prometheus 的查询 API ，被 Query Frontend 调用。
     - Query Frontend ：供用户访问，执行 PromQL 查询表达式。
   - federate 等集群方案主要用于横向扩容 Prometheus 集群，依然存在单点故障的风险。而 thanos 可给每个组件部署多实例，实现高可用。
-    - 不过 Prometheus 单节点就有很高性能，一般不需要用到 thanos 。
 
 - [VictoriaMetrics](https://github.com/VictoriaMetrics/VictoriaMetrics)
   - ：一个监控工具。可完全替代 Prometheus ，也可用作 Prometheus 的存储层，通过 remote write 写入数据，并且兼容 Prometheus 的查询 API 。
   - 与 Prometheus 相比，优点如下：
-    - 采集、查询基数很大的 metrics 时，性能比 Prometheus 更好。
+    - 采集、查询基数很大的 metrics 时，性能比 Prometheus 更好。（seriesId 的数量称为基数）
     - 除了单节点部署，也支持集群部署，可通过部署多实例来实现高可用。
 
 ## 配置

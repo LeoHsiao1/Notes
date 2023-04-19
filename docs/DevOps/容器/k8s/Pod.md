@@ -46,8 +46,8 @@
       workingDir: /tmp                  # 容器的工作目录，这会覆盖 Dockerfile 的 WORKDIR 指令
       # terminationMessagePath: /dev/termination-log  # 默认挂载一个文件到容器内指定路径，用于记录容器的终止信息
       # terminationMessagePolicy: File
-    # imagePullSecrets:                 # 拉取镜像时使用的账号密码，需要指定 secret 对象
-    # - name: my_harbor
+    imagePullSecrets:                 # 拉取镜像时使用的账号密码，可指定多个 k8s secret 对象
+      - name: my_harbor
     # restartPolicy: Always             # 重启策略
     # terminationGracePeriodSeconds: 30 # kubelet 主动终止 Pod 时的宽限期，默认为 30s
     # hostIPC: false                    # 是否采用宿主机的 IPC namespace
@@ -55,9 +55,9 @@
     # hostPID: false                    # 是否采用宿主机的 PID namespace
     # shareProcessNamespace:false       # 是否让所有容器共用 pause 容器的 PID namespace
   ```
-
-- 容器内应用程序的的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
-  - 如果输出到容器内的日志文件，可以增加一个 sidecar 容器，执行 `tail -f xx.log` 命令，将日志采集到容器终端。
+  - 假设 Pod 正在使用一个镜像 nginx:1.23 ，并且 push 了一个新版本的镜像，哈希值不同，但依然命名为 nginx:1.23 。此时重建 Pod ，如果 imagePullPolicy 为 IfNotPresent ，则可能使用本机已有的旧版本的镜像。如果 imagePullPolicy 为 Always ，才能确保使用最新版本的镜像。
+  - 容器内应用程序的的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
+    - 如果输出到容器内的日志文件，可以增加一个 sidecar 容器，执行 `tail -f xx.log` 命令，将日志采集到容器终端。
 
 - Static Pod 是一种特殊的 Pod ，由 kubelet 管理，不受 apiserver 控制，不能调用 ConfigMap 等对象。
   - 用法：启动 kubelet 时加上参数 `--pod-manifest-path=/etc/kubernetes/manifests`，然后将 Pod 的配置文件保存到该目录下。kubelet 会定期扫描配置文件，启动 Pod 。

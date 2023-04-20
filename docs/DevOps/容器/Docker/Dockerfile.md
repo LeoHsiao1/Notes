@@ -39,7 +39,7 @@
 - 会沿用基础镜像的 layer ，继承其大部分指令的配置。
 - 语法：
   ```sh
-  FROM [--platform=<platform>] <image>[:<tag>] [AS <name>]
+  FROM [--platform=<platform>] <image> [AS <name>]
   ```
   - FROM 指令表示一个构建阶段的开始，可用 AS 给该阶段命名。
   - 有的程序不支持跨平台运行，因此需要指定不同的 --platform ，对不同平台分别构建镜像。常见的几种平台（OS/Architecture）：
@@ -413,7 +413,7 @@
 ```sh
 docker build <PATH>|<URL>
             -f <file>                   # Dockerfile 的路径，默认为 <dir>/Dockerfile
-            -t <image>[:tag]            # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
+            -t <image>                  # --tag ，给构建出的镜像加上名称和标签（可多次使用该选项）
             --build-arg VERSION="1.0"   # 传入 ARG 构建参数。可多次使用该选项，每次只能传入一个键值对
             --target <stage>            # 执行完某个阶段就停止构建
             --network <name>            # 设置中间容器使用的网络
@@ -434,9 +434,7 @@ docker build <PATH>|<URL>
 
 ### BuildKit
 
-- Docker 的 18.09 版本增加了一个构建工具 BuildKit 。
-
-- 特点：
+- Docker 的 18.09 版本增加了一个 BuildKit 构建器。特点如下：
   - 采用一种更低级的格式来定义构建过程，称为（Low Level Builder ，LLB）。
     - 兼容 Dockerfile ，通过前端组件自动将其转换成 LLB 。
   - 优化了构建过程，减少耗时。
@@ -447,7 +445,7 @@ docker build <PATH>|<URL>
 - 可通过 buildx 插件启用 BuildKit ：
   ```sh
   docker buildx
-            build <dir>             # 构建，兼容 docker build 的命令选项
+            build <dir>             # 构建镜像，兼容 docker build 的命令选项
                 --cache-from <image>                  # 采用某个镜像作为缓存源
                 --platform linux/arm64,...            # 指定构建的目标平台，默认采用本机平台，可指定多个平台
                 --progress plain                      # 构建过程的输出类型。默认为 auto ，设置为 plain 则会显示终端输出
@@ -456,9 +454,10 @@ docker build <PATH>|<URL>
             du                      # 显示 buildx 占用的磁盘
             prune -f                # 清空 buildx cache
   ```
-  - 可以修改 daemon.json 的配置，使得 docker build 也启用 BuildKit 。
+  - 也可执行 `DOCKER_BUILDKIT=1 docker build` 来启用 BuildKit 。
+  - 从 Docker 23.0.0 版本开始，`docker build` 命令默认采用 BuildKit 构建器，声明 `DOCKER_BUILDKIT=0` 才会采用旧的构建器。
 
-启用 Buildkit 时的新语法：
+启用 Buildkit 时，Dockerfile 的新语法：
 - 支持在 Dockerfile 中声明语法版本：
   ```sh
   # syntax=docker/dockerfile:1.2

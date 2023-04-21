@@ -24,13 +24,16 @@
   services:
     nacos:
       container_name: nacos
-      image: nacos/nacos-server:v2.2.1
+      image: nacos/nacos-server:v2.2.2
       restart: unless-stopped
       environment:
+        JVM_XMS: 1G
+        JVM_XMX: 1G
         MODE: standalone
         NACOS_AUTH_ENABLE: 'true'
-        # JVM_XMS: 1G
-        # JVM_XMX: 1G
+        NACOS_AUTH_TOKEN: ***         # 用于生成客户端的 accessToken
+        NACOS_AUTH_IDENTITY_KEY: ***  # 用于 Nacos 集群节点之间的身份认证
+        NACOS_AUTH_IDENTITY_VALUE: ***
       ports:
         - 8848:8848     # HTTP 端口，供客户端访问
         - 9848:9848     # gRPC 端口，供客户端访问
@@ -54,7 +57,7 @@
     grant  all on nacos.* to nacos@'%';
     flush privileges;
     ```
-    然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.1/distribution/conf/mysql-schema.sql)
+    然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.2/distribution/conf/mysql-schema.sql)
 
 - Nacos 启动慢，重启时容易导致所有微服务不可用，因此在生产环境建议部署集群模式的 Nacos ，参考 [官方示例](https://github.com/nacos-group/nacos-k8s) 。
   - Nacos 集群的各节点通过 Raft 协议实现分布式一致性。自动选出一个节点担任 leader ，其它节点担任 follower 。

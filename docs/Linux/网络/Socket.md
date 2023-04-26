@@ -4,8 +4,8 @@
 
 ## 用法
 
-- 调用 Socket API 时，会在内存中创建一个 Socket 类型的文件，没有实际存储在磁盘上。程序可通过读写 Socket 文件的方式，进行 TCP/UDP 通信。
-  - 程序不需要自己实现 TCP/UDP 协议的具体逻辑，操作系统会自动完成三次握手、顺序控制、差错控制等任务。
+- 调用 Socket API 时，会在内存中创建一个 Socket 类型的文件，没有实际存储在磁盘上。
+  - 程序读、写 Socket 文件时，操作系统会自动基于 TCP/UDP 协议接收、发送数据，不需要程序自己实现 TCP/UDP 协议的具体逻辑。
   - Linux 内核会为每个 Socket 自动分配一些内存空间，创建一个接收缓冲区（Recv buffer）、一个发送缓冲区（Send buffer），用于缓冲基于 TCP/UDP 协议接收、发送的 payload 数据。
 - Socket 主要有两种用法：
   - Unix Domain Socket
@@ -14,15 +14,10 @@
   - Network Socket
     - ：用于不同主机的进程之间通信。
     - 通信双方需要各自创建一个 Socket 文件，向一方的 Socket 文件写入数据，就会被操作系统自动进行 TCP/UDP 传输，然后可以在另一方的 Socket 文件读取到数据。
-    - client 向 server 请求建立 TCP 连接时，只需知道 server 的 `IP:PORT` 地址，比如 `10.0.0.1:80` 。
+    - client 向 server 请求建立 TCP 连接时，需要知道 server 的 `IP:PORT` 地址，比如 `10.0.0.1:80` 。
       - IP ：IPv4 或 IPv6 地址，用于定位主机。
       - PORT ：端口号，用于定位主机上的进程。
         - 同一 IP 的主机上可能有多个进程，分别监听了不同的 TCP 端口。
-    - 例：
-      1. 假设主机 A 的 IP 为 10.0.0.1 ，其上有一个进程 a ，创建了一个 Socket 文件，监听 TCP 80 端口。
-      2. 如果其它主机上的进程想与进程 a 通信，就创建一个 Socket 文件，发送 TCP 包，目标地址为 10.0.0.1:80 。
-      3. 主机 A 收到 TCP 包，发现它的目标端口是 TCP 80 ，于是将 TCP 包转发到监听该端口的进程 a 的 Socket 文件。
-      4. 进程 a 从 Socket 文件读取到 TCP 包。
 
 ### 常见报错
 
@@ -33,8 +28,8 @@
   - 如果主机 B 的防火墙放通了该端口，但没有进程在监听该 socket ，则会回复一个 RST 包，表示拒绝连接，导致主机 A 报错：`Connection refused`
 
 - 当主机 A 与主机 B 通信过程中，主机 B 突然关闭 TCP 连接时：
-  - 如果主机 A 继续读取数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
-  - 如果主机 A 继续发送数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer`
+  - 如果主机 A 继续读取数据，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
+  - 如果主机 A 继续发送数据，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer`
 
 ## API
 
@@ -44,35 +39,35 @@
   ```c
   #include <sys/socket.h>
 
-  // 创建一个 Socket ，输入的参数用于指定协议、类型，返回一个文件描述符 sockfd
   int socket(int domain, int type, int protocol);
+      // 创建一个 Socket ，返回一个文件描述符 sockfd
 
-  // 将一个 Socket 绑定到指定的 IP:PORT
   int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+      // 将一个 Socket 绑定到指定的 IP:PORT
 
-  // TCP server 一方的程序会调用该函数，让 Socket 进入 listen 状态，等待 client 连接
   int listen(int sockfd, int backlog);
-      // backlog ：accept 队列的最大长度。该值的隐式最大值为 net.core.somaxconn
+      // TCP server 一方的程序会调用该函数，让 Socket 进入 LISTEN 状态，等待 client 连接
+      // backlog ：accept 队列的最大长度
 
-  // TCP client 一方的程序会调用该函数，连接到 server
   int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+      // TCP client 一方的程序会调用该函数，连接到 server
 
-  // 从指定 Socket 的 accept 队列取出一个 TCP 握手成功的连接，为它创建并绑定一个新 Socket ，返回新的 sockfd
-  // 源 Socket 为 Listen 状态，新 Socket 为 ESTABLISHED 状态
-  // 如果 accept 队列为空，则一直阻塞等待
   int accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
+      // 从指定 Socket 的 accept 队列取出一个 TCP 握手成功的连接，为它创建并绑定一个新 Socket ，返回新的 sockfd
+      // 源 Socket 为 LISTEN 状态，新 Socket 为 ESTABLISHED 状态
+      // 如果 accept 队列为空，则 accept() 函数会一直阻塞等待
       // addr    ：请求连接的客户端地址
       // addrlen ：客户端地址的长度，即 sizeof(addr)
 
-  // 用于停止 Socket 的通信，但并不会关闭 Socket
   int shutdown(int sockfd , int how);
+      // 用于停止 Socket 的通信，但并不会关闭 Socket
       // how ：表示操作类型，可取值：
         // SHUT_RD   ：停止接收，并丢弃接收缓冲区中的数据
         // SHUT_WR   ：停止发送，但继续传输发送缓冲区中的数据
         // SHUT_RDWR ：停止接收和发送
   ```
 
-- 例：基于 Socket 开发一个 TCP server 程序的基本代码
+- 例：基于 Socket 开发一个 TCP server 程序的代码流程
   1. 调用 socket() 创建一个 Socket ，然后用 bind() 绑定，用 listen() 监听。
       - 该 Socket 用于被动监听 TCP 端口，等待 client 连接，不能用于正式的 TCP 通信。
       - client 程序可调用 socket() 创建一个 Socket ，然后调用 connect() 主动连接到 server 。
@@ -150,7 +145,7 @@
 
 ### IO 模型
 
-- 对于读写 Socket 的 API ，Unix 提供了五种 IO 模型：
+- 读写 Socket 的 API 有很多种，根据 IO 模型分为以下几类：
   - 阻塞（blocking） IO
   - 非阻塞（nonblocking） IO
   - IO 复用（multiplexing）
@@ -159,11 +154,11 @@
 
 #### 阻塞 IO
 
-- ：调用 API 读写 Socket 时，会阻塞执行。
-  - 进程调用 API 接收数据时，要等数据从 Socket 缓冲区拷贝到进程缓冲区，API 才返回。
-  - 发送数据时，也要等数据从进程缓冲区拷贝到 Socket 缓冲区，API 才返回。
-- 优点：阻塞进程时，不会占用 CPU ，可运行其它进程。
-- 缺点：调用 API 时可能长时间阻塞进程，导致进程不能执行其它任务。
+- ：程序调用 API 读写 Socket 时，会阻塞执行。
+  - 调用 API 接收数据时，要等数据从 Socket 接收缓冲区拷贝到 buf 进程内存空间，API 才返回。
+  - 调用 API 发送数据时，也要等数据从 buf 进程内存空间拷贝到 Socket 发送缓冲区，API 才返回。
+- 优点：阻塞当前线程时，不会占用 CPU ，可执行其它线程。
+- 缺点：调用 API 时可能长时间阻塞，导致当前线程不能执行其它任务。
 - 相关 API ：
   ```c
   #include <sys/socket.h>
@@ -172,7 +167,7 @@
       // 接收数据。将 Socket 接收缓冲区中的数据，拷贝到 buf ，然后返回实际读取的字节数
       // sockfd ：指定 Socket 的文件描述符
       // buf    ：指向一块内存空间的指针，用作读缓冲。内核会从 Socket 接收缓冲区读取数据，写入其中
-      // len    ：声明 buf 缓冲区的长度
+      // len    ：声明 buf 内存空间的长度
 
   ssize_t recvfrom(int sockfd, void *restrict buf, size_t len, int flags, struct sockaddr *restrict src_addr, socklen_t *restrict addrlen);
       // 与 recv() 相比，只接收来自指定源地址的数据
@@ -181,7 +176,7 @@
       // 发送数据。将 buf 中的数据，拷贝到 Socket 发送缓冲区，然后返回实际拷贝的字节数
 
   ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
-      // 与 send() 相比，只发送数据给指定目标地址
+      // 与 send() 相比，只发送数据到指定目标地址
   ```
   - 调用 read()、write() 读写 Socket 时，相当于调用 recv()、send() 且 flags 为 0 。
   - 调用 `recv(sockfd, buf, len, flags);` 时，相当于调用 `recvfrom(sockfd, buf, len, flags, NULL, NULL);` 。
@@ -197,24 +192,25 @@
   4. 程序 B 调用 `recv(int sockfd, void *buf, size_t len, int flags);` ，请求接收数据。
       - 这个 buf 是进程动态分配的一块内存空间，可以被进程直接访问。而 Socket 发送、接收缓冲区是 Linux 内核自动分配的一块内存空间，不能被进程直接访问。
       - 如果接收缓冲区中有数据，则操作系统会从中取出 len 长度的数据，拷贝到进程的 buf 内存空间，然后结束执行 recv() 函数。之后进程可以自由处理 buf 中的数据。
-      - 如果接收缓冲区中没有数据，则 recv() 函数会一直阻塞等待，直到接收到新数据。
+      - 如果接收缓冲区中没有数据，则 recv() 函数会一直阻塞等待。
 
-- 假设进程多次调用 send() ，分别发送 1、2、3 bytes 长度的数据：
-  - 如果是 TCP 通信，则多次 send() 的数据可能暂存在发送缓冲区中，前后拼接成一条数据（该例为 6 字节长度），然后放在一个 TCP 数据包中发送，导致 recv() 时不能区分多次 send() 的数据。
-    - 该问题称为 TCP 黏包。常见的解决方案是，进程每次 send() 时，主动给数据添加一些前缀标识，从而明确每条数据的边界。例如 HTTP 协议发送的每个报文，都有固定格式的头部。
-    - 有时 TCP 黏包不会影响数据传输。例如将一个文件的数据分多次 send() 发送，本来就需要拼接成一条数据，不存在边界。
+- 假设程序多次调用 send() ，分别发送 1、2、3 bytes 长度的数据：
+  - 如果是 TCP 通信，则多次 send() 的数据会暂存在发送缓冲区中，前后拼接成一段数据（该例为 6 bytes 长度）。累计的数据量达到 Nagle 算法的阈值之后，才封装为一个 TCP 数据包并发送。因此 recv() 时只收到一段数据，不能区分多次 send() 的数据。
+    - 该问题称为 TCP 黏包。常见的解决方案是，程序每次 send() 时，主动给数据添加一些前缀标识，从而明确每条数据的边界。例如 HTTP 协议发送的每个报文，都有固定格式的头部。
+    - 有时 TCP 黏包不会影响数据传输。例如将一个文件的数据分多次 send() 发送，本来就需要拼接成一段数据，不存在边界。
   - 如果是 UDP 通信，则每次调用 send() ，都会立即发送 UDP 数据包，不存在黏包的问题。
 
 #### 非阻塞 IO
 
-- ：进程调用 API 时，API 立即返回一个错误码，然后进程需要轮询 IO 是否完成。
+- ：程序调用 API 读写 Socket 时，API 会立即返回一个错误码，然后程序需要轮询 IO 操作是否完成。
 - 优点：调用 API 的耗时很短。
 - 缺点：需要多次轮询，占用更多 CPU 。
 
 #### IO 复用
 
-- ：进程调用 API 阻塞监视多个 Socket ，等任一 Socket 缓冲区变为可读或可写时返回。然后进程再调用 recv() 或 send() 。
-- 优点：处理大量连接时，不必为每个 Socket 都创建一个进程或线程。
+- ：程序调用 API 阻塞监视多个 Socket ，等任一 Socket 缓冲区变为可读或可写时返回。然后程序再调用 recv() 或 send() 。
+- 优点：使用单线程就可同时监视多个 Socket 的状态。
+  - 例如 TCP server 一般会被多个 client 连接，绑定了多个 Socket ，需要检查每个 Socket 是否接收了新数据。如果 server 采用阻塞式 IO ，则一个线程同时只能检查一个 Socket 的缓冲区是否可读，轮询一遍全部 Socket 的耗时较久。解决方案是创建多线程，或采用 IO 复用。
 - select() 是最老的一种 IO 复用 API ，大部分操作系统都支持：
   ```c
   #include <sys/select.h>
@@ -276,11 +272,11 @@
 
 #### 信号驱动 IO
 
-- ：进程调用 sigaction() ，函数会立即返回。等 Socket 变为可读或可写时，内核会发送 SIGIO 信号通知进程。然后进程再调用 recv() 或 send() 。
+- ：进程调用 sigaction() ，函数会立即返回。等 Socket 变为可读或可写时，内核会发送 SIGIO 信号通知该进程。然后进程再调用 recv() 或 send() 。
 
 #### 异步 IO
 
-- ：进程调用 API 读写 Socket ，函数会立即返回。等内核完成 IO 操作之后，再发送信号通知进程。
+- ：进程调用 API 读写 Socket ，函数会立即返回。等内核执行完 IO 操作之后，再发送信号通知该进程。
 - 相当于另外创建了一个线程，去执行 recv() 或 send() 。
 - 其它四种 IO 模型都属于同步 IO ，进程需要等待 IO 完成，才能执行其它任务。
 
@@ -297,33 +293,34 @@
 
 ### sockstat
 
-通过 `/proc/net/sockstat` 文件可查看各种状态的 socket 数量：
-```sh
-[CentOS ~]# cat /proc/net/sockstat
-sockets: used 1101
-TCP: inuse 44 orphan 0 tw 260 alloc 402 mem 37
-UDP: inuse 2 mem 10
-UDPLITE: inuse 0
-RAW: inuse 0
-FRAG: inuse 0 memory 0
-```
-- `used` ：使用的 socket 数量。
-- `inuse` ：监听的 socket 数量。
-- `orphan` ：无主的，不属于任何进程。
-- `tw` ：time_wait 。
-- `alloc` ：allocated ，已分配的。
-- `mem` ：内存中缓冲区的大小，单位未知。
+- 通过 `/proc/net/sockstat` 文件可查看各种状态的 socket 数量：
+  ```sh
+  [CentOS ~]# cat /proc/net/sockstat
+  sockets: used 1101
+  TCP: inuse 44 orphan 0 tw 260 alloc 402 mem 37
+  UDP: inuse 2 mem 10
+  UDPLITE: inuse 0
+  RAW: inuse 0
+  FRAG: inuse 0 memory 0
+  ```
+  各字段的含义：
+  ```sh
+  orphan  # 无主的 Socket ，即不绑定任何进程
+  tw      # TIME-WAIT 状态的 socket 数量
+  alloc   # 已绑定进程的 socket 数量
+  mem     # 占用内存
+  ```
 
 ### netstat
 
 ：用于查看本机网络连接的状态。
 - 命令：
   ```sh
-  $ netstat
+  netstat
           -a  # 显示所有 socket
           -l  # 只显示被进程 listen 的 socket
-          -t  # 只显示 TCP 的 socket
-          -u  # 只显示 UDP 的 socket
+          -t  # 只显示 tcp socket
+          -u  # 只显示 udp socket
           -x  # 只显示 unix socket
 
           -e  # 增加显示 User、Inode 列
@@ -337,17 +334,17 @@ FRAG: inuse 0 memory 0
 - 与 netstat 命令类似，但运行速度更快。
 - 命令：
   ```sh
-  $ ss        # 显示 established 状态的 socket
-      -a      # 显示所有状态的 socket
-      -l      # 只显示被进程 listen 的 socket
-      -t      # 只显示 TCP 的 socket
-      -u      # 只显示 UDP 的 socket
-      -x      # 只显示 unix socket
+  ss        # 显示 established 状态的 socket
+    -a      # 显示所有状态的 socket
+    -l      # 只显示被进程 listen 的 socket
+    -t      # 只显示 tcp socket
+    -u      # 只显示 udp socket
+    -x      # 只显示 unix socket
 
-      -p      # 显示使用每个 socket 的进程名
-      -n      # 取消将端口号显示成服务名
+    -p      # 显示绑定每个 socket 的进程名
+    -n      # 取消将端口号显示成服务名
 
-      -s      # 只显示各种 Socket 的统计数量
+    -s      # 只显示各种 Socket 的统计数量
   ```
 
 - 例：查看所有 TCP 端口的信息
@@ -358,7 +355,7 @@ FRAG: inuse 0 memory 0
   LISTEN     0      128        *:111                  *:*              users:(("systemd",pid=1,fd=51))
   LISTEN     0      128        *:22                   *:*              users:(("sshd",pid=3057,fd=3))
   ```
-  - 不指定 Socket 类型时，默认显示的第一列是 `Netid` ，表示 Socket 类型，取值包括：
+  - 不指定 Socket 类型时，默认显示的第一列是 Netid ，表示 Socket 类型，取值包括：
     ```sh
     TCP
     UDP
@@ -392,6 +389,6 @@ FRAG: inuse 0 memory 0
   FRAG      0         0         0
   ```
   - 执行 `ss -a` 时不会显示 closed 状态的 Socket ，但它们的确存在，占用了文件描述符。
-  - 这里 closed 状态的 Socket ，不是指被 close() 关闭的 Socket （它们会被内核回收），而是指没有通信的 Socket 。比如：
+  - 这里 closed 状态的 Socket ，不是指被 close() 关闭的 Socket （它们会被内核自动回收），而是指没有通信的 Socket 。比如：
     - 程序创建 Socket 之后，没有成功调用 connect() ，导致该 Socket 从未进行通信。
     - 程序调用了 shutdown() ，但没有调用 close() ，导致该 Socket 停止通信。

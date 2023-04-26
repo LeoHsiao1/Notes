@@ -4,55 +4,25 @@
 
 ## 用法
 
-- 程序调用 Socket 的 API 时，会在内存中创建一个文件，没有实际存储在磁盘上。程序可通过读写 Socket 文件的方式，进行 TCP/UDP 通信。
+- 调用 Socket API 时，会在内存中创建一个 Socket 类型的文件，没有实际存储在磁盘上。程序可通过读写 Socket 文件的方式，进行 TCP/UDP 通信。
+  - 程序不需要自己实现 TCP/UDP 协议的具体逻辑，操作系统会自动完成三次握手、顺序控制、差错控制等任务。
+  - Linux 内核会为每个 Socket 自动分配一些内存空间，创建一个接收缓冲区（Recv buffer）、一个发送缓冲区（Send buffer），用于缓冲基于 TCP/UDP 协议接收、发送的 payload 数据。
 - Socket 主要有两种用法：
-  - Unix Domain Socket ：用于本机的进程之间通信。例如 mysqld 服务器在启动时会创建一个 /var/lib/mysql/mysql.sock 文件，客户端可读写该文件，从而与服务器交互。
-  - Network Socket ：用于不同主机的进程之间通信。例如进行 TCP/UDP 通信时，通信双方需要各创建一个 Socket 文件，向一方的 Socket 写入数据，就会自动进行 TCP/UDP 传输，然后在另一方的 Socket 读取到。
-- client 向 server 请求建立 TCP 连接时，只需知道 server 的 `IP:PORT` 地址，比如 `10.0.0.1:80` 。
-  - IP ：IPv4 或 IPv6 地址，用于定位主机。
-  - PORT ：端口号，用于定位主机上的进程。
-    - 同一 IP 的主机上可能有多个进程，分别监听了不同的 TCP 端口。
-
-- 例：
-  1. 假设主机 A 的 IP 为 10.0.0.1 ，其上有一个进程 B ，创建一个 Socket 文件，监听 TCP 80 端口。
-  2. 如果其它主机上的进程想与进程 B 通信，就创建一个 Socket 文件，发送 TCP 包，目标地址为 10.0.0.1:80 。
-  3. 主机 A 收到 TCP 包，发现它的目标端口是 TCP 80 ，于是将 TCP 转发到监听该端口的进程 B 的 Socket 文件。
-  4. 进程 B 从 Socket 文件读取到 TCP 包。
-
-### 端口号
-
-- 端口号在 TCP/UDP 数据包中存储为 16 bit 的无符号整数，因此取值范围为 0~65535 。
-- 如果进程申请监听端口 0 ，则会被随机分配一个可用端口来监听。例：
-  ```sh
-  [root@CentOS ~]# python3 -m http.server 0
-  Serving HTTP on 0.0.0.0 port 33720 (http://0.0.0.0:33720/) ...
-  ```
-- 小于 1024 的端口通常被系统服务、标准通信协议使用，不建议普通进程使用。例如：
-  - FTP 协议     ：20、21
-  - SSH 协议     ：22
-  - telnet 协议  ：23
-  - SMTP 协议    ：25
-  - HTTP 协议    ：80
-  - HTTPS 协议   ：443
-
-## TCP
-
-### 连接队列
-
-- 建立 TCP 连接时，server 方的 Linux 内核会为每个 Socket 维护 SYN、accept 两个连接队列。
-  - 当连接变为 SYN_RECV 状态时，将连接信息存入 SYN 队列，又称为半连接队列。
-    - 此时每个连接占用 304 bytes 内存。
-    - 查看半连接的数量：
-      ```sh
-      netstat | grep SYN_RECV | wc -l
-      ```
-  - 当连接变为 ESTABLISHED 状态时，将它从 SYN 队列取出，存入 accept 队列，又称为全连接队列。
-    - 然后等待进程主动调用 accept() 函数，取出连接。
-
-- 当队列满了时，Socket 不能接收新连接。
-  - Linux 内核默认会在 SYN 队列满了时启用 SYN Cookies 功能，从而抵抗 SYN Flood 攻击。
-    - 原理：将 SYN_RECV 状态的连接信息不存入 SYN 队列，而是在 server 回复的 SYN+ACK 包中包含一个 cookie 信息。client 之后发出 ACK 包时如果包含该 cookie ，则允许建立连接。
-    - 该功能不符合 TCP 协议，与某些服务不兼容。
+  - Unix Domain Socket
+    - ：用于本机的进程之间通信。
+    - 例如 mysqld 进程在启动时会创建一个 /var/lib/mysql/mysql.sock 文件，位于同一主机的其它进程可读写该文件，从而与 mysqld 进程通信。
+  - Network Socket
+    - ：用于不同主机的进程之间通信。
+    - 通信双方需要各自创建一个 Socket 文件，向一方的 Socket 文件写入数据，就会被操作系统自动进行 TCP/UDP 传输，然后可以在另一方的 Socket 文件读取到数据。
+    - client 向 server 请求建立 TCP 连接时，只需知道 server 的 `IP:PORT` 地址，比如 `10.0.0.1:80` 。
+      - IP ：IPv4 或 IPv6 地址，用于定位主机。
+      - PORT ：端口号，用于定位主机上的进程。
+        - 同一 IP 的主机上可能有多个进程，分别监听了不同的 TCP 端口。
+    - 例：
+      1. 假设主机 A 的 IP 为 10.0.0.1 ，其上有一个进程 a ，创建了一个 Socket 文件，监听 TCP 80 端口。
+      2. 如果其它主机上的进程想与进程 a 通信，就创建一个 Socket 文件，发送 TCP 包，目标地址为 10.0.0.1:80 。
+      3. 主机 A 收到 TCP 包，发现它的目标端口是 TCP 80 ，于是将 TCP 包转发到监听该端口的进程 a 的 Socket 文件。
+      4. 进程 a 从 Socket 文件读取到 TCP 包。
 
 ### 常见报错
 
@@ -66,7 +36,7 @@
   - 如果主机 A 继续读取数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
   - 如果主机 A 继续发送数据包，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer`
 
-## 相关 API
+## API
 
 ### 创建 Socket
 
@@ -80,11 +50,11 @@
   // 将一个 Socket 绑定到指定的 IP:PORT
   int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 
-  // 让 Socket 进入 Listen 状态（常被作为服务器的进程调用）
+  // TCP server 一方的程序会调用该函数，让 Socket 进入 listen 状态，等待 client 连接
   int listen(int sockfd, int backlog);
       // backlog ：accept 队列的最大长度。该值的隐式最大值为 net.core.somaxconn
 
-  // 连接到指定 Socket（常被作为客户端的进程调用）
+  // TCP client 一方的程序会调用该函数，连接到 server
   int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 
   // 从指定 Socket 的 accept 队列取出一个 TCP 握手成功的连接，为它创建并绑定一个新 Socket ，返回新的 sockfd
@@ -94,7 +64,7 @@
       // addr    ：请求连接的客户端地址
       // addrlen ：客户端地址的长度，即 sizeof(addr)
 
-  // 用于停止 Socket 的通信（但并没有关闭 Socket ）
+  // 用于停止 Socket 的通信，但并不会关闭 Socket
   int shutdown(int sockfd , int how);
       // how ：表示操作类型，可取值：
         // SHUT_RD   ：停止接收，并丢弃接收缓冲区中的数据
@@ -102,41 +72,73 @@
         // SHUT_RDWR ：停止接收和发送
   ```
 
-- 调用 Socket 时，通常需要编写以下代码：
-  1. 调用 socket() 创建 Socket ，然后用 bind() 绑定，用 listen() 监听，等待客户端建立 TCP 连接。
-  2. 调用 accept() ，接收客户端的连接。
+- 例：基于 Socket 开发一个 TCP server 程序的基本代码
+  1. 调用 socket() 创建一个 Socket ，然后用 bind() 绑定，用 listen() 监听。
+      - 该 Socket 用于被动监听 TCP 端口，等待 client 连接，不能用于正式的 TCP 通信。
+      - client 程序可调用 socket() 创建一个 Socket ，然后调用 connect() 主动连接到 server 。
+  2. 调用 accept() ，为每个 TCP 握手成功的 client 创建一个 Socket 。
+      - 该 Socket 用于正式的 TCP 通信。
+      - 一个 server 可能被多个 client 连接，会分别创建一个 Socket ，分别用一对接收、发送缓冲区进行 TCP 通信。
   3. 调用 read()、write() 读写 Socket 。
   4. 调用 close() 关闭 Socket 。
 
-- 每个 Socket 连接由五元组 protocol、src_addr、src_port、dst_addr、dst_port 确定，只要其中一项元素不同， Socket 的文件描述符就不同。
-  - 同一 IP 的主机上可能存在多个进程。如果使用相同 protocol ，则只能绑定不同端口。如果使用不同 protocol ，则可以绑定相同端口。
-  - 当 server 监听一个端口时，可以被 client 使用任意 src_addr、src_port 请求连接，因此建立的 Socket 有 `255^4 * 65535` 种可能性，几乎无限。
-  - 当 server 监听一个端口、被同一个 client 请求连接时，client 的 src_addr 固定、可用的端口范围默认为 `10000 ~ 65535` ，因此建立的 Socket 有 55535 种可能性，足够使用。
+- 调用 bind() 时，如果端口已被本机的其它进程绑定，则会报错：`bind() failed: Address already in use`
+  - 同一 IP 的主机上可能有多个进程先后调用 bind() 。如果它们的 Socket 使用相同 protocol ，则只能绑定不同端口。如果使用不同 protocol ，则可以绑定相同端口。
+  - 端口号在 TCP/UDP 数据包中存储为 16 bit 的无符号整数，因此取值范围为 0~65535 。
+    - 小于 1024 的端口号通常被系统服务使用，不建议普通进程使用，比如 SSH 协议采用 TCP 22 端口。
+      - 调用 bind() 时，如果端口号小于 1024 ，则需要 root 权限才能绑定。
+      - 调用 bind() 时，如果端口号为 0 ，则会被随机分配一个可用端口号。例：
+        ```sh
+        [root@CentOS ~]# python3 -m http.server 0
+        Serving HTTP on 0.0.0.0 port 33720 (http://0.0.0.0:33720/) ...
+        ```
+    - 如果一个进程绑定 IP 为 127.0.0.1 并监听一个端口，则只会接收本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
+    - 如果一个进程绑定 IP 为 0.0.0.0 并监听一个端口，则会接收所有数据包，不限制目标 IP ，只要目标端口一致。
+
+- 当 server 调用 listen() 监听 TCP 端口时，Linux 内核会自动为该 Socket 维护 SYN、accept 两个连接队列。
+  - 如果一个 client 请求连接当前 server ，开始三次握手。则等 TCP 连接变为 SYN_RECV 状态时，将连接信息存入 SYN 队列，又称为半连接队列。
+    - 此时每个连接占用 304 bytes 内存。
+    - 查看半连接的数量：
+      ```sh
+      netstat | grep SYN_RECV | wc -l
+      ```
+  - 当 TCP 连接变为 ESTABLISHED 状态时，将它从 SYN 队列取出，存入 accept 队列，又称为全连接队列。
+    - 等到 server 调用 accept() 函数，就从 accept 队列取出 TCP 连接。
+  - 如果队列满了，则 Socket 不能接收新连接。
+    - Linux 内核默认会在 SYN 队列满了时启用 SYN Cookies 功能，从而抵抗 SYN Flood 攻击。
+      - 原理：将 SYN_RECV 状态的连接信息不存入 SYN 队列，而是在 server 回复的 SYN+ACK 包中包含一个 cookie 信息。client 之后发出 ACK 包时如果包含该 cookie ，则允许建立连接。
+      - 不过该功能不符合 TCP 协议，与某些服务不兼容。
+
+- 调用 accept() 时，会根据五元组 protocol、src_addr、src_port、dst_addr、dst_port 创建一个 Socket ，只要其中一项元素不同，就会创建不同的 Socket 文件。
+  - 当 server 监听一个端口、被不同 IP 的 client 分别请求连接时，这些 Socket 的 src_addr、src_port 不同，因此建立的 Socket 有 `255^4 * 65535` 种可能性，几乎无限。
+  - 当 server 监听一个端口、被同一 IP 的 client 多次请求连接时，这些 Socket 的 src_addr 相同、src_port 默认的取值范围为 `10000 ~ 65535` ，因此建立的 Socket 有 55535 种可能性，一般足够使用。
     - 一般情况下，client 向同一 server 建立的并发连接数只有几个。
     - 有的情况下，client 会频繁访问 server ，每次创建一个新的 TCP 连接，传输完数据就关闭连接。而 client 作为主动关闭方， Socket 要等 2*MSL 时长才能关闭，因此新、旧 Socket 会同时存在，平均每秒最多能创建 `55535/60=925` 个新 Socket 。此时建议 client 创建 TCP 连接之后不立即关闭，而是复用一段时间。
-
-- Linux 内核收到一个发向本机的 TCP/UDP 数据包时，先检查其目标 IP 、目标端口，判断属于哪个 Socket ，然后交给监听该 Socket 的进程。
-  - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
-  - 如果一个进程调用 bind() 时，该端口已被其它进程绑定，则会报错：`bind() failed: Address already in use`
-  - 如果 bind 的端口小于 1024 ，则需要 root 权限。
-  - 如果一个进程绑定 IP 为 127.0.0.1 并监听，则只会接收本机发来的数据包，因为其它主机发来的数据包的目标 IP 不可能是本机环回地址。
-  - 如果一个进程绑定 IP 为 0.0.0.0 并监听，则会接收所有数据包，不限制目标 IP ，只要目标端口一致。
+  - Linux 内核收到一个发向本机的 TCP/UDP 数据包时，会检查其 dst_addr、dst_port ，判断属于哪个 Socket ，然后暂存到该 Socket 的接收缓冲区。
+    - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
 
 ### 读写 Socket
 
-- 可用文件的关闭、读写 API 访问 Socket 文件：
+- Socket 是在内存中创建的文件，因此可调用文件的 API 来读写 Socket ：
   ```c
   #include <unistd.h>
 
-  int close(int fd);
   ssize_t read(int fd, void *buf, size_t count);
   ssize_t write(int fd, const void *buf, size_t count);
   ```
-  - 也可以调用 recv()、send() 等 API 进行通信。
+
+- 也可以调用 recv()、send() 等 API 来读写 Socket ，详见 IO 模型。
+
+### 关闭 Socket
 
 - 关闭 Socket 的几种方式：
-  - 等创建该 Socket 的进程主动调用 close() 。
-    - 其它进程不允许关闭，即使是 root 用户。
+  - 等待创建该 Socket 的进程主动调用 close() 。
+    ```c
+    #include <unistd.h>
+
+    int close(int fd);
+    ```
+    - 不允许其它进程关闭该 Socket ，即使是 root 用户。
   - 终止创建该 Socket 的进程，内核会自动回收其创建的所有 Socket 。
   - 通过 gdb ，调试创建该 Socket 的进程，调用 close() 。如下：
     ```sh
@@ -148,7 +150,7 @@
 
 ### IO 模型
 
-- 调用 API 进行网络通信时，Unix 提供了五种 IO 模型：
+- 对于读写 Socket 的 API ，Unix 提供了五种 IO 模型：
   - 阻塞（blocking） IO
   - 非阻塞（nonblocking） IO
   - IO 复用（multiplexing）
@@ -157,10 +159,11 @@
 
 #### 阻塞 IO
 
-- ：进程调用 API 接收数据时，要等数据从 Socket 缓冲区拷贝到进程缓冲区，API 才返回。
+- ：调用 API 读写 Socket 时，会阻塞执行。
+  - 进程调用 API 接收数据时，要等数据从 Socket 缓冲区拷贝到进程缓冲区，API 才返回。
   - 发送数据时，也要等数据从进程缓冲区拷贝到 Socket 缓冲区，API 才返回。
 - 优点：阻塞进程时，不会占用 CPU ，可运行其它进程。
-- 缺点：调用 API 时会阻塞进程，耗时较久。
+- 缺点：调用 API 时可能长时间阻塞进程，导致进程不能执行其它任务。
 - 相关 API ：
   ```c
   #include <sys/socket.h>
@@ -180,24 +183,27 @@
   ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
       // 与 send() 相比，只发送数据给指定目标地址
   ```
-  - 调用 `recv(sockfd, buf, len, flags);` 相当于 `recvfrom(sockfd, buf, len, flags, NULL, NULL);` 。
-  - 收发时，如果一个数据包较大，则需要多次调用 recv() 或 send() 。
-  - TCP 通信时，通常使用 recv()、send() ，因为远程主机的地址已经绑定到 Socket 了。
+  - 调用 read()、write() 读写 Socket 时，相当于调用 recv()、send() 且 flags 为 0 。
+  - 调用 `recv(sockfd, buf, len, flags);` 时，相当于调用 `recvfrom(sockfd, buf, len, flags, NULL, NULL);` 。
+    - TCP 通信时，通常使用 recv()、send() ，因为远程主机的地址已经绑定到 Socket 了。
     - UDP 通信时，通常使用 recvfrom()、sendto() ，从而区分不同地址的远程主机。
 
-- 进程调用 recv() 的工作流程：
-  1. 进程动态分配一块内存空间，用作缓冲区，用 buf 指针记录。然后开始调用 recv() 。
-  2. 网卡一边接收字节数据，一边写入 Socket 的接收缓冲区。等接收完一个数据包，就通过中断通知内核。
-      - 内核为会每个 Socket 创建 Recv、Send 缓冲区，用于缓冲收、发的数据。
-      - 为了避免缓冲区溢出，可以提高调用 recv() 的频率，或者修改 `net.core.rmem_default` 内核参数来扩大缓冲区。
-  3. 内核将 Recv 缓冲区中的数据，拷贝到进程的 buf 缓冲区。
-  4. recv() 函数返回，进程可以从 buf 读取数据。
+- 例：假设两个程序 A、B 分别位于两个 Linux 主机上，已建立 TCP 连接，可调用 send()、recv() 函数来发送、接收数据。流程如下：
+  1. 程序 A 调用 send() ，请求操作系统发送一批 bytes 数据。
+  2. 程序 A 的操作系统先将 bytes 数据暂存到发送缓冲区，然后取出这些数据作为 payload ，自动封装为一个或多个 TCP 包，最后发送。
+  3. 程序 B 的操作系统收到一个或多个 TCP 包，自动解包，将其中的 payload 数据暂存到接收缓冲区。
+      - 这些数据会一直保存在接收缓冲区，直到程序调用 recv() 取出这些数据。另外，关闭 Socket 也会销毁缓冲区，如果缓冲区还有数据则会丢失。
+      - 如果接收缓冲区满了，则不能接收包含 payload 的新 TCP 包，只能丢包。为了避免这种情况，可以提高调用 recv() 的频率，或者增加 `net.core.rmem_default` 内核参数。
+  4. 程序 B 调用 `recv(int sockfd, void *buf, size_t len, int flags);` ，请求接收数据。
+      - 这个 buf 是进程动态分配的一块内存空间，可以被进程直接访问。而 Socket 发送、接收缓冲区是 Linux 内核自动分配的一块内存空间，不能被进程直接访问。
+      - 如果接收缓冲区中有数据，则操作系统会从中取出 len 长度的数据，拷贝到进程的 buf 内存空间，然后结束执行 recv() 函数。之后进程可以自由处理 buf 中的数据。
+      - 如果接收缓冲区中没有数据，则 recv() 函数会一直阻塞等待，直到接收到新数据。
 
-- 假设进程多次调用 send() ，分别发送 1、2、3 字节长度的数据：
+- 假设进程多次调用 send() ，分别发送 1、2、3 bytes 长度的数据：
   - 如果是 TCP 通信，则多次 send() 的数据可能暂存在发送缓冲区中，前后拼接成一条数据（该例为 6 字节长度），然后放在一个 TCP 数据包中发送，导致 recv() 时不能区分多次 send() 的数据。
     - 该问题称为 TCP 黏包。常见的解决方案是，进程每次 send() 时，主动给数据添加一些前缀标识，从而明确每条数据的边界。例如 HTTP 协议发送的每个报文，都有固定格式的头部。
     - 有时 TCP 黏包不会影响数据传输。例如将一个文件的数据分多次 send() 发送，本来就需要拼接成一条数据，不存在边界。
-  - 如果是 UDP 通信，则每次 send() 都会立即发送 UDP 数据包，不存在黏包的问题。
+  - 如果是 UDP 通信，则每次调用 send() ，都会立即发送 UDP 数据包，不存在黏包的问题。
 
 #### 非阻塞 IO
 
@@ -207,7 +213,7 @@
 
 #### IO 复用
 
-- ：进程调用 API 阻塞监视多个 Socket ，等任一 Socket 变为可读或可写时返回。然后进程再调用 recv() 或 send() 。
+- ：进程调用 API 阻塞监视多个 Socket ，等任一 Socket 缓冲区变为可读或可写时返回。然后进程再调用 recv() 或 send() 。
 - 优点：处理大量连接时，不必为每个 Socket 都创建一个进程或线程。
 - select() 是最老的一种 IO 复用 API ，大部分操作系统都支持：
   ```c

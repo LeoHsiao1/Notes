@@ -105,9 +105,9 @@
       - 不过该功能不符合 TCP 协议，与某些服务不兼容。
 
 - 调用 accept() 时，会根据五元组 protocol、src_addr、src_port、dst_addr、dst_port 创建一个 Socket ，只要其中一项元素不同，就会创建不同的 Socket 文件。
-  - 当 server 监听一个端口、被不同 IP 的 client 分别请求连接时，这些 Socket 的 src_addr、src_port 不同，因此建立的 Socket 有 `255^4 * 65535` 种可能性，几乎无限。
-  - 当 server 监听一个端口、被同一 IP 的 client 多次请求连接时，这些 Socket 的 src_addr 相同、src_port 默认的取值范围为 `10000 ~ 65535` ，因此建立的 Socket 有 55535 种可能性，一般足够使用。
-    - 一般情况下，client 向同一 server 建立的并发连接数只有几个。
+  - 当 server 监听一个端口、被不同 IP 的 client 分别请求连接时，这些 Socket 的 src_addr、src_port 不同，因此创建的 Socket 有 `255^4 * 65535` 种可能性，几乎无限。
+  - 当 server 监听一个端口、被同一 IP 的 client 多次请求连接时，这些 Socket 的 src_addr 相同、src_port 默认的取值范围为 `10000 ~ 65535` ，因此创建的 Socket 有 55535 种可能性，一般足够使用。
+    - 一般情况下，同一 client 向同一 server 建立的 TCP 并发连接数只有一个，或者几个。
     - 有的情况下，client 会频繁访问 server ，每次创建一个新的 TCP 连接，传输完数据就关闭连接。而 client 作为主动关闭方， Socket 要等 2*MSL 时长才能关闭，因此新、旧 Socket 会同时存在，平均每秒最多能创建 `55535/60=925` 个新 Socket 。此时建议 client 创建 TCP 连接之后不立即关闭，而是复用一段时间。
   - Linux 内核收到一个发向本机的 TCP/UDP 数据包时，会检查其 dst_addr、dst_port ，判断属于哪个 Socket ，然后暂存到该 Socket 的接收缓冲区。
     - 如果不存在该 Socket ，则回复一个 RST 包，表示拒绝连接。
@@ -145,7 +145,7 @@
 
 ### IO 模型
 
-- 读写 Socket 的 API 有很多种，根据 IO 模型分为以下几类：
+- 读写 Socket 的 API 有多种，根据 IO 模型分为以下几类：
   - 阻塞（blocking） IO
   - 非阻塞（nonblocking） IO
   - IO 复用（multiplexing）
@@ -157,8 +157,9 @@
 - ：程序调用 API 读写 Socket 时，会阻塞执行。
   - 调用 API 接收数据时，要等数据从 Socket 接收缓冲区拷贝到 buf 进程内存空间，API 才返回。
   - 调用 API 发送数据时，也要等数据从 buf 进程内存空间拷贝到 Socket 发送缓冲区，API 才返回。
-- 优点：阻塞当前线程时，不会占用 CPU ，可执行其它线程。
+- 优点：用法简单。
 - 缺点：调用 API 时可能长时间阻塞，导致当前线程不能执行其它任务。
+  - 函数阻塞时 CPU 是空闲的，可执行其它线程。
 - 相关 API ：
   ```c
   #include <sys/socket.h>
@@ -285,7 +286,7 @@
   - 在等待回复的期间，该程序属于阻塞（Block）状态。
 
 - 异步通信（Asynchronous）
-  - ：指一个程序对外发送消息之后，不必等收到回复，就执行其它任务。
+  - ：指一个程序对外发送消息之后，不必等收到回复，就能执行其它任务。
   - 例如：打电话属于同步通信，需要一边说话一边听对方的回复。而发短信属于异步通信。
   - CPU 的运行速度远高于磁盘 IO 、网络 IO 速度。因此采用同步 IO 时，程序经常会阻塞，不占用 CPU 。采用异步 IO 可以大幅提高 CPU 的使用率。
 
@@ -330,8 +331,7 @@
 
 ### ss
 
-：socket statistics ，用于查看本机 socket 的状态。
-- 与 netstat 命令类似，但运行速度更快。
+：全称为 socket statistics 。该命令与 netstat 类似，但执行速度更快。
 - 命令：
   ```sh
   ss        # 显示 established 状态的 socket
@@ -343,8 +343,8 @@
 
     -p      # 显示绑定每个 socket 的进程名
     -n      # 取消将端口号显示成服务名
-
-    -s      # 只显示各种 Socket 的统计数量
+    -i      # 显示 tcp 协议的详细信息，包括 mss、cwnd、ssthresh 等
+    -s      # 显示各种 Socket 的统计数量
   ```
 
 - 例：查看所有 TCP 端口的信息

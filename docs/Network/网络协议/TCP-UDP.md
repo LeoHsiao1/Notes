@@ -357,7 +357,7 @@ TCP segment 的结构如下：
     1. 将 ssthresh 改为之前 cwnd 的一半，将 cwnd 改为 `sshthresh + 3*MSS` ，其中 `3*MSS` 表示已收到 3 个 ACK 包。
     2. 快速重传 Seq number = N 的包。
     3. 如果依然重复收到 Ack number = N 包，则每收到一个，就将 cwnd 增加 1 倍 MSS 。
-    4. 如果收到 Ack number > N 的新包，则结束快速恢复算法。然后将 cwnd 改为 sshthresh 的值，跳过慢启动阶段，改用拥塞避免算法。
+    4. 如果收到 Ack number > N 的新包，则结束快速恢复算法。然后将 cwnd 改为 sshthresh 的值，跳过慢启动阶段，直接进入拥塞避免阶段。
   - 优点：
     - 每次网络拥塞，大概将 ssthresh、cwnd 减半，比 TCP Tahoe 的降幅小。
   - TCP Reno 等传统拥塞控制算法判断网络拥塞的依据为是否超时重传、快速重传，即是否丢包。因此存在以下缺点：
@@ -369,9 +369,14 @@ TCP segment 的结构如下：
       - 如果缓冲区不为空，则说明网络已经拥塞，但传统拥塞控制算法还不能发现这个事实，直到缓冲区满了、开始丢包，才降低 cwnd 。在此期间，越来越多的数据包暂存到缓冲区，进一步增加了传输延迟、网络负载，该问题称为缓冲区膨胀（Bufferbloat）。
 
 - TCP New Reno
-  - ：1995 年发布的一个拥塞控制算法，改进了 TCP Reno 中的快速恢复算法：
-    - 如果在同一个滑动窗口内，有多个 TCP 包传输失败，则 TCP Reno 会多次触发快速恢复，多次将 ssthresh、cwnd 减半。而 TCP New Reno 只会触发一次快速恢复，逐个找出缺少的 TCP 包并重传，因此只将 ssthresh 减半一次。
-  - 优点：当丢包率较高时，TCP New Reno 的性能比 TCP Reno 更好。
+  - ：1995 年发布的一个拥塞控制算法，改进了 TCP Reno 中的快速恢复算法。
+  - 如果在同一个滑动窗口内，有多个 TCP 包传输失败：
+    - TCP Reno 会多次触发快速恢复，多次将 ssthresh、cwnd 减半。
+    - TCP New Reno 只会触发一次快速恢复，逐个找出缺少的 TCP 包并重传，因此只将 ssthresh 减半一次。例如：
+      - 发送方已发送的最新 Seq number 为 400 ，却重复收到 3 个 Ack number = 100 的包，则快速重传 Seq number = 100 的包。
+      - 重传之后收到新的 Ack 包，如果此时的 Ack number 依然小于 400 ，则从该 Ack number 处继续重传。
+    - 两个算法都假设未启用 SACK 功能，从而提高通用性。
+  - 优点：丢包率越高，TCP New Reno 的性能比 TCP Reno 越好。
 
 - TCP BIC
   - 通过二分法寻找 cwnd 可用的最大值。

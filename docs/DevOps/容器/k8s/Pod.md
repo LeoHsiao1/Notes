@@ -545,7 +545,7 @@ spec:
 
 ## 资源配额
 
-- Pod 中的容器默认可以占用主机的全部 CPU、内存，可能导致主机资源不足。建议限制 Pod 的资源配额，例：
+- Pod 中的容器默认可以无限占用 CPU、内存，可能导致节点资源不足。因此建议给每个容器配置 resources 资源配额，例：
   ```yml
   kind: Pod
   spec:
@@ -562,29 +562,29 @@ spec:
           ephemeral-storage: 100Mi
           memory: 100Mi
   ```
-- requests 表示节点应该分配给 Pod 的资源量，limits 表示 Pod 最多占用的资源量。
-  - 创建 Pod 时，如果指定的 requests 大于 limits 值，则创建失败。
-  - 调度 Pod 时，会寻找可用资源不低于 Pod requests 的节点。如果不存在，则调度失败。
-  - 启动 Pod 时，会创建一个 Cgroup ，根据 Pod limits 设置 cpu.cfs_quota_us、memory.limit_in_bytes 阈值，从而限制 Pod 的资源开销。
-  - k8s v1.8 增加了 ephemeral-storage 功能，不是基于 Cgroup 技术，而是直接测量 Pod 的 container rootfs、container log、emptyDir 占用的磁盘空间。
+- requests 表示该容器期望占用的资源量，limits 表示该容器最多占用的资源量。
+  - 创建 Pod 时，如果任一容器配置的 requests 大于 limits 值，则创建失败。
+  - 调度 Pod 时，会将所有容器的 requests 总和记作 Pod requests ，然后寻找可用资源不低于 Pod requests 的节点。如果不存在，则调度失败。
+  - 启动 Pod 时，会为各个容器分别创建一个 Cgroup ，然后根据该容器的 limits 设置 cpu.cfs_quota_us、memory.limit_in_bytes 阈值，从而限制该容器的资源开销。
+  - k8s v1.8 增加了 ephemeral-storage 功能，用于声明容器的磁盘配额。它不是基于 Cgroup 技术，而是直接测量 Pod 的 container rootfs、container log、emptyDir 占用的磁盘空间。
 
-- 当 Pod 占用的资源超过 limits 时：
-  - 如果超过 limits.cpu ，则让 CPU 暂停执行容器内进程，直到下一个 CPU 周期。
-  - 如果超过 limits.memory ，则触发 OOM-killer ，可能杀死容器内 1 号进程而导致容器终止，不过一般设置了容器自动重启。
-  - 如果超过 limits.ephemeral-storage ，则会发出驱逐信号 ephemeralpodfs.limit ，驱逐 Pod 。
+- 当容器占用的资源超过 limits 时：
+  - 如果超过 limits.cpu ，则让 CPU 暂停执行容器内所有进程，直到下一个 CPU 周期。
+  - 如果超过 limits.memory ，则触发 OOM-killer ，杀死容器内占用内存最多的那个进程。通常是杀死容器内 1 号进程，导致容器终止，然后根据 restartPolicy 自动重启。
+  - 如果超过 limits.ephemeral-storage ，则 kubelet 会发出驱逐信号 ephemeralpodfs.limit ，从当前节点驱逐该 Pod 的所有容器。
 
-- 建议监控 Pod 运行一段时间的实际资源开销，据此配置 requests、limits 。
+- 建议监控 Pod 内各个容器运行一段时间的实际资源开销，据此配置 requests、limits 。
   - 例如用脚本自动配置：
     ```py
     requests.cpu = average_over_24_hours(monitor.cpu)   # 根据 24 小时的平均开销设置 requests 资源
     limits.cpu   = max_over_24_hours(monitor.cpu)       # 根据 24 小时的最大开销设置 requests 资源
     ```
-    - 理想的情况是， Pod 的 requests 等于 limits ，这样容易预测 Pod 的资源开销。
-  - 假设一个 Pod 运行时通常只占用 0.1 核 CPU ，但启动时需要 1 核 CPU ，高峰期需要 2 核 CPU 。
-    - 如果 requests 等于 limits 且多于实际开销，就容易浪费节点资源。
-    - 如果 requests 等于 limits 且少于实际开销，Pod 就容易资源不足。
-    - 如果分配较少 requests、较多 limits ，就难以预测 Pod 的资源开销。如果多个这样的 Pod 调度到同一个节点上，limits 之和可能超过节点总资源，高峰期可能耗尽节点资源。
-    - 这种情况，可采用 VPA 等措施，控制 Pod 的资源配额。
+  - 理想的情况是，Pod 的 requests 等于 limits ，这样 k8s 容易预测 Pod 的资源开销，将 Pod 调度到有足够资源的节点上，避免运行 Pod 一段时间之后才发现节点资源不足。
+  - 有些 Pod 的资源开销不稳定，难以预测。例如一个 Pod 运行一段时间，平均只占用 0.1 核 CPU ，但启动时占用 1 核 CPU ，高峰期占用 2 核 CPU 。
+    - 如果配置 requests=limits=2 ，远大于平均开销，则大部分时间都会浪费节点资源。
+    - 如果配置 requests=limits=0.1 ，远小于启动开销、高峰期开销，则启动耗时久、高峰期 Pod 资源不足。
+    - 如果配置 requests=0.1、limits=2 ，则能解决上述两个问题，但 k8s 难以预测 Pod 的资源开销。如果多个这样的 Pod 调度到同一个节点上，limits 之和可能超过节点总资源，高峰期可能耗尽节点资源。
+    - 如果通过 VPA 自动调整 Pod 的资源开销，则能解决上述三个问题，但比较麻烦。
 
 ### QoS
 

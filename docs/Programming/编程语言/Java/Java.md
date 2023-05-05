@@ -60,9 +60,9 @@
 
 ### GC
 
-：垃圾回收（Garbage Collection），指销毁 Java 进程中不需要保留的对象，回收其内存。
+：垃圾回收（Garbage Collection），指销毁 JVM 进程中不需要保留的对象，回收其内存。
 
-- Java 进程占用的内存分为几部分：
+- JVM 进程占用的内存分为几部分：
   - Heap ：堆内存。主要存放 Java 类的实例对象。
   - Direct Memory ：直接内存，存放与操作系统交互的数据，比如文件。
   - Metaspace ：存放 Java 类的元数据，包括常量、注解等。替代了 Java 8 以前的永久代（Permanent）。
@@ -70,11 +70,16 @@
   - Code Cache ：存放根据 Java 字节码生成的机器代码。
   - Thread Stack ：线程堆栈。
 
-- Java 进程运行时，会从操作系统申请一些内存空间，划分为 Heap、Metaspace 等区域，统称为 committed_memory 。
+- JVM 进程运行时，会从操作系统申请一些内存空间，划分为 Heap、Metaspace 等区域，统称为 committed_memory 。
   - 申请的内存空间不一定实际使用、存放了数据。JVM 内部实际使用的内存称为 used_memory ，它小于等于 committed_memory 。
-  - 在 JVM 外部、操作系统的视角， committed_memory 全部属于 Java 进程占用的内存，会计入主机的 used 内存。
-  - Java GC 的目的，是在 committed_memory 中减少 used_memory ，从而腾出内存空间来写入新数据。
-    - 一般不会减少 committed_memory ，也不会将 committed_memory 中的空闲内存释放给操作系统，而是留给 JVM 自己以后使用。因为释放内存、重新申请内存的开销都较大。
+  - 在 JVM 外部、操作系统的视角， committed_memory 全部属于 JVM 进程占用的内存，会计入主机的 used 内存。
+  - JVM 进程运行时，经常需要分配空闲内存来创建新的 Java 对象，此时可能自动申请更多 committed_memory ，从而凭空增加空闲内存。也可能自动进行 GC ，从而将 committed_memory 中的某些 used_memory 转换成空闲内存。
+    - 当 JVM 进程申请的 committed_memory 达到 MaxHeapSize、MaxMetaspaceSize 等限制时，就不能继续增加。此时只能依靠 GC 在 Heap 中获得空闲内存。
+  - GC 一般不会减少 committed_memory ，也不会将 committed_memory 中的空闲内存释放给操作系统，而是留给 JVM 自己以后使用。因为释放内存、重新申请内存的开销较大。
+    - 频繁 GC 会造成较大 CPU 负载，可能导致 Java 进程卡死、端口无响应。
+    - 如果 GC 之后空闲内存依然不足，则会抛出 OutOfMemoryError 错误。
+      - java.lang.OutOfMemoryError 属于错误，不属于异常，但可以被 try catch 捕捉。
+      - Java 进程抛出 OutOfMemoryError 错误时，可能崩溃退出，也可能继续运行。
 
 - 对象的引用分为四种，从强到弱如下：
   - 强引用（Strong Reference）

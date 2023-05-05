@@ -128,7 +128,7 @@
   ```sh
   echo $var1 ${var2}          # 这不是在 shell 中执行命令，$ 符号不生效，会保留原字符串
   sh -c "echo $var1 ${var2}"  # 这会读取 shell 环境变量
-  echo $(var)                 # 语法 $() 会在创建容器时嵌入 Pod env 环境变量，而不是读取 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会保留原字符串
+  echo $(var)                 # 语法 $() 会在创建容器时引用 spec.containers[].env 中的环境变量，而不是读取 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会保留原字符串
   ```
   例：
   ```yml
@@ -148,6 +148,10 @@
   ```yml
   env:
   - name: POD_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: APP_NAME
     valueFrom:
       fieldRef:
         fieldPath: metadata.labels['k8s-app']
@@ -449,12 +453,13 @@ status:
 
 - 探针可执行多种操作：
   ```sh
-  exec        # 在容器中执行指定的命令，如果命令的退出码为 0 ，则探测结果为 Success
+  exec        # 在当前容器中执行指定命令，如果命令的退出码为 0 ，则探测结果为 Success
   tcpSocket   # 访问容器的指定 TCP 端口，如果能建立 TCP 连接（不必保持），则探测结果为 Success
   httpGet     # 向容器的指定端口、URL 发出 HTTP GET 请求，如果收到响应报文，且状态码为 2xx 或 3xx ，则探测结果为 Success
   grpc
   ```
   - 执行 exec 操作时，产生的 stdout、stderr 不会输出到容器终端，除非主动重定向，例如： `run.sh 1> /proc/1/fd/1  2> /proc/1/fd/2`
+  - 执行 exec 操作时，不能通过语法 `$()` 引用 spec.containers[].env 中的环境变量。
 - 每次执行探针时，探测结果有三种：
   ```sh
   Success
@@ -498,12 +503,12 @@ spec:
 
 ### hook
 
-- k8s 支持添加钩子（hook），用于当容器生命周期发生某些事件时，执行自定义的操作。
+- k8s 支持添加钩子（hook），用于当容器生命周期发生某些 k8s event 时，执行自定义的操作。
   - hook 可执行 exec、httpGet 等类型的操作，像探针。
 
 - 目前可添加两种 hook ：
-  - postStart ：在启动容器时执行。使得 kubelet 启动容器的流程变成这样：
-    1. 创建容器。
+  - postStart ：在启动容器时执行，使得 kubelet 启动容器的流程变成这样：
+    1. kubelet 创建容器。
     2. 在容器内执行启动命令 ENTRYPOINT 作为 1 号进程，执行 postStart 作为普通进程。
         - postStart 与 ENTRYPOINT 是异步执行的，不能控制先后执行的顺序。
     3. 等 postStart 执行成功之后，kubelet 才会将容器的状态改为 Running 。
@@ -512,11 +517,11 @@ spec:
     4. 执行 startupProbe 探针。
     5. 执行 readinessProbe、livenessProbe 探针。
 
-  - preStop ：在终止容器时执行。使得 kubelet 终止容器的流程变成这样：
-    1. kubelet 发现 Pod 变为 Terminating 状态，于是主动终止 Pod 。
-        - kubelet 主动终止 Pod 时，才会执行 preStop 钩子。如果容器已自行终止，进入 terminated 状态，则不会执行 preStop 钩子。
-    2. kubelet 开始执行 preStop 钩子，然后等待容器终止。
-    3. 如果 preStop 执行完，则向容器内 1 号进程发送 SIGTERM 信号，然后继续等待容器终止。
+  - preStop ：在终止容器时执行，使得 kubelet 终止容器的流程变成这样：
+    1. kubelet 发现 Pod 的状态变为 Terminating （可能是因为 apiserver 要求终止该 Pod ），于是开始主动终止 Pod 。
+        - kubelet 主动终止 Pod 时，才会执行 preStop 钩子。如果容器自己终止、被 OOM 终止，该过程不受 kubelet 控制，因此不会执行 preStop 钩子。
+    2. kubelet 执行 preStop 钩子，然后等待容器终止。
+    3. 如果 preStop 执行完了，容器仍未终止，则向容器内 1 号进程发送 SIGTERM 信号，然后继续等待容器终止。
     3. 等待宽限期（terminationGracePeriodSeconds）时长之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。
 
 - 例：

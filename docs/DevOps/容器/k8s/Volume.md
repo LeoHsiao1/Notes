@@ -31,6 +31,7 @@
       - name: vol-data
         mountPath: /etc/redis.conf
         subPath: redis.conf         # 当 volume 为目录时，可选指定 subPath ，只挂载 volume 中的子路径
+        # subPathExpr: $(POD_NAME)  # 引用 spec.containers[].env 中的环境变量
     volumes:                        # 声明该 Pod 使用的所有 volume
       - name: vol-time
         hostPath:
@@ -53,7 +54,7 @@
   CharDevice          # hostPath 必须是一个已存在的字符设备文件
   ```
 - 如果 kubelet 容器化运行，而不是直接运行在主机上，则 hostPath 会使用 kubelet 容器 rootfs 中的路径，映射到主机的 `/var/lib/kubelet/pods/<pod_uid>/volume-subpaths/<volume_name>/<container_name>/0/` 路径之后再挂载到容器。
-  - 此时要省略 subPath ，才能让 hostPath 使用主机路径。可能还要省略 type 。
+  - 此时省略 subPath、type ，才能让 hostPath 使用主机路径。
 - 容器内进程以非 root 用户运行时，通常只能读取 hostPath ，没有修改权限。可以在宿主机上执行 `chown -R <uid>:<uid> $hostPath` ，调整文件权限。
 
 ## emptyDir

@@ -44,14 +44,21 @@
 - Calico 虚拟网络有多种模式：
   - VXLAN
   - IP-in-IP
-    - 在每个主机上创建一个虚拟网口 tunl0 ，担任 OSI 3 层的网桥，连通各个主机。
-    - 当本机某个 Pod 发出一个 OSI 3 层的 IP 数据包时，如果目标 IP 属于其它主机的虚拟子网，则封包成 IP 包，再通过虚拟网口 tunl0 发出。
-    转发到
+    - 原理：
+      - 在每个主机上创建一个虚拟网口 tunl0 ，担任 OSI 3 层的网桥，连通各个主机。
+      - 当本机某个 Pod 发出一个 OSI 3 层的 IP 数据包时，如果目标 IP 属于其它主机的虚拟子网，则封包成 IP 包，再通过虚拟网口 tunl0 发出。
+    - 在每个安装了 Calico 的节点上自动配置 iptables 规则。
+      - 如果一个 IP 包的源 IP 不属于 Calico 节点，则会 drop 。因此在 k8s 集群外的主机上，即使添加了路由规则，也不能访问到 k8s 集群内的虚拟 IP 。除非将外部主机的 IP 加入 Calico 白名单 FELIX_EXTERNALNODESCIDRLIST 。
+      - 默认启用了 natOutgoing 。当 Pod 发送 IP 包给 k8s 集群外的主机时，会自动将源 IP 从 Pod IP 改为当前节点 IP 。收到回复的 IP 包时，会自动将目标 IP 从当前节点 IP 改回 Pod IP 。
   - BGP
-    - 用 BGP 协议在主机之间通告路由信息，给每个主机分配一个 AS 编号。
-    - 当本机某个 Pod 发出一个 OSI 3 层的 IP 数据包时，如果目标 IP 属于其它主机的虚拟子网，则直接路由转发给该主机。因此 Calico 实现了纯三层的虚拟网络。
-    - 优点：不像 VXLAN、IP-in-IP 模式那样添加一层 overlay 网络，而是直接路由，效率更高。
+    - 原理：
+      - 用 BGP 协议在主机之间通告路由信息，给每个主机分配一个 AS 编号。
+      - 当本机某个 Pod 发出一个 OSI 3 层的 IP 数据包时，如果目标 IP 属于其它主机的虚拟子网，则直接路由转发给该主机。因此 Calico 实现了纯三层的虚拟网络。
+    - 优点：VXLAN、IPIP 都属于隧道模式，需要封包、拆包。而 BGP 属于直接路由模式，效率更高。
     - 缺点：要求所有主机位于以太网的同一子网。如果主机 A 发送网络包给主机 B 时，需要经过第三方主机路由转发，则第三方主机不知道 Calico 的 BGP 路由，会丢弃这个指向虚拟 IP 的数据包。
+  - CrossSubnet
+    - 原理：自动切换模式。在同一子网内通信时，采用 BGP 直接路由模式。跨子网通信时，采用 VXLAN 或 IPIP 隧道模式。
+    - 用法：先启用 VXLAN 或 IPIP 模式，然后添加配置参数 `vxlanMode: CrossSubnet` 或 `ipipMode: CrossSubnet` 。
 - Calico 默认基于 Linux iptables 控制网络流量，也可改用 eBPF 技术，性能更高。
 
 ## Canal

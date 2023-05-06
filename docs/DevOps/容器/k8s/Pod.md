@@ -150,10 +150,12 @@
   - name: POD_NAME
     valueFrom:
       fieldRef:
+        apiVersion: v1
         fieldPath: metadata.name
   - name: APP_NAME
     valueFrom:
       fieldRef:
+        apiVersion: v1
         fieldPath: metadata.labels['k8s-app']
   - name: LIMITS_CPU
     valueFrom:

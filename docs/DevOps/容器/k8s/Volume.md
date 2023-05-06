@@ -53,9 +53,12 @@
   BlockDevice         # hostPath 必须是一个已存在的块设备文件
   CharDevice          # hostPath 必须是一个已存在的字符设备文件
   ```
-- 如果 kubelet 容器化运行，而不是直接运行在主机上，则 hostPath 会使用 kubelet 容器 rootfs 中的路径，映射到主机的 `/var/lib/kubelet/pods/<pod_uid>/volume-subpaths/<volume_name>/<container_name>/0/` 路径之后再挂载到容器。
-  - 此时省略 subPath、type ，才能让 hostPath 使用主机路径。
-- 容器内进程以非 root 用户运行时，通常只能读取 hostPath ，没有修改权限。可以在宿主机上执行 `chown -R <uid>:<uid> $hostPath` ，调整文件权限。
+- 如果 kubelet 容器化运行，而不是直接运行在宿主机上，则挂载 hostPath 时：
+  - 如果省略 hostPath 的 subPath、type ，则会正常挂载宿主机的路径。
+  - 如果不省略 subPath、type ，则不会挂载宿主机的路径，而是在 kubelet 容器的 rootfs 中创建 `$hostPath/$subPath` 路径，映射到宿主机的 `/var/lib/kubelet/pods/<pod_uid>/volume-subpaths/<volume_name>/<container_name>/0/` 路径，然后挂载到容器。
+    - [相关 Issue](https://github.com/kubernetes/kubernetes/issues/61456)
+    - 一种解决方案是，将宿主机的 /tmp、/data 等目录事先挂载到 kubelet 容器中，在这些目录下创建 hostPath、subPath 。
+- 挂载 hostPath 时，如果容器内进程以非 root 用户运行，则只能读取 hostPath ，没有修改权限。可以在宿主机上执行 `chown -R <uid> $hostPath` ，调整文件权限。
 
 ## emptyDir
 

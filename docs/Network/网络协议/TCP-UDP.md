@@ -73,7 +73,7 @@ TCP segment 的结构如下：
     - 以太网中，IP 包的最大体积 MTU 通常配置为 1500 Bytes 。考虑到 TCP 包封装成 IP 包时需要添加 metadata ，因此通常将 MSS 配置为 1460 bytes 。
     - 如果一个 IP 包超过 MTU ，则会被拆分成多个 IP 包。如果一个 TCP 包超过 MSS ，则会被丢弃。
     - TCP 三次握手时，通信双方可通过 SYN 包协商 MSS、Window scale、SACK-permitted 的值，然后作用于本次 TCP 通信的所有数据包。
-  - Window scale ：用于扩展 Window size 的大小。
+  - Window scale ：用于放大 Window size 。
   - SACK ：用于选择性确认。
   - SACK-permitted ：表示本机启用了 SACK 功能。
   - Timestamps ：时间戳，占 32 bit 。
@@ -274,10 +274,10 @@ TCP segment 的结构如下：
   - ：接收方的接收缓冲区的可用空间，单位 bytes 。
   - 接收方可以同时接收多个 TCP 包，将 payload 暂存到接收缓冲区，等处理完了才删除接收缓冲区中的这些数据。
     - 如果接收缓冲区的可用空间不足，则不能接收包含 payload 的新 TCP 包，只能丢包。
-  - TCP headers 中的 Window size 表示本机接收窗口的大小，占 16 bit 空间，因此接收窗口最大为 65535 bytes 。
-    - 如果需要进一步增加窗口大小，可在 TCP Options 中添加 Window scale 参数，占 14 bit 空间。
+  - TCP headers 中的 Window size 表示本机接收窗口的大小，占 16 bit 空间，因此接收窗口最大为 2^16 = 64 KB 。
+    - 如果需要进一步增加接收窗口，可在 TCP Options 中添加 Window scale 参数，占 14 bit 空间。
       - 此时用 Window size 与 Window scale 的乘积表示接收窗口的大小，因此接收窗口最大为 2^16 * 2^14 = 1 GB 。
-    - 每发送一个新的 TCP 包，就可修改本机 Window size 的大小，而 Window scale 在三次握手时就确定不变了。
+    - 每发送一个新的 TCP 包，就可修改本机 Window size 的大小，而 Window scale 的值在 TCP 三次握手时就确定不变了。
   - 网络带宽高时，增加接收窗口的大小，能明显提高数据传输速度，即网速。
     - 但网络带宽低、丢包率高时，增加接收窗口的大小，可能加剧网络拥塞。
 

@@ -309,7 +309,7 @@
   orphan  # 无主的 Socket ，即不绑定任何进程
   tw      # TIME-WAIT 状态的 socket 数量
   alloc   # 已绑定进程的 socket 数量
-  mem     # 占用内存
+  mem     # 占用内存，单位为内存页 pages
   ```
 
 ### netstat
@@ -342,18 +342,38 @@
     -x      # 只显示 unix socket
 
     -p      # 显示绑定每个 socket 的进程名
+    -m      # 显示每个 socket 占用的内存
     -n      # 取消将端口号显示成服务名
     -i      # 显示 tcp 协议的详细信息，包括 mss、cwnd、ssthresh 等
     -s      # 显示各种 Socket 的统计数量
   ```
 
+- 例：查看各种 Socket 的统计数量
+  ```sh
+  [root@CentOS ~]# ss -s
+  Total: 1101 (kernel 1405)           # Total 表示存在的 Socket 数。不过 kernel 中存在的 Socket 数较多一些，因为有些 Socket 已关闭，但尚未回收
+  TCP:   697 (estab 140, closed 538, orphaned 0, synrecv 0, timewait 295/0), ports 0
+
+  Transport Total     IP        IPv6
+  *         1405      -         -
+  RAW       0         0         0
+  UDP       3         2         1     # 统计 UDP 类型的 Socket ，包括总数、IPv4 数量、IPv6 数量
+  TCP       159       44        115
+  INET      162       46        116
+  FRAG      0         0         0
+  ```
+  - 执行 `ss -a` 时不会显示 closed 状态的 Socket ，但它们的确存在，占用了文件描述符。
+  - 这里 closed 状态的 Socket ，不是指被 close() 关闭的 Socket （它们会被内核自动回收），而是指没有通信的 Socket 。比如：
+    - 程序创建 Socket 之后，没有成功调用 connect() ，导致该 Socket 从未进行通信。
+    - 程序调用了 shutdown() ，但没有调用 close() ，导致该 Socket 停止通信。
+
 - 例：查看所有 TCP 端口的信息
   ```sh
   [root@CentOS ~]# ss -tapn | cat    # 加上 cat 使显示的 users 列不换行
-  State      Recv-Q Send-Q Local Address:Port    Peer Address:Port
-  LISTEN     0      128    127.0.0.1:34186            *:*              users:(("node",pid=15647,fd=19))
-  LISTEN     0      128        *:111                  *:*              users:(("systemd",pid=1,fd=51))
-  LISTEN     0      128        *:22                   *:*              users:(("sshd",pid=3057,fd=3))
+  State      Recv-Q   Send-Q    Local Address:Port    Peer Address:Port
+  LISTEN     0        128       127.0.0.1:34186            *:*              users:(("node",pid=15647,fd=19))
+  LISTEN     0        128           *:111                  *:*              users:(("systemd",pid=1,fd=51))
+  LISTEN     0        128           *:22                   *:*              users:(("sshd",pid=3057,fd=3))
   ```
   - 不指定 Socket 类型时，默认显示的第一列是 Netid ，表示 Socket 类型，取值包括：
     ```sh
@@ -374,21 +394,26 @@
     - 上述两个值为 0 时最好，说明内核缓冲区没有堆积。
   - 最右端的一列 users 表示监听每个端口的进程。
 
-- 例：查看各种 Socket 的统计数量
+- 例：查看所有 Socket 占用的内存
   ```sh
-  [root@CentOS ~]# ss -s
-  Total: 1101 (kernel 1405)           # Total 表示存在的 Socket 数。不过 kernel 中存在的 Socket 数较多一些，因为有些 Socket 已关闭，但尚未回收
-  TCP:   697 (estab 140, closed 538, orphaned 0, synrecv 0, timewait 295/0), ports 0
-
-  Transport Total     IP        IPv6
-  *         1405      -         -
-  RAW       0         0         0
-  UDP       3         2         1     # 统计 UDP 类型的 Socket ，包括总数、IPv4 数量、IPv6 数量
-  TCP       159       44        115
-  INET      162       46        116
-  FRAG      0         0         0
+  [root@CentOS ~]# ss -tapnm | cat
+  State      Recv-Q   Send-Q    Local Address:Port    Peer Address:Port
+  LISTEN     0        128             *:22                 *:*              users:(("sshd",pid=1173,fd=3))
+      skmem:(r0,rb87380,t0,tb16384,f0,w0,o0,bl0,d0)   cubic rto:1000 mss:536 cwnd:10 segs_in:146 lastsnd:988678939 lastrcv:988678939 lastack:988678939
+  SYN-SENT   0        1         10.0.0.1:52052        10.0.0.2:9094         users:(("filebeat",pid=1215,fd=8))
+      skmem:(r0,rb87380,t0,tb16384,f4294966016,w1280,o0,bl0,d0)   cubic rto:16000 backoff:4 mss:524 rcvmss:88 advmss:1460 cwnd:1 ssthresh:7 segs_out:5 lastsnd:988678939 lastrcv:988678939 lastack:988678939 unacked:1 retrans:1/4 lost:1
   ```
-  - 执行 `ss -a` 时不会显示 closed 状态的 Socket ，但它们的确存在，占用了文件描述符。
-  - 这里 closed 状态的 Socket ，不是指被 close() 关闭的 Socket （它们会被内核自动回收），而是指没有通信的 Socket 。比如：
-    - 程序创建 Socket 之后，没有成功调用 connect() ，导致该 Socket 从未进行通信。
-    - 程序调用了 shutdown() ，但没有调用 close() ，导致该 Socket 停止通信。
+  - skmem 表示 Socket 占用的内存，其中各个字段的含义：
+    ```sh
+    rmem_alloc    # 接收缓冲区已分配的内存。通常缓冲区不需要存储数据时，Socket 就不会向 MMU 申请分配内存
+    rcv_buf       # 接收缓冲区的容量，即最多允许分配的内存。Linux 可能自动增减缓冲区的容量
+    wmem_alloc    # 发送缓冲区已分配的内存
+    snd_buf       # 发送缓冲区的容量
+    fwd_alloc     # 该 Socket 已分配，但尚未用于 rmem_alloc、wmem_alloc 的空闲内存。这部分内存尚未写入数据，因此并未占用 RSS 内存
+    wmem_queued   # 发送缓冲区已分配的另一块内存，已写入数据，正在准备发送
+    opt_mem       # 用于存储 socket option 的内存
+    back_log      # sk backlog 队列占用的内存。当进程正在接收数据包时，新的数据包会被暂存到 sk backlog 队列，以便被进程立即接收
+    sock_drop     # 该 Socket 丢弃的数据包的数量
+    ```
+  - 每个 Socket 占用的总内存等于 rmem_alloc + wmem_alloc (+ fwd_alloc) + wmem_queued + opt_mem + back_log 。
+  - 这里 rto 的单位为 ms ，

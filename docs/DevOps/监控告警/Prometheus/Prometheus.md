@@ -77,6 +77,7 @@
               # --storage.tsdb.retention.size=500GB         # TSDB 的最大保存体积
               # --query.timeout=2m                          # 每次查询的超时时间
               # --query.max-samples=50000000                # 每次查询时最多将多少个指标载入内存，如果超过该数量，则查询失败
+              # --log.level=info
               --log.format=json
   ```
   - 配置文件 prometheus.yml 主要用于控制 Prometheus 的监控任务，而 Prometheus 自身的运行状态只能通过命令行参数控制。

@@ -440,7 +440,7 @@
 
 ### cAdvisor
 
-：用于监控容器。
+：全名为 container Advisor ，用于监控容器。
 - [GitHub](https://github.com/google/cadvisor)
 - 该工具由 Google 公司开发，支持将监控数据输出到 Prometheus、InfluxDB、Kafka、ES 等存储服务。
 - 下载后启动：
@@ -1035,14 +1035,16 @@
 
 ### kube-state-metrics
 
-：用于采集 k8s 的监控指标。
+：用于监控 k8s 内部组件。
 - [GitHub](https://github.com/kubernetes/kube-state-metrics)
-- kube-state-metrics 会缓存所有 k8s 对象的状态数据。并监听 k8s event ，据此更新发生变化的部分数据。
-  - 优点：
-    - 每次采集监控指标时，是增量采集而不是全量采集，减少了耗时。
-  - 缺点：
-    - 缓存增加了内存开销。
-    - 删除一个 Pod 之后，kube-state-metrics 会根据缓存继续输出该 Pod 的监控指标，大概 3 分钟之后才停止。
+- kube-state-metrics 只是采集 k8s 内部组件的监控指标，没有采集容器的监控指标，因此通常跟 cAdvisor 组合使用。
+- kube-state-metrics 会缓存所有 k8s 对象的状态数据。并监听 k8s event ，在发生事件时更新相关的状态数据。
+  - 优点：每次采集监控指标时，是增量采集而不是全量采集，减少了耗时。
+  - 缺点：kube-state-metrics 进程需要占用更多内存，来缓存数据。
+- cAdvisor 也使用了缓存，但没有监听 k8s event ，不能及时更新监控指标。
+  - 如果用 `docker rm -f` 删除一个容器，则 cAdvisor 会根据缓存继续输出该容器的监控指标，大概 4 分钟之后才停止。
+  - 假设 Pod 内某个容器因为 OOM 等原因终止，然后根据 restartPolicy 自动创建新容器。短时间内 cAdvisor 会根据缓存输出旧容器的监控指标，因此用 `sum(container_memory_xx_bytes{container!~"POD|", pod="xx"})` 会计算新容器、旧容器占用的内存之和，显得该 Pod 占用的内存异常多。
+  - [相关 Issue](https://github.com/google/cadvisor/issues/2844)
 
 #### 部署
 

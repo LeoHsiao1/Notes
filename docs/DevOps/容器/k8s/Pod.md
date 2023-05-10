@@ -349,14 +349,16 @@
       Up 5 minutes   k8s_kafka_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0
       Up 5 minutes   k8s_POD_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0      # 每个 Pod 都会先创建一个 pause 容器
       ```
-  3. 用 `docker stop` 终止 kafka 容器，则 kubelet 会立即创建一个新的 kafka 容器：
+  3. 用 `docker stop` 终止 kafka 容器，则 kubelet 会立即创建一个新的 kafka 容器，此时全部容器如下：
       ```sh
-      Up 3 seconds              k8s_exporter_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_1  # 新容器，末尾的 restart_count 为 1
+      Up 3 seconds              k8s_exporter_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_1  # 新容器，容器名末尾的 restart_count 为 1
       Exited (2) 4 seconds ago  k8s_exporter_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0  # 旧容器已终止，退出码为 2
       Up 5 minutes              k8s_kafka_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0
       Up 5 minutes              k8s_POD_kafka-dcr7n_base_0d5af3a6-b27e-4e21-a39e-a2d25f704152_0
       ```
-  4. 再用 `docker stop` 终止 kafka 容器，此时容器的状态如下：
+      - 上一个 kafka 容器的 restart_count 为 0 ，因此 kubelet 创建新容器时，将 restart_count 递增，改为 1 。
+      - 如果此时用 `docker rm -f` 删除 kafka 容器，则 kubelet 创建新容器时，restart_count 依然为 1 ，不会递增。因此容器名不变，只是容器 id 不同。
+  4. 再用 `docker stop` 终止 kafka 容器，此时 containerStatuses 如下：
       ```yml
       state:
         terminated:                           # 容器处于 terminated 状态
@@ -366,7 +368,7 @@
           reason: Error                       # 处于当前状态的原因是 Error ，表示异常终止
           startedAt: "2020-01-17T02:57:45Z"
       ```
-      kubelet 会等待 10s 才创建一个新的 kafka 容器，此时容器的状态如下：
+      kubelet 会等待 10s 才创建一个新的 kafka 容器，此时 containerStatuses 如下：
       ```yml
       state:
         waiting:                              # 容器处于 waiting 状态

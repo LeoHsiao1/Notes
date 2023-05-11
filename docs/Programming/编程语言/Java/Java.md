@@ -71,12 +71,13 @@
   - Thread Stack ：线程堆栈。
 
 - JVM 进程运行时，会从操作系统申请一些内存空间，划分为 Heap、Metaspace 等区域，统称为 committed_memory 。
-  - 申请的内存空间不一定实际使用、存放了数据。JVM 内部实际使用的内存称为 used_memory ，它小于等于 committed_memory 。
-  - 在 JVM 外部、操作系统的视角， committed_memory 全部属于 JVM 进程占用的内存，会计入主机的 used 内存。
-  - JVM 进程运行时，经常需要分配空闲内存来创建新的 Java 对象，此时可能自动申请更多 committed_memory ，从而凭空增加空闲内存。也可能自动进行 GC ，从而将 committed_memory 中的某些 used_memory 转换成空闲内存。
+  - JVM 申请的内存空间不一定全部使用。committed_memory 中，正在存放数据的那些内存称为 used_memory 。其它内存处于空闲状态，可供未来存放数据，称为 free_memory 。
+    - 从 JVM 外部、操作系统来看，committed_memory 是整个 JVM 进程占用的内存，会计入主机的 used 内存。
+    - 从 JVM 内部来看，committed_memory 是一个内存池，其中有的内存正在使用，有的内存空闲。
+  - 当 JVM 需要存放新数据（比如新建的 Java 对象）时，就会选用一些 free_memory 。如果当前的 free_memory 不足以存放新数据，则可能自动申请更多 committed_memory ，从而凭空增加 free_memory 。也可能自动进行 GC ，从而将 committed_memory 中的某些 used_memory 转换成 free_memory 。
     - 当 JVM 进程申请的 committed_memory 达到 MaxHeapSize、MaxMetaspaceSize 等限制时，就不能继续增加。此时只能依靠 GC 在 Heap 中获得空闲内存。
   - GC 一般不会减少 committed_memory ，也不会将 committed_memory 中的空闲内存释放给操作系统，而是留给 JVM 自己以后使用。因为释放内存、重新申请内存的开销较大。
-    - 频繁 GC 会造成较大 CPU 负载，可能导致 Java 进程卡死、端口无响应。
+    - 频繁 GC 会造成较大 CPU 负载，可能导致 Java 进程假死、端口无响应。
     - 如果 GC 之后空闲内存依然不足，则会抛出 OutOfMemoryError 错误。
       - java.lang.OutOfMemoryError 属于错误，不属于异常，但可以被 try catch 捕捉。
       - Java 进程抛出 OutOfMemoryError 错误时，可能崩溃退出，也可能继续运行。
@@ -137,26 +138,33 @@
         - 按复制算法，交替使用两个 survivor space ，从而减少内存碎片。比如将 S0 中的全部对象复制到 S1 ，然后清空 S0 。
       - old GC ：当 old 区域的内存不足以存入新对象时，会触发一次 GC ，将存在时间较长的对象删除。
         - 发生 young GC 之前、之后，都可能判断出 old 区域内存不足，从而触发 old GC 。
-      - full GC ：对 young、old、Permanent 区域进行 GC ，清理全部堆内存。
-        - 不同垃圾收集器触发 full GC 的条件不同。
+      - full GC ：对 young、old、metaspace 区域全部进行 GC 。
+        - 不同垃圾收集器触发 full GC 的条件不同。常见的触发条件是 old 或 metaspace 区域内存不足，因此在不优化 Java 程序代码的情况下，增加 -Xmx 或 -XX:NewRatio 的值，能减少 full GC 的次数。
 
 - STW（Stop The World）
-  - ：GC 过程中的一种状态，暂停用户线程，只执行 GC 线程。
-  - STW 状态是不可避免的，不同的 GC 算法可能 STW 时长不同，越短越好。
-  - full GC 的 STW 时间通常最长，导致用户线程的明显停顿。
+  - ：GC 过程中的一种状态，会暂停执行用户线程，然后执行 GC 线程。
+  - 如果不暂停执行用户线程，则在 GC 的过程中，某些垃圾对象可能被重新引用，变成非垃圾对象，却被 GC 删除，导致用户线程执行出错。
+  - 不同的 GC 算法的 STW 时长不同，越短越好。
+  - full GC 的 STW 时间通常最长，会导致用户线程明显停顿，甚至 Java 进程假死。
 
 - JVM 规范不包含 GC ，但 JVM 通常提供了 GC 功能，常见的几种垃圾收集器：
   - Serial GC
     - ：串行收集。GC 时运行单个 GC 线程，全程为 STW 状态。
+    - 优点：流程简单。
+    - 缺点：单个 GC 线程的执行速度慢，导致用户线程长时间停顿。
   - Parallel GC
     - ：并行收集。GC 时运行多个 GC 线程，全程为 STW 状态。
-    - 比 Serial 的速度快几倍。
-  - Concurrent Mark-Sweep（CMS） GC
-    - ：并发收集。GC 时分为多个阶段，部分阶段允许同时运行 GC 线程、用户线程。
-    - young GC、full GC 全程为 STW 状态，而 old GC 只有部分阶段会 STW 。
-    - 例如 ElasticSearch 默认采用 CMS GC 算法。
+    - 优点：比 Serial 快几倍。
+    - 缺点：用户线程依然会明显停顿。
+  - Concurrent Mark Sweep（CMS） GC
+    - ：并发收集。
+    <!-- 第一个支持并发的 GC 算法 -->
+    <!-- GC 时分为多个阶段，部分阶段允许同时运行 GC 线程、用户线程，其它阶段依然为 STW 状态。 -->
+    <!-- 不适合 young GC、full GC ？ -->
+    - young GC、full GC 全程为 STW 状态。而 old GC 的部分阶段允许同时运行 GC 线程、用户线程，其它阶段为 STW 状态。
+
   - G1 GC
-    - ：类似 CMS 算法，但能减少内存碎片、控制 STW 时长。
+    - ：类似 CMS 算法，但能减少内存碎片、限制 STW 时长。
     - 传统 GC 算法的 young、old 区域分别是一块地址连续的内存空间。而 G1 GC 在堆内存中划分大量 region ，分别分配给 eden、survivor、old 区域。
       - 每个 region 是一小块地址连续的内存空间，体积相同。
       - 体积巨大的对象（humongous object）可能占用多个地址连续的 region 。
@@ -166,6 +174,10 @@
       - mixed GC ：清理年轻代，还会清理老生代中垃圾较多（即活动对象较少）的 region ，称为垃圾优先。
       - full GC ：当老年代内存不足时，清理全部堆内存。
     - 例如 Java 8 默认采用 Parallel 算法，Java 9 开始默认采用 G1 算法。
+
+
+<!-- 只有 Serial GC 和 G1 将未使用的 committed_memory 释放给操作系统？ -->
+
 
 ### 关于 Web
 

@@ -169,12 +169,6 @@
       - GC 时运行多个 GC 线程，全程为 STW 状态。
     - 优点：堆内存超过 100MB 时，GC 速度比 SerialGC 快几倍。
     - 缺点：全程依然为 STW 状态。
-  <!-- - ParallelOldGC
-    - 对 young 区域、old 区域，都运行多个 GC 线程。
-    Java 7u4 以来并行 GC 的默认版本 -->
-
-  <!-- - ParNewGC -->
-
   - ConcMarkSweepGC（Concurrent Mark Sweep）
     - ：第一个支持并发收集的垃圾收集器，在某些阶段不是 STW 状态，允许同时运行用户线程、GC 线程。
     <!-- - 整体采用分代收集算法，对  ：采用 Mark-Sweep 算法。 -->
@@ -186,7 +180,7 @@
     - 对于 Oracle JVM ，Java 9 开始弃用 ConcMarkSweepGC ，建议改用 G1GC 。
 
 
-  - Garbage-First（G1） GC
+  - G1GC（Garbage-First）
   <!-- 采用新创的 G1GC 算法 -->
     - ：类似 ConcMarkSweepGC 算法，但能减少内存碎片、限制 STW 时长。
     - 传统 GC 算法的 young、old 区域分别是一块地址连续的内存空间。而 G1GC 在堆内存中划分大量 region ，分别分配给 eden、survivor、old 区域。
@@ -199,13 +193,17 @@
       - full GC ：当老年代内存不足时，清理全部堆内存。
     - 对于 Oracle JVM ，Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
 
-- 综上，GC 算法有很多种。在不同的使用场景下，可能选用不同的 GC 算法。评价 GC 算法的主要指标如下：
-  - STW 时间，越短越好
-  - 清理的垃圾内存，越多越好
+- 在不同的使用场景下，可能选用不同的垃圾收集器。为了比较它们的优劣，通常衡量以下性能指标：
+  - JVM 占用内存
+  - 延迟（Latency）
+    - GC 时会因为 STW 导致用户线程停顿。比如原来 Java 程序执行一段代码的耗时为 1s ，遇到 STW 则增加到 1.1s 。
   - 吞吐量（throughput）
     - ：用户线程占用的 CPU 时间的比例。
     - 例：假设 JVM 总共占用了 1s 时长的 CPU ，其中用户线程占用了 0.9s ，GC 线程占用了 0.1s ，则吞吐量为 90% 。
-    - 吞吐量越高，用户线程占用的 CPU 时间越多，因此能处理更多业务数据，而 GC 线程占用的 CPU 时间越少。
+    - 吞吐量越高，用户线程占用的 CPU 时间越多，因此能执行更多业务代码。
+  - 上述三个指标最多同时追求两个。例如追求低延迟、高吞吐量，则减少了 GC 线程的执行时长，因此 GC 效果差，JVM 占用内存多。
+    - 用户可根据自己的需求，调整 java 启动命令中的 GC 参数。例如追求低延迟，则采用 G1GC ，限制 MaxGCPauseMillis 。
+
 
 <!-- 只有 Serial GC 和 G1 将未使用的 committed_memory 释放给操作系统？ -->
 

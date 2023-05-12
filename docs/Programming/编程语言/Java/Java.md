@@ -60,7 +60,8 @@
 
 ### GC
 
-：垃圾回收（Garbage Collection），指销毁 JVM 进程中不需要保留的对象，回收其内存。
+：垃圾回收（Garbage Collection），是 JVM 的一项功能，用于在运行 Java 程序时自动找出垃圾对象，销毁它们从而回收内存。
+- 当用户编写了一个 Java 程序，用 JVM 运行时。JVM 会创建一些用户线程，负责执行用户代码。还会在某些条件下，自动创建 GC 线程，负责垃圾回收。
 
 - JVM 进程占用的内存分为几部分：
   - Heap ：堆内存。主要存放 Java 类的实例对象。
@@ -97,7 +98,7 @@
     - ：最弱的引用，相当于没有引用。
     - 不能用于获取对象的实例，主要用于判断对象是否被垃圾回收。
 
-- 发现垃圾对象的常见算法：
+- GC 时，首先需要找出垃圾对象，常见的几种算法：
   - 引用计数（Reference Counting）
     - 原理：
       - 每个对象内置一个引用计数器，表示有多少个地方引用了它。当引用数减为 0 时，就可以销毁该对象。
@@ -114,67 +115,97 @@
       3. 不在引用链上的对象，就可以销毁。
     - 目前跟踪算法更常用。
 
-- 发现垃圾对象之后，常见的 GC 算法：
-  - 标记-删除算法
+- 找出垃圾对象之后，需要销毁它们从而回收内存，常见的几种算法：
+  - 标记-清除（Mark-Sweep）
     - ：先标记垃圾对象，然后删除它们。
-    - 缺点：容易在内存中产生大量碎片空间。
-  - 标记-整理算法
-    - ：在标记-删除算法之后，增加一个整理阶段，减少内存碎片。
-    - 缺点：增加了 GC 耗时。
-  - 复制算法
-    - ：划分两块内存空间。开始一次 GC 时，将前一个空间中的非垃圾对象全部拷贝到后一个空间，然后清空前一个空间。如此循环切换内存空间。
-    - 这样能减少内存碎片，但是内存利用率只有 50% 。
-  - 分代收集算法
-    - ：划分两块内存空间，采用不同的 GC 算法：
-      - 年轻代（young generation）：又称为新生代（new generation），用于存放寿命较短的对象，适合复制算法。细分为两种区域：
-        - 伊甸园空间（eden space）：用于存放新创建的对象。
-        - 幸存者空间（survivor space）：用于存放在 young GC 之后幸存、但尚未存入 old 区域的对象。默认有两个 survivor space ，简称为 S0、S1 。
-      - 老生代（old generation）：用于存放寿命较长的对象，适合标记-整理算法。
-    - 大部分 Java 对象的寿命都较短，很快就没用了，因此采用分代收集算法的效率较高。
-      - 新创建的对象最初存放在 young 区域的 eden space ，其中大部分会在短期内停止引用而被销毁。
-      - young GC ：当 eden space 内存不足以存入新对象时，会触发一次 GC ，进行以下操作：
+    - 缺点：删除一些垃圾对象之后，释放的空闲内存通常地址不连续，比较零散，容易产生大量内存碎片，导致内存使用率低。
+  - 标记-整理（Mark-Compact）
+    - ：在 Mark-Sweep 算法之后，增加一个称为 Compact 的步骤，移动所有非垃圾对象的内存地址，从堆内存的头部开始连续存放。
+    - 优点：不会产生内存碎片。
+    - 缺点：Compact 步骤增加了 GC 耗时。
+  - 标记-复制（Mark-Copy）
+    - ：将堆内存分为两个区域 A、B ，循环使用：
+      1. 最初只使用区域 A ，不使用区域 B 。
+      2. 等区域 A 内存不足而触发 GC 时，将区域 A 中所有非垃圾对象拷贝到区域 B ，从区域 B 的头部开始连续存放。然后清空区域 A 的所有数据。
+      3. 接下来只使用区域 B ，不使用区域 A 。
+      4. 等区域 B 内存不足而触发 GC 时，按上述流程切换使用区域 A 。
+    - 优点：与 Mark-Sweep 算法相比，不会产生内存碎片。与 Mark-Compact 算法相比，GC 耗时更少。
+    - 缺点：内存使用率低于 50% 。
+  - 分代收集（Generational Collection）
+    - ：将堆内存分为两个区域，采用不同的 GC 算法：
+      - 年轻代（young generation）：又称为新生代（new generation），用于存放寿命较短的 Java 对象，适合被 Mark-Copy 算法处理。
+      - 老生代（old generation）：用于存放寿命较长的 Java 对象，适合被 Mark-Compact 算法处理。
+    - 优点：对不同寿命的 Java 对象采用不同的 GC 算法，效率更高。
+    - 年轻代细分为两种区域：
+      - 伊甸园空间（eden space）：用于存放新创建的对象。
+      - 幸存者空间（survivor space）：用于存放在 young GC 之后幸存、但尚未存入 old 区域的对象。
+        - 默认创建了两个 survivor space 实例，简称为 S0、S1 ，根据 Mark-Copy 算法循环使用。比如最初只使用 S0 ，等 S0 内存不足而触发 GC 时，就将 S0 中所有非垃圾对象拷贝到 S1 。
+        - 新创建的 Java 对象最初存放在 young 区域的 eden space 。通常大部分新对象会在短期内停止引用，因此在下一次 young GC 时被删除。少部分新对象在 young GC 之后依然存活，被移到 survivor space 。
+    - 根据作用域的不同，将 GC 过程分为以下几种模式：
+      - young GC ：又称为 Minor GC 。当 eden space 的空闲内存不足以存入新对象时，会触发一次 young GC ，进行以下操作：
         - 将 eden space 中被标记引用的对象移到 survivor space 。如果 survivor space 内存不足，则直接移到 old 区域。
-        - 将 survivor space 中存在时间较长的对象（即活过了多次 young GC）移到 old 区域。
-        - 按复制算法，交替使用两个 survivor space ，从而减少内存碎片。比如将 S0 中的全部对象复制到 S1 ，然后清空 S0 。
-      - old GC ：当 old 区域的内存不足以存入新对象时，会触发一次 GC ，将存在时间较长的对象删除。
-        - 发生 young GC 之前、之后，都可能判断出 old 区域内存不足，从而触发 old GC 。
+        - 将 survivor space 中存在时间较长（即经过了多次 young GC 依然存活）的对象移到 old 区域。
+      - old GC ：又称为 Major GC 。当 old 区域的内存不足以存入新对象时，会触发一次 old GC ，将 old 区域中存在时间较长的对象删除。
+        - 发生 young GC 之前、之后，都可能认为 old 区域内存不足，因此触发 old GC 。
       - full GC ：对 young、old、metaspace 区域全部进行 GC 。
-        - 不同垃圾收集器触发 full GC 的条件不同。常见的触发条件是 old 或 metaspace 区域内存不足，因此在不优化 Java 程序代码的情况下，增加 -Xmx 或 -XX:NewRatio 的值，能减少 full GC 的次数。
+        - 不同垃圾收集器触发 full GC 的条件不同。常见的触发条件是 old 或 metaspace 区域的内存不足。
 
 - STW（Stop The World）
-  - ：GC 过程中的一种状态，会暂停执行用户线程，然后执行 GC 线程。
-  - 如果不暂停执行用户线程，则在 GC 的过程中，某些垃圾对象可能被重新引用，变成非垃圾对象，却被 GC 删除，导致用户线程执行出错。
-  - 不同的 GC 算法的 STW 时长不同，越短越好。
-  - full GC 的 STW 时间通常最长，会导致用户线程明显停顿，甚至 Java 进程假死。
+  - ：GC 过程中的一种状态，会暂停执行用户线程，只执行 GC 线程。
+  - 优点：如果不暂停执行用户线程，则在 GC 的过程中，某些已标记为垃圾的对象，可能被重新引用、变成非垃圾对象，然后被 GC 删除，导致用户线程执行出错。
+  - 缺点：长时间的 STW 会导致用户线程明显停顿，甚至 Java 进程假死。
+  - 不同 GC 算法的 STW 时长不同。与 young GC、old GC 相比，full GC 需要清理全部内存，因此 STW 时间通常最长。
 
-- JVM 规范不包含 GC ，但 JVM 通常提供了 GC 功能，常见的几种垃圾收集器：
-  - Serial GC
-    - ：串行收集。GC 时运行单个 GC 线程，全程为 STW 状态。
-    - 优点：流程简单。
-    - 缺点：单个 GC 线程的执行速度慢，导致用户线程长时间停顿。
-  - Parallel GC
-    - ：并行收集。GC 时运行多个 GC 线程，全程为 STW 状态。
-    - 优点：比 Serial 快几倍。
-    - 缺点：用户线程依然会明显停顿。
-  - Concurrent Mark Sweep（CMS） GC
-    - ：并发收集。
+- 综上，存在多种 GC 算法。而实现 GC 算法的程序称为垃圾收集器（Garbage Collector，GC），例如：
+  - SerialGC
+    - ：串行垃圾收集器。特点如下：
+      - 采用分代收集算法。
+      - GC 时运行单个 GC 线程，全程为 STW 状态。
+    - 优点：实现简单，是 JVM 最古老的一个垃圾收集器。
+    - 缺点：堆内存超过 100MB 时，单个 GC 线程的处理速度慢，导致 STW 时间长。
+  - ParallelGC
+    - ：并行垃圾收集器。特点如下：
+      - 采用分代收集算法。
+      - GC 时运行多个 GC 线程，全程为 STW 状态。
+    - 优点：堆内存超过 100MB 时，GC 速度比 SerialGC 快几倍。
+    - 缺点：全程依然为 STW 状态。
+  <!-- - ParallelOldGC
+    - 对 young 区域、old 区域，都运行多个 GC 线程。
+    Java 7u4 以来并行 GC 的默认版本 -->
+
+  <!-- - ParNewGC -->
+
+  - ConcMarkSweepGC（Concurrent Mark Sweep）
+    - ：第一个支持并发收集的垃圾收集器，在某些阶段不是 STW 状态，允许同时运行用户线程、GC 线程。
+    <!-- - 整体采用分代收集算法，对  ：采用 Mark-Sweep 算法。 -->
+
     <!-- 第一个支持并发的 GC 算法 -->
     <!-- GC 时分为多个阶段，部分阶段允许同时运行 GC 线程、用户线程，其它阶段依然为 STW 状态。 -->
     <!-- 不适合 young GC、full GC ？ -->
     - young GC、full GC 全程为 STW 状态。而 old GC 的部分阶段允许同时运行 GC 线程、用户线程，其它阶段为 STW 状态。
+    - 对于 Oracle JVM ，Java 9 开始弃用 ConcMarkSweepGC ，建议改用 G1GC 。
 
-  - G1 GC
-    - ：类似 CMS 算法，但能减少内存碎片、限制 STW 时长。
-    - 传统 GC 算法的 young、old 区域分别是一块地址连续的内存空间。而 G1 GC 在堆内存中划分大量 region ，分别分配给 eden、survivor、old 区域。
+
+  - Garbage-First（G1） GC
+  <!-- 采用新创的 G1GC 算法 -->
+    - ：类似 ConcMarkSweepGC 算法，但能减少内存碎片、限制 STW 时长。
+    - 传统 GC 算法的 young、old 区域分别是一块地址连续的内存空间。而 G1GC 在堆内存中划分大量 region ，分别分配给 eden、survivor、old 区域。
       - 每个 region 是一小块地址连续的内存空间，体积相同。
       - 体积巨大的对象（humongous object）可能占用多个地址连续的 region 。
       - 分代 GC 时只需改变 region 所属的内存区域，属于移动式算法，不需要复制 region 。
-    - G1 GC 有几种模式：
+    - G1GC 有几种模式：
       - young GC ：清理年轻代。比如将 eden 区域中幸存的 region 分配给 survivor、old 区域。
       - mixed GC ：清理年轻代，还会清理老生代中垃圾较多（即活动对象较少）的 region ，称为垃圾优先。
       - full GC ：当老年代内存不足时，清理全部堆内存。
-    - 例如 Java 8 默认采用 Parallel 算法，Java 9 开始默认采用 G1 算法。
+    - 对于 Oracle JVM ，Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
 
+- 综上，GC 算法有很多种。在不同的使用场景下，可能选用不同的 GC 算法。评价 GC 算法的主要指标如下：
+  - STW 时间，越短越好
+  - 清理的垃圾内存，越多越好
+  - 吞吐量（throughput）
+    - ：用户线程占用的 CPU 时间的比例。
+    - 例：假设 JVM 总共占用了 1s 时长的 CPU ，其中用户线程占用了 0.9s ，GC 线程占用了 0.1s ，则吞吐量为 90% 。
+    - 吞吐量越高，用户线程占用的 CPU 时间越多，因此能处理更多业务数据，而 GC 线程占用的 CPU 时间越少。
 
 <!-- 只有 Serial GC 和 G1 将未使用的 committed_memory 释放给操作系统？ -->
 

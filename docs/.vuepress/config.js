@@ -12,7 +12,7 @@ module.exports = {
         }],
         ['seo', {}],
         ['@vuepress/google-analytics', {
-            'ga': 'UA-155748502-1'
+            'ga': 'G-YLS8VYET64'
         }],
         ['vuepress-plugin-meilisearch',
             {

@@ -64,19 +64,19 @@
 - 当用户编写了一个 Java 程序，用 JVM 运行时。JVM 会创建一些用户线程，负责执行用户代码。还会在某些条件下，自动创建 GC 线程，负责垃圾回收。
 
 - JVM 进程占用的内存分为几部分：
-  - Heap ：堆内存。主要存放 Java 类的实例对象。
-  - Direct Memory ：直接内存，存放与操作系统交互的数据，比如文件。
-  - Metaspace ：存放 Java 类的元数据，包括常量、注解等。替代了 Java 8 以前的永久代（Permanent）。
+  - Heap ：堆内存。主要存储 Java 类的实例对象。除了堆内存之外的其它内存，统称为非堆内存（noheap）。
+  - Direct Memory ：直接内存，存储与操作系统交互的数据，比如读写文件、Socket 的数据。
+  - Metaspace ：存储 Java 类的元数据，包括常量、注解等。替代了 Java 8 以前的永久代（Permanent）。
   - JVM native ：运行 JVM 本身占用的内存。
-  - Code Cache ：存放根据 Java 字节码生成的机器代码。
+  - Code Cache ：存储根据 Java 字节码生成的机器代码。
   - Thread Stack ：线程堆栈。
 
-- JVM 进程运行时，会从操作系统申请一些内存空间，划分为 Heap、Metaspace 等区域，统称为 committed_memory 。
-  - JVM 申请的内存空间不一定全部使用。committed_memory 中，正在存放数据的那些内存称为 used_memory 。其它内存处于空闲状态，可供未来存放数据，称为 free_memory 。
+- JVM 进程运行时，会从操作系统申请一些内存空间，划分为 Heap、DirectMemory、Metaspace 等区域，统称为 committed_memory 。
+  - JVM 申请的内存空间不一定全部使用。committed_memory 中，正在存储数据的那些内存称为 used_memory 。其它内存处于空闲状态，可供未来存储数据，称为 free_memory 。
     - 从 JVM 外部、操作系统来看，committed_memory 是整个 JVM 进程占用的内存，会计入主机的 used 内存。
     - 从 JVM 内部来看，committed_memory 是一个内存池，其中有的内存正在使用，有的内存空闲。
-  - 当 JVM 需要存放新数据（比如新建的 Java 对象）时，就会选用一些 free_memory 。如果当前的 free_memory 不足以存放新数据，则可能自动申请更多 committed_memory ，从而凭空增加 free_memory 。也可能自动进行 GC ，从而将 committed_memory 中的某些 used_memory 转换成 free_memory 。
-    - 当 JVM 进程申请的 committed_memory 达到 MaxHeapSize、MaxMetaspaceSize 等限制时，就不能继续增加。此时只能依靠 GC 在 Heap 中获得空闲内存。
+  - 当 JVM 需要存储新数据（比如新建的 Java 对象）时，就会选用一些 free_memory 。如果当前的 free_memory 不足以存储新数据，则可能自动申请更多 committed_memory ，从而凭空增加 free_memory 。也可能自动进行 GC ，从而将 committed_memory 中的某些 used_memory 转换成 free_memory 。
+    - 当 JVM 进程申请的 committed_memory 达到 MaxHeapSize、MaxDirectMemorySize 等限制时，就不能继续增加。此时只能依靠 GC 在 Heap 中获得空闲内存。
   - GC 一般不会减少 committed_memory ，也不会将 committed_memory 中的空闲内存释放给操作系统，而是留给 JVM 自己以后使用。因为释放内存、重新申请内存的开销较大。
     - 频繁 GC 会造成较大 CPU 负载，可能导致 Java 进程假死、端口无响应。
     - 如果 GC 之后空闲内存依然不足，则会抛出 OutOfMemoryError 错误。
@@ -118,37 +118,49 @@
 - 找出垃圾对象之后，需要销毁它们从而回收内存，常见的几种算法：
   - 标记-清除（Mark-Sweep）
     - ：先标记垃圾对象，然后删除它们。
-    - 缺点：删除一些垃圾对象之后，释放的空闲内存通常地址不连续，比较零散，容易产生大量内存碎片，导致内存使用率低。
+    - 缺点：删除一些垃圾对象之后，释放的空闲内存通常地址不连续，比较零散，容易产生内存碎片，导致内存使用率低。
   - 标记-整理（Mark-Compact）
-    - ：在 Mark-Sweep 算法之后，增加一个称为 Compact 的步骤，移动所有非垃圾对象的内存地址，从堆内存的头部开始连续存放。
+    - ：在 Mark-Sweep 算法之后，增加一个称为 Compact 的步骤，移动所有非垃圾对象的内存地址，从堆内存的头部开始连续存储。
     - 优点：不会产生内存碎片。
     - 缺点：Compact 步骤增加了 GC 耗时。
   - 标记-复制（Mark-Copy）
     - ：将堆内存分为两个区域 A、B ，循环使用：
       1. 最初只使用区域 A ，不使用区域 B 。
-      2. 等区域 A 内存不足而触发 GC 时，将区域 A 中所有非垃圾对象拷贝到区域 B ，从区域 B 的头部开始连续存放。然后清空区域 A 的所有数据。
+      2. 等区域 A 内存不足而触发 GC 时，将区域 A 中所有非垃圾对象拷贝到区域 B ，从区域 B 的头部开始连续存储。然后清空区域 A 的所有数据。
       3. 接下来只使用区域 B ，不使用区域 A 。
-      4. 等区域 B 内存不足而触发 GC 时，按上述流程切换使用区域 A 。
+      4. 等区域 B 内存不足而触发 GC 时，按上述流程循环使用区域 A 。
     - 优点：与 Mark-Sweep 算法相比，不会产生内存碎片。与 Mark-Compact 算法相比，GC 耗时更少。
     - 缺点：内存使用率低于 50% 。
   - 分代收集（Generational Collection）
     - ：将堆内存分为两个区域，采用不同的 GC 算法：
-      - 年轻代（young generation）：又称为新生代（new generation），用于存放寿命较短的 Java 对象，适合被 Mark-Copy 算法处理。
-      - 老生代（old generation）：用于存放寿命较长的 Java 对象，适合被 Mark-Compact 算法处理。
-    - 优点：对不同寿命的 Java 对象采用不同的 GC 算法，效率更高。
+      - 年轻代（young generation）：又称为新生代（new generation），用于存储存在时间较短的 Java 对象。预计该区域每分钟都有大量对象变成垃圾，需要经常清理，因此适合采用 Mark-Copy 算法，尽量减少 GC 耗时。
+      - 老生代（old generation）：用于存储存在时间较长的 Java 对象。预计不需要经常清理，因此适合采用 Mark-Compact 算法。
+    - 优点：一般的 Java 程序中，大部分 Java 对象会在创建之后的短期内停止引用，只有少部分对象会长期保留。因此对这两类对象用不同的 GC 算法处理，效率更高。
     - 年轻代细分为两种区域：
-      - 伊甸园空间（eden space）：用于存放新创建的对象。
-      - 幸存者空间（survivor space）：用于存放在 young GC 之后幸存、但尚未存入 old 区域的对象。
-        - 默认创建了两个 survivor space 实例，简称为 S0、S1 ，根据 Mark-Copy 算法循环使用。比如最初只使用 S0 ，等 S0 内存不足而触发 GC 时，就将 S0 中所有非垃圾对象拷贝到 S1 。
-        - 新创建的 Java 对象最初存放在 young 区域的 eden space 。通常大部分新对象会在短期内停止引用，因此在下一次 young GC 时被删除。少部分新对象在 young GC 之后依然存活，被移到 survivor space 。
-    - 根据作用域的不同，将 GC 过程分为以下几种模式：
-      - young GC ：又称为 Minor GC 。当 eden space 的空闲内存不足以存入新对象时，会触发一次 young GC ，进行以下操作：
-        - 将 eden space 中被标记引用的对象移到 survivor space 。如果 survivor space 内存不足，则直接移到 old 区域。
-        - 将 survivor space 中存在时间较长（即经过了多次 young GC 依然存活）的对象移到 old 区域。
-      - old GC ：又称为 Major GC 。当 old 区域的内存不足以存入新对象时，会触发一次 old GC ，将 old 区域中存在时间较长的对象删除。
+      - 伊甸园空间（eden space）：用于存储新创建的对象。
+      - 幸存者空间（survivor space）：用于存储在 young GC 之后幸存、但尚未存入 old 区域的对象。
+        - 默认创建了两个 survivor space 实例，简称为 S0、S1 ，或称为 From、To 。根据 Mark-Copy 算法循环使用两个实例，比如最初只使用 S0 ，等 GC 时，将 S0 中所有非垃圾对象拷贝到 S1 。
+    - 根据作用域的不同， GC 分为以下几种模式：
+      - young GC
+        - ：又称为 Minor GC 。
+        - young 区域的 Java 对象存储在 eden space 和一个 survivor space （假设为 S0）中。当 eden space 的空闲内存不足以存入新对象时，会触发一次 young GC ，将 eden space 和 S0 中所有非垃圾对象拷贝到 S1 ，然后清空 eden space 和 S0 ，供未来存入新对象。
+          - 如果 S1 的空闲内存不足以存入对象，则将对象直接拷贝到 old 区域。
+          - 下一次触发 young GC 时，会将 eden space 和 S1 中所有非垃圾对象拷贝到 S0 。
+        - 新创建的 Java 对象最初存储在 young 区域的 eden space 。
+          - 如果对象活过了第一次 young GC ，则从 eden space 拷贝到一个 survivor space 。
+          - 之后对象每活过一次 young GC ，则从一个 survivor spac 拷贝到到另一个 survivor space 。这样能多过滤几次垃圾对象，减少拷贝到 old 区域的对象数量。
+          - 如果对象活过 young GC 的次数达到 TenuringThreshold 阈值，则从 survivor space 拷贝到 old 区域，该过程称为长期保留（Tenuring）、晋升（Promotion）。
+          - JVM 会自动调整 TenuringThreshold 的大小。尽量增加 TenuringThreshold ，从而减少拷贝到 old 区域的对象数量，但不至于让 survivor space 溢出。
+      - old GC
+        - ：又称为 Major GC 。
+        - 当 old 区域的内存不足时，会触发一次 old GC ，将 old 区域中存在时间较长的对象删除。
         - 发生 young GC 之前、之后，都可能认为 old 区域内存不足，因此触发 old GC 。
-      - full GC ：对 young、old、metaspace 区域全部进行 GC 。
-        - 不同垃圾收集器触发 full GC 的条件不同。常见的触发条件是 old 或 metaspace 区域的内存不足。
+      - full GC
+        - ：当 old 或 DirectMemory 或 Metaspace 区域的内存不足时，会触发一次 full GC ，对 young、old、DirectMemory、Metaspace 区域全部进行 GC 。
+        - 目前 full GC 没有严格的标准，不同垃圾收集器的处理逻辑可能不同。
+    - young 区域中大部分对象一般会在短期内停止引用，活不到 old 区域。因此两个区域的内存开销不同。例如 JVM 默认配置了 -XX:NewRatio=2 ，使得 old 区域容量是 young 的 2 倍。
+      - 如果 Java 程序短期内创建过多新对象，则可能 young 区域内存不足而频繁 GC ，此时需要增加 young 区域的容量。
+      - 如果 Java 程序长期保留了大量对象，则可能 old 区域内存不足而频繁 GC ，此时需要增加 old 区域的容量。
 
 - STW（Stop The World）
   - ：GC 过程中的一种状态，会暂停执行用户线程，只执行 GC 线程。
@@ -193,15 +205,17 @@
       - full GC ：当老年代内存不足时，清理全部堆内存。
     - 对于 Oracle JVM ，Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
 
-- 在不同的使用场景下，可能选用不同的垃圾收集器。为了比较它们的优劣，通常衡量以下性能指标：
-  - JVM 占用内存
-  - 延迟（Latency）
-    - GC 时会因为 STW 导致用户线程停顿。比如原来 Java 程序执行一段代码的耗时为 1s ，遇到 STW 则增加到 1.1s 。
-  - 吞吐量（throughput）
+- 在不同的使用场景下，可能选用不同的垃圾收集器。为了比较它们的优劣，通常计算以下性能指标：
+  - Footprint
+    - ：堆内存使用量。
+  - Latency
+    - ：GC 时 STW 会导致用户线程停顿。
+    - 例如原来 Java 程序执行一段代码的耗时为 1s ，遇到 STW 则增加到 1.1s 。
+  - 吞吐量（Throughput）
     - ：用户线程占用的 CPU 时间的比例。
     - 例：假设 JVM 总共占用了 1s 时长的 CPU ，其中用户线程占用了 0.9s ，GC 线程占用了 0.1s ，则吞吐量为 90% 。
     - 吞吐量越高，用户线程占用的 CPU 时间越多，因此能执行更多业务代码。
-  - 上述三个指标最多同时追求两个。例如追求低延迟、高吞吐量，则减少了 GC 线程的执行时长，因此 GC 效果差，JVM 占用内存多。
+  - 上述三个指标最多同时追求两个。例如追求低延迟、高吞吐量，则减少了 GC 线程的执行时长，因此 GC 效果差，会占用更多堆内存。
     - 用户可根据自己的需求，调整 java 启动命令中的 GC 参数。例如追求低延迟，则采用 G1GC ，限制 MaxGCPauseMillis 。
 
 

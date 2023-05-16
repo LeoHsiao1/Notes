@@ -60,7 +60,7 @@
 
 ### GC
 
-：垃圾回收（Garbage Collection），是 JVM 的一项功能，用于在运行 Java 程序时自动找出垃圾对象，销毁它们从而回收内存。
+：垃圾回收（Garbage Collection），是 JVM 的一项功能，用于在运行 Java 程序时自动找出垃圾对象，删除它们从而回收内存。
 - 当用户编写了一个 Java 程序，用 JVM 运行时。JVM 会创建一些用户线程，负责执行用户代码。还会在某些条件下，自动创建 GC 线程，负责垃圾回收。
 
 - JVM 进程占用的内存分为几部分：
@@ -101,23 +101,24 @@
 - GC 时，首先需要找出垃圾对象，常见的几种算法：
   - 引用计数（Reference Counting）
     - 原理：
-      - 每个对象内置一个引用计数器，表示有多少个地方引用了它。当引用数减为 0 时，就可以销毁该对象。
+      - 每个对象内置一个引用计数器，表示有多少个地方引用了它。当引用数减为 0 时，就可以删除该对象。
       - 创建一个对象并传递给一个变量时，该对象的引用计数为 1 。
-      - 销毁一个对象时，将它引用的其它所有对象的引用技术减 1 。
+      - 删除一个对象时，将它引用的其它所有对象的引用技术减 1 。
     - 缺点：
       - 修改引用计数的开销较大。
-      - 难以发现循环引用的对象。比如对象 A、B 相互引用，则可能一直不会被销毁。
+      - 难以发现循环引用的对象。比如对象 A、B 相互引用，则可能一直不会被删除。
   - 跟踪（Tracing）
     - 又称为可达性分析。
     - 原理：
-      1. 选出当前的局部变量、静态变量、线程等对象，作为根集（Root Set）。
+      1. 选出当前的局部变量、静态变量、线程等对象，作为根集（GC Roots）。
       2. 遍历根集中的各个对象，递归寻找它们引用的对象，记录成一条条引用链。
-      3. 不在引用链上的对象，就可以销毁。
+      3. 不在引用链上的对象，就可以删除。
     - 目前跟踪算法更常用。
 
-- 找出垃圾对象之后，需要销毁它们从而回收内存，常见的几种算法：
+- 找出垃圾对象之后，需要删除它们从而回收内存，常见的几种算法：
   - 标记-清除（Mark-Sweep）
     - ：先标记垃圾对象，然后删除它们。
+    - 优点：实现简单，GC 耗时最少。
     - 缺点：删除一些垃圾对象之后，释放的空闲内存通常地址不连续，比较零散，容易产生内存碎片，导致内存使用率低。
   - 标记-整理（Mark-Compact）
     - ：在 Mark-Sweep 算法之后，增加一个称为 Compact 的步骤，移动所有非垃圾对象的内存地址，从堆内存的头部开始连续存储。
@@ -154,46 +155,71 @@
       - old GC
         - ：又称为 Major GC 。
         - 当 old 区域的内存不足时，会触发一次 old GC ，将 old 区域中存在时间较长的对象删除。
-        - 发生 young GC 之前、之后，都可能认为 old 区域内存不足，因此触发 old GC 。
+        - young GC 与 old GC 相互独立，可以同时执行。
       - full GC
         - ：当 old 或 DirectMemory 或 Metaspace 区域的内存不足时，会触发一次 full GC ，对 young、old、DirectMemory、Metaspace 区域全部进行 GC 。
-        - 目前 full GC 没有严格的标准，不同垃圾收集器的处理逻辑可能不同。
-    - young 区域中大部分对象一般会在短期内停止引用，活不到 old 区域。因此两个区域的内存开销不同。例如 JVM 默认配置了 -XX:NewRatio=2 ，使得 old 区域容量是 young 的 2 倍。
+        - 目前 full GC 没有严格的标准，有的垃圾收集器的 old GC 相当于 full GC 。
+    - young 区域中大部分对象一般会在短期内停止引用，活不到 old 区域，因此两个区域的内存开销不同。
+      - HotSpot 假设 old 区域的内存开销更大，默认配置了 -XX:NewRatio=2 ，使得 old 区域容量是 young 的 2 倍。
       - 如果 Java 程序短期内创建过多新对象，则可能 young 区域内存不足而频繁 GC ，此时需要增加 young 区域的容量。
       - 如果 Java 程序长期保留了大量对象，则可能 old 区域内存不足而频繁 GC ，此时需要增加 old 区域的容量。
 
 - STW（Stop The World）
   - ：GC 过程中的一种状态，会暂停执行用户线程，只执行 GC 线程。
-  - 优点：如果不暂停执行用户线程，则在 GC 的过程中，某些已标记为垃圾的对象，可能被重新引用、变成非垃圾对象，然后被 GC 删除，导致用户线程执行出错。
-  - 缺点：长时间的 STW 会导致用户线程明显停顿，甚至 Java 进程假死。
+  - 如果不暂停执行用户线程，则在 GC 的过程中，可能出现以下问题：
+    - 错删：某些已标记为垃圾的对象，可能被重新引用、变为非垃圾对象，之后被 GC 删除，导致用户线程执行出错。
+    - 漏删：某些未标记为垃圾的对象，可能变为垃圾对象，没有被本次 GC 删除。
+  - 缺点：STW 会导致用户线程停顿，甚至 Java 进程假死。
   - 不同 GC 算法的 STW 时长不同。与 young GC、old GC 相比，full GC 需要清理全部内存，因此 STW 时间通常最长。
 
 - 综上，存在多种 GC 算法。而实现 GC 算法的程序称为垃圾收集器（Garbage Collector，GC），例如：
   - SerialGC
-    - ：串行垃圾收集器。特点如下：
-      - 采用分代收集算法。
-      - GC 时运行单个 GC 线程，全程为 STW 状态。
+    - ：串行垃圾收集器。
+    - 特点：
+      - 分代收集：young GC 采用 Mark-Copy 算法，old GC 采用 Mark-Compact 算法，全程处于 STW 状态。
+      - GC 时运行单个 GC 线程。
     - 优点：实现简单，是 JVM 最古老的一个垃圾收集器。
     - 缺点：堆内存超过 100MB 时，单个 GC 线程的处理速度慢，导致 STW 时间长。
   - ParallelGC
-    - ：并行垃圾收集器。特点如下：
-      - 采用分代收集算法。
-      - GC 时运行多个 GC 线程，全程为 STW 状态。
+    - ：并行垃圾收集器。
+    - 特点：
+      - 分代收集：young GC 采用 Mark-Copy 算法，old GC 采用 Mark-Compact 算法，全程处于 STW 状态。
+      - GC 时运行多个 GC 线程。
     - 优点：堆内存超过 100MB 时，GC 速度比 SerialGC 快几倍。
-    - 缺点：全程依然为 STW 状态。
+    - 缺点：依然全程处于 STW 状态。
   - ConcMarkSweepGC（Concurrent Mark Sweep）
-    - ：第一个支持并发收集的垃圾收集器，在某些阶段不是 STW 状态，允许同时运行用户线程、GC 线程。
-    <!-- - 整体采用分代收集算法，对  ：采用 Mark-Sweep 算法。 -->
-
-    <!-- 第一个支持并发的 GC 算法 -->
-    <!-- GC 时分为多个阶段，部分阶段允许同时运行 GC 线程、用户线程，其它阶段依然为 STW 状态。 -->
-    <!-- 不适合 young GC、full GC ？ -->
-    - young GC、full GC 全程为 STW 状态。而 old GC 的部分阶段允许同时运行 GC 线程、用户线程，其它阶段为 STW 状态。
-    - 对于 Oracle JVM ，Java 9 开始弃用 ConcMarkSweepGC ，建议改用 G1GC 。
+    - ：第一个支持并发收集的垃圾收集器。
+    - 特点：
+      - 分代收集：young GC 采用 Mark-Copy 算法，处于 STW 状态。old GC 采用 Mark-Sweep 算法并进行了魔改，使得大部分时间不处于 STW 状态。
+    - old GC 分为多个阶段：
+      1. 初始标记（Initial Mark）：最初将所有对象标记为白色，然后找出 GC Roots 直接关联的所有 Java 对象，标记为灰色。
+      2. 并发标记（Concurrent Mark）：找出灰色对象引用的所有对象（即使为空），然后将前者标记为黑色，将后者标记为灰色。递归执行该操作，直到不存在灰色对象。
+          - 该过程称为三色标记法，最后剩下的白色对象就是不在引用链上的对象，视为垃圾对象。
+          - GC Roots 中有的对象处于 young 区域，有的对象处于 old 区域。因此虽然这是 old GC ，不是 full GC ，但会扫描一遍 young、old 区域的所有可达对象，才能找出 old 区域的垃圾对象。
+          - 该并发阶段同时运行用户线程、GC 线程，可能有些对象刚刚标记，又被用户线程修改了引用，还可能有些对象从 young 区域晋升到 old 区域，加入 old GC 的范围。因此并发标记的结果不可靠，需要接下来几个阶段重新标记。
+      3. 并发预清洗（Concurrent Preclean）：在并发标记期间可能有些对象发生了变化，需要重新标记。
+      4. 并发终止预清洗（Concurrent Abortable Preclean）：该阶段像 Concurrent Preclean ，但可通过 JVM 参数限制该阶段的耗时，提前终止。
+      5. 最终重新标记（Final Remark）：该阶段进入 STW 状态，检查已标记为垃圾的对象，确保它们依然没有被引用。
+          - Final Remark 能避免误删，但不能避免漏删：某些未标记为垃圾的对象，在 Final Remark 之前变为垃圾对象，因此没被本次 GC 删除，等下一次 GC 才会被删除，称为浮动垃圾（floating garbage）。
+      6. 并发扫描（Concurrent Sweep）：删除垃圾对象。
+      7. 并发重置（Concurrent Reset）：重置 ConcMarkSweepGC 垃圾收集器，准备开始下一次 old GC 。
+          - 上述 5 个并发阶段不处于 STW 状态，虽然耗时长，但不会导致用户线程停顿。
+          - 其它 2 个阶段虽然处于 STW 状态，但耗时短，可以忍受。
+    - 优点：
+      - old GC 的大部分时间不处于 STW 状态，允许同时运行用户线程、GC 线程。
+    - 缺点：
+      - young GC 依然处于 STW 状态。
+      - old GC 同时运行用户线程、GC 线程，因此用户线程、GC 线程的执行速度都变慢了。用户线程的吞吐量降低 10% 左右，GC 线程的耗时比 ParallelGC 久。
+        - ConcMarkSweepGC 默认创建的 GC 线程数等于 CPU 核数除以 4 ，至少为 1 。因此 CPU 核数越少，吞吐量降幅越大。
+      - old GC 会产生浮动垃圾，导致 old 区域占用内存增加 10% 左右。
+      - old GC 采用 Mark-Sweep 算法，容易产生内存碎片。
+        - 不采用 Mark-Compact、Mark-Copy 算法，是因为移动对象的内存地址时，必须处于 STW 状态。
+        - JVM 对 ConcMarkSweepGC 默认启用了 -XX:+UseCMSCompactAtFullCollection 功能，当不能存储大对象时，自动清理内存碎片。
+    - HotSpot 从 Java 9 开始弃用 ConcMarkSweepGC ，采用它时会显示 warning ，建议改用 G1GC 。
 
 
   - G1GC（Garbage-First）
-  <!-- 采用新创的 G1GC 算法 -->
+  <!-- 采用自创的 G1GC 算法 -->
     - ：类似 ConcMarkSweepGC 算法，但能减少内存碎片、限制 STW 时长。
     - 传统 GC 算法的 young、old 区域分别是一块地址连续的内存空间。而 G1GC 在堆内存中划分大量 region ，分别分配给 eden、survivor、old 区域。
       - 每个 region 是一小块地址连续的内存空间，体积相同。
@@ -203,7 +229,9 @@
       - young GC ：清理年轻代。比如将 eden 区域中幸存的 region 分配给 survivor、old 区域。
       - mixed GC ：清理年轻代，还会清理老生代中垃圾较多（即活动对象较少）的 region ，称为垃圾优先。
       - full GC ：当老年代内存不足时，清理全部堆内存。
-    - 对于 Oracle JVM ，Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
+    - HotSpot 对于 Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
+
+
 
 - 在不同的使用场景下，可能选用不同的垃圾收集器。为了比较它们的优劣，通常计算以下性能指标：
   - Footprint
@@ -218,6 +246,10 @@
   - 上述三个指标最多同时追求两个。例如追求低延迟、高吞吐量，则减少了 GC 线程的执行时长，因此 GC 效果差，会占用更多堆内存。
     - 用户可根据自己的需求，调整 java 启动命令中的 GC 参数。例如追求低延迟，则采用 G1GC ，限制 MaxGCPauseMillis 。
 
+- 参考文档：
+  - [HotSpot GC 调优指南](https://docs.oracle.com/en/java/javase/11/gctuning/introduction-garbage-collection-tuning.html)
+  - [plumbr GC handbook](https://plumbr.io/handbook/garbage-collection-algorithms-implementations)
+om/understanding-and-optimizing-garbage-collection/)
 
 <!-- 只有 Serial GC 和 G1 将未使用的 committed_memory 释放给操作系统？ -->
 

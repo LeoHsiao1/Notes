@@ -7,6 +7,7 @@
   - [Java](编程语言/Java/Java.md)
     - [构建](编程语言/Java/构建.md)
     - [语法](编程语言/Java/语法.md)
+    - [GC](编程语言/Java/GC.md)
   - [Batch](编程语言/Batch.md)
   - [Golang](编程语言/Golang.md)
   - [Groovy](编程语言/Groovy.md)

@@ -130,6 +130,10 @@ module.exports = {
                                 {
                                     title: "语法",
                                     path: "/Programming/编程语言/Java/语法"
+                                },
+                                {
+                                    title: "GC",
+                                    path: "/Programming/编程语言/Java/GC"
                                 }
                             ]
                         },

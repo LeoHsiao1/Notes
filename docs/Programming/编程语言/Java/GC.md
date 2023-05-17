@@ -3,6 +3,10 @@
 - C 语言需要在编程时主动申请内存、释放内存，而 Java 会自动在创建对象时分配对象、回收垃圾对象的内存。
 - JVM 提供了 GC（Garbage Collection）的功能，用于在运行 Java 程序时自动找出垃圾对象，删除它们从而回收内存。
   - 当用户编写了一个 Java 程序，用 JVM 运行时。JVM 会创建一些用户线程，负责执行用户代码。还会在某些条件下，自动创建 GC 线程，负责垃圾回收。
+- 参考文档：
+  - [plumbr GC handbook](https://plumbr.io/handbook/garbage-collection-algorithms-implementations)
+  - [HotSpot GC 调优指南](https://docs.oracle.com/en/java/javase/11/gctuning/introduction-garbage-collection-tuning.html)
+  - [美团 GC 优化案例](https://tech.meituan.com/2017/12/29/jvm-optimize.html)
 
 ## 内存
 
@@ -75,7 +79,7 @@
 
 - ：标记-清除算法。
 - 原理：分为两个步骤，先标记垃圾对象，然后删除它们。
-- 优点：实现简单，GC 耗时最少。
+- 优点：实现简单，GC 耗时最短。
 - 缺点：删除一些垃圾对象之后，释放的空闲内存通常地址不连续，比较零散，容易产生内存碎片，导致内存使用率低。
 
 ### Mark-Compact
@@ -93,8 +97,23 @@
   2. 等区域 1 内存不足而触发 GC 时，将区域 1 中所有非垃圾对象拷贝到区域 2 ，从区域 2 的头部开始连续存储。然后清空区域 1 的所有数据。
   3. 接下来只使用区域 2 ，不使用区域 1 。
   4. 等区域 2 内存不足而触发 GC 时，按上述流程循环使用区域 1 。
-- 优点：与 Mark-Sweep 算法相比，不会产生内存碎片。与 Mark-Compact 算法相比，GC 耗时更少。
-- 缺点：总是有一个区域空闲，总内存使用率低于 50% 。
+- 优点：
+  - 与 Mark-Sweep 算法相比，不会产生内存碎片。
+  - 与 Mark-Compact 算法相比，GC 耗时更少。
+- 缺点：
+  - 同时只使用一个区域，总内存使用率低于 50% 。
+
+- 比较 GC 耗时：
+  - Mark-Sweep 的耗时最短。总耗时主要包括：
+    - 扫描耗时：与内存容量成正比。
+    - 删除耗时：与垃圾对象的数量成正比。
+  - Mark-Copy 的耗时较久，因为复制操作比删除操作慢。总耗时主要包括：
+    - 扫描耗时
+    - 复制耗时：与非垃圾对象的数量成正比。
+  - Mark-Compact 的耗时更久，因为 Compact 操作比 Copy 操作慢。总耗时主要包括：
+    - 扫描耗时
+    - 删除耗时
+    - Compact 耗时：与非垃圾对象的数量成正比。
 
 ### Generational Collection
 
@@ -125,17 +144,16 @@
   - full GC
     - ：当 old 或 DirectMemory 或 Metaspace 区域的内存不足时，会触发一次 full GC ，对 young、old、DirectMemory、Metaspace 区域全部进行 GC 。
     - 目前 full GC 没有严格的标准，有的垃圾收集器的 old GC 相当于 full GC 。
+
 - young 区域中大部分对象一般会在短期内停止引用，活不到 old 区域，因此两个区域的内存开销不同。
   - 例如 HotSpot 认为 old 区域的内存开销一般更大。因此默认配置了 -XX:NewRatio=2 ，使得 old 区域容量是 young 的 2 倍。
-  - 如果 Java 程序短期内创建过多新对象，则可能 young 区域内存不足而频繁 GC ，此时需要增加 young 区域的容量。
-  - 如果 Java 程序长期保留了大量对象，则可能 old 区域内存不足而频繁 GC ，此时需要增加 old 区域的容量。
+  - 如果 Java 程序短期内创建大量新对象，则可能 young 区域内存不足而频繁 GC ，此时需要增加 young 区域的容量。
+  - 如果 Java 程序存在大量非垃圾对象，则可能 old 区域内存不足而频繁 GC ，此时需要增加 old 区域的容量。
+  - 如果 Java 程序存在大量非垃圾对象，还不断创建新的非垃圾对象，则 young、old 区域都会内存不足。
 
 ## 垃圾收集器
 
 - 上文列举了多种 GC 算法，而实现 GC 算法的程序称为垃圾收集器（Garbage Collector，GC），下文列举几个垃圾收集器，一般在 JVM 中内置可用。
-- 参考文档：
-  - [HotSpot GC 调优指南](https://docs.oracle.com/en/java/javase/11/gctuning/introduction-garbage-collection-tuning.html)
-  - [plumbr GC handbook](https://plumbr.io/handbook/garbage-collection-algorithms-implementations)
 
 ### SerialGC
 
@@ -182,7 +200,7 @@
     - ConcMarkSweepGC 默认创建的 GC 线程数等于 CPU 核数除以 4 ，至少为 1 。因此 CPU 核数越少，吞吐量降幅越大。
   - old GC 会产生浮动垃圾，导致 old 区域占用内存增加 10% 左右。
   - old GC 采用 Mark-Sweep 算法，容易产生内存碎片。
-    - 不采用 Mark-Compact、Mark-Copy 算法，是因为移动对象的内存地址时，必须处于 STW 状态。
+    - 不采用 Mark-Compact、Mark-Copy 算法，是因为改变对象的内存地址时，必须处于 STW 状态。
     - JVM 对 ConcMarkSweepGC 默认启用了 -XX:+UseCMSCompactAtFullCollection 功能，当不能存储大对象时，自动清理内存碎片。
 - HotSpot 从 Java 9 开始弃用 ConcMarkSweepGC ，采用它时会显示 warning ，建议改用 G1GC 。
 
@@ -213,4 +231,6 @@
     - 例：假设 JVM 总共占用了 1s 时长的 CPU ，其中用户线程占用了 0.9s ，GC 线程占用了 0.1s ，则吞吐量为 90% 。
     - 吞吐量越高，用户线程占用的 CPU 时间越多，因此能执行更多业务代码。
 - 上述三个指标最多同时追求两个。例如追求低延迟、高吞吐量，则减少了 GC 线程的执行时长，因此 GC 效果差，会占用更多堆内存。
-  - 用户可根据自己的需求，调整 java 启动命令中的 GC 参数。例如追求低延迟，则采用 G1GC ，限制 MaxGCPauseMillis 。
+  - 用户可根据自己的需求，优化 JVM 配置参数，从而提升性能。例如追求低延迟，则采用 G1GC ，限制 MaxGCPauseMillis 。
+  - 不过 JVM 优化的幅度有限，可能只提升 30% 的性能，而且需要用户学习如何优化 JVM 并调试。
+  - 如果 Java 程序存在大量非垃圾对象，超出了堆内存容量，则只能增加内存，或者优化 Java 代码，比如通过分页查询减少 Java 程序同时处理的数据量。

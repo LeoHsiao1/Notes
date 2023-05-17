@@ -146,7 +146,7 @@
     - 目前 full GC 没有严格的标准，有的垃圾收集器的 old GC 相当于 full GC 。
 
 - young 区域中大部分对象一般会在短期内停止引用，活不到 old 区域，因此两个区域的内存开销不同。
-  - 例如 HotSpot 认为 old 区域的内存开销一般更大。因此默认配置了 -XX:NewRatio=2 ，使得 old 区域容量是 young 的 2 倍。
+  - 例如 HotSpot 认为 old 区域的内存开销一般更大。因此默认配置了 `-XX:NewRatio=2` ，使得 old 区域容量是 young 的 2 倍。
   - 如果 Java 程序短期内创建大量新对象，则可能 young 区域内存不足而频繁 GC ，此时需要增加 young 区域的容量。
   - 如果 Java 程序存在大量非垃圾对象，则可能 old 区域内存不足而频繁 GC ，此时需要增加 old 区域的容量。
   - 如果 Java 程序存在大量非垃圾对象，还不断创建新的非垃圾对象，则 young、old 区域都会内存不足。
@@ -172,6 +172,13 @@
   - GC 时运行多个 GC 线程。
 - 优点：堆内存超过 100MB 时，GC 速度比 SerialGC 快几倍。
 - 缺点：依然全程处于 STW 状态。
+- 类似的垃圾收集器：
+  - ParNewGC
+    - 专注于 new generation 。在 young GC 时创建多个 GC 线程，在 old GC 时创建单个 GC 线程。
+    - HotSpot 在 Java 8 中，启用 `-XX:+UseConcMarkSweepGC` 时会默认启用 `-XX:+UseParNewGC` ，从而组合使用两个垃圾收集器，分别处理 young GC、old GC 。
+  - ParallelOldGC
+    - 早期版本的 ParallelGC 只能在 young GC 时创建多个 GC 线程。Java 6 增加了 ParallelOldGC ，在 old GC 时也能创建多个 GC 线程。
+    - HotSpot 在 Java 8 中，启用 `-XX:+UseParallelGC` 时会默认启用 `-XX:+UseParallelOldGC` 。
 
 ### ConcMarkSweepGC
 
@@ -201,9 +208,8 @@
   - old GC 会产生浮动垃圾，导致 old 区域占用内存增加 10% 左右。
   - old GC 采用 Mark-Sweep 算法，容易产生内存碎片。
     - 不采用 Mark-Compact、Mark-Copy 算法，是因为改变对象的内存地址时，必须处于 STW 状态。
-    - JVM 对 ConcMarkSweepGC 默认启用了 -XX:+UseCMSCompactAtFullCollection 功能，当不能存储大对象时，自动清理内存碎片。
+    - JVM 对 ConcMarkSweepGC 默认启用了 `-XX:+UseCMSCompactAtFullCollection` 功能，当不能存储大对象时，自动清理内存碎片。
 - HotSpot 从 Java 9 开始弃用 ConcMarkSweepGC ，采用它时会显示 warning ，建议改用 G1GC 。
-
 
 ### G1GC
   <!-- 采用自创的 G1GC 算法 -->

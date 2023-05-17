@@ -173,12 +173,12 @@
 - 优点：堆内存超过 100MB 时，GC 速度比 SerialGC 快几倍。
 - 缺点：依然全程处于 STW 状态。
 - 类似的垃圾收集器：
-  - ParNewGC
-    - 专注于 new generation 。在 young GC 时创建多个 GC 线程，在 old GC 时创建单个 GC 线程。
-    - HotSpot 在 Java 8 中，启用 `-XX:+UseConcMarkSweepGC` 时会默认启用 `-XX:+UseParNewGC` ，从而组合使用两个垃圾收集器，分别处理 young GC、old GC 。
   - ParallelOldGC
     - 早期版本的 ParallelGC 只能在 young GC 时创建多个 GC 线程。Java 6 增加了 ParallelOldGC ，在 old GC 时也能创建多个 GC 线程。
     - HotSpot 在 Java 8 中，启用 `-XX:+UseParallelGC` 时会默认启用 `-XX:+UseParallelOldGC` 。
+  - ParNewGC
+    - 专注于 new generation 。在 young GC 时创建多个 GC 线程，在 old GC 时创建单个 GC 线程。
+    - HotSpot 在 Java 8 中，启用 `-XX:+UseConcMarkSweepGC` 时会默认启用 `-XX:+UseParNewGC` ，从而组合使用两个垃圾收集器，分别处理 young GC、old GC 。
 
 ### ConcMarkSweepGC
 
@@ -199,12 +199,15 @@
   7. 并发重置（Concurrent Reset）：重置 ConcMarkSweepGC 垃圾收集器，准备开始下一次 old GC 。
       - 上述 5 个并发阶段不处于 STW 状态，虽然耗时长，但不会导致用户线程停顿。
       - 其它 2 个阶段虽然处于 STW 状态，但耗时短，可以忍受。
+- 满足以下条件之一时，会触发一次 old GC ：
+  - old 区域内存使用率超过 CMSInitiatingOccupancyFraction 阈值。
+  - Metaspace 内存不足。
+  - young 区域的对象可能全部晋升到 old 区域，此时如果 old 区域内存不足则会晋升失败。为了避免该问题，当 young 区域的 used_memory 大于 old 区域的 free_memory 时，也会触发一次 old GC 。
 - 优点：
   - old GC 的大部分时间不处于 STW 状态，允许同时运行用户线程、GC 线程。
 - 缺点：
   - young GC 依然处于 STW 状态。
   - old GC 同时运行用户线程、GC 线程，因此用户线程、GC 线程的执行速度都变慢了。用户线程的吞吐量降低 10% 左右，GC 线程的耗时比 ParallelGC 久。
-    - ConcMarkSweepGC 默认创建的 GC 线程数等于 CPU 核数除以 4 ，至少为 1 。因此 CPU 核数越少，吞吐量降幅越大。
   - old GC 会产生浮动垃圾，导致 old 区域占用内存增加 10% 左右。
   - old GC 采用 Mark-Sweep 算法，容易产生内存碎片。
     - 不采用 Mark-Compact、Mark-Copy 算法，是因为改变对象的内存地址时，必须处于 STW 状态。
@@ -223,6 +226,8 @@
   - mixed GC ：清理年轻代，还会清理老生代中垃圾较多（即活动对象较少）的 region ，称为垃圾优先。
   - full GC ：当老年代内存不足时，清理全部堆内存。
 - HotSpot 对于 Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
+- 优点：
+  - 传统的 SerialGC、ParallelGC 只适合处理 4G 以下的堆内存，因为堆内存越大，STW 时间越久。而 G1GC 擅长处理大内存。
 
 ### 性能指标
 

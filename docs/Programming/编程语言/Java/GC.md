@@ -66,19 +66,24 @@
 
 ### STW
 
-- ：Stop The World 。是 GC 过程中的一种状态，会暂停执行用户线程，只执行 GC 线程，从而方便找出垃圾对象。
-- 如果不暂停执行用户线程，则在 GC 的过程中，可能出现以下问题：
-  - 错删：某些已标记为垃圾的对象，可能被重新引用、变为非垃圾对象，之后被 GC 删除，导致用户线程执行出错。
-  - 漏删：某些未标记为垃圾的对象，可能变为垃圾对象，没有被本次 GC 删除。
-- 缺点：STW 会导致用户线程停顿，甚至 Java 进程假死。
-- 不同 GC 算法的 STW 时长不同。与 young GC、old GC 相比，full GC 需要清理全部内存，因此 STW 时间通常最长。
+- GC 算法一般是先 Mark 找出所有垃圾对象，然后开始删除。而不是每找出一个垃圾对象就删除一个，否则效率低。
+- 如果在 Mark 过程中，同时运行用户线程、GC 线程，则可能遇到以下问题：
+  - 错删：某些已标记为垃圾的对象，在 Mark 结束之前可能被用户线程重新引用、变为非垃圾对象，然后被删除，导致用户线程执行出错。
+  - 漏删：某些未标记为垃圾的对象，在 Mark 结束之前可能被用户线程改为垃圾对象，没有被本次 GC 删除。
+    - 这些垃圾对象等下一次 GC 才会被删除，称为浮动垃圾（floating garbage）。
+- 为了避免上述问题，通常在 Mark 过程中处于 STW（Stop The World）状态：暂停执行用户线程，只执行 GC 线程。
+  - 优点：避免在 Mark 过程中，对象的引用被用户线程改变。
+  - 缺点：短时间的 STW 会导致用户线程停顿，长时间的 STW 会导致 Java 进程假死。
+  - 不同 GC 算法的 STW 时长不同。与 young GC、old GC 相比，full GC 需要清理全部内存，因此 STW 时间通常最长。
 
 ## GC 算法
 
 ### Mark-Sweep
 
 - ：标记-清除算法。
-- 原理：分为两个步骤，先标记垃圾对象，然后删除它们。
+- 原理：分为两个步骤：
+  - Mark ：找出所有垃圾对象。
+  - Sweep ：删除所有垃圾对象。
 - 优点：实现简单，GC 耗时最短。
 - 缺点：删除一些垃圾对象之后，释放的空闲内存通常地址不连续，比较零散，容易产生内存碎片，导致内存使用率低。
 
@@ -153,7 +158,7 @@
 
 ## 垃圾收集器
 
-- 上文列举了多种 GC 算法，而实现 GC 算法的程序称为垃圾收集器（Garbage Collector，GC），下文列举几个垃圾收集器，一般在 JVM 中内置可用。
+- 上文列举了多种 GC 算法，而实现 GC 算法的程序称为垃圾收集器（Garbage Collector），下文列举几个垃圾收集器，一般在 JVM 中内置可用。
 
 ### SerialGC
 
@@ -194,7 +199,7 @@
   3. 并发预清洗（Concurrent Preclean）：在并发标记期间可能有些对象发生了变化，需要重新标记。
   4. 并发终止预清洗（Concurrent Abortable Preclean）：该阶段像 Concurrent Preclean ，但可通过 JVM 参数限制该阶段的耗时，提前终止。
   5. 最终重新标记（Final Remark）：该阶段进入 STW 状态，检查已标记为垃圾的对象，确保它们依然没有被引用。
-      - Final Remark 能避免误删，但不能避免漏删：某些未标记为垃圾的对象，在 Final Remark 之前变为垃圾对象，因此没被本次 GC 删除，等下一次 GC 才会被删除，称为浮动垃圾（floating garbage）。
+      - Final Remark 能避免误删，但不能避免漏删，因此可能产生浮动垃圾。
   6. 并发扫描（Concurrent Sweep）：删除垃圾对象。
   7. 并发重置（Concurrent Reset）：重置 ConcMarkSweepGC 垃圾收集器，准备开始下一次 old GC 。
       - 上述 5 个并发阶段不处于 STW 状态，虽然耗时长，但不会导致用户线程停顿。
@@ -217,10 +222,10 @@
 ### G1GC
   <!-- 采用自创的 G1GC 算法 -->
 - ：Garbage-First ，是一个与 ConcMarkSweepGC 类似的并发收集器，但能减少内存碎片、限制 STW 时长。
-- 传统 GC 算法的 young、old 区域分别是一块地址连续的内存空间。而 G1GC 在堆内存中划分大量 region ，分别分配给 eden、survivor、old 区域。
+- 传统垃圾收集器将堆内存分为两个区域 young、old ，晋升对象时需要从 young 区域拷贝到 old 区域。而 G1GC 将堆内存分为至少 2046 个 region 空间，再将各个 region 归属到 eden、survivor、old 区域名下。
   - 每个 region 是一小块地址连续的内存空间，体积相同。
-  - 体积巨大的对象（humongous object）可能占用多个地址连续的 region 。
-  - 分代 GC 时只需改变 region 所属的内存区域，属于移动式算法，不需要复制 region 。
+  - 如果一个对象的体积超过单个 region ，则称为 humongous object ，会存储到一组地址连续的 region 中。
+  - 晋升对象时，不需要从 young 区域拷贝到 old 区域，只需要将对象所在的 region 归属到 old 区域名下。
 - G1GC 有几种模式：
   - young GC ：清理年轻代。比如将 eden 区域中幸存的 region 分配给 survivor、old 区域。
   - mixed GC ：清理年轻代，还会清理老生代中垃圾较多（即活动对象较少）的 region ，称为垃圾优先。
@@ -228,6 +233,10 @@
 - HotSpot 对于 Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
 - 优点：
   - 传统的 SerialGC、ParallelGC 只适合处理 4G 以下的堆内存，因为堆内存越大，STW 时间越久。而 G1GC 擅长处理大内存。
+  - 移动算法，比复制算法的开销、耗时低很多。
+
+ConcMarkSweepGC 侧重于减少 STW 时长，而 G1GC 侧重于限制 STW 时长。
+
 
 ### 性能指标
 

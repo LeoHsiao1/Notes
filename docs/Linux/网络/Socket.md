@@ -396,7 +396,7 @@
 
 - 例：查看所有 Socket 占用的内存
   ```sh
-  [root@CentOS ~]# ss -tapnm | cat
+  [root@CentOS ~]# ss -tapnmi | cat
   State      Recv-Q   Send-Q    Local Address:Port    Peer Address:Port
   LISTEN     0        128             *:22                 *:*              users:(("sshd",pid=1173,fd=3))
       skmem:(r0,rb87380,t0,tb16384,f0,w0,o0,bl0,d0)   cubic rto:1000 mss:536 cwnd:10 segs_in:146 lastsnd:988678939 lastrcv:988678939 lastack:988678939

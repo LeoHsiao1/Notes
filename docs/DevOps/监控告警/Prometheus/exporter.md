@@ -501,15 +501,27 @@
 
 ：用于从 JMX 端口获取监控指标。
 - [GitHub](https://github.com/prometheus/jmx_exporter)
-- 用法：
+- 用法一：将 jmx_exporter 集成到待监控的 Java 进程中
   1. 下载 jmx_exporter 的 jar 文件。
-  2. 创建 jmx_exporter 的配置文件：
+  2. 编写 jmx_exporter 的配置文件 config.yaml ：
       ```yml
       rules:
-      - pattern: "jvm.*"    # 这里只采集 JVM 的监控指标，不监控其它 bean
+      - pattern: "jvm.*"        # 这里只采集 JVM 的监控指标，不监控其它 bean
       ```
   3. 在 Java 程序的启动命令中加入 `-javaagent:jmx_prometheus_javaagent-0.17.2.jar=8081:config.yaml` ，即可在 8081 端口提供 exporter 指标。
-      - jmx_exporter 作为 javaagent 运行时几乎不会增加 Java 进程的 CPU 开销，除非 Prometheus 的采集间隔很短。
+      - jmx_exporter 作为 java agent 运行时几乎不会增加 Java 进程的 CPU 开销，除非 Prometheus 的采集间隔很短。
+- 用法二：独立运行 jmx_exporter 进程，监控另一个 Java 进程
+  1. 编写 jmx_exporter 的配置文件 config.yaml ：
+      ```yml
+      hostPort: 10.0.0.1:9999   # 访问另一个 Java 进程的 JMX 端口，从而采集监控指标
+      rules:
+      - pattern: "jvm.*"
+      ```
+  2. 启动 jmx_exporter ，作为 HTTP 服务器运行：
+      ```sh
+      java -jar jmx_prometheus_httpserver-0.18.0.jar 8081 config.yaml
+      ```
+
 - 指标示例：
   ```sh
   jvm_memory_bytes_max                        # JVM 内存允许的最大容量，分为 heap、nonheap 两块内存区域
@@ -969,7 +981,9 @@
   kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
   kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
   ```
+- 同类产品：
   - kafka_exporter 没有监控 Topic 占用的磁盘空间，而 kminion 提供了该监控指标。
+  - 如果对性能有更高的追求，可给 Kafka 声明 JMX_PORT 环境变量，然后用 jmx_exporter 监控其 JVM 状态。
 
 ### kminion
 

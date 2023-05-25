@@ -38,7 +38,7 @@
       volumes:
         - ./config:/etc/gitlab
         - ./data:/var/opt/gitlab
-        - ./logs:/var/log/gitlab
+        - /tmp/gitlab-log:/var/log/gitlab  # GitLab 会生成大量日志文件，因此挂载到 /tmp 目录，自动清理
   ```
   - 执行 `gitlab-rake "gitlab:password:reset"` ，根据提示输入用户名 root ，即可设置其密码。
   - 官方 Docker 镜像中集成了多个进程，因此比较臃肿，启动时需要几分钟。

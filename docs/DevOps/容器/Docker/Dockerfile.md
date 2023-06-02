@@ -73,7 +73,7 @@
 ### 多阶段
 
 - 一个 Dockerfile 可以包含多个 FROM 指令，即多个构建阶段。
-- 使用多阶段构建的好处：
+- 使用多阶段构建的优点：
   - 将复杂的 Dockerfile 划分成多个独立的部分。
   - 减小镜像体积。
     - 一个构建步骤 step ，会使用之前 step 的中间镜像，继承 layer 中的全部文件，因此镜像容易包含无用文件。
@@ -429,6 +429,7 @@ docker build <PATH>|<URL>
   !*.md     # ! 表示反向匹配
   */tmp*    # 匹配子目录下的文件
   **/tmp*   # ** 匹配任意数量的目录
+  **/.git
   ```
   - Dockerfile 和 .dockerignore 文件总是会被发送给 dockerd ，即使在这声明了也没用。
 
@@ -449,7 +450,7 @@ docker build <PATH>|<URL>
                 --cache-from <image>                  # 采用某个镜像作为缓存源
                 --platform linux/arm64,...            # 指定构建的目标平台，默认采用本机平台，可指定多个平台
                 --progress plain                      # 构建过程的输出类型。默认为 auto ，设置为 plain 则会显示终端输出
-                --secret id=mysecret,src=/root/secret # 将宿主机上的文件声明为一个私密文件，指定 id ，可供 RUN 命令挂载
+                --secret id=mysecret,src=/root/secret # 将宿主机上的文件声明为一个私密文件，分配 id ，可供 RUN 命令挂载
             ls                      # 列出所有 builder 实例
             du                      # 显示 buildx 占用的磁盘
             prune -f                # 清空 buildx cache
@@ -462,7 +463,7 @@ docker build <PATH>|<URL>
   ```sh
   # syntax=docker/dockerfile:1.2
   ```
-- RUN 命令支持使用 `--mount` 选项，可多次使用，有多种挂载类型：
+- RUN 命令支持使用 `--mount` 选项，有多种挂载类型：
   - bind ：默认挂载类型。
     ```sh
     RUN --mount=type=bind,src=./dist,dst=/dist \
@@ -473,7 +474,8 @@ docker build <PATH>|<URL>
     - src 表示源路径，默认为 from 的顶级目录。
     - dst 表示目标路径，如果不存在则会自动创建。
     - 挂载时默认的访问模式为 rw ，可以改为 ro 。
-    - 使用 RUN --mount 方式获取文件，可以避免像 COPY 命令那样将文件保存到镜像中。
+    - 使用 RUN --mount 是临时挂载 build context 中的文件到容器中，当 RUN 命令执行结束就会取消挂载，因此该文件不会像 COPY 命令那样保存到镜像 layer 中。
+    - 一条 RUN 命令中，可多次使用 --mount 选项，挂载多个文件。
   - cache ：用于挂载缓存目录，类似于数据卷。
     ```sh
     RUN --mount=type=cache,target=/app/node_modules,id=/app/node_modules \
@@ -485,13 +487,13 @@ docker build <PATH>|<URL>
         npm run build
     ```
     - cache 会在第一次挂载时自动创建。当构建结束，且不存在引用它的镜像时，自动删除。
-      - 挂载 cache 的好处：可以让多个构建步骤共享文件。
+      - 挂载 cache 的优点：可以让多个构建步骤共享文件。
     - cache 的 id 默认等于 target 。
     - sharing 表示并行构建时，对 cache 的访问模式。可取值如下：
       - shared ：默认值，允许并行读写。
       - locked ：同时只能有一方绑定该 cache 。
       - private ：如果 cache 已被绑定，则创建新的 cache 实例。
-  - secret ：用于挂载一个私密文件。该文件不是来自 build context ，而是由用户指定的任意宿主机文件。
+  - secret ：用于挂载一个私密文件。该文件不是来自 build context ，而是在 `docker buildx build --secret xx` 命令中指定的宿主机文件。
     ```sh
     RUN --mount=type=secret,id=mysecret,dst=/secret \
         cat /secret

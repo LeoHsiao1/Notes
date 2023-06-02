@@ -145,15 +145,22 @@
       var2=value2
   ```
   - 可以不赋值，此时值为空。
-- 构建镜像时，可通过 `docker build --build-arg` 传入构建参数。
-- ARG 变量只影响构建过程，不会保留。
-  - 可以通过 `docker history` 命令查看 ARG 变量的值，因此不应该通过 ARG 传递密码等敏感信息。可改为读取 secret 文件，或者让最终镜像不继承当前构建阶段。
+- 构建镜像时，可通过 `docker build --build-arg xx` 从 Dockerfile 外部传入构建参数，赋值给 ARG 变量。
+  - 如果想从外部赋值给 ENV 指令，则需要先赋值给 ARG 变量，然后在 ENV 指令中读取 ARG 变量。如下：
+    ```sh
+    ARG     A=10
+    ENV     B=$A
+    ```
 
 ### ENV
 
 ：给容器内 shell 添加一个或多个键值对格式的环境变量。
 - 语法与 ARG 指令相同。
-- ENV 变量会保存到镜像中，并添加到容器内 shell 中。
+
+- 比较 ARG 与 ENV 变量：
+  - ARG 变量的作用域更广。在 ENV 指令中可读取 ARG 变量，而在 ARG 指令中不能读取 ENV 变量。
+  - ARG 变量只添加到 Dockerfile 中，只能在构建镜像时读取。而 ENV 变量会添加到容器内 shell 中，在构建镜像、运行镜像时都可读取。
+    - 做出镜像之后，可以通过 `docker history <image>` 命令查看 ARG 变量的值，因此不应该通过 ARG 传递密码等敏感信息。可改为读取 secret 文件，或者让最终镜像不继承当前构建阶段。
 
 ### LABEL
 

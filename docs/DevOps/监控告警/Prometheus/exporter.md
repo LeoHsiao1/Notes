@@ -917,7 +917,7 @@
   elasticsearch_index_stats_indexing_index_time_seconds_total
   elasticsearch_index_stats_merge_total                         # index merge 的次数
   elasticsearch_index_stats_merge_time_seconds_total
-  elasticsearch_index_stats_refresh_total                       # index refresh 的次数
+  elasticsearch_index_stats_refresh_total                       # index refresh 的次数。这是累计该 index 下属所有 shard 的 refresh 次数
   elasticsearch_index_stats_refresh_time_seconds_total
   elasticsearch_index_stats_search_fetch_time_seconds_total     # search fetch 的次数
   elasticsearch_index_stats_search_fetch_total

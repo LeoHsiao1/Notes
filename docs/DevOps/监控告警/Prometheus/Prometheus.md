@@ -607,36 +607,46 @@ Prometheus 的多种集群部署方案：
   abs(go_goroutines)                    # 返回每个时刻处，数据点的绝对值
   round(go_goroutines)                  # 返回每个时刻处，数据点四舍五入之后的整数值
   absent(go_goroutines)                 # 在每个时刻处，如果矢量为空（不存在任何数据点），则返回 1 ，否则返回空值
-  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 以内矢量一直为空，则返回 1 ，否则返回空值
-  changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 以内数值变化的次数
-  resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内数值减少的次数
+  absent_over_time(go_goroutines[1m])   # 在每个时刻处，如果过去 1m 内矢量一直为空，则返回 1 ，否则返回空值
+  changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 内数值变化的次数
+  resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 内数值减少的次数
 
-  delta(go_goroutines[1m])              # 返回每个时刻处，该数据点减去 1m 之前数据点的差值（可能为负），适合计算变化量
-  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 以内最后两个数据点的差值（可能为负）
+  delta(go_goroutines[1m])              # 返回每个时刻处，过去 1m 内最新一个数据点与最旧一个数据点的差值（可能为负），适合计算变化量
+  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 内最新两个数据点的差值（可能为负）
   deriv(go_goroutines[1m])              # 通过简单线性回归，计算每秒的导数（可能为负）
 
   # 以下算术函数只适用于 Counter 类型，即单调递增的矢量
-  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 以内的每秒平均增量（时间间隔越长，曲线越平缓）
-  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 以内最后两个数据点之间的每秒平均增量（不会为负）
-  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 以内的数值增量（不会为负）
+  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 内的每秒平均增量（时间间隔越长，曲线越平缓）
+  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 内最新两个数据点之间的每秒平均增量（不会为负）
+  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 内的数值增量（不会为负）
   ```
-  - 使用函数时，时间间隔 `[t]` 至少应该是 scrape_interval 的两倍，否则容易缺少采样点，导致计算结果为空。
-  - 例：正常情况下 node_time_seconds 的值是每秒加 1 ，因此：
-    - `delta(node_time_seconds[1m])` 计算结果的每个数据点的值都是 60 。
-    - `rate(node_time_seconds[1m])` 每个点的值都是 1 。
-    - `irate(node_time_seconds[xx])` 每个点的值也都是 1 。
-    - 如果 scrape_interval 为 30s ，则 `idelta(node_time_seconds[xx])` 每个点的值都是 30 。
-  - increase() 实际上是 rate() 乘以时间间隔的语法糖。
-    - 如果矢量为 Counter 类型，即单调递增，
-      - 则 increase() 与 delta() 的计算结果几乎相同，但可能存在轻微的误差，因为要先计算 rate() 。
-    - 如果矢量先增加，然后减少，
-      - 则 delta() 的计算结果可能为负，可以只取 >= 0 部分的值。
-      - 而 rate() 只会计算出第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，最终得到的 increase() 值比 delta() 大。因此 rate() 只适合计算 Counter 类型的矢量。
-      - Counter 类型的矢量不能保证总是单调递增，比如服务重启时会重新计算，称为计数器重置。因此 rate() 计算 Counter 类型的矢量时，也可能出错。
-    - 综上，计算增量时，使用 delta() 比 increase() 更好。
-  - 关于 idelta()、irate() ：
-    - 应该尽量使用大一些的时间间隔，因为时间间隔过大时不影响计算精度，但时间间隔过小时可能缺少数据点。
-    - 曲线比 delta()、rate() 更尖锐，更接近瞬时值。但是只考虑到最近的两个数据点，更容易产生误差。
+  - 使用函数时，时间间隔 `[t]` 应该至少是 scrape_interval 的两倍，否则在 t 时间范围内的数据点可能少于 2 个，导致计算结果为空。
+
+- 例：假设 scrape_interval 为 30s ，指标 node_time_seconds 采集了几个数据点，取值依次为 0、30、60、90 ，进行以下函数计算：
+  - `delta(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 60 。因为 60s 时间内包含 3 个数据点，最新一个数据点与最旧一个数据点的差值为 60 。
+  - `delta(node_time_seconds[30s])` 计算结果为空，因为 30s 时间内的数据点少于 2 个。
+  - `delta(node_time_seconds[50s])` 计算结果显示的图像不连续。因为 50s 时间内，有时包含 2 个数据点，就有图像；有时包含 1 个数据点，就没有图像。
+  - `delta(node_time_seconds[70s])` 计算结果中，每个点的值为 70 。
+    - 这里 70s 时间内包含 3 个数据点，最新一个数据点与最旧一个数据点的差值为 60 、时间长度为 60s 。然后 delta() 会根据这 60s 时间内的差值，按比例推算 70s 时间内的差值。
+    - 如果指标的值不是匀速变化的，则时间间隔 `[t]` 除以 scrape_interval 的余数越大，delta() 推算的误差越大。
+    - 即使原指标取值为整数，但受到 delta() 推算的影响，计算结果也可能包含小数。而 rate()、increase() 是取平均值，计算结果总是包含小数。
+  - `idelta(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 30 。
+  - `rate(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 1 。
+  - `irate(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 1 。
+  - `increase(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 60 。
+
+- increase() 实际上是 rate() 乘以时间间隔的语法糖。
+  - 如果矢量为 Counter 类型，即单调递增，
+    - 则 increase() 与 delta() 的计算结果几乎相同，但可能存在轻微的误差，因为要先计算 rate() 。
+  - 如果矢量先增加，然后减少，
+    - 则 delta() 的计算结果可能为负，可以只取 `delta(...) >= 0` 部分的值。
+    - 而 rate() 会计算第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，最终 increase() 计算结果比 delta() 大。因此 rate() 只适合计算 Counter 类型的矢量。
+    - Counter 类型的矢量不能保证总是单调递增，比如服务重启时会重新计算，称为计数器重置。因此 rate() 计算 Counter 类型的矢量时，也可能出错。
+  - 综上，计算增量时，使用 delta() 比 increase() 更好。
+
+- 关于 idelta()、irate() ：
+  - 应该尽量使用大一些的时间间隔，因为时间间隔过大时不影响计算精度，但时间间隔过小时可能缺少数据点。
+  - 它们的曲线比 delta()、rate() 更尖锐，更接近瞬时值。但是只考虑到最近的两个数据点，更容易产生误差。
 
 #### 聚合函数
 

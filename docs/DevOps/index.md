@@ -45,6 +45,7 @@
   - [Grafana](监控告警/Grafana.md)
   - [Zabbix](监控告警/Zabbix.md)
   - [Prometheus](监控告警/Prometheus/Prometheus.md)
+    - [PromQL](监控告警/Prometheus/PromQL.md)
     - [exporter](监控告警/Prometheus/exporter.md)
     - [Pushgateway](监控告警/Prometheus/Pushgateway.md)
     - [Alertmanager](监控告警/Prometheus/Alertmanager.md)

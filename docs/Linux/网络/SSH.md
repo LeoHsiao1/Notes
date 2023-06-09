@@ -51,11 +51,12 @@ PasswordAuthentication yes        # 允许使用密码登录（否则只能使�
 PermitEmptyPasswords no           # 不允许使用空密码登录
 
 UseDNS no                         # 不检查目标主机的主机名、 IP 是否与 DNS 一致，否则会增加建立 SSH 连接的耗时
-StrictModes yes                   # 被 SSH 登录时，检查用户的家目录、authorized_keys 等文件是否只被该用户拥有写权限
+StrictModes yes                   # 被其它主机以密钥方式 SSH 登录时，检查用户的家目录、authorized_keys 的文件权限，只允许被该用户访问，否则存在被其他用户篡改的风险，拒绝 SSH 登录
 ```
 - 修改了配置文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
-- 如果 StrictModes 检查不通过，则 sshd 依然会拒绝 SSH 认证，并在 `/var/log/secure` 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` 。此时建议调整文件权限：
+- 如果 StrictModes 检查不通过，则 sshd 会拒绝 SSH 登录，并在 `/var/log/secure` 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` 。此时需要调整文件权限：
   ```sh
+  chown `id -u`:`id -g` ~  ~/.ssh
   chmod 700 ~  ~/.ssh
   chmod 600 ~/.ssh/authorized_keys
   ```

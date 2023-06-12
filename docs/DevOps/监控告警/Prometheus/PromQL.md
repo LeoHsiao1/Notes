@@ -36,9 +36,9 @@
   - Counter
     - ：计数器，数值单调递增。
   - Gauge
-    - ：仪表，数值可以任意加减变化。
+    - ：仪表，数值没有单调性，可以自由增减。
   - Histogram
-    - ：直方图。将时间平均分成一段段区间，将每段时间内的多个采样点取平均值再返回（由 Server 计算），相当于从散点图变成直方图。
+    - ：直方图。将时间平均分成一段段区间，将每段时间内的多个采样点取平均值再返回（这会增加 Prometheus 的 CPU 开销），相当于从散点图变成直方图。
     - 例如 `prometheus_http_request_duration_seconds_count{}  10` 表示 HTTP 请求的样本总数有 10 个。
     - 例如 `prometheus_http_request_duration_seconds_sum{}  0.1` 表示 HTTP 请求的耗时总和为 0.1s 。
     - 例如 `prometheus_http_request_duration_seconds_bucket{le="60"}  10` 表示 HTTP 请求中，耗时低于 60s 的有 10 个。
@@ -215,42 +215,152 @@
   changes(go_goroutines[1m])            # 返回每个时刻处，最近 1m 内数值变化的次数
   resets(go_goroutines[1m])             # 返回每个时刻处，过去 1m 内数值减少的次数
 
-  delta(go_goroutines[1m])              # 返回每个时刻处，过去 1m 内最新一个数据点与最旧一个数据点的差值（可能为负），适合计算变化量
-  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 内最新两个数据点的差值（可能为负）
-  deriv(go_goroutines[1m])              # 通过简单线性回归，计算每秒的导数（可能为负）
+  delta(go_goroutines[1m])              # 返回每个时刻处，过去 1m 内最新的值减去最旧的值之差
+  idelta(go_goroutines[1m])             # 返回每个时刻处，过去 1m 内最新两个数据点的差值
+  deriv(go_goroutines[1m])              # 通过简单线性回归，计算每秒的导数
 
-  # 以下算术函数只适用于 Counter 类型，即单调递增的矢量
-  rate(go_goroutines[1m])               # 返回每个时刻处，过去 1m 内的每秒平均增量（时间间隔越长，曲线越平缓）
-  irate(go_goroutines[1m])              # 返回每个时刻处，过去 1m 内最新两个数据点之间的每秒平均增量（不会为负）
-  increase(go_goroutines[1m])           # 返回每个时刻处，过去 1m 内的数值增量（不会为负）
+  # 以下函数专用于处理 Counter 类型的矢量，即单调递增的矢量。计算结果不会为负
+  increase(http_requests_count[1m])     # 返回每个时刻处，过去 1m 内的增量
+  rate(http_requests_count[1m])         # 返回每个时刻处，过去 1m 内的增长率，即平均每秒增量
+  irate(http_requests_count[1m])        # 返回每个时刻处，过去 1m 内最新两个数据点之间的增长率
   ```
-  - 使用函数时，时间间隔 `[t]` 应该至少是 scrape_interval 的两倍，否则在 t 时间范围内的数据点可能少于 2 个，导致计算结果为空。
+  - 使用函数时，时间间隔 `[interval]` 应该至少是 scrape_interval 的两倍，否则在过去 interval 时长内的数据点可能少于 2 个，导致计算结果为空。
+  - rate() 的计算结果，相当于 increase() 除以时间间隔 interval 。
 
-- 例：假设 scrape_interval 为 30s ，指标 node_time_seconds 采集了几个数据点，取值依次为 0、30、60、90 ，进行以下函数计算：
-  - `delta(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 60 。因为 60s 时间内包含 3 个数据点，最新一个数据点与最旧一个数据点的差值为 60 。
-  - `delta(node_time_seconds[30s])` 计算结果为空，因为 30s 时间内的数据点少于 2 个。
-  - `delta(node_time_seconds[50s])` 计算结果显示的图像不连续。因为 50s 时间内，有时包含 2 个数据点，就有图像；有时包含 1 个数据点，就没有图像。
-  - `delta(node_time_seconds[70s])` 计算结果中，每个点的值为 70 。
-    - 这里 70s 时间内包含 3 个数据点，最新一个数据点与最旧一个数据点的差值为 60 、时间长度为 60s 。然后 delta() 会根据这 60s 时间内的差值，按比例推算 70s 时间内的差值。
-    - 如果指标的值不是匀速变化的，则时间间隔 `[t]` 除以 scrape_interval 的余数越大，delta() 推算的误差越大。
-    - 即使原指标取值为整数，但受到 delta() 推算的影响，计算结果也可能包含小数。而 rate()、increase() 是取平均值，计算结果总是包含小数。
-  - `idelta(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 30 。
-  - `rate(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 1 。
-  - `irate(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 1 。
-  - `increase(node_time_seconds[1m])` 计算结果中，每个数据点的值都为 60 。
-
-- increase() 实际上是 rate() 乘以时间间隔的语法糖。
-  - 如果矢量为 Counter 类型，即单调递增，
-    - 则 increase() 与 delta() 的计算结果几乎相同，但可能存在轻微的误差，因为要先计算 rate() 。
-  - 如果矢量先增加，然后减少，
-    - 则 delta() 的计算结果可能为负，可以只取 `delta(...) >= 0` 部分的值。
-    - 而 rate() 会计算第一段单调递增部分的增长率 k ，然后认为该矢量在 t 时间内的增量等于 k × t ，最终 increase() 计算结果比 delta() 大。因此 rate() 只适合计算 Counter 类型的矢量。
-    - Counter 类型的矢量不能保证总是单调递增，比如服务重启时会重新计算，称为计数器重置。因此 rate() 计算 Counter 类型的矢量时，也可能出错。
-  - 综上，计算增量时，使用 delta() 比 increase() 更好。
+- 关于 delta()、increase() ：
+  - delta() 函数用于计算矢量的差值、变化量。
+    - 例如 `delta(http_requests_count[1m])` 的计算结果接近于 `http_requests_count - http_requests_count offset 1m` ，但不完全相同，因为受到 extrapolation 的影响。
+  - increase() 函数用于计算矢量的增量，因此希望矢量是单调递增的。如果矢量的值在 interval 时长内一会增大一会减小，则累计每一段增量，视作总增量。
+    - 假设矢量的值从 30 变为 50 ，则差值、增量都为 20 。
+    - 假设矢量的值从 50 变为 40 ，则差值为 -10 ，增量为 40 。这里 increase() 认为 Counter 计数器先从 50 重置到 0 ，然后从 0 增长到 40 ，只是因为离散采样没有采样到 0 值，因此增量为 40-0=40 。
+  - 如果矢量为 Counter 类型，即单调递增，则 delta() 与 increase() 的计算结果通常相同。
+    - 但 Counter 类型的矢量不能保证总是单调递增，比如 exporter 重启时会重新计数，称为计数器重置（Counter Reset），此时 delta() 与 increase() 的计算结果不同。
+    - 如果矢量的值减小，则 delta() 的计算结果可能为负，可以只取 `delta(...) >= 0` 部分的值。而 increase() 的计算结果不会为负，反而会计算出比 delta() 更大的增量，因为每次 Counter Reset 之后会从 0 开始重新计算增量。
+  - 综上，选用函数的一般逻辑如下：
+    - 如果矢量为 Counter 类型，则用 increase() 计算增量，用 rate() 计算增长率。
+    - 如果矢量为 Gauge 类型，则用 delta() 计算差值，用 deriv() 计算导数。
 
 - 关于 idelta()、irate() ：
-  - 应该尽量使用大一些的时间间隔，因为时间间隔过大时不影响计算精度，但时间间隔过小时可能缺少数据点。
-  - 它们的曲线比 delta()、rate() 更尖锐，更接近瞬时值。但是只考虑到最近的两个数据点，更容易产生误差。
+  - 时间间隔 interval 越大，rate() 函数的曲线越平缓。而 idelta()、irate() 的曲线总是很尖锐，不受 interval 影响，接近瞬时值。
+  - interval 取值应该尽量大些，因为 interval 过大时不影响 idelta()、irate() 的计算精度，但是 interval 小于 scrape_interval 的两倍时会缺少数据点。
+
+- 例：假设 scrape_interval 为 30s ，指标 http_requests_count 在 2m 时间内采样了 4 个数据点，取值依次为 3、6、9、12 ，进行以下函数计算：
+  - `delta(http_requests_count[1m])` 计算结果中，每个数据点的值都为 6 。
+  - `idelta(http_requests_count[1m])` 计算结果中，每个数据点的值都为 3 。
+  - `increase(http_requests_count[1m])` 计算结果中，每个数据点的值都为 6 。
+  - `rate(http_requests_count[1m])` 计算结果中，每个数据点的值都为 0.1 。
+  - `irate(http_requests_count[1m])` 计算结果中，每个数据点的值都为 0.1 。
+
+- 例：假设 scrape_interval 为 30s ，指标 http_requests_count 在 2m 时间内采样了 4 个数据点，取值依次为 3、1、2、5 ，进行以下函数计算：
+  - `delta(http_requests_count[30s])` 计算结果为空，因为 30s 时间内包含的数据点少于 2 个，不能计算差值。
+  - `delta(http_requests_count[50s])` 计算结果显示的图像不连续。因为 50s 时间内，有时包含 2 个数据点，就有图像；有时包含 1 个数据点，就没有图像。
+  - `delta(http_requests_count[1m])` 计算结果中，第 4 个数据点的值为 (5-2)/30*60=6 。这是受到了 extrapolation 的影响。
+
+### extrapolation
+
+- ddelta()、increase()、rate() 是数学里常见的函数，但 Prometheus 是离散采样，实现它们存在一定难度、误差。如下：
+  - 计算矢量在过去 interval 时长内的差值时，不一定在开始时刻、结束时刻正好采样了数据点。例如 scrape_interval 为 30s 时，执行 `delta(http_requests_count[70s])` 。
+  - 即使 interval 是 scrape_interval 的整数倍，实际采样的时间间隔并不总等于 scrape_interval ，会有波动。依然不一定在开始时刻、结束时刻正好采样了数据点。
+
+- 为了解决上述问题，Prometheus 采用了 extrapolation 机制：
+  - delta()、increase()、rate() 函数在底层都是调用 extrapolatedRate() 函数进行计算。
+  - extrapolatedRate() 函数会读取已有的数据点，计算矢量在局部时间范围的差值、增量、增长率，然后按时间比例放大到更大时间范围。
+
+- 例：假设 scrape_interval 为 30s ，指标 http_requests_count 采样的一组数据点为 20、30、50、40 。
+  - 如果执行 `delta(http_requests_count[1m])` ，则最后一个 scrape_interval 的差值为 40-50=-10 。然后 extrapolate ，得到过去 1m 时间内的差值为 -10/30*60=-20 。
+  - 如果执行 `increase(http_requests_count[1m])` ，则最后一个 scrape_interval 的差值为 40-50 ，叠加 Counter Reset 之前的值 50 ，得到增量为 40-50+50=40 。然后 extrapolate ，得到过去 1m 时间内的增量为 40/30*60=80 。
+  - 如果执行 `rate(http_requests_count[2m])` ，则过去 90s 时间内的增长率为 (40-20+50)/90≈0.78 。然后 extrapolate ，将它视作过去 2m 时间内的增长率。
+
+- 下面分析 Prometheus 的 [相关源码](https://github.com/prometheus/prometheus/blob/main/promql/functions.go) ：
+  ```golang
+  func extrapolatedRate(vals []parser.Value, args parser.Expressions, enh *EvalNodeHelper, isCounter, isRate bool) Vector {
+      var (
+          samples = ...       // interval 时长内采样的全部数据点，保存为一个数组
+          rangeStart = ...    // interval 的开始时刻
+          rangeEnd = ...      // interval 的结束时刻
+          resultFloat float64 // 记录 extrapolatedRate() 函数的计算结果，可能是差值、增长率、增量三种类型
+      )
+
+      // 如果采样的数据点少于 2 个，则不能计算差值，结束执行 extrapolatedRate()
+      if len(samples.Floats) < 2 {
+          return enh.Out
+      }
+
+      // 计算指标差值
+      numSamplesMinusOne = len(samples) - 1
+      first_point = samples[0]                            // 采样的第一个数据点
+      last_point = samples[numSamplesMinusOne]            // 采样的最后一个数据点
+      resultFloat = last_point.Value - first_point.Value
+
+      // 以上的 resultFloat 只是计算首尾两个数据点的差值，满足了 delta() 函数的需求。但 increase()、rate() 函数用于处理 Counter 类型的指标，需要考虑 Counter Reset 的情况
+      // 如果指标为 Counter 类型，则遍历所有数据点的 value 。如果当前 value 小于 prevValue ，则认为发生了一次 Counter Reset ，为了补偿 resultFloat ，给它叠加 prevValue
+      if isCounter {
+          prevValue := samples[0].Value
+          for _, current_point := range samples[1:] {
+              if current_point.Value < prevValue {
+                  resultFloat += prevValue
+              }
+              prevValue = currPoint.F
+          }
+      }
+
+      // 计算 extrapolation 阈值
+      sampledInterval := last_point.Time - first_point.Time                 // 采样的时长
+      averageDurationBetweenSamples := sampledInterval / numSamplesMinusOne // 数据点之间的平均采样间隔
+      extrapolationThreshold := averageDurationBetweenSamples * 1.1         // 触发 extrapolation 的阈值
+      extrapolateToInterval := sampledInterval
+
+      // 如果数据点距离 rangeStart、rangeEnd 较近，则将 sampledInterval 时长内的指标差值，按时间比例放大，视作 extrapolateToInterval 时长内的指标差值
+      // 如果距离超过 extrapolationThreshold 阈值（大概为 1.1 倍 scrape_interval ），则只放大少量时间（大概为 0.5 倍 scrape_interval ）。否则只采集了 1m 时间的指标，却可以计算 1h 时间的增量，误差很大，不可信
+      durationToStart := first_point.Time - rangeStart   // 第一个数据点距离 rangeStart 的时长
+      durationToEnd   := last_point.Time - rangeEnd      // 最后一个数据点距离 rangeEnd 的时长
+      if durationToStart < extrapolationThreshold {
+          extrapolateToInterval += durationToStart
+      } else {
+          extrapolateToInterval += averageDurationBetweenSamples / 2
+      }
+      if durationToEnd < extrapolationThreshold {
+          extrapolateToInterval += durationToEnd
+      } else {
+          extrapolateToInterval += averageDurationBetweenSamples / 2
+      }
+
+      // 按时间比例放大 resultFloat
+      factor := extrapolateToInterval / sampledInterval
+      resultFloat *= factor
+
+      // 如果正在执行 rate() 函数，则将差值除以时长，得到增长率
+      if isRate {
+          resultFloat /= sampledInterval
+      }
+
+      ...
+  }
+
+  // delta() 函数调用 extrapolatedRate() 时会声明 isCounter=false, isRate=false
+  func funcDelta(vals []parser.Value, args parser.Expressions, enh *EvalNodeHelper) Vector {
+      return extrapolatedRate(vals, args, enh, false, false)
+  }
+
+  func funcRate(vals []parser.Value, args parser.Expressions, enh *EvalNodeHelper) Vector {
+      return extrapolatedRate(vals, args, enh, true, true)
+  }
+
+  func funcIncrease(vals []parser.Value, args parser.Expressions, enh *EvalNodeHelper) Vector {
+      return extrapolatedRate(vals, args, enh, true, false)
+  }
+  ```
+  - delta() 函数只需要计算首尾两个数据点的差值，而 increase()、rate() 函数还需要遍历所有数据点的值，开销更大。
+
+- 评价 extrapolation 机制：
+  - 优点：
+    - Prometheus 采集监控指标时，即使遗漏了少量时刻的数据点，也能使用 delta()、rate() 函数绘制图像。即使未来 1m 时间的监控指标尚未采集，也能绘制图像，实现预测。
+  - 缺点：
+    - 如果原指标的值不是匀速变化的，则 interval/scrape_interval 比例越小，函数计算结果的误差越大。[相关 Issue](https://github.com/prometheus/prometheus/issues/3746)
+    - 即使原指标的值为整数，但受到 extrapolation 的影响，函数计算结果也可能包含小数。
+  - 如果用户担心 extrapolation 误差，可采取以下措施：
+    - 增加 interval/scrape_interval 比例，能减小 extrapolation 误差。
+    - 使用 idelta()、irate() 能避免 extrapolation 误差。
 
 ### 聚合函数
 

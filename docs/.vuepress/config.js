@@ -1337,6 +1337,10 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
+                                    title: "PromQL",
+                                    path: "/DevOps/监控告警/Prometheus/PromQL"
+                                },
+                                {
                                     title: "exporter",
                                     path: "/DevOps/监控告警/Prometheus/exporter"
                                 },

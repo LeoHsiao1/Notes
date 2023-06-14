@@ -1,14 +1,7 @@
 # Linux
 
-：一个流行的操作系统。
+：一个流行的操作系统，全称为 GNU/Linux 。
 - 发音为 `/ˈlɪnəks/` 。
-
-## 历史
-
-- 1991 年，芬兰人 Linus Torvalds 开发了 Linux 内核，将它按 GPL 协议授权为自由软件。
-- Linux 内核与诸多 GNU 软件组合在一起，构成了一个操作系统，称为 GNU/Linux 。
-  - Linux 在设计上借鉴了 Unix ，属于类 Unix 系统。但在社区的推动下，很快超越了 Unix 。
-- 2007 年，开源发展实验室（Open Source Development Labs ，OSDL）与自由标准组织（Free Standards Group ，FSG）合并，成立 Linux 基金会，负责管理 Linux 社区。
 
 ## 版本
 

@@ -758,6 +758,10 @@ module.exports = {
                         {
                             title: "Web安全",
                             path: "/Network/计算机安全/Web安全"
+                        },
+                        {
+                            title: "密码安全",
+                            path: "/Network/计算机安全/密码安全"
                         }
                     ]
                 }

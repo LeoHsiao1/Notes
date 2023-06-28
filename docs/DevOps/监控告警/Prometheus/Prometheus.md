@@ -84,7 +84,7 @@
   - 配置文件 web.yml 用于启用身份认证，如下：
     ```yml
     basic_auth_users:
-      <username>: <password>   # 这里需要填密码的哈希值，可用命令 htpasswd -nbB <username> <password> 生成
+      <username>: <password>   # 这里需要填密码的哈希值，可用命令 htpasswd -Bbn <username> <password> 生成
     ```
 
 - 或者用 docker-compose 部署：

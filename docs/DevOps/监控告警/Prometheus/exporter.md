@@ -454,7 +454,7 @@
   - 它依赖版本较新的 glibc 库，因此建议运行官方 Docker 镜像。
 - 它提供了 Web 监控页面，默认只允许从 localhost 访问，可以加上 HTTP Basic Auth 后公开：
   ```sh
-  htpasswd -cb passwd admin 123456
+  htpasswd -Bbc passwd admin 123456
   ./cadvisor --http_auth_file passwd --http_auth_realm 0.0.0.0
   ```
   访问地址为 `127.0.0.1:8080/containers/` 。

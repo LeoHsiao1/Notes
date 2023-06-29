@@ -136,7 +136,7 @@
   ```sh
   curl -X POST 'http://localhost:8081/service/rest/v1/components?repository=test'
         -u admin:******
-        -F raw.assetN=@f1         # 要上传的文件
+        -F raw.assetN=@f1         # 要上传的本机文件路径
         -F raw.assetN.filename=f1 # 上传之后的文件名
-        -F raw.directory=/        # 上传之后的保存目录
+        -F raw.directory=/        # 上传到哪个目录
   ```

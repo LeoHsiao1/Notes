@@ -24,12 +24,12 @@ curl <URL>...                   # 访问指定网址（默认为 GET 方法）�
     -u USER[:PASSWORD]          # 发送用户名，或者用户名加密码
 
     # 发送 POST body 的选项
-    -d "id=001&name=leo"        # --data ，在请求报文的 body 中，以纯文本形式发送数据。此时默认采用 POST 方法，并设置 header ："Content-Type : application/x-www-form-urlencoded"
+    -d "id=001&name=leo"        # --data ，在请求报文的 body 中，以纯文本形式发送数据。此时默认采用 POST 方法，并自动添加 HTTP 头部 "Content-Type : application/x-www-form-urlencoded"
     --data-ascii "Hello"        # 等价于 -d
     --data-urlencode "Hello"    # 经过 URLencode 之后再以纯文本形式发送
     --data-binary "Hello"       # 以二进制形式发送
     --data-binary @f1           # 上述选项都可以通过 @filepath 的格式发送文件的内容。不过 --data-binary 是以二进制格式发送，避免乱码
-    -F key1=Hello               # 发送 form 表单格式的 POST body ，此时默认采用 POST 方法，并设置 header ： "Content-Type: multipart/form-data"
+    -F key1=Hello               # 发送 form 表单格式的 POST body ，此时默认采用 POST 方法，并自动添加 HTTP 头部 "Content-Type: multipart/form-data"
     -F file1=@f1                # 该选项可以多次使用
     -T f1                       # 上传文件，此时默认采用 PUT 方法
 

@@ -85,13 +85,15 @@
   - 将字符串用反引号包住时，不会让反斜杠转义。
   - 查询表达式不能为空的 `{}` ，同理也不能使用 `{__name__=~".*"}` 选中所有指标。
 
-- 可以使用以下时间单位：
-  - s ：秒
-  - m ：分钟
-  - h ：小时
-  - d ：天
-  - w ：周
-  - y ：年
+- 时间的取值必须是正整数，可以使用以下时间单位：
+  ```sh
+  s     # 秒
+  m     # 分钟
+  h     # 小时
+  d     # 天
+  w     # 周
+  y     # 年
+  ```
 
 ## 运算符
 
@@ -243,6 +245,7 @@
 - 关于 idelta()、irate() ：
   - 时间间隔 interval 越大，rate() 函数的曲线越平缓。而 idelta()、irate() 的曲线总是很尖锐，不受 interval 影响，接近瞬时值。
   - interval 取值应该尽量大些，因为 interval 过大时不影响 idelta()、irate() 的计算精度，但是 interval 小于 scrape_interval 的两倍时会缺少数据点。
+  - Prometheus 的实际采样间隔不一定等于 scrape_interval ，因此如果用 idelta()、irate() 计算矢量每隔 scrape_interval 时长的变化量，则存在误差。
 
 - 例：假设 scrape_interval 为 30s ，指标 http_requests_count 在 2m 时间内采样了 4 个数据点，取值依次为 3、6、9、12 ，进行以下函数计算：
   - `delta(http_requests_count[1m])` 计算结果中，每个数据点的值都为 6 。
@@ -254,17 +257,48 @@
 - 例：假设 scrape_interval 为 30s ，指标 http_requests_count 在 2m 时间内采样了 4 个数据点，取值依次为 3、1、2、5 ，进行以下函数计算：
   - `delta(http_requests_count[30s])` 计算结果为空，因为 30s 时间内包含的数据点少于 2 个，不能计算差值。
   - `delta(http_requests_count[50s])` 计算结果显示的图像不连续。因为 50s 时间内，有时包含 2 个数据点，就有图像；有时包含 1 个数据点，就没有图像。
-  - `delta(http_requests_count[1m])` 计算结果中，第 4 个数据点的值为 (5-2)/30*60=6 。这是受到了 extrapolation 的影响。
+  - `delta(http_requests_count[1m])` 计算结果中，第 4 个数据点的值为 (5-2)/30*60=6 ，该值受 extrapolation 影响。
+  - `delta(http_requests_count[90s])` 计算结果中，第 4 个数据点的值为 (5-1)/60*90=6 ，该值受 extrapolation 影响。
 
 ### extrapolation
 
-- ddelta()、increase()、rate() 是数学里常见的函数，但 Prometheus 是离散采样，实现它们存在一定难度、误差。如下：
-  - 计算矢量在过去 interval 时长内的差值时，不一定在开始时刻、结束时刻正好采样了数据点。例如 scrape_interval 为 30s 时，执行 `delta(http_requests_count[70s])` 。
-  - 即使 interval 是 scrape_interval 的整数倍，实际采样的时间间隔并不总等于 scrape_interval ，会有波动。依然不一定在开始时刻、结束时刻正好采样了数据点。
+- delta()、increase()、rate() 是数学里常见的函数，但 Prometheus 是离散采样，实现它们存在一定难度、误差。
+  - 问题：假设 scrape_interval 为 30s ，执行 `delta(http_requests_count[70s])` ，此时不能找到相距 70s 的两个数据点，如何得出 70s 时长内的差值？
+    - 为了解决该问题，Prometheus 采用外推（extrapolation）机制：先计算矢量在 30s 时长内的差值，然后按时间比例放大，得到 70s 时长内的差值。不过这样会产生误差。
+  - 问题：假设 scrape_interval 为 30s ，指标 http_requests_count 采样的一组数据点记作 p1、p2、p3、p4 ，执行 `delta(http_requests_count[70s])` 时应该读取几个数据点来计算差值？
+    - 此时 interval 大于 scrape_interval 的 2 倍，看起来 Prometheus 在每个 interval 时长内可读取 3 个数据点来计算差值。但实际采样间隔不一定等于 scrape_interval ，可能为 31s、35s ，因此每个 interval 时长内不一定包含 3 个数据点。保守起见，Prometheus 在每个 interval 时长内只读取 `interval/scrape_interval + 0.33 = n` 个数据点，n 向下取整。
+    - 综上，不管 interval 是 scrape_interval 的多少倍，函数计算结果都受 extrapolation 影响，会产生误差。
 
-- 为了解决上述问题，Prometheus 采用了 extrapolation 机制：
-  - delta()、increase()、rate() 函数在底层都是调用 extrapolatedRate() 函数进行计算。
-  - extrapolatedRate() 函数会读取已有的数据点，计算矢量在局部时间范围的差值、增量、增长率，然后按时间比例放大到更大时间范围。
+<!--
+读取大于等于 t0 时刻、小于 t0+0.33*scrape_interval 时刻范围内的所有数据点
+ms.Range -->
+
+
+
+- 评价 extrapolation 机制：
+  - 优点：
+    - 用户使用 delta()、increase()、rate() 函数时，可自由调整 interval 的大小，方便统计分析。
+    - Prometheus 采集监控指标时，即使漏采了少量数据点，也能使用 delta()、increase()、rate() 函数绘制图像。即使未来几分钟的监控指标尚未采集，也能绘制图像，实现预测。
+  - 缺点：
+    - 如果原指标的值不是匀速变化的，则 interval/scrape_interval 比例越小，函数计算结果的误差越大。[相关 Issue](https://github.com/prometheus/prometheus/issues/3746)
+    - 即使原指标的值为整数，但受到 extrapolation 的影响，函数计算结果也可能包含小数。
+  - 如果用户担心 extrapolation 误差，可采取以下措施：
+    - 增加 interval 或减小 scrape_interval ，从而增加 interval/scrape_interval 比例，能减小 extrapolation 误差。
+    - 改用 idelta()、irate() 函数，能避免 extrapolation 误差。
+
+
+<!--
+- 另一个问题：分桶
+  - 问题：假设 scrape_interval 为 30s ，指标 http_requests_count 采样的一组数据点为 1、1、2、2、3、3 。
+
+
+根据 step 将读取的数据点分为多组，默认的 step 等于 interval -->
+
+  <!--
+  这样少统计了一个 scrape_interval ，，，遗漏了上一个 interval 最后一个数据点，与下一个 interval 第一个数据点的差值
+  解决办法是：缩小查询的步长（step），使得上一个 interval 最后一个数据点，重复担任下一个 interval 第一个数据点
+  -->
+
 
 - 例：假设 scrape_interval 为 30s ，指标 http_requests_count 采样的一组数据点为 20、30、50、40 。
   - 如果执行 `delta(http_requests_count[1m])` ，则最后一个 scrape_interval 的差值为 40-50=-10 。然后 extrapolate ，得到过去 1m 时间内的差值为 -10/30*60=-20 。
@@ -350,17 +384,8 @@
       return extrapolatedRate(vals, args, enh, true, false)
   }
   ```
-  - delta() 函数只需要计算首尾两个数据点的差值，而 increase()、rate() 函数还需要遍历所有数据点的值，开销更大。
-
-- 评价 extrapolation 机制：
-  - 优点：
-    - Prometheus 采集监控指标时，即使遗漏了少量时刻的数据点，也能使用 delta()、rate() 函数绘制图像。即使未来 1m 时间的监控指标尚未采集，也能绘制图像，实现预测。
-  - 缺点：
-    - 如果原指标的值不是匀速变化的，则 interval/scrape_interval 比例越小，函数计算结果的误差越大。[相关 Issue](https://github.com/prometheus/prometheus/issues/3746)
-    - 即使原指标的值为整数，但受到 extrapolation 的影响，函数计算结果也可能包含小数。
-  - 如果用户担心 extrapolation 误差，可采取以下措施：
-    - 增加 interval/scrape_interval 比例，能减小 extrapolation 误差。
-    - 使用 idelta()、irate() 能避免 extrapolation 误差。
+  - delta()、increase()、rate() 函数在底层都是调用 extrapolatedRate() 函数，从而计算差值、增量、增长率。
+  - delta() 函数只需要计算首尾两个数据点的差值，而 increase()、rate() 函数需要遍历所有数据点的值，开销更大。
 
 ### 聚合函数
 

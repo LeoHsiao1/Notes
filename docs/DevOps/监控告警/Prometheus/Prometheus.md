@@ -211,8 +211,8 @@ Prometheus 的多种集群部署方案：
 1. 在配置文件 prometheus.yml 中加入监控任务：
     ```yml
     global:
-      scrape_interval: 30s          # 每隔多久采集一次指标，默认为 1m（这是全局值，可以被局部值覆盖）
-      scrape_timeout: 10s           # 每次采集的超时时间。默认为 10s ，不允许超过 scrape_interval
+      scrape_interval: 30s          # 每隔多久采集一次指标，默认为 1m 。这是全局值，可以被局部值覆盖
+      scrape_timeout: 10s           # 每次采集的超时时间。默认为 10s ，该值不能超过 scrape_interval
       evaluation_interval: 30s      # 每隔多久执行一次 rules ，默认为 1m
       # external_labels:            # 与 Alertmanager 等外部组件通信时，会加上这些标签
       #   monitor: codelab-monitor

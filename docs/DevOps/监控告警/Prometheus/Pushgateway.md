@@ -49,20 +49,14 @@
 - 例：推送指标到 Pushgateway
   ```sh
   cat <<EOF | curl --data-binary @- http://localhost:9091/metrics/job/pushgateway/instance/10.0.0.1
-  # TYPE test_metric gauge
   # HELP test_metric Just an example.
+  # TYPE test_metric gauge
   test_metric{name="one"} 42
   EOF
   ```
   - Pushgateway 会将收到的指标按 job、instance 的值进行分组。
     - 如果 URL 中不指定 job ，则会报错 404 。
     - 如果 URL 中不指定 instance ，则会默认设置为 instance="" 。
-  - 指标中：
-    - `# TYPE <metric_name> <type>` 行必须存在，用于声明该指标的类型，否则指标会被视作无类型的。
-    - `# HELP <metric_name> <comment>` 行不是必要的，用作该指标的注释。
-    - 标签的值只能用双引号 " 作为定界符，不能用单引号 ' 。
-    - 每行末尾不能存在空格，否则会被当作最后一个字段。
-    - 每行末尾要有换行符，最后一行也需要换行。
 
 - 推送之后，Pushgateway 会记录以下指标：
   ```sh

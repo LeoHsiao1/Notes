@@ -7,32 +7,88 @@
 
 ## metrics
 
-- Prometheus 采集的监控指标称为 metrics ，它是纯文本格式，每条数据是如下格式的字符串：
+- Prometheus 每隔 scrape_interval 时长，会向各个 exporter 发送一个 HTTP GET 请求，获取 metrics 。而 exporter 会在 HTTP response body 中输出多行文本，作为 metrics ，例如：
   ```sh
-  <metric_name>{<label_name>=<label_value>, ...}     metric_value
+  # HELP go_goroutines Number of goroutines that currently exist.
+  # TYPE go_goroutines gauge
+  go_goroutines{instance="10.0.0.1:9090", job="prometheus"}   80
+  go_goroutines{instance="10.0.0.2:9090", job="prometheus"}   90
   ```
-  例如：
-  ```sh
-  go_goroutines{instance="10.0.0.1:9090", job="prometheus"}    80
-  go_goroutines{instance="10.0.0.2:9090", job="prometheus"}    90
-  ```
-  - metric_name 必须匹配正则表达式 `[a-zA-Z_:][a-zA-Z0-9_:]*` ，一般通过 Recording Rules 定义的指标名称才包含冒号 : 。
-  - 存在多条用途相同的监控数据时，可使用同一个 metric_name 、不同的标签（label），然后通过 labels 来筛选。
-  - label_value 可包含 Unicode 字符。
-  - 一个监控对象 exporter 可能输出多种名称的 metrics 。而每个 metrics 可能存在 labels 集合值不同的多个实例 samples ，又称为指标样本。
+  - `# HELP <metric_name> <comment>` 行用于声明该指标的注释，可以省略。
+  - `# TYPE <metric_name> <type>` 行用于声明该指标的类型。
+  - 每行指标的格式为 `<metric_name>{<label_name>=<label_value>, ...}  metric_value` ，先是指标名称、标签，然后在任意个空格之后声明指标值。
+    - metric_name 必须匹配正则表达式 `[a-zA-Z_:][a-zA-Z0-9_:]*` ，一般通过 Recording Rules 定义的指标名称才包含冒号 `:` 。
+    - exporter 生成多条用途相同的监控指标时，建议采用同一个 metric_name 、不同的 label_value ，然后通过 labels 来筛选。
+    - label_value 只能用双引号 " 作为定界符，不能用单引号 ' 。
+    - label_value 可包含 Unicode 字符。
+    - metric_value 只能是数值，不支持 string 类型。
+  - exporter 输出的 metrics 中可包含多行指标。
+    - 相同 metric_name 的指标放在一起，放在一行 TYPE 之下。
+    - 每行末尾不能存在空格，否则会被解析成最后一个字段。
+    - 每行末尾要有换行符，最后一行也需要换行。
 
-- Prometheus 采集 metrics 时，会进行以下处理：
-  - exporter 输出的 metrics 没有时间戳，而 Prometheus 采集 metrics 时会自动记录当前的时间戳。而采集通常有几秒的延迟，因此记录的时间戳不是很准确。
-  - 将 metric_name 记录到内置标签 `__name__` ，比如 `go_goroutines{instance="10.0.0.1:9090", job="prometheus"}` 会记录成 `{__name__="go_goroutines", instance="10.0.0.1:9090", job="prometheus"}` ，因此 samples 完全是通过 labels 来标识的。
-  - 对于一条 sample ，比如 `go_goroutines{instance="10.0.0.1:9090", job="prometheus"}` ，在不同时刻采集一次，就得到了它在不同时刻的取值，组成一个时间序列（time series），可用于监控 sample 取值随时间变化的趋势。
-  - 对每条 sample 的 labels 集合值计算哈希，然后将该哈希值记作 seriesId ，用作该 time series 在 TSDB 数据库的主键。
-    - 新增一条 sample 时，如果它的 seriesId 在 TSDB 已存在，则添加到已有的 time series 。
-    - 同一 seriesId 之下的各个 sample ，拥有相同的 labels 集合值，只能通过时间戳区分。
-    - Prometheus 定义了一种数据结构 memSeries ，用于存储某个 seriesId 在一段时间范围内的全部 sample 数据。
-    - seriesId 的数量称为基数。采集、查询时涉及的基数越大，则处理的 memSeries 越多，占用的 CPU、内存越多。
-  - 从 labels 向 seriesId 建立倒排索引，因此根据 labels 查询 metrics 的速度很快。例如记录含有 `job="prometheus"` 标签的 seriesId 有 11、22、33 等。
+- Prometheus 不能准确测量 metrics 的时刻，存在误差：
+  - exporter 生成的 metrics 没有时间戳，等 Prometheus 将 metrics 保存到 TSDB 数据库时，才会记录当前的时间戳，该时间戳与 metrics 的生成时刻之间存在延迟。
+  - 从 Prometheus 发出 HTTP 请求，到收到 HTTP 响应、解析 metrics 、保存到 TSDB ，该过程的耗时可能波动，因此保存 metrics 到 TSDB 的时间间隔不一定等于 scrape_interval 。
 
-- 根据用途的不同对 metrics 分类：
+- exporter 一般收到 HTTP 请求时才动态生成一次当前时刻的 metrics ，例如统计当前的线程数。
+  - 减少 scrape_interval 能提高采集频率，减小离散采样的误差，但会增加 Prometheus 和 exporter 的 CPU、带宽开销。
+
+
+
+
+
+
+
+- Prometheus 将采集的 metrics 保存到 TSDB 时序数据库时，会进行以下处理：
+  - 对于每行 metric 文本，解析成以下数据结构，称为一个数据点（point）：
+    ```json
+    {
+        "metric": {                       // 该 metric 的 labels set
+            "__name__": "go_goroutines",  // 将 metric_name 记录为内置标签 __name__
+            "instance": "10.0.0.1:9090",
+            "job": "prometheus",
+        },
+        "value": [
+            1656109032.131,               // timestamp ，单位为秒，保留三位小数到毫秒
+            "80"                          // value
+        ]
+    }
+    ```
+  - 如果多个 point 的 labels set 相同，则归属为同一条指标样本（sample）。
+    - 例如 `go_goroutines{instance="10.0.0.1:9090", job="prometheus"}` 和 `go_goroutines{instance="10.0.0.2:9090", job="prometheus"}` 是 2 条 samples ，都属于名为 go_goroutines 的 metric 。
+    - 对于每条 sample ，比如 `go_goroutines{instance="10.0.0.1:9090", job="prometheus"}` ，在不同时刻采集一次，就得到了它在不同时刻的取值，组成一个时间序列（time series），可用于监控 sample 取值随时间变化的趋势。
+
+
+
+- 根据数据类型，对 metrics 分类：
+  - 标量（scalar）
+    - ：一个数值，包括 int、float 类型。
+    - 例如数值 `1` 属于 scalar 。
+    - scalar 只有 value ，没有 timestamp、labels 信息。常用于与 vector 进行算术运算。
+  - 瞬时矢量（instant vector）
+    - ：一个 vector 包含一组 time series 。
+    - 例如在 Prometheus 的 Graph 页面，查询 `go_goroutines{job="prometheus"}` 会显示多条曲线，即包含多个 time series ，合称为一个 vector 。
+    - 一个 time series 在每个时刻只有一个 point ，而一个 vector 在每个时刻有一组 point 。
+  - 范围矢量（range vector）
+    - ：instant vector 的每个 point 只包含一对 timestamp、value ，而 range vector 的每个 point 包含附近一段时间范围内的多对 timestamp、value 。
+    - 例如 `go_goroutines{job="prometheus"}[1m]` 属于范围矢量，先从 TSDB 中读取 instant vector 形式的 point ，然后转换成 range vector 形式的 point 。其中单个 point 如下：
+      ```json
+      {
+          "metric": {
+              "__name__": "go_goroutines",
+              "instance": "10.0.0.1:9090",
+              "job": "prometheus",
+          },
+          "values": [
+              [1656109032.131, "80"],
+              [1656109062.503, "82"],
+          ]
+      }
+      ```
+    - 范围矢量不能在 Graph 页面直接显示成曲线，常用于 delta() 等函数的计算。
+
+- 根据用途，对 metrics 分类：
   - Counter
     - ：计数器，数值单调递增。
   - Gauge
@@ -45,19 +101,13 @@
   - Summary
     - ：汇总。将所有采样点按数值从小到大排列，然后返回其中几个关键位置的采样点的值（由 exporter 计算），相当于正态分布图。
     - 例如 `..._count`、`..._sum` 后缀。
-    - 例如 `http_request_duration_microseconds{handler="prometheus",quantile="0.5"}  3246.518` 表示 HTTP 请求中，排在 50% 位置处的耗时（即中位数）。
-    - 例如 `http_request_duration_microseconds{handler="prometheus",quantile="0.9"}  3525.421` 表示 HTTP 请求中，排在 90% 位置处的耗时。
-    - 例如  `http_request_duration_microseconds{handler="prometheus",quantile="0.99"}  3657.138` 表示 HTTP 请求中，排在 99% 位置处的耗时。
+    - 例如 `go_gc_duration_seconds{quantile="0.5"}  0.001` 表示全部 gc 耗时中，排在 50% 位置处的值（即中位数）。
+    - 例如 `go_gc_duration_seconds{quantile="0.75"}  0.001` 表示全部 gc 耗时中，排在 75% 位置处的值。
+    - 例如  `go_gc_duration_seconds{quantile="1"}  0.002` 表示全部 gc 耗时中，排在 100% 位置处的值，即最大值。
   - exemplar
     - ：在 metrics 之后附加 traceID 等信息，便于链路追踪。
     - 该功能默认禁用。
 
-- 根据是否随时间变化对 metrics 分类：
-  - 标量（scalar）
-    - ：包含一个或一些散列的值。
-  - 矢量（vector）
-    - ：包含一系列随时间变化的值。
-    - 一个矢量由 n≥1 个时间序列组成，显示成曲线图时有 n 条曲线，在每个时刻处最多有 n 个数据点（又称为元素），不过也可能缺少数据点（为空值）。
 
 ## 查询表达式
 
@@ -170,7 +220,7 @@
 - 矢量与标量的转换：
   ```sh
   vector(1)                 # 输入标量，返回一个矢量
-  scalar(vector(1))         # 输入一个单时间序列的矢量，以标量的形式返回当前时刻处的值
+  scalar(vector(1))         # 输入一个 time series ，返回每个时刻处的标量值
   ```
 
 - 关于时间：
@@ -196,8 +246,8 @@
   sort(go_goroutines)       # 按指标值升序排列
   sort_desc(go_goroutines)  # 按指标值降序排列
   ```
-  - 在 Prometheus 的 Table 视图中，显示的指标默认是无序的，只能通过 sort() 函数按指标值排序。不支持按 label 进行排序。
-  - 在 Graph 视图中，显示的图例是按第一个标签的值进行排序的，且不受 sort() 函数影响。
+  - 在 Prometheus 的 Table 页面，显示的指标默认是无序的，只能通过 sort() 函数按指标值排序。不支持按 label 进行排序。
+  - 在 Graph 页面，显示的图例是按第一个标签的值进行排序的，且不受 sort() 函数影响。
 
 - 修改矢量的标签：
   ```sh

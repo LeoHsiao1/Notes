@@ -12,9 +12,8 @@
 
 - 架构：
   - 在每个需要监控的主机上运行一个负责采集监控指标的程序，称为 exporter 。它能通过 HTTP API 输出纯文本格式的监控指标，称为 metrics 。
-  - Prometheus 定期向每个 exporter 发送 HTTP GET 请求，获取 metrics ，然后存储到自己的时序数据库 TSDB 中。。
-      - Prometheus 属于离散采样，可能有遗漏、有延迟、有误差。
-      - exporter 一般收到 HTTP 请求时才采集一次当前时刻的 metrics ，不负责存储数据。
+  - Prometheus 每隔 scrape_interval 时长，向各个 exporter 发送一个 HTTP GET 请求，获取 metrics ，然后存储到内置的时序数据库 TSDB 中。。
+    - Prometheus 属于离散采样，可能有遗漏、有延迟、有误差。
 
 - Prometheus 采集 metrics 的方式有多种：
   - exporter

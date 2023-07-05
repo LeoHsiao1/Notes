@@ -69,17 +69,17 @@
   jenkins_node_online_value               # node 在线数
   jenkins_executor_count_value            # 执行器的总数
   jenkins_executor_in_use_value           # 执行器正在使用的数量
-  jenkins_node_builds_count               # Jenkins 本次启动以来的构建总次数
+  jenkins_node_builds_count               # Jenkins 本次启动以来的累计构建次数
 
   jenkins_job_count_value                 # Job 总数
   jenkins_queue_size_value                # 构建队列中的 Job 数（最好为 0 ）
-  default_jenkins_builds_duration_milliseconds_summary_count{, jenkins_job='xxx'}  # Job 的构建总次数（当构建结束时才记录）
-  default_jenkins_builds_duration_milliseconds_summary_sum{jenkins_job='xxx'}      # Job 的构建总耗时（包括被阻塞的时长）
-  default_jenkins_builds_success_build_count{jenkins_job='xxx'}                    # Job 构建成功的次数
-  default_jenkins_builds_failed_build_count{jenkins_job='xxx'}                     # Job 构建失败的次数
-  default_jenkins_builds_last_build_start_time_milliseconds{jenkins_job='xxx'}     # Job 最近一次构建的开始时间
-  default_jenkins_builds_last_build_duration_milliseconds{jenkins_job='xxx'}       # Job 最近一次构建的持续时长
-  default_jenkins_builds_last_build_result{jenkins_job='xxx'}                      # Job 最近一次构建的结果（ 1 代表 success 、0 代表其它状态）
+  default_jenkins_builds_duration_milliseconds_summary_count{jenkins_job='xx'} # Job 的构建总次数（当构建结束时才记录）
+  default_jenkins_builds_duration_milliseconds_summary_sum{jenkins_job='xx'}   # Job 的构建总耗时（包括被阻塞的时长）
+  default_jenkins_builds_success_build_count_total{jenkins_job='xx'}           # Job 构建成功的累计次数
+  default_jenkins_builds_failed_build_count_total{jenkins_job='xx'}            # Job 构建失败的累计次数
+  default_jenkins_builds_last_build_start_time_milliseconds{jenkins_job='xx'}  # Job 最近一次构建的开始时间
+  default_jenkins_builds_last_build_duration_milliseconds{jenkins_job='xx'}    # Job 最近一次构建的持续时长
+  default_jenkins_builds_last_build_result{jenkins_job='xx'}                   # Job 最近一次构建的结果（ 1 代表 success 、0 代表其它状态）
   ```
   - 如果删除某个 Job 的构建记录，则会使其总的构建次数减少。
 
@@ -280,8 +280,8 @@
   sum(delta(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
   delta(prometheus_rule_evaluation_duration_seconds_sum[1m])                      # rule 每分钟的执行耗时（s）
 
-  ALERTS{alertname="xxx", alertstate="pending|firing"}            # 存在的警报
-  ALERTS_FOR_STATE{alertname="xxx"}                               # 警报开始的时间戳（这是 pending 状态的开始时间，不能区分 firing 状态）
+  ALERTS{alertname="xx", alertstate="pending|firing"}             # 存在的警报
+  ALERTS_FOR_STATE{alertname="xx"}                                # 警报开始的时间戳（这是 pending 状态的开始时间，不能区分 firing 状态）
 
   count({job="xx"}) by(__name__)    # 列出所有指标名
   count({job="xx"}) by(__name__) unless on(__name__) count({job="xx"} offset 6h) by(__name__) # 找到比 6h 之前多出的指标（适合更新 exporter 版本时，发现指标的变化）
@@ -776,8 +776,8 @@
   rate(windows_logical_disk_write_bytes_total[1m])                        # 磁盘每秒写入量
 
   # net collector
-  rate(windows_net_bytes_received_total{nic="xxx"}[1m])                   # 接口每秒接收量
-  rate(windows_net_bytes_sent_total{nic="xxx"}[1m])                       # 接口每秒发送量
+  rate(windows_net_bytes_received_total{nic="xx"}[1m])                    # 接口每秒接收量
+  rate(windows_net_bytes_sent_total{nic="xx"}[1m])                        # 接口每秒发送量
 
   # process collector
   timestamp(windows_process_start_time) - (windows_process_start_time>0)  # 进程的运行时长

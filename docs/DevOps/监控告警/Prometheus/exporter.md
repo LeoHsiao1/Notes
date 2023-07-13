@@ -274,8 +274,9 @@
   sum(delta(prometheus_http_request_duration_seconds_sum[1m]))    # 每分钟处理 HTTP 请求的耗时（s）
 
   count(up == 1)                                                  # target 在线数
-  sum(scrape_samples_scraped)                                     # scrape 的指标数
-  sum(scrape_duration_seconds)                                    # scrape 的耗时（s）
+  prometheus_tsdb_head_series                                     # head block 中的 series 数量
+  sum(scrape_samples_scraped)                                     # 抓取的 sample 数
+  sum(scrape_duration_seconds)                                    # 抓取的耗时（s）
   sum(delta(prometheus_rule_evaluations_total[1m])) without (rule_group)          # rule 每分钟的执行次数
   sum(delta(prometheus_rule_evaluation_failures_total[1m])) without (rule_group)  # rule 每分钟的执行失败次数
   delta(prometheus_rule_evaluation_duration_seconds_sum[1m])                      # rule 每分钟的执行耗时（s）

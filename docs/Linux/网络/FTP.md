@@ -20,7 +20,7 @@
     2. 服务器随机监听一个端口。
     3. 客户端连接到服务器的该端口，进行通信。
         - 客户端的防火墙不需要开通端口，但服务器的防火墙需要开通 21 端口和一组可能监听的端口，比如 21000~22000 。
-        - 主动模式需要服务器访问客户端，不符合常理，因此被动模式更常用。
+        - 主动模式需要服务器访问客户端，可能被客户端的防火墙拦截，因此被动模式更常用。
 - 客户端不会保持 TCP 连接，每次执行指令都会根据通信模式重新建立连接。
 
 ### 用法
@@ -135,6 +135,7 @@
 ```sh
 yum install vsftpd
 systemctl start vsftpd
+systemctl enable vsftpd
 ```
 
 ### 配置
@@ -239,9 +240,9 @@ xferlog_file=/var/log/vsftpd.log
     # 让虚拟用户拥有与本地用户相同的权限（默认只拥有匿名用户的权限）
     virtual_use_local_privs=YES
     # 采用指定的 /etc/pam.d/<service_name> 配置文件进行身份认证
-    pam_service_name=vsftpd.vu
+    pam_service_name=vsftpd
     # 读取用户配置的目录
-    user_config_dir=/etc/vsftpd/vusers_conf
+    user_config_dir=/etc/vsftpd/virtual_users_conf.d
     ```
     - 默认所有虚拟用户都映射到名为 ftp 的 SSH 用户，可选给每个虚拟用户单独创建 SSH 用户：
       ```sh
@@ -250,8 +251,8 @@ xferlog_file=/var/log/vsftpd.log
 
 2. 为每个虚拟用户单独创建配置文件：
     ```sh
-    mkdir -p /etc/vsftpd/vusers_conf/
-    vim /etc/vsftpd/vusers_conf/ftpuser1
+    mkdir -p /etc/vsftpd/virtual_users_conf.d/
+    vim /etc/vsftpd/virtual_users_conf.d/ftpuser1
     ```
     ```ini
     # 本地用户登录之后进入的家目录
@@ -264,7 +265,7 @@ xferlog_file=/var/log/vsftpd.log
     chown -R ftp:ftp /data/ftp/ftpuser1
     ```
 
-3. 创建一个临时的 vusers 文件，配置所有的虚拟用户名和密码：
+3. 创建一个临时的 virtual_users 文件，配置所有的虚拟用户名和密码：
     ```sh
     ftpuser1
     FnwKhwCWBo90
@@ -274,14 +275,14 @@ xferlog_file=/var/log/vsftpd.log
    然后将密码文件转换成加密数据库：
     ```sh
     yum install -y libdb-utils
-    db_load -T -t hash -f vusers /etc/vsftpd/vusers.db
-    chmod 600 /etc/vsftpd/vusers.db
-    rm -f vusers
+    db_load -T -t hash -f virtual_users /etc/vsftpd/virtual_users.db
+    chmod 600 /etc/vsftpd/virtual_users.db
+    rm -f virtual_users
     ```
-   创建一个 PAM 的配置文件 /etc/pam.d/vsftpd.vu ，根据加密数据库验证用户身份：
+   创建一个 PAM 的配置文件 /etc/pam.d/vsftpd ，根据加密数据库验证用户身份：
     ```sh
-    auth      required pam_userdb.so  db=/etc/vsftpd/vusers
-    account   required pam_userdb.so  db=/etc/vsftpd/vusers
+    auth      required pam_userdb.so  db=/etc/vsftpd/virtual_users
+    account   required pam_userdb.so  db=/etc/vsftpd/virtual_users
     ```
 
 ## sftp

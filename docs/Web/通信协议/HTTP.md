@@ -1,93 +1,11 @@
 # HTTP
 
 ：超文本传输协议（Hyper Text Transfer Protocol），可以传输文本或文件，是 Web 服务器的核心通信协议。
-
-## 原理
-
 - 属于应用层协议，基于 TCP 通信。
 - 采用 C/S 架构，工作流程如下：
   1. client 访问 server 的 TCP 端口，建立 TCP 连接。
   2. client 发送 HTTP 请求报文。
   3. server 回复 HTTP 响应报文。
-
-## 版本
-
-- HTTP 协议存在多个版本，服务器、客户端程序不一定兼容所有版本、特性。
-
-### HTTP/1.0
-
-- 1996 年发布。
-- 特点：无连接。
-  - client 访问 server 时，需要先建立 TCP 连接，再发送 HTTP 请求报文。而 server 发送响应报文之后，就会主动关闭该 TCP 连接。
-    - 因此每次 HTTP 通信之后，不会长时间保持 TCP 连接，称为无连接。
-  - 缺点：
-    - client 多次发送 HTTP 请求时，需要多次建立 TCP 连接，耗时较大。
-    - server 因为主动关闭 TCP 连接，会产生大量 TIME-WAIT 状态的 Socket ，浪费内存。
-  - 建议进行以下配置，启用 TCP 长连接，使得 client 可复用同一个 TCP 连接，传输多个 HTTP 请求报文、响应报文，性能更好。
-    - 修改 server 的配置，允许 TCP 长连接。
-    - 让 client 在 HTTP 请求报文 Headers 中加入 `Connection: keep-alive` ，申请保持 TCP 长连接。
-
-- 特点：无状态。
-  - HTTP 协议不会记录通信过程中的任何信息，每次 HTTP 通信都是独立的。
-  - 尽管如此，server 或 client 的程序可以自己记录通信过程中的一些信息。比如 server 可以记录 client 的 IP、cookie 。
-
-### HTTP/1.1
-
-- 1997 年发布。向下兼容 HTTP/1.0 。
-- 默认启用 TCP 长连接，除非在请求报文 Headers 中加入 `Connection: close` 。
-- 增加 PUT、DELETE 等请求方法。
-- 增加 Host、Upgrade、Cache-Control 等 Headers 。
-
-### HTTP/2.0
-
-- 2015 年发布。
-- 以二进制格式传输报文。
-  - 采用 HPACK 算法压缩报文 headers ，大幅减小其体积。
-  - 每个 HTTP 报文分成多个二进制帧（Frame），然后通过 TCP 协议传输。
-- 支持 TCP 多路复用：可通过同一个 TCP 连接，并行传输多个指向同一个域名的 HTTP 请求报文。
-  - HTTP/1 开启 TCP 长连接时，客户端可以在同一个 TCP 连接中发送多个请求报文，但只能串行传输。否则并行传输多个请求报文时，不能区分发出的 TCP 包属于哪个请求报文。
-    - 假设客户端先后发出 a、b、c 三个请求报文，如果某个请求报文没传输完，则之后的请求报文都不能开始传输。该问题称为队头堵塞（Head-of-line blocking）。同理，服务器也只能按 a、b、c 的顺序回复响应报文。
-  - HTTP/2 的每个 HTTP 报文会分成多个 Frame ，这些 Frame 包含同样的 Stream ID ，标识它们属于同一个 HTTP 报文、同一个通信流（Stream）。
-    - 因此客户端可以并行发送多个请求报文，服务器可以并行发送多个响应报文，实现时分多路复用，大幅提高通信效率。
-  - 与 HTTP/1 相比，TCP 多路复用的优点：
-    - 不必多次创建 TCP 连接，减少了耗时、Socket 数量。
-    - 共用一个 TCP 连接时，因为 TCP 慢启动，能提高传输速度。
-
-- 支持服务器主动推送多个响应报文给浏览器，该操作称为 Server Push 。
-  - 采用 HTTP/1 协议时，浏览器访问网页的一般流程：
-    1. 浏览器发送一个 HTTP 请求。
-    2. 服务器返回一个 HTTP 响应，包含一个 HTML 文件。
-    3. 浏览器解析 HTML 文件，发现其中依赖的 CSS 等资源，于是再发出多个 HTTP 请求。
-  - 采用 HTTP/2 协议且启用 Server Push 时，流程变成：
-    1. 浏览器发送一个 HTTP 请求。
-    2. 服务器返回一个 HTTP 响应，包含一个 HTML 文件。并且预测到浏览器还需要 CSS 等资源，于是主动推送多个响应报文，将这些资源发给浏览器。
-        - HTML 的响应报文，与其它响应报文，会同时发给浏览器。
-        - 服务器会在 HTML 的响应报文中，添加一些 Headers ，声明哪些资源可以预加载（preload）。例如：
-          ```sh
-          Link: </css/styles.css>; rel=preload; as=style
-          Link: </img/logo.jpg>; rel=preload; as=image
-          ```
-          浏览器看到 Link 报文头，就知道从 preload 缓存中获取这些资源，不必发出 HTTP 请求。
-        - Nginx 服务器的配置示例：
-          ```sh
-          server {
-              listen 443 ssl http2;
-              root /var/www/html;
-              location = /index.html {
-                  # 如果浏览器请求 index.html ，则主动推送以下资源
-                  http2_push /style.css;
-                  http2_push /logo.jpg;
-              }
-          }
-          ```
-  - 优点：
-    - 减少了浏览器发出的 HTTP 请求数。
-    - 浏览器在解析 HTML 之前就得到了 CSS 等资源，使网页的加载耗时减少了至少一倍 RTT 。
-  - 缺点：
-    - 服务器主动推送的资源，浏览器可能并不需要，或者浏览器之前已获取并缓存了，造成无用的网络传输。
-    - 目前 Server Push 技术没有普及。2022 年，Chrome 106 开始默认禁用 Server Push 功能。
-
-- HTTP/2 协议本身不要求使用 TLS 加密，不过大部分 Web 浏览器强制要求在 TLS 加密的基础上进行 HTTP/2 通信。
 
 ## URI
 
@@ -335,6 +253,118 @@ Content-Type: text/html; charset=utf-8
   - 强缓存：比如 Expires、Cache-Control 两种缓存方式，不会发出请求。例如 Chrome 浏览器会为该请求显示预配的请求头（Provisional headers），和缓存的响应头、状态码。
   - 协商缓存：比如 Etag、Last-Modified 两种缓存方式，依然有通信耗时，只是减少了响应 body 。
   - 启发式缓存：如果响应报文中没有声明缓存字段，则浏览器默认设置响应的缓存时长为 `(Now - Last-Modified)*10%` ，这属于强缓存。
+
+## 版本
+
+- HTTP 协议存在多个版本，服务器、客户端程序不一定兼容所有版本的特性。
+
+### HTTP/1.0
+
+- 于 1996 年发布。
+- 特点：无连接。
+  - client 访问 server 时，需要先建立 TCP 连接，再发送 HTTP 请求报文。而 server 发送响应报文之后，就会主动关闭该 TCP 连接。
+    - 因此每次 HTTP 通信之后，不会长时间保持 TCP 连接，称为无连接。
+  - 缺点：
+    - client 多次发送 HTTP 请求时，需要多次建立 TCP 连接，耗时较大。
+    - server 因为主动关闭 TCP 连接，会产生大量 TIME-WAIT 状态的 Socket ，浪费内存。
+  - 建议进行以下配置，启用 TCP 长连接，使得 client 可复用同一个 TCP 连接，传输多个 HTTP 请求报文、响应报文，性能更好。
+    - 修改 server 的配置，允许 TCP 长连接。
+    - 让 client 在 HTTP 请求报文 Headers 中加入 `Connection: keep-alive` ，申请保持 TCP 长连接。
+
+- 特点：无状态。
+  - HTTP 协议不会记录通信过程中的任何信息，每次 HTTP 通信都是独立的。
+  - 尽管如此，server 或 client 的程序可以自己记录通信过程中的一些信息。比如 server 可以记录 client 的 IP、cookie 。
+
+### HTTP/1.1
+
+- 于 1997 年发布。向下兼容 HTTP/1.0 。
+- 默认启用 TCP 长连接，除非在请求报文 Headers 中加入 `Connection: close` 。
+- 增加 PUT、DELETE 等请求方法。
+- 增加 Host、Upgrade、Cache-Control 等 Headers 。
+
+### HTTP/2.0
+
+- 于 2015 年发布。
+
+- 所有 header 采用小写字母。
+- 将 HTTP/1 报文开头的请求行、状态行拆分成几个伪标头（Pseudo Header），例如：
+  ```sh
+  # 拆分自请求行 GET /index.html HTTP/1.1
+  :authority: test.com
+  :method: GET
+  :path: /index.html
+  :scheme: https
+
+  # 拆分自响应行 HTTP/1.1 200 OK
+  :status: 200
+  ```
+  - 伪标头以冒号 : 作为前缀，且位于普通标头之前。
+  - 伪标头省略了 HTTP 版本号。
+  - 请求报文必须包含 `:method`、`:path`、`:scheme` 三个伪标头，除非是 CONNECT 请求。
+    - 如果请求报文不包含 `:authority` 伪标头，则服务器会读取 Host 标头。
+  - 响应报文必须包含 `:status` 伪标头。
+
+- 以二进制格式传输报文。
+  - 采用 HPACK 算法压缩报文 headers ，大幅减小其体积。
+  - 每个 HTTP 报文分成多个二进制帧（Frame），然后通过 TCP 协议传输。
+  - HTTP/2 协议本身不要求使用 TLS 加密，但大部分 Web 浏览器强制要求在 TLS 加密的基础上进行 HTTP/2 通信，因此同时使用 HTTPS 和 HTTP/2 协议。
+
+- 支持 TCP 多路复用：可通过同一个 TCP 连接，并行传输多个指向同一个域名的 HTTP 请求报文。
+  - HTTP/1 开启 TCP 长连接时，客户端可以在同一个 TCP 连接中发送多个请求报文，但只能串行传输。否则并行传输多个请求报文时，不能区分发出的 TCP 包属于哪个请求报文。
+    - 假设客户端先后发出 a、b、c 三个请求报文，如果某个请求报文没传输完，则之后的请求报文都不能开始传输。该问题称为队头堵塞（Head-of-line blocking）。同理，服务器也只能按 a、b、c 的顺序回复响应报文。
+  - HTTP/2 的每个 HTTP 报文会分成多个 Frame ，这些 Frame 包含同样的 Stream ID ，标识它们属于同一个 HTTP 报文、同一个通信流（Stream）。
+    - 因此客户端可以并行发送多个请求报文，服务器可以并行发送多个响应报文，实现时分多路复用，大幅提高通信效率。
+  - 与 HTTP/1 相比，TCP 多路复用的优点：
+    - 不必多次创建 TCP 连接，减少了耗时、Socket 数量。
+    - 共用一个 TCP 连接时，因为 TCP 慢启动，能提高传输速度。
+
+- 支持服务器主动推送多个响应报文给浏览器，该操作称为 Server Push 。
+  - 采用 HTTP/1 协议时，浏览器访问网页的一般流程：
+    1. 浏览器发送一个 HTTP 请求。
+    2. 服务器返回一个 HTTP 响应，包含一个 HTML 文件。
+    3. 浏览器解析 HTML 文件，发现其中依赖的 CSS 等资源，于是再发出多个 HTTP 请求。
+  - 采用 HTTP/2 协议且启用 Server Push 时，流程变成：
+    1. 浏览器发送一个 HTTP 请求。
+    2. 服务器返回一个 HTTP 响应，包含一个 HTML 文件。并且预测到浏览器还需要 CSS 等资源，于是主动推送多个响应报文，将这些资源发给浏览器。
+        - HTML 的响应报文，与其它响应报文，会同时发给浏览器。
+        - 服务器会在 HTML 的响应报文中，添加一些 Headers ，声明哪些资源可以预加载（preload）。例如：
+          ```sh
+          Link: </css/styles.css>; rel=preload; as=style
+          Link: </img/logo.jpg>; rel=preload; as=image
+          ```
+          浏览器看到 Link 报文头，就知道从 preload 缓存中获取这些资源，不必发出 HTTP 请求。
+        - Nginx 服务器的配置示例：
+          ```sh
+          server {
+              listen 443 ssl http2;
+              root /var/www/html;
+              location = /index.html {
+                  # 如果浏览器请求 index.html ，则主动推送以下资源
+                  http2_push /style.css;
+                  http2_push /logo.jpg;
+              }
+          }
+          ```
+  - 优点：
+    - 减少了浏览器发出的 HTTP 请求数。
+    - 浏览器在解析 HTML 之前就得到了 CSS 等资源，使网页的加载耗时减少了至少一倍 RTT 。
+  - 缺点：
+    - 服务器主动推送的资源，浏览器可能并不需要，或者浏览器之前已获取并缓存了，造成无用的网络传输。
+    - 目前 Server Push 技术没有普及。2022 年，Chrome 106 开始默认禁用 Server Push 功能。
+
+
+
+
+
+<!-- ### HTTP/3.0
+
+
+- 采用的传输层协议从 TCP 改为 QUIC 。
+ -->
+
+
+
+
 
 ## Basic Auth
 

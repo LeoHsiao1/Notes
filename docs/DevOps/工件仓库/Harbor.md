@@ -20,7 +20,7 @@
   ```sh
   wget https://github.com/goharbor/harbor/releases/download/v2.7.1/harbor-online-installer-v2.7.1.tgz
   ```
-  解压后，使用其中的脚本：
+  解压后，编辑配置文件 harbor.yml ，然后执行脚本：
   ```sh
   sh install.sh
                 # --with-chartmuseum  # 启用 chart repository
@@ -30,7 +30,7 @@
   - 这会基于 docker-compose 部署 Harbor ，包含 harbor-core、harbor-db、registry、Nginx、Redis 等多个服务。
     - 不会将日志输出到 docker 容器，而是保存到日志目录。
     - 部署时至少需要 4G 内存。
-  - 部署之后，会生成一个配置文件 harbor.yml 。如果修改配置文件，则需要执行：
+  - 部署之后，如果修改配置文件 harbor.yml ，则需要执行：
     ```sh
     ./prepare --with-trivy
     docker-compose up -d

@@ -154,7 +154,7 @@ git revert <refs>...    # 自动提交一个新版本来抵消某个历史版本
 
 ```sh
 git branch              # 显示所有本地分支
-        -a              # 增加显示 tracked 的远程分支，分支命名格式为 remotes/origin/<branch>
+        -a              # 增加显示本地仓库中的 remote-tracking branch ，默认不会显示它们
         -v              # 显示每个分支所在的版本
         <branch> [src_refs] # 新建一个分支，源版本默认为 HEAD 分支
           -d            # 删除分支，需要该分支已合并到其它分支
@@ -362,7 +362,7 @@ git gc                      # 清理磁盘文件，比如删除 orphan commit �
 - 相关命令：
   ```sh
   git submodule
-                add <repository_url> [<path>] [--name <name>] [-b <branch>]   # 添加 submodule
+                add <repository_url> [<path>] [--name <repo>] [-b <branch>]   # 添加 submodule
                 update          # 从远程仓库拉取 submodule ，根据记录的 commit id
                       --remote  # 根据 .gitmodules 中配置的 branch 进行拉取
                       --recurse # 递归拉取所有嵌套的 submodule
@@ -400,11 +400,24 @@ git gc                      # 清理磁盘文件，比如删除 orphan commit �
 
 - 可以将本机的 Git 仓库（称为本地仓库），推送到 Git 服务器存储（称为远程仓库）。也可以从 Git 服务器下载 Git 仓库到本机。
 - 一个本地仓库可以绑定 0 个或任意个远程仓库。
-  - 配置之后，通过 URL 或 name 即可引用远程仓库。
-  - 本地仓库的分支需要与远程仓库的分支建立一对一的关系，称为跟踪（tracked），才能通过 pull、push 的方式同步分支。
-  - 例：执行 git clone 时，默认将远程仓库命名为 origin ，并让本地分支 master 跟踪远程分支 origin/master 。
+  - 配置之后，通过 repo name 或 URL 即可引用远程仓库。
+  - 多个用户同时修改一个 Git 仓库时，常见的方案：
+    1. 部署一个 Git 服务器，创建一个远程仓库。
+    2. 每个用户在自己电脑上，创建一个本地仓库，分别修改。
+    3. 当一个用户在本地仓库新增 commit 之后，通过 git push 命令同步到远程仓库。然后其他用户通过 git pull 命令，将远程仓库新增的 commit 同步到各自的本地仓库。
 
-- 本地仓库与远程仓库之间，有两种传输方式：
+- 本地仓库的每个分支通常会关联到远程仓库中的一个分支，称为跟踪（tracked）。
+  - 假设本地分支 master 跟踪了远程分支 master ，则执行 git push 命令时会将本地分支同步到远程分支，执行 git pull 命令时会将远程分支同步到本地分支。
+  - 建立 tracked 关系时，Git 会在本地仓库创建一个代表远程分支的分支，称为 remote-tracking branch ，命名格式为 `remotes/<repo>/<branch>` 。
+    - 例：执行 git clone 时，默认将远程仓库命名为 origin ，让本地分支 master 跟踪 origin 仓库中的分支 master 。为此，会在本地仓库创建一个 remote-tracking branch ，名为 `remotes/origin/master`` 。
+    - remote-tracking branch 用于跟踪远程分支指向的 commit 。但本地仓库可能长时间未与远程仓库同步，因此 remote-tracking branch 不一定反映远程分支的最新位置。
+    - 最初，本地分支、远程分支、remote-tracking branch 三者指向相同的 commit 0 。
+      - 假设用户 A 在本地仓库新增 commit 1 ，则本地分支指向 commit 1 ，远程分支、remote-tracking branch 依然指向 commit 0 。
+      - 此时用户 B 新增 commit 2 到远程仓库，则用户 A 的本地分支指向 commit 1 ，remote-tracking branch 指向 commit 0 。
+      - 等到用户 A 执行 git fetch 命令，则本地分支指向 commit 1 ，远程分支、remote-tracking branch 指向 commit 2 。
+    - 用户执行 git fetch 命令时会将远程分支同步到 remote-tracking branch ，使得两者指向相同的 commit 。此时不会同步到本地分支，除非执行 git pull 命令。
+
+- 本地仓库与远程仓库之间，有两种数据传输方式：
 	- 基于 SSH 协议：
 		1. 先生成一对 SSH 密钥，将密钥保存在本机的 `~/.ssh/id_rsa` 文件中，将公钥保存到 Git 服务器上。
 		2. 然后在本机连接到 Git 服务器，使用私钥文件进行认证。
@@ -417,7 +430,7 @@ git gc                      # 清理磁盘文件，比如删除 orphan commit �
         git config --global credential.helper store   # 将凭证持久保存，以明文形式保存到 ~/.git-credentials 文件中
         ```
 
-- 常见的 Git 服务器：
+- 常见的 Git 服务器软件：
   - GitLab ：提供了代码托管、项目管理、Wiki、CI/CD 等丰富的功能。可使用公网版、私有部署版。
   - GitHub ：功能比 GitLab 少些。只可使用公网版。
   - Gogs   ：只有代码托管功能，轻量级。可使用公网版、私有部署版。
@@ -433,21 +446,23 @@ git clone <URL> [dir]           # 将一个远程仓库克隆到本地，默认�
 
 git remote                      # 显示已配置的所有远程仓库的名字
         -v                      # 显示各个远程仓库的 URL
-        show <name>             # 显示某个远程仓库的地址、所有 tracked 的远程分支
-        add <name> <URL>        # 添加一个远程仓库，并设置其名字
-        rm <name>               # 删除一个远程仓库
-        rename <name> <name>    # 重命名一个远程仓库
+        show <repo>             # 显示某个远程仓库的地址、所有 tracked 的远程分支
+        add <repo> <URL>        # 添加一个远程仓库，并设置其名字
+        rm <repo>               # 删除一个远程仓库
+        rename <repo> <repo>    # 重命名一个远程仓库
+        prune <repo>            # 如果一个 tracked 的远程分支在远程仓库不存在，则删除本地仓库中的 remote-tracking branch ，但本地分支依然保留，只是没有 tracked 到远程分支
 
-git fetch [name 或 URL]         # 拉取远程仓库的最新内容（包括分支、标签），但只是下载到本地仓库，不会修改本地分支
+git fetch [repo 或 URL]         # 拉取远程仓库的最新内容（包括分支、标签），但只是下载到本地仓库，不会修改本地分支
         --all                   # 拉取所有远程仓库（默认只是 origin 仓库）
         --tags                  # 拉取标签
-        --prune                 # 如果一个 tracked 的远程分支在远程仓库不存在了，则在本地仓库删除 tracked 关系，但不会影响本地分支
+        --prune                 # 先执行 git remote prune ，然后执行 fetch
+        --prune-tags            # 如果一个 tag 在远程仓库不存在，则删除本地仓库中的同名 tag 。然后执行 fetch
         --dry-run
 
-git pull [name 或 URL]          # 先 fetch 远程仓库，然后将所有 tracked 的远程分支合并到本地分支
+git pull [repo 或 URL]          # 先 fetch 远程仓库，然后将所有 tracked 的远程分支合并到本地分支
         origin master           # 拉取远程仓库的 master 分支，合并到本地的 HEAD 分支
 
-git push [name 或 URL]          # 推送本地仓库到远程仓库。默认会推送所有 tracked 分支，但不会推送 tag
+git push [repo 或 URL]          # 推送本地仓库到远程仓库。默认会推送所有 tracked 分支，但不会推送 tag
         --force                 # 强制推送，即清空远程仓库后再上传本地仓库
         --all                   # 推送本地仓库的所有分支。如果不存在 tracked 的远程分支，则自动创建它
         <tag>                   # 推送一个标签

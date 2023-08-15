@@ -2,9 +2,9 @@
 
 ## ifconfig
 
-用法：
-```sh
-$ ifconfig                         # 显示已启用的网口
+- 命令：
+  ```sh
+  ifconfig                         # 显示已启用的网口
             -a                     # 显示所有网口的信息
             eth0                   # 显示网口 eth0 的信息
             up                     # 启用网口
@@ -12,64 +12,64 @@ $ ifconfig                         # 显示已启用的网口
             10.0.0.1               # 设置网口的 IP 地址
             netmask 255.255.255.0  # 设置网口的子网掩码
             broadcast 10.0.0.255   # 设置网口的广播地址
-```
-
-例：
-```sh
-[root@CentOS ~]# ifconfig
-eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet 10.0.0.1  netmask 255.255.255.0  broadcast 10.0.0.255
-        ether 52:54:00:59:c1:b7  txqueuelen 1000  (Ethernet)
-        RX packets 25883978  bytes 7322687281 (6.8 GiB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 24178898  bytes 6035774584 (5.6 GiB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-
-lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
-        inet 127.0.0.1  netmask 255.0.0.0
-        loop  txqueuelen 1000  (Local Loopback)
-        RX packets 3615476  bytes 2842561090 (2.6 GiB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 3615476  bytes 2842561090 (2.6 GiB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-```
-- 一个主机可以有多个网络接口，例如：
-  ```sh
-  eth0    # 连接到第一个以太网网卡
-  wlan0   # 连接到第一个无线网卡
-  lo      # 环回网口，地址为 127.0.0.1 。属于虚拟网口，没有连接到物理设备
   ```
-- 每个网口有一些配置信息，比如 IP、子网掩码，保存在内核的网络协议栈中。
-  - MAC 地址属于网卡的配置信息，与网口无关。
-- flags 取值示例：
-  - UP ：网口已启用。
-  - BROADCAST ：网口支持广播。
-  - RUNNING ：网口已连接到网络。
-  - MULTICAST ：网口支持组播。
-- 地址信息：
-  - mtu ：最大传输单元，即网口能传输的 IP 数据包最大大小，单位 bytes 。
-  - inet ：网口的 IP 地址。
-  - netmask ：子网掩码。
-  - ether ：网口的 MAC 地址。
-  - txqueuelen ：传输队列的长度。
-- IP 数据包的统计数量：
-  - RX packets ：接收的数据包总数。
--   TX packets ：发送的数据包总数。
-  - bytes ：数据包的总大小。
-  - errors ：出错的数据包数。比如校验错误、帧对齐错误。
-  - dropped ：因为 buffer 内存不足等原因而被丢弃的数据包数。
-  - overrun ：因为缓冲区已满而被丢弃的数据包数。
-  - frame ：因为数据帧出错的数据包数，比如长度不能被 8 整除。
-  - carrier ：因为载体出错的数据包数，比如半双工模式时不可通信。
-  - collisions ：发生碰撞的数据包数。
+
+- 例：
+  ```sh
+  [root@CentOS ~]# ifconfig
+  eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+          inet 10.0.0.1  netmask 255.255.255.0  broadcast 10.0.0.255
+          ether 52:54:00:59:c1:b7  txqueuelen 1000  (Ethernet)
+          RX packets 25883978  bytes 7322687281 (6.8 GiB)
+          RX errors 0  dropped 0  overruns 0  frame 0
+          TX packets 24178898  bytes 6035774584 (5.6 GiB)
+          TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+  lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+          inet 127.0.0.1  netmask 255.0.0.0
+          loop  txqueuelen 1000  (Local Loopback)
+          RX packets 3615476  bytes 2842561090 (2.6 GiB)
+          RX errors 0  dropped 0  overruns 0  frame 0
+          TX packets 3615476  bytes 2842561090 (2.6 GiB)
+          TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+  ```
+  - 一个主机可以有多个网络接口，例如：
+    ```sh
+    eth0    # 连接到第一个以太网网卡
+    wlan0   # 连接到第一个无线网卡
+    lo      # 环回网口，地址为 127.0.0.1 。属于虚拟网口，没有连接到物理设备
+    ```
+  - 每个网口有一些配置信息，比如 IP、子网掩码，保存在内核的网络协议栈中。
+    - MAC 地址属于网卡的配置信息，与网口无关。
+  - flags 取值示例：
+    - UP ：网口已启用。
+    - BROADCAST ：网口支持广播。
+    - RUNNING ：网口已连接到网络。
+    - MULTICAST ：网口支持组播。
+  - 地址信息：
+    - mtu ：最大传输单元，即网口能传输的 IP 数据包最大大小，单位 bytes 。
+    - inet ：网口的 IP 地址。
+    - netmask ：子网掩码。
+    - ether ：网口的 MAC 地址。
+    - txqueuelen ：传输队列的长度。
+  - IP 数据包的统计数量：
+    - RX packets ：接收的数据包总数。
+  -   TX packets ：发送的数据包总数。
+    - bytes ：数据包的总大小。
+    - errors ：出错的数据包数。比如校验错误、帧对齐错误。
+    - dropped ：因为 buffer 内存不足等原因而被丢弃的数据包数。
+    - overrun ：因为缓冲区已满而被丢弃的数据包数。
+    - frame ：因为数据帧出错的数据包数，比如长度不能被 8 整除。
+    - carrier ：因为载体出错的数据包数，比如半双工模式时不可通信。
+    - collisions ：发生碰撞的数据包数。
 
 ## route
 
-命令：
-```sh
-$ route       # 显示本机的路由表
-    -n        # 将名称解析为 IP
-```
+- 命令：
+  ```sh
+  route       # 显示本机的路由表
+        -n    # 将名称解析为 IP
+  ```
 
 - 例：查看路由表
   ```sh
@@ -109,41 +109,40 @@ $ route       # 显示本机的路由表
 
 ## ip
 
-：可替代 ifconfig、route 命令，且功能更强。
+：可替代 ifconfig、route 命令，且功能更多。
+- 命令：
+  ```sh
+  ip
+      link                  # 显示所有网口的信息（不包括网口绑定的 IP 地址）
+          -s                # 增加显示网口接收、发送的字节数（该选项要放在 link 之前）
+          -s -s             # 增加显示网口接收、发送的错误包数（该选项要放在 link 之前）
+          show eth0         # 只显示指定网口的信息
+          set eth0 up       # 启用网口
+                    down    # 停用网口
+          del eth0          # 删除网口
 
-命令：
-```sh
-$ ip
-    link                  # 显示所有网口的信息（不包括网口绑定的 IP 地址）
-        -s                # 增加显示网口接收、发送的字节数（该选项要放在 link 之前）
-        -s -s             # 增加显示网口接收、发送的错误包数（该选项要放在 link 之前）
-        show eth0         # 只显示指定网口的信息
-        set eth0 up       # 启用网口
-                  down    # 停用网口
-        del eth0          # 删除网口
+      addr                            # 显示所有网口的信息，及其 IP 地址
+          show eth0
+          add 10.0.0.1/24 dev eth0    # 给网口增加一个 IP 及掩码
+          del 10.0.0.1/24 dev eth0    # 删除
 
-    addr                            # 显示所有网口的信息，及其 IP 地址
-        show eth0
-        add 10.0.0.1/24 dev eth0    # 给网口增加一个 IP 及掩码
-        del 10.0.0.1/24 dev eth0    # 删除
+      neighbour                       # 显示当前网段的其它主机
 
-    neighbour                       # 显示当前网段的其它主机
-
-    route                           # 显示路由表
-      add default via 10.0.1.1      # 设置缺少路由
-      add 10.0.1.0/24 via 10.0.1.1  # via 相当于 route 命令的 gw
-      add 10.0.1.0/24 dev eth0
-```
+      route                           # 显示路由表
+        add default via 10.0.1.1      # 设置缺少路由
+        add 10.0.1.0/24 via 10.0.1.1  # via 相当于 route 命令的 gw
+        add 10.0.1.0/24 dev eth0
+  ```
 
 ## ping
 
-：常用于基于 ICMP 协议测试网络是否连通、网络延迟、丢包率、域名解析。
+：用于基于 ICMP 协议测试网络是否连通、网络延迟、丢包率、域名解析。
 - 命令：
   ```sh
-  $ ping <host>    # 启动 ping
-          -c n     # 最多发送 ICMP 报文多少次（默认为无限次）
-          -i n     # 每次发送 ICMP 报文的间隔时间（默认为 1 秒）
-          -I eth0  # 使用本机的指定网口来发送 ICMP 报文（默认自动选取网口）
+  ping <host>    # 启动 ping
+        -c n     # 最多发送 ICMP 报文多少次（默认为无限次）
+        -i n     # 每次发送 ICMP 报文的间隔时间（默认为 1 秒）
+        -I eth0  # 使用本机的指定网口来发送 ICMP 报文（默认自动选取网口）
   ```
   - host 可以是 IP 地址或域名，如果是域名，在执行时还会显示出域名解析后的 IP 地址。
 
@@ -182,10 +181,10 @@ $ ip
 ：用于测试发送一个数据包到目标主机，显示经过的各个路由节点。
 - 命令：
   ```sh
-  $ traceroute <host>
-              -I    # 发送 ICMP ECHO 数据包
-              -T    # 发送 TCP SYN 包，默认端口为 80
-              -U    # 发送 UDP 数据表，默认端口是 53
+  traceroute <host>
+            -I    # 发送 ICMP ECHO 数据包
+            -T    # 发送 TCP SYN 包，默认端口为 80
+            -U    # 发送 UDP 数据表，默认端口是 53
   ```
   - 先探测 TTL 减 1 的路由节点，再探测 TLL 减 2 的路由节点，以此类推，直到 TTL 减为 0 或者到达目标主机。
 - 例：

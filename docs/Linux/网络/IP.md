@@ -33,7 +33,7 @@
           TX packets 3615476  bytes 2842561090 (2.6 GiB)
           TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
   ```
-  - 一个主机可以有多个网络接口，例如：
+  - 一个主机可以有多个网口，例如：
     ```sh
     eth0    # 连接到第一个以太网网卡
     wlan0   # 连接到第一个无线网卡
@@ -134,8 +134,8 @@
 
       addr                            # 显示所有网口的信息，及其 IP 地址
           show eth0
-          add 10.0.0.1/24 dev eth0    # 给网口增加一个 IP 及掩码
-          del 10.0.0.1/24 dev eth0    # 删除
+          add 10.0.0.1/24 dev eth0    # 将 IP 绑定到网口设备 eth0
+          del 10.0.0.1/24 dev eth0    # 删除绑定的 IP
 
       neighbour                       # 显示当前子网的其它主机，基于 ARP 缓存表
 
@@ -144,6 +144,26 @@
         add 10.0.1.0/24 via 10.0.1.1  # via 相当于 route 命令的 gw
         add 10.0.1.0/24 dev eth0
   ```
+
+- 例：给本机网口绑定一个自定义 IP
+  ```sh
+  [root@CentOS ~]# ip addr add 10.0.0.1/24 dev lo
+  [root@CentOS ~]# ip addr show lo
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+      inet 127.0.0.1/8 scope host lo
+        valid_lft forever preferred_lft forever
+      inet 10.0.0.1/32 scope global lo
+        valid_lft forever preferred_lft forever
+      inet6 ::1/128 scope host
+        valid_lft forever preferred_lft forever
+  [root@CentOS ~]# ping 10.0.0.1
+  PING 10.0.0.1 (10.0.0.1) 56(84) bytes of data.
+  64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=0.099 ms
+  64 bytes from 10.0.0.1: icmp_seq=2 ttl=64 time=0.097 ms
+  ```
+  - 此时本机发向 10.0.0.1 的数据包，会被 lo 网口接收。
+  - 该配置不会影响局域网的其它主机，它们访问不到 10.0.0.1 。除非在路由器添加一条路由规则，将访问 10.0.0.1 的流量路由到该主机的 IP 。
 
 ## ping
 

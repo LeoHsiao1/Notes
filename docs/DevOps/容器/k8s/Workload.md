@@ -66,7 +66,7 @@
         k8s-app: nginx        # 要求 labels 中存在该键值对
 
       matchExpressions:
-        - key: k1             # 要求存在 app 标签，且取值包含于指定列表
+        - key: k1             # 要求存在 k1 标签，且取值包含于指定列表
           operator: In
           values:
           - v1

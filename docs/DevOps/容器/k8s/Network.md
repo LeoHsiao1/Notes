@@ -123,8 +123,9 @@ k8s 常见的几种网络通信：
   - 默认不能从 k8s 集群外主机访问 Pod ，有几种解决方案：
     - 修改 Pod 的配置，绑定 HostPort ，并固定调度到某个 Node 。
     - 修改 Pod 的配置，启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
-    - 给集群外主机添加路由，将访问 Cluster IP 的流量路由到任一 k8s 节点。例如：`ip route add 10.43.0.0/16 via 10.0.1.1`
-    - 给 Pod 创建 NodePort 类型的 Service 。
+    - 给集群外主机添加路由，将访问 Cluster IP 的流量路由到任一 k8s node 。例如：`ip route add 10.43.0.0/16 via 10.0.1.1`
+    - 给 k8s Service 配置 externalIPs ，绑定 k8s node IP ，这样访问 node_ip:port 的流量就会转发到 service_ip:port 。也可绑定其它内网 IP ，但需要用 keepalived 等工具，将该 IP 通过 ARP 协议解析到任一 k8s node 的 MAC 地址。
+    - 给 Pod 创建 NodePort 类型的 Service ，缺点是端口范围默认为 30000-32767 。
     - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网 IP 或公网 IP 。
     - 在 k8s 集群创建 Ingress 。
   - 如果 Pod 需要访问一些集群外地址，则可采用以下措施，将外部地址转换成 k8s Service 。这样便于像访问 k8s 内部 Service 一样访问 k8s 外部地址，外部地址变化时还只需修改 Service 配置。
@@ -249,7 +250,7 @@ k8s 常见的几种网络通信：
     type: NodePort
     clusterIP: 10.43.0.1    # NodePort 类型的 service 也要绑定一个 clusterIP 。如果不指定，则随机分配一个
     ports:
-    - nodePort: 31017       # 在 Node 上监听的端口号。如果不指定，则随机分配一个。取值范围默认为 30000-32767
+    - nodePort: 31017       # 在 Node 上监听的端口号。如果不指定，则随机分配一个。端口范围默认为 30000-32767
       port: 80
       protocol: TCP
       targetPort: 80

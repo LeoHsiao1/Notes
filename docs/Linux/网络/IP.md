@@ -173,7 +173,8 @@
   ping <host>    # 启动 ping
         -c n     # 最多发送 ICMP 报文多少次（默认为无限次）
         -i n     # 每次发送 ICMP 报文的间隔时间（默认为 1 秒）
-        -I eth0  # 使用本机的指定网口来发送 ICMP 报文（默认自动选取网口）
+        -I eth0  # 使用本机的指定网口来发送 ICMP 报文（默认会自动选取网口）
+        -b       # 允许目标 IP 地址为广播地址，比如 10.0.0.255 。不过 Linux 主机默认配置了 sysctl net.ipv4.icmp_echo_ignore_broadcasts=1
   ```
   - host 可以是 IP 地址或域名，如果是域名，在执行时还会显示出域名解析后的 IP 地址。
 

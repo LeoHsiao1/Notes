@@ -1261,6 +1261,10 @@ module.exports = {
                                             path: "/DevOps/容器/k8s/扩展/CNI"
                                         },
                                         {
+                                            title: "kube-vip",
+                                            path: "/DevOps/容器/k8s/扩展/kube-vip"
+                                        },
+                                        {
                                             title: "Kustomize",
                                             path: "/DevOps/容器/k8s/扩展/Kustomize"
                                         },

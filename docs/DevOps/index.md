@@ -27,6 +27,7 @@
     - [权限](容器/k8s/权限.md)
     - [扩展](容器/k8s/扩展.md)
       - [CNI](容器/k8s/扩展/CNI.md)
+      - [kube-vip](容器/k8s/扩展/kube-vip.md)
       - [Kustomize](容器/k8s/扩展/Kustomize.md)
       - [Helm](容器/k8s/扩展/Helm.md)
 - 配置管理

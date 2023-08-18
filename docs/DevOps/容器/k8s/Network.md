@@ -286,7 +286,7 @@ k8s 常见的几种网络通信：
 ### LoadBalancer
 
 ：给 Service 绑定 k8s 集群外的一个内网 IP 或公网 IP ，便于从集群外主机访问 Service 。
-- 创建 LoadBalancer 类型的 Service 之前，需要在 k8s 安装负载均衡器，可以购买云平台的，也可以用 MetalLB 等工具自建。
+- 创建 LoadBalancer 类型的 Service 之前，需要在 k8s 安装负载均衡器。可以购买云平台的，也可以用 MetalLB、kube-vip 等工具自建。
 - 例：
   ```yml
   apiVersion: v1

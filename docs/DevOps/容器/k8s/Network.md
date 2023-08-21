@@ -286,7 +286,7 @@ k8s 常见的几种网络通信：
 ### LoadBalancer
 
 ：给 Service 绑定 k8s 集群外的一个内网 IP 或公网 IP ，便于从集群外主机访问 Service 。
-- 创建 LoadBalancer 类型的 Service 之前，需要在 k8s 安装负载均衡器。可以购买云平台的，也可以用 MetalLB、kube-vip 等工具自建。
+- 创建 LoadBalancer 类型的 Service 之前，需要在 k8s 安装负载均衡器。可以购买云平台的，也可以用 MetalLB、kube-vip、kube-router 等工具自建。
 - 例：
   ```yml
   apiVersion: v1
@@ -295,6 +295,7 @@ k8s 常见的几种网络通信：
     name: redis
     namespace: default
   spec:
+    allocateLoadBalancerNodePorts: true # 是否自动分配 nodePort 。在创建 Service 时才能设置为 False ，这会直接反向代理 Pod EndPoints
     type: LoadBalancer
     clusterIP: 10.43.0.1
     loadBalancerIP: 1.1.1.1
@@ -310,11 +311,12 @@ k8s 常见的几种网络通信：
 - 客户端访问 loadBalancerIP 的流程：
   1. 客户端发出数据包，目标 IP 为 Service 的 loadBalancerIP 。
   2. 负载均衡器收到数据包，反向代理到 k8s 集群中随机一个 Node 的 nodePort ，并将目标 IP 改为 Service 的 clusterIP 。
-  3. k8s Node 收到数据包，反向代理到 EndPoints 。
+  3. k8s Node 收到数据包，反向代理到 Pod EndPoints 。
 - 优点：
   - 使用 NodePort 类型的 Service 时，客户端通常访问固定一个 Node IP ，存在单点故障的风险。而使用 LoadBalancer 类型的 Service 时，客户端依然访问固定一个 loadBalancerIP ，但流量会被分散到所有 k8s Node ，实现负载均衡。因此 LoadBalancer 类型比 ClusterIP、NodePort 的功能更多，是它们的超集。
+  - 允许多个 LoadBalancer Service 使用同一个 loadBalancerIP ，只要监听的端口不同。
 - 缺点：
-  - 原生 k8s 没有提供 LoadBalancer 。
+  - 原生 k8s 不支持运行 LoadBalancer 。
   - 客户端通过 TCP 长连接发起请求时， LoadBalancer 会一直转发到 EndPoints 中同一个端点，不能实现负载均衡。
 
 ### ExternalName

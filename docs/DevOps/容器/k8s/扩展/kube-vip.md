@@ -2,13 +2,13 @@
 
 ：一个 k8s 插件，用于为 LoadBalancer Service 绑定内网 VIP 。
 - [GitHub](https://github.com/kube-vip/kube-vip)
+- k8s 原生创建的 Cluster IP 只能在 k8s 集群内访问，在 k8s 集群外主机找不到访问 Cluster IP 的路由。而 kube-vip 可创建一些 Virtual IP ，简称为 VIP ，并将 VIP 基于 ARP 或 BGP 模式暴露到 k8s 集群外。
+- 公有云平台一般不支持传播 ARP、BGP 消息。因此在其中部署的 k8s 集群不能使用 kube-vip 。
 
 ## 原理
 
-- k8s 本身可创建 Cluster IP ，但只能在 k8s 集群内访问。而 kube-vip 创建的 VIP 可暴露到 k8s 集群外，基于 ARP 或 BGP 模式。
-
 - ARP 模式
-  - 类似于 keepalived ，原理如下：
+  - 工作在 OSI 第二层，类似于 keepalived ，原理如下：
     - kube-vip 会监听 k8s 里 LoadBalancer Service 的变化，如果配置了 `metadata.annotations["kube-vip.io/loadbalancerIPs"]` 或 `spec.loadBalancerIP` ，则为其绑定 VIP 。
     - leader 节点会广播 Gratuitous ARP 消息，将 VIP 解析到自己的 Mac 地址。用户访问 VIP 的流量，会先到达 leader 节点，然后交给 kube-proxy 路由转发。
   - 在多个主机上分别部署一个 kube-vip 节点，它们会自动选举出一个 leader 节点。选举原理：
@@ -24,13 +24,16 @@
       - 删除 Service 时，不会自动删除对应的 Lease 对象。
       - 多个 Service 可能使用同一个 VIP ，此时不能确保由同一个 kube-vip 节点担任 leader 。
 
-
 - BGP 模式
-  <!-- - 部署多个 kube-vip 节点，每个节点都会通告 VIP 路由，对等互连 -->
+  - 工作在 OSI 第三层。
+  - 部署多个 kube-vip 节点，每个节点担任一个路由器。
+    - 每个节点都会将所有 VIP 绑定到宿主机的网口。
+    - 每个节点都会对外通告 VIP 路由，不需要选举 leader 。
+  - 目前缺陷：停止部署 kube-vip ，不会自动删除宿主机网口绑定的 VIP 。
 
 ## 部署
 
-- 以 daemonset 方式部署 kube-vip 的配置示例：
+- 以 daemonset 方式部署 kube-vip ，采用 ARP 模式，配置示例：
   ```yml
   apiVersion: v1
   kind: ServiceAccount
@@ -102,8 +105,6 @@
             value: 10.0.0.10
           - name: port            # 反向代理 apiserver 时，监听的端口
             value: "6443"
-          - name: vip_arp         # 采用 ARP 模式
-            value: "true"
           - name: vip_interface   # 使用宿主机的哪个网口
             value: eth0
           - name: vip_cidr        # VIP 的子网掩码长度
@@ -114,11 +115,14 @@
             value: kube-system
           - name: svc_enable      # 允许 kube-vip 反向代理 LoadBalancer Service
             value: "true"
+
+          - name: vip_arp             # 采用 ARP 模式
+            value: "true"
           - name: vip_leaderelection  # 对于 ARP 模式，开启 leader 选举
             value: "true"
           - name: svc_election        # 为每个 service 选举一个 leader
             value: "true"
-          image: ghcr.io/kube-vip/kube-vip:v0.6.1
+          image: plndr/kube-vip:v0.6.1
           imagePullPolicy: IfNotPresent
           name: kube-vip
           securityContext:
@@ -149,8 +153,6 @@
     time="2023-08-12T06:28:03Z" level=info msg="namespace [kube-system], Mode: [ARP], Features(s): Control Plane:[true], Services:[true]"
     time="2023-08-12T06:28:03Z" level=info msg="prometheus HTTP server started"
     time="2023-08-12T06:28:03Z" level=info msg="Starting Kube-vip Manager with the ARP engine"
-    time="2023-08-12T06:28:03Z" level=info msg="beginning services leadership, namespace [kube-system], lock name [plndr-svcs-lock], id [node-1]" # 开始反向代理 Service 的 leader 选举，当前节点为 node-1
-    I0818 06:28:03.807814 1 leaderelection.go:245] attempting to acquire leader lease kube-system/plndr-svcs-lock...    # 尝试获取 Lease 对象
     time="2023-08-12T06:28:03Z" level=info msg="Beginning cluster membership, namespace [kube-system], lock name [plndr-cp-lock], id [node-1]"  # 开始反向代理 apiserver 的 leader 选举
     I0818 06:28:03.808814 1 leaderelection.go:245] attempting to acquire leader lease kube-system/plndr-cp-lock...      # 尝试获取 Lease 对象
     time="2023-08-12T06:28:03Z" level=info msg="new leader elected: node-2"   # 当选 leader 节点的是 node-2
@@ -181,3 +183,35 @@
     time="2023-08-12T06:32:20Z" level=info msg="[service] adding VIP [10.0.0.10] for [default/nginx]"
     time="2023-08-12T06:32:20Z" level=info msg="[service] synchronised in 37ms"
     ```
+    在 leader 节点所在主机执行命令 `ip addr show eth0` ，可见 VIP 绑定到了宿主机网口。
+
+- 让 kube-vip 采用 BGP 模式时，只需修改上例的环境变量：
+  ```yml
+  env:
+  - name: address
+    value: 10.0.0.10
+  - name: port
+    value: "6443"
+  - name: vip_interface
+    value: eth0
+  - name: vip_cidr
+    value: "32"
+  - name: cp_enable
+    value: "true"
+  - name: cp_namespace
+    value: kube-system
+  - name: svc_enable
+    value: "true"
+
+  - name: bgp_enable            # 采用 BGP 模式
+    value: "true"
+  - name: bgp_routerinterface   # 参与 BGP 对等连接的每个 kube-vip 节点需要分配不同的 routerID ，这里采用宿主机网口的 IP
+    value: eth0
+  - name: bgp_as                # 当前 AS 域的编号
+    value: "65001"
+  - name: bgp_peeras            # 对等连接到另一个 AS 域，向它们通告 VIP 路由。比如连接到当前机房的路由器
+    value: "65000"
+  - name: bgp_peers             # 对等连接到另一个 AS 域的路由器
+    value: 10.0.1.1:65000::false,10.0.1.2:65000::false
+  ```
+  - 在任一主机执行命令 `ip addr show eth0` ，可见 VIP 绑定到了宿主机网口。

@@ -2,14 +2,15 @@
 
 ：一个 Web 服务器，用于检查代码质量，采用 Java 开发。
 - [官方文档](https://docs.sonarqube.org/latest/)
-- 主要用于扫描静态代码，找出语法错误、漏洞、可优化之处。
-- 支持扫描 C、C++、C#、Java、JavaScrip 等常见编程语言的代码。
 - 采用 C/S 架构：
-  - 先运行一个 SonarQube 服务器。
-  - 然后执行一次 SonarScanner 扫描器，它会扫描代码，并上传到 SonarQube 服务器进行分析。
+  - 保持运行 SonarQube 服务器。
+  - 执行一次 SonarScanner 扫描器，它会扫描代码，并上传到 SonarQube 服务器进行分析。
+- 优点：
+  - 可扫描源代码，找出语法错误、漏洞等问题。
+  - 支持扫描 C、C++、C#、Java、JavaScript 等常见编程语言的代码。
 - 缺点：
-  - 扫描的规则较少，有的语法错误都不会发现，有的无关紧要的问题也会报错。
-  - 相同的问题会重复报错，导致报错很多。
+  - 对 Java 语言的扫描规则较多，对其它编程语言的扫描规则很少。
+  - 扫描规则不会经常更新，因此不能发现最新的漏洞。
 
 ## 部署
 
@@ -26,20 +27,19 @@
     services:
       sonarqube:
         container_name: sonarqube
-        image: sonarqube:9.4-community
+        image: sonarqube:10.1-community
         ports:
           - 9000:9000
         networks:
           - net
         environment:
-          - sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube
-          - sonar.jdbc.username=sonarqube
-          - sonar.jdbc.password=******    # 密码
+          SONAR_JDBC_URL: jdbc:postgresql://postgres:5432/sonar
+          SONAR_JDBC_USERNAME: sonar
+          SONAR_JDBC_PASSWORD: ******
         volumes:
-          - ./sonarqube/conf:/opt/sonarqube/conf
-          - ./sonarqube/data:/opt/sonarqube/data
-          - ./sonarqube/extensions:/opt/sonarqube/extensions
-          - ./sonarqube/logs:/opt/sonarqube/logs
+          - ./data:/opt/sonarqube/data
+          - ./extensions:/opt/sonarqube/extensions
+          - ./logs:/opt/sonarqube/logs
 
       postgres:
         container_name: postgres
@@ -47,24 +47,29 @@
         networks:
           - net
         environment:
-          - POSTGRES_USER=sonarqube
-          - POSTGRES_PASSWORD=******    # 密码
-          - POSTGRES_DB=sonarqube
+          POSTGRES_DB: sonar
+          POSTGRES_USER: sonar
+          POSTGRES_PASSWORD: ******   # 数据库密码
         volumes:
           - ./postgres:/var/lib/postgresql/data
 
     networks:
       net:
     ```
-    - 默认用户名、密码为 admin、admin 。
+    - 需要调整挂载目录的权限：
+      ```sh
+      mkdir data extensions logs
+      chown -R 1000 data extensions logs
+      ```
     - SonarQube 支持的外部数据库包括：Oracle、PostgreSQL、SQL Server 。如果不配置外部数据库，则默认会使用内置数据库，但不方便迁移数据、不支持版本更新。
+    - SonarQube 启动之后的默认用户名、密码为 admin、admin 。
 
 ## 用法
 
 - 初次运行时的配置：
-  1. 进入 Administration -> Security 页面，修改 admin 用户的密码，并取消 Anyone 用户组的访问权限。
+  1. 进入 Administration -> Security 页面，取消 Anyone 用户组的访问权限。
   2. 进入 Administration -> Configuration -> Security 页面，勾选 "强制用户认证" ，从而禁止匿名用户访问。
-  3. 进入 "配置（Administration）" -> "应用市场（Marketplace）" 页面，下载有用的插件。
+  3. 进入 Administration -> Marketplace 页面，下载有用的插件。
     - 比如 "Chinese Pack" 插件可以汉化页面。
     - 下载插件之后，网页会提示需要重启服务器才能安装。
 
@@ -100,7 +105,7 @@ docker run -it --rm \
         # -Dsonar.sources=src,lib \               # 只扫描这些目录（必须在 projectBaseDir 之下）
         -Dsonar.sourceEncoding=UTF-8 \            # 源文件的编码格式
         -Dsonar.host.url=http://10.0.0.1:9000 \   # SonarQube 服务器的 URL
-        -Dsonar.login=<token>                     # SonarQube 服务器上的用户密钥
+        -Dsonar.token=<token>                     # SonarQube 服务器上的用户密钥
         # -X                                      # 显示 DEBUG 信息
 ```
 - 如果 SonarQube 服务器上不存在该项目，则会自动创建。
@@ -126,7 +131,7 @@ docker run -it --rm \
       maven:3.8.4-jdk-11 \
       mvn sonar:sonar \                             # 不必配置 sonar.projectKey ，因为它会根据 pom.xml 自动配置
           -Dsonar.host.url=http://10.0.0.1:9000 \
-          -Dsonar.login=<token>
+          -Dsonar.token=<token>
   ```
 
 ### Jenkins 集成

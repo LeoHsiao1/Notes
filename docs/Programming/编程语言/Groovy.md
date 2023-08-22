@@ -120,19 +120,21 @@
   // 显示：true
   ```
   ```groovy
-  println 'Hello'.findAll('\\w')            // String.findAll() 用于找出所有正则匹配的元组
+  println 'Hello'.findAll('\\w')              // String.findAll() 用于找出所有正则匹配的元组
   // 显示：[H, e, l, l, o]
-  println 'Hello'.replaceAll('He.*', 'Hi')  // 正则替换，返回替换之后的字符串
+  println 'Hello'.replaceAll('He.*', 'Hi')    // 正则替换，返回替换之后的字符串
   // 显示：Hi
-  println 'Hello'.matches('He')             // 判断是否完全正则匹配
+  println 'Hello'.replaceAll('(\\w)', '$1_')  // 通过正则捕获字符组
+  // 显示：H_e_l_l_o_
+  println 'Hello'.matches('He')           // 判断是否完全正则匹配
   // 显示：false
-  println 'Hello' =~ 'He'                   // =~ 运算符相当于 pattern.matcher()
+  println 'Hello' =~ 'He'                 // =~ 运算符相当于 pattern.matcher()
   // 显示：java.util.regex.Matcher[pattern=He region=0,5 lastmatch=]
-  println 'Hello' ==~ 'He.*'                // ==~ 运算符相当于 String.matches()
+  println 'Hello' ==~ 'He.*'              // ==~ 运算符相当于 String.matches()
   // 显示：true
-  println !('Hello' ==~ 'He.*')             // 否定整个表达式
+  println !('Hello' ==~ 'He.*')           // 否定整个表达式
   // 显示：false
-  println 'Hello    World'.split('\\s+')    // 用正则表达式分割字符串，默认用连续的空字符分割
+  println 'Hello    World'.split('\\s+')  // 用正则表达式分割字符串，默认用连续的空字符分割
   // 显示：[Hello, World]
   ```
   - Groovy 的正则表达式中，转义符 `\` 本身也需要转义，因此转义字符 `\n` 要写作 `\\n` ，转义字符 `\\` 要写作 `\\\\` 。

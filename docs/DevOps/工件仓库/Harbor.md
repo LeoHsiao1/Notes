@@ -52,10 +52,20 @@
     - 默认存储在本机文件系统中。以 layer 为单位进行存储，因此存储多个相似的镜像时，只会占用少量存储空间。
   - 拉取镜像的命令格式如下：
     ```sh
-    docker pull <harbor_url>/<project>/<REPOSITORY>[:tag]
+    docker pull <harbor_url>/<project>/<name>[:tag]
     ```
     - 每个镜像 Image 划分一个镜像仓库（repository），其下可以存储多个 tag 的镜像。
     - 网页上显示的镜像大小是压缩之后的。
+
+  - 除了普通类型的项目，还可创建 proxy 类型的项目，用于反向代理某个远程仓库。
+    - 当用户拉取 proxy 项目下的镜像时，Harbor 会自动在后台从远程仓库拉取同名镜像，然后返回给用户，并默认缓存 7 天。
+    - 假设部署两个 Harbor 服务器，域名分别为 `harbor1.test.com`、`harbor2.test.com` 。在第二个 Habor 创建一个 proxy 项目，地址为 `harbor2.test.com/proxy-harbor1/` ，反向代理 `harbor1.test.com` 。然后用户拉取 `harbor2.test.com/proxy-harbor1/test/curl:latest` （注意这有多级路径），此时 Harbor 会自动在后台下载镜像 `harbor1.test.com/test/curl:latest` ，有几种结果：
+      - harbor1 存在该镜像，harbor2 不存在该镜像。则从 harbor1 下载到 harbor2 （默认缓存 7 天才删除），然后将该镜像返回给用户。
+      - harbor1、harbor2 都存在该镜像，且哈希值相同。则不必下载，直接将 harbor2 中缓存的镜像返回给用户。
+      - harbor1、harbor2 都存在镜像 curl:latest ，但哈希值不同。则从 harbor1 下载到 harbor2 ，覆盖 harbor2 中缓存的镜像。
+      - harbor1 不存在该镜像，harbor2 存在镜像。则报错 not found ，以 harbor1 的内容为准。
+      - harbor2 不能访问到 harbor1 。则以 harbor2 的内容为准，相当于从 proxy 项目变成普通项目。
+
   - 每个项目可以添加多个用户作为成员，担任某种角色。角色按权限从高到低如下：
     ```sh
     项目管理员  # 可以管理该项目的其他成员
@@ -66,12 +76,6 @@
     ```
     - 如果项目的访问级别为 Private ，则允许被未登录用户拉取镜像。
 
-  - 新建项目时，可以设置为对其它远程仓库的 "代理" 。
-    - 当用户请求拉取该项目下的镜像时，会自动从远程仓库拉取同名镜像，并默认缓存 7 天。
-    - 不过，拉取缓存镜像时，需要增加一层路径，声明远程镜像的命名空间。如下：
-      ```sh
-      docker pull <harbor_url>/<proxy_project>/<remote_namespace>/<REPOSITORY>[:tag]
-      ```
   - 支持设置 Tag 的保留规则、项目的磁盘定额，从而限制存储的镜像数量。
     - 推送镜像到 Harbor 时，默认会覆盖 image:tag 相同的 artifact 。可以将一些 tag 声明为不可变的，不允许被覆盖、删除。
   - 支持漏洞扫描。

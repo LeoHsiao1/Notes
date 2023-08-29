@@ -73,42 +73,46 @@
     - 所有容器共享挂载的所有 volume 。
     - 所有容器采用独立的 PID namespace ，保证每个容器的主进程的 PID 为 1 。
 
-- Pod 中的容器分为两种类型：
+- Pod 中的容器分为几种类型：
   - 普通容器
-    - 一般 Pod 中只有一个普通容器，用于运行一个业务应用。
-    - 辅助容器（Sidecar）：一些辅助用途的普通容器，不运行业务应用，而是负责采集日志、监控告警等辅助功能。
+    - 一个 Pod 至少包含一个普通容器，用于运行一个业务应用。也可包含多个普通容器，但增加了 Pod 的复杂程度。
   - init 容器
-    - ：在创建 Pod 之后最先启动，执行一些初始化任务，执行完成之后就退出。
-    - 可以给一个 Pod 设置多个 init 容器，它们会按顺序先后运行。
-      - 当一个 init 容器运行成功之后（即进入 Succeeded 阶段），才会启动下一个 init 容器。
-      - 当所有 init 容器都运行成功之后，才会同时启动所有普通容器。
-      - 如果某个 init 容器运行失败，则触发 restartPolicy 。
-    - init 容器不会长期运行，因此不支持 lifecycle、Probe 等配置。
-    - init 容器可能多次重启、重复运行，因此建议实现幂等性。
-
-- 例：
-  ```yml
-  kind: Pod
-  spec:
-    containers:                 # 普通容器
-    - name: nginx
-      image: nginx:1.23
-    initContainers:             # init 容器
-    - name: init
-      image: busybox:latest
-      command:
-        - touch
-        - /tmp/f1
-  ```
-
-- 关于资源配额：
-  - 如果多个 init 容器定义了一种配额，比如 requests.cpu、limits.cpu ，则采用各个 init 容器中取值最大的该种配额，作为有效值，作用于所有 init 容器的运行过程。
-  - 调度 Pod 时，节点的可用资源必须大于以下两者的较大值：
-    - 所有普通容器的 requests 配额的总和
-    - init 容器的 requests 配额的有效值
+    - ：启动 Pod 时，会先启动其中的 init 容器，用于执行一些初始化任务，执行完成之后就退出容器。
+    - 一个 Pod 可包含任意个 init 容器，它们会按 YAML 配置中的顺序，从上到下依次执行。
+      - 一个 Pod 中同时只能执行一个 init 容器。
+      - 当一个 init 容器执行成功之后（即进入 Succeeded 阶段），才启动下一个 init 容器。
+      - 当所有 init 容器都执行成功之后，才认为 init 阶段结束，同时启动所有普通容器。
+      - 如果某个 init 容器执行失败，则触发 restartPolicy ，重启整个 Pod 。
+    - 原生 k8s 认为 init 容器不应该长期运行，因此不支持 lifecycle、Probe 等配置。
+    - init 容器可能多次重启、重复执行，因此用户使用 init 容器时，应该实现幂等性。
+    - 例：
+      ```yml
+      kind: Pod
+      spec:
+        containers:                 # 普通容器
+        - name: nginx
+          image: nginx:1.23
+        initContainers:             # init 容器
+        - name: init
+          image: busybox:latest
+          # restartPolicy: Always   # sidecar 形式的 init 容器
+          command:
+            - touch
+            - /tmp/f1
+      ```
+  - 辅助容器（Sidecar）
+    - ：用于运行一些辅助服务，例如采集日志、监控告警、服务网格。
+    - 原生 k8s 没有设计 sidecar 类型的容器，当用户需要在 Pod 中运行一些辅助服务时，考虑到 init 容器不能长期运行，只能以普通容器的方式运行 sidecar ，这存在以下问题：
+      - 一个 Pod 包含不止一个普通容器，增加了 Pod 的复杂程度。
+      - 修改 sidecar 时需要重建 Pod 。
+      - 不能让 sidecar 在 init 容器之前启动。
+      - sidecar 通常会长期运行，导致 Job 类型的 Pod 不会终止。
+    - k8s v1.28 增加了 sidecar 形式的 init 容器：如果给一个 init 容器配置 `restartPolicy: Always` ，则允许该 init 容器长期运行。
+      - 该容器依然会按 init 容器的顺序启动。当该容器启动并通过 readinessProbe 健康检查时，才启动下一个 init 容器。
+      - 当 Pod 中的普通容器都退出时，整个 Pod 就算终止。即使还有 sidecar 形式的 init 容器在运行，也会被终止。
 
 - 临时容器（Ephemeral Containers）
-  - ：一种临时存在的容器，便于人工调试。
+  - ：一种临时存在的容器，用于人工调试。
   - 临时容器不能在 Pod spec 中定义，只能通过 API 创建。不会自动重启，不会自动删除。
   - 例：
     ```sh
@@ -121,6 +125,12 @@
         -c <name>         # 指定临时容器的名称
         --target=<name>   # 共用指定容器的 PID namespace
     ```
+
+- 关于资源配额：
+  - 如果多个 init 容器配置了同一种配额，比如 requests.cpu、limits.cpu ，则采用这些 init 容器中最大的一个配额，作为有效值，作用于所有 init 容器的运行过程。
+  - 调度 Pod 时，节点的可用资源必须大于以下两者的较大值：
+    - 所有普通容器的 requests 配额的总和
+    - 全部 init 容器的 requests 配额的有效值
 
 ### env
 
@@ -338,7 +348,7 @@
   OnFailure  # 只有当容器异常终止时，才会自动重启
   Never      # 总是不会自动重启
   ```
-  - Deployment、Daemonset、StatefulSet 适合部署长期运行的 Pod ，挂掉了就自动重启，除非被删除。因此 restartPolicy 只能为 Always 。
+  - Deployment、Daemonset、StatefulSet 适合部署长期运行的 Pod ，容器退出时会自动自动重启，除非被删除。因此 restartPolicy 只能为 Always 。
   - Job 适合部署运行一段时间就会自行终止的 Pod ，因此 restartPolicy 只能为 Never 或 OnFailure 。
 
 - 例：

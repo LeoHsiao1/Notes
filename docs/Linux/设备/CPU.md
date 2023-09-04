@@ -277,7 +277,7 @@
 ### uptime
 
 ```sh
-$ uptime      # 显示系统运行时长、CPU 平均负载
+uptime      # 显示系统运行时长、CPU 平均负载
 ```
 - 例：
   ```sh
@@ -290,56 +290,68 @@ $ uptime      # 显示系统运行时长、CPU 平均负载
 
 ### perf
 
-：用于测试执行一条命令，查看各个事件占用的 CPU 时长。
+：一个针对 CPU 的性能测试工具。
 
 ```sh
-$ perf top    # 显示占用 CPU 的各个事件（采样分析）
-       -g     # 增加显示各个进程的子进程
+perf top          # 监控当前主机执行的 CPU 事件（属于离散采样）
+        -a        # 监控 CPU 的所有核。默认只监控第 0 个核
+        -c <int>  # 监控 CPU 的第几个核
+        -e <str>  # 采样的 event 类型，默认为 cpu-clock 。执行 perf list 查看可选的类型
+        -F <int>  # 采样频率，每秒采样多少次 CPU 正在执行的 event 。默认为 4000 ，降低该值可以减少采样的开销
+
+        -g        # 监控 event 的调用链
+        -n        # 显示每个 event 采样的 samples 数量
+        -v        # 显示详细内容，比如 Shared Object 的文件路径、Symbol 的内存地址
 ```
 - 例：
   ```sh
-  [root@CentOS ~]# perf top
-  Samples: 4K of event 'cpu-clock', 4000 Hz, Event count (approx.): 828026549 lost: 0/0 drop: 0/0
-  Overhead  Shared Object         Symbol
-    22.91%  perf                  [.] __symbols__insert
-      9.82%  perf                  [.] rb_next
-      7.34%  [kernel]              [k] clear_page_c_e
-      2.33%  libc-2.17.so          [.] __strchr_sse42
-      1.86%  perf                  [.] rb_insert_color
+  [root@CentOS ~]# perf top -n
+  Samples: 167K of event 'cpu-clock', 4000 Hz, Event count (approx.): 29827031201 lost: 0/0 drop: 0/0
+  Overhead       Samples  Shared Object                                      Symbol
+    3.53%          4206   [kernel]                                           [k] _raw_spin_unlock_irqrestore
+    1.99%          2369   [kernel]                                           [k] __do_softirq
+    1.85%          2206   libcoreclr.so                                      [.] 0x000000000030f332
+    0.70%           836   perf                                               [.] rb_next
+  ...
   ```
-  - 第一行中，Samples 表示采样率，event 表示事件类型，Event count 表示占用 CPU 时钟周期的事件总数。
-  - Overhead  ：该事件在样本中的比例。
-  - Shared  ：该事件所在的动态共享对象，比如内核名、进程名。
-  - Object  ：该动态共享对象的类型，比如[.]表示用户控件、[k]表示内核空间。
-  - Symbol  ：该事件的名称，大多为某个进程的函数名称，或者是内存地址。
-  - 在显示窗口中，可按方向键上下选择事件，按回车键进入子菜单。
+  - 默认会在一个窗口中显示监控结果，可按方向键上下选择 event ，按回车键进入子菜单。
+  - 第一行表示累计采样了 167K 个 samples ，event 类型为 cpu-clock ，采样频率为 4000 Hz 。Event count 表示这段时间产生的 event 总数，只有部分被采样了。
+  - 从第三行开始，每行表示一种名称的 event 。各列的含义如下：
+    - Overhead  ：该 event 被采样的数量在全部样本中的比例，可用于估算 event 占用 CPU 时长的比例。
+    - Samples  ：该 event 被采样的数量。
+    - Shared Object ：产生该 event 的对象名称，通常是内核、动态链接库名、进程名。
+    - Symbol  ：该 event 的名称，通常是正在执行的函数名称，或者是内存地址。前缀 `[.]` 表示其内存地址位于用户空间，`[k]` 表示位于内核空间。
 
 ```sh
-$ perf record <command> # 记录执行某条命令时，其中各个事件的 CPU 使用率
+perf record <command> # 执行一条命令，并记录其中各个 event 的 CPU 使用率，保存在 $PWD/perf.data 文件中
+perf record -p <pid> -- sleep 10  # 监控一个已运行的进程，最多监控 10 秒
+perf record -a       -- sleep 10  # 监控 CPU 所有核
 
-$ perf report           # 显示 perf record 记录的信息
+perf report           # 读取 $PWD/perf.data 文件，显示 perf record 记录的信息
 ```
 - 例：
   ```sh
-  [root@CentOS ~]# perf record ls
-  actions-runner  node_modules  Notes  package.json  perf.data  yarn.lock
-  [ perf record: Woken up 1 times to write data ]
-  [ perf record: Captured and wrote 0.014 MB perf.data (6 samples) ]
+  [root@CentOS ~]# perf record -g -a -- sleep 3
+  [ perf record: Woken up 2 times to write data ]
+  [ perf record: Captured and wrote 1.940 MB perf.data (16068 samples) ]
+  [root@CentOS ~]# perf report -n
+  Samples: 16K of event 'cpu-clock', Event count (approx.): 4017000000
+    Children      Self       Samples  Command        Shared Object       Symbol
+  +   99.58%     0.00%             0  swapper        [kernel.kallsyms]   [k] start_cpu
+  +   99.38%    99.38%         15969  swapper        [kernel.kallsyms]   [k] native_safe_halt
+  +    3.46%     0.00%             0  swapper        [kernel.kallsyms]   [k] x86_64_start_kernel
+       0.24%     0.00%             0  rcu_sched      [kernel.kallsyms]   [k] kthread
   ```
-  ```sh
-  [root@CentOS ~]# perf report
-  Samples: 6  of event 'cpu-clock', Event count (approx.): 1500000
-  Overhead  Command  Shared Object      Symbol
-    16.67%  ls       [kernel.kallsyms]  [k] copy_user_enhanced_fast_string
-    16.67%  ls       [kernel.kallsyms]  [k] get_seconds
-    16.67%  ls       [kernel.kallsyms]  [k] prepend_name
-    16.67%  ls       [kernel.kallsyms]  [k] vma_interval_tree_insert
-    16.67%  ls       ld-2.17.so         [.] _dl_lookup_symbol_x
-    16.67%  ls       libc-2.17.so       [.] __sysconf
-  ```
+  - 如果某行的左侧显示 + ，则可按 Enter 键，显示子进程。
+  - 每行表示一种名称的 event ，通常是函数名。
+    - Self 列表示该函数被采样的数量在全部样本中的比例。
+    - Children 列表示子孙函数被采样的数量，在该函数样本中的比例。
 
 ```sh
-$ perf stat <command>   # 分析某条命令占用 CPU 的过程
+perf stat <command>   # 执行一条命令，并统计各种 event 的数量。等执行完命令，才显示统计结果
+        -I 1000       # 每隔 1000ms 显示一次统计结果
+
+perf stat -I 1000 -a  # 监控 CPU 所有核
 ```
 - 例：
   ```sh
@@ -371,5 +383,5 @@ $ perf stat <command>   # 分析某条命令占用 CPU 的过程
   page-faults           # CPU 抛出 page fault 异常的次数
   cycles                # CPU 的时钟周期数。一条指令的执行可能需要多个 cycles
   instructions          # 指令数。Instructions/Cycles 的比值越大越好
-  seconds time elapsed  # 运行该命令消耗的秒数
+  seconds time elapsed  # 执行该命令消耗的秒数
   ```

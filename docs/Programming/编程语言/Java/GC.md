@@ -125,7 +125,7 @@
 - ：分代收集算法。
 - 原理：将堆内存分为两个区域，采用不同的 GC 算法：
   - 年轻代（young generation）：又称为新生代（new generation），用于存储存在时间较短的 Java 对象。预计该区域每分钟都有大量对象变成垃圾，需要经常清理，因此适合采用 Mark-Copy 算法，尽量减少 GC 耗时。
-  - 老生代（old generation）：用于存储存在时间较长的 Java 对象。预计不需要经常清理，因此适合采用 Mark-Compact 算法。
+  - 老年代（old generation）：又称为终身代（tenured generation），用于存储存在时间较长的 Java 对象。预计不需要经常清理，因此适合采用 Mark-Compact 算法。
 - 优点：一般的 Java 程序中，大部分 Java 对象会在创建之后的短期内停止引用，只有少部分对象会长期保留。因此对这两类对象采用不同的 GC 算法，效率更高。
 - 年轻代细分为两种区域：
   - 伊甸园空间（eden space）：用于存储新创建的对象。
@@ -134,9 +134,9 @@
 - 根据作用域的不同，将 GC 分为几种模式：
   - young GC
     - ：又称为 Minor GC 。
-    - young 区域的 Java 对象存储在 eden space 和一个 survivor space （假设为 S0）中。当 eden space 的空闲内存不足以存入新对象时，会触发一次 young GC ，将 eden space 和 S0 中所有非垃圾对象拷贝到 S1 ，然后清空 eden space 和 S0 ，供未来存入新对象。
-      - 如果 S1 的空闲内存不足以存入对象，则将对象直接拷贝到 old 区域。
+    - young 区域的 Java 对象存储在 eden space 和一个 survivor space （假设为 S0）中。当 eden space 的空闲内存不足以存入新对象时，会触发一次 young GC ，将 eden space 和 S0 中所有非垃圾对象拷贝到另一个 survivor space （这里是 S1 ），然后清空 eden space 和 S0 ，供未来存入新对象。
       - 下一次触发 young GC 时，会将 eden space 和 S1 中所有非垃圾对象拷贝到 S0 。
+      - 如果另一个 survivor space 的空闲内存不足以存入对象，则将对象直接拷贝到 old 区域。如果 old 区域也内存不足，则触发 full GC 。
     - 新创建的 Java 对象最初存储在 young 区域的 eden space 。
       - 如果对象活过了第一次 young GC ，则从 eden space 拷贝到一个 survivor space 。
       - 之后对象每活过一次 young GC ，则从一个 survivor spac 拷贝到到另一个 survivor space 。这样能多过滤几次垃圾对象，减少拷贝到 old 区域的对象数量。
@@ -187,10 +187,11 @@
 
 ### ConcMarkSweepGC
 
-- ：Concurrent Mark Sweep ，是第一个支持并发收集的垃圾收集器。
+- ：Concurrent Mark Sweep Garbage Collector ，是第一个支持并发收集的垃圾收集器。
 - 特点：
   - 分代收集：young GC 采用 Mark-Copy 算法，处于 STW 状态。old GC 采用 Mark-Sweep 算法并进行了魔改，使得大部分时间不处于 STW 状态。
-- old GC 分为多个阶段：
+  - young GC、old GC 时支持运行多个 GC 线程。但 full GC 时，只运行单个 GC 线程，处于 STW 状态。
+- 将 old GC 分为多个阶段：
   1. 初始标记（Initial Mark）：最初将所有对象标记为白色，然后找出 GC Roots 直接关联的所有 Java 对象，标记为灰色。
   2. 并发标记（Concurrent Mark）：找出灰色对象引用的所有对象（即使为空），然后将前者标记为黑色，将后者标记为灰色。递归执行该操作，直到不存在灰色对象。
       - 该过程称为三色标记法，最后剩下的白色对象就是不在引用链上的对象，视为垃圾对象。
@@ -207,35 +208,45 @@
 - 满足以下条件之一时，会触发一次 old GC ：
   - old 区域内存使用率超过 CMSInitiatingOccupancyFraction 阈值。
   - Metaspace 内存不足。
-  - young 区域的对象可能全部晋升到 old 区域，此时如果 old 区域内存不足则会晋升失败。为了避免该问题，当 young 区域的 used_memory 大于 old 区域的 free_memory 时，也会触发一次 old GC 。
+  - young 区域的对象可能全部晋升到 old 区域，此时如果 old 区域内存不足则会晋升失败，触发 full GC 。为了避免该问题，当 young 区域的 used_memory 大于 old 区域的 free_memory 时，就会触发一次 old GC 。
 - 优点：
-  - old GC 的大部分时间不处于 STW 状态，允许同时运行用户线程、GC 线程。
+  - SerialGC、ParallelGC 不支持并发收集，全程处于 STW 状态。而 ConcMarkSweepGC 支持并发收集，使得 old GC 的大部分时间不处于 STW 状态。
 - 缺点：
   - young GC 依然处于 STW 状态。
-  - old GC 同时运行用户线程、GC 线程，因此用户线程、GC 线程的执行速度都变慢了。用户线程的吞吐量降低 10% 左右，GC 线程的耗时比 ParallelGC 久。
   - old GC 会产生浮动垃圾，导致 old 区域占用内存增加 10% 左右。
   - old GC 采用 Mark-Sweep 算法，容易产生内存碎片。
     - 不采用 Mark-Compact、Mark-Copy 算法，是因为改变对象的内存地址时，必须处于 STW 状态。
-    - JVM 对 ConcMarkSweepGC 默认启用了 `-XX:+UseCMSCompactAtFullCollection` 功能，当不能存储大对象时，自动清理内存碎片。
+    - JVM 对 ConcMarkSweepGC 默认启用了 `-XX:+UseCMSCompactAtFullCollection` 功能，在 full GC 时自动压缩内存碎片。
 - HotSpot 从 Java 9 开始弃用 ConcMarkSweepGC ，采用它时会显示 warning ，建议改用 G1GC 。
 
 ### G1GC
-  <!-- 采用自创的 G1GC 算法 -->
-- ：Garbage-First ，是一个与 ConcMarkSweepGC 类似的并发收集器，但能减少内存碎片、限制 STW 时长。
-- 传统垃圾收集器将堆内存分为两个区域 young、old ，晋升对象时需要从 young 区域拷贝到 old 区域。而 G1GC 将堆内存分为至少 2046 个 region 空间，再将各个 region 归属到 eden、survivor、old 区域名下。
+
+- ：Garbage First Garbage Collector ，垃圾优先的垃圾收集器，支持并发收集。
+- 特点：
+  <!-- - 分代收集，但采用自创的 G1GC 算法。 -->
+
+- 传统垃圾收集器将堆内存分为两个区域 young、old ，晋升对象时需要从 young 区域拷贝到 old 区域。而 G1GC 将堆内存分为几千个 region 空间，然后记录 eden、survivor、old 区域分别包含哪些 region 。
   - 每个 region 是一小块地址连续的内存空间，体积相同。
-  - 如果一个对象的体积超过单个 region ，则称为 humongous object ，会存储到一组地址连续的 region 中。
-  - 晋升对象时，不需要从 young 区域拷贝到 old 区域，只需要将对象所在的 region 归属到 old 区域名下。
+  - 如果一个对象的体积超过单个 region ，则称为 humongous object ，会存储到几个地址连续的 region 中。
+  - eden、survivor 区域包含一些零散的 region 。如果其中的对象需要晋升，则不必将对象拷贝到 old 区域，而是将对象所在的 region 改到 old 区域名下。
+  - 使用 region 的优点：
+    - 晋升对象的开销很低。
+    - 容易调整 eden、survivor、old 区域的体积。
 - G1GC 有几种模式：
   - young GC ：清理年轻代。比如将 eden 区域中幸存的 region 分配给 survivor、old 区域。
-  - mixed GC ：清理年轻代，还会清理老生代中垃圾较多（即活动对象较少）的 region ，称为垃圾优先。
+  - mixed GC ：清理年轻代，还会清理老年代中垃圾较多（即活动对象较少）的 region ，称为垃圾优先。
   - full GC ：当老年代内存不足时，清理全部堆内存。
-- HotSpot 对于 Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
-- 优点：
-  - 传统的 SerialGC、ParallelGC 只适合处理 4G 以下的堆内存，因为堆内存越大，STW 时间越久。而 G1GC 擅长处理大内存。
-  - 移动算法，比复制算法的开销、耗时低很多。
 
-ConcMarkSweepGC 侧重于减少 STW 时长，而 G1GC 侧重于限制 STW 时长。
+<!-- 暂停时间软限制 -->
+
+- 优点：
+  - 使得 STW 时长更容易预测、更可控。
+  - 能处理大型堆内存。而传统的 SerialGC、ParallelGC 只适合处理 4G 以下的堆内存，因为堆内存越大，STW 时间越久。
+  - 移动算法，比复制算法的开销、耗时低很多。
+  <!-- ConcMarkSweepGC 侧重于减少 STW 时长，而 G1GC 侧重于限制 STW 时长，还能能减少内存碎片。 -->
+
+- HotSpot 对于 Java 8 默认采用 ParallelGC ，Java 9 开始默认采用 G1GC 。
+
 
 
 ### 性能指标
@@ -250,7 +261,10 @@ ConcMarkSweepGC 侧重于减少 STW 时长，而 G1GC 侧重于限制 STW 时长
     - ：用户线程占用的 CPU 时间的比例。
     - 例：假设 JVM 总共占用了 1s 时长的 CPU ，其中用户线程占用了 0.9s ，GC 线程占用了 0.1s ，则吞吐量为 90% 。
     - 吞吐量越高，用户线程占用的 CPU 时间越多，因此能执行更多业务代码。
+    - ConcMarkSweepGC、G1GC 通过并发收集减少了 STW 时长，但增加了总的 GC 耗时。同时运行用户线程、GC 线程，会降低用户线程的吞吐量。
 - 上述三个指标最多同时追求两个。例如追求低延迟、高吞吐量，则减少了 GC 线程的执行时长，因此 GC 效果差，会占用更多堆内存。
-  - 用户可根据自己的需求，优化 JVM 配置参数，从而提升性能。例如追求低延迟，则采用 G1GC ，限制 MaxGCPauseMillis 。
-  - 不过 JVM 优化的幅度有限，可能只提升 30% 的性能，而且需要用户学习如何优化 JVM 并调试。
-  - 如果 Java 程序存在大量非垃圾对象，超出了堆内存容量，则只能增加内存，或者优化 Java 代码，比如通过分页查询减少 Java 程序同时处理的数据量。
+  - 用户可根据自己的需求，优化 JVM 配置参数，从而提升性能。例如：
+    - 如果 Java 程序直接为用户提供服务，追求低延迟，则采用 G1GC 。
+    - 如果 Java 程序不追求低延迟，而是追求高吞吐量、低成本，则采用 ParallelGC 。
+  - JVM 优化的幅度有限，可能只提升 30% 的性能，而且需要用户学习如何优化 JVM 并调试。
+  - 如果 Java 程序存在大量非垃圾对象，超出了堆内存容量，则 JVM 优化也无济于事。只能增加内存，或者优化 Java 代码，比如通过分页查询减少 Java 程序同时处理的数据量。

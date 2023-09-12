@@ -101,8 +101,8 @@ docker run -it --rm \
         -Dsonar.projectKey=test \                 # SonarQube 服务器上的项目名
         -Dsonar.projectBaseDir=. \                # 项目的根目录
         # -Dsonar.projectVersion=1.0 \            # 项目版本
-        # -Dsonar.exclusions=dist \               # 不扫描这些目录
-        # -Dsonar.sources=src,lib \               # 只扫描这些目录（必须在 projectBaseDir 之下）
+        # -Dsonar.exclusions=**/build,**/dist \   # 不扫描这些目录
+        # -Dsonar.sources=src,lib \               # 只扫描这些目录
         -Dsonar.sourceEncoding=UTF-8 \            # 源文件的编码格式
         -Dsonar.host.url=http://10.0.0.1:9000 \   # SonarQube 服务器的 URL
         -Dsonar.token=<token>                     # SonarQube 服务器上的用户密钥

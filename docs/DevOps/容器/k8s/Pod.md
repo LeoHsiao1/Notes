@@ -967,7 +967,7 @@ spec:
 - 分析 kubelet 的源代码：
   - kubelet 启动时，先后启动 cAdvisor、containerManager、evictionManager 等模块。
   - 调用 evictionManager.Start() 函数即可启动 evictionManager 模块，它会运行一个主循环：
-    ```golang
+    ```go
     for {
       if evictedPods := m.synchronize(diskInfoProvider, podFunc); evictedPods != nil {
         klog.InfoS("Eviction manager: pods evicted, waiting for pod to be cleaned up", "pods", klog.KObjSlice(evictedPods))

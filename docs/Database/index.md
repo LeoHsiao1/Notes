@@ -41,6 +41,7 @@
   - [管理单元](ES/管理单元.md)
   - [查询](ES/查询.md)
   - [配置](ES/配置.md)
+  - [Kibana](ES/Kibana.md)
 - ClickHouse
   - [ClickHouse](ClickHouse/ClickHouse.md)
   - [部署](ClickHouse/部署.md)

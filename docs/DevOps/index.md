@@ -52,7 +52,6 @@
     - [Pushgateway](监控告警/Prometheus/Pushgateway.md)
     - [Alertmanager](监控告警/Prometheus/Alertmanager.md)
   - [ELK](监控告警/ELK/ELK.md)
-    - [Kibana](监控告警/ELK/Kibana.md)
     - [Filebeat](监控告警/ELK/Filebeat.md)
     - [Logstash](监控告警/ELK/Logstash.md)
     - [OpenSearch](监控告警/ELK/OpenSearch.md)

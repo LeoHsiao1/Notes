@@ -1121,6 +1121,10 @@ module.exports = {
                         {
                             title: "配置",
                             path: "/Database/ES/配置"
+                        },
+                        {
+                            title: "Kibana",
+                            path: "/Database/ES/Kibana"
                         }
                     ]
                 },
@@ -1371,10 +1375,6 @@ module.exports = {
                             path: "/DevOps/监控告警/ELK/ELK",
                             collapsable: false,
                             children: [
-                                {
-                                    title: "Kibana",
-                                    path: "/DevOps/监控告警/ELK/Kibana"
-                                },
                                 {
                                     title: "Filebeat",
                                     path: "/DevOps/监控告警/ELK/Filebeat"

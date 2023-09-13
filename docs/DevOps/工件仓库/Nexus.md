@@ -17,7 +17,7 @@
       image: sonatype/nexus3:3.37.3
       restart: unless-stopped
       environment:
-        INSTALL4J_ADD_VM_PARAMS: -Xms2G -Xmx2G -XX:MaxDirectMemorySize=1G -Djava.util.prefs.userRoot=/nexus-data/javaprefs -Duser.timezone=GMT+08
+        INSTALL4J_ADD_VM_PARAMS: -Xms2G -Xmx2G -Djava.util.prefs.userRoot=/nexus-data/javaprefs -Duser.timezone=GMT+08
       ports:
         - 8081:8081
       volumes:

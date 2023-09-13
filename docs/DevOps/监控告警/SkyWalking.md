@@ -16,7 +16,7 @@
       environment:
         - discovery.type=single-node
         - bootstrap.memory_lock=true
-        - "ES_JAVA_OPTS=-Xms2G -Xmx2G -XX:MaxDirectMemorySize=1G"
+        - "ES_JAVA_OPTS=-Xms2G -Xmx2G"
       ports:
         - 9200:9200
       ulimits:
@@ -27,7 +27,7 @@
     oap:
       image: apache/skywalking-oap-server:8.9.1
       environment:
-        JAVA_OPTS: "-Xms2G -Xmx2G -XX:MaxDirectMemorySize=1G"
+        JAVA_OPTS: "-Xms2G -Xmx2G"
         SW_STORAGE: elasticsearch
         SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
         SW_HEALTH_CHECKER: default
@@ -41,7 +41,7 @@
     ui:
       image: apache/skywalking-ui:8.9.1
       environment:
-        JAVA_OPTS: "-Xms1G -Xmx1G -XX:MaxDirectMemorySize=100M"
+        JAVA_OPTS: "-Xms1G -Xmx1G"
         SW_OAP_ADDRESS: http://oap:12800
       ports:
         - 8080:8080

@@ -41,14 +41,37 @@ Kibana 的配置文件位于 `config/kibana.yml` ，内容示例：
 server.port: 5601           # Kibana 监听的端口
 server.host: 0.0.0.0        # Kibana 监听的 IP
 server.name: kibana         # 服务器显示的名称
+server.publicBaseUrl: https://kibana.test.com   # kibana 最终供用户访问的地址
 
-elasticsearch.hosts: ['http://10.0.0.1:9200']   # 要连接的 ES 地址。可以指定多个 host ，但必须属于同一 ES 集群
+# 连接到 ES
+elasticsearch.hosts: ['http://10.0.0.1:9200']   # 要连接的 ES 地址。可以连接到同一 ES 集群的多个节点，从而提高可用性
 elasticsearch.ssl.verificationMode: none        # 不验证 ES 的 SSL 证书是否有效
 # elasticsearch.username: kibana_system         # 让 Kibana 通过该账号访问 ES
 # elasticsearch.password: ******
 # kibana.index: '.kibana'   # 在 ES 中创建该索引，用于存储 Kibana 的数据
+
+# 默认的日志格式不是 JSON ，因此需要主动配置
+logging:
+  appenders:
+    json-layout:
+      type: console
+      layout:
+        type: json
+  root:
+    appenders: [json-layout]
+    level: info
+
+# 关于 xpack 功能
+xpack.encryptedSavedObjects.encryptionKey: ****** # 将一些敏感信息存储到 ES 时，采用的加密密钥，长度至少 32 个字符。如果未指定，则 kibana 每次重启时会生成一个随机密钥
+xpack.reporting.encryptionKey: ******             # 生成报告时采用的加密密钥
+xpack.security.encryptionKey: ******              # 用户会话采用的加密密钥
+xpack.security.session.idleTimeout: 1d            # 用户访问 kibana 网站时，如果会话长期空闲，则过期。默认不会过期
+# xpack.security.audit.enabled: true              # 是否启用审计日志，默认为 false ，这是付费功能
+xpack.screenshotting.browser.chromium.disableSandbox: true  # 运行 Chromium 无头浏览器时，不创建 Linux sandbox
 ```
 - 如果 ES 集群包含多个节点，为了让 Kibana 发向 ES 的查询请求实现负载均衡，可以额外部署一个 ES 节点，只担任 coordinating 角色，然后让 Kibana 将查询请求都发给它。
+- Kibana 的 Discover 页面支持生成 png、pdf 格式的报告。为了实现该功能，Kibana 内部运行了一个 Chromium 无头浏览器。
+  - 为了避免执行危险代码，Chromium 无头浏览器默认会在 Linux sandbox 中运行，因此每次重启 Kibana 时会创建一个随机的 `data/chromium-xx` 目录。如果在容器中运行 Kibana ，则已经隔离了运行环境，可关闭 Linux sandbox 功能。
 
 ## 用法
 

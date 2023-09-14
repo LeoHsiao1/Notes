@@ -7,6 +7,7 @@
   - 对此，AWS 公司宣布从 ES、Kibana 分叉出 [OpenSearch](https://opensearch.org) 项目，取代之前的 Open Distro for Elasticsearch 项目，采用 Apache V2 开源协议。主要发布了以下软件：
     - [OpenSearch](https://github.com/opensearch-project/OpenSearch) ：对标 ES 。
     - [OpenSearch-Dashboards](https://github.com/opensearch-project/OpenSearch-Dashboards) ：对标 Kibana 。
+- ES 从 v6.8、v7.1 版本开始，将 x-pack 中的 RBAC 身份认证、TLS 加密通信改为免费功能。因此用户使用 OpenSearch 的需求变小了。
 
 ## 部署
 

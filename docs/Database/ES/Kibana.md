@@ -41,6 +41,7 @@ Kibana 的配置文件位于 `config/kibana.yml` ，内容示例：
 server.port: 5601           # Kibana 监听的端口
 server.host: 0.0.0.0        # Kibana 监听的 IP
 server.name: kibana         # 服务器显示的名称
+server.publicBaseUrl: https://kibana.test.com   # kibana 最终供用户访问的地址
 
 # 连接到 ES
 elasticsearch.hosts: ['http://10.0.0.1:9200']   # 要连接的 ES 地址。可以连接到同一 ES 集群的多个节点，从而提高可用性

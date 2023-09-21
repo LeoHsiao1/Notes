@@ -1,6 +1,6 @@
 # Kibana
 
-：一个基于 node.js 运行的 Web 服务器，用于查询、管理 ES 。
+：一个基于 node.js 运行的 Web 服务器，提供了对 ES 的 Web 管理页面。
 
 ## 部署
 

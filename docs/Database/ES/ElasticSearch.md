@@ -24,7 +24,7 @@
   - 因此新增文档的过程又称为 "索引文档" 。
 
 - 例：将以下 2 条 JSON 格式的日志写入 ES ，保存为 2 条文档。
-  ```json
+  ```sh
   {"_id": 1, "level": "INFO", "message": "process started."}
   {"_id": 2, "level": "INFO", "message": "process stopped."}
   ```
@@ -98,8 +98,8 @@
     - 如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
 
 - 在 Kibana 网站上，可按以下简略格式执行 HTTP 请求：
-  ```json
-  GET /_count     # 开头的 / 可省略
+  ```sh
+  GET /_count     # 开头的斜杆 / 可省略
   {
     "query": {
       "match_all": {}

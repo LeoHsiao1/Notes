@@ -3,27 +3,50 @@
 ：简称为 ES ，一个搜索服务器，也可用作存储 JSON 格式数据的 NoSQL 数据库。
 - [官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/index.html)
 - 采用 Java 开发，基于 Lucene 实现。
-- 采用 C/S 架构、TCP 通信。
+- 采用 C/S 架构，提供 Restful API 供客户端访问。
 
 ## 原理
 
-- ES 允许用户写入数据，并进行搜索。
-  - 每条数据称为一个文档（document），采用 JSON 格式，可以包含多个字段（field）。
-  - 容纳文档的集合称为索引（index）。
-
+- ES 允许用户写入 JSON 格式的数据，每条数据称为一个文档（document），可包含多个字段（field）。
 - 使用 ES 的一般流程：
-  1. 在 ES 中创建索引，定义文档的数据结构。
-  2. 在索引中写入一些文档。
-  3. 在索引中搜索一些文档。
+  1. 创建 index （相当于 SQL 数据库的 table），定义文档的数据结构。
+  2. 在 index 中写入文档。
+  3. 在 index 中查询文档。
 
-- ES 的每个索引由一个或多个分片（shard）组成。
-  - 一个索引下的所有文档，会分散存储到各个分片中。
-  - 在一个索引中查询文档时，会为每个分片分别创建一个查询线程，然后合并它们的查询结果。
-  - 客户端发出查询请求时，不必知道文档存储在哪个分片、分片存储在哪个节点，因为 ES 会自动完成查询。
+- ES 存储数据时，将每个 index 的数据分成一个或多个分片（shard）。
+  - 一个 index 下的所有文档，会分散存储到各个 shard 中。
+  - 在一个 index 中查询文档时，会为每个 shard 分别创建一个查询线程，然后合并它们的查询结果。
+  - 客户端发出查询请求时，不必知道文档存储在哪个 shard 、shard 存储在哪个节点，因为 ES 会自动完成查询。
+
+### 倒排索引
+
+- 当用户新增一个文档时，ES 默认会对文档的每个字段建立倒排索引，从而允许用户对任意字段执行 search 操作。
+  - 因此新增文档的过程又称为 "索引文档" 。
+
+- 例：将以下 2 条 JSON 格式的日志写入 ES ，保存为 2 条文档。
+  ```json
+  {"_id": 1, "level": "INFO", "message": "process started."}
+  {"_id": 2, "level": "INFO", "message": "process stopped."}
+  ```
+  - 每个文档都有一个 _id 字段，用于存储该文档的唯一编号。
+  - 用户新增一个文档时，如果不指定 _id 字段的值，则 ES 会自动为 _id 字段赋值。
+
+  ES 会对每个字段建立倒排索引，内容大概为：
+  ```sh
+  对于 level   字段的值，包含关键词 INFO    的文档编号列表为 [1,2]
+  对于 message 字段的值，包含关键词 process 的文档编号列表为 [1,2]
+  对于 message 字段的值，包含关键词 started 的文档编号列表为 [1]
+  对于 message 字段的值，包含关键词 stopped 的文档编号列表为 [2]
+  ```
+  - ES 将关键词称为 term ，将文档编号列表称为 postings list 。
+  - 这样建立倒排索引之后，ES 通常存在海量不同的 term 。为了快速从中找到当前查询的那个 term ，ES 将所有 term 基于 B+ tree 结构排序存储，称为 term dictionary 。
+  - term dictionary 的数据量很大，因此存储在磁盘，只是在内存中保留一份针对 term dictionary 的前缀索引，称为 term index 。
+  - 综上，当 ES 需要查询一个 term 时，先根据内存中的 term index 找到该 term 的大致位置，然后从磁盘读取这部分 term dictionary 数据，从而找到该 term 的倒排索引，最后找到包含该 term 的文档 _id 。
 
 ### ES 与 Lucene
 
-- ES 的每个分片是基于一个 Lucene 索引实现的。
+- ES 的每个 shard 是基于一个 Lucene 索引实现的。
+  - 如果 ES 一个 index 分为 n 个 shard ，则会在 Lucenne 中存储 n 个索引。
 - ES 对 Lucene 新增文档的流程做了改进，如下：
   1. 将新增的文档写入内存缓冲区（buffer），并备份到事务日志（translog）中。
       - translog 由多个 generation 文件组成。
@@ -52,8 +75,7 @@
 
 ## 客户端
 
-- ES 服务器提供了 Restful API 供客户端访问。
-- 客户端向 ES 服务器发出请求的标准格式如下：
+- 客户端向 ES 服务器发出 HTTP 请求的格式如下：
   ```sh
   [root@CentOS ~]# curl -X GET 127.0.0.1:9200/_count?pretty -H 'content-Type:application/json' -d '
   > {
@@ -75,9 +97,10 @@
   - 如果客户端发出的请求报文 body 不能按 JSON 格式正常解析，ES 就会返回 HTTP 400 报错。
   - ES 返回的响应报文 body 是 JSON 格式的字符串。
     - 如果在请求 URL 末尾加上 `?pretty` ，则会让 ES 返回经过缩进、换行的 JSON 字符串。
-- 为了方便书写，下文将客户端的请求简记成如下格式：
+
+- 在 Kibana 网站上，可按以下简略格式执行 HTTP 请求：
   ```json
-  GET /_count
+  GET /_count     # 开头的 / 可省略
   {
     "query": {
       "match_all": {}

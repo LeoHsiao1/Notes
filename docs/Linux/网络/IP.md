@@ -244,11 +244,11 @@
 ## cip.cc
 
 ：一个位于公网的 Web 网站，访问之后会显示本机的公网 IP、地理位置、运营商。
+- 也可查询指定 IP 的信息：`curl cip.cc/8.8.8.8`
 - 不同场景的用法：
   - 在 Web 浏览器上，访问 `cip.cc` 网站。
   - 在 Unix/Linux 上，执行 `curl cip.cc` 。
   - 在 Windows 上，执行 `telnet cip.cc` 。
-- 也可查询指定 IP 的信息：`curl cip.cc/8.8.8.8`
 - 例：
   ```sh
   [root@CentOS ~]# curl cip.cc

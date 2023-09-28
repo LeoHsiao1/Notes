@@ -799,6 +799,16 @@ bytearray(b'ello')
   - r：声明为raw（原始字符)，让反斜杠不发生转义。
 >>> print(r"Hello!\n")
 Hello!\n
+
+>>> 'hello\"world'
+'hello"world'
+>>> 'hello\\"world'
+'hello\\"world'
+>>> print('hello\\"world')
+hello\"world
+>>> r'hello\"world'
+'hello\\"world'
+
   - b：声明为bytes对象。
 >>> b"Hello"
 b'Hello'

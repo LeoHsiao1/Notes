@@ -17,7 +17,7 @@ module.exports = {
         ['vuepress-plugin-meilisearch',
             {
                 hostUrl: 'https://meilisearch.leohsiao.com',
-                apiKey: 'RLm2XlAvfb27e935629fc9a4b6ba438ee7f26ed4e2bb91b612e1661583365fbf65243b53',
+                apiKey: 'X9UsPpbPe6ed532b8c3f8cfaf8cdcaa2fb0ff3e6637da4303eb6505c81f46ec7d859dc09',
                 indexUid: 'docs',
                 placeholder: '',
                 maxSuggestions: 6,

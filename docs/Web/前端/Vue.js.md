@@ -12,7 +12,7 @@
 
 - 开发简单的网页时，通常导入 Vue 的独立 js 文件即可。
 - 构建大型项目时，通常用 npm 安装 Vue ：`npm install vue`
-- npm 包 @vue/cli 提供了一个命令行工具 vue ，用于创建、构建 Vue 项目。
+- 包 @vue/cli 提供了一个命令行工具 vue ，用于创建、构建 Vue 项目。
 
 ## 用法示例
 

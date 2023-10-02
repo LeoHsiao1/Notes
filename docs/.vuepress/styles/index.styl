@@ -1,12 +1,15 @@
 // 引入字体
+// Consolas 等宽字体，用于显示英文
 @font-face{
     font-family: 'Consolas';
     src:url('/Consolas.ttf') format('truetype');
 }
-// @font-face{  // 微软雅黑的字体太大，因此不提供
+// 微软雅黑的字体，用于显示中文。但该字体库有几十 MB ，太大了，因此不让用户下载。如果用户电脑上没安装，则采用默认的 serif 字体
+// @font-face{
 //     font-family: 'Microsoft YaHei';
 //     src:url('/Microsoft YaHei.ttf') format('truetype');
 // }
+// MV-Boli 字体，用于显示网站标题
 @font-face{
     font-family: 'mv boli';
     src:url('/MV-Boli.ttf') format('truetype');
@@ -77,10 +80,10 @@ body .theme-default-content code {
     color: #2c3e50;
     font-family: 'Consolas', 'Microsoft YaHei', serif;
 }
-// MarkDown 文档中的代码块
-body div[class*="language-"] {
-    background-color: #3d3d3d;
-}
+// // MarkDown 文档中的代码块
+// body div[class*="language-"] {
+//     background-color: #3d3d3d;
+// }
 // MarkDown 文档中的代码块
 body div[class*="language-"] pre[class*="language-"] code {
     color: #d9d9d9;

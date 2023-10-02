@@ -185,5 +185,5 @@ fabric.properties
 # ---> VisualStudioCode
 .vscode/
 
-/node_modules/
-
+node_modules/
+.temp/

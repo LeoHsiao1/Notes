@@ -45,6 +45,10 @@ export default defineUserConfig({
         placement: "before",
       }),
     },
+    // 在代码块中，不显示代码行号，从而简化显示内容
+    code: {
+      lineNumbers: false,
+    },
     // 为 markdown 文档生成右侧目录树时，只提取 h1~h4 级别的标题
     headers: {
       level: [1, 2, 3, 4]

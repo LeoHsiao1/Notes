@@ -17,20 +17,34 @@
   src:url('/MV-Boli.ttf') format('truetype');
 }
 
+// 导航栏、左侧边栏的背景颜色
+.vp-navbar,
+.vp-sidebar {
+  background-color: #ebe6dd;
+}
+
+// 右侧目录栏的背景颜色
+#toc .toc-wrapper {
+  background-color: #f9f9f9;
+}
+// 右侧目录栏中，让标题加粗显示
+#toc .toc-wrapper a.level1,
+#toc .toc-wrapper a.level2 {
+  font-weight: bold;
+}
+// 右侧目录栏中，顶端显示的提示词 “此页目录”
+#toc .toc-header {
+  font-size: 0.9rem;
+  font-weight: normal;
+  text-align: center;
+}
+
 // 每个页面默认显示的 title 不带锚点，因此改为显示带锚点的 h1 级标题
 div.vp-page-title {
   display: none;
 }
 .theme-hope-content:not(.custom) > h1:first-child {
   display: block;
-}
-
-// 每个页面右侧显示的目录栏，让标题加粗显示
-div.toc-wrapper a.level1,a.level2 {
-  font-weight: bold;
-}
-div.toc-header {
-  display: none;
 }
 
 // 网页左上角显示的网站名称
@@ -56,7 +70,11 @@ div.vp-hero-infos #main-title {
   -webkit-text-fill-color: #f8f8f8;
   margin: 2rem;
 }
-
 div.theme-hope-content blockquote {
   color: #cccccc;
+}
+
+// markdown 代码块中的注释颜色
+.token.comment, .token.prolog, .token.cdata {
+  color: #909090;
 }

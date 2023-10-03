@@ -69,6 +69,11 @@ export default hopeTheme({
     // 启用 vuepress-plugin-copy-code2 插件，用于在 markdown 每个代码块的右上角，显示一个复制按钮
     copyCode: {},
 
+    // 启用 @vuepress/plugin-prismjs 插件，用于为 markdown 代码块实现语法高亮
+    prismjs:{
+      light: "one-dark",
+    },
+
     // 启用 @vuepress/plugin-git 插件，用于根据 git comment 信息，显示 contributors、lastUpdated 等信息
     git: true,
 

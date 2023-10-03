@@ -10,7 +10,11 @@ $font-family-mono: 'Consolas, "Microsoft YaHei", serif';
 // 网页颜色
 $theme-color: #3eaf7c;
 $text-color: #2c3e50;
-$bg-color: #fff;
+$bg-color: #ede9e3;
+// 左侧边栏中，鼠标悬停某行链接时，用该颜色高亮显示
+$bg-color-secondary: #3eaf7c30;
+// markdown 代码块中的颜色
+$code-bg-color: #282c34ee;
 
 // 网页尺寸
 $navbar-height: 3.5rem;

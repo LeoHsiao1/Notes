@@ -20,12 +20,12 @@
 // 导航栏、左侧边栏的背景颜色
 .vp-navbar,
 .vp-sidebar {
-  background-color: #ebe6dd;
+  background-color: #eeedd4;
 }
 
 // 右侧目录栏的背景颜色
 #toc .toc-wrapper {
-  background-color: #f9f9f9;
+  background-color: #faf9e8;
 }
 // 右侧目录栏中，让标题加粗显示
 #toc .toc-wrapper a.level1,
@@ -45,6 +45,14 @@ div.vp-page-title {
 }
 .theme-hope-content:not(.custom) > h1:first-child {
   display: block;
+}
+
+// markdown 代码块
+#app {
+  --code-bg-color: #3a3a3a;
+}
+.token.comment, .token.prolog, .token.cdata {
+  color: #909090;
 }
 
 // 网页左上角显示的网站名称
@@ -72,9 +80,4 @@ div.vp-hero-infos #main-title {
 }
 div.theme-hope-content blockquote {
   color: #cccccc;
-}
-
-// markdown 代码块中的注释颜色
-.token.comment, .token.prolog, .token.cdata {
-  color: #909090;
 }

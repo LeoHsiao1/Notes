@@ -43,7 +43,7 @@ Web 浏览器按以下顺序使用 CSS ，如果上一级的 CSS 不存在才使
 ## 语法
 
 ```css
-selector { [property: value;]... } 
+selector { [property: value;]... }
 ```
 
 - 一个样式表中包含一个或多个样式。
@@ -91,7 +91,7 @@ selector { [property: value;]... }
   a.red : visited {color: #FF0000}  /* 伪类可以与 CSS 类组合使用 */
   p:first-child {font-weight: bold;}
   ```
-  - link、visited、hover、active 四种伪类作用于“链接”类型的元素。
+  - link、visited、hover、active 四种伪类作用于"链接"类型的元素。
   - focus ：选择拥有键盘焦点的元素。
   - first-child ：选择元素的第一个实例。
   - lang ：选择带有 lang 属性的元素。
@@ -115,12 +115,17 @@ selector { [property: value;]... }
 
 - 一般兄弟选择器：
   ```css
-  h1 + p {margin-top:20px;}   /* 选择在 h1 元素之后、属于相同父节点的 p 元素 */
+  h1 ~ p {margin-top:20px;}   /* 选择在 h1 元素之后、属于相同父节点的 p 元素 */
   ```
 
 - 紧邻兄弟选择器：
   ```css
-  h1 + p {margin-top:20px;}   /* 选择在 h1 元素之后、属于相同父节点、且相邻的 p 元素 */
+  h1 + p {margin-top:20px;}   /* 选择紧邻在 h1 元素之后、属于相同父节点的 p 元素 */
+  ```
+
+- 子元素选择器：
+  ```css
+  p > strong {color: red;}    /* 选择 p 元素的子元素（不包括孙元素）中的 strong 元素 */
   ```
 
 - 后代选择器：
@@ -128,11 +133,6 @@ selector { [property: value;]... }
   p strong {color: red;}      /* 选择 p 元素的后代元素中的 strong 元素 */
   ```
   - 后代元素包括子元素、孙元素等。
-
-- 子元素选择器：
-  ```css
-  p > strong {color: red;}    /* 选择 p 元素的子元素中的 strong 元素 */
-  ```
 
 ### 优先级
 
@@ -415,11 +415,11 @@ CSS 根据框模型显示元素，如下图：
   - 默认内边距、边框、外边距的宽度为 0 ，框模型被元素的内容填满。
 - padding ：内边距，元素内容与边框之间的距离。
 - border ：边框。
-  - 元素的背景色、背景图片显示在边框以内的区域，称为“框内”。
-  - 边框以外的区域默认是透明的，称为“框外”。
+  - 元素的背景色、背景图片显示在边框以内的区域，称为"框内"。
+  - 边框以外的区域默认是透明的，称为"框外"。
 - margin ：外边距，边框与外部的距离。
   - 外边距可以为负值。
-- 一个块级元素有一个大的“块框”，其中的每行有一个“行框”，每行中的每个内联元素有一个“行内框”。
+- 一个块级元素有一个大的"块框"，其中的每行有一个"行框"，每行中的每个内联元素有一个"行内框"。
   - 块级元素：在一行内只能显示一个。比如 div、h1、p 等。
   - 内联元素：在一行内可以显示多个，且不能设置 width、height、margin-top、margin-bottom 属性。比如 strong、span 等。
   - 内联块元素：在一行内可以显示多个，且可以设置 width、height、margin-top、margin-bottom 属性。
@@ -472,7 +472,7 @@ border-style 的可用取值：
 
 ### 定位
 
-这里研究的元素定位，是指 “元素外边距的边界” 相对于 “其外部块的边界” 的位置。
+这里研究的元素定位，是指 "元素外边距的边界" 相对于 "其外部块的边界" 的位置。
 
 用 position 属性可设置元素的定位方式，分为四种：
 - static ：默认方式。所有元素按 HTML 中的顺序从上到下显示。

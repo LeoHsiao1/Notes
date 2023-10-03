@@ -11,7 +11,7 @@ export default hopeTheme({
   // 是否允许切换到夜晚模式的网页显示
   darkmode: "disable",
   // 是否显示一个回到网页顶部的按钮，位于网页右下角
-  backToTop: true,
+  backToTop: false,
   // 是否显示一个打印按钮，位于网页右侧目录栏
   print: false,
 
@@ -38,6 +38,7 @@ export default hopeTheme({
     center: [],
     end: ["Search", "Links", "Repo"],
   },
+  titleIcon: false,
 
   // ↓↓↓ 控制每个 markdown 文档底部的显示内容
   displayFooter: false,
@@ -46,12 +47,14 @@ export default hopeTheme({
   prevLink: false,
   nextLink: false,
   contributors: false,
-  lastUpdated: true,
+  lastUpdated: false,
   editLink: true,
+  docsBranch: 'master',
   // 几个信息显示的名称
   metaLocales: {
     editLink: "Edit on GitHub",
     lastUpdated: "lastUpdated",
+    toc: "此页目录",
   },
 
   // 是否为 markdown 文档显示目录，位于网页右侧
@@ -78,45 +81,46 @@ export default hopeTheme({
     // 启用 vuepress-plugin-sitemap2 插件，用于自动生成网站地图
     sitemap: true,
 
-    // All features are enabled for demo, only preserve features you need here
+    // vuepress-plugin-md-enhance 插件提供了多个功能，默认每个功能都为 false ，这里只启用部分功能
     mdEnhance: {
-      align: true,
+      // align: true,
       attrs: true,
-      chart: true,
-      codetabs: true,
-      demo: true,
-      echarts: true,
-      figure: true,
-      flowchart: true,
-      gfm: true,
+      // chart: true,
+      // codetabs: true,
+      // container: true,
+      // demo: true,
+      // echarts: true,
+      // figure: true,
+      // flowchart: true,
+      // gfm: true,
       imgLazyload: true,
       imgSize: true,
       include: true,
-      katex: true,
+      // katex: true,
       mark: true,
-      mermaid: true,
-      playground: {
-        presets: ["ts", "vue"],
-      },
-      presentation: ["highlight", "math", "search", "notes", "zoom"],
-      stylize: [
-        {
-          matcher: "Recommended",
-          replacer: ({ tag }) => {
-            if (tag === "em")
-              return {
-                tag: "Badge",
-                attrs: { type: "tip" },
-                content: "Recommended",
-              };
-          },
-        },
-      ],
+      // mermaid: true,
+      // playground: {
+      //   presets: ["ts", "vue"],
+      // },
+      // presentation: ["highlight", "math", "search", "notes", "zoom"],
+      // stylize: [
+      //   {
+      //     matcher: "Recommended",
+      //     replacer: ({ tag }) => {
+      //       if (tag === "em")
+      //         return {
+      //           tag: "Badge",
+      //           attrs: { type: "tip" },
+      //           content: "Recommended",
+      //         };
+      //     },
+      //   },
+      // ],
       sub: true,
       sup: true,
-      tabs: true,
+      // tabs: true,
       vPre: true,
-      vuePlayground: true,
+      // vuePlayground: true,
     },
 
   },

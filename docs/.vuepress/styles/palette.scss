@@ -1,2 +1,21 @@
-// you can change colors here
-$theme-color: #096dd9;
+// 该文件用于设置一些颜色和布局的相关变量，比如主题色、背景色、导航栏高度等
+
+// 普通文本上使用的字体
+$font-family: 'Consolas, "Microsoft YaHei", serif';
+// 用于标题元素的字体
+$font-family-heading: 'Consolas, "Microsoft YaHei", serif';
+// 代码上使用的字体
+$font-family-mono: 'Consolas, "Microsoft YaHei", serif';
+
+// 网页颜色
+$theme-color: #3eaf7c;
+$text-color: #2c3e50;
+$bg-color: #fff;
+
+// 网页尺寸
+$navbar-height: 3.5rem;
+$navbar-mobile-height: 3.5rem;
+$sidebar-width: 15rem;
+$sidebar-mobile-width: 15rem;
+$content-width: 70rem;
+$home-page-width: 60rem;

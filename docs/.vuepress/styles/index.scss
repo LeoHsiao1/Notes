@@ -1,1 +1,62 @@
-// place your custom styles here
+// 该文件用于设置一些 CSS 样式
+
+// 引入字体
+// Consolas 等宽字体，用于显示英文
+@font-face{
+  font-family: 'Consolas';
+  src:url('/Consolas.ttf') format('truetype');
+}
+// 微软雅黑字体，用于显示中文。但该字体库有几十 MB ，太大了，因此不让用户下载。如果用户电脑上没安装，则采用默认的 serif 字体
+// @font-face{
+//     font-family: 'Microsoft YaHei';
+//     src:url('/Microsoft YaHei.ttf') format('truetype');
+// }
+// MV-Boli 字体，用于显示网站标题
+@font-face{
+  font-family: 'mv boli';
+  src:url('/MV-Boli.ttf') format('truetype');
+}
+
+// 每个页面默认显示的 title 不带锚点，因此改为显示带锚点的 h1 级标题
+div.vp-page-title {
+  display: none;
+}
+.theme-hope-content:not(.custom) > h1:first-child {
+  display: block;
+}
+
+// 每个页面右侧显示的目录栏，让标题加粗显示
+div.toc-wrapper a.level1,a.level2 {
+  font-weight: bold;
+}
+div.toc-header {
+  display: none;
+}
+
+// 网页左上角显示的网站名称
+.vp-site-name {
+  font-family: 'mv boli';
+}
+
+// 配置首页
+main.vp-project-home {
+  background-color: #3d3961;
+  background-image: url(/cat.gif);
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+}
+div.vp-hero-infos #main-title {
+  color: #f8f8f8;
+  text-align: center;
+  font-family: 'mv boli';
+  font-size: 4em;
+  font-weight: normal;
+
+  // vuepress 默认给首页标题添加了一些样式，这里去掉
+  -webkit-text-fill-color: #f8f8f8;
+  margin: 2rem;
+}
+
+div.theme-hope-content blockquote {
+  color: #cccccc;
+}

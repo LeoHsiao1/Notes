@@ -1,6 +1,9 @@
-import { defineUserConfig } from "vuepress";
-import theme from "./theme.js";
-import { googleAnalyticsPlugin } from '@vuepress/plugin-google-analytics';
+import { defineUserConfig } from "vuepress"
+import theme from "./theme.js"
+import { googleAnalyticsPlugin } from '@vuepress/plugin-google-analytics'
+// import { default as anchorPlugin } from 'markdown-it-anchor'
+import { anchorPlugin } from '@vuepress/markdown'
+// import anchorPlugin from 'markdown-it-anchor';
 
 export default defineUserConfig({
   title: "LeoHsiao's Notes",
@@ -12,32 +15,19 @@ export default defineUserConfig({
   lang: 'zh-CN',
 
   // 在 HTML 中添加 head
-  // head: [["link", { rel: "icon", href: "/images/logo.png" }]],
-
-  plugins: [
-    googleAnalyticsPlugin({
-        id: 'G-YLS8VYET64',
-    }),
-
-    // vuepress-plugin-meilisearch 暂不支持 vuepress 2
-    // ['vuepress-plugin-meilisearch',
-    // {
-    //     hostUrl: 'https://meilisearch.leohsiao.com',
-    //     apiKey: 'X9UsPpbPe6ed532b8c3f8cfaf8cdcaa2fb0ff3e6637da4303eb6505c81f46ec7d859dc09',
-    //     indexUid: 'docs',
-    //     placeholder: '',
-    //     maxSuggestions: 6,
-    //     cropLength: 50,
-    // }
-    // ],
-  ],
-
   // head: [
   //   ['meta', { name: 'foo', content: 'bar' }],
   //   ['link', { rel: 'canonical', href: 'foobar' }],
   //   ['script', {}, `console.log('hello from frontmatter');`],
   // ],
 
+  plugins: [
+    googleAnalyticsPlugin({
+      id: 'G-YLS8VYET64',
+    }),
+  ],
+
+  // 读取哪些文件作为 markdown 文档
   pagePatterns: [
     "**/*.md",
     "!.vuepress",
@@ -45,11 +35,21 @@ export default defineUserConfig({
   ],
 
   markdown: {
-    // 为 markdown 文档生成目录时，提取 h1~h4 级别的标题
+    // 为 markdown 文档中的各级标题，生成 archor 锚点
+    anchor: {
+      level: [1, 2, 3, 4, 5, 6],
+      permalink: anchorPlugin.permalink.ariaHidden({
+        class: "header-anchor",
+        symbol: "#",
+        space: true,
+        placement: "before",
+      }),
+    },
+    // 为 markdown 文档生成右侧目录树时，只提取 h1~h4 级别的标题
     headers: {
       level: [1, 2, 3, 4]
     },
   },
 
   theme,
-});
+})

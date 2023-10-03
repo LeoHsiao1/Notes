@@ -1,12 +1,11 @@
 ---
-pageClass: homepage_class
+# pageClass: homepage_class
 navbar: false
 home: true
+title: LeoHsiao's Notes
 heroText: null
 tagline: null
 ---
-
-<h1 id="homepage_title">LeoHsiao's Notes</h1>
 
 > Hello 2023 !
 

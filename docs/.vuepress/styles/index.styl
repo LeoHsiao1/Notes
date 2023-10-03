@@ -1,19 +1,4 @@
-// 引入字体
-// Consolas 等宽字体，用于显示英文
-@font-face{
-    font-family: 'Consolas';
-    src:url('/Consolas.ttf') format('truetype');
-}
-// 微软雅黑的字体，用于显示中文。但该字体库有几十 MB ，太大了，因此不让用户下载。如果用户电脑上没安装，则采用默认的 serif 字体
-// @font-face{
-//     font-family: 'Microsoft YaHei';
-//     src:url('/Microsoft YaHei.ttf') format('truetype');
-// }
-// MV-Boli 字体，用于显示网站标题
-@font-face{
-    font-family: 'mv boli';
-    src:url('/MV-Boli.ttf') format('truetype');
-}
+
 
 html {
     height: 100%;   // 让网页填充全屏
@@ -24,9 +9,6 @@ body {
     color: #2c3e50;
     font-family: 'Consolas', 'Microsoft YaHei', serif;
     font-size: 16px;
-}
-body .site-name {
-    font-family: 'mv boli';
 }
 
 // 导航栏
@@ -92,21 +74,21 @@ body div[class*="language-"] pre[class*="language-"] code {
 
 
 // 自定义首页
-main.home {
-    background-image: url(/cat.gif);
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-}
-div.homepage_class {
-    background-color: #3d3961;    // 首页的背景色采用紫色
-}
-main.home #homepage_title {
-    color: #f8f8f8;
-    text-align: center;
-    font-family: 'mv boli';
-    font-size: 4em;
-    font-weight: normal;
-}
-main.home div.footer {
-    display: none;
-}
+// main.home {
+//     background-image: url(/cat.gif);
+//     background-repeat: no-repeat;
+//     background-position: 50% 50%;
+// }
+// div.homepage_class {
+//     background-color: #3d3961;    // 首页的背景色采用紫色
+// }
+// main.home #homepage_title {
+//     color: #f8f8f8;
+//     text-align: center;
+//     font-family: 'mv boli';
+//     font-size: 4em;
+//     font-weight: normal;
+// }
+// main.home div.footer {
+//     display: none;
+// }

@@ -1,9 +1,7 @@
 import { defineUserConfig } from "vuepress"
 import theme from "./theme.js"
 import { googleAnalyticsPlugin } from '@vuepress/plugin-google-analytics'
-// import { default as anchorPlugin } from 'markdown-it-anchor'
-import { anchorPlugin } from '@vuepress/markdown'
-// import anchorPlugin from 'markdown-it-anchor';
+// import { anchorPlugin } from '@vuepress/markdown'
 
 export default defineUserConfig({
   title: "LeoHsiao's Notes",
@@ -36,15 +34,15 @@ export default defineUserConfig({
 
   markdown: {
     // 为 markdown 文档中的各级标题，生成 archor 锚点
-    anchor: {
-      level: [1, 2, 3, 4, 5, 6],
-      permalink: anchorPlugin.permalink.ariaHidden({
-        class: "header-anchor",
-        symbol: "#",
-        space: true,
-        placement: "before",
-      }),
-    },
+    // anchor: {
+    //   level: [1, 2, 3, 4, 5, 6],
+    //   permalink: anchorPlugin.permalink.ariaHidden({
+    //     class: "header-anchor",
+    //     symbol: "#",
+    //     space: true,
+    //     placement: "before",
+    //   }),
+    // },
     // 在代码块中，不显示代码行号，从而简化显示内容
     code: {
       lineNumbers: false,

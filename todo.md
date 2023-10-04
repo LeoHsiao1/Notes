@@ -16,5 +16,3 @@ TODO:
     https://www.meilisearch.com/docs/learn/cookbooks/search_bar_for_docs
     https://github.com/tauri-apps/meilisearch-docsearch
   或改用 https://vuejs.press/zh/reference/plugin/docsearch.html#%E6%A0%B7%E5%BC%8F
-
-- 更新 set_sidebar.py 脚本

@@ -1,5 +1,6 @@
 // 该文件用于设置一些颜色和布局的相关变量，比如主题色、背景色、导航栏高度等
 
+/* 字体 */
 // 普通文本上使用的字体
 $font-family: 'Consolas, "Microsoft YaHei", serif';
 // 用于标题元素的字体
@@ -7,7 +8,7 @@ $font-family-heading: 'Consolas, "Microsoft YaHei", serif';
 // 代码上使用的字体
 $font-family-mono: 'Consolas, "Microsoft YaHei", serif';
 
-// 网页颜色
+/* 网页颜色 */
 $theme-color: #3eaf7c;
 $text-color: #2c3e50;
 $bg-color: #faf9de;
@@ -16,7 +17,7 @@ $bg-color-secondary: #3eaf7c30;
 // markdown 代码块中的颜色
 $code-bg-color: #3a3a3a;
 
-// 网页尺寸
+/* 网页尺寸 */
 $navbar-height: 3.5rem;
 $navbar-mobile-height: 3.5rem;
 $sidebar-width: 15rem;

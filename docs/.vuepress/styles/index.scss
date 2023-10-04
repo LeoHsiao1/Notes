@@ -1,6 +1,6 @@
 // 该文件用于设置一些 CSS 样式
 
-// 引入字体
+/* 引入字体 */
 // Consolas 等宽字体，用于显示英文
 @font-face{
   font-family: 'Consolas';
@@ -17,22 +17,23 @@
   src:url('/MV-Boli.ttf') format('truetype');
 }
 
-// 导航栏、左侧边栏的背景颜色
+/* 导航栏、左侧边栏 */
 .vp-navbar,
 .vp-sidebar {
   background-color: #eeedd4;
 }
 
-// 右侧目录栏的背景颜色
+/* 右侧目录栏 */
+// 背景颜色
 #toc .toc-wrapper {
   background-color: #faf9e8;
 }
-// 右侧目录栏中，让标题加粗显示
+// 让标题加粗显示
 #toc .toc-wrapper a.level1,
 #toc .toc-wrapper a.level2 {
   font-weight: bold;
 }
-// 右侧目录栏中，顶端显示的提示词 “此页目录”
+// 顶端显示的提示词 “此页目录”
 #toc .toc-header {
   font-size: 0.9rem;
   font-weight: normal;
@@ -47,7 +48,7 @@ div.vp-page-title {
   display: block;
 }
 
-// markdown 代码块
+/* markdown 代码块 */
 #app {
   --code-bg-color: #3a3a3a;
 }
@@ -60,7 +61,7 @@ div.vp-page-title {
   font-family: 'mv boli';
 }
 
-// 配置首页
+/* 配置首页 */
 main.vp-project-home {
   background-color: #3d3961;
   background-image: url(/cat.gif);

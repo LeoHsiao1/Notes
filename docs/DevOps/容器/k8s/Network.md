@@ -389,8 +389,18 @@ k8s 常见的几种网络通信：
 
 - 创建 Service 时，如果没有 selector ，则不会创建 EndPoints 对象，因此发向 service_ip:port 的数据包不会被转发，导致用户访问端口时无响应。
   - 此时用户可手动创建 Endpoints 对象，自定义端点地址，从而让 Service 反向代理到任意地址。
-  - 虽然是手动创建的 Endpoints ，但删除 Service 时，会自动删除与它同名的 Endpoints 。
-- 例：手动创建一个 Service 和 EndPoints ，反向代理到 k8s 集群外的 mysql
+  - 虽然是手动创建的 Endpoints ，但删除 Service 时，依然会自动删除与它同名的 Endpoints 。
+
+### EndpointSlices
+
+：端点分片，Service 的一种子对象，用于将大量端点分片存储。
+- EndpointSlices 相比 Endpoints 的优点：
+  - 增加端点容量：每个 EndPoints 对象最多记录 1000 个端点，超出的部分会截断。而每个 EndpointSlices 默认最多记录 100 个端点，并且容量满了时，k8s 会自动为 Service 添加 EndpointSlices 。
+  - 降低同步开销：一个 Service 的 EndPoints 每次变化时，需要全量同步到所有节点的 kube-proxy ，开销较大。如果将单个 EndPoints 拆分成多个 EndpointSlice ，则可以降低同步开销。
+  - 每个 Service 最多绑定一个 EndPoints 对象，两者同名。而每个 Service 可以绑定多个 EndpointSlices 对象，名称任意，但需要设置标签 `kubernetes.io/service-name: <service>` 。
+- k8s v1.19 开始默认启用 EndpointSlices 功能，创建 Service 时会同时创建 EndPoints 和 EndpointSlices 对象，但实际使用的是 EndpointSlices 。
+  - k8s 默认会将 EndPoints 中的端点拷贝到 EndpointSlices ，除非 EndPoints 设置了标签 `endpointslice.kubernetes.io/skip-mirror: "true"` 。
+- 例：手动创建一个 Service 和 EndpointSlices ，反向代理到 k8s 集群外的 mysql
   ```yml
   apiVersion: v1
   kind: Service
@@ -400,33 +410,36 @@ k8s 常见的几种网络通信：
   spec:
     clusterIP: 10.43.0.2
     ports:
-    - port: 3306
+    - name: tcp
+      port: 3306
       protocol: TCP
       targetPort: 3306
     type: ClusterIP
   ---
-  apiVersion: v1
-  kind: Endpoints
+  apiVersion: discovery.k8s.io/v1
+  kind: EndpointSlice
   metadata:
+    labels:
+      kubernetes.io/service-name: mysql
     name: mysql
     namespace: default
-  subsets:
+  addressType: IPv4
+  endpoints:
   - addresses:
-    - ip: 10.0.0.5
-    ports:
-    - port: 3306
-      protocol: TCP
+    - 10.0.0.5
+    conditions:
+      ready: true
+  # - addresses:
+  #   - 10.0.0.6
+  #   conditions:
+  #     ready: true
+  ports:
+  - name: tcp
+    port: 3306
+    protocol: TCP
   ```
-  - 此时执行 `curl mysql:3306` ，首先 DNS 解析到 10.43.0.2 ，然后流量被转发到 `curl 10.0.0.5:3306` 。
-
-### EndpointSlices
-
-：端点分片，Service 的一种子对象，用于将大量端点分片存储。
-- EndpointSlices 相比 Endpoints 的优点：
-  - 增加端点容量：每个 EndPoints 对象最多记录 1000 个端点，超出的部分会截断。而每个 EndpointSlices 默认最多记录 100 个端点，并且容量满了时，k8s 会自动为 Service 添加 EndpointSlices 。
-  - 降低同步开销：一个 Service 的 EndPoints 每次变化时，需要全量同步到所有节点的 kube-proxy ，开销较大。如果将单个 EndPoints 拆分成多个 EndpointSlice ，则可以降低同步开销。
-  - 每个 Service 最多绑定一个 EndPoints 对象，两者同名。而每个 Service 可以绑定多个 EndpointSlices 对象，名称任意，通过 `kubernetes.io/service-name` 标签记录所属的 Service 。
-- k8s v1.19 开始默认启用 EndpointSlices 功能，创建 Service 时会同时创建 EndPoints 和 EndpointSlices 对象，但实际使用的是 EndpointSlices 。
+  - 此时执行 `curl mysql:3306` ，会首先 DNS 解析到 10.43.0.2 ，然后流量被转发到 10.0.0.5:3306 。
+  - Service 与 EndpointSlices 的 port.name 必须相同，才能转发流量。
 
 ## Ingress
 

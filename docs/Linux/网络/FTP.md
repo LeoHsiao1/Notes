@@ -291,13 +291,38 @@ xferlog_file=/var/log/vsftpd.log
 - 优点：
   - sftp 与 ftp 相比，更安全。且服务器更简单，只需监听 SSH 22 端口，不需要监听 FTP 端口。
   - sftp 与 scp 相比，功能更多。
-- 例：运行 sftp 服务器
-  ```sh
-  docker run -d --rm -p 1022:22 \
-      --name sftp \
-      atmoz/sftp:alpine-3.7 \
-      root:123456:::upload      # 创建一个用户、密码，并在用户家目录下创建一个 upload 目录，分配访问权限
+- 例：用 docker-compose 部署 sftp 服务器
+  ```yml
+  version: "3"
+
+  services:
+    sftp:
+      container_name: sftp
+      image: atmoz/sftp:alpine-3.7
+      restart: unless-stopped
+      ports:
+        - '1022:22'
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        # - ./ssh:/etc/ssh/
+        - ./users.conf:/etc/sftp/users.conf:ro
+        - ./home:/home/
   ```
+  - 建议执行 `docker cp sftp:/etc/ssh/` . 拷贝 ssh 目录并挂载，避免每次重建容器时 SSH 公钥变化
+  在 users.conf 中配置账号：
+  ```sh
+  user1:123456:1001:100:files
+  user2:123456:1002:100:files
+  ```
+  这会在容器中创建一个名为 user1 的用户，登录密码为 123456 ，uid 为 1001 ，gid 为 100 。还会在用户家目录下创建一个 files 目录：
+  ```sh
+  [root@CentOS ~]# ls -alh home/user1/
+  total 0
+  drwxr-xr-x 3 root root  19 Apr 6 16:41 .      # 家目录的所有权属于 root 用户，因此 user1 用户无权修改
+  drwxr-xr-x 3 root root  18 Apr 6 16:41 ..
+  drwxr-xr-x 3 1001 100   18 Apr 6 16:41 files  # 创建的子目录 files ，会自动分配所有权给 user1 用户
+  ```
+
 - 例：使用 sftp 客户端
   ```sh
   [root@CentOS ~]# ssh -p 1022 root@10.0.0.1
@@ -310,5 +335,5 @@ xferlog_file=/var/log/vsftpd.log
   sftp> ls -alh
   drwxr-xr-x    0 0        0            4.0K Apr 6 16:41 .
   drwxr-xr-x    0 0        0            4.0K Apr 6 16:41 ..
-  drwxr-xr-x    0 1000     100          4.0K Apr 6 16:41 upload
+  drwxr-xr-x    0 1001     100          4.0K Apr 6 16:41 files
   ```

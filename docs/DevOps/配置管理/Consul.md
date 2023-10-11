@@ -67,11 +67,13 @@
       restart: unless-stopped
       ports:
         - 8300:8300
-        - 8301-8302:8301-8302
-        - 8301-8302:8301-8302/udp
+        # - 8301:8301
+        # - 8301:8301/udp
+        # - 8302:8302
+        # - 8302:8302/udp
         - 8500:8500
-        - 8600:8600
-        - 8600:8600/udp
+        # - 8600:8600
+        # - 8600:8600/udp
       volumes:
         - /etc/localtime:/etc/localtime:ro
         - ./config:/consul/config

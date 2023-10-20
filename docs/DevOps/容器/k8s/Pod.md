@@ -32,7 +32,7 @@
     containers:
     - name: nginx
       image: nginx:1.23
-      # imagePullPolicy: Always         # 拉取镜像的策略。默认为 Always ，表示每次创建容器时都要 pull 镜像。可选 IfNotPresent ，表示本机不存在该镜像时才拉取
+      # imagePullPolicy: Always
       args:                             # 容器的启动命令，这会覆盖 Dockerfile 的 CMD 指令
       - nginx
       - -c
@@ -46,7 +46,7 @@
       workingDir: /tmp                  # 容器的工作目录，这会覆盖 Dockerfile 的 WORKDIR 指令
       # terminationMessagePath: /dev/termination-log  # 默认挂载一个文件到容器内指定路径，用于记录容器的终止信息
       # terminationMessagePolicy: File
-    imagePullSecrets:                 # 拉取镜像时使用的账号密码，可指定多个 k8s secret 对象
+    imagePullSecrets:                   # 拉取镜像时使用的账号密码，从指定名称的 k8s secret 对象中读取
       - name: my_harbor
     # restartPolicy: Always             # 重启策略
     # terminationGracePeriodSeconds: 30 # kubelet 主动终止 Pod 时的宽限期，默认为 30s
@@ -55,7 +55,6 @@
     # hostPID: false                    # 是否采用宿主机的 PID namespace
     # shareProcessNamespace:false       # 是否让所有容器共用 pause 容器的 PID namespace
   ```
-  - 假设 Pod 正在使用一个镜像 nginx:1.23 ，并且 push 了一个新版本的镜像，哈希值不同，但依然命名为 nginx:1.23 。此时重建 Pod ，如果 imagePullPolicy 为 IfNotPresent ，则可能使用本机已有的旧版本的镜像。如果 imagePullPolicy 为 Always ，才能确保使用最新版本的镜像。
   - 容器内应用程序的的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
     - 如果输出到容器内的日志文件，可以增加一个 sidecar 容器，执行 `tail -f xx.log` 命令，将日志采集到容器终端。
 
@@ -126,11 +125,24 @@
         --target=<name>   # 共用指定容器的 PID namespace
     ```
 
-- 关于资源配额：
-  - 如果多个 init 容器配置了同一种配额，比如 requests.cpu、limits.cpu ，则采用这些 init 容器中最大的一个配额，作为有效值，作用于所有 init 容器的运行过程。
-  - 调度 Pod 时，节点的可用资源必须大于以下两者的较大值：
-    - 所有普通容器的 requests 配额的总和
-    - 全部 init 容器的 requests 配额的有效值
+### 拉取镜像
+
+- Pod 中每个容器可分别配置 imagePullPolicy ，表示拉取镜像的策略。
+  - 默认配置为 Always ，表示每次创建容器时都要拉取镜像。
+  - 可改为 IfNotPresent ，表示本机不存在该镜像时才拉取。
+- 例：假设制作一个镜像 nginx:1.23 ，部署成 Pod 。然后制作一个新镜像，哈希值不同，但依然命名为 nginx:1.23 ，推送到镜像仓库。当重新部署 Pod 时，
+  - 如果 imagePullPolicy 为 IfNotPresent ，则会使用本机已有的旧镜像。
+  - 如果 imagePullPolicy 为 Always ，则会拉取新镜像。
+- 每个节点的 kubelet 可以同时启动多个 Pod ，但默认以串行方式拉取镜像，即同时只拉取一个镜像。
+  - 如果想并行拉取镜像，可修改 kubelet 的配置参数：
+    ```yml
+    serializeImagePulls: false    # 取消串行拉取镜像，即采用并行拉取
+    maxParallelImagePulls: <int>  # 最多并行拉取多少个镜像，默认不限制
+    ```
+  - 评价并行拉取：
+    - 优点：避免因为一个 Pod 拉取镜像慢，而阻塞其它 Pod 拉取镜像。
+    - 缺点：如果 kubelet 同时启动多个 Pod ，且这些 Pod 采用相同的镜像，则并行拉取会重复拉取相同的镜像，反而比串行拉取慢。
+  - 如果从内网镜像仓库拉取镜像，网速很快，则建议采用串行拉取。
 
 ### env
 
@@ -599,6 +611,12 @@ spec:
     - 如果配置 requests=limits=0.1 ，远小于启动开销、高峰期开销，则启动耗时久、高峰期 Pod 资源不足。
     - 如果配置 requests=0.1、limits=2 ，则能解决上述两个问题，但 k8s 难以预测 Pod 的资源开销。如果多个这样的 Pod 调度到同一个节点上，limits 之和可能超过节点总资源，高峰期可能耗尽节点资源。
     - 如果通过 VPA 自动调整 Pod 的资源开销，则能解决上述三个问题，但比较麻烦。
+
+- Pod 包含 init 容器时，这样考虑资源配额：
+  - 如果多个 init 容器配置了同一种配额，比如 requests.cpu、limits.cpu ，则采用这些 init 容器中最大的一个配额，作为有效值，作用于所有 init 容器的运行过程。
+  - 调度 Pod 时，节点的可用资源必须大于以下两者的较大值：
+    - 所有普通容器的 requests 配额的总和
+    - 全部 init 容器的 requests 配额的有效值
 
 ### QoS
 

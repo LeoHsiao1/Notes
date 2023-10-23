@@ -4,26 +4,26 @@
 
 ### 采集日志
 
-- Filebeat 每采集一条日志文本，都会保存为 JSON 格式的对象，称为日志事件（event）。
-- Filebeat 的主要模块：
+- filebeat 每采集一条日志文本，都会保存为 JSON 格式的对象，称为日志事件（event）。
+- filebeat 的主要模块：
   - input ：输入端。
   - output ：输出端。
   - harvester ：收割机，负责采集日志。
-- Filebeat 会定期扫描（scan）日志文件，如果发现其最后修改时间改变，则创建 harvester 去采集日志。
+- filebeat 会定期扫描（scan）日志文件，如果发现其最后修改时间改变，则创建 harvester 去采集日志。
   - 对每个日志文件创建一个 harvester ，逐行读取文本，转换成日志事件，发送到输出端。
     - 每行日志文本必须以换行符分隔，最后一行也要加上换行符才能视作一行。
   - harvester 开始读取时会打开文件描述符，读取结束时才关闭文件描述符。
     - 默认会一直读取到文件末尾，如果文件未更新的时长超过 close_inactive ，才关闭。
 
-- 假设让 Filebeat 采集日志文件 A 。轮换日志文件时，可能经常出现将文件 A 重命名为 B 的情况，比如 `mv A B` 。Filebeat 会按以下规则处理：
+- 假设让 filebeat 采集日志文件 A 。轮换日志文件时，可能经常出现将文件 A 重命名为 B 的情况，比如 `mv A B` 。filebeat 会按以下规则处理：
   - 如果没打开文件 A ，则以后会因为文件 A 不存在而采集不了。
-    - 在类 Unix 系统上，当 Filebeat 打开文件时，允许其它进程重命名文件。而在 Windows 系统上不允许，因此总是这种情况。
+    - 在类 Unix 系统上，当 filebeat 打开文件时，允许其它进程重命名文件。而在 Windows 系统上不允许，因此总是这种情况。
   - 如果打开了文件 A ，则会继续读取到文件末尾，然后每隔 backoff 时间检查一次文件：
-    - 如果在 backoff 时长之内又创建文件 A ，比如 `touch A` 。则 Filebeat 会认为文件被重命名（renamed）。
+    - 如果在 backoff 时长之内又创建文件 A ，比如 `touch A` 。则 filebeat 会认为文件被重命名（renamed）。
       - 默认配置了 `close_renamed: false` ，因此会既采集文件 A ，又采集文件 B ，直到因为 close_inactive 超时等原因才关闭文件 B 。
       - 此时两个文件的状态都会记录在 registry 中，文件路径 source 相同，只是 inode 不同。
-    - 如果在 backoff 时长之后，依然没有创建文件 A 。则 Filebeat 会认为文件被删除（removed）。
-      - 默认配置了 `close_removed: true` ，因此会立即关闭文件 B 而不采集，而文件 A 又因为不存在而采集不了。此时 Filebeat 的日志如下：
+    - 如果在 backoff 时长之后，依然没有创建文件 A 。则 filebeat 会认为文件被删除（removed）。
+      - 默认配置了 `close_removed: true` ，因此会立即关闭文件 B 而不采集，而文件 A 又因为不存在而采集不了。此时 filebeat 的日志如下：
         ```sh
         2021-02-02T15:49:49.446+0800    INFO    log/harvester.go:302    Harvester started for file: /var/log/A.log      # 开始采集文件 A
         2021-02-02T15:50:55.457+0800    INFO    log/harvester.go:325    File was removed: /var/log/A.log. Closing because close_removed is enabled.   # 发现文件 A 被删除了，停止采集
@@ -31,7 +31,7 @@
 
 ### 注册表
 
-- Filebeat 会通过 registry 文件记录所有日志文件的当前状态信息（State）。
+- filebeat 会通过 registry 文件记录所有日志文件的当前状态信息（State）。
   - registry 保存在 `data/registry/` 目录下，如下：
     ```sh
     data/registry/filebeat/
@@ -69,11 +69,11 @@
 
 ### 发送日志
 
-- Filebeat 将采集的日志事件经过处理之后，会发送到输出端，该过程称为发布事件（publish event）。
+- filebeat 将采集的日志事件经过处理之后，会发送到输出端，该过程称为发布事件（publish event）。
   - event 保存在内存中，不会写入磁盘。
   - 每个 event 只有成功发送到输出端，且收到 ACK 回复，确认被接收，才视作发送成功。
     - 如果发送 event 到输出端失败，则会自动重试。直到发送成功，才更新记录。
-    - 因此，采集到的 event 至少会被发送一次。但如果在 ACK 之前重启 Filebeat ，则可能重复发送。
+    - 因此，采集到的 event 至少会被发送一次。但如果在 ACK 之前重启 filebeat ，则可能重复发送。
 
 - 一个 event 的内容示例：
   ```json
@@ -268,6 +268,7 @@
             -e          # 将 filebeat 自身的日志输出到 stderr
   ```
 - 在 k8s 中部署时，可参考[官方配置](https://github.com/elastic/beats/blob/main/deploy/kubernetes/filebeat-kubernetes.yaml) 。
+- filebeat v8.0 将 filebeat 自身日志文件的命名格式，从 `filebeat[.n]` 改为 `filebeat-<date>[-n].ndjson` 。
 
 ## 配置
 
@@ -284,10 +285,10 @@
 - filebeat.yml 的基本配置：
   ```yml
   # path.config: ${path.home}                     # 配置文件的路径，默认是项目根目录
-  # filebeat.shutdown_timeout: 0s                 # 当 Filebeat 关闭时，如果有 event 正在发送，则等待一定时间直到其完成。默认不等待
+  # filebeat.shutdown_timeout: 0s                 # 当 filebeat 关闭时，如果有 event 正在发送，则等待一定时间直到其完成。默认不等待
   # filebeat.registry.path: ${path.data}/registry # registry 文件的保存目录
   # filebeat.registry.file_permissions: 0600      # registry 文件的权限
-  # filebeat.registry.flush: 0s                   # 每当 Filebeat 发布一个 event 到输出端，隔多久才刷新 registry 文件
+  # filebeat.registry.flush: 0s                   # 每当 filebeat 发布一个 event 到输出端，隔多久才刷新 registry 文件
 
   # 配置 filebeat 自身的日志
   logging.level: info                     # 只记录不低于该级别的日志
@@ -303,7 +304,7 @@
 
 ### output
 
-- Filebeat 支持多种输出端：
+- filebeat 支持多种输出端：
   ```yml
   # 输出到终端，便于调试
   # output.console:

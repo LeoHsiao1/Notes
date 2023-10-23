@@ -32,7 +32,6 @@
 ### 注册表
 
 - Filebeat 会通过 registry 文件记录所有日志文件的当前状态信息（State）。
-  - 即使只有一个日志文件被修改了，也会在 registry 文件中写入一次所有日志文件的当前状态。
   - registry 保存在 `data/registry/` 目录下，如下：
     ```sh
     data/registry/filebeat/
@@ -42,6 +41,7 @@
     └── meta.json           # 记录一些元数据
     ```
     - 删除该目录就会重新采集所有日志文件，这会导致重复采集。
+
 - registry 中一个记录的示例：
   ```json
   {"op":"set", "id":237302}                             // 本次动作的编号
@@ -71,9 +71,9 @@
 
 - Filebeat 将采集的日志事件经过处理之后，会发送到输出端，该过程称为发布事件（publish event）。
   - event 保存在内存中，不会写入磁盘。
-  - 每个 event 只有成功发送到输出端，且收到确认接收的回复，才视作发送成功。
+  - 每个 event 只有成功发送到输出端，且收到 ACK 回复，确认被接收，才视作发送成功。
     - 如果发送 event 到输出端失败，则会自动重试。直到发送成功，才更新记录。
-    - 因此，采集到的 event 至少会被发送一次。但如果在确认接收之前重启 Filebeat ，则可能重复发送。
+    - 因此，采集到的 event 至少会被发送一次。但如果在 ACK 之前重启 Filebeat ，则可能重复发送。
 
 - 一个 event 的内容示例：
   ```json
@@ -275,7 +275,7 @@
   ```yml
   name: 'filebeat-001'        # 该 Beat 的名称，默认使用当前主机名
   tags: ['json']              # 给每条日志加上标签，保存到一个名为 tags 的字段中，便于筛选日志
-  fields:                     # 给每条日志加上字段，这些字段默认保存到一个名为 fields 的字段的子字典中
+  fields:                     # 给每条日志加上字段，这些字段默认保存为一个名为 fields 的字段的子字段
     project: test
   fields_under_root: false    # 是否将 fields 的各个字段保存为日志的顶级字段，此时如果与已有字段重名则会覆盖
   ```
@@ -391,22 +391,22 @@
   - type: log
     # enabled: true                 # 是否启用该输入项
     paths:
-      - '/var/log/apache/*'
+      - '/var/log/nginx/*'
 
     # fields:                       # 覆盖全局的 General 配置项
     #   project: test
-    #   logformat: apache
+    #   logformat: nginx
     # fields_under_root: true
 
-    # 如果启用任何一个以 json 开头的配置项，则会将每行日志文本按 JSON 格式解析，解析的字段默认保存到一个名为 json 的字段的子字典中
+    # 如果启用任何一个以 json 开头的配置项，则会将每行日志文本按 JSON 格式解析，解析的字段默认保存为一个名为 json 的字段的子字段
     # 解析 JSON 的操作会在 multiline 之前执行。因此建议让 filebeat 只执行 multiline 操作，将日志发送到 Logstash 时才解析 JSON
     # 如果 JSON 解析失败，则会将日志文本保存在 message 字段，然后输出
-    # json.add_error_key: true      # 如果解析出错，则加入 error.message 等字段
+    # json.add_error_key: true      # 如果解析出错，则给 event 添加 error.message 等字段
     # json.message_key: log         # 指定存储日志内容的字段名。如果指定了该字段，当该字段为顶级字段、取值为字符串类型时，会进行 multiline、include、exclude 操作
-    # json.keys_under_root: false   # 是否将解析的字典保存为日志的顶级字段
+    # json.keys_under_root: false   # 是否将解析出的 JSON 字段保存为 event 的顶级字段
     # json.overwrite_keys: false    # 在启用了 keys_under_root 时，如果解析出的字段与原有字段冲突，是否覆盖
 
-    # 默认将每行日志文本视作一个日志事件，可以通过 multiline 规则将连续的多行文本记录成同一个日志事件
+    # 默认将每行日志文本视作一个 event ，可以通过 multiline 规则将连续的多行文本记录成同一个 event
     # multiline 操作会在 include_lines 之前执行
     # multiline.type: pattern       # 采用 pattern 方式，根据正则匹配处理多行。也可以采用 count 方式，根据指定行数处理多行
     # multiline.pattern: '^\s\s'    # 如果一行文本与 pattern 正则匹配，则按 match 规则与上一行或下一行合并
@@ -443,7 +443,42 @@
   ```
   - 配置时间时，默认单位为秒，可使用 1、1s、2m、3h 等格式的值。
 
-- 可以启用 filebeat 的一些内置模块，自动采集一些系统或流行软件的日志文件，此时不需要用户自行配置。
+- filebeat v7.14 新增了输入类型 `type: filestream` ，是 `type: log` 的改进版。
+  - `type: log` 的特点：
+    - 每次成功发布日志事件到输出端，就会重写一次 registry 文件，从而更新日志文件的当前状态（主要是 offset ）。因此需要频繁 fsync 到磁盘，开销较大。
+    - 解析日志文本时，只能采用 json 或 multiline 格式。
+  - `type: filestream` 的特点：
+    - 将 offset 更新信息以 append 方式写入磁盘的 `data/registry/log.json` 文件，达到 10MB 时才重写一次 registry 文件，因此大幅减少了 fsync 。
+    - 解析日志文本时，可依次采用多个 parsers 。
+  - 例：
+    ```yml
+    - type: filestream
+      id: mysql-filestream        # 每个 filestream 需要配置一个唯一 ID
+      paths:
+      - /var/log/mysql.log
+      # fields:
+      #   project: test
+      #   logformat: nginx
+      # fields_under_root: true
+      # exclude_lines: ...
+      # include_lines: ...
+      parsers:                    # 配置一组解析日志文本的规则
+      - ndjson:                   # 按 JSON 格式解析
+          target: ""              # 将解析出的 JSON 字段保存为哪个字段的子字段，取值为空表示保存为顶级字段
+          # overwrite_keys: true  # 如果解析出的字段与原有字段冲突，是否覆盖
+          # add_error_key: true   # 如果解析出错，则给 event 添加 error.message 等字段
+          # message_key: msg      # 可选，对 JSON 中某个字段执行 multiline 规则
+      - multiline:
+          type: pattern
+          pattern: '^\s\s'
+      # - container:              # 解析容器的日志文件
+      #     stream: all           # 默认会读取 stdout 和 stderr
+      #     format: auto          # 表示容器日志的格式是 docker 还是 cri ，默认为 auto ，会自动识别
+      # - syslog:                 # 解析系统日志
+      #     format: auto
+    ```
+
+- 可启用 filebeat 的一些内置模块，自动采集一些系统或流行软件的日志文件，此时不需要用户自行配置。
   - 命令：
     ```sh
     ./filebeat modules

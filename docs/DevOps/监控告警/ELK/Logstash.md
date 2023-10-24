@@ -49,7 +49,7 @@
 
 ## 配置
 
-- Logstash 的配置目录的结构如下：
+- logstash 的配置目录的结构如下：
   ```sh
   config/
   ├── conf.d/               # 存放一些管道的定义文件
@@ -90,8 +90,8 @@
 
 ### 原理
 
-- Linux 系统上一般通过管道符筛选日志，比如 `cat test.log | grep ERROR'` 。而 Logstash 处理数据的机制也称为管道（pipeline），每条数据称为一个事件（event）。
-- Logstash 可以运行多个管道，每个管道分为三个阶段：
+- Linux 系统上一般通过管道符筛选日志，比如 `cat test.log | grep ERROR'` 。而 logstash 处理数据的机制也称为管道（pipeline），每条数据称为一个事件（event）。
+- logstash 可以运行多个管道，每个管道分为三个阶段：
   - input ：输入数据。
   - filter ：过滤、修改数据。该阶段可以省略。
   - output ：输出数据。
@@ -99,7 +99,7 @@
 ### 示例
 
 通过命令行创建管道的示例：
-1. 启动 Logstash ，运行一个简单的管道：
+1. 启动 logstash ，运行一个简单的管道：
     ```sh
     bin/logstash -e 'input { stdin { } } output { stdout {} }'
     ```
@@ -162,9 +162,9 @@
         # password            => "123456"
         # ssl_certificate_verification => true                            # 使用 HTTPS 连接时，是否验证 SSL 证书
         # http_compression    => false                                    # 是否对请求 body 进行 gzip 压缩
-        # index               => "logstash-%{+yyyy.MM.dd}"                # 指定写入的索引名。可通过 %{} 插入变量，比如 %{[field]][sub_field]}
+        # index               => "%{project}-%{+yyyy.MM.dd}"              # 指定写入的索引名。可通过 %{} 插入变量
         # document_id         => "%{[@metadata][_id]}"                    # 指定写入的文档 id 。如果已存在相同 id 的文档，则会覆盖它
-        # manage_template     => true                                     # Logstash 启动时，是否自动在 ES 中创建索引模板
+        # manage_template     => true                                     # logstash 启动时，是否自动在 ES 中创建索引模板
         # template            => "/path/to/logstash/logstash-apache.json" # template 的配置文件，默认使用内置的模板
         # template_name       => "logstash"                               # template 的名称
         # template_overwrite  => false                                    # 如果 ES 中已存在同名 template ，是否覆盖它
@@ -178,9 +178,12 @@
       - 如果 HTTP 响应码为 409 conflict ，则不会重试，丢弃 event 。
       - 如果 HTTP 响应码为 400 mapper_parsing_exception 或 404 ，表示不能重试，则打印报错日志，丢弃 event 。
         - 可启用死信队列，将这些 event 保存到 `data/dead_letter_queue/` 目录下，然后可通过 input.dead_letter_queue 插件读取。
-      - 如果 HTTP 响应码为 403 pressure too high ，表示 ES 负载过大，拒绝了 bulk 请求。此时会自动重试，但这会导致 ES 的负载更大，可能返回 503 Unavailable ，最终导致 Logstash 放弃重试。因此建议增加 retry 的间隔。
+      - 如果 HTTP 响应码为 403 pressure too high ，表示 ES 负载过大，拒绝了 bulk 请求。此时会自动重试，但这会导致 ES 的负载更大，可能返回 503 Unavailable ，最终导致 logstash 放弃重试。因此建议增加 retry 的间隔。
+    - 输出 event 到 ES 的某个 index 时，日期后缀 `%{+yyyy.MM.dd}` 取决于 @timestamp 字段的值。
+      - filebeat、logstash、ES 三个软件都要求每条数据包含 @timestamp 字段，采用 UTC 时区。
+      - 在 Kibana 的 Discover 网页中查询日志时，会自动将 ES 中存储的 @timestamp 字段，转换成用户浏览器的本地时区，然后显示。
 
-2. 启动 Logstash ，运行指定的管道：
+2. 启动 logstash ，运行指定的管道：
     ```sh
     bin/logstash -f config/pipeline.conf --log.level=debug
     ```
@@ -261,7 +264,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
   ```sh
   plain         # 纯文本，即不进行处理
   line          # 用于解码输入时，将每行文本视作一个 event 。用于编码输出时，将每个 event 保存成一行文本
-  multiline     # 将连续的多行文本视作同一个 event 。不过该操作可以由 Beats 完成，减轻 Logstash 的工作量
+  multiline     # 将连续的多行文本视作同一个 event 。不过该操作可以由 Beats 完成，减轻 logstash 的工作量
   json          # 按 JSON 格式处理，忽略换行符、缩进
   json_lines    # 根据换行符 `\n` 将文本分成多行，每行视作一个 JSON 格式的 event
   rubydebug     # 按 Ruby 调试信息的格式处理

@@ -78,7 +78,7 @@
 - 一个 event 的内容示例：
   ```json
   {
-    "@timestamp":"2021-02-02T12:03:21.027Z",  // 自动加上该字段，记录当前时间戳
+    "@timestamp":"2021-02-02T12:03:21.027Z",  // 自动加上时间戳字段
     "@metadata":{
       "beat": "filebeat",
       "type": "_doc",

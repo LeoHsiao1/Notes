@@ -90,18 +90,23 @@ TCP segment 的结构如下：
   ![](./socket_1.png)
 
   1. client 发送一个 SYN=1 的 TCP 包给 server ，表示请求连接到 server 的指定一个 TCP 端口。
-  2. server 收到后，回复一个 ACK=1、SYN=1 的 TCP 包，表示接受对方的连接，且自己也请求连接。
+      - client 发送 SYN 包之后，如果超过一定时间未收到 server 的回复，则认为丢包了，于是重传 SYN 包。
+  2. server 收到后，回复一个 ACK=1、SYN=1 的 TCP 包，表示接受对方的连接，而且自己也请求连接。
       - 如果 client 收到该包，就证明自己发送的包能被对方接收，而对方发送的包也能被自己接收。因此从 client 的角度来看，判断双方能相互通信。
+      - server 发送 SYN+ACK 包之后，如果超过一定时间未收到 client 的回复，则认为丢包了，于是重传 SYN+ACK 包。
   3. client 收到后，发送一个 ACK=1 的 TCP 包，表示接受对方的连接，从而正式建立连接。
       - 如果 server 收到该包，则从 server 的角度来看，判断双方能相互通信。
-      - 如果 server 一直未收到 ACK 包，处于 SYN_RECV 状态，则会在超时之后重新发送 SYN+ACK 包，再次等待。多次超时之后，server 会关闭该连接。
-      - 三次握手的总耗时大概为 1.5 倍 RTT 。不过在第三步，client 发出 ACK 包之后，通常认为已成功建立 TCP 连接，client 可以开始发送消息。对 client 而言，建立 TCP 连接的耗时大概为 1 倍 RTT 。
+      - 如果 server 未收到该包（比如丢包了），则 server 处于 SYN_RECV 状态，client 处于 ESTABLISHED 状态。
+        - 正常情况下，client 发出 ACK 包之后，通常认为已成功建立 TCP 连接，会开始发送携带正式 payload 的 TCP 包。而正式通信的 TCP 包总是包含 ACK=1 ，因此也会使得 server 进入 ESTABLISHED 状态。
+        - 恶意情况下，client 可能一直不发出 ACK 包，使得 server 长时间处于 SYN_RECV 状态。如果有大量这样未完成的 TCP 连接，则会占用 server 的大量资源，造成 SYN FLOOD 攻击。
 
 - 建立 TCP 连接时的 Socket 状态变化：
   - `LISTEN`      ：server 正在监听该 Socket ，允许接收 TCP 包。
   - `SYN_SENT`    ：client 已发出 SYN=1 的 TCP 包，还没有收到 SYN+ACK 包。
   - `SYN_RECV`    ：server 已收到 SYN 包，还没有收到 ACK 包。
   - `ESTABLISHED` ：已建立连接。
+
+- 三次握手的总耗时大概为 1.5 倍 RTT 。不过在第三步，client 发出 ACK 包之后，通常立即进入 ESTABLISHED 状态。从 client 的角度来看，建立 TCP 连接的耗时大概为 1 倍 RTT 。
 
 ### 关闭连接
 
@@ -234,7 +239,7 @@ TCP segment 的结构如下：
   - 发送方设置的 RTO ，应该略大于 RTT 。
     - 如果 RTO 比 RTT 大很多，则 TCP 包丢失时，要等更久时间才重发。
     - 如果 RTO 比 RTT 小很多，则 TCP 包没有丢失时，也容易重发，加剧网络拥塞。
-    - 例如 Linux 会根据网络最近一段时间的 RTT 平均值，动态设置 RTO 。每触发一次超时重传，就会把 RTO 翻倍，然后继续统计 RTT 。
+    - 例如 Linux 会根据网络最近一段时间的 RTT 平均值，动态设置 RTO 。每触发一次超时重传，就会将 RTO 翻倍，然后继续统计 RTT 。
 
 - 快速重传（Fast retransmit）
   - ：如果发送方重复收到 3 个 Ack number = N 的包，则认为 Seq number = N 的包传输失败，不等超时就立即重传。
@@ -424,5 +429,5 @@ TCP segment 的结构如下：
 
 - 比较 TCP 与 UDP 协议。
   - 早期计算机网络的通常带宽低、丢包率高，因此 UDP 通信的质量差，大部分应用只能采用 TCP 通信。
-  - 目前计算机网络的质量变好，城域网基本不丢包，因此一些应用从 TCP 改用 UDP ，从而降低通信开销。
-    - 特别是在一些机房内网中，主机之间进行高速网络通信。如果采用 TCP 协议，则会因为三次握手、差错控制等因素增加通信延迟、通信开销。
+  - 目前计算机网络的质量变好，城域网基本不丢包，因此一些软件从 TCP 改用 UDP ，希望提高通信效率。
+    - 特别是在一些机房内网中，主机之间进行高速网络通信。采用 TCP 协议时，会因为三次握手、顺序控制、差错控制等因素，明显增加通信延迟、通信开销。

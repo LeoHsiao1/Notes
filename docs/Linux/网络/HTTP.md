@@ -71,10 +71,38 @@ curl <URL>...                   # 访问指定网址（默认为 GET 方法）�
       ```sh
       curl 127.0.0.1 2> /dev/null
       ```
-- 虽然 curl 命令提供的 HTTP 客户端的功能少，不如浏览器。但日常工作中经常要用 curl 命令下载文件，或进行测试。
-  - 执行 `curl <ip>:<port>` ，可测试本机能否向某个端口建立 TCP 连接。这里也可用 telnet 命令测试。
+
+### 网络测试
+
+- 虽然 curl 命令提供的 HTTP 客户端的功能少，不如浏览器。但使用 Linux 服务器时，经常要用 curl 命令下载文件，或进行网络测试。
+  - 执行 `curl $ip:$port` ，可测试本机能否向某个 ip 的某个 port 建立 TCP 连接。这里也可用 telnet 命令测试。
   - 执行 `curl cip.cc` ，可查询本机使用的公网 IP 、地理位置。
   - 执行 `curl -v -X GET https://httpbin.org/get -H "accept: application/json"` ，可测试本机发出的 HTTP headers 有哪些。
+
+- 假设需要测试主机 A 能否访问主机 B 的某个 TCP 端口，则可在主机 A 上执行命令 `curl $ip:$port` 。curl 命令在发送 HTTP 请求之前，会先向主机 B 发送 SYN=1 的 TCP 包，请求建立 TCP 连接。
+  - 如果主机 B 的防火墙禁用了该端口，采用 `iptables -j REJECT` 方式拒绝通信，则会导致主机 A 报错：`No route to host`
+  - 如果主机 B 的防火墙放通了该端口，但没有进程在监听该 socket ，则会回复一个 RST 包，表示拒绝连接，导致主机 A 报错：`Connection refused` 。例：
+    ```sh
+    [root@CentOS ~]# curl 127.0.0.1
+    curl: (7) Failed connect to 127.0.0.1:80; Connection refused
+    ```
+  - 如果主机 A 长时间没有收到回复（连拒绝信息都没收到），则会在超时之后报错：`Connection timed out` 。可能是以下原因：
+    - 主机 A 与主机 B 的网络不连通。此时可进一步测试，通过 ping 命令尝试访问主机 B ，有两种结果：
+      - 能 ping 通主机 B ，说明网络连通，只是主机 B 的防火墙 drop 了发向该端口的 TCP 包。
+      - 不能 ping 通主机 B ，可能是以下原因：
+        - 的确网络不连通。
+        - 主机 B 的防火墙把 ICMP 协议也禁用了。
+    - 也可能是主机 B 的防火墙禁用了该端口，采用 `iptables -j DROP` 方式丢包。
+
+- 当主机 A 与主机 B 成功建立 TCP 连接之后，主机 B 突然关闭 TCP 连接时：
+  - 如果主机 A 继续读取数据，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset`
+  - 如果主机 A 继续发送数据，主机 B 就会回复一个 RST 包，导致主机 A 报错：`Connection reset by peer` 。例：
+    ```sh
+    [root@CentOS ~]# curl 127.0.0.1:22
+    SSH-2.0-OpenSSH_7.4
+    Protocol mismatch.
+    curl: (56) Recv failure: Connection reset by peer
+    ```
 
 ## wget
 

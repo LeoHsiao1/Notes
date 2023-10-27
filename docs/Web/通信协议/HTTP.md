@@ -256,11 +256,13 @@ Content-Type: text/html; charset=utf-8
 
 ## 版本
 
+- Tim Berners-Lee 发明 Web 服务时，设计了简单的 HTTP 协议。后来由互联网工程任务组（IETF）负责制定 HTTP 协议的标准。
 - HTTP 协议存在多个版本，服务器、客户端程序不一定兼容所有版本的特性。
 
 ### HTTP/1.0
 
-- 于 1996 年发布。
+- 于 1996 年由 IETF 发布。
+
 - 特点：无连接。
   - client 访问 server 时，需要先建立 TCP 连接，再发送 HTTP 请求报文。而 server 发送响应报文之后，就会主动关闭该 TCP 连接。
     - 因此每次 HTTP 通信之后，不会长时间保持 TCP 连接，称为无连接。
@@ -277,15 +279,14 @@ Content-Type: text/html; charset=utf-8
 
 ### HTTP/1.1
 
-- 于 1997 年发布。向下兼容 HTTP/1.0 。
+- 于 1997 年由 IETF 发布，向下兼容 HTTP/1.0 。
 - 默认启用 TCP 长连接，除非在请求报文 Headers 中加入 `Connection: close` 。
 - 增加 PUT、DELETE 等请求方法。
 - 增加 Host、Upgrade、Cache-Control 等 Headers 。
 
 ### HTTP/2.0
 
-- 于 2015 年发布。
-
+- 于 2015 年由 IETF 发布，不兼容 HTTP/1 。
 - 所有 header 采用小写字母。
 - 将 HTTP/1 报文开头的请求行、状态行拆分成几个伪标头（Pseudo Header），例如：
   ```sh
@@ -314,9 +315,14 @@ Content-Type: text/html; charset=utf-8
     - 假设客户端先后发出 a、b、c 三个请求报文，如果某个请求报文没传输完，则之后的请求报文都不能开始传输。该问题称为队头堵塞（Head-of-line blocking）。同理，服务器也只能按 a、b、c 的顺序回复响应报文。
   - HTTP/2 的每个 HTTP 报文会分成多个 Frame ，这些 Frame 包含同样的 Stream ID ，标识它们属于同一个 HTTP 报文、同一个通信流（Stream）。
     - 因此客户端可以并行发送多个请求报文，服务器可以并行发送多个响应报文，实现时分多路复用，大幅提高通信效率。
-  - 与 HTTP/1 相比，TCP 多路复用的优点：
+  - 因为 TCP 多路复用，HTTP/2 与 HTTP/1 相比，存在以下优点：
     - 不必多次创建 TCP 连接，减少了耗时、Socket 数量。
     - 共用一个 TCP 连接时，因为 TCP 慢启动，能提高传输速度。
+  - 不过 HTTP/2 不能保证总是并行传输，可能降级为串行传输。
+    - 每个 TCP 连接只能传输一个通信流，可以同时发送多个 TCP 包，但所有 TCP 包必须按顺序被接收。
+    - 假设同时发送多个 HTTP 请求报文，封装为多个 TCP 包之后发送。如果某个 TCP 包未被接收，则之后所有 TCP 包都不能被接收，处于阻塞等待状态。
+    - 综上，HTTP/2 解决了 HTTP 应用层的队头阻塞，但没有解决 TCP 传输层的队头阻塞。
+    - 当丢包率较高时，HTTP/2 加载网页的速度，还不如 HTTP/1 建立多个 TCP 连接来通信。
 
 - 支持服务器主动推送多个响应报文给浏览器，该操作称为 Server Push 。
   - 采用 HTTP/1 协议时，浏览器访问网页的一般流程：
@@ -351,36 +357,3 @@ Content-Type: text/html; charset=utf-8
   - 缺点：
     - 服务器主动推送的资源，浏览器可能并不需要，或者浏览器之前已获取并缓存了，造成无用的网络传输。
     - 目前 Server Push 技术没有普及。2022 年，Chrome 106 开始默认禁用 Server Push 功能。
-
-
-
-
-
-<!-- ### HTTP/3.0
-
-
-- 采用的传输层协议从 TCP 改为 QUIC 。
- -->
-
-
-
-
-
-## Basic Auth
-
-：HTTP 协议定义的一种简单的身份认证方式。
-- 原理：HTTP 客户端将用户名、密码以明文方式发送给 HTTP 服务器，如果服务器认证通过则允许客户端访问，否则返回 HTTP 401 报文。
-  - 例如，当用户使用 Web 浏览器访问该 HTTP 服务器时，通常会显示一个对话框，要求输入用户名、密码即可。
-  - 实际上，HTTP 客户端会将 `username:password` 经过 Base64 编码之后，放在 HTTP Header 中发送给 HTTP 服务器。如下：
-    ```sh
-    curl 127.0.0.1 -H "Authorization: Basic YWRtaW46MTIzNA=="
-    ```
-  - 大部分 HTTP 客户端也支持按以下格式发送用户名、密码：
-    ```sh
-    curl http://username:password@127.0.0.1:80
-    ```
-  - Basic Auth 没有通过 Cookie 记录用户登录状态，因此浏览器重启之后，用户需要重新登录。
-- 优点：过程简单，容易实现。
-- 缺点：通过 HTTP Header 将用户名、密码以明文方式传输，容易泄露。
-- URL 中，`username:password@host:port` 三个字段的组合称为 authority 。
-  - 例如 URL 为 `http://test:123456@127.0.0.1:80/index.html` 时，authority 为 `test:123456@127.0.0.1:80` 。

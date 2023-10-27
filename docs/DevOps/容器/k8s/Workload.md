@@ -98,9 +98,10 @@
       - 执行 `kubectl rollout restart <deployment>` 命令，则会按 strategy 策略重启 Deployment ，可实现滚动重启，又称为热重启。
     - 缺点：
       - 短期部署的 Pod 实例会比平时多 maxSurge 个，占用更多服务器资源。
-      - 新旧 Pod 短期内会同时运行，可能引发冲突，比如同时访问挂载的数据卷。
+      - 新旧 Pod 短期内会同时运行，可能引发冲突，比如挂载了同一个数据卷并同时访问。
       - 旧 Pod 被终止时，不会接受新请求，但可能还有旧请求未处理完，比如还有客户端的 TCP 连接在传输数据。
-        - 可以给容器添加 preStop 钩子，等准备好了才终止容器。这样能实现零中断的滚动更新。
+        - 可以给容器添加 preStop 钩子，等准备好了才终止容器，实现优雅终止（Graceful Shutdown）。
+        - 实现了 Graceful Shutdown 时，Deployment 的滚动重启就能保证 TCP 连接零中断，不会被用户感知到，又称为优雅重启（Graceful Restart）、平滑重启。
   - Recreate
     - ：直接重建。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
 

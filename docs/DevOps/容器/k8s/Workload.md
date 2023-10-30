@@ -287,7 +287,7 @@
 - StatefulSet 的更新部署策略（updateStrategy），与 DaemonSet 的 strategy 相似，有两种：
   - RollingUpdate
     - ：滚动更新，这是默认策略。
-    - 按从小到大的序号逐个更新 Pod 。先删除序号为 n 的旧版 Pod ，然后创建序号为 n 的新版 Pod ，等它变为 Ready 状态，才更新序号为 n-1 的 Pod 。
+    - 按序号从大到小的顺序，逐个更新 Pod 。先删除序号为 n 的旧版 Pod ，然后创建序号为 n 的新版 Pod ，等它变为 Ready 状态，才更新序号为 n-1 的 Pod 。
     - 设置了 updateStrategy.rollingUpdate.partition 时，则会将该 StatefulSet 的所有 Pod 分为两个分区：
       - 旧分区：序号小于 partition 的 Pod 。这些 Pod 会一直采用设置 partition 时的那个版本，即使更新 StatefulSet 、删除重建 Pod ，也会停留在旧版本。
       - 新分区：序号大于等于 partition 的 Pod ，会正常更新部署。

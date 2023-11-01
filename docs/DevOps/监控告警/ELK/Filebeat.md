@@ -31,18 +31,23 @@
 
 ### 注册表
 
-- filebeat 会通过 registry 文件记录所有日志文件的当前状态信息（State）。
-  - registry 保存在 `data/registry/` 目录下，如下：
-    ```sh
-    data/registry/filebeat/
-    ├── 237302.json         # 快照文件，使用最后一次动作的编号作为文件名
-    ├── active.dat          # 记录快照文件的路径
-    ├── log.json            # 记录日志文件的状态。该文件体积超过 10 MB 时会自动清空，并将此时所有文件的状态保存到快照文件中
-    └── meta.json           # 记录一些元数据
-    ```
-    - 删除该目录就会重新采集所有日志文件，这会导致重复采集。
+- filebeat 通常会监听多个日志文件，当有新增日志时，就自动采集。
+  - 监听日志文件时，需要记录一些重要信息，比如：日志文件的路径、inode 、已采集到第几行日志（表示为字节偏移量）
+  - filebeat 将它采集的所有日志文件的状态信息（state）记录在内存中，统称为注册表（registry）。
 
-- registry 中一个记录的示例：
+- 为了避免 filebeat 重启时丢失内存中的 registry 数据，filebeat 还会将 registry 数据备份到 `data/registry/` 磁盘目录下。如下：
+  ```sh
+  data/registry/filebeat/
+  ├── 237302.json         # registry 快照文件，记录所有日志文件的当前状态，采用最后一次动作的编号作为文件名
+  ├── active.dat          # 记录最新一个快照文件的绝对路径
+  ├── log.json            # registry 日志文件，记录最近执行的一连串动作的日志
+  └── meta.json           # registry 的元数据
+  ```
+  - filebeat 可能每秒采集多个日志文件，也就是执行大量动作。每执行一个动作，就记录日志到 log.json 文件中，代表某个日志文件的状态发生变化（主要是已采集的 offset 变化）。
+  - 为了避免 log.json 文件体积过大，默认当 log.json 文件达到 10MB 时，filebeat 会清空该文件，重新写入。并将所有日志文件的当前状态记录成快照文件 xxx.json 。
+  - 如果删除该目录，则 filebeat 会重新采集所有日志文件，这会导致重复采集。
+
+- filebeat 每执行一个动作，会在 log.json 文件中记录两行 JSON 日志，如下：
   ```json
   {"op":"set", "id":237302}                             // 本次动作的编号
   {
@@ -63,9 +68,10 @@
     }
   }
   ```
-  - 采集每个日志文件时，会记录已采集的字节偏移量（bytes offset）。
-    - 每次 harvester 读取日志文件时，会从 offset 处继续采集。
-    - 如果 harvester 发现文件体积小于已采集的 offset ，则认为文件被截断了，会从 offset 0 处重新开始读取。这可能会导致重复采集。
+
+- filbeat 采集每个日志文件时，会通过 registry 记录已采集的字节偏移量（bytes offset）。
+  - 每次 harvester 读取日志文件时，会从 offset 处继续采集。
+  - 如果 harvester 发现文件体积小于已采集的 offset ，则认为文件被截断了，会从 offset 0 处重新开始读取。这可能会导致重复采集。
 
 ### 发送日志
 
@@ -286,9 +292,9 @@
   ```yml
   # path.config: ${path.home}                     # 配置文件的路径，默认是项目根目录
   # filebeat.shutdown_timeout: 0s                 # 当 filebeat 关闭时，如果有 event 正在发送，则等待一定时间直到其完成。默认不等待
-  # filebeat.registry.path: ${path.data}/registry # registry 文件的保存目录
+  # filebeat.registry.path: ${path.data}/registry # registry 磁盘目录
   # filebeat.registry.file_permissions: 0600      # registry 文件的权限
-  # filebeat.registry.flush: 0s                   # 每当 filebeat 发布一个 event 到输出端，隔多久才刷新 registry 文件
+  # filebeat.registry.flush: 0s                   # 每当 filebeat 发布一个 event 到输出端，等多久才记录到 registry 日志文件。v8.3 版本将默认值从 0s 改为 1s
 
   # 配置 filebeat 自身的日志
   logging.level: info                     # 只记录不低于该级别的日志
@@ -434,9 +440,9 @@
     # close_removed: true           # 如果 harvester 读取到文件末尾之后，检查发现日志文件被删除，则立即关闭
     # close_renamed: false          # 如果 harvester 读取到文件末尾之后，检查发现日志文件被重命名，则立即关闭
 
-    # 配置 clean_* 参数可以自动清理 registry 文件，但可能导致遗漏采集，或重复采集
-    # clean_removed: true           # 如果日志文件在磁盘中被删除，则从 registry 中删除它
-    # clean_inactive: 0s            # 如果日志文件长时间未活动，则从 registry 中删除它。默认不限制时间。其值应该大于 scan_frequency + ignore_older
+    # 配置 clean_* 参数可以自动清理 registry 快照文件，避免它体积过大，但可能导致遗漏采集，或重复采集
+    # clean_removed: true           # 如果某个日志文件在磁盘中被删除，则从 registry 快照文件中删除它
+    # clean_inactive: 0s            # 如果某个日志文件长时间未活动，则从 registry 快照文件中删除它。默认不限制时间。其值应该大于 scan_frequency + ignore_older
 
     # 给该日志源单独配置 processors
     # processors:
@@ -444,12 +450,12 @@
   ```
   - 配置时间时，默认单位为秒，可使用 1、1s、2m、3h 等格式的值。
 
-- filebeat v7.14 新增了输入类型 `type: filestream` ，是 `type: log` 的改进版。
+- filebeat v7.14 弃用了输入类型 `type: log` ，建议用户改用 `type: filestream` 。
   - `type: log` 的特点：
-    - 每次成功发布日志事件到输出端，就会重写一次 registry 文件，从而更新日志文件的当前状态（主要是 offset ）。因此需要频繁 fsync 到磁盘，开销较大。
+    - 每次成功发布日志事件到输出端，就会重写一次 registry 快照文件，从而更新日志文件的当前状态（主要是 offset ）。因此需要频繁 fsync 到磁盘，开销较大。
     - 解析日志文本时，只能采用 json 或 multiline 格式。
   - `type: filestream` 的特点：
-    - 将 offset 更新信息以 append 方式写入磁盘的 `data/registry/log.json` 文件，达到 10MB 时才重写一次 registry 文件，因此大幅减少了 fsync 。
+    - 将 offset 更新信息以 append 方式写入 registry 日志文件，默认达到 10MB 时才重写一次 registry 快照文件，因此大幅减少了 fsync 的次数。
     - 解析日志文本时，可依次采用多个 parsers 。
   - 例：
     ```yml

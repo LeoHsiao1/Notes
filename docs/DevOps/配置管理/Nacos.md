@@ -5,7 +5,7 @@
 - 发音为 `/nɑ:kəʊs/` 。
 - 2018 年由阿里巴巴公司开源，采用 Java 开发。
 - 优点：
-  - 在中国比较流行，与 Spring Cloud 框架做了适配。
+  - 在中国 Java 程序员中比较流行，与 Spring Cloud 框架做了适配。
 - 缺点：
   - 功能、性能不如 Consul 。
   - 启动慢，可能要几分钟。
@@ -27,10 +27,11 @@
       image: nacos/nacos-server:v2.2.2
       restart: unless-stopped
       environment:
-        JVM_XMS: 1G
-        JVM_XMX: 1G
+        JVM_XMS: 2G
+        JVM_XMX: 2G
         MODE: standalone
-        NACOS_AUTH_ENABLE: 'true'
+        EMBEDDED_STORAGE: embedded    # 采用内置数据库
+        NACOS_AUTH_ENABLE: 'true'     # 让 API 启用密码认证
         NACOS_AUTH_TOKEN: ***         # 用于生成客户端的 accessToken
         NACOS_AUTH_IDENTITY_KEY: ***  # 用于 Nacos 集群节点之间的身份认证
         NACOS_AUTH_IDENTITY_VALUE: ***
@@ -42,6 +43,7 @@
   ```
   - Nacos 默认采用内置数据库 Derby ，将数据存储在本机目录中，可配置以下环境变量，将数据存储到 MySQL 中：
     ```yml
+    EMBEDDED_STORAGE: none
     SPRING_DATASOURCE_PLATFORM: mysql
     MYSQL_SERVICE_HOST: 10.0.0.1
     MYSQL_SERVICE_PORT: 3306
@@ -66,7 +68,7 @@
 
 - Nacos 默认的安全性低，需要用户主动配置。
   - 访问 `http://127.0.0.1:8848/nacos/` 即可登录 Nacos 的 Web 页面，默认账号、密码为 nacos、nacos ，需要用户修改密码。
-  - Nacos 的 Web 页面默认启用了密码认证，但 API 未启用密码认证，需要用户主动配置 NACOS_AUTH_ENABLE=true ，而很多用户会忽视这点。
+  - Nacos 的 Web 页面默认启用了密码认证，但 API 未启用密码认证，需要用户主动配置 `NACOS_AUTH_ENABLE=true` ，而很多用户会忽视这点。
     - 原理：每次客户端登录成功之后，Nacos 会根据 token.secret.key 生成一个 accessToken ，分配给客户端使用，并根据 token.expire.seconds 设置有效期。
     - 即使启用了 NACOS_AUTH_ENABLE ，但一些配置参数采用默认值的话，容易被爆破。因此 Nacos v2.2.0 取消了 token.secret.key、nacos.core.auth.server.identity.key、nacos.core.auth.server.identity.value 的默认值，需要用户主动配置。
   - 即使完成了上述安全措施，也不应该将 Nacos 暴露到公网。因为它可能存在其它安全漏洞，而且可能有人频繁尝试登录 Nacos ，造成很大 CPU 负载。

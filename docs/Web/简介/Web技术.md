@@ -34,9 +34,9 @@
 - 1994 年，Tim Berners Lee 成立了万维网联盟（World Wide Web Consortium ，简称为 W3C ），负责管理 Web 标准。
 - 1994 年，网景（Netscape）公司发布网景浏览器，很快占据了大部分浏览器市场。
 - 1995 年，网景浏览器的 Brendan Eich 为浏览器设计了一种脚本语言。
-  - 网景公司与发明 Java 语言的 Sun 公司合作，将这种网页脚本语言取名为 JavaScript ，以求借助 Java 的名头来推广。但 JavaScript 与 Java 的语法只有少部分相似。
+  - Netscape 公司与发明 Java 语言的 Sun 公司合作，将这种网页脚本语言取名为 JavaScript ，以求借助 Java 的名头来推广。但 JavaScript 与 Java 的语法只有少部分相似。
 - 1998 年，网景浏览器逐渐衰落，市场份额被与 Windows 系统捆绑销售的 IE 浏览器抢占。
-  - 网景公司将浏览器转变为开源的 Mozilla 项目。
+  - Netscape 公司将浏览器转变为开源的 Mozilla 项目。
 - 2004 年，Mozilla 社区发布 Firefox 浏览器。
   - Firefox 支持创建网页选项卡、安装插件，功能又多又灵活。而此时的 IE 浏览器生态封闭，功能老旧。
 - 2008 年，Google 公司发布 Chrome 浏览器，并将其源代码作为 Chromium 项目开放。

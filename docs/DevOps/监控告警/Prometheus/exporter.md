@@ -494,9 +494,36 @@
   container_network_transmit_bytes_total                  # 网络发
   container_network_transmit_packets_total
   ```
-  - 假设容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 限制的 memory.limit_in_bytes 时，不会触发 OOM ，而是停止增长。
-    - 因为 `container_memory_usage_bytes = rss + swap + cache` ，在总和 container_memory_usage_bytes 不变的情况下，容器可以减少 container_memory_cache ，继续增加 container_memory_rss 。
-    - 当 container_memory_working_set_bytes 达到 Cgroup 内存限制时，会触发 OOM ，杀死容器内进程。
+
+- 假设一个容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 限制的 memory.limit_in_bytes 时，不会触发 OOM ，而是停止增长。
+  - 因为 `container_memory_usage_bytes = rss + swap + cache` ，在总和 container_memory_usage_bytes 不变的情况下，容器可以减少 container_memory_cache ，继续增加 container_memory_rss 。
+  - 当 container_memory_working_set_bytes 达到 Cgroup 内存限制时，会触发 OOM ，杀死容器内进程。
+
+- 假设用户在 k8s 中部署一个 Pod ，只包含一个 nginx 容器，则 k8s-cadvisor 会记录多个维度的监控指标：
+  ```sh
+  container_memory_rss{container="POD", pod="xx"}   40960     # 每个 Pod 中会自动创建一个 Pause 容器
+  container_memory_rss{container="nginx", pod="xx"} 24346624  # 用户创建的 nginx 容器
+  container_memory_rss{container="", pod="xx"}      25591808  # container 标签取值为空，表示该 Pod 的 Cgroup 根节点，它的内存开销等于各个容器之和（由于监控延迟，存在误差）
+  sum(container_memory_rss{container!~"POD|", pod="xx"})      # 计算所有非 Pause 容器的内存开销之和。这样做更麻烦，建议用上面一行指标监控整个 Pod 的内存开销
+
+  container_memory_rss{id="/", instance="xx"}                 # 一个主机上，全部 Cgroup 节点的内存开销之和
+  container_memory_rss{id="/kubepods.slice", instance="xx"}   # 一个主机上，全部 pod 的内存开销之和
+  container_memory_rss{id="/system.slice/docker.service", instance="xx"}  # 一个主机上，kube-proxy 等 k8s 组件的内存开销之和
+
+  container_processes{container="POD", pod="xx"}    1
+  container_processes{container="nginx", pod="xx"}  1
+  container_processes{container="", pod="xx"}       0         # Cgroup 根节点本身不运行进程，它包含的进程数为 0 。因此不能用该指标监控整个 Pod 的进程数，建议用下面一行指标
+  sum(container_processes{container!~"POD|", pod="xx"})       # 计算所有非 Pause 容器的进程数之和
+  ```
+  - 这里的 container 标签是指 Pod 中配置的容器名。而实际创建的容器名，记录在 name 标签。
+
+- cAdvisor 会每隔 housekeeping-interval 时长采集一次容器的监控指标，并缓存起来，但缓存可能过期。
+  - 例如：用 `docker rm -f` 删除一个容器时， cAdvisor 会根据缓存继续输出该容器的监控指标，大概 4 分钟之后才停止。
+  - 假设遇到以下情况：
+    - Pod 内某个容器因为 OOM 等原因终止，然后根据 restartPolicy 自动创建新容器，新旧容器属于同一个名称的 Pod 。
+    - 更新部署 StatefulSet 类型的 Pod ，删除旧容器，创建新容器，新旧容器属于同一个名称的 Pod 。
+    虽然旧容器已被删除，但短时间内 cAdvisor 依然会根据缓存输出旧容器的监控指标，因此用 `sum(container_processes{container~"POD|", pod="xx"})` 这种方式计算 Pod 的资源开销时，会累加新容器、旧容器的指标，显得该 Pod 的资源开销在短时间内翻倍。
+  - [相关 Issue](https://github.com/google/cadvisor/issues/2844)
 
 ### jmx_exporter
 
@@ -1056,10 +1083,6 @@
 - kube-state-metrics 会缓存所有 k8s 对象的状态数据。并监听 k8s event ，在发生事件时更新相关的状态数据。
   - 优点：每次采集监控指标时，是增量采集而不是全量采集，减少了耗时。
   - 缺点：kube-state-metrics 进程需要占用更多内存，来缓存数据。
-- cAdvisor 也使用了缓存，但没有监听 k8s event ，不能及时更新监控指标。
-  - 如果用 `docker rm -f` 删除一个容器，则 cAdvisor 会根据缓存继续输出该容器的监控指标，大概 4 分钟之后才停止。
-  - 假设 Pod 内某个容器因为 OOM 等原因终止，然后根据 restartPolicy 自动创建新容器。短时间内 cAdvisor 会根据缓存输出旧容器的监控指标，因此用 `sum(container_memory_xx_bytes{container!~"POD|", pod="xx"})` 会计算新容器、旧容器占用的内存之和，显得该 Pod 占用的内存异常多。
-  - [相关 Issue](https://github.com/google/cadvisor/issues/2844)
 
 #### 部署
 

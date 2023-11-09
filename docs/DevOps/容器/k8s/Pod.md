@@ -737,7 +737,7 @@ spec:
       pods: "100"                       # 限制 Pod 的总数
       services: "100"
       count/deployments.apps: "100"     # 可用 count/<resource> 的语法限制某种资源的总数
-      requests.nvidia.com/gpu: 4        # 限制 GPU 的总数
+      nvidia.com/gpu: 4                 # 限制 GPU 的总数
       hugepages-<size>: "100"           # 限制 某种尺寸的 hugepages 的总数
 
   # scopes:                             # 只限制指定范围的 Pod

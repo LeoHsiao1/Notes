@@ -545,6 +545,10 @@ module.exports = {
                             path: "/Linux/设备/CPU"
                         },
                         {
+                            title: "GPU",
+                            path: "/Linux/设备/GPU"
+                        },
+                        {
                             title: "内存",
                             path: "/Linux/设备/内存"
                         },

@@ -7,8 +7,7 @@
 - GPU 最初用于加速计算机图形渲染，在该过程并行执行大量算术运算。后来因为 GPU 擅长并行运算，扩展了其它用途：
   - 用于深度学习等人工智能算法，并行计算矩阵。
   - 用于比特币挖矿，并行计算哈希值。
-- 目前，世界上主要有两个公司在研发计算机显卡：NVIDIA 公司、AMD 公司。
-  - 两个公司的显卡存在较大架构差异，因此在 NVIDIA 显卡上运行的二进制程序，不能兼容地运行在 AMD 显卡上。
+- 目前，世界上主要有两个公司在研发计算机显卡：NVIDIA 公司、AMD 公司，两种显卡存在较大架构差异。
   - 本文主要参考 NVIDIA 品牌的显卡。
 
 ## 特点
@@ -19,6 +18,7 @@
 
 - CPU 与 GPU 的不同点：
   - 架构不同。一个 CPU 芯片通常包含几个或几十个核心（Core）处理器，每个 Core 的能力强，包含算术逻辑单元（ALU）、高速缓存等元件。而一个 GPU 芯片通常包含几百或几千个 ALU ，不擅长执行串行的、复杂的运算，而擅长执行大量并行的、相同的、简单的算术运算。
+    - 因此，面向 GPU 编程时，通常是让程序的主要代码在 CPU 上运行，将一些需要并行运算的代码放到 GPU 上运行，使得运行速度更快。这种方案属于异构计算。
   - 重要性不同。CPU 是计算机中必不可少的硬件，缺少它则不能开机。而 GPU 是计算机中可选的硬件，缺少它则不能让显示器正常工作。
   - 用途不同。CPU 可用于执行大部分类型的软件程序，通用性强。而 GPU 主要用于执行大量并行的算术运算。
 
@@ -32,15 +32,14 @@
   - [官方文档](https://docs.nvidia.com/cuda/cuda-c-programming-guide/contents.html)
   - 因为 NVIDIA 公司占据了大部分显卡市场，所以 CUDA 成为了面向 GPU 编程的主要框架。
   - 用户可采用 C++ 语言开发程序，调用 CUDA 代码库的 API ，从而编写在 GPU 上运行的代码。
-    - 不过面向 CUDA 的程序开发偏向底层，挺麻烦。一些开源的代码库已经基于 CUDA 实现了常见的数学函数，可直接调用。
 
-- 面向 CUDA 编程的流程：
+- 基于 CUDA 编程的流程：
   1. 给计算机插入 GPU 硬件。
   2. 给计算机安装 GPU 的驱动程序。
       - 计算机会将这些驱动程序载入内存，由 CPU 运行，从而能调用 GPU 的功能。
-  3. 面向 CUDA 编写一个程序的源代码，然后编译、运行。
-      - 这会先将程序文件载入内存，然后由 GPU 拷贝到显存中。
-      - GPU 会读取显存中的程序指令，依次拷贝到 GPU 的 L2、L1 缓存、SP 寄存器，最终由 SP 执行。
+  3. 编写一个程序的源代码，调用 CUDA 的 API ，然后编译、运行。
+      - 这会将程序载入内存，由 CPU 运行。其中部分代码涉及到 CUDA ，会被 GPU 拷贝到显存中运行。
+      - GPU 会读取显存中的程序代码，依次拷贝到 GPU 的 L2、L1 缓存、SP 寄存器，最终由 SP 执行。
 
 ### 架构
 
@@ -216,13 +215,15 @@
         - 如果本机启用了 nouveau ，则需要禁用它并重启主机，然后才能启动 NVIDIA 官方驱动。因为同时只能运行一个驱动程序来控制 GPU。
       - 2022 年，NVIDIA 公司开源了 Linux GPU 内核驱动模块。
 
-3. 安装 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 CUDA 开发工具、调试工具、编译器、运行时。
-    - CUDA 通常依赖较新版本的 NVIDIA 显卡驱动，参考：https://docs.NVIDIA.com/cuda/cuda-toolkit-release-notes/index.html
+3. 安装 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 cuFFT 等加速库、CUDA 开发及调试工具、编译器、运行时。
+    - CUDA 通常依赖较新版本的 NVIDIA 显卡驱动，参考：<https://docs.NVIDIA.com/cuda/cuda-toolkit-release-notes/index.html>
     - CUDA 通常安装在 `/usr/local/cuda*` 目录下。
     - 可执行命令 `/usr/local/cuda-*/bin/nvcc --version` 查看 CUDA 的版本号。nvcc 是 CUDA 编译器（NVIDIA CUDA Compiler）
     - 同一主机上可以安装多个版本的 CUDA 工具包，共用同一个 NVIDIA 显卡驱动。
 
-4. 启动 Python 解释器：
+4. 安装 [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html) ，它是一个常用的算法库，没有包含在 cuda-toolkit 中。
+
+5. 启动 Python 解释器：
     ```sh
     pip install torch
     python
@@ -244,9 +245,9 @@
     8500
     ```
 
-5. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
+6. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
 
-6. 如果想让 k8s 容器运行在 GPU 上，则还需要安装 [k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) ，它会以 k8s Daemonset 方式部署在启用 GPU 的每个主机上。
+7. 如果想让 k8s 容器运行在 GPU 上，则还需要安装 [k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) ，它会以 k8s Daemonset 方式部署在启用 GPU 的每个主机上。
     - 执行以下命令，检查 k8s 是否识别到主机上的 GPU 资源：
       ```sh
       kubectl get node -o yaml | grep gpu
@@ -268,6 +269,10 @@
     - CUDA 专用于 NVIDIA 显卡，而 OpenCL 是通用的，可用于 NVIDIA 或 AMD 公司的显卡，也可用于非显卡的其它设备。
     - 用户面向 NVIDIA 显卡开发程序时，可以使用 CUDA 或 OpenCL 框架，但使用 CUDA 的性能更高，因为 NVIDIA 显卡在研发、生产时主要考虑 CUDA 。
 
-
-<!-- 当深度学习大潮到来时，英伟达提供了cuDNN深度神经网络加速库，目前常用的TensorFlow、PyTorch深度学习框架的底层大多基于cuDNN库。 -->
-<!-- - 另外，cuDNN 是基于 CUDA 的一个深度学习 GPU 加速库，需要使用的话，还要额外安装。 -->
+- 用户可以将一些由 CPU 运行的算法移植到 GPU 上运行，利用 GPU 的并行运算来加速执行。但亲自编写这些算法比较麻烦，NVIDIA 公司提供了一些 [算法库](https://developer.nvidia.com/gpu-accelerated-libraries) ，已经基于 CUDA 实现了常见的算法函数，可供用户调用。例如：
+  - CUDA Math library ：实现了一些标准数学函数。
+  - cuBLAS ：用于基本的线性代数。
+  - cuFFT ：用于快速傅里叶变换。
+  - cuRAND ：用于生成随机数。
+  - nvJPEG ：用于 JPEG 解码。
+  - cuDNN ：用于深度学习，比如池化、卷积。PyTorch、TensorFlow 依赖了 cuDNN 。

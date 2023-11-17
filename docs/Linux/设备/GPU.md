@@ -5,7 +5,7 @@
   - 现代的个人电脑一般包含显示器，由显卡控制其显示的内容。
   - 机房的 Linux 服务器一般包含 CPU、内存、磁盘等硬件，但没有显示器、显卡。一般通过另一台包含显示器的电脑 SSH 登录它，然后进行操作。
 - GPU 最初用于加速计算机图形渲染，在该过程并行执行大量算术运算。后来因为 GPU 擅长并行运算，扩展了其它用途：
-  - 用于深度学习等人工智能算法，并行计算矩阵。
+  - 用于机器学习等算法，并行计算矩阵。
   - 用于比特币挖矿，并行计算哈希值。
 - 目前，世界上主要有两个公司在研发计算机显卡：NVIDIA 公司、AMD 公司，两种显卡存在较大架构差异。
   - 本文主要参考 NVIDIA 品牌的显卡。
@@ -237,13 +237,15 @@
     True
     >>> torch.cuda.device_count()       # 查看 GPU 设备数，如果本机拥有多张显卡的话
     1
-    >>> torch.cuda.current_device()     # 查看当前使用的 GPU 设备的编号。可通过环境变量 CUDA_VISIBLE_DEVICES=0,1 指定可用的 GPU
+    >>> torch.cuda.current_device()     # 查看当前使用的 GPU 设备的编号
     0
     >>> torch.cuda.get_device_name()    # 查看当前使用的 GPU 设备的名称
     'GeForce GTX 950M'
     >>> torch.backends.cudnn.version()  # 查看 cuDNN 版本
     8500
     ```
+    - 可通过环境变量 `CUDA_VISIBLE_DEVICES=0,1` 指定可用的 GPU 设备编号。
+    - PyTorch、TensorFlow 可以在 CPU 或 GPU 上运行。如果本机启用了 GPU ，则优先使用 GPU 。如果设置环境变量 CUDA_VISIBLE_DEVICES 为空，则不允许使用 GPU 。
 
 6. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
 
@@ -275,4 +277,17 @@
   - cuFFT ：用于快速傅里叶变换。
   - cuRAND ：用于生成随机数。
   - nvJPEG ：用于 JPEG 解码。
-  - cuDNN ：用于深度学习，比如池化、卷积。PyTorch、TensorFlow 依赖了 cuDNN 。
+  - cuDNN ：用于深度神经网络，比如池化、卷积。PyTorch、TensorFlow 依赖了 cuDNN 。
+
+- Torch
+  - ：一个开源的算法库，用于机器学习。
+  - 于 2002 年发布。2017 年停止开发，被 PyTorch 项目取代。
+  - 采用 C 语言实现底层算法，而用户使用 lua 脚本调用这些算法。
+- PyTorch
+  - ：一个开源的算法库，用于机器学习。
+  - 2016 年，由 Facebook 公司发布。最初基于 Torch 开发，后来取代了 Torch 。
+  - 采用 C、C++ 语言实现底层算法，而用户使用 Python 脚本调用这些算法。
+- TensorFlow
+  - ：一个开源的算法库，用于机器学习。采用 C++、Python 语言开发。
+  - 2015 年，由 Google 公司发布。
+  - TensorFlow 与 PyTorch 的用途相似，属于竞品。

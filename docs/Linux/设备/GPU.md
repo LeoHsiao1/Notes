@@ -26,14 +26,6 @@
   - 优点：减少了硬件体积，适用于笔记本电脑、平板电脑、手机。
   - 缺点：散热差，性能低，难以运行高画质游戏。
 
-- 如何让一个程序在 GPU 上运行？
-  1. 给计算机插入 GPU 硬件。
-  2. 给计算机安装 GPU 的驱动程序。
-      - 计算机会将这些驱动程序载入内存，由 CPU 运行，从而能够调用 GPU 的资源、功能。
-  3. 面向 CUDA 编写一个程序的源代码，然后编译、运行。
-      - 这会先将程序文件载入内存，然后由 GPU 拷贝到显存中。
-      - GPU 会读取显存中的程序指令，依次拷贝到 GPU 的 L2、L1 缓存、SP 寄存器，最终由 SP 执行。
-
 ## CUDA
 
 - 2006 年，NVIDIA 公司发布了 CUDA（Compute Unified Device Architecture，计算统一设备架构），是一个并行编程框架。
@@ -41,6 +33,14 @@
   - 因为 NVIDIA 公司占据了大部分显卡市场，所以 CUDA 成为了面向 GPU 编程的主要框架。
   - 用户可采用 C++ 语言开发程序，调用 CUDA 代码库的 API ，从而编写在 GPU 上运行的代码。
     - 不过面向 CUDA 的程序开发偏向底层，挺麻烦。一些开源的代码库已经基于 CUDA 实现了常见的数学函数，可直接调用。
+
+- 面向 CUDA 编程的流程：
+  1. 给计算机插入 GPU 硬件。
+  2. 给计算机安装 GPU 的驱动程序。
+      - 计算机会将这些驱动程序载入内存，由 CPU 运行，从而能调用 GPU 的功能。
+  3. 面向 CUDA 编写一个程序的源代码，然后编译、运行。
+      - 这会先将程序文件载入内存，然后由 GPU 拷贝到显存中。
+      - GPU 会读取显存中的程序指令，依次拷贝到 GPU 的 L2、L1 缓存、SP 寄存器，最终由 SP 执行。
 
 ### 架构
 
@@ -197,6 +197,61 @@
   }
   ```
 
+### 安装驱动
+
+以下步骤是在 Linux 主机上安装 NVIDIA 显卡驱动：
+1. 执行以下命令，查看本机已插入的显卡的硬件型号。
+    ```sh
+    lspci | grep NVIDIA
+    ```
+
+2. 安装 [NVIDIA 显卡驱动](https://docs.NVIDIA.com/datacenter/tesla/tesla-installation-notes/index.html) 。
+    - 如果自动安装失败，则需要根据本机的操作系统版本、GPU 型号，找到某个兼容版本的显卡驱动，手动安装。
+    - 安装之后，会在 Linux 中保持运行一个内核进程。可执行命令 `ps auxf | grep NVIDIA` 查看
+    - 安装之后，会附带 nvidia-smi 命令，它提供了 NVIDIA 的系统管理接口（System Management Interface）。
+      - 可用该命令查看显卡驱动的版本、最高兼容的 CUDA 版本、GPU 上正在运行的进程列表。
+    - 长期以来，NVIDIA 公司发布的显卡驱动程序都是闭源的。
+      - 2012 年，nouveau 发布 1.0 版本。它是一个针对 NVIDIA 显卡的开源驱动程序，集成到了 Linux 内核。但功能较少，性能较低。
+        - 执行 `lsmod | grep nouveau` ，可检查 Linux 内核是否加载了 nouveau 。
+        - 如果本机启用了 nouveau ，则需要禁用它并重启主机，然后才能启动 NVIDIA 官方驱动。因为同时只能运行一个驱动程序来控制 GPU。
+      - 2022 年，NVIDIA 公司开源了 Linux GPU 内核驱动模块。
+
+3. 安装 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 CUDA 开发工具、调试工具、编译器、运行时。
+    - CUDA 通常依赖较新版本的 NVIDIA 显卡驱动，参考：https://docs.NVIDIA.com/cuda/cuda-toolkit-release-notes/index.html
+    - CUDA 通常安装在 `/usr/local/cuda*` 目录下。
+    - 可执行命令 `/usr/local/cuda-*/bin/nvcc --version` 查看 CUDA 的版本号。nvcc 是 CUDA 编译器（NVIDIA CUDA Compiler）
+    - 同一主机上可以安装多个版本的 CUDA 工具包，共用同一个 NVIDIA 显卡驱动。
+
+4. 启动 Python 解释器：
+    ```sh
+    pip install torch
+    python
+    ```
+    然后测试使用 CUDA ：
+    ```py
+    >>> import torch
+    >>> torch.version.cuda
+    '12.4'
+    >>> torch.cuda.is_available()       # 查看 CUDA 是否可用
+    True
+    >>> torch.cuda.device_count()       # 查看 GPU 设备数，如果本机拥有多张显卡的话
+    1
+    >>> torch.cuda.current_device()     # 查看当前使用的 GPU 设备的编号。可通过环境变量 CUDA_VISIBLE_DEVICES=0,1 指定可用的 GPU
+    0
+    >>> torch.cuda.get_device_name()    # 查看当前使用的 GPU 设备的名称
+    'GeForce GTX 950M'
+    >>> torch.backends.cudnn.version()  # 查看 cuDNN 版本
+    8500
+    ```
+
+5. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
+
+6. 如果想让 k8s 容器运行在 GPU 上，则还需要安装 [k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) ，它会以 k8s Daemonset 方式部署在启用 GPU 的每个主机上。
+    - 执行以下命令，检查 k8s 是否识别到主机上的 GPU 资源：
+      ```sh
+      kubectl get node -o yaml | grep gpu
+      ```
+
 ## 相关概念
 
 - OpenGL（Open Graphics Library）是一个跨语言、跨平台的 API 标准，用于渲染 2D、3D 矢量图形，于 1992 年发布。
@@ -213,3 +268,6 @@
     - CUDA 专用于 NVIDIA 显卡，而 OpenCL 是通用的，可用于 NVIDIA 或 AMD 公司的显卡，也可用于非显卡的其它设备。
     - 用户面向 NVIDIA 显卡开发程序时，可以使用 CUDA 或 OpenCL 框架，但使用 CUDA 的性能更高，因为 NVIDIA 显卡在研发、生产时主要考虑 CUDA 。
 
+
+<!-- 当深度学习大潮到来时，英伟达提供了cuDNN深度神经网络加速库，目前常用的TensorFlow、PyTorch深度学习框架的底层大多基于cuDNN库。 -->
+<!-- - 另外，cuDNN 是基于 CUDA 的一个深度学习 GPU 加速库，需要使用的话，还要额外安装。 -->

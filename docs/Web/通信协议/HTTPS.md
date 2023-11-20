@@ -9,8 +9,8 @@
   1. client 进行 DNS 查询，得知 server 的 IP 地址。不过这里假设 client 距离 DNS 服务器很近，耗时可忽略。
   1. client 与 server 进行 TCP 握手，建立 TCP 连接，相当于一个明文的通信信道。耗时为 1 RTT 。
   2. client 与 server 进行 SSL 握手，建立 SSL 连接，相当于一个加密的通信信道。耗时为 1 RTT （假设采用 TLSv1.3 ）。
-  3. client 生成 HTTP 请求报文，用 SSL 加密，发送给 server 。
-  4. server 收到 HTTP 请求报文，用 SSL 解密。然后生成 HTTP 响应报文，用 SSL 加密，发送给 client 。
+  3. client 生成 HTTP 请求，用 SSL 加密，发送给 server 。
+  4. server 收到 HTTP 请求，用 SSL 解密。然后生成 HTTP 响应报文，用 SSL 加密，发送给 client 。
 
 - 一般的 Web 服务器都支持 HTTP 协议，而启用 HTTPS 需要进行一些准备工作：
   1. 生成一对 SSL 私钥和公钥。
@@ -23,9 +23,8 @@
     - 传输 SSL 证书文件时不应该压缩，因为存在一些已知漏洞。
     - Nginx 支持让客户端在一段时间内复用 SSL 会话，不必重复 SSL 握手。
     - 有的浏览器会缓存网站的 SSL 证书，直到用户关闭该网页。
-  - 采用 HTTP 协议时，客户端发出第一个 HTTP 请求报文之前，需要 TCP 握手，等待 1 RTT 。而采用 HTTPS 协议时，需要 TCP 握手、SSL 握手，等待 2 RTT ，耗时更久。
+  - 采用 HTTP 协议时，客户端发出第一个 HTTP 请求之前，需要 TCP 握手，等待 1 RTT 。而采用 HTTPS 协议时，需要 TCP 握手、SSL 握手，等待 2 RTT ，耗时更久。
   - 每次传输 HTTP 报文时需要加密、解密，略微增加了 CPU 负载和耗时。
-  - 虽然加密传输每个 HTTP 报文，不过 TCP 头没有加密，比如 client、server 的 IP 地址，依然可以被第三方看到。
 
 - SNI（Server Name Indication，服务器名称指示）
   - 同一个 IP 地址的 server 可能同时运行多个 Web 网站，拥有多个 SSL 证书。因此，在 SSL 握手时 server 需要判断使用哪个 SSL 证书。
@@ -36,13 +35,28 @@
 
 ## SSL
 
-- 90 年代，网景公司发布了 SSL（Secure Sockets Layer ，安全套接字层）协议，用于加密传输 HTTP 报文。
-  - SSL 工作在传输层与应用层之间。将应用层的 HTTP 报文加密之后，再通过传输层的 TCP 协议传输。
-  - 除了 HTTP 协议，应用层其它协议的报文也可以使用 SSL 加密传输。
+- 90 年代，Netscape 公司发布了 SSL（Secure Sockets Layer ，安全套接字层）协议，主要用于加密传输 HTTP 报文。
+  - SSL 工作在传输层与应用层之间。
+  - 应用层协议（比如 HTTP ）可以将一段 payload 数据用 SSL 协议传输。而 SSL 会将 payload 加密之后，用传输层协议（比如 TCP ）传输。
+
 - 关于版本。
   - SSLv1 版本未公开发布，在发布了 SSLv2、SSLv3 版本之后，过渡到更安全的 TLS（Transport Layer Security ，安全传输层）协议。有时也将 SSL、TLS 统称为 SSL 协议。
-  - 目前建议最好采用 TLSv1.3 。其次采用 TLSv1.2 ，但握手耗时更久。
-  - 不应该采用 SSLv2、SSLv3、TLSv1.0、TLSv1.1 ，因为存在一些漏洞。
+  - 目前建议最好采用 TLSv1.3 。其次采用 TLSv1.2 ，但握手耗时更久。不应该采用 SSLv2、SSLv3、TLSv1.0、TLSv1.1 ，因为存在一些漏洞。
+
+- SSL 协议提供了多个方面的安全性：
+  - 身份验证
+    - 通信双方可使用数字证书，证明自己的身份。
+  - 加密传输 payload ，保护隐私，避免被窃听
+    - SSL 协议采用对称加密的方式。发送方将 payload 用密钥加密之后才发送，接收方用同一密钥才能解密 payload 。
+    - 每个 SSL 会话会临时生成一个随机的会话密钥，互不相同，因此隔离了风险。
+    - 不过 SSL 只是加密了 payload ，其它信息没有加密。比如第三方可以抓包查看 TCP 头，得知通信双方的 IP 地址。
+  - 避免重放攻击
+    - 每发送一个 SSL 数据包，会包含一个从 0 开始递增的序列号（sequence number），从而保证 SSL 数据包的有序传输。
+  - 校验数据一致性，避免 payload 传输出错、被篡改
+    - 发送方会根据会话密钥生成 MAC（Message Authentication Code，消息验证码）密钥。然后使用 MAC 密钥搭配一个哈希算法，将 payload、sequence number、ssl version 等信息拼凑在一起计算哈希值，作为 MAC 验证码。最后将 MAC 验证码加入 SSL 包一起发送。
+    - 接收方会根据 MAC 验证码，检查 payload 是否传输出错。
+    - 只有通信双方知道 MAC 密钥，能计算出 MAC 验证码。而第三方不能伪造 MAC 验证码，因此不能篡改 payload 。
+    - TLSv1.3 弃用单纯的 MAC 算法，改用包含 MAC 算法的 AEAD 算法。
 
 ### TLSv1.2
 
@@ -50,30 +64,30 @@
 - 握手流程：
   1. client 发送 Client Hello 消息，说明自己支持哪些 TLS 版本、哪些加密算法（ciphers），请 server 决定选用哪个。还包含一个临时生成的随机数，称为 client random 。
   2. server 回复 Server Hello 消息，说明决定采用哪个 TLS 版本、哪个加密算法。还包含另一个临时生成的随机数，称为 server random 。
-      - 再发送 Server Key Exchange 消息，包含 server 的 SSL 公钥。
-      - 再发送 Certificate 消息，包含由 CA 颁发的数字证书，用于证明身份。
+      - 再发送 Server Key Exchange 消息。
+      - 再发送 Certificate 消息，包含由 CA 颁发的数字证书（其中包含了 SSL 公钥），用于证明身份。
       - 可选发送 CertificateRequest 消息，索要 client 的数字证书，实现双向认证。
       - 最后发送 Server Hello Done 消息，表示 Hello 阶段的消息已发送完。
   3. client 收到 server 的数字证书，验证 server 的身份。
-      - 再临时生成一个随机数，称为预主密钥（premaster secret）。用 SSL 公钥加密，放在 Server Key Exchange 消息中，发送给 server 。这样只有 server 能解密，第三方即使监听了通信，也不能解密。
-      - 再使用上述采纳的加密算法，根据上述三个随机数，生成一个会话密钥。然后发送 Change Cipher Spec 消息，表示已生成会话密钥，以后的消息都将加密传输。
+      - 再临时生成一个随机数，称为预主密钥（pre-master secret）。用 SSL 公钥加密，放在 Server Key Exchange 消息中，发送给 server 。这样只有 server 能解密，第三方即使监听了通信，也不能解密。
+      - 再使用上述采纳的加密算法，根据上述三个随机数，生成一个会话密钥（master secret）。然后发送 Change Cipher Spec 消息，表示已生成会话密钥，以后的消息都将加密传输。
       - 再发送 Finished 消息，表示握手完成。
-  4. server 收到 Server Key Exchange 消息，用 SSL 私钥解密，得到 premaster secret 。
+  4. server 收到 Server Key Exchange 消息，用 SSL 私钥解密，得到 pre-master secret 。
       - 再使用上述采纳的加密算法，根据上述三个随机数，生成一个会话密钥。然后发送 Change Cipher Spec 消息。因此 client、server 会分别生成一个会话密钥，但取值相同，属于对称加密。
       - 再发送 Finished 消息，表示握手完成。
 
 - 总结：
   - 握手流程的第 1、2 步，是 client 与 server 协商采用哪个 TLS 版本、哪个加密算法。
   - 握手流程的第 3、4 步，是先基于 SSL 非对称加密，交换随机数。然后根据随机数，生成对称加密的会话密钥，用于之后的 TLS 加密通信。
-  - TLSv1.2 握手需要两次往返通信，client 需要等待 2 RTT ，才能开始发送 HTTP 请求报文。
+  - TLSv1.2 握手需要两次往返通信，client 需要等待 2 RTT ，才能开始发送 HTTP 请求。
 
 ### TLSv1.3
 
 - 2018 年发布。
 - 握手流程：
-  1. client 发送 Client Hello 消息，与 TLSv1.2 相似，但还包含 premaster secret 。
+  1. client 发送 Client Hello 消息，与 TLSv1.2 相似，但还包含 pre-master secret 。
   2. server 回复 Server Hello 消息，与 TLSv1.2 相似，但还包含 server 的数字证书。同时，server 已得到三个随机数，可以生成会话密钥，发送 Finished 消息。
-  3. client 验证 server 的数字证书，然后生成会话密钥，发送 Finished 消息。同时，开始发送 HTTP 请求报文。
+  3. client 验证 server 的数字证书，然后生成会话密钥，发送 Finished 消息。同时，开始发送 HTTP 请求。
 
 - 与 TLSv1.2 相比，TLSv1.3 简化了握手流程，client 只需等待 1 RTT ，在第 3 步就能开始发送 HTTP 请求。
 

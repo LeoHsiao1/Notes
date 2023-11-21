@@ -120,7 +120,7 @@ ie=UTF-8&wd=1
   Accept: text/html,application/xml;q=0.8     # 客户端能接受的响应 body 的 Content-Type 。可以声明多个方案，用逗号分隔。q 表示选择这种方案的优先级，默认为 1
   Accept-Charset: GB2312,utf-8;q=0.7,*;q=0.7  # 客户端能接受的响应 body 编码格式
   Accept-Encoding: gzip,deflate               # 客户端能接受的响应 body 压缩格式
-  Upgrade: HTTP/2.0,websocket                 # 仅 HTTP/1.1 支持该字段，表示客户端除了 HTTP/1.1 ，可切换到哪些通信协议。设置了此字段时必须设置 Connection: Upgrade ，表示切换通信协议
+  Upgrade: websocket                          # 仅 HTTP/1.1 支持该字段，表示客户端请求切换到其它通信协议。设置此字段时，必须同时设置 Connection: Upgrade
   ```
 
 ### 响应报文
@@ -278,61 +278,73 @@ Content-Type: text/html; charset=utf-8
   - HTTP 协议不会记录通信过程中的任何信息，每次 HTTP 通信都是独立的。
   - 尽管如此，server 或 client 的程序可以自己记录通信过程中的一些信息。比如 server 可以记录 client 的 IP、cookie 。
 
+- 缺点：
+  - client 每发送一个 HTTP 请求，就要与 server 建立一个新的 TCP 连接，增加了耗时、Socket 数量。
+
 ### HTTP/1.1
 
 - 于 1997 年由 IETF 发布，向下兼容 HTTP/1.0 。
 - 优点：
-  - 默认启用 TCP 长连接，除非在请求报文 Headers 中加入 `Connection: close` 。
-  - 增加 PUT、DELETE 等请求方法。
-  - 增加 Host、Upgrade、Cache-Control 等 Headers 。
+  - 默认启用 TCP 长连接，除非在请求报文 Headers 中加入 `Connection: close` 。这样弥补了 HTTP/1.0 的主要缺点，不必建立大量 TCP 连接。
+  - 增加了 PUT、DELETE 等请求方法。
+  - 增加了 Host、Upgrade、Cache-Control 等 Headers 。
+
+- 缺点：
+  - HTTP/1.1 虽然支持 TCP 长连接，但通过同一个 TCP 连接发送多个 HTTP 请求时，只能串行发送。
+    - 等发送完一个 HTTP 请求并收到 HTTP 响应，才能发送下一个 HTTP 请求。
+    - 总耗时可能还不如 HTTP/1.0 建立多个 TCP 连接，分别发送 HTTP 请求。
 
 ### HTTP/2
 
-- 于 2015 年由 IETF 发布，不兼容 HTTP/1 。
-- 启用方法：
+- 相关历史：
+  - 2009 年，Google 公司发布了一个网络协议 SPDY ，旨在替代 HTTP/1.1 ，通过压缩 headers、TCP 多路复用来减少耗时。
+  - 2012 年，Google 等公司讨论了 HTTP/2 的草案，它源自 SPDY 协议。而 SPDY 协议停止研发。
+  - 2015 年，IETF 发布 [RFC 7540](https://datatracker.ietf.org/doc/html/rfc7540) 规范，定义了 HTTP/2 协议，它不兼容 HTTP/1 。
+
+- 如何启用？
   - 目前 Nginx 等大部分 Web 服务器，默认采用 HTTP/1 。需要添加额外的配置参数，才能启用 HTTP/2 。
-  - 目前 Chrome 等大部分 Web 浏览器，会自动选择 HTTP 协议版本。
-    - client 与 server 建立 TCP 连接之后，如果发现 server 未启用 TLS 加密，则只能采用 HTTP/1 。
-    - client 与 server 建立 TCP 连接之后，如果发现 server 启用了 TLS 加密，则在 TLS 握手时发送 ALPN 信息，协商双方采用的 HTTP 协议版本。优先采用 HTTP/2 ，其次采用 HTTP/1 。
-    - ALPN（Application-Layer Protocol Negotiation，应用层协议协商）是 TLS 协议的一个扩展，用于协商 client 与 server 在应用层采用什么协议。可执行命令 `curl -v` 查看 SSL 握手过程中的 ALPN 信息。
-    - 另一种方案：client 先采用 HTTP/1.1 协议与 server 通信，然后在请求报文头部加入字段 `Connection: Upgrade; Upgrade: HTTP/2.0` ，请求切换到 HTTP/2 ，但这样会产生 1 RTT 的耗时，因此 server 一般不支持该方案。
+  - 目前 Chrome 等大部分 Web 浏览器，会自动协商 HTTP 协议的版本。
+    - client 连接到 server 时，如果 URL 的协议头为 http:// ，则采用 HTTP/1 。
+    - client 连接到 server 时，如果 URL 的协议头为 https:// ，则在 TLS 握手时发送 ALPN 信息，协商双方采用 HTTP 协议的哪个版本，优先采用最高版本。
+    - HTTP/2 协议规范中，可使用 TLS 加密，也可不使用。但大部分 Web 浏览器强制要求在 TLS 加密的基础上进行 HTTP/2 通信，使得 HTTP/2 的 URL 协议头总是 https:// 。
+    - ALPN（Application-Layer Protocol Negotiation，应用层协议协商）是 TLS 协议的一个扩展，用于协商 client 与 server 在应用层采用什么协议。可执行命令 `curl -v $server` 查看 SSL 握手过程中的 ALPN 信息。
+    - 另一种方案：client 先采用 HTTP/1.1 协议与 server 通信，然后在请求报文头部添加字段 `Connection: Upgrade; Upgrade: HTTP/2.0` ，请求切换到 HTTP/2 ，但这样会产生 1 RTT 的耗时。
 
-- 所有 header 采用小写字母。
-- 将 HTTP/1 报文开头的请求行、状态行拆分成几个伪标头（Pseudo Header），例如：
-  ```sh
-  # 拆分自请求行 GET /index.html HTTP/1.1
-  :authority: test.com
-  :method: GET
-  :path: /index.html
-  :scheme: https
+- 修改了 HTTP 报文的传输格式：
+  - 以二进制格式传输 HTTP 报文，而不是 HTTP/1 的纯文本。
+    - 采用 HPACK 算法压缩报文 headers ，大幅减小其体积。
+    - 每个 HTTP 报文分成多个二进制帧（Frame），然后通过 TCP 协议传输。
+  - 所有 header 采用小写字母。
+  - 将 HTTP/1 报文开头的请求行、状态行拆分成几个伪标头（Pseudo Header），例如：
+    ```sh
+    # 拆分自请求行 GET /index.html HTTP/1.1
+    :authority: test.com
+    :method: GET
+    :path: /index.html
+    :scheme: https
 
-  # 拆分自响应行 HTTP/1.1 200 OK
-  :status: 200
-  ```
-  - 伪标头以冒号 : 作为前缀，且位于普通标头之前。
-  - 伪标头省略了 HTTP 版本号。
-  - 请求报文必须包含 `:method`、`:path`、`:scheme` 三个伪标头，除非是 CONNECT 请求。
-    - 如果请求报文不包含 `:authority` 伪标头，则服务器会读取 Host 标头。
-  - 响应报文必须包含 `:status` 伪标头。
-
-- 以二进制格式传输报文。
-  - 采用 HPACK 算法压缩报文 headers ，大幅减小其体积。
-  - 每个 HTTP 报文分成多个二进制帧（Frame），然后通过 TCP 协议传输。
-  - HTTP/2 协议本身不要求使用 TLS 加密，但大部分 Web 浏览器强制要求在 TLS 加密的基础上进行 HTTP/2 通信，因此同时使用 HTTPS 和 HTTP/2 协议。
+    # 拆分自响应行 HTTP/1.1 200 OK
+    :status: 200
+    ```
+    - 伪标头以冒号 : 作为前缀，且位于普通标头之前。
+    - 伪标头省略了 HTTP 版本号。
+    - 请求报文必须包含 `:method`、`:path`、`:scheme` 三个伪标头，除非是 CONNECT 请求。
+      - 如果请求报文不包含 `:authority` 伪标头，则服务器会读取 Host 标头。
+    - 响应报文必须包含 `:status` 伪标头。
 
 - 支持 TCP 多路复用（multiplexing）：可通过同一个 TCP 连接，并行传输多个指向同一个域名的 HTTP 请求报文。
-  - HTTP/1 开启 TCP 长连接时，客户端可以在同一个 TCP 连接中发送多个请求报文，但只能串行传输。否则并行传输多个请求报文时，不能区分发出的 TCP 包属于哪个请求报文。
+  - HTTP/1.1 开启 TCP 长连接时，客户端可以在同一个 TCP 连接中发送多个请求报文，但只能串行传输。否则并行传输多个请求报文时，不能区分发出的 TCP 包属于哪个请求报文。
     - 假设客户端先后发出 a、b、c 三个请求报文，如果某个请求报文没传输完，则之后的请求报文都不能开始传输。该问题称为队头堵塞（Head-of-line blocking）。同理，服务器也只能按 a、b、c 的顺序回复响应报文。
   - HTTP/2 的每个 HTTP 报文会分成多个 Frame ，这些 Frame 包含同样的 Stream ID ，标识它们属于同一个 HTTP 报文、同一个通信流（Stream）。
     - 因此客户端可以并行发送多个请求报文，服务器可以并行发送多个响应报文，实现时分多路复用，大幅提高通信效率。
-  - 因为 TCP 多路复用，HTTP/2 与 HTTP/1 相比，存在以下优点：
+  - 因为 TCP 多路复用，HTTP/2 与 HTTP/1.1 相比，存在以下优点：
     - 不必多次创建 TCP 连接，减少了耗时、Socket 数量。
     - 共用一个 TCP 连接时，因为 TCP 慢启动，能提高传输速度。
   - 不过 HTTP/2 不能保证总是并行传输，可能降级为串行传输。
     - 每个 TCP 连接只能传输一个通信流，可以同时发送多个 TCP 包，但所有 TCP 包必须按顺序被接收。
     - 假设同时发送多个 HTTP 请求报文，封装为多个 TCP 包之后发送。如果某个 TCP 包未被接收，则之后所有 TCP 包都不能被接收，处于阻塞等待状态。
     - 综上，HTTP/2 解决了 HTTP 应用层的队头阻塞，但没有解决 TCP 传输层的队头阻塞。
-    - 当丢包率较高时，HTTP/2 加载网页的速度，还不如 HTTP/1 建立多个 TCP 连接来通信。
+    - 当丢包率较高时，HTTP/2 完成多个 HTTP 请求的总耗时，可能还不如 HTTP/1.0 建立多个 TCP 连接，分别发送 HTTP 请求。
 
 - 支持服务器主动推送多个响应报文给浏览器，该操作称为 Server Push 。
   - 采用 HTTP/1 时，浏览器访问网页的一般流程：

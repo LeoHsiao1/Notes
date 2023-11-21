@@ -41,7 +41,7 @@ curl <URL>...                   # 访问指定网址（默认为 GET 方法）�
     --http2                     # 采用 HTTP/2.0 协议，这需要 curl 7.43 以上版本
 
     # 关于通信过程
-    -v                          # 显示通信过程的详细信息（包括请求报文、响应报文）
+    -v                          # 显示通信过程的详细信息（包括 SSL握手过程、请求报文、响应报文）
     --progress-bar              # 显示进度条
     -m 10                       # --max-time，设置整个操作的超时时间（单位为秒）
     --connect-timeout 3         # 与 Web 服务器建立 TCP 连接的超时时间（单位为秒）。默认会根据 net.ipv4.tcp_syn_retries 进行重试

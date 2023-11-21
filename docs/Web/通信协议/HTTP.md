@@ -182,6 +182,7 @@ Content-Type: text/html; charset=utf-8
   - 403 ：Forbidden ，禁止客户端访问该资源，且不说明理由。
   - 404 ：Not Found ，服务器找不到该资源。
   - 405 ：Method Not Allowed ，服务器不支持这种 HTTP 请求方法。比如向 POST 接口发送 GET 请求时会报错 405 。
+  - 499 ：Client Closed Request 。这不是 HTTP/1 定义的标准状态码，主要被 Nginx 使用，表示服务器返回响应报文时，发现客户端已经关闭了连接。
 - 5××：表示服务器出错。
   - 500 ：Internal Server Error ，通常是因为服务器执行内部代码时出错。
   - 502 ：Bad Gateway ，通常是因为作为网关或代理的服务器，从上游服务器收到的 HTTP 响应报文出错。
@@ -280,13 +281,22 @@ Content-Type: text/html; charset=utf-8
 ### HTTP/1.1
 
 - 于 1997 年由 IETF 发布，向下兼容 HTTP/1.0 。
-- 默认启用 TCP 长连接，除非在请求报文 Headers 中加入 `Connection: close` 。
-- 增加 PUT、DELETE 等请求方法。
-- 增加 Host、Upgrade、Cache-Control 等 Headers 。
+- 优点：
+  - 默认启用 TCP 长连接，除非在请求报文 Headers 中加入 `Connection: close` 。
+  - 增加 PUT、DELETE 等请求方法。
+  - 增加 Host、Upgrade、Cache-Control 等 Headers 。
 
-### HTTP/2.0
+### HTTP/2
 
 - 于 2015 年由 IETF 发布，不兼容 HTTP/1 。
+- 启用方法：
+  - 目前 Nginx 等大部分 Web 服务器，默认采用 HTTP/1 。需要添加额外的配置参数，才能启用 HTTP/2 。
+  - 目前 Chrome 等大部分 Web 浏览器，会自动选择 HTTP 协议版本。
+    - client 与 server 建立 TCP 连接之后，如果发现 server 未启用 TLS 加密，则只能采用 HTTP/1 。
+    - client 与 server 建立 TCP 连接之后，如果发现 server 启用了 TLS 加密，则在 TLS 握手时发送 ALPN 信息，协商双方采用的 HTTP 协议版本。优先采用 HTTP/2 ，其次采用 HTTP/1 。
+    - ALPN（Application-Layer Protocol Negotiation，应用层协议协商）是 TLS 协议的一个扩展，用于协商 client 与 server 在应用层采用什么协议。可执行命令 `curl -v` 查看 SSL 握手过程中的 ALPN 信息。
+    - 另一种方案：client 先采用 HTTP/1.1 协议与 server 通信，然后在请求报文头部加入字段 `Connection: Upgrade; Upgrade: HTTP/2.0` ，请求切换到 HTTP/2 ，但这样会产生 1 RTT 的耗时，因此 server 一般不支持该方案。
+
 - 所有 header 采用小写字母。
 - 将 HTTP/1 报文开头的请求行、状态行拆分成几个伪标头（Pseudo Header），例如：
   ```sh
@@ -310,7 +320,7 @@ Content-Type: text/html; charset=utf-8
   - 每个 HTTP 报文分成多个二进制帧（Frame），然后通过 TCP 协议传输。
   - HTTP/2 协议本身不要求使用 TLS 加密，但大部分 Web 浏览器强制要求在 TLS 加密的基础上进行 HTTP/2 通信，因此同时使用 HTTPS 和 HTTP/2 协议。
 
-- 支持 TCP 多路复用：可通过同一个 TCP 连接，并行传输多个指向同一个域名的 HTTP 请求报文。
+- 支持 TCP 多路复用（multiplexing）：可通过同一个 TCP 连接，并行传输多个指向同一个域名的 HTTP 请求报文。
   - HTTP/1 开启 TCP 长连接时，客户端可以在同一个 TCP 连接中发送多个请求报文，但只能串行传输。否则并行传输多个请求报文时，不能区分发出的 TCP 包属于哪个请求报文。
     - 假设客户端先后发出 a、b、c 三个请求报文，如果某个请求报文没传输完，则之后的请求报文都不能开始传输。该问题称为队头堵塞（Head-of-line blocking）。同理，服务器也只能按 a、b、c 的顺序回复响应报文。
   - HTTP/2 的每个 HTTP 报文会分成多个 Frame ，这些 Frame 包含同样的 Stream ID ，标识它们属于同一个 HTTP 报文、同一个通信流（Stream）。
@@ -325,11 +335,11 @@ Content-Type: text/html; charset=utf-8
     - 当丢包率较高时，HTTP/2 加载网页的速度，还不如 HTTP/1 建立多个 TCP 连接来通信。
 
 - 支持服务器主动推送多个响应报文给浏览器，该操作称为 Server Push 。
-  - 采用 HTTP/1 协议时，浏览器访问网页的一般流程：
+  - 采用 HTTP/1 时，浏览器访问网页的一般流程：
     1. 浏览器发送一个 HTTP 请求。
     2. 服务器返回一个 HTTP 响应，包含一个 HTML 文件。
     3. 浏览器解析 HTML 文件，发现其中依赖的 CSS 等资源，于是再发出多个 HTTP 请求。
-  - 采用 HTTP/2 协议且启用 Server Push 时，流程变成：
+  - 采用 HTTP/2 且启用 Server Push 时，流程变成：
     1. 浏览器发送一个 HTTP 请求。
     2. 服务器返回一个 HTTP 响应，包含一个 HTML 文件。并且预测到浏览器还需要 CSS 等资源，于是主动推送多个响应报文，将这些资源发给浏览器。
         - HTML 的响应报文，与其它响应报文，会同时发给浏览器。
@@ -352,8 +362,8 @@ Content-Type: text/html; charset=utf-8
           }
           ```
   - 优点：
-    - 减少了浏览器发出的 HTTP 请求数。
-    - 浏览器在解析 HTML 之前就得到了 CSS 等资源，使网页的加载耗时减少了至少一倍 RTT 。
+    - 减少浏览器发出的 HTTP 请求数。
+    - 浏览器在解析 HTML 之前就得到了 CSS 等资源，使网页的加载耗时减少至少 1 RTT 。
   - 缺点：
-    - 服务器主动推送的资源，浏览器可能并不需要，或者浏览器之前已获取并缓存了，造成无用的网络传输。
-    - 目前 Server Push 技术没有普及。2022 年，Chrome 106 开始默认禁用 Server Push 功能。
+    - 可能造成负优化效果。服务器主动推送的资源，浏览器可能并不需要，或者浏览器之前已获取并缓存了，造成无用的网络传输。
+    - 目前 Server Push 技术没有普及。2022 年，Chrome 浏览器从 v106 版本开始默认禁用 Server Push 功能。

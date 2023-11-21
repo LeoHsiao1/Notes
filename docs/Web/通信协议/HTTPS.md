@@ -92,16 +92,17 @@
 
 - TLSv1.3 还提供了 0-RTT 会话恢复模式，用于将重复握手的耗时缩短到 0 。
   - 流程：
-    1. 当 client 与 server 第一次 TLSv1.3 握手时，server 在收到 client 的 Finished 消息之后，可发送一个 NewSessionTicket 消息，包含一个临时生成的随机密钥 PSK（Pre-Shared Key）。
+    1. 当 client 与 server 第一次 TLSv1.3 握手时，server 在收到 client 的 Finished 消息之后，可发送一个 NewSessionTicket 消息，包含一个临时生成的随机密钥 PSK（Pre-Shared Key）及其有效期。
         - PSK 是 client 在当前 TLS 会话的凭证（session ticket）。类似于浏览器访问网站时用 cookie 作为身份凭证。
         - server 会为每个 TLS 会话生成不同的 PSK 。
     2. 当 client 重新向 server 建立 TCP 连接时（例如浏览器重新打开一个网站），可不遵循标准握手流程，而是请求恢复之前的 TLS 会话。做法为发送 Client Hello 消息，包含：PSK （用于证明该 client 曾经握手成功、经过 server 身份认证）、early data （此时就可发送 HTTP 请求，用 PSK 加密）。
     3. server 收到 Client Hello 消息之后，如果认为其中的 PSK 有效，则回复 Server Hello 消息，包含新的 PSK （表示新的 TLS 会话）、HTTP 响应。同时发送 Finished 消息。
     4. client 发送 Finished 消息。
   - 优点：
-    - 跳过了重复握手的耗时。
+    - 跳过了重复 TLS 握手的耗时，不过依然要重新 TCP 握手。
     - 跳过了身份认证，不必传输数字证书，节省了网络流量。
-  - 安全漏洞：TLS 会话传输的每个数据包都包含序列号，不怕重放攻击。但 0-RTT 数据包的作用是创建一个新的 TLS 会话，不受序列号限制。因此第三方可以监听 client 发送的 0-RTT 数据包（包含已加密的 HTTP 请求），重复发送给 server ，造成重放攻击。
+  - 缺点：
+    - TLS 会话传输的每个数据包都包含序列号，不怕重放攻击。但 0-RTT 数据包的作用是创建一个新的 TLS 会话，不受序列号限制。因此第三方可以监听 client 发送的 0-RTT 数据包（包含已加密的 HTTP 请求），重复发送给 server ，造成重放攻击。
   - 避免 0-RTT 重放攻击的几种措施：
     - 禁用 0-RTT 功能。例如 nginx 在采用 TLSv1.3 协议时，默认禁用 0-RTT 。
     - 如果 0-RTT 数据包中的 HTTP 请求是 GET 类型，则 server 正常响应，否则拒绝服务。因为 GET 类型的 HTTP 请求通常具有幂等性。

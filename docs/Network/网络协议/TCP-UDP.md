@@ -31,19 +31,19 @@
 - 在类 Unix 系统中进行 TCP/UDP 通信时，通信双方需要各创建一个 Socket 文件，以读写文件的方式进行通信。
   - 比如 client 向本机的 Socket 文件写入数据，会被自动传输到 server 端的 Socket 文件，被 server 读取到数据。
 
-### 数据包结构
+### 传输格式
 
-TCP segment 的结构如下：
+UDP 协议传输 payload 数据时，会封装成至少一个数据包，每个数据包称为段（segment），其数据结构如下：
 
 ![](./tcp.jpg)
 
-- Source Port ：源端口，占 16 bit 空间。
-- Dest Port ：目标端口，占 16 bit 。
-- Seq number ：序列号，占 32 bit 。
-- Ack number ：确认号，占 32 bit 。
-- Data offset ：偏移量，占 4 bit 。表示 payload 的起始坐标，即 TCP headers 的总长度。
-- Reserved ：保留给未来使用，占 3 bit ，默认值为 0 。
-- Flag ：标志符，占 9 bit 。每个 bit 代表一个标志位，默认值为 0 。
+- Source Port ：源端口，占 16 bits 空间。
+- Dest Port ：目标端口，占 16 bits 。
+- Seq number ：序列号，占 32 bits 。
+- Ack number ：确认号，占 32 bits 。
+- Data offset ：偏移量，占 4 bits 。表示 payload 的起始坐标，即 TCP headers 的总长度。
+- Reserved ：保留给未来使用，占 3 bits ，默认值为 0 。
+- Flag ：标志符，占 9 bits 。每个 bit 代表一个标志位，默认值为 0 。
   - NS
   - CWR
   - ECE
@@ -61,8 +61,8 @@ TCP segment 的结构如下：
   - RST=1 ：表示拒绝 TCP 连接，不愿意接收对方发送的数据包。
   - SYN=1 ：表示请求建立 TCP 连接。
   - FIN=1 ：表示请求关闭 TCP 连接，但依然愿意接收对方发送的数据包，直到正式关闭连接。
-- Window size ：表示本机接收窗口的大小，占 16 bit 。
-- Checksum ：校验和，占 16 bit 。
+- Window size ：表示本机接收窗口的大小，占 16 bits 。
+- Checksum ：校验和，占 16 bits 。
   - 计算方法：
     1. 将 TCP headers 中的 Checksum 清零。
     2. 在 TCP headers 之前加上 12 bytes 的伪头部，包含几个字段：Source IP、Dest IP、1 个 保留字节、protocol（传输层协议号）、length（原 headers + payload 的长度）。
@@ -70,18 +70,19 @@ TCP segment 的结构如下：
 - Urgent pointer
 - Options ：在 TCP headers 的末尾可添加一些额外的配置参数，实现扩展功能。例如：
   - MSS（Maximum Segment Size）：允许传输的 TCP 包的最大体积。
-    - 以太网中，IP 包的最大体积 MTU 通常配置为 1500 Bytes 。考虑到 TCP 包封装成 IP 包时需要添加 metadata ，因此通常将 MSS 配置为 1460 bytes 。
-    - 如果一个 IP 包超过 MTU ，则会被拆分成多个 IP 包。如果一个 TCP 包超过 MSS ，则会被丢弃。
+    - 以太网中，通常限制 IP 包的最大体积 MTU 为 1500 Bytes 。
+    - TCP 包需要封装成 IP 包之后才能传输。而封装时，需要添加几十字节的 IP 协议的 metadata ，增加了网络流量。为了节约网络流量，应该让每个 TCP 包只封装成一个 IP 包（而不是多个），因此通常限制每个 TCP 包的最大体积 MSS 为 1460 bytes 。
+    - 如果一个 TCP 包超过 MSS ，则会被丢弃，不会传输。
     - TCP 三次握手时，通信双方可通过 SYN 包协商 MSS、Window scale、SACK-permitted 的值，然后作用于本次 TCP 通信的所有数据包。
   - Window scale ：用于放大 Window size 。
   - SACK ：用于选择性确认。
   - SACK-permitted ：表示本机启用了 SACK 功能。
-  - Timestamps ：时间戳，占 32 bit 。
+  - Timestamps ：时间戳，占 32 bits 。
     - 该时间戳不表示 Unix 时间，而是通常每隔几十 ms 就递增 1 。
     - 常用于计算 TCP 包的传输耗时、 RTT ，防止序号回绕。
   - Nop ：表示 No-Operation ，用作各个 Options 之间的分隔符。
-- Payload ：负载，即该数据包负责传递的数据。
-  - payload 之前的数据都只是用于描述 TCP 数据包的元数据，称为 TCP headers 。
+- Payload ：该数据包负责传输的数据，取值可以为空。
+  - payload 之前的数据都只是用于描述 TCP 数据包的元数据，称为 TCP 头部（headers）。
 
 ### 建立连接
 
@@ -191,7 +192,7 @@ TCP segment 的结构如下：
         - payload 长度为 0 。
 
 - 防止序号回绕（Protection Against Wrapped Sequences，PAWS）
-  - ：TCP headers 中用 32 bit 空间记录序列号，如果序列号的取值达到最大值，则从 0 开始重新递增，称为回绕。此时接收窗口中同时存在新旧 TCP 包，需要判断它们的先后顺序。
+  - ：TCP headers 中用 32 bits 空间记录序列号，如果序列号的取值达到最大值，则从 0 开始重新递增，称为回绕。此时接收窗口中同时存在新旧 TCP 包，需要判断它们的先后顺序。
   - 通常每传输 4 GB 数据，序列号就回绕一次。
   - 常见的解决方案是，比较两个 TCP 包 headers 中的 timestamp ，从而判断它们的先后顺序。不过极低的概率下，timestamp 与序列号会同时发生回绕。
 
@@ -281,8 +282,8 @@ TCP segment 的结构如下：
   - ：接收方的接收缓冲区的可用空间，单位 bytes 。
   - 接收方可以同时接收多个 TCP 包，将 payload 暂存到接收缓冲区，等处理完了才删除接收缓冲区中的这些数据。
     - 如果接收缓冲区的可用空间不足，则不能接收包含 payload 的新 TCP 包，只能丢包。
-  - TCP headers 中的 Window size 表示本机接收窗口的大小，占 16 bit 空间，因此接收窗口最大为 2^16 = 64 KB 。
-    - 如果需要进一步增加接收窗口，可在 TCP Options 中添加 Window scale 参数，占 14 bit 空间。
+  - TCP headers 中的 Window size 表示本机接收窗口的大小，占 16 bits 空间，因此接收窗口最大为 2^16 = 64 KB 。
+    - 如果需要进一步增加接收窗口，可在 TCP Options 中添加 Window scale 参数，占 14 bits 空间。
       - 此时用 Window size 与 Window scale 的乘积表示接收窗口的大小，因此接收窗口最大为 2^16 * 2^14 = 1 GB 。
     - 每发送一个新的 TCP 包，就可修改本机 Window size 的大小，而 Window scale 的值在 TCP 三次握手时就确定不变了。
   - 增加接收窗口的大小，能提高吞吐量，从而提高数据传输速度，即网速。
@@ -428,12 +429,32 @@ TCP segment 的结构如下：
 - 特点：
   - 全双工通信。
   - 面向无连接。
-    - TCP 通信之前需要握手，而 UDP 通信可以立即发送网络包。适用于即时通信、广播消息。
+    - TCP 通信之前需要先握手，耗时为 1 RTT 。而 UDP 通信可以直接发送数据包，因此更适合即时通信，比如网络聊天。
+    - UDP 通信不需要握手，不需要接收方同意即可发送数据包，因此可实现多播消息、广播消息。
   - 传输不可靠。
-    - 与 TCP 协议相比，UDP 没有顺序控制、差错控制等功能，只是简单地发送数据包，不考虑对方是否在线、是否接收。优点是开销低，缺点是容易丢包。
+    - 与 TCP 协议相比，UDP 没有顺序控制、差错控制等功能，只是简单地发送数据包，不考虑对方是否在线、是否接收。优点是开销低，缺点是容易丢包、网络拥塞。
     - 使用 UDP 时，如果需要顺序控制、差错控制等功能，可在应用层软件实现。
 
 - 比较 TCP 与 UDP 协议。
   - 早期计算机网络的通常带宽低、丢包率高，因此 UDP 通信的质量差，大部分应用只能采用 TCP 通信。
   - 目前计算机网络的质量变好，城域网基本不丢包，因此一些软件从 TCP 改用 UDP ，希望提高通信效率。
     - 特别是在一些机房内网中，主机之间进行高速网络通信。采用 TCP 协议时，会因为三次握手、顺序控制、差错控制等因素，明显增加通信延迟、通信开销。
+
+### 传输格式
+
+UDP 协议传输 payload 数据时，会封装成至少一个数据包，每个数据包称为报文（datagram），其数据结构如下：
+
+![](./udp.png)
+
+- Source Port ：源端口，占 16 bits 空间。
+  - 该字段声明了发送方使用的端口。当接收方回复 UDP 报文时，应该采用该端口作为目标端口。
+  - 该字段可以省略，此时相当于取值为 0 。
+- Dest Port ：目标端口，占 16 bits 。
+- Length ：整个 UDP 报文的字节长度（包括 headers、payload），占 16 bits 。
+  - 理论上，UDP datagram 的最大长度为 `2^16 - 1 = 65535 bytes` 。
+  - 实际上，UDP datagram 和 TCP segment 的最大长度都应该小于 IP 包的最大体积 MTU 。
+- Checksum ：校验和，占 16 bits。
+  - IPv4 协议允许省略该字段，而 IPv6 协议不允许。
+- Payload ：该数据包负责传输的数据，取值可以为空。
+
+- 可见，TCP segment 包含大量 headers ，而 UDP datagram 只有少量 headers ，因此网络流量少得多。

@@ -379,3 +379,80 @@ Content-Type: text/html; charset=utf-8
   - 缺点：
     - 可能造成负优化效果。服务器主动推送的资源，浏览器可能并不需要，或者浏览器之前已获取并缓存了，造成无用的网络传输。
     - 目前 Server Push 技术没有普及。2022 年，Chrome 浏览器从 v106 版本开始默认禁用 Server Push 功能。
+
+### HTTP/3
+
+- 相关历史：
+  - 2012 年，Google 公司提出了一个新的传输层协议 QUIC ，全称为 Quick UDP Internet Connections ，发音相当于英文单词 quick 。它旨在替代 TCP 协议，从而改善 HTTP 协议的传输效率。
+  - 2018 年，IETF 决定将基于 QUIC 协议传输的 HTTP 协议，称为 HTTP/3 。
+  - 2021 年，IETF 发布 [RFC 9000](https://datatracker.ietf.org/doc/html/rfc9000) 规范，定义了 QUIC 协议。
+  - 2022 年，IETF 发布 [RFC 9114](https://datatracker.ietf.org/doc/html/rfc9114) 规范，定义了 HTTP/3 协议，它不兼容 HTTP/2 。
+  - 2023 年，Nginx 发布 v1.25 版本，开始支持 QUIC 和 HTTP/3 协议。
+
+- 如何启用？
+  - 目前 Nginx 等大部分 Web 服务器，默认采用 HTTP/1 。需要添加额外的配置参数，才能启用 HTTP/3 。
+  - 目前 Chrome 浏览器会自动协商 HTTP 协议的版本。流程如下：
+    1. client 先采用 HTTP/1 或 HTTP/2 协议发送 HTTP 请求给 server 。
+    2. 如果 server 支持 HTTP/3 协议，则在 HTTP 响应报文头部添加 alt-svc 字段，例如 `alt-svc 'h3=":443"; ma=2592000; persist=1` 。
+        - alt-svc 是 Alternative Services 的缩写，表示 server 存在其它访问地址（比如其它协议、其它域名、其它端口），可供 client 访问。
+        - 例如 `alt-svc 'h2="test.com:443";` 表示可访问 HTTP/2 协议的指定地址。
+        - ma 是 max-age 的缩写，表示该 alt-svc 的有效时长，单位为秒。如果 alt-svc 过期，则 client 不应该再访问它。如果不配置 max-age ，则默认为 24h 。
+        - persist=1 表示当网络变化时，该 alt-svc 依然有效，不必被 client 删除。
+    3. client 访问 server 的 alt-svc 地址。如果连接失败，则继续访问 server 的旧地址。
+        - 因此，HTTP/3 连接失败时，会自动降级到 HTTP/2 。
+
+- HTTP/3 采用的传输层协议从 TCP 改为 QUIC 。
+  - 采用 HTTP/2 时，程序在应用层发出的 HTTP 报文，会依次经过多层网络协议封包：HTTP -> TLS -> TCP -> IP -> 以太网帧 ，最后从网卡发出。
+  - 采用 HTTP/3 时，HTTP 报文会依次经过这些网络协议封包：HTTP -> QUIC -> UDP -> IP -> 以太网帧。
+    - QUIC 协议内置了 TLSv1.3 协议，从而可以在 QUIC 握手的同时进行 TLS 握手。
+    - QUIC 协议是基于 UDP 协议进行通信。因为目前的计算机设备通常只支持 TCP、UDP 两种传输层协议，研发一个全新的传输层协议的话，还需要时间推广。
+
+- 因为 QUIC 协议，HTTP/3 具有以下优点：
+  - 通信安全
+    - QUIC 数据包的 payload 和大部分 headers 会加密传输，不允许明文通信，因此不会泄露隐私、被篡改。
+
+  - 传输可靠
+    - 虽然 QUIC 基于 UDP 通信，但像 TCP 一样面向连接，实现了顺序控制、差错控制、流量控制、拥塞控制等功能。而且参考 TCP 几十年的实践经验，做了一些优化。
+    - QUIC 通信时，会基于 UDP 通信，在两个主机之间建立 QUIC 连接。
+      - QUIC 协议会将每个 QUIC 数据包封装成一个 UDP 报文然后发送。而 UDP 协议只管发送 UDP 报文，不会考虑 QUIC 。
+      - 建立多个 QUIC 连接时，依然只使用一个 UDP 端口，只是在逻辑上对所有 QUIC 数据包进行分组。与之相比，建立多个 TCP 连接时，需要使用多个 TCP 端口。
+      - 每个 QUIC 数据包的 headers 中有个 connection id 字段，声明该 QUIC 数据包属于哪个 QUIC 连接。
+    - 每个 QUIC 连接的用法像一个 TCP 连接。
+      - 每个 QUIC 连接可以按顺序传输一组 QUIC 数据包，称为一个通信流（stream）。比如将一个 HTTP 报文封装成多个 QUIC 数据包，作为一个 stream ，按顺序传输。
+      - 每个 QUIC 连接独立工作。任一 QUIC 连接发生丢包时，会自动重传，不会影响其它 QUIC 连接。
+
+  - 避免队头阻塞
+    - HTTP/3 每传输一个 HTTP 报文，就会视作一个 stream ，创建一个专用的 QUIC 连接来传输。使用多个 QUIC 连接，就可以并发传输多个 HTTP 报文。
+    - 因此，HTTP/2 解决了 HTTP 应用层的队头阻塞，但没有解决 TCP 传输层的队头阻塞。而 HTTP/3 把传输层的队头阻塞也解决了，实现了稳定的并行通信。
+    - 缺点：QUIC 并行传输多个 HTTP 报文时不能控制先后顺序，导致一些重要性低、体积大的 HTTP 报文可能抢占网络带宽。
+      - 对策：在 HTML 文件中声明不同资源的优先级，让浏览器优先对重要的资源发出 HTTP 请求。对于不重要的资源，浏览器暂时不会发出 HTTP 请求，因此不会抢占网络带宽。例如：
+        ```html
+        <script src="/assets/js/test.js" fetchpriority="high"></script>
+        <img src="test.jpg" fetchpriority="low">
+        ```
+
+  - 首次建立连接的耗时更短
+    - 采用 HTTP/2 时，client 需要与 server 先进行 TCP 握手（耗时为 1 RTT），再进行 TLSv1.3 握手（耗时为 1 RTT），总耗时为 2 RTT ，然后才能开始发送 HTTP 请求。
+    - 采用 HTTP/3 时，client 可以与 server 同时进行 QUIC 握手和 TLSv1.3 握手，总耗时为 1 RTT 。流程如下：
+      1. client 向 server 发送 Client Hello 消息，包含 QUIC 握手信息、TLSv1.3 握手信息。
+      2. server 回复 Server Hello 消息，包含握手信息、server 的数字证书。同时发送 Finished 消息。
+      3. client 发送 Finished 消息，表示握手成功。同时开始发送加密的 HTTP 请求报文。
+
+  - 重复建立连接的耗时为 0
+    - 采用 HTTP/2 时，如果 client 重新连接 server ，即使启用 TLSv1.3 0-RTT 功能，依然要重新 TCP 握手，总耗时为 1 RTT 。
+    - 采用 HTTP/3 时，如果 client 重新连接 server ，则不必重新 QUIC 握手，总耗时为 0 RTT。不过，依然需要在应用层采用措施，防御 0-RTT 重放攻击。
+
+  - 当网络变化时，支持连接迁移（Connection Migration），避免重新建立连接
+    - TCP 通信时，会根据五元组 protocol、src_addr、src_port、dst_addr、dst_port 创建 Socket 。如果服务器、客户端的 IP、端口变化，则需要重新创建 Socket ，重新建立 TCP 连接。
+    - QUIC 使用 connection id 标识每个 QUIC 连接，因此当 client 的 ip、port 变化时（比如切换 wifi ），可以继续使用之前的 QUIC 连接（比如从之前的进度继续下载文件）。
+    - 不过，有的 server 运行了多个实例，用网关反向代理。 client 多次发出的 HTTP 请求，不一定会到达同一个 client 实例，导致不支持 0-RTT 握手、连接迁移。
+
+- 其它特点：
+  - HTTP/2 采用 HPACK 算法，在 TCP 数据包中压缩 HTTP headers 。HTTP/3 不能采用为 TCP 设计的 HPACK 算法，而是采用 QPACK 算法，在 QUIC 数据包中压缩 HTTP headers 。
+  - QUIC 协议运行在 Linux 用户空间，而不是内核空间。
+    - 优点：减少了与内核的耦合，使得 QUIC 协议的功能更灵活、更容易版本升级。
+    - 缺点：增加了 CPU 负载，因为需要更多地 CPU 上下文切换、在内核空间与用户空间之间拷贝数据。
+
+- 缺点：
+  - 尚未推广使用，软件生态尚未成熟。
+  - 一些路由器、防火墙会限制 UDP 流量的带宽。因为以往只有 DNS 请求会产生少量 UDP 流量，出现大量 UDP 流量时会被怀疑是 DoS 攻击。

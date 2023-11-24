@@ -13,7 +13,7 @@
 
 - k8s 几种资源对象的 IP ：
   - Node IP
-    - ：k8s 集群中主机节点的 IP ，可以是 eth0 IP 或 Cluster IP 。
+    - ：k8s 集群中主机节点的 IP ，可以是 eth0 IP （称为内网 IP ），或者 Cluster IP （称为虚拟 IP ）。
     - 每个 Node 原本有一个 eth0 物理网卡，其上绑定一个内网 IP ，用于与 k8s 集群外的主机通信。
     - 部署 kube-proxy 之后，每个 Node 会增加一个虚拟网卡，其上绑定当前 Pod CIDR 的网络号，属于 Cluster IP ，用于与 k8s 集群内的其它 Cluster IP 通信。
     - 例：查看 Node 的网卡
@@ -31,9 +31,9 @@
       ```
   - Pod IP
     - ：分配给 Pod 使用的 Cluster IP 。
-    - 一个应用可以部署多个 Pod 实例，每个 Pod 绑定不同的 Pod IP 。
-      - 重新部署应用时，会创建新 Pod ，分配新 Pod IP 。因此 Pod IP 不固定，不方便访问，通常通过 Service 或 Ingress 访问应用。
-    - Pod IP 支持 TCP/UDP 通信。也支持 ICMP 通信，因为绑定了一个虚拟网卡，能在一定程度上模拟一个主机。
+    - 一个应用可以部署多个 Pod 实例，每个 Pod 绑定不同的 pod_ip 。
+      - 重新部署应用时，会创建新 Pod ，分配新 pod_ip 。因此 pod_ip 不固定，不方便访问，通常通过 Service 或 Ingress 访问应用。
+    - pod_ip 支持 TCP/UDP 通信。也支持 ICMP 通信，因为绑定了一个虚拟网卡，能在一定程度上模拟一个主机。
     - 例：在 Pod 内查看网卡
       ```sh
       curl-7bc27a5d69-p62tl:/$ ip addr
@@ -53,7 +53,7 @@
 ### 路由
 
 - 在 k8s 集群的任一主机或容器内，都可以访问到 Cluster IP ，因为 kube-proxy 会自动路由转发网络流量，并进行 NAT 转换。
-  - 在 k8s 集群外的主机上则访问不到 Cluster IP ，因为缺乏路由。
+  - 在 k8s 集群外的主机上则访问不到 Cluster IP ，因为找不到路由。
 
 - 假设 k8s 集群有以下主机：
   ```sh
@@ -73,64 +73,71 @@ k8s 常见的几种网络通信：
     - 如果访问 node2 的 Cluster IP ，则数据包会进入 k8s 的虚拟子网， src_ip 为 node1 的 Cluster IP 。
 
 - 同一个 Pod 中，容器之间的通信
-  - 同一个 Pod 中的所有容器共用一个虚拟网卡、network namespace、Pod IP ，像同一主机内运行的多个进程。
-  - 假设从 container1 访问 container2 ，则数据包的 src_ip 、 dst_ip 都是当前 Pod IP 。
+  - 同一个 Pod 中的所有容器共用一个虚拟网卡、network namespace、pod_ip ，像同一主机内运行的多个进程。
+  - 假设从 container1 访问 container2 ，则数据包的 src_ip 、 dst_ip 都是当前 pod_ip 。
   - 假设 container2 监听 TCP 80 端口，则在 container1 中可执行 `curl 127.0.0.1:80` 访问到 container2 的端口。
 
 - Pod 之间的通信
   - 每个 Pod 绑定了一个 Cluster IP ，因此可通过 Cluster IP 相互访问，像一个个独立的主机。
-  - 假设从 Pod1 访问 Pod2 ，则流程如下：
-    1. Pod1 中某个容器，从该 Pod 的 eth0 网口发出数据包，被传输到宿主机的 veth 网口。
+  - 假设从 pod1 访问 pod2 ，则流程如下：
+    1. pod1 中某个容器，从该 Pod 的 eth0 网口发出数据包，被传输到宿主机的 veth 网口。
         - Pod 与宿主机之间通过 veth pair 虚拟网口传输数据包，详见 Docker 网络。
-        - 此时数据包的 src_ip 为 Pod1 的 Cluster IP ， dst_ip 为 Pod2 的 Cluster IP 。
-    2. Pod1 的宿主机收到数据包，路由转发给 Pod2 的宿主机。
+        - 此时数据包的 src_ip 为 pod1 的 Cluster IP ， dst_ip 为 pod2 的 Cluster IP 。
+    2. pod1 的宿主机收到数据包，路由转发给 pod2 的宿主机。
         - kube-proxy 事先配置了路由规则：如果数据包的 dst_ip 是属于某 Pod CIDR 子网的 Cluster IP ，则路由转发到管理该 Pod CIDR 子网的那个 Node 。
-        - 如果 Pod1 与 Pod2 位于同一宿主机，则不需要路由转发。
+        - 如果 pod1 与 pod2 位于同一宿主机，则不需要路由转发。
         - Pod 之间通信时，不会进行 NAT ，因此数据包的 src_ip 、 dst_ip 一直为 Pod IP 。
-    3. Pod2 的宿主机收到数据包，通过 veth 网口传输给 Pod2 。
-    4. Pod2 中某个容器，从该 Pod 的 eth0 网口收到数据包。
+    3. pod2 的宿主机收到数据包，通过 veth 网口传输给 pod2 。
+    4. pod2 中某个容器，从该 Pod 的 eth0 网口收到数据包。
 
 - 访问 Service 的通信
-  - 假设从 Pod1 访问 ClusterIP 类型的 Service ，则流程如下：
-    1. Pod1 发出数据包，被传输到宿主机的 veth 网口。
-        - 此时数据包的 src_ip 为 Pod1 的 Cluster IP ， dst_ip 为 Service 的 Cluster IP 。
-    2. Pod1 的宿主机收到数据包，kube-proxy 发现数据包的 dst_ip 指向 Service ，于是经过 DNAT 之后转发到 Service 的 EndPoints 中的某个 Pod 端点（假设为 Pod2 ）。
-        - 此时数据包的 src_ip 不变， dst_ip 变为 pod2_ip 。
-    3. kube-proxy 将数据包路由转发到 Pod2 所在的 Node 。
-    4. Pod2 收到数据包。
-  - 假设 node1 上有一个 client 进程（不在 Pod 内），需要访问一个 Pod ，或访问一个 Service 时反向代理到一个 Pod ：
-    - 如果目标 Pod 位于当前 node ，则直接传输数据包， src_ip 为 node1 的 eth0 IP 。
-    - 如果目标 Pod 位于其它 node ，则先将数据包路由转发到目标主机， src_ip 变为 node1 的 Cluster IP 。
-  - 假设有一个 NodePort 类型的 Service ，监听 node1 的 80 端口，然后在任一主机（包括 k8s 集群外主机）上有一个 client 进程（不在 Pod 内）。则 client 访问 Service 的流程如下：
-    1. client 向 Service 发送数据包。
-        - 此时数据包的 src_ip 为 client_ip ， dst_ip 为 node1_ip 。
-    2. node1 收到数据包，经过 DNAT 之后转发到 Service 的 EndPoints 中的某个 Pod 端点（假设为 Pod2 ）。
-        - 此时数据包的 dst_ip 改为 pod_ip 。
-        - 同时会通过 iptables 规则进行 SNAT ，将数据包的 src_ip 改为 node1_ip 。
-    3. Pod2 收到数据包，回复另一个数据包给 node1 。
-        - 此时数据包的 src_ip 为 pod_ip ， dst_ip 为 node1_ip 。
-        - 如果不进行 SNAT ，则 Pod2 会直接回复数据包给 client ，跳过 node1 的反向代理。client 预期收到来自 node1_ip 的回复，却收到来自 pod2_ip 的数据包，导致不能建立 TCP 连接。
-    4. node1 收到数据包，发送给 client 。
-        - 此时数据包的 dst_ip 改为 client_ip 。
-        - 同时会通过 iptables 规则进行 SNAT ，将数据包的 src_ip 改为 node1_ip 。
+  - 假设在 pod1 内执行 curl 命令（担任 client ）， 访问 Service 的 Cluster IP 。则流程如下：
+    1. pod1 发出数据包，被传输到宿主机的 veth 网口。
+        - 此时数据包的 src_ip 为 pod1 的 Cluster IP ， dst_ip 为 Service 的 Cluster IP 。
+    2. pod1 的宿主机收到数据包。发现数据包的 dst_ip 指向 Service ，于是进行 DNAT ，将 dst_ip 改为 Service 的 EndPoints 中的某个 pod_ip:port 端点（假设为 pod2 ）。
+        - 此时数据包的 src_ip 依然为 pod1_ip ， dst_ip 改为 pod2_ip 。
+    3. node1 将数据包路由转发到 pod2 所在的 node 。
+    4. pod2 收到数据包。
+  - 假设在 k8s node1 宿主机上执行 curl 命令，访问某个 Pod IP 。则流程如下：
+    - 如果目标 Pod 位于当前 node ，则直接发送数据包到目标 Pod 的虚拟网口，src_ip 为 node1 的内网 IP 。
+    - 如果目标 Pod 位于其它 node ，则需要将数据包路由转发到目标 node ，由目标 node 发送数据包到目标 Pod 的虚拟网口。
+      - 转发时，node1 会通过 iptables 规则进行 SNAT ，将 src_ip 改为 node1 的 Cluster IP 。
+  - 假设在 k8s node1 宿主机上执行 curl 命令，访问某个 Service 的 Cluster IP 。则流程如下：
+    1. 先进行 DNAT ，将 dst_ip 改为 Service 的 EndPoints 中的某个端点。
+    2. 然后遵守上述从宿主机访问 Pod IP 的流程。
+  - 假设创建 NodePort 类型的 Service ，供 k8s 集群外主机 node3 上的 client 访问，则流程如下：
+    1. client 发出数据包。
+        - 此时数据包的 src_ip 为 node3_ip ， dst_ip 可以是任一 k8s node （假设为 node1_ip ）。
+    2. node1 收到数据包。发现数据包的目标地址是 nodeIP:nodePort ，于是进行 DNAT ，将目标地址改为 Service 的 EndPoints 中的某个 pod_ip:port 端点。
+        - 此时数据包的 src_ip 不变，dst_ip 改为 pod_ip 。
+    3. 然后遵守上述从宿主机访问 Pod IP 的流程。
+        - 此时数据包的 src_ip 改为当前 node 的内网 IP 或 Cluster IP ，dst_ip 依然为 pod_ip 。
+        - 如果目标 Pod 位于其它 node ，则需要转发到目标 node 并进行 SNAT 。如果不进行 SNAT ，则目标 Pod 会直接回复数据包给 client ，跳过 node1 的反向代理。client 预期收到来自 node1_ip 的回复，却收到来自 pod_ip 的数据包，导致不能建立 TCP 连接。
+        - 如果想保留数据包原本的 src_ip ，则需要满足以下条件：
+          - 给 Service 配置 `externalTrafficPolicy: Local` 路由策略，避免将数据包转发到其它 node ，保留原本的 src_ip 。
+          - 在每个 node 上都部署 Pod 实例。否则某个 node 未部署 Pod 实例，当 client 发送数据包到该 node 时，以 Local 路由策略就找不到可用 EndPoints 。
+            - 或者，只在某个 node 上部署 Pod 实例，并且让 client 固定发送数据包到该 node_ip 。
+  - 参考文档：<https://kubernetes.io/docs/tutorials/services/source-ip/>
 
-- Pod 与集群外主机的通信
-  - 假设从 Pod1 访问集群外主机 node3 ，则流程如下：
-    1. Pod1 发出数据包，被传输到宿主机的 veth 网口。
-        - 此时数据包的 src_ip 是 Pod1 的 Cluster IP 。
-    2. Pod1 的宿主机收到数据包，路由转发给 node3 。
-        - 因为 node3 是集群外主机，会通过 iptables 规则进行 SNAT ，将数据包的 src_ip 改为宿主机的 eth0 IP 。否则 node3 回复数据包时，会找不到路由而失败。
-  - 默认不能从 k8s 集群外主机访问 Pod ，有几种解决方案：
+- 从 Pod 访问集群外主机：
+  - 假设从 pod1 访问集群外主机 node3 ，则流程如下：
+    1. pod1 发出数据包，被传输到宿主机的 veth 网口。
+        - 此时数据包的 src_ip 是 pod1 的 Cluster IP ，dst_ip 是 node3_ip 。
+    2. pod1 的宿主机收到数据包，路由转发给 node3 。
+        - 因为 node3 是集群外主机，所以会通过 iptables 规则进行 SNAT ，将数据包的 src_ip 改为宿主机的内网 IP 。否则 node3 回复数据包时，会找不到路由而失败。
+  - 如果 Pod 需要访问一些集群外地址，则可采用以下措施，将外部地址转换成 k8s Service 。这样便于像访问 k8s 内部 Service 一样访问 k8s 外部地址，而且外部地址变化时只需修改 Service 配置。
+    - 假设外部地址为域名，则可创建 externalName 类型的 Service 。
+    - 假设外部地址为 IP ，则可创建指向该 IP 的 Endpoints 。
+
+- 让 Pod 被集群外主机访问：
+  - Pod 使用的是虚拟 IP ，不能被 k8s 集群外主机访问到，因为找不到路由。有几种解决方案：
     - 修改 Pod 的配置，绑定 HostPort ，并固定调度到某个 Node 。
     - 修改 Pod 的配置，启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
+    - 给 k8s Service 添加 externalIPs ，绑定 k8s node IP ，使得访问 `node_ip:port` 的流量被转发到 EndPoints 。
     - 给 Pod 创建 NodePort 类型的 Service 。缺点是端口范围默认为 30000-32767 。
     - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网 IP 或公网 IP 。
     - 如果需要暴露大量 k8s service ，供集群外主机访问。则分别暴露每个 service 比较麻烦，不如只一个暴露 Ingress ，反向代理所有 service 。
-    - 给 k8s Service 添加 externalIPs ，绑定 k8s node IP ，使得访问 `node_ip:port` 的流量被转发到 EndPoints 。优点是配置简单。缺点是默认会改变流量的 src_ip 。
     - 给集群外主机添加路由，将访问 Cluster IP 的流量路由到任一 k8s node 。例如：`ip route add 10.43.0.0/16 via 10.0.1.1`
-  - 如果 Pod 需要访问一些集群外地址，则可采用以下措施，将外部地址转换成 k8s Service 。这样便于像访问 k8s 内部 Service 一样访问 k8s 外部地址，外部地址变化时还只需修改 Service 配置。
-    - 假设外部地址为域名，则可创建 externalName 类型的 Service 。
-    - 假设外部地址为 IP ，则可创建指向该 IP 的 Endpoints 。
 
 ## Service
 
@@ -181,9 +188,9 @@ k8s 常见的几种网络通信：
     # publishNotReadyAddresses: false # 是否将非 Ready 状态的 Pod 端点加入 EndPoints 。默认为 false
     selector:                     # 通过 selector 选中一些 Pod
       k8s-app: redis
-    # sessionAffinity: ClientIP   # 会话保持的方式。默认为 None ，会将数据包随机转发到各个 Pod IP
+    # sessionAffinity: ClientIP   # 会话保持的方式。默认为 None ，会将数据包随机转发到各个 pod_ip
     # sessionAffinityConfig:
-    #   clientIP:                 # 为每个 client IP 创建一个会话。在会话持续时间内，将来自同一个 client IP 的流量总是转发到同一个 Pod IP
+    #   clientIP:                 # 为每个 client_ip 创建一个会话。在会话持续时间内，将来自同一个 client_ip 的流量总是转发到同一个 pod_ip
     #     timeoutSeconds: 10800
   ```
 
@@ -207,7 +214,7 @@ k8s 常见的几种网络通信：
   ```
 
 - 可以给 Service 配置 `clusterIP: None` ，不分配 clusterIP 。这样的 Service 称为 Headless 类型。
-  - 此时只能通过 DNS 名称访问 Service ，会 DNS 解析到 EndPoints 中的某个 Pod IP 。
+  - 此时只能通过 DNS 名称访问 Service ，会 DNS 解析到 EndPoints 中的某个 pod_ip 。
   - 组合使用 StatefulSet 与 Headless Service 时，会为每个 Pod 创建一个 DNS 子域名，格式为 `<pod_name>.<service_name>...` 。
 
 #### 环境变量
@@ -225,26 +232,24 @@ k8s 常见的几种网络通信：
 #### externalIPs
 
 - 给 Service 添加 externalIPs 时，可以额外绑定多个 IP 作为访问地址。而且 externalIPs 不必是 Cluster IP ，可以是内网 IP 。
-- 原理：
-  - 给 Service 添加 externalIPs 之后，每个 k8s node 上的 kube-proxy 会自动配置 iptables 规则，将访问 `externalIPs:port` 的流量，转发到 EndPoints 。
-  - iptables 转发流量时，会以 masquerade 方式进行 SNAT ，修改其 src_ip ：
-    - 如果 src_ip 属于 k8s 集群的 Pod IP ，则不变。
-    - 如果 src_ip 属于 k8s 集群的 Node IP ，则考虑：如果 EndPoints 部署在当前主机，则将 src_ip 改成当前主机的内网 IP 。否则改成当前主机的 Cluster IP 。
-    - 如果 src_ip 属于 k8s 集群外的主机 IP ，则将 src_ip 改成当前主机的内网 IP 。
-  - 如果不进行 SNAT ，则 EndPoints 会直接回复数据包给 client ，跳过 iptables 的反向代理。client 预期收到来自 externalIPs 的回复，却收到来自 EndPoints 的数据包，导致不能建立 TCP 连接。
+- externalIPs 的原理与 NodePort 差不多。
+  - 给 Service 添加 externalIPs 之后，每个 k8s node 上的 kube-proxy 会自动配置 iptables 规则，将访问 `externalIPs:port` 的流量，转发到 EndPoints 中的某个 pod_ip:port 端点。
+  - 创建 NodePort 类型的 Service 之后，每个 k8s node 上的 kube-proxy 会自动配置 iptables 规则，将访问 `nodeIP:nodePort` 的流量，转发到 EndPoints 中的某个 pod_ip:port 端点。
 
 - 用法：
   - 可以将某个 k8s node 的内网 IP 绑定为 externalIPs ，使得内网所有主机都能访问到该 Service ，目标地址为 `externalIPs:port` 。
   - 如果将未被任何主机使用的内网 IP 绑定为 externalIPs ，则内网非 k8s 主机找不到访问该 IP 的路由。需要：
     - 修改内网路由器，将访问该 IP 的流量路由到任一 k8s node 。后者收到数据包时，会自动转发到 EndPoints 。
-    - 或者用 ip 或 keepalived 等命令，将该 IP 通过 ARP 协议解析到任一 k8s node 的 MAC 地址。
+    - 或者，用 ip 或 keepalived 等命令，将该 IP 通过 ARP 协议解析到任一 k8s node 的 MAC 地址。
 
 - 优点：想暴露 Service 供 k8s 集群外主机访问时，使用 externalIPs ，比 NodePort、LoadBalancer 等方式简单很多。
-- 缺点：默认会改变流量的 src_ip ，导致不能监控 client 的来源。除非设置 TrafficPolicy 为 Local 。
+- 缺点：不能保留数据包原本的 src_ip ，因为：
+  - 只有 NodePort、LoadBalancer 类型的 Service 支持配置 `externalTrafficPolicy: Local` 路由策略。
+  - 其它类型的 Service 只能采用 `externalTrafficPolicy: Cluster` 的默认值。
 
 #### TrafficPolicy
 
-- kube-proxy 收到访问 Service 的数据包时，会反向代理到 EndPoints 中的某个 Pod 端点。具体选择哪个 Pod 端点？取决于 externalTrafficPolicy、internalTrafficPolicy 路由策略。
+- kube-proxy 收到访问 Service 的数据包时，会反向代理到 EndPoints 中的某个 pod_ip:port 端点。具体选择哪个 Pod 端点？取决于 externalTrafficPolicy、internalTrafficPolicy 路由策略。
 - TrafficPolicy 的取值：
   - Cluster
     - ：默认策略，当 kube-proxy 收到指向 Service 的数据包时，可以转发给集群内任一 Ready 状态的 Pod 端点。
@@ -260,7 +265,6 @@ k8s 常见的几种网络通信：
 ### NodePort
 
 ：在所有 Node 上监听端口，将访问 `node_ip:port` 的流量转发到 Service 的 EndPoints 。
-- 反向代理的原理与 ExternalIP 差不多，也是让每个 k8s node 上的 kube-proxy 自动配置 iptables 规则，转发流量，并修改 src_ip 。
 - 例：
   ```yml
   apiVersion: v1
@@ -385,7 +389,7 @@ k8s 常见的几种网络通信：
     namespace: default
   subsets:              # subsets 字段之下可包含多组端点 addresses
   - addresses:
-    - ip: 10.42.3.6     # 每组 addresses 可包含多个 IP ，这里是 Ready 状态的 Pod IP ，这些 IP 暴露同样的一组 ports
+    - ip: 10.42.3.6     # 每组 addresses 可包含多个 IP ，这里是 Ready 状态的 pod_ip ，这些 IP 暴露同样的一组 ports
       nodeName: node-1
       targetRef:
         kind: Pod
@@ -534,7 +538,7 @@ k8s 常见的几种网络通信：
 
 ## NetworkPolicy
 
-：网络策略，用于管控 Pod IP 接收、发送的 TCP/UDP 流量，相当于第四层的防火墙。
+：网络策略，用于管控 pod_ip 接收、发送的 TCP/UDP 流量，相当于第四层的防火墙。
 - 每个 namespace 之下默认没有 NetworkPolicy ，因此放通所有出、入 Pod 的网络流量。
   - 如果入方向或出方向存在 NetworkPolicy ，则只会放通与 NetworkPolicy 匹配的网络包，其它网络包则 drop 。
   - 每个 Pod 内的容器之间总是可以相互通信，不受 NetworkPolicy 限制。

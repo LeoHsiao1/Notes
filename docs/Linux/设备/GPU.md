@@ -204,7 +204,7 @@
     lspci | grep NVIDIA
     ```
 
-2. 安装 [NVIDIA 显卡驱动](https://docs.NVIDIA.com/datacenter/tesla/tesla-installation-notes/index.html) 。
+2. 安装 NVIDIA 公司发布的 [显卡驱动](https://docs.NVIDIA.com/datacenter/tesla/tesla-installation-notes/index.html) 。
     - 如果自动安装失败，则需要根据本机的操作系统版本、GPU 型号，找到某个兼容版本的显卡驱动，手动安装。
     - 安装之后，会在 Linux 中保持运行一个内核进程。可执行命令 `ps auxf | grep NVIDIA` 查看
     - 安装之后，会附带 nvidia-smi 命令，它提供了 NVIDIA 的系统管理接口（System Management Interface）。
@@ -215,13 +215,13 @@
         - 如果本机启用了 nouveau ，则需要禁用它并重启主机，然后才能启动 NVIDIA 官方驱动。因为同时只能运行一个驱动程序来控制 GPU。
       - 2022 年，NVIDIA 公司开源了 Linux GPU 内核驱动模块。
 
-3. 安装 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 cuFFT 等加速库、CUDA 开发及调试工具、编译器、运行时。
+3. 安装 NVIDIA 公司发布的 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 cuFFT 等加速库、CUDA 开发及调试工具、编译器、运行时。
     - CUDA 通常依赖较新版本的 NVIDIA 显卡驱动，参考：<https://docs.NVIDIA.com/cuda/cuda-toolkit-release-notes/index.html>
     - CUDA 通常安装在 `/usr/local/cuda*` 目录下。
     - 可执行命令 `/usr/local/cuda-*/bin/nvcc --version` 查看 CUDA 的版本号。nvcc 是 CUDA 编译器（NVIDIA CUDA Compiler）
     - 同一主机上可以安装多个版本的 CUDA 工具包，共用同一个 NVIDIA 显卡驱动。
 
-4. 安装 [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html) ，它是一个常用的算法库，没有包含在 cuda-toolkit 中。
+4. 安装 NVIDIA 公司发布的 [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html) ，它是一个常用的算法库，没有包含在 cuda-toolkit 中。
 
 5. 启动 Python 解释器：
     ```sh
@@ -247,13 +247,44 @@
     - 可通过环境变量 `CUDA_VISIBLE_DEVICES=0,1` 指定可用的 GPU 设备编号。
     - PyTorch、TensorFlow 可以在 CPU 或 GPU 上运行。如果本机启用了 GPU ，则优先使用 GPU 。如果设置环境变量 CUDA_VISIBLE_DEVICES 为空，则不允许使用 GPU 。
 
-6. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
+6. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
 
-7. 如果想让 k8s 容器运行在 GPU 上，则还需要安装 [k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) ，它会以 k8s Daemonset 方式部署在启用 GPU 的每个主机上。
+7. 如果想让 k8s 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) ，它会以 k8s Daemonset 方式部署在启用 GPU 的每个主机上。
     - 执行以下命令，检查 k8s 是否识别到主机上的 GPU 资源：
       ```sh
       kubectl get node -o yaml | grep gpu
       ```
+    - 建议给 node 打上污点，专用于部署需要 GPU 资源的 Pod ，例如：
+      ```yml
+      taints:
+      - effect: NoSchedule
+        key: dedicated
+        value: gpu-gtx-950m
+      ```
+    - 给 Pod 分配 GPU 资源：
+      ```yml
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+          nvidia.com/gpu: 1
+          # amd.com/gpu: 1
+        requests:
+          cpu: 100m
+          memory: 1Gi
+          nvidia.com/gpu: 1
+      ```
+    - 缺点：
+      - 每个容器只能分配 GPU 的整数个核心，不支持小数。因为 GPU 的每个核心只能被一个容器占用，不能被多个容器共享。
+      - 分配 GPU 核数时，取决于 limits 配额。如果配置了 requests 配额，则必须等于 limits 配额。
+    - k8s-device-plugin 默认只允许每个 GPU 芯片设备中运行一个进程，如果想运行多进程，可采用时间分片（Time-Slicing）、MPS（Multi-Process Service）等方案。
+      - 大致原理：让一个 GPU 先后执行不同进程创建的 CUDA 内核函数。
+      - 参考文档：<https://developer.nvidia.com/blog/improving-gpu-utilization-in-kubernetes/>
+      - 优点：
+        - 运行单进程不一定能用完 GPU 的计算资源，运行多进程可以提高 GPU 资源的利用率。
+      - 缺点：
+        - 每个进程使用一个独立的 CUDA context（上下文），包含程序代码等数据。GPU 运行多进程时，会因为上下文切换而增加耗时。
+        - GPU 运行多进程时，在硬件层面没有隔离。例如没有限制每个进程占用的显存，可能某个进程耗尽显存，连累其它进程。
 
 ## 相关概念
 

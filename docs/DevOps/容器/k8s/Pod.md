@@ -737,8 +737,8 @@ spec:
       pods: "100"                       # 限制 Pod 的总数
       services: "100"
       count/deployments.apps: "100"     # 可用 count/<resource> 的语法限制某种资源的总数
-      nvidia.com/gpu: 4                 # 限制 GPU 的总数
       hugepages-<size>: "100"           # 限制 某种尺寸的 hugepages 的总数
+      nvidia.com/gpu: 2                 # 设置 GPU 资源，这需要安装 GPU 驱动
 
   # scopes:                             # 只限制指定范围的 Pod
   #   - BestEffort
@@ -752,9 +752,6 @@ spec:
   ```
   - 创建 Pod 时，如果该 Pod 加上已调度 Pod 的 limits、requests 超过总配额，则创建失败。
   - terminated 状态的 Pod 不会占用 cpu、memory、pods 等资源配额，但会占用 storage 等资源配额。
-  - 安装 Nvidia 插件可让 kubelet 识别出主机上的 GPU ，然后分配给 Pod 。
-    - 每个容器可以分配整数个 GPU ，不支持小数。
-    - 不同容器之间不能共享 GPU 。
 
 ## 调度节点
 

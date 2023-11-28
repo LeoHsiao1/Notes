@@ -1020,39 +1020,61 @@ spec:
 ### HPA
 
 ：Pod 水平方向的自动伸缩（Horizontal Pod Autoscaling），又称为横向伸缩。
+- 用途：
+  - 可以将业务程序部署多个 Pod 实例，由 HPA 自动控制 Pod 数量。比如全部 Pod 的平均 CPU 使用量高于期望值，则增加 Pod 数量，从而降低平均 CPU 使用量。
+  - HPA 适合控制 Deployment 类型的 Pod 数量。
+    - DaemonSet 不支持改变 Pod 数量。
+    - StatefulSet 是有状态应用，虽然支持 HPA ，但不一定合适。
 - 原理：
-  1. 创建一个 HPA 对象，监控 Pod 的一些 metrics 指标。
-  2. HPA 自动增加、减少 Pod 的 replicas 数量，使得 metrics 指标接近指定数值。算法为：
-      ```sh
+  1. 用户创建一个 HPA 对象，监控 Pod 的一些 metrics 指标。
+  2. kube-controller-manager 默认每隔 `--horizontal-pod-autoscaler-sync-period=15s` 执行一次 HPA 伸缩规则，自动调整 Pod 的 replicas 数量，使得 metrics 指标接近期望值。算法为：
+      ```py
       rate = metrics_当前值 / metrics_期望值
       replicas_期望值 = ceil(replicas_当前值 * rate )   # ceil 即向上取整
       ```
 - 一个 HPA 对象的配置示例：
   ```yml
-  apiVersion: autoscaling/v2beta2
+  apiVersion: autoscaling/v2
   kind: HorizontalPodAutoscaler
   metadata:
     name: test-hpa
     namespace: default
   spec:
     maxReplicas: 10           # Pod 自动伸缩的最大数量
-    minReplicas: 1            # 最小数量
-    metrics:                  # 获取监控指标
+    minReplicas: 1            # Pod 自动伸缩的最小数量
+    metrics:                  # 选择监控指标
     - resource:
         name: cpu
-        target:
+        target:               # 期望值，这里为全部 Pod 的平均 cpu 使用量
           averageValue: 100m
-          type: AverageValue  # 获取全部 Pod 的 cpu 平均使用量
+          type: AverageValue
     - resource:
         name: memory
-        target:
+        target:               # 期望值，这里为全部 Pod 的平均 memory 使用率，即实际使用量占 requests 的百分比
           averageUtilization: 80
-          type: Utilization   # 获取全部 Pod 的 memory 平均使用率（即使用量占 requests 的百分比）
+          type: Utilization
         type: Resource
     scaleTargetRef:           # 选择要控制的 Pod
       apiVersion: apps/v1
       kind: Deployment
       name: nginx
+    # behavior:               # 配置 HPA 的行为策略，用于避免 replicas 数量抖动。如果不配置，则采用默认值
+    #   scaleDown:            # 减少 replicas 时的策略
+    #     stabilizationWindowSeconds: 300 # 采用最近 300s 内 desiredReplicas 的最大值，避免抖动
+    #     policies:
+    #     - type: Percent
+    #       value: 100
+    #       periodSeconds: 15 # 在 15s 内，允许修改 replicas 的幅度为 100%
+    #   scaleUp:              # 增加 replicas 时的策略
+    #     stabilizationWindowSeconds: 0
+    #     policies:
+    #     - type: Percent
+    #       value: 100
+    #       periodSeconds: 15 # 在 15s 内，允许修改 replicas 的幅度为 100%
+    #     - type: Pods
+    #       value: 4
+    #       periodSeconds: 15 # 在 15s 内，允许修改 replicas 的幅度为 4 个
+    #     selectPolicy: Max   # Max 表示，存在多个策略时，会采用使得 replicas 更大的那个策略。如果改为 Min ，则会采用使得 replicas 更小的那个策略。如果改为 Disabled ，则禁止 scaleUp
   status:
     currentMetrics:           # 记录 metrics 的当前值
     - resource:
@@ -1066,13 +1088,15 @@ spec:
           averageValue: 1m
         name: cpu
       type: Resource
-    currentReplicas: 1        # 当前的 replicas 值
-    desiredReplicas: 1        # 期望的 replicas 值
+    currentReplicas: 1        # 当前的 replicas
+    desiredReplicas: 1        # 期望的 replicas
   ```
-  - HPA 适合控制 Deployment 类型的 Pod 数量。而 DaemonSet 不能改变 Pod 数量，StatefulSet 是有状态应用，不适合自动伸缩。
-  - kube-controller-manager 默认每隔 15s 执行一次 HPA 伸缩。
-  - HPA 原生的 metrics 种类少，只监控了 Pod 的 cpu、memory 开销。当 Pod 没有运行时就不能获取 metrics ，因此不能缩放到 replicas=0 。
-    - 安装 k8s-prometheus-adapter 之后可将 Prometheus 存储的监控指标传给 apiserver ，从而能使用各种各样的 metrics 来控制 HPA ，能缩放到 replicas=0 。
+  - 计算全部 Pod 的平均指标时，只会统计 Ready 状态的 Pod ，排除不健康的 Pod 、正在被删除的 Pod 、不存在监控指标的 Pod 。
+    - 因为统计的是全部 Pod 的平均指标，所以不能考虑到负载特别大的个别 Pod 。比如某个 Pod 内存耗尽。
+    - 滚动更新 Deployment 时，会创建新旧两个 ReplicaSet ，分别配置一个 replicas 字段。而 HPA 修改的是 Deployment 中的 replicas 字段，也就是新的 ReplicaSet 中的 replicas 字段。
+    - metrics 的值可能每分钟变化两三次，导致 HPA 经常修改 replicas 数量。为了避免 replicas 数量抖动，建议配置 HPA behavior ，或者只考虑 metrics 在 10 分钟以上时间尺度的变化。
+  - HPA 原生的 metrics 种类少，只监控了 Pod 的 cpu、memory 开销。而且当 Pod 没有运行时就不能获取 metrics ，因此不能缩放到 minReplicas=0 。
+    - 安装 k8s-prometheus-adapter 之后可将 Prometheus 存储的监控指标传给 apiserver ，从而能使用多种多样的 metrics 来控制 HPA ，而且能缩放到 minReplicas=0 。
 
 ### VPA
 

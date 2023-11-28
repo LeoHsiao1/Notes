@@ -37,31 +37,30 @@ sshd 的主配置文件是 `/etc/ssh/sshd_config` ，内容示例：
 Port 22                           # 监听的端口号
 ListenAddress 0.0.0.0             # 允许连接的 IP
 
+Protocol 2                        # SSH 协议的版本
+HostKey /etc/ssh/ssh_host_rsa_key # 使用 SSH2 协议时，RSA 私钥的位置
+
+MaxAuthTries 6                    # 被 SSH 客户端登录时，每个 TCP 连接的最多认证次数。如果客户端输错密码的次数达到该值的一半，则断开连接
+MaxSessions 10                    # 同时最多连接的终端数
+
+# 当前 SSH 服务器被 SSH 客户端连接时，允许以哪些用户的身份登录
 AllowUsers root leo@10.0.0.1      # 只允许这些用户进行 SSH 登录。可以使用通配符 * 和 ? ，可以指定用户的 IP ，可以指定多个用户（用空格分隔）
 AllowGroups *                     # 只允许这些用户组进行 SSH 登录
+PermitRootLogin yes               # 允许以 root 用户的身份登录
 
-Protocol 2                        # SSH 协议的版本
-HostKey /etc/ssh/ssh_host_rsa_key # 使用 SSH2 时，RSA 私钥的位置
-
-MaxAuthTries 6                    # 每个 TCP 连接的最多认证次数。如果客户端输错密码的次数达到该值的一半，则断开连接
-MaxSessions 10                    # 最多连接的终端数
-
-PermitRootLogin yes               # 允许 root 用户登录
-PasswordAuthentication yes        # 允许使用密码登录（否则只能使用 SSH 私钥登录）
+# 关于密码认证
+PasswordAuthentication yes        # 被 SSH 客户端登录时，允许以密码方式进行身份认证（否则只能采用密钥认证）
 PermitEmptyPasswords no           # 不允许使用空密码登录
 
-UseDNS no                         # 不检查目标主机的主机名、 IP 是否与 DNS 一致，否则会增加建立 SSH 连接的耗时
-StrictModes yes                   # 被其它主机以密钥方式 SSH 登录时，检查用户的家目录、authorized_keys 的文件权限，只允许被该用户访问，否则存在被其他用户篡改的风险，拒绝 SSH 登录
+# 关于密钥认证
+StrictModes yes                   # 被 SSH 客户端登录时，如果采用密钥认证，则检查该用户的家目录、authorized_keys 的文件权限，只允许被该用户访问，否则存在被其他用户篡改的风险，拒绝 SSH 登录
+
+UseDNS no                         # 是否检查 SSH 客户端的主机名、 IP 是否与 DNS 名称一致。建议禁用该功能，从而减少 SSH 连接的耗时
+GSSAPIAuthentication yes          # 是否允许以 Kerberos 协议进行身份认证。该功能通常没用，不过也不影响 SSH 连接的耗时
 ```
-- 修改了配置文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
-- 如果 StrictModes 检查不通过，则 sshd 会拒绝 SSH 登录，并在 `/var/log/secure` 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` 。此时需要调整文件权限：
-  ```sh
-  chown `id -u`:`id -g` ~  ~/.ssh
-  chmod 700 ~  ~/.ssh
-  chmod 600 ~/.ssh/authorized_keys
-  ```
-- 使用 SSH 客户端登录 SSH 服务器时，有两种认证方式：
-  - 用户名加密码认证
+- 修改了 sshd_config 文件之后，要重启 sshd 服务才会生效：`systemctl restart sshd`
+- 使用 SSH 客户端登录 SSH 服务器时，主要有两种方式进行身份认证：
+  - 密码认证
     - ：登录时指定用户名，然后按提示输入密码。
     - 优点：
       - 可设置方便记忆的密码。
@@ -75,9 +74,15 @@ StrictModes yes                   # 被其它主机以密钥方式 SSH 登录时
       - 每次登录时不需要手动输入密码，又称为免密登录。
     - 缺点：
       - 密钥文件只能拷贝，不方便人记忆。
+- 如果 StrictModes 检查不通过，则 sshd 会拒绝 SSH 登录，并在 `/var/log/secure` 文件中报错 `Authentication refused: bad ownership or modes for file ~/.ssh/authorized_keys` 。此时需要调整文件权限：
+  ```sh
+  chown `id -u`:`id -g` ~  ~/.ssh
+  chmod 700 ~  ~/.ssh
+  chmod 600 ~/.ssh/authorized_keys
+  ```
 - 为了避免恶意用户频繁尝试 SSH 登录，进行暴力破解，可采取以下安全措施：
   - 使用复杂的 SSH 密码，或者只允许使用 SSH 密钥进行登录。
-  - 禁止 root 用户远程登录，创建其它用户并分配 root 权限，这样暴力破解时还需要猜测有效的用户名。
+  - 禁止以 root 用户的身份登录，创建其它用户并分配 root 权限，这样暴力破解时还需要猜测有效的用户名。
   - 只允许白名单中的 IP 登录，比如只允许内网 IP 。
 
 ### 白名单、黑名单

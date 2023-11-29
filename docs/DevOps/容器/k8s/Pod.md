@@ -1019,19 +1019,19 @@ spec:
 
 ### HPA
 
-：Pod 水平方向的自动伸缩（Horizontal Pod Autoscaling），又称为横向伸缩。
-- 用途：
-  - 可以将业务程序部署多个 Pod 实例，由 HPA 自动控制 Pod 数量。比如全部 Pod 的平均 CPU 使用量高于期望值，则增加 Pod 数量，从而降低平均 CPU 使用量。
-  - HPA 适合控制 Deployment 类型的 Pod 数量。
-    - DaemonSet 不支持改变 Pod 数量。
-    - StatefulSet 是有状态应用，虽然支持 HPA ，但不一定合适。
+：水平方向的 Pod 自动伸缩（Horizontal Pod Autoscaling），又称为横向伸缩。
+- 用于自动控制 Deployment、StatefulSet 类型的 Pod 数量，相当于自动执行 `kubectl scale` 命令。例如当全部 Pod 的平均 CPU 使用量高于期望值时，自动增加 Pod 数量，从而降低平均 CPU 使用量。
+  - DaemonSet 不支持改变 Pod 数量。
 - 原理：
   1. 用户创建一个 HPA 对象，监控 Pod 的一些 metrics 指标。
-  2. kube-controller-manager 默认每隔 `--horizontal-pod-autoscaler-sync-period=15s` 执行一次 HPA 伸缩规则，自动调整 Pod 的 replicas 数量，使得 metrics 指标接近期望值。算法为：
+  2. kube-controller-manager 执行 HPA 伸缩规则，自动调整 Pod 的 replicas 数量，使得 metrics 指标接近期望值。算法为：
       ```py
       rate = metrics_当前值 / metrics_期望值
       replicas_期望值 = ceil(replicas_当前值 * rate )   # ceil 即向上取整
       ```
+      - kube-controller-manager 默认每隔 `--horizontal-pod-autoscaler-sync-period=15` 秒执行一次 HPA 伸缩规则。
+      - 如果 rate 减去 1 的差值小于 `--horizo​​ntal-pod-autoscaler-tolerance=0.1` ，则不会向上取整到 2 ，避免 replicas 抖动。
+
 - 一个 HPA 对象的配置示例：
   ```yml
   apiVersion: autoscaling/v2
@@ -1058,15 +1058,16 @@ spec:
       apiVersion: apps/v1
       kind: Deployment
       name: nginx
-    # behavior:               # 配置 HPA 的行为策略，用于避免 replicas 数量抖动。如果不配置，则采用默认值
+    # behavior:               # 配置 HPA 的行为策略，主要用于避免 replicas 抖动
     #   scaleDown:            # 减少 replicas 时的策略
-    #     stabilizationWindowSeconds: 300 # 采用最近 300s 内 desiredReplicas 的最大值，避免抖动
+    #     stabilizationWindowSeconds: 300 # 采用最近 300s 内 desiredReplicas 的最大值来 scaleDown ，因此会慢速 scaleDown ，从而避免抖动
     #     policies:
     #     - type: Percent
     #       value: 100
-    #       periodSeconds: 15 # 在 15s 内，允许修改 replicas 的幅度为 100%
+    #       periodSeconds: 15 # 在 15s 内，允许修改 replicas 的幅度为 100% ，即可以增减一倍 replicas
+    #     selectPolicy: Max   # Max 表示，存在多个策略时，会采用使得 replicas 更大的那个策略。如果改为 Min ，则会采用使得 replicas 更小的那个策略。如果改为 Disabled ，则禁止 scaleUp
     #   scaleUp:              # 增加 replicas 时的策略
-    #     stabilizationWindowSeconds: 0
+    #     stabilizationWindowSeconds: 0   # 采用最近 0s 内 desiredReplicas 的最小值来 scaleUp
     #     policies:
     #     - type: Percent
     #       value: 100
@@ -1074,7 +1075,7 @@ spec:
     #     - type: Pods
     #       value: 4
     #       periodSeconds: 15 # 在 15s 内，允许修改 replicas 的幅度为 4 个
-    #     selectPolicy: Max   # Max 表示，存在多个策略时，会采用使得 replicas 更大的那个策略。如果改为 Min ，则会采用使得 replicas 更小的那个策略。如果改为 Disabled ，则禁止 scaleUp
+    #     selectPolicy: Max
   status:
     currentMetrics:           # 记录 metrics 的当前值
     - resource:
@@ -1091,12 +1092,20 @@ spec:
     currentReplicas: 1        # 当前的 replicas
     desiredReplicas: 1        # 期望的 replicas
   ```
-  - 计算全部 Pod 的平均指标时，只会统计 Ready 状态的 Pod ，排除不健康的 Pod 、正在被删除的 Pod 、不存在监控指标的 Pod 。
-    - 因为统计的是全部 Pod 的平均指标，所以不能考虑到负载特别大的个别 Pod 。比如某个 Pod 内存耗尽。
-    - 滚动更新 Deployment 时，会创建新旧两个 ReplicaSet ，分别配置一个 replicas 字段。而 HPA 修改的是 Deployment 中的 replicas 字段，也就是新的 ReplicaSet 中的 replicas 字段。
-    - metrics 的值可能每分钟变化两三次，导致 HPA 经常修改 replicas 数量。为了避免 replicas 数量抖动，建议配置 HPA behavior ，或者只考虑 metrics 在 10 分钟以上时间尺度的变化。
-  - HPA 原生的 metrics 种类少，只监控了 Pod 的 cpu、memory 开销。而且当 Pod 没有运行时就不能获取 metrics ，因此不能缩放到 minReplicas=0 。
-    - 安装 k8s-prometheus-adapter 之后可将 Prometheus 存储的监控指标传给 apiserver ，从而能使用多种多样的 metrics 来控制 HPA ，而且能缩放到 minReplicas=0 。
+
+- 关于监控指标。
+  - HPA 原生的 metrics 种类少，只监控了 Pod 的 cpu、memory 负载。而且当 Pod 没有运行时就不能获取 metrics ，因此不能缩放到 minReplicas=0 。
+    - 计算全部 Pod 的平均指标时，只会统计 Ready 状态的 Pod ，排除不健康的 Pod 、正在被删除的 Pod 。
+    - 计算全部 Pod 的平均指标时，不能考虑到负载特别大的个别 Pod 。比如某个 Pod 内存不足，但全部 Pod 的平均内存负载不大，则不会增加 replicas 。
+  - 可选在 k8s 部署 [prometheus-adapter](https://github.com/kubernetes-sigs/prometheus-adapter) ，将 Prometheus 存储的 metrics 传给 apiserver ，从而允许 HPA 读取多种多样的 metrics ，而且能缩放到 minReplicas=0 。
+  - 可选在 k8s 部署 [keda](https://keda.sh/docs) ，从 Kafka、Prometheus 等来源监听 event ，代替 metrics 来触发 HPA ，从而更及时地自动伸缩。
+
+- 关于 replicas 字段。
+  - 用 `kubectl apply -f xx.yml` 命令修改被 HPA 管理的 Deployment 或 DaemonSet 的配置文件时，应该省略 replicas 字段。否则，如果它的值与 HPA 的 desiredReplicas 不同，则 HPA 会自动改变 Pod 数量，增加开销。
+  - 滚动更新 Deployment 时，会创建新旧两个 ReplicaSet ，分别配置一个 replicas 字段。而 HPA 修改的是 Deployment 中的 replicas 字段，也就是新的 ReplicaSet 中的 replicas 字段。
+  - metrics 的值可能每分钟变化两三次，导致 HPA 经常修改 replicas 。为了避免 replicas 抖动，建议配置 HPA behavior ，或者统计 metrics 在最近 5 分钟的平均值。
+  - 对于重要的业务程序 Pod ，优先保障 Pod 服务质量。当负载升高时，迅速增加 replicas 。当负载降低时，缓慢减少 replicas 。
+  - 对于不重要的业务程序 Pod ，优先节省 CPU、内存资源。当负载升高时，缓慢增加 replicas 。当负载降低时，迅速减少 replicas 。
 
 ### VPA
 

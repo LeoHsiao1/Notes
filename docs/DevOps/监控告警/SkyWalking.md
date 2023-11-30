@@ -27,7 +27,7 @@
     oap:
       image: apache/skywalking-oap-server:8.9.1
       environment:
-        JAVA_OPTS: "-Xms2G -Xmx2G"
+        JAVA_OPTS: -Xms2G -Xmx2G -Dcom.linecorp.armeria.defaultResponseTimeoutMillis=60000
         SW_STORAGE: elasticsearch
         SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
         SW_HEALTH_CHECKER: default

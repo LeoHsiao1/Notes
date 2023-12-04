@@ -76,7 +76,7 @@
 
 - spec.template 是必填字段，表示 Pod 配置文件的模板。
   - 当用户修改了 spec.template 之后，Deployment 会自动创建一个新版本的 ReplicaSet ，并将旧版本的 ReplicaSet 的 replicas 减至 0 。该过程称为更新部署。
-    - ReplicaSet 会根据 template 创建 Pod ，并添加 `metadata.ownerReferences` 和 `metadata.labels.pod-template-hash` ，用于区分不同版本的 Pod 。
+    - ReplicaSet 会根据 template 创建 Pod ，并添加 `metadata.ownerReferences` 和 `metadata.labels.pod-template-hash` 字段，用于区分不同版本的 Pod 。
     - Deployment 会保留最近 revisionHistoryLimit 个历史版本的 ReplicaSet ，可用于回滚。
   - 修改 Deployment 的其它配置，比如 replicas ，不算版本变化，不会触发更新部署。
     - 创建 Deployment 之后不允许修改 spec.selector 。

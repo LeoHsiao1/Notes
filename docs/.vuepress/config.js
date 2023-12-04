@@ -1260,10 +1260,6 @@ module.exports = {
                                     path: "/DevOps/容器/k8s/权限"
                                 },
                                 {
-                                    title: "自动伸缩",
-                                    path: "/DevOps/容器/k8s/自动伸缩"
-                                },
-                                {
                                     title: "扩展",
                                     path: "/DevOps/容器/k8s/扩展/扩展",
                                     collapsable: false,
@@ -1283,6 +1279,17 @@ module.exports = {
                                         {
                                             title: "Helm",
                                             path: "/DevOps/容器/k8s/扩展/Helm"
+                                        }
+                                    ]
+                                },
+                                {
+                                    title: "自动伸缩",
+                                    path: "/DevOps/容器/k8s/自动伸缩/自动伸缩",
+                                    collapsable: false,
+                                    children: [
+                                        {
+                                            title: "keda",
+                                            path: "/DevOps/容器/k8s/自动伸缩/keda"
                                         }
                                     ]
                                 }

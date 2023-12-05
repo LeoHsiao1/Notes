@@ -7,7 +7,7 @@
 
 - 设计理念：
   - k8s 原生的 HPA 是根据监控指标调整 replicas 。如果所有 Pod 的平均 cpu、memory 负载升高，则增加 replicas ，反之则减少 replicas 。不能缩放到 minReplicas=0 。
-  - keda 是根据事件调整 replicas 。默认将 replicas 设置为 minReplicaCount=0 。如果从 Prometheus、Kafka 等数据源收到 event ，代表业务负载出现，则增加 replicas 。等没有业务负载了，再减少 replicas 。
+  - keda 是根据事件调整 replicas 。默认将 replicas 设置为 minReplicaCount=0 。如果从 Prometheus、Kafka 等数据源收到 event ，代表业务负载出现（称为 active ），则增加 replicas 。等没有业务负载了，再减少 replicas 。
 
 - keda 定义了几种 CRD 对象：
   - ScaledObject ：用于自动伸缩 Deployment、StatefulSet 类型的 Pod 。
@@ -85,6 +85,9 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
         end: 05 * * * *         # 采用 Linux Cron 时间表达式
         start: 00 * * * *
         timezone: Asia/Shanghai # 时区
+    # advanced:
+    #   horizontalPodAutoscalerConfig:
+    #     behavior:
+    #       scaleDown:
+    #         stabilizationWindowSeconds: 300   # 默认在 end 时刻之后，要等待 300s 才能减少 replicas 。将该参数改为 0 ，则会立即减少 replicas
   ```
-
-

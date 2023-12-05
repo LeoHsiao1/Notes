@@ -6,13 +6,18 @@
 ## 原理
 
 - 设计理念：
-  - k8s 原生的 HPA 是根据监控指标调整 replicas 。如果所有 Pod 的平均 cpu、memory 负载升高，则增加 replicas ，反之则减少 replicas 。不能缩放到 minReplicas=0 。
-  - keda 是根据事件调整 replicas 。默认将 replicas 设置为 minReplicaCount=0 。如果从 Prometheus、Kafka 等数据源收到 event ，代表业务负载出现（称为 active ），则增加 replicas 。等没有业务负载了，再减少 replicas 。
+  - k8s 原生的 HPA 是根据监控指标调整 replicas 。如果所有 Pod 的平均 cpu、memory 负载升高，则增加 replicas ，反之则减少 replicas 。
+  - keda 是根据事件（event）调整 replicas 。默认将 replicas 设置为 minReplicaCount=0 。如果从 Prometheus、Kafka 等数据源收到 event ，代表业务负载出现，则自动增加 replicas 。等没有业务负载了，再减少 replicas 。
 
-- keda 定义了几种 CRD 对象：
+- keda 提供了两种伸缩器（scaler）：
   - ScaledObject ：用于自动伸缩 Deployment、StatefulSet 类型的 Pod 。
   - ScaledJob ：用于自动伸缩 Job 类型的 Pod 。
-  - TriggerAuthentication ：记录账号密码，用于连接到 Prometheus、Kafka 等数据源。
+
+- k8s 原生的 HPA 不能自动将 replicas 缩减到 0 ，因此，keda scaler 划分了多种工作状态：
+  - not-active ：未激活，此时将 replicas 赋值为 0 。
+  - active ：激活，此时将 replicas 从 0 改为其它值。
+  - scaling ：伸缩，此时将 replicas 从一个非 0 值，改为其它非 0 值。
+    - 此时，keda scaler 会输入指标数据给 HPA ，从而驱使 HPA 改变 replicas 。
 
 ## 部署
 
@@ -24,8 +29,7 @@
 
 ## ScaledJob
 
-- 创建 ScaledObject 对象之后，会自动创建下属的 HPA 对象。
-  - ScaledObject 会输入指标数据给 HPA ，从而驱使 HPA 改变 replicas 。
+- 创建 ScaledObject 对象之后，会自动创建一个下属的 HPA 对象。
   - 如果 scaleTargetRef 已被其它 ScaledObject 或 HPA 管理，则不允许创建新的 ScaledObject 。
 
 - 配置语法：
@@ -66,23 +70,24 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
 
 ### cron
 
-- 用于定时伸缩。配置示例：
+- 用途：在指定时间范围内增加 replicas ，而平时将 replicas 设置为最小值。
+- 配置示例：
   ```yml
   apiVersion: keda.sh/v1alpha1
   kind: ScaledObject
   metadata:
-    name: test
+    name: nginx
   spec:
-    minReplicaCount: 2
+    minReplicaCount: 1
     maxReplicaCount: 5
     scaleTargetRef:
       kind: Deployment
-      name: test
+      name: nginx
     triggers:
     - type: cron                # 定时伸缩
       metadata:
-        desiredReplicas: "5"    # 平时将 replicas 默认赋值为 minReplicaCount 。在 [start, end) 时间范围内，将 replicas 赋值为 desiredReplicas
-        end: 05 * * * *         # 采用 Linux Cron 时间表达式
+        desiredReplicas: "5"    # 在 [start, end) 时间范围内，将 replicas 赋值为 desiredReplicas 。而平时将 replicas 赋值为 minReplicaCount
+        end: 15 * * * *         # 采用 Linux Cron 时间表达式
         start: 00 * * * *
         timezone: Asia/Shanghai # 时区
     # advanced:
@@ -91,3 +96,16 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     #       scaleDown:
     #         stabilizationWindowSeconds: 300   # 默认在 end 时刻之后，要等待 300s 才能减少 replicas 。将该参数改为 0 ，则会立即减少 replicas
   ```
+
+### kubernetes-workload
+
+- 用途：查询 k8s 中某些 Pod 的数量 ，然后按比例赋值给 scaleTargetRef 的 replicas 。
+- 配置示例：
+  ```yml
+  triggers:
+  - type: kubernetes-workload
+    metadata:
+      podSelector: k1=v1, k2 notin (v1,v2)  # 根据标签查询 Pod 的数量。只统计当前 k8s namespace 下的 Pod ，排除 Succeeded、Failed 阶段的 Pod
+      value: '0.5'    # 将 podSelector 查询到的数量，除以该值，然后赋值给 scaleTargetRef 的 replicas
+  ```
+  - 如果 podSelector 查询到的数量为 0 ，则会将 replicas 赋值为 minReplicaCount 。

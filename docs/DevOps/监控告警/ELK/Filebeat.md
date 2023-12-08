@@ -539,6 +539,7 @@
             paths:
               - /var/log/containers/*-${data.kubernetes.container.id}.log   # CRI 标准的日志路径
             fields_under_root: true
+            enabled: true         # 默认采集每个容器的日志
     ```
   - provider 为 docker 类型时，可引用一些变量，比如：
     ```sh

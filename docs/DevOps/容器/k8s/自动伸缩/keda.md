@@ -24,6 +24,8 @@
 - 创建 keda scaler 对象时，会自动创建一个下属的 HPA 对象，用于间接调整 replicas 。
   - 如果 scaleTargetRef 已经被其它 keda scaler 或 HPA 管理，则不允许创建新的 keda scaler 。
 
+- keda scaler 连接 Prometheus、Kafka 等数据源时可能需要身份认证。为此，keda 定义了一种名为 TriggerAuthentication 的 CRD 对象，用于从 k8s Secret 对象中读取密钥，然后传给 keda scaler 。
+
 ## 部署
 
 - 执行：
@@ -141,8 +143,6 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     - ScaledObject 的 minReplicaCount 或 idleReplicaCount 是否为 0 。
     - activationLagThreshold 的优先级比 lagThreshold 更高。假设 lagThreshold 为 5 ，activationLagThreshold 为 10 ，查询到的滞后量为 10 。则优先考虑 activationLagThreshold ，将 replicas 赋值为 0 。
     - HPA 等待 stabilizationWindowSeconds 时长才能减少 replicas 。
-
-- 几种特殊情况：
   - 如果指定的 topic 不存在，则 keda-operator 每次从 triggers 获取数据时，就会打印报错日志：
     ```sh
     error describing topics: kafka server: Request was for a topic or partition that does not exist on this broker
@@ -152,3 +152,40 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     - consumerGroup 从未提交过 offset ，可能是因为不存在新消息、消费失败。
     <!-- - consumerGroup 提交过 offset ，但长时间未消费，导致在 __consumer_offsets 中记录的 offset 被删除？？？ -->
     此时会根据 scaleToZeroOnInvalidOffset 设置 replicas 。
+
+### mysql
+
+- 用途：连接到 MySQL 并执行 SQL 语句，查询到一个数值，然后按比例赋值给 replicas 。
+- 配置示例：
+  ```yml
+  triggers:
+  - type: mysql
+    metadata:
+      query: "SELECT CEIL(COUNT(*)/6) FROM tasks WHERE state='running'"
+      queryValue: "4.4"             # keda 会将查询到的数值，除以该值，然后赋值给 replicas
+      activationQueryValue: "5.4"   # 激活 keda scaler 的阈值。如果查询到的数值，小于等于该值，则将 replicas 赋值为 0
+    authenticationRef:
+      name: keda-auth-mysql
+  ```
+  再添加以下配置用于身份认证：
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: mysql
+    namespace: default
+  type: Opaque
+  data:
+    mysql_conn_str: username:password@tcp(mysql:3306)/db_name
+  ---
+  apiVersion: keda.sh/v1alpha1
+  kind: TriggerAuthentication
+  metadata:
+    name: keda-auth-mysql
+    namespace: default
+  spec:
+    secretTargetRef:
+    - parameter: connectionString
+      name: mysql
+      key: mysql_conn_str
+  ```

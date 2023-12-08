@@ -146,7 +146,7 @@
 
 ### env
 
-- Pod 中定义的 env 环境变量会被添加到容器终端，还可在 command、args 命令中引用：
+- Pod 配置的 env 环境变量会被添加到容器终端，还可在 command、args 命令中引用：
   ```sh
   echo $var1 ${var2}          # 这不是在 shell 中执行命令，$ 符号不生效，会保留原字符串
   sh -c "echo $var1 ${var2}"  # 这会读取 shell 环境变量

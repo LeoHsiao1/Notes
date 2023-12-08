@@ -130,9 +130,9 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     metadata:
       bootstrapServers: kafka:9092
       # version: 1.0.0
-      consumerGroup: my-group
-      topic: test-topic
-      lagThreshold: '5'                     # 期望每个 Pod 的平均滞后量。keda 会将查询到的滞后量，除以该值，然后赋值给 replicas
+      consumerGroup: test_group_1
+      topic: test_topic_1
+      lagThreshold: '5.0'                   # 期望每个 Pod 的平均滞后量。keda 会将查询到的滞后量，除以该值，然后赋值给 replicas
       # activationLagThreshold: '0'         # 激活 keda scaler 的阈值。如果查询到的滞后量，小于等于该值，则将 replicas 赋值为 0
       # allowIdleConsumers: 'false'         # 是否允许 replicas 数量大于 topic 的分区数，从而存在空闲的 consumer 。默认为 false
       # partitionLimitation: ...            # 统计 topic 的哪几个分区的滞后量之和，默认为所有分区。可指定逗号分隔的多个分区编号，还可指定编号范围，例如为 1,2,5-6
@@ -155,17 +155,17 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
 
 ### mysql
 
-- 用途：连接到 MySQL 并执行 SQL 语句，查询到一个数值，然后按比例赋值给 replicas 。
+- 用途：连接到 MySQL 并执行查询语句，得到一个数值，然后按比例赋值给 replicas 。
 - 配置示例：
   ```yml
   triggers:
   - type: mysql
     metadata:
-      query: "SELECT CEIL(COUNT(*)/6) FROM tasks WHERE state='running'"
-      queryValue: "4.4"             # keda 会将查询到的数值，除以该值，然后赋值给 replicas
-      activationQueryValue: "5.4"   # 激活 keda scaler 的阈值。如果查询到的数值，小于等于该值，则将 replicas 赋值为 0
+      query: SELECT CEIL(COUNT(*)/6) FROM tasks WHERE state='running'
+      queryValue: '5.0'             # keda 会将查询到的值，除以该值，然后赋值给 replicas
+      # activationQueryValue: '0'   # 激活 keda scaler 的阈值。如果查询到的值，小于等于该值，则将 replicas 赋值为 0
     authenticationRef:
-      name: keda-auth-mysql
+      name: trigger-auth-mysql
   ```
   再添加以下配置用于身份认证：
   ```yml
@@ -176,16 +176,61 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     namespace: default
   type: Opaque
   data:
-    mysql_conn_str: username:password@tcp(mysql:3306)/db_name
+    connectionString: username:password@tcp(mysql:3306)/db_name
   ---
   apiVersion: keda.sh/v1alpha1
   kind: TriggerAuthentication
   metadata:
-    name: keda-auth-mysql
+    name: trigger-auth-mysql
     namespace: default
   spec:
     secretTargetRef:
     - parameter: connectionString
       name: mysql
-      key: mysql_conn_str
+      key: connectionString
+  ```
+
+### prometheus
+
+- 用途：连接到 Prometheus 并执行查询语句，得到一个数值，然后按比例赋值给 replicas 。
+- 配置示例：
+  ```yml
+  triggers:
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      query: count(kube_pod_info{pod='nginx'})  # 查询语句应该返回一个 vector 或 scalar 类型的值
+      threshold: '5.0'                          # keda 会将查询到的值，除以该值，然后赋值给 replicas
+      # activationThreshold: '0'                # 激活 keda scaler 的阈值。如果查询到的值，小于等于该值，则将 replicas 赋值为 0
+      # ignoreNullValues: 'true'                # 如果查询结果为空，则将 replicas 赋值为 0 。并且不让 keda-operator 打印报错
+      # customHeaders: header1=xxx,header2=xxx
+      authModes: basic
+    authenticationRef:
+      name: trigger-auth-prometheus
+  ```
+  再添加以下配置用于身份认证：
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: prometheus
+    namespace: default
+  type: Opaque
+  data:
+    username: xxx
+    password: xxx
+  ---
+  apiVersion: keda.sh/v1alpha1
+  kind: TriggerAuthentication
+  metadata:
+    name: trigger-auth-prometheus
+    namespace: default
+  spec:
+    secretTargetRef:
+    - parameter: username
+      name: prometheus
+      key: username
+    - parameter: password
+      name: prometheus
+      key: password
   ```

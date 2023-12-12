@@ -1423,6 +1423,14 @@ module.exports = {
                                 {
                                     title: "kube-vip",
                                     path: "/Container/k8s/network/kube-vip"
+                                },
+                                {
+                                    title: "APISIX",
+                                    path: "/Container/k8s/network/APISIX"
+                                },
+                                {
+                                    title: "Istio",
+                                    path: "/Container/k8s/network/Istio"
                                 }
                             ]
                         },
@@ -1463,6 +1471,10 @@ module.exports = {
                         {
                             title: "大数据",
                             path: "/Distributed/简介/大数据"
+                        },
+                        {
+                            title: "微服务",
+                            path: "/Distributed/简介/微服务"
                         }
                     ]
                 },
@@ -1568,23 +1580,6 @@ module.exports = {
                         {
                             title: "Nextcloud",
                             path: "/Distributed/存储/Nextcloud"
-                        }
-                    ]
-                },
-                {
-                    title: "微服务",
-                    children: [
-                        {
-                            title: "简介",
-                            path: "/Distributed/微服务/简介"
-                        },
-                        {
-                            title: "APISIX",
-                            path: "/Distributed/微服务/APISIX"
-                        },
-                        {
-                            title: "Istio",
-                            path: "/Distributed/微服务/Istio"
                         }
                     ]
                 },

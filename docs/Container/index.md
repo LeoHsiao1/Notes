@@ -21,6 +21,8 @@
   - [Network](k8s/network/Network.md)
     - [CNI](k8s/network/CNI.md)
     - [kube-vip](k8s/network/kube-vip.md)
+    - [APISIX](k8s/network/APISIX.md)
+    - [Istio](k8s/network/Istio.md)
   - [Volume](k8s/volume/Volume.md)
   - [扩展](k8s/extension/扩展.md)
     - [Kustomize](k8s/extension/Kustomize.md)

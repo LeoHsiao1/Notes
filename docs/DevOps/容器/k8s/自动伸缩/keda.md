@@ -44,8 +44,8 @@
     name: <string>
     # namespace: default
     annotations:
-      # autoscaling.keda.sh/paused: "true"        # 添加该注释时，会立即暂停自动伸缩。删除该注释时，会继续自动伸缩
-      # autoscaling.keda.sh/paused-replicas: "0"  # 将 replicas 修改到指定数量，然后暂停自动伸缩。如果同时添加 paused 和 paused-replicas 注释，则只有后者生效
+      # autoscaling.keda.sh/paused: x             # 添加该名称的注释时，会暂停自动伸缩，并删除下属的 HPA 对象。删除该注释时，会继续自动伸缩
+      # autoscaling.keda.sh/paused-replicas: '0'  # 将 replicas 修改到指定数量，然后暂停自动伸缩。如果同时添加 paused 和 paused-replicas 注释，则只有后者生效
   spec:
     # pollingInterval:  30      # 每隔 30s 从 triggers 获取一次数据，检查是否出现 event
     # fallback:
@@ -73,6 +73,8 @@
         # useCachedMetrics: false
         metadata: ...
   ```
+  - 将 replicas 改为 0 之前，至少需要等待 cooldownPeriod 时长。
+  - 将 replicas 改为非 0 值之前，至少需要等待 stabilizationWindowSeconds 时长。
 
 ## triggers
 

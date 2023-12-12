@@ -87,6 +87,10 @@ module.exports = {
                     link: "/DevOps/index"
                 },
                 {
+                    text: "《容器》",
+                    link: "/Container/index"
+                },
+                {
                     text: "《分布式》",
                     link: "/Distributed/index"
                 }
@@ -1193,111 +1197,6 @@ module.exports = {
                     ]
                 },
                 {
-                    title: "容器",
-                    children: [
-                        {
-                            title: "简介",
-                            path: "/DevOps/容器/简介"
-                        },
-                        {
-                            title: "Docker",
-                            path: "/DevOps/容器/Docker/Docker",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "原理",
-                                    path: "/DevOps/容器/Docker/原理"
-                                },
-                                {
-                                    title: "容器",
-                                    path: "/DevOps/容器/Docker/容器"
-                                },
-                                {
-                                    title: "镜像",
-                                    path: "/DevOps/容器/Docker/镜像"
-                                },
-                                {
-                                    title: "Dockerfile",
-                                    path: "/DevOps/容器/Docker/Dockerfile"
-                                },
-                                {
-                                    title: "Docker Compose",
-                                    path: "/DevOps/容器/Docker/Docker-Compose"
-                                }
-                            ]
-                        },
-                        {
-                            title: "Kubernetes",
-                            path: "/DevOps/容器/k8s/Kubernetes",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "原理",
-                                    path: "/DevOps/容器/k8s/原理"
-                                },
-                                {
-                                    title: "部署",
-                                    path: "/DevOps/容器/k8s/部署"
-                                },
-                                {
-                                    title: "Pod",
-                                    path: "/DevOps/容器/k8s/Pod"
-                                },
-                                {
-                                    title: "Workload",
-                                    path: "/DevOps/容器/k8s/Workload"
-                                },
-                                {
-                                    title: "Network",
-                                    path: "/DevOps/容器/k8s/Network"
-                                },
-                                {
-                                    title: "Volume",
-                                    path: "/DevOps/容器/k8s/Volume"
-                                },
-                                {
-                                    title: "权限",
-                                    path: "/DevOps/容器/k8s/权限"
-                                },
-                                {
-                                    title: "扩展",
-                                    path: "/DevOps/容器/k8s/扩展/扩展",
-                                    collapsable: false,
-                                    children: [
-                                        {
-                                            title: "CNI",
-                                            path: "/DevOps/容器/k8s/扩展/CNI"
-                                        },
-                                        {
-                                            title: "kube-vip",
-                                            path: "/DevOps/容器/k8s/扩展/kube-vip"
-                                        },
-                                        {
-                                            title: "Kustomize",
-                                            path: "/DevOps/容器/k8s/扩展/Kustomize"
-                                        },
-                                        {
-                                            title: "Helm",
-                                            path: "/DevOps/容器/k8s/扩展/Helm"
-                                        }
-                                    ]
-                                },
-                                {
-                                    title: "自动伸缩",
-                                    path: "/DevOps/容器/k8s/自动伸缩/自动伸缩",
-                                    collapsable: false,
-                                    children: [
-                                        {
-                                            title: "keda",
-                                            path: "/DevOps/容器/k8s/自动伸缩/keda"
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
                     title: "配置管理",
                     children: [
                         {
@@ -1424,6 +1323,127 @@ module.exports = {
                         {
                             title: "YApi",
                             path: "/DevOps/其它/YApi"
+                        }
+                    ]
+                }
+            ],
+            "/Container/": [
+                {
+                    title: "《容器》",
+                    path: "/Container/"
+                },
+                {
+                    title: "简介",
+                    children: [
+                        {
+                            title: "虚拟机与容器",
+                            path: "/Container/introduction/虚拟机与容器"
+                        }
+                    ]
+                },
+                {
+                    title: "Docker",
+                    children: [
+                        {
+                            title: "Docker",
+                            path: "/Container/Docker/Docker"
+                        },
+                        {
+                            title: "原理",
+                            path: "/Container/Docker/原理"
+                        },
+                        {
+                            title: "容器",
+                            path: "/Container/Docker/容器"
+                        },
+                        {
+                            title: "镜像",
+                            path: "/Container/Docker/镜像"
+                        },
+                        {
+                            title: "Dockerfile",
+                            path: "/Container/Docker/Dockerfile"
+                        },
+                        {
+                            title: "Docker Compose",
+                            path: "/Container/Docker/Docker-Compose"
+                        }
+                    ]
+                },
+                {
+                    title: "Kubernetes",
+                    children: [
+                        {
+                            title: "Kubernetes",
+                            path: "/Container/k8s/Kubernetes"
+                        },
+                        {
+                            title: "原理",
+                            path: "/Container/k8s/principle/原理"
+                        },
+                        {
+                            title: "部署",
+                            path: "/Container/k8s/deploy/部署",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "权限",
+                                    path: "/Container/k8s/deploy/权限"
+                                }
+                            ]
+                        },
+                        {
+                            title: "Pod",
+                            path: "/Container/k8s/Pod"
+                        },
+                        {
+                            title: "Workload",
+                            path: "/Container/k8s/workload/Workload",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "自动伸缩",
+                                    path: "/Container/k8s/workload/自动伸缩"
+                                },
+                                {
+                                    title: "keda",
+                                    path: "/Container/k8s/workload/keda"
+                                }
+                            ]
+                        },
+                        {
+                            title: "Network",
+                            path: "/Container/k8s/network/Network",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "CNI",
+                                    path: "/Container/k8s/network/CNI"
+                                },
+                                {
+                                    title: "kube-vip",
+                                    path: "/Container/k8s/network/kube-vip"
+                                }
+                            ]
+                        },
+                        {
+                            title: "Volume",
+                            path: "/Container/k8s/volume/Volume"
+                        },
+                        {
+                            title: "扩展",
+                            path: "/Container/k8s/extension/扩展",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "Kustomize",
+                                    path: "/Container/k8s/extension/Kustomize"
+                                },
+                                {
+                                    title: "Helm",
+                                    path: "/Container/k8s/extension/Helm"
+                                }
+                            ]
                         }
                     ]
                 }

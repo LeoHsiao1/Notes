@@ -113,9 +113,9 @@ git revert <refs>...    # 自动提交一个新版本来抵消某个历史版本
     - 在当前分支，通过 git revert 自动提交一个新版本，撤销该历史版本的提交内容。然后重新编写函数代码，手动提交成一个版本。这样总共增加了两个版本，不怎么美观，但保持了历史版本的固定不变。
     - 通过 git checkout 切换到 HEAD~5 的上一个版本 HEAD~6 ，然后新建一个分支，在该版本的基础上重新提交函数代码。这样分叉了一个新分支。
 
-- Git 仓库中不应该提交密钥文件、大体积文件。如果历史版本有这种做法，可执行以下命令，从 Git 仓库的所有版本中永久删除指定文件：
+- Git 仓库中不应该存储大体积文件（否则 git 会占用比该文件多几倍的磁盘空间），也不应该存储私密文件（因为 git 仓库通常会被分享给多人查看）。如果存在这些文件，则可执行以下命令，从 Git 仓库的所有版本中删除指定文件：
   ```sh
-  git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch <文件的相对路径>' --prune-empty --tag-name-filter cat -- --all
+  git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch *.log' --prune-empty --tag-name-filter cat -- --all
   git push origin --force --all --tags    # 强制推送，覆盖远程仓库
   ```
 

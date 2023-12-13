@@ -334,7 +334,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 
 ## steps{}
 
-在 steps{} 中可以使用多种 DSL 语句。
+- 在 steps{} 中可以使用多种 DSL 语句。
 - [官方文档](https://www.jenkins.io/doc/pipeline/steps/)
 
 ### archiveArtifacts
@@ -856,3 +856,45 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       }
   }
   ```
+
+## 共享库
+
+- [官方文档](https://www.jenkins.io/doc/book/pipeline/shared-libraries/)
+- 如果编写了大量 pipeline 脚本，则可将一些通用的代码保存为共享库（Shared Library），从而简化单个 pipeline 脚本的内容。
+- 用法：
+  1. 用 Groovy 语言编写 Jenkins 共享库，保存到 GitLab 等仓库。例如在 vars 目录下创建一个名为 test.groovy 的文件：
+      ```groovy
+      def call(message) {
+          echo "INFO: ${message}"
+          return 0            // 可选执行 return 语句，也可省略
+      }
+
+      def run(message) {
+          sh "echo $message"  // 可以在共享库中执行 pipeline 语法的 DSL 语句
+      }
+
+      @groovy.transform.Field
+      def field1 = "xxx"      // 可以定义全局变量，建议只是读取它，而不修改
+      ```
+  2. 在 Jenkins 管理页面添加 Global Pipeline Libraries ，以 Git 等方式下载共享库。
+  3. 在 pipeline 脚本中调用共享库。
+      ```groovy
+      @Library('library_1')_            // 导入指定名称的共享库
+      // @Library('library_1@master')   // 可以指定共享库的版本，比如指定 git 分支
+      // @Library('[name]@[version]', '[name]@[version]', ...)_   // 可以导入多个共享库，通过逗号分隔
+
+      pipeline {
+          agent any
+          stages {
+              stage ('stage1') {
+                  steps {
+                      script {
+                          test 'hello'      // 调用共享库中的 test.groovy 时，默认调用其中的 call() 函数
+                          test.run 'hello'  // 可以指定调用 test.groovy 中的其它函数
+                          r = test('world') // 可以接收函数的返回值
+                      }
+                  }
+              }
+          }
+      }
+      ```

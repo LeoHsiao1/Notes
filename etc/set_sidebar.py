@@ -28,22 +28,23 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
     """
     - 用于解析 index.md 中的文档目录，保存到一个 dict 中
     - 函数每次只解析同一层级的文档，通过递归解析子层的文档
-    - 文档组默认是可折叠的（collapsable），但除了第一层以外的文档组，全部取消折叠，避免需要经常鼠标点击展开。
+    - 文档组默认是可折叠的（collapsable），但除了第一层以外的文档组，全部取消折叠，避免经常需要鼠标点击展开。
       - 建议可折叠的文档组，组名不要添加链接，只担任分组。否则单击一次不会展开，需要单击两次。
     """
 
     def split_line(line_num):
-        """ 分割指定的一行 """
+        """ 分割第 line_num 行字符串 """
         if line_num < len(index_md):
             line = index_md[line_num]
             match = re.search(r'^( *)(- )?(.*)$', line)
             indent, prefix, content = match.groups()
             return len(indent), content
         else:
-            return 0,''
+            return 0, ''
 
     doc_list = []
 
+    # 循环，每次解析 index_md 中的第 line_num 行字符串
     while line_num < len(index_md):
         depth, content = split_line(line_num)
         line_num += 1
@@ -52,13 +53,17 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
         # 解析当前行的内容
         doc = {}
         if content.startswith('['):
-            match = re.search(r'^\[(.*?)\]\((.*?).md\)$', content)
+            match = re.search(r'^\[(.*?)\]\((.*?)\)$', content)
             if not match:
                 raise ValueError('解析失败：' + content)
             doc['title'], doc['path'] = match.groups()
-            if doc['path'] == 'index':
-                doc['path'] = ''
-            doc['path'] = base_url + doc['path']
+            doc['path'] = doc['path'].removesuffix('.md')
+
+            # 如果 path 不是以 / 开头，说明不是绝对路径，则在开头添加 base_url
+            if not doc['path'].startswith('/'):
+                if doc['path'] == 'index':
+                    doc['path'] = ''
+                doc['path'] = base_url + doc['path']
         else:
             doc['title'] = content
 

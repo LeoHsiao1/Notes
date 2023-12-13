@@ -110,7 +110,11 @@ module.exports = {
                     children: [
                         {
                             title: "简介",
-                            path: "/Programming/编程语言/简介"
+                            path: "/Programming/language/简介"
+                        },
+                        {
+                            title: "Batch",
+                            path: "/Programming/language/Batch"
                         },
                         {
                             title: "C",
@@ -118,60 +122,60 @@ module.exports = {
                             children: [
                                 {
                                     title: "编译",
-                                    path: "/Programming/编程语言/C/编译"
+                                    path: "/Programming/language/C/编译"
                                 }
                             ]
                         },
                         {
+                            title: "Golang",
+                            path: "/Programming/language/Golang"
+                        },
+                        {
+                            title: "Groovy",
+                            path: "/Programming/language/Groovy"
+                        },
+                        {
                             title: "Java",
-                            path: "/Programming/编程语言/Java/Java",
+                            path: "/Programming/language/Java/Java",
                             collapsable: false,
                             children: [
                                 {
                                     title: "构建",
-                                    path: "/Programming/编程语言/Java/构建"
+                                    path: "/Programming/language/Java/构建"
                                 },
                                 {
                                     title: "语法",
-                                    path: "/Programming/编程语言/Java/语法"
+                                    path: "/Programming/language/Java/语法"
                                 },
                                 {
                                     title: "GC",
-                                    path: "/Programming/编程语言/Java/GC"
+                                    path: "/Programming/language/Java/GC"
                                 }
                             ]
                         },
                         {
-                            title: "Batch",
-                            path: "/Programming/编程语言/Batch"
-                        },
-                        {
-                            title: "Golang",
-                            path: "/Programming/编程语言/Golang"
-                        },
-                        {
-                            title: "Groovy",
-                            path: "/Programming/编程语言/Groovy"
-                        },
-                        {
                             title: "Lisp",
-                            path: "/Programming/编程语言/Lisp"
+                            path: "/Programming/language/Lisp"
                         },
                         {
                             title: "Lua",
-                            path: "/Programming/编程语言/Lua"
+                            path: "/Programming/language/Lua"
+                        },
+                        {
+                            title: ">>Python",
+                            path: "/Python/index"
                         },
                         {
                             title: "Perl",
-                            path: "/Programming/编程语言/Perl"
+                            path: "/Programming/language/Perl"
                         },
                         {
                             title: "PHP",
-                            path: "/Programming/编程语言/PHP"
+                            path: "/Programming/language/PHP"
                         },
                         {
                             title: "Ruby",
-                            path: "/Programming/编程语言/Ruby"
+                            path: "/Programming/language/Ruby"
                         }
                     ]
                 },
@@ -180,15 +184,15 @@ module.exports = {
                     children: [
                         {
                             title: "哈希算法",
-                            path: "/Programming/算法/哈希算法"
+                            path: "/Programming/algorithm/哈希算法"
                         },
                         {
                             title: "加密算法",
-                            path: "/Programming/算法/加密算法"
+                            path: "/Programming/algorithm/加密算法"
                         },
                         {
                             title: "图片相似算法",
-                            path: "/Programming/算法/图片相似算法"
+                            path: "/Programming/algorithm/图片相似算法"
                         }
                     ]
                 }
@@ -1184,8 +1188,8 @@ module.exports = {
                     ]
                 },
                 {
-                    title: "容器",
-                    path: "/Container/"
+                    title: ">>容器",
+                    path: "/Container/index"
                 },
                 {
                     title: "测试",

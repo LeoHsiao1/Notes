@@ -13,7 +13,7 @@
     - [GC](language/Java/GC.md)
   - [Lisp](language/Lisp.md)
   - [Lua](language/Lua.md)
-  - [>>Python](/Python/index.md)
+  - [>>Python](https://leohsiao.com/Python/)
   - [Perl](language/Perl.md)
   - [PHP](language/PHP.md)
   - [Ruby](language/Ruby.md)

@@ -163,7 +163,7 @@ module.exports = {
                         },
                         {
                             title: ">>Python",
-                            path: "/Python/index"
+                            path: "https://leohsiao.com/Python/"
                         },
                         {
                             title: "Perl",
@@ -1189,7 +1189,7 @@ module.exports = {
                 },
                 {
                     title: ">>容器",
-                    path: "/Container/index"
+                    path: "/DevOps/../Container/index"
                 },
                 {
                     title: "测试",

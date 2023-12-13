@@ -59,8 +59,10 @@ def parse_index_md(index_md, line_num=0, base_url='/', collapsable=True):
             doc['title'], doc['path'] = match.groups()
             doc['path'] = doc['path'].removesuffix('.md')
 
-            # 如果 path 不是以 / 开头，说明不是绝对路径，则在开头添加 base_url
-            if not doc['path'].startswith('/'):
+            # 如果 path 是相对路径，则在开头加上 base_url
+            if doc['path'].startswith('/') or doc['path'].startswith('https://'):
+                pass
+            else:
                 if doc['path'] == 'index':
                     doc['path'] = ''
                 doc['path'] = base_url + doc['path']

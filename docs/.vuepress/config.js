@@ -162,7 +162,7 @@ module.exports = {
                             path: "/Programming/language/Lua"
                         },
                         {
-                            title: ">>Python",
+                            title: "Python",
                             path: "https://leohsiao.com/Python/"
                         },
                         {
@@ -1189,7 +1189,7 @@ module.exports = {
                 },
                 {
                     title: "容器",
-                    path: "/Container/"
+                    path: "https://leohsiao.com/Container/"
                 },
                 {
                     title: "测试",

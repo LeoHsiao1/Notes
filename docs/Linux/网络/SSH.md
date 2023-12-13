@@ -80,18 +80,23 @@ GSSAPIAuthentication yes          # 是否允许以 Kerberos 协议进行身份�
   chmod 700 ~  ~/.ssh
   chmod 600 ~/.ssh/authorized_keys
   ```
-- 为了避免恶意用户频繁尝试 SSH 登录，进行暴力破解，可采取以下安全措施：
-  - 使用复杂的 SSH 密码，或者只允许使用 SSH 密钥进行登录。
-  - 禁止以 root 用户的身份登录，创建其它用户并分配 root 权限，这样暴力破解时还需要猜测有效的用户名。
-  - 只允许白名单中的 IP 登录，比如只允许内网 IP 。
+
+- 即使其它主机不知道本机的 root 密码，但可能尝试用一些常见密码 SSH 登录本机，进行暴力破解。可采取以下防范措施：
+  - 给本机配置复杂的 SSH 密码，或者只允许使用 SSH 密钥进行登录。
+  - 禁止以 root 用户的身份登录，然后创建其它用户并分配 root 权限，这样暴力破解时还需要猜测有效的用户名。
+  - 配置 `/etc/hosts.allow`、`/etc/hosts.deny` ，只允许被指定的 IP 登录。
+  - 如果本机被一个 IP 连续多次 SSH 登录失败，则自动封禁该 IP 。
+    - Linux 发行版默认没有自动封禁 IP 的功能，用户可以安装 fail2ban 等工具来实现，或者添加 crontab 定时任务来自动扫描日志。
+    - [fail2ban](https://github.com/fail2ban/fail2ban) 的工作原理：扫描 `/var/log/btmp` 等日志文件，找出需要封禁的 IP ，然后添加 iptables 规则来禁止该 IP 连接本机。
 
 ### 白名单、黑名单
 
-当 Linux 收到一个 ssh 或 telnet 的连接请求时，会先查看 `/etc/hosts.allow` 文件：
-- 如果包含该 IP ，则建立 TCP 连接，开始身份认证。
-- 如果不包含该 IP ，则查看 /etc/hosts.deny 文件：
-  - 如果包含该 IP ，则拒绝连接。
-  - 如果不包含该 IP ，则允许连接。
+- 当 Linux 收到一个 ssh 或 telnet 的连接请求时，会先查看 `/etc/hosts.allow` 文件：
+  - 如果包含该 IP ，则建立 TCP 连接，开始身份认证。
+  - 如果不包含该 IP ，则查看 /etc/hosts.deny 文件：
+    - 如果包含该 IP ，则拒绝连接。
+    - 如果不包含该 IP ，则允许连接。
+  - 修改这两个配置文件之后，要重启 sshd、telnet 服务才会生效。
 
 - `/etc/hosts.allow` 的内容示例：
   ```sh
@@ -102,10 +107,9 @@ GSSAPIAuthentication yes          # 是否允许以 Kerberos 协议进行身份�
 
 - `/etc/hosts.deny` 的内容示例：
   ```sh
-  sshd:ALL              # 禁止所有 IP
+  sshd:ALL        # 禁止所有 IP
   in.telnetd:ALL
   ```
-  - 修改了配置文件之后，要重启 sshd、telnet 服务才会生效。
 
 ## 客户端
 
@@ -141,8 +145,7 @@ $ ssh <user>@<host>   # 使用 ssh 协议，以 user 用户（默认为 root ）
   EOL
   ```
   - `-tt` 选项用于强制分配伪终端，从而将远程终端的内容显示到当前终端。
-  - 这里将 EOF 声明为定界符，将两个定界符之间的所有内容当作 sh 脚本发送到远程终端执行。
-    甚至两个定界符之间的缩进空格，也会被一起发送。
+  - 这里将 EOF 声明为定界符，将两个定界符之间的所有内容当作 sh 脚本发送到远程终端执行。甚至两个定界符之间的缩进空格，也会被一起发送。
   - 最后一条命令应该是 exit ，用于主动退出远程终端。
 
 ### 配置

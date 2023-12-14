@@ -425,8 +425,8 @@
     # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中正则匹配的那些行
     # include_lines: ['^WARN', '^ERROR']  # 只采集日志文件中正则匹配的那些行。默认采集所有非空的行。该操作会在 exclude_lines 之前执行
 
-    # encoding: utf-8               # 编码格式
-    # scan_frequency: 10s           # 每隔多久扫描一次日志文件，如果有变动则创建 harvester 进行采集
+    # encoding: utf-8               # 读取日志文件时的编码格式
+    # scan_frequency: 10s           # 每隔多久扫描一次 registry 中的所有日志文件，如果文件有变化，则创建 harvester 进行采集
     # ignore_older: 0s              # 不扫描最后修改时间在多久之前的文件，默认不限制时间。其值应该大于 close_inactive
     # harvester_buffer_size: 16384  # 每个 harvester 在采集日志时的缓冲区大小，单位 bytes
     # max_bytes: 102400             # 每条日志的 message 部分的最大字节数，超过的部分不会发送（但依然会读取）。默认为 10 M ，这里设置为 100 K
@@ -449,6 +449,9 @@
     # - drop_event: ...
   ```
   - 配置时间时，默认单位为秒，可使用 1、1s、2m、3h 等格式的值。
+  - k8s 中 filebeat 漏采日志的一种情况：一个 Pod 超过 close_inactive 时长未打印日志，因此 filebeat 每隔 scan_frequency 时长扫描一次 Pod 的日志文件是否变化。然后 Pod 突然打印日志，并在 scan_frequency 时长内终止 Pod ，此时 k8s 会立即删除 Pod 的日志文件，导致 filebeat 漏采日志。
+    - 参考 [issue](https://github.com/elastic/beats/issues/17396)
+    - 对策：减小 filebeat 的 scan_frequency 参数，或者给 Pod 添加 preStop 延迟终止。
 
 - filebeat v7.14 弃用了输入类型 `type: log` ，建议用户改用 `type: filestream` 。
   - `type: log` 的特点：

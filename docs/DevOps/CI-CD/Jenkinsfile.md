@@ -860,23 +860,36 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
 ## 共享库
 
 - [官方文档](https://www.jenkins.io/doc/book/pipeline/shared-libraries/)
-- 如果编写了大量 pipeline 脚本，则可将一些通用的代码保存为共享库（Shared Library），从而简化单个 pipeline 脚本的内容。
+- 如果编写了大量 pipeline 脚本，则可将一些通用的 pipeline 代码保存为共享库（Shared Library），从而简化单个 pipeline 脚本的内容。
 - 用法：
-  1. 用 Groovy 语言编写 Jenkins 共享库，保存到 GitLab 等仓库。例如在 vars 目录下创建一个名为 test.groovy 的文件：
-      ```groovy
-      def call(message) {
-          echo "INFO: ${message}"
-          return 0            // 可选执行 return 语句，也可省略
-      }
+  1. 用 Groovy 语言编写 Jenkins 共享库，保存到 GitLab 等仓库。目录结构如下：
+        ```sh
+        /
+        ├── src                 # 存放类文件
+        │   └── xx.groovy
+        └── vars                # 存放全局变量、函数
+            └── xx.groovy
+        ```
+        例如编写一个文件 `vars/test.groovy` ：
+        ```groovy
+        def call(message) {
+            echo "INFO: ${message}"
+            return 0            // 可选执行 return 语句，也可省略
+        }
 
-      def run(message) {
-          sh "echo $message"  // 可以在共享库中执行 pipeline 语法的 DSL 语句
-      }
+        def run(message) {
+            sh "echo $message"  // 可以在共享库中执行 pipeline 语法的 DSL 语句
+        }
 
-      @groovy.transform.Field
-      def field1 = "xxx"      // 可以定义全局变量，建议只是读取它，而不修改
-      ```
-  2. 在 Jenkins 管理页面添加 Global Pipeline Libraries ，以 Git 等方式下载共享库。
+        @groovy.transform.Field
+        def field1 = "value1"   // 可以定义全局变量，建议只是读取它，而不修改
+        ```
+  2. 在 Jenkins 管理页面添加 `Global Pipeline Libraries` ，以 Git 等方式下载共享库。
+        - 默认情况下，Jenkins 每次执行一个 Pipeline Job 时，会创建一个 `${WORKSPACE}@libs/` 目录，用于存储动态库。如果已存在 `${WORKSPACE}@libs/` 目录，则会通过 git fetch 等方式更新动态库。
+        - 每执行一个 Pipeline Job 时，还会将 `${WORKSPACE}@libs/` 目录拷贝一份到 master 节点的 `$JENKINS_HOME/jobs/$JOB_NAME/builds/$BUILD_ID/libs/` 目录下，从而备份每次 build 时采用的动态库，便于回滚某次 build 。
+        - 缺点：增加了每次执行 Pipeline Job 的耗时。增加了磁盘开销。
+        - 可以勾选 `Cache fetched versions on controller for quick retrieval` ，这会将动态库缓存在 master 节点的 `$JENKINS_HOME/global-libraries-cache/` 目录下。每次执行 Pipeline Job 时，不会直接下载动态库，而是从 master 节点拷贝过来。因此不能自动更新动态库。
+
   3. 在 pipeline 脚本中调用共享库。
       ```groovy
       @Library('library_1')_            // 导入指定名称的共享库
@@ -892,6 +905,7 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
                           test 'hello'      // 调用共享库中的 test.groovy 时，默认调用其中的 call() 函数
                           test.run 'hello'  // 可以指定调用 test.groovy 中的其它函数
                           r = test('world') // 可以接收函数的返回值
+                          echo test.field1
                       }
                   }
               }

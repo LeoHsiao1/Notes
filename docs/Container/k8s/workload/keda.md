@@ -44,7 +44,7 @@
     name: <string>
     # namespace: default
     annotations:
-      # autoscaling.keda.sh/paused: x             # 添加该名称的注释时，会暂停自动伸缩，并删除下属的 HPA 对象。删除该注释时，会继续自动伸缩
+      # autoscaling.keda.sh/paused: '*'           # 添加该名称的注释时，会暂停自动伸缩，并删除下属的 HPA 对象。删除该注释时，会继续自动伸缩
       # autoscaling.keda.sh/paused-replicas: '0'  # 将 replicas 修改到指定数量，然后暂停自动伸缩。如果同时添加 paused 和 paused-replicas 注释，则只有后者生效
   spec:
     # pollingInterval:  30      # 每隔 30s 从 triggers 获取一次数据，检查是否出现 event
@@ -152,8 +152,29 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     此时 keda scaler 不会工作。
   - 如果指定的 topic 存在，但获取到无效的 offset ，则可能是以下几种原因：
     - consumerGroup 从未提交过 offset ，可能是因为不存在新消息、消费失败。
-    <!-- - consumerGroup 提交过 offset ，但长时间未消费，导致在 __consumer_offsets 中记录的 offset 被删除？？？ -->
+    - consumerGroup 提交过 offset ，但长时间停止运行，导致在 __consumer_offsets 中记录的 offset 被删除。
     此时会根据 scaleToZeroOnInvalidOffset 设置 replicas 。
+
+- 下面举例说明上述 ScaledObject 配置文件的运行效果：
+  - 当 kafka_lag 为 12 时，因为 lagThreshold 为 5 ，所以 keda 会计算出 desiredReplicas 赋值为 kafka_lag / lagThreshold = 12 / 5 = 2.4 ，然后向上取整为 3 。
+  - 当 kafka_lag 为 0 时，keda 会计算出 desiredReplicas 为 0 / 5 = 0 。
+    - 当 kafka_lag 为 0 时，可能是因为 kafka 没有生产消息，此时将 replicas 赋值为 0 是合适的。
+    - 当 kafka_lag 为 0 时，也可能是因为 kafka 每时每刻生产的消息都被消费了，此时将 replicas 赋值为 0 是不合适的，但毕竟 keda 掌握的情报有限，只能做出这样的决策。\
+      此时消费者减少，kafka_lag 会增长，使得 keda 又自动增加 replicas 。如果经常这样，replicas 数量会频繁变化，导致频繁启动、停止 Pod ，增加了开销（比如 kafka rebalance 的耗时）。因此建议 HPA behavior ，避免 replicas 抖动。例如：
+      ```yml
+      advanced:
+        horizontalPodAutoscalerConfig:
+          behavior:
+            scaleDown:
+              stabilizationWindowSeconds: 300 # 统计最近 n 秒内 desiredReplicas 的最大值，作为 scaleDown 的依据
+              policies:
+              - type: Percent
+                value: 50
+                periodSeconds: 60             # 每次减少 replicas 时，限制在 60s 内最多减少 50% ，这样以保守策略减少 kafka 消费者
+            scaleUp:
+              stabilizationWindowSeconds: 0   # 允许立即增加 replicas ，这样尽量及时消费 kafka 消息
+      ```
+      假设监控 Kafka 消费速度，发现每个消费者 Pod 在 30s 内最多消费 100 条消息。则建议将 lagThreshold 赋值为 100 ，并将 scaleDown.periodSeconds 赋值为 30s 的两倍以上。
 
 ### mysql
 

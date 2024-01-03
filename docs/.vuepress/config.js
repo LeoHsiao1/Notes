@@ -227,8 +227,8 @@ module.exports = {
                             path: "/Python/模块与包/模块与包"
                         },
                         {
-                            title: "代码库",
-                            path: "/Python/模块与包/代码库"
+                            title: "软件包",
+                            path: "/Python/模块与包/软件包"
                         }
                     ]
                 },

@@ -8,7 +8,7 @@ tagline: null
 
 <h1 id="homepage_title">LeoHsiao's Notes</h1>
 
-> Hello 2023 !
+> Hello 2024 !
 
 > - 该笔记主要用于记录 IT 知识，欢迎指正。
 > - 笔记编写为 Markdown 格式，按章节目录排序。

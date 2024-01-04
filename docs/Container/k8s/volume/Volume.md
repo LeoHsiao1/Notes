@@ -11,7 +11,7 @@
 
 ## hostPath
 
-：用于将宿主机的一个路径挂载到 Pod 。
+- 用途：将宿主机的一个指定路径挂载到 Pod 中。
 - 例：
   ```yml
   apiVersion: v1
@@ -62,8 +62,10 @@
 
 ## emptyDir
 
-：用于将宿主机的一个空目录挂载到 Pod 。
-- 每次给一个 Pod 挂载 emptyDir 时，会在宿主机上自动创建一个空目录，路径为 `/var/lib/kubelet/pods/<pod_uid>/volumes/kubernetes.io~empty-dir/<volume_name>` 。
+- 用途：在宿主机上创建一个空目录，挂载到 Pod 中。
+- 与 hostPath 的区别在于，emptyDir 不允许指定挂载宿主机的哪个路径，而且 Pod 终止之后可能自动删除 emptyDir ，因此只能用于 Pod 运行期间临时存储数据。
+- 原理：
+  - 每次给 Pod 挂载 emptyDir 时，会在宿主机上自动创建一个空目录，路径为 `/var/lib/kubelet/pods/<pod_uid>/volumes/kubernetes.io~empty-dir/<volume_name>` 。
   - emptyDir 目录的文件权限为 777 ，文件所有者为 root 用户。
   - 如果该 Pod 一直调度在当前 Node ，即使重启 Pod ，也会保留 emptyDir 并继续挂载。
   - 如果该 Pod 从当前 Node 移除，则自动删除 emptyDir 。
@@ -93,7 +95,7 @@
 
 ## downwardAPI
 
-：用于将一些 k8s 字段的值保存为文件，作为 volume 挂载。
+- 用途：将一些 k8s 字段的值保存为文件，作为 volume 挂载。
 - 例：
   ```yml
   apiVersion: v1
@@ -122,7 +124,7 @@
 
 ## ConfigMap
 
-：用于记录一些非私密的配置参数。
+- 用途：记录一些非私密的配置参数。
 - 常见用途：创建一个 ConfigMap 对象，记录一些配置参数，然后在 Pod 中引用 ConfigMap ，创建环境变量或 volume 。
   - 如果需要挂载大型文件或很多文件到 Pod 中，则不适合用 ConfigMap 。可考虑用 hostPath、PV ，或者将这些文件打包成一个 Docker 镜像，以 Sidecar 方式运行。
 - 例：一个 ConfigMap
@@ -209,7 +211,7 @@
 
 ## Secret
 
-：与 ConfigMap 类似，但用于记录密码等私密的配置参数。
+- 用途：与 ConfigMap 类似，但偏向于记录密码等私密的配置参数。
 - 不过 Secret 存储在 etcd 时默认没有加密，因此安全性与 ConfigMap 一样。需要在启动 apiserver 时启用加密功能。
 - 例：一个 Secret
   ```yml
@@ -273,19 +275,19 @@
   1. 用户创建一个 PVC 对象，声明需要一个怎样的 PV 存储卷。
   2. 用户创建一个 Pod ，挂载上述的 PVC 。
   3. k8s 调度 Pod 时，会自动将当前 PVC 绑定的 PV 挂载到 Pod 内。
+- 每个 PVC 需要绑定一个 PV 。
+  - 创建 PVC 时，用户可以主动填写 volumeName 字段，从而指定一个未被使用的 PV ，绑定到该 PVC 。
+  - 如果创建 PVC 时未指定 PV ，则会自动绑定一个符合该 PVC 需求的 PV 。
+    - 例如 PVC 需要 20Gi 的存储空间，则容量为 10Gi 的 PV 不符合要求。
+    - 如果现有的 PV 都不符合需求，则会自动从 StorageClass 新建 PV 。
+    - 如果一直没有符合需求的 PV ，则该 PVC 一直不可用，导致试图挂载它的 Pod 不能启动，停留在 Pending 阶段。
+  - PVC 与 PV 一对一绑定，因此即使 Pod 重启、调度到其它主机，也会挂载之前的 PV ，从而持久存储数据。
+- PVC 是一种受 namespace 管理的 k8s 对象，不是 Pod 的子对象。因此删除 Pod 时，不会自动删除它挂载的 PVC 。
+  - 删除 PVC 时，默认会自动删除下级的 PV 对象。
 - 与挂载 HostPath 相比，PVC 的优点：
   - 能自动创建 volume 来挂载。
   - 能限制 volume 的磁盘使用量。
   - 可以隔离每个 Pod 的 volume ，互不干扰。此时 volume 更像一个独立的磁盘设备，使得 Pod 更像一个独立的主机。
-- 每个 PVC 需要绑定一个 PV 。
-  - 创建 PVC 时，用户可以主动指定一个未被使用的 PV ，绑定到该 PVC 。
-  - 如果创建 PVC 时未指定 PV ，k8s 会自动寻找一个符合该 PVC 需求的 PV 。
-    - 比如 PVC 需要 20Gi 的存储空间，则容量为 10Gi 的 PV 不符合要求。
-    - 如果现有的 PV 都不符合需求，默认会自动从 StorageClass 创建 PV 。
-    - 如果一直没有符合需求的 PV ，则该 PVC 一直不可用，导致试图挂载它的 Pod 不能启动，停留在 Pending 阶段。
-  - PVC 与 PV 一对一绑定，因此即使 Pod 重启、调度到其它主机，也会挂载之前的 PV ，从而持久保存数据。
-- PVC 是一种受 namespace 管理的 k8s 对象，不是 Pod 的子对象。因此删除 Pod 时，不会自动删除它挂载的 PVC 。
-  - 删除 PVC 时，默认会自动删除下级的 PV 对象。
 
 - 例：创建一个 PVC 对象
   ```yml
@@ -406,7 +408,7 @@
   - ReadWriteMany（RWX）：被多主机读写。
   - ReadWriteOncePod（RWOP）：在 ReadWriteOnce 的基础上，限制了只能被单个 Pod 读写。
 - PV 作为 volume 挂载时，有多种模式（volumeMode）：
-  - Filesystem ：默认模式，表示在挂载 volume 之前，会自动创建文件系统。
+  - Filesystem ：默认模式，表示 volume 中已有文件系统。
   - Block ：表示挂载的 volume 是块设备，没有文件系统。
 
 ### StorageClass

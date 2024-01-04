@@ -71,7 +71,7 @@
     [root@CentOS ~]# route
     Kernel IP routing table
     Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-    default         10.1.51.1       0.0.0.0         UG    0      0        0 eth0
+    default         10.1.1.1        0.0.0.0         UG    0      0        0 eth0
     10.1.1.0        0.0.0.0         255.255.255.0   U     0      0        0 eth0
     10.42.1.7       0.0.0.0         255.255.255.255 UH    0      0        0 cali62e56a2ef6d
     10.42.1.9       0.0.0.0         255.255.255.255 UH    0      0        0 cali8417d296a09

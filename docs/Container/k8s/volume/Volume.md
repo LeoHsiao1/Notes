@@ -414,11 +414,23 @@
 ### StorageClass
 
 ：存储类。用于将不同的存储介质抽象为存储类，作为创建 PV 的模板。
-- 在 k8s 中使用 StorageClass 时，通常需要安装第三方的存储插件，或者购买公有云平台的存储服务。例如：
-  - csi ：通过 k8s 容器存储接口提供 StorageClass ，兼容性好。
-  - nfs ：基于 NFS 服务器提供 StorageClass 。
-  - cephfs ：基于 Ceph 服务器提供 StorageClass 。
-- 例：一个 StorageClass
+- k8s 默认未提供 StorageClass ，因此使用 StorageClass 时，需要安装第三方的 CSI 存储插件。例如：
+  - [csi-driver-nfs](https://github.com/kubernetes-csi/csi-driver-nfs)
+    - ：将数据存储到 NFS 服务器。
+    - 优点：部署简单。
+    - 缺点：仅支持文件存储模式。存在单点故障。
+  - [ceph-csi](https://github.com/ceph/ceph-csi/)
+    - ：将数据存储到 Ceph 服务器。
+    - 支持 Ceph-RBD 块存储模式。每个 Ceph-RBD 块设备只能同时被一个 Pod 访问。
+    - 支持 CephFS 文件存储模式。每个 CephFS 网络文件系统可以同时被多个 Pod 访问。
+    - 优点：功能成熟。支持部署多实例、存储多副本，从而实现高可用。
+    - 缺点：运维复杂。
+  - [Longhorn](https://github.com/longhorn/longhorn)
+    - ：将数据存储到每个主机的磁盘设备中。
+    - 优点：与 ceph 相比，更轻量级，更适合云原生架构。
+    - 缺点：仅支持块存储模式。
+
+- StorageClass 的配置示例：
   ```yml
   apiVersion: storage.k8s.io/v1
   kind: StorageClass
@@ -433,13 +445,13 @@
   ```
   - 假设一个 StorageClass 的容量为 100G ，则可以创建多个 PV ，只要它们的总容量不超过 100G 。
   - 有的 StorageClass 支持创建卷快照（VolumeSnapshots），备份 volume 某个时刻的数据。
-- 删除 PV 时需要回收相关资源，有多种策略（reclaimPolicy）：
-  - Delete ：默认策略，表示直接删除 PV 等资源，释放存储空间。
-  - Retain ：保留资源，等待用户手动回收。
-  - Recycle ：对 volume 执行 rm -rf * ，然后便可复用 volume ，而不是重新创建。该策略已弃用。
-- 例如腾讯云 k8s 提供了基于云硬盘的 csi 类型的 StorageClass ，挂载 PVC 的原理如下：
-  1. 创建 PVC 时，自动从 StorageClass 创建一个 PV ，相当于一个云硬盘。
-  2. 当 Pod 调度到某个主机时，将 PV 存储设备接入该主机，挂载到宿主机的某个目录。例如：
+  - 删除 PV 时，StorageClass 需要自动回收相关资源，有多种策略（reclaimPolicy）：
+    - Delete ：默认策略，表示直接删除 PV 等资源，释放存储空间。
+    - Retain ：保留资源，等待用户手动回收。
+    - Recycle ：对 volume 执行 rm -rf * ，然后便可复用 volume ，而不是重新创建。该策略已弃用。
+- 例如腾讯云 k8s 提供了基于云硬盘的 StorageClass ，原理如下：
+  1. 创建 PVC 时，自动从 StorageClass 创建一个 PV ，绑定一个云硬盘。
+  2. 当 Pod 调度到某个主机时，自动将 PV 云硬盘挂载到该主机的某个目录。例如：
       ```sh
       [root@CentOS]# df -hT | grep pvc
       /dev/vde       ext4       99G   84G   16G  85% /var/lib/kubelet/plugins/kubernetes.io/csi/pv/pvc-0ad73317-6f8d-419c-a93c-ce9badf7e3fe/globalmount

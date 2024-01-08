@@ -37,12 +37,12 @@
 
 - 应用程序可通过 librados 库访问 RADOS 。librados 库提供了三种常用的存储接口：
   - librbd
-    - ：用于块存储。
+    - ：用于块存储，又称为 RBD（RADOS Block Device）。
     - Ceph 不依赖其它文件系统，可以用自带的存储后端 BlueStore 直接管理 HDD、SSD 硬盘。
   - MDS
     - ：用于文件存储。
     - 提供了一种网络文件系统 CephFS ，兼容 POSIX 文件系统。
-  - RADOS Gateway
+  - RADOS Gateway（RGW）
     - ：用于对象存储，兼容 S3、Swift 。
 
 - Ceph 新增数据的流程：

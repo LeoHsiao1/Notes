@@ -1444,7 +1444,14 @@ module.exports = {
                         },
                         {
                             title: "Volume",
-                            path: "/Container/k8s/volume/Volume"
+                            path: "/Container/k8s/volume/Volume",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "Longhorn",
+                                    path: "/Container/k8s/volume/Longhorn"
+                                }
+                            ]
                         },
                         {
                             title: "扩展",

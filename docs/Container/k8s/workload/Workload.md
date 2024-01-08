@@ -249,7 +249,7 @@
     selector:
       matchLabels:
         k8s-app: nginx
-    serviceName: nginx        # 该 StatefulSet 采用的 k8s Service ，默认为 ''
+    serviceName: nginx        # 该 StatefulSet 采用的 k8s Service ，默认为 '' 。虽然可以不用该功能，但该字段必填
     template:
       metadata:
         labels:

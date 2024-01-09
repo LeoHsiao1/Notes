@@ -481,8 +481,8 @@ Consul 支持为 HTTP、RPC 通信设置 ACL 规则，主要概念如下：
               -recurse            # 递归访问文件夹中的子 key
             put <key> [value]
             delete <key>
-            export [prefix]       # 导出前缀匹配的所有 key ，包括子 key 。返回值为 JSON 格式
-            import [data]         # 导入 key 。输入必须为 JSON 格式
+            export [prefix]       # 导出前缀匹配的所有 key ，包括子 key 。输出值为 JSON 格式
+            import [data]         # 导入 key 。输入必须为 JSON 格式。例如 cat data.json | consul kv import -
               -prefix [prefix]    # 只导入前缀匹配的 key
 
         snapshot                  # 访问 snapshot 功能

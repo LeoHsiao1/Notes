@@ -376,7 +376,7 @@ git gc                      # 清理磁盘文件，比如删除 orphan commit �
     path = submodules/python_utils                      # 将该 submodule 下载到哪个目录
     branch = master                                     # 引用的分支
   ```
-  还会在 `.git/config` 中记录 submodule 的信息，如下：
+  并根据 .gitmodules 文件，在 .git/config 文件中添加配置：
   ```ini
   [submodule "python_utils"]
     active = true

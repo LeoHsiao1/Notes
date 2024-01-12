@@ -388,8 +388,8 @@
             values:
             - node-1
   ```
+  - PV 是不受 namespace 管理的 k8s 对象，而 PVC 受 namespace 管理。
   - k8s 原生可创建 hostPath、local 两种 PV ，用于挂载宿主机上的 path ，但不能在主机间迁移数据，因此实用性低。更常见的用法是从 StorageClass 创建可迁移的 PV 。
-  - PV、StorageClass 都是不受 namespace 管理的 k8s 对象，在整个集群的命名唯一。而 PVC 受 namespace 管理。
 
 - PV 对象的生命周期分为多个阶段：
   ```sh
@@ -414,6 +414,12 @@
 ### StorageClass
 
 ：存储类。用于将不同的存储介质抽象为存储类，作为创建 PV 的模板。
+- StorageClass 是一个容量很大的存储池，可以从中创建多个 Volume 存储卷。
+  - StorageClass、Volume、PV 都是不受 namespace 管理的 k8s 对象，在整个 k8s 集群的名称唯一。而 PVC 受 namespace 管理。
+- 工作流程：
+  1. 用户创建一个 PVC ，未绑定 PV 。并且 PVC 中配置了 storageClassName ，表示需要从某个 StorageClass 创建存储卷。
+  2. k8s 自动从 StorageClass 创建一个 Volume 对象，并映射为一个 PV 对象。然后将该 PV 绑定到 PVC ，供用户使用。
+
 - k8s 默认未提供 StorageClass ，因此使用 StorageClass 时，需要安装第三方的 CSI 存储插件。例如：
   - [csi-driver-nfs](https://github.com/kubernetes-csi/csi-driver-nfs)
     - ：将数据存储到 NFS 服务器。
@@ -445,7 +451,7 @@
   ```
   - 假设一个 StorageClass 的容量为 100G ，则可以创建多个 PV ，只要它们的总容量不超过 100G 。
   - 有的 StorageClass 支持创建卷快照（VolumeSnapshots），备份 volume 某个时刻的数据。
-  - 删除 PV 时，StorageClass 需要自动回收相关资源，有多种策略（reclaimPolicy）：
+  - 删除 PV 时，StorageClass 需要自动回收 volume 等相关资源，有多种策略（reclaimPolicy）：
     - Delete ：默认策略，表示直接删除 PV 等资源，释放存储空间。
     - Retain ：保留资源，等待用户手动回收。
     - Recycle ：对 volume 执行 rm -rf * ，然后便可复用 volume ，而不是重新创建。该策略已弃用。

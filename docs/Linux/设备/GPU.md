@@ -218,8 +218,12 @@
 3. 安装 NVIDIA 公司发布的 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 cuFFT 等加速库、CUDA 开发及调试工具、编译器、运行时。
     - CUDA 通常依赖较新版本的 NVIDIA 显卡驱动，参考：<https://docs.NVIDIA.com/cuda/cuda-toolkit-release-notes/index.html>
     - CUDA 通常安装在 `/usr/local/cuda*` 目录下。
-    - 可执行命令 `/usr/local/cuda-*/bin/nvcc --version` 查看 CUDA 的版本号。nvcc 是 CUDA 编译器（NVIDIA CUDA Compiler）
-    - 同一主机上可以安装多个版本的 CUDA 工具包，共用同一个 NVIDIA 显卡驱动。
+    - 可执行以下命令，查看 CUDA 的版本号：
+      ```sh
+      ls /usr/local/cuda*                     # CUDA 默认安装在该目录
+      /usr/local/cuda-*/bin/nvcc --version    # nvcc 是 CUDA 编译器（NVIDIA CUDA Compiler）
+      ```
+      - 同一主机上可以安装多个版本的 CUDA 工具包，共用同一个 NVIDIA 显卡驱动。
 
 4. 安装 NVIDIA 公司发布的 [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html) ，它是一个常用的算法库，没有包含在 cuda-toolkit 中。
 
@@ -244,6 +248,7 @@
     >>> torch.backends.cudnn.version()  # 查看 cuDNN 版本
     8500
     ```
+    - 用 pip 安装 torch 的二进制 wheel 包时，它会内置一份 CUDA ，不使用本机的 CUDA 。下载 torch 的源代码然后编译、安装，才会使用本机的 CUDA 。
     - 可通过环境变量 `CUDA_VISIBLE_DEVICES=0,1` 指定可用的 GPU 设备编号。
     - PyTorch、TensorFlow 可以在 CPU 或 GPU 上运行。如果本机启用了 GPU ，则优先使用 GPU 。如果设置环境变量 CUDA_VISIBLE_DEVICES 为空，则不允许使用 GPU 。
 

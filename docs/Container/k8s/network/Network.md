@@ -219,7 +219,7 @@ k8s 常见的几种网络通信：
 
 #### 环境变量
 
-- 创建一个 Pod 时，会自动在终端环境变量中加入当前 namespace 所有 Service 的地址。如下：
+- 创建一个 Pod 时，默认会在 shell 环境变量中加入当前 namespace 所有 Service 的地址。如下：
   ```sh
   REDIS_SERVICE_HOST=10.43.0.1
   REDIS_PORT_6379_TCP_PORT=6379
@@ -227,7 +227,9 @@ k8s 常见的几种网络通信：
   REDIS_PORT_6379_TCP=tcp://10.43.0.1:6379
   ...
   ```
-  - Serivce 变化时不会自动更新 Pod 的环境变量，因此不可靠。
+- 建议给 Pod 配置 `spec.enableServiceLinks: False` ，不添加 Service 环境变量。因为：
+  - Service 变化时，不会自动更新 shell 环境变量，因此不可靠。
+  - k8s 存在大量 Service 时，会添加大量 shell 环境变量，增加读写的开销。
 
 #### externalIPs
 

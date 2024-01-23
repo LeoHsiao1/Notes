@@ -870,19 +870,20 @@
   services:
     elasticsearch_exporter:
       container_name: elasticsearch_exporter
-      image: quay.io/prometheuscommunity/elasticsearch-exporter:v1.2.1
+      image: quay.io/prometheuscommunity/elasticsearch-exporter:v1.7.0
       command:
         # - --web.listen-address=:9114
         # - --web.telemetry-path=/metrics
-        - --es.uri=http://<user>:<password>@elasticsearch:9200
-        - --es.all                    # 是否监控集群的所有 node 。默认为 false ，只监控当前 node
-        # - --es.cluster_settings     # 是否监控集群的配置
-        # - --es.indices              # 是否监控所有 index
-        # - --es.indices_settings
+        - --es.uri=http://<username>:<password>@elasticsearch:9200  # 也可将账号赋值给环境变量 ES_USERNAME、ES_PASSWORD
+        - --es.all                      # 是否监控集群的所有 node 。默认为 false ，只监控当前 node
+        # - --collector.clustersettings # 是否监控集群的配置
+        - --es.indices                  # 是否监控所有 index 的状态
+        # - --es.indices_settings       # 是否监控所有 index 的 settings
         # - --es.indices_mappings
+        # - --es.aliases
         - --es.shards
         # - --es.snapshots
-        # - --es.timeout  5s          # 从 ES 采集信息的超时时间
+        # - --es.timeout=5s             # 从 ES 采集信息的超时时间
       restart: unless-stopped
       ports:
         - 9114:9114
@@ -914,12 +915,11 @@
   elasticsearch_filesystem_io_stats_device_write_size_kilobytes_sum   # 磁盘累计写
   elasticsearch_transport_rx_size_bytes_total                         # 网络累计读
   elasticsearch_transport_tx_size_bytes_total
-  elasticsearch_process_max_files_descriptors
-  elasticsearch_process_open_files_count
+  elasticsearch_process_open_files_count / elasticsearch_process_max_files_descriptors  # 文件描述符使用率
 
   # 关于 JVM ，可参考 jmx_exporter
-  elasticsearch_jvm_memory_used_bytes / elasticsearch_jvm_memory_max_bytes
-  elasticsearch_jvm_memory_pool_used_bytes / elasticsearch_jvm_memory_pool_max_bytes
+  elasticsearch_jvm_memory_used_bytes / elasticsearch_jvm_memory_max_bytes  # JVM 堆内存使用率
+  elasticsearch_jvm_memory_pool_used_bytes / elasticsearch_jvm_memory_pool_max_bytes  # JVM 内存池使用率
   delta(elasticsearch_jvm_gc_collection_seconds_count[1m])  # GC 次数（每分钟）
   delta(elasticsearch_jvm_gc_collection_seconds_sum[1m])    # GC 耗时（每分钟）
 
@@ -932,9 +932,15 @@
   elasticsearch_thread_pool_rejected_count
 
   # 关于 index
-  elasticsearch_indices_docs_total{index=".kibana"}     # index 的可见文档数，包括主分片、副分片的文档，不包括 delete 文档
-  elasticsearch_indices_deleted_docs_total              # index 的 deleted 文档数
+  elasticsearch_indices_settings_replicas               # index 的副本数
+  elasticsearch_indices_docs_total{index="xx"}          # index 的可见文档数，包括主分片、副分片的文档，不包括 deleted 文档
+  elasticsearch_indices_docs_primary                    # index 主分片的可见文档数
+  elasticsearch_indices_deleted_docs_primary            # index 主分片的 deleted 文档数
   elasticsearch_indices_store_size_bytes_total          # index 占用的磁盘空间，累计所有 node
+  elasticsearch_indices_store_size_bytes_primary        # index 主分片占用的磁盘空间，累计所有 node
+  elasticsearch_index_stats_fielddata_memory_bytes_total        # index fielddata 占用的内存
+  elasticsearch_index_stats_query_cache_memory_bytes_total
+  elasticsearch_index_stats_request_cache_memory_bytes_total
   elasticsearch_index_stats_flush_total                         # index flush 的次数
   elasticsearch_index_stats_flush_time_seconds_total            # index flush 的耗时
   elasticsearch_index_stats_get_total                           # index GET 的次数
@@ -952,11 +958,8 @@
   elasticsearch_index_stats_search_query_time_seconds_total     # search query 的次数
   elasticsearch_index_stats_search_query_total
 
-  # 关于 shard
-  elasticsearch_indices_shards_docs{index=".kibana", node="qA5eXtIwQU6kbVc-ly5IKg", primary="true", shard="0"}   # 某个 index 在某个 nodename 上，某个编号的 shard 的文档数
-
-  # 关于 segment
-  elasticsearch_indices_segment_count_total             # index 的 segment 数量
+  # 某个 index 在某个 nodename 上，某个 shard 的文档数。用于监控 shard 是否均匀分布
+  elasticsearch_indices_shards_docs{index="xx", node="xx", primary="true", shard="0"}
   ```
 
 ### kafka_exporter

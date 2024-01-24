@@ -42,6 +42,8 @@ HostKey /etc/ssh/ssh_host_rsa_key # 使用 SSH2 协议时，RSA 私钥的位置
 
 MaxAuthTries 6                    # 被 SSH 客户端登录时，每个 TCP 连接的最多认证次数。如果客户端输错密码的次数达到该值的一半，则断开连接
 MaxSessions 10                    # 同时最多连接的终端数
+# ClientAliveCountMax 3           # 如果一个 SSH 连接长时间没有传输数据，则每隔 ClientAliveInterval 秒发送一次空消息给客户端，最多发送 ClientAliveCountMax ，然后关闭空闲的连接
+# ClientAliveInterval 0           # 默认为 0 ，表示不会自动关闭空闲的连接
 
 # 当前 SSH 服务器被 SSH 客户端连接时，允许以哪些用户的身份登录
 AllowUsers root leo@10.0.0.1      # 只允许这些用户进行 SSH 登录。可以使用通配符 * 和 ? ，可以指定用户的 IP ，可以指定多个用户（用空格分隔）

@@ -93,7 +93,7 @@
           image: nginx:1.23
         initContainers:             # init 容器
         - name: init
-          image: busybox:latest
+          image: alpine/curl:latest
           # restartPolicy: Always   # sidecar 形式的 init 容器
           command:
             - touch
@@ -157,8 +157,8 @@
   kind: Pod
   spec:
     containers:
-    - name: busybox
-      image: busybox:latest
+    - name: curl
+      image: alpine/curl:latest
       command: ["echo", "$K1", "$(K2)"]
       env:
       - name: K1
@@ -260,6 +260,59 @@
     system-cluster-critical
     system-node-critical
     ```
+
+### securityContext
+
+- 可选配置 securityContext 字段，声明安全上下文。如下：
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: curl
+  spec:
+    securityContext:
+      runAsUser: 1000       # 启动容器内每个进程时，采用该 user id 身份。如果不配置该字段，则由 Dockerfile 决定 uid
+      runAsGroup: 2000      # 启动容器内每个进程时，采用该 group id 身份。如果不配置该字段，则由 Dockerfile 决定 gid
+      fsGroup: 3000         # 指定容器内用户所属的扩展用户组，并且将 volume 中所有文件的 gid 改为该值
+      fsGroupChangePolicy: Always           # 每次挂载 volume 时，递归修改其中所有文件的 gid 。这是默认策略，但如果有大量文件需要处理，则会拖慢 Pod 启动速度
+      # fsGroupChangePolicy: OnRootMismatch # 每次挂载 volume 时，如果根目录的 gid 不符合 securityContext ，才递归修改
+      privileged: false     # 是否特权容器
+      capabilities: ...     # 分配一些内核权限
+      seLinuxOptions: ...
+    containers:
+    - name: curl
+      image: alpine/curl:latest
+      # securityContext: ...
+      volumeMounts:
+      - name: vol-data
+        mountPath: /data
+    volumes:
+    - name: vol-data
+      emptyDir:
+        sizeLimit: 100Mi
+  ```
+  - 可以在 Pod 级别配置 securityContext ，也可给 Pod 中的每个 container、initContainers、ephemeralContainers 单独配置 securityContext 。
+  - 如果在 Pod 级别配置了 securityContext.xx 字段，并且在 container 级别未配置同名字段，则会继承 Pod 级别的配置。
+
+- 关于 fsGroup 配置参数：
+  - 工作原理：
+    - 每次挂载 volume 到 Pod 时，将 volume 中所有文件的 gid 改为该值。（不会修改文件的 uid）
+    - 挂载之后，如果容器内进程在该 volume 目录下新建文件，则文件的 uid 取决于 runAsUser 参数，文件的 gid 取决于 fsGroup 参数。（通过 Linux setgid 实现）
+    - 挂载之后，如果容器内进程在非 volume 目录下新建文件，则文件的 uid 取决于 runAsUser 参数，文件的 gid 取决于 runAsGroup 参数。
+  - 如果挂载 hostPath 类型的 volume ，则不会修改其 gid 。
+  - 只能在 Pod 级别配置 fsGroup 和 fsGroupChangePolicy ，在 container 级别不支持配置。
+
+- 用上述配置创建一个 Pod ，然后进入容器终端，效果如下：
+  ```sh
+  $ id
+  uid=1000 gid=2000 groups=2000,3000
+  $ touch /data/f1
+  $ ls -alh /data
+  total 0
+  drwxrwsr-x    2 root     3000          16 Jan 12 12:22 .
+  drwxr-xr-x    1 root     root          40 Jan 12 12:19 ..
+  -rw-r--r--    1 1000     3000           0 Jan 12 12:22 f1
+  ```
 
 ## 生命周期
 

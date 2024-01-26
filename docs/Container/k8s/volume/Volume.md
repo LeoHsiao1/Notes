@@ -81,13 +81,13 @@
     - name: nginx
       image: nginx:1.23
       volumeMounts:
-      - name: volume-cache
+      - name: vol-cache
         mountPath: /cache
     volumes:
-    - name: volume-cache
+    - name: vol-cache
       emptyDir:
         sizeLimit: 100Mi    # 限制 emptyDir 存储的文件大小，超过则驱逐该 Pod 。即使 emptyDir 未达到 sizeLimit ，也可能达到 limits.ephemeral-storage 而驱逐 Pod
-    - name: volume-tmpfs
+    - name: vol-tmpfs
       emptyDir:
         medium: Memory      # 在内存中创建 emptyDir ，挂载为 tmpfs 文件系统。此时 emptyDir 存储的文件不会占用磁盘，而是占用内存，受 sizeLimit、limits.memory 限制
         sizeLimit: 100Mi
@@ -347,16 +347,16 @@
           volumeMounts:
             - name: pvc
               mountPath: /data
-  volumeClaimTemplates:
-  - metadata:
-      name: pvc   # 会根据模板为每个 Pod 创建一个 PVC ，命名格式为 <template_name>-<pod_name> ，比如 pvc-redis-1、pvc-redis-2
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      storageClassName: test-csi
-      resources:
-        requests:
-          storage: 10Gi
+    volumeClaimTemplates:
+    - metadata:
+        name: pvc   # 会根据模板为每个 Pod 创建一个 PVC ，命名格式为 <template_name>-<pod_name> ，比如 pvc-redis-1、pvc-redis-2
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: test-csi
+        resources:
+          requests:
+            storage: 10Gi
   ```
 
 ### PV
@@ -444,6 +444,7 @@
     name: cbs-csi
   allowVolumeExpansion: true              # 是否支持对已创建的 PV 进行扩容
   parameters:                             # 一些配置参数，会传递给 provisioner
+    fstype: xfs
     ...
   provisioner: kubernetes.io/aws-ebs      # 提供该 StorageClass 的插件名
   reclaimPolicy: Delete
@@ -455,6 +456,7 @@
     - Delete ：默认策略，表示直接删除 PV 等资源，释放存储空间。
     - Retain ：保留资源，等待用户手动回收。
     - Recycle ：对 volume 执行 rm -rf * ，然后便可复用 volume ，而不是重新创建。该策略已弃用。
+  - 删除一个 StorageClass 时，不会自动删除由它创建的所有 PVC 。此时再删除 PVC ，可能不会根据 reclaimPolicy 释放资源。
 - 例如腾讯云 k8s 提供了基于云硬盘的 StorageClass ，原理如下：
   1. 创建 PVC 时，自动从 StorageClass 创建一个 PV ，绑定一个云硬盘。
   2. 当 Pod 调度到某个主机时，自动将 PV 云硬盘挂载到该主机的某个目录。例如：

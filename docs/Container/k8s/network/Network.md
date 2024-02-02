@@ -345,11 +345,11 @@ k8s 常见的几种网络通信：
   - 允许多个 LoadBalancer Service 使用同一个 loadBalancerIP ，只要监听的端口不同。
 - 缺点：
   - 原生 k8s 不支持运行 LoadBalancer 。
-  -  client 通过 TCP 长连接发起请求时， LoadBalancer 会一直转发到 EndPoints 中同一个端点，不能实现负载均衡。
+  - client 通过 TCP 长连接发起请求时， LoadBalancer 会一直转发到 EndPoints 中同一个端点，不能实现负载均衡。
 
 ### ExternalName
 
-：将 Service 的 DNS 名称解析到一个集群外的域名。
+：将 Service 的 DNS 名称解析到一个域名。
 - 例：
   ```yml
   apiVersion: v1
@@ -362,10 +362,13 @@ k8s 常见的几种网络通信：
     externalName: redis.test.com
   ```
   - k8s 会添加一条 CNAME 类型的 DNS 记录，将该 Service 的 DNS 名称解析到 externalName ，而不是 clusterIP 。
-  - 因此上例中，执行 `ping redis.default` ，相当于执行 `ping redis.test.com` ，DNS 解析结果是 externalName 对应的 IP 。
+  - 上例中，执行 `ping redis.default` ，相当于执行 `ping redis.test.com` ，最终 DNS 解析到 externalName 对应的 IP 。
   - externalName 字段必须填一个可被 DNS 解析的名称，不能填 IP 。
-    - 如果是 k8s 内部的 DNS 名称，则必须为 FQDN 格式。
     - 如果该值不能被 DNS 解析，则创建该 Service 时会成功，但执行 `ping redis.default` 时会报错 bad address ，表示不能 DNS 解析。
+  - externalName 可以填 k8s 集群外部的域名。也可以填 k8s 内部定义的域名，但必须为 FQDN 格式，例如：
+    ```yml
+    externalName: redis.default.svc.cluster.local
+    ```
 
 ## EndPoints
 
@@ -517,6 +520,18 @@ k8s 常见的几种网络通信：
     ```
   - Ingress 中可定义多个 backend 。如果 HTTP 请求的 request_host、request_path 匹配某个 backend ，则交给该 backend 处理，不交给其它 backend 处理。
     - 如果 HTTP 请求不匹配任何 backend ，则交给 defaultBackend 处理。
+
+- backend.service 必须与 Ingress 位于同一 k8s namespace 。如果想让 Ingress 反向代理其它 namespace 的 service ，则可添加一个 externalName 类型的 service 进行转发，例如：
+  ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: nginx
+    namespace: default
+  spec:
+    type: ExternalName
+    externalName: nginx.other_namepsace.svc.cluster.local
+  ```
 
 - rules[].host 中可使用通配符 * ，匹配任意内容的单个 DNS 字段。
   - 例如 `host: *.test.com` 匹配 `www.test.com` ，不匹配 `test.com`、`1.www.test.com` 。

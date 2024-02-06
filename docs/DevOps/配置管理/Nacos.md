@@ -147,3 +147,16 @@ curl -X POST 'http://127.0.0.1:8848/nacos/v1/ns/instance?serviceName=nginx&ip=10
 # 发现服务
 curl -X GET 'http://127.0.0.1:8848/nacos/v1/ns/instance/list?serviceName=nginx'
 ```
+
+### 日志
+
+nacos 会在 `/home/nacos/logs/` 目录下记录多种日志文件，例如：
+```sh
+alipay-jraft.log    # 运行 nacos 集群时，记录 nacos 节点之间的 RAFT 协议日志
+config-fatal.log    # 记录 nacos 连接 Derby 或 MySQL 数据库的报错日志
+core-auth.log       # 记录所有 client 连接到 nacos 的认证日志。例如 client 使用错误的密码登录，会记录 HTTP 403 报错日志
+nacos-cluster.log   # 记录 nacos 集群的日志
+naming-server.log   # 记录各个 instance 注册到 nacos 的日志
+```
+- nacos 记录的日志文件会不断增长，可能占用几十 GB 磁盘，建议用 logrotate 等方式自动清理。
+- 对于 core-auth.log ，如果 client 频繁尝试登录 nacos ，则会明显增加 nacos 的 CPU 负载，因为 nacos 校验密码的性能较低，见 [相关 issue](https://github.com/alibaba/nacos/issues/11609) 。

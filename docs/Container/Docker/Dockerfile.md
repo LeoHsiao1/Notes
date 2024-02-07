@@ -141,7 +141,7 @@
 ：声明一个或多个键值对格式的构建参数。
 - 例：
   ```sh
-  ARG var1  \
+  ARG var1 \
       var2=value2
   ```
   - 可以不赋值，此时值为空。
@@ -209,8 +209,8 @@
   - 在容器中，dockerd 会将所有命令都从 exec 格式转换成 shell 格式，然后执行。
 - 例：
   ```sh
-  RUN echo Hello && \
-      touch f1
+  RUN echo Hello \
+      && touch f1
   RUN ["/bin/echo", "hello"]
   ```
 
@@ -339,13 +339,13 @@
 
   # 定义环境变量
   ENV USER=test \
-      USER_ID=1000  \
+      USER_ID=1000 \
       WORK_DIR=/opt
 
   # 创建用户及目录
-  RUN useradd $USER -u $USER_ID -m -s /bin/bash && \
-      mkdir -p $WORK_DIR && \
-      chown -R $USER:$USER $WORK_DIR
+  RUN useradd $USER -u $USER_ID -m -s /bin/bash \
+      && mkdir -p $WORK_DIR \
+      && chown -R $USER:$USER $WORK_DIR
 
   # 其它配置
   USER $USER
@@ -356,9 +356,9 @@
   # 构建阶段
   FROM maven:3.8.4-jdk-8 AS builder
   WORKDIR $WORK_DIR
-  RUN git clone $GIT_REPO .   && \
-      git checkout $GIT_REFS  && \
-      mvn clean package
+  RUN git clone $GIT_REPO . \
+      && git checkout $GIT_REFS \
+      && mvn clean package
 
   # 最终阶段
   FROM base_image
@@ -407,8 +407,8 @@
 - 例：使用 tini
   ```dockerfile
   ...
-  RUN wget https://github.com/krallin/tini/releases/download/v0.19.0/tini -O /usr/bin/tini && \
-      chmod +x /usr/bin/tini
+  RUN wget https://github.com/krallin/tini/releases/download/v0.19.0/tini -O /usr/bin/tini \
+      && chmod +x /usr/bin/tini
   ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
   CMD ["-jar", "test.jar"]
   ```
@@ -488,12 +488,12 @@ docker build <PATH>|<URL>
   - cache ：用于挂载缓存目录，类似于数据卷。
     ```sh
     RUN --mount=type=cache,target=/app/node_modules,id=/app/node_modules \
-        cd /app   && \
-        npm install
+        cd /app \
+        && npm install
 
     RUN --mount=type=cache,target=/app/node_modules,sharing=locked \
-        cd /app   && \
-        npm run build
+        cd /app \
+        && npm run build
     ```
     - cache 会在第一次挂载时自动创建。当构建结束，且不存在引用它的镜像时，自动删除。
       - 挂载 cache 的优点：可以让多个构建步骤共享文件。
@@ -515,8 +515,8 @@ docker build <PATH>|<URL>
     FROM nginx
 
     LABEL maintainer=test
-    RUN echo Hello && \
-        touch f1
+    RUN echo Hello \
+        && touch f1
 
     CMD ["nginx"]
     ```
@@ -554,16 +554,16 @@ docker build <PATH>|<URL>
       - 建议尽量减少 RUN 指令的数量，避免增加大量 layer ，占用过多磁盘空间。比如将多条 RUN 指令合并成一条，但合并了经常不命中缓存的命令时，又会增加构建耗时。
       - 安装软件之后，应该删除缓存。例如：
         ```dockerfile
-        RUN yum update && \
-            yum install -y vim && \
-            yum clean all && \
-            rm -rf /var/cache/yum
+        RUN yum update \
+            && yum install -y vim \
+            && yum clean all \
+            && rm -rf /var/cache/yum
         ```
         ```dockerfile
-        RUN apt update && \
-            apt install -y vim && \
-            apt clean && \
-            rm -rf /var/lib/apt/lists/*
+        RUN apt update \
+            && apt install -y vim \
+            && apt clean \
+            && rm -rf /var/lib/apt/lists/*
         ```
         ```dockerfile
         RUN pip install -r requirements.txt --no-cache-dir

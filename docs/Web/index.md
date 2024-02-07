@@ -30,7 +30,6 @@
     - [路由转发](Web服务器/Nginx/路由转发.md)
     - [访问控制](Web服务器/Nginx/访问控制.md)
     - [通信协议](Web服务器/Nginx/通信协议.md)
-    - [相关命令](Web服务器/Nginx/相关命令.md)
   - [Tomcat](Web服务器/Tomcat.md)
 - CMS
   - [简介](CMS/简介.md)

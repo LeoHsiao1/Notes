@@ -221,59 +221,81 @@
 
 ### OpenSSL
 
-：一个关于 SSL 的开源工具包。
-- 常用于生成 SSL 证书，或被客户端、服务器用于 SSL 握手。
-- 例：生成 SSL 私钥和自签名证书
+：一个关于 SSL 协议的开源工具包。
+- 主要用途：
+  - 生成自签名的 SSL 证书。但不被浏览器认可，只能用于私有网络。
+  - 使用 SSL 公钥、私钥，进行加密、解密。
+- 命令：
   ```sh
   openssl
-          req -x509           # 生成自签名的数字证书，采用 X.509 标准
+          req -x509           # 生成自签名的 SSL 证书，采用 X.509 标准
           -days 365           # 证书的有效期
           -newkey rsa:2048    # 使用新生成的密钥
           -nodes              # no DES ，生成 key 文件时不加密
           -keyout cert.key    # 保存私钥到指定文件
           -out cert.crt       # 保存证书到指定文件
   ```
-  - 浏览器通常不会承认自签名证书，会警告该网站不安全。
 
 ### ACME
 
-- letsencrypt.org ：一个 CA 网站，可以免费申请数字证书。
-- ACME（Automatic Certificate Management Environment）：一个网络协议，用于向 CA 申请、续订、撤销证书。
-  - 最初是为 letsencrypt.org 设计的，后来也支持其它 CA 。
-  - 2016 年发布 API v1 。
-  - 2018 年发布 API v2 ，支持通配符域名。
+- ACME（Automatic Certificate Management Environment）
+  - ：一个网络协议，用于自动化向 CA 申请、续订、撤销 SSL 证书。
+  - 该协议由 letsencrypt.org 发明，兼容多个 CA 机构。
+  - 版本：
+    - 2016 年发布 API v1 。
+    - 2018 年发布 API v2 ，支持通配符域名。
+
+- letsencrypt.org
+  - ：一个根 CA 机构，从 2015 年开始运行。
+  - 优点：
+    - 如果用户找传统的 CA 机构申请 SSL 证书，通常需要人工审核，耗时几天。还需要为每个 SSL 证书每年付费几千元。
+    - 而 letsencrypt.org 将申请 SSL 证书的流程自动化，并允许用户免费创建 SSL 证书，因此推动了 HTTPS 协议的普及。
+  - 缺点：
+    - 2015 年，Chrome 等浏览器软件添加了对 letsencrypt.org 根证书的信任，进而信任其颁发的 SSL 证书。而老版本的软件可能不信任 letsencrypt.org 颁发的 SSL 证书。
+
+- 按照 ACME 协议，当用户申请某个域名的 SSL 证书时，需要证明自己对该域名有控制权，该过程称为 challenge ，有两种方式：
+  - HTTP
+    - 原理：
+      1. CA 服务器指定一个随机名称的文件。
+      2. 用户将域名解析到一个 Web 服务器，并通过公网 URL `<domain>:80/.well-known/acme-challenge/<filename>` 提供上述文件。
+      3. CA 服务器向上述公网 URL 发送 HTTP GET 请求，如果响应为 200 ，则证明用户对该域名有控制权。
+  - DNS
+    - 原理：
+      1. CA 服务器指定一个随机取值的字符串。
+      2. 用户操作 DNS 服务器，添加一条 DNS 记录，将子域名 `_acme-challenge.<domain>` 解析到上述字符串。
+      3. CA 服务器向公网 DNS 服务器查询上述子域名，如果解析到上述字符串，则证明用户对该域名有控制权。
+    - 用户可以手动添加 DNS 记录。也可以运行 Certbot 的 DNS 插件，调用 DNS 服务器的 API ，自动添加 DNS 记录。
+    - 优点：
+      - Web 服务器没有运行时，也能通过 DNS 方式申请 SSL 证书。
+      - HTTP 方式每次只能 challenge 一个域名，而 DNS 方式可以同时 challenge 所有子域名，因此能对通配符域名申请 SSL 证书。
+    - 缺点：
+      - 修改 DNS 记录之后，要等几分钟才能同步到全球 DNS 服务器。而 HTTP 方式可以立即申请到 SSL 证书。
 
 #### Certbot
 
-：一个命令行工具，作为 ACME 客户端。
+：一个命令行工具，作为 ACME 客户端，向 letsencrypt.org 申请 SSL 证书。
   - [GitHub](https://github.com/certbot/certbot)
-- 用户需要证明自己对域名拥有控制权，该过程称为 challenge ，主要有两种方式：
-  - HTTP ：将域名绑定到一个网站，监听 80 端口，并在 URL `/.well-known/acme-challenge/` 下提供一个指定文件。
-  - DNS ：添加一个 TXT 类型的 DNS 记录，将子域名 `_acme-challenge.<domain>` 解析到指定字符串。
-    - 使用 DNS 插件时，会调用 DNS 服务器的 API ，从而自动进行验证。
-    - 通配符域名只能通过 DNS 方式申请证书。
-- 证书的有效期默认为 90 天。
-  - 为了刷新有效期，可以重新创建证书，或续订。
-  - 通过 --manual 方式申请的证书，不能自动续订，需要重新申请。
 - 命令：
   ```sh
   certbot
           # 申请证书
-          run                 # 默认执行该操作，会自动申请证书并安装
-          certonly            # 只是获取证书，保存到本机，不会安装
-          -d <domain>         # 指定要申请证书的域名。可以多次使用该选项，指定多个域名
+          run                 # 默认执行该操作，会申请证书，然后安装到 Web 服务器软件中
+          certonly            # 只是申请证书，保存到本机，不会安装
+          -d <domain>         # 指定要申请证书的域名。可以多次使用该选项，让一个证书包含多个域名
           --email <xx>        # 填写申请人的 email
 
-          # 证明域名控制权的几种方式
-          --nginx             # 发现本机的 Nginx 服务器，自动修改配置文件，进行验证
-          --standalone        # 运行一个简单的 HTTP 服务器。这需要暂时停止原网站
-          --webroot -w /www/  # 指定网站的静态目录，自动创建验证文件
-          --manual --preferred-challenges=dns  # 手动添加 DNS 记录
+          # HTTP 方式的 challenge
+          --nginx             # 适合采用 nginx 运行 Web 服务器的情况，让 certbot 在 nginx 的 /.well-known/acme-challenge/ 路径下添加一个文件，进行验证
+          --standalone        # 适合没有 nginx 的情况，让 certbot 运行一个简单的 HTTP 服务器，在 /.well-known/acme-challenge/ 路径下添加一个文件，进行验证
+          --webroot -w /www/  # 指定网站的静态目录，让 certbot 在 /.well-known/acme-challenge/ 路径下创建一个文件，进行验证
+
+          # DNS 方式的 challenge
+          --manual --preferred-challenges dns  # 手动添加 DNS 记录
           --dns-goole         # 调用 Goole 云平台的 DNS 插件
 
           # 关于 certbot 的配置
           --dry-run           # 向 CA 测试服务器发出请求，从而模拟执行命令
-          --config-dir  /etc/letsencrypt
+          --config-dir /etc/letsencrypt
 
           # 其它操作
           certificates        # 列出本机存放的证书
@@ -283,10 +305,13 @@
   ```
 
 - 例：
-  1. 使用 Nginx 部署网站，在配置文件中加入一个路由：
+  1. 使用 Nginx 部署一个 HTTP 网站，监听以下 URI ：
       ```sh
-      location /.well-known/acme-challenge/ {
-          root  /certbot/www;
+      server {
+          listen 80;
+          location /.well-known/acme-challenge/ {
+              root /certbot/www;
+          }
       }
       ```
   2. 运行 Certbot 的 Docker 镜像：
@@ -294,29 +319,36 @@
       docker run -it --rm \
           -v $PWD/certbot/www:/www \
           -v $PWD/certbot/etc:/etc/letsencrypt \
-          certbot/certbot:v2.6.0 \
-          certonly --webroot -w /www -d test.com --email xxx
+          certbot/certbot:v2.8.0 \
+          certonly --email xxx --webroot -w /www -d test.com  # HTTP 方式的 challenge
+          # certonly --email xxx --manual --preferred-challenges dns -d test.com -d *.test.com  # DNS 方式的 challenge
       ```
-      - 申请的证书会保存在配置目录下。
-  3. 修改 Nginx 配置，使用证书，提供 HTTPS 服务：
+      - 申请的证书文件会保存在 `certbot/etc/` 目录下。
+  3. 修改 Nginx 配置，使用证书，提供 HTTPS 网站：
       ```sh
       server {
-          listen    443  ssl;
+          listen 443 ssl;
           ssl_certificate /certbot/etc/fullchain.pem;
           ssl_certificate_key /certbot/etc/privkey.pem;
+          location / {
+              ...
+          }
       }
       ```
   4. 增加一个 crontab 定时任务，定期续订证书：
       ```sh
-      0 1 * * 1  docker run -i --rm -v /data/certbot/www:/www -v /data/certbot/etc:/etc/letsencrypt certbot/certbot:v2.6.0 renew &>> /var/log/cron
-      0 2 * * 1  docker exec -i nginx nginx -s reload &>> /var/log/cron       # 让 Nginx 重新读取 ssl 文件
+      0 1 * * 1  docker run -i --rm -v /data/certbot/www:/www -v /data/certbot/etc:/etc/letsencrypt certbot/certbot:v2.8.0 renew &>> /var/log/cron
+      0 2 * * 1  docker exec -i nginx nginx -s reload &>> /var/log/cron       # 让 Nginx 重新读取 ssl 证书文件
       ```
+
+- letsencrypt.org 颁发的 SSL 证书默认为 90 天有效期。
+  - 为了刷新有效期，需要续订证书，或者重新创建证书。
 
 #### acme.sh
 
 ：一个 shell 脚本，作为 ACME 客户端，与 Certbot 类似。
 - [GitHub](https://github.com/acmesh-official/acme.sh)
-- 为很多种 DNS 服务商提供了对接插件。
+- 为多种 DNS 服务商提供了对接插件。
 - 例：通过 HTTP 方式申请证书
   ```sh
   docker run -it --rm \

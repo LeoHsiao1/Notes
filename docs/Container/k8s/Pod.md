@@ -50,6 +50,7 @@
       - name: my_harbor
     # restartPolicy: Always             # 重启策略
     # terminationGracePeriodSeconds: 30 # kubelet 主动终止 Pod 时的宽限期，默认为 30s
+    # hostname: <string>                # 容器内的 hostname ，默认等于 pod name
     # hostIPC: false                    # 是否采用宿主机的 IPC namespace
     # hostNetwork: false                # 是否采用宿主机的 Network namespace
     # hostPID: false                    # 是否采用宿主机的 PID namespace
@@ -66,8 +67,8 @@
 
 - 一个 Pod 中可以运行多个容器，特点：
   - 各个容器必须设置不同的 name 。
-  - 容器内的主机名等于 Pod name ，模拟一个独立的虚拟机。
-  - 所有容器会被部署到同一个节点上。
+  - 所有容器内的 hostname 默认都等于 Pod name ，模拟一个虚拟机。
+  - 所有容器会被部署到同一个 k8s node 上。
     - 所有容器共享一个 Network namespace ，可以相互通信。绑定同一个 Pod IP ，因此不能监听同一个端口号。
     - 所有容器共享挂载的所有 volume 。
     - 所有容器采用独立的 PID namespace ，保证每个容器的主进程的 PID 为 1 。

@@ -166,6 +166,7 @@
       - SSL 证书文件（包含公钥）
       - 私钥文件
   3. 绑定：管理员将这两个文件放到 Web 服务器上。然后修改 Web 服务器的配置，使用这两个文件。
+      - 管理员可以同时从多个 CA 机构创建多个 SSL 证书，针对同一域名。这些 SSL 证书都是有效的，可任选其一，给 Web 服务器使用。
 
 ### 文件格式
 
@@ -259,12 +260,15 @@
       1. CA 服务器指定一个随机名称的文件。
       2. 用户将域名解析到一个 Web 服务器，并通过公网 URL `<domain>:80/.well-known/acme-challenge/<filename>` 提供上述文件。
       3. CA 服务器向上述公网 URL 发送 HTTP GET 请求，如果响应为 200 ，则证明用户对该域名有控制权。
+      4. challenge 成功之后，用户可以关闭上述公网 URL 。
   - DNS
     - 原理：
       1. CA 服务器指定一个随机取值的字符串。
-      2. 用户操作 DNS 服务器，添加一条 DNS 记录，将子域名 `_acme-challenge.<domain>` 解析到上述字符串。
+      2. 用户操作 DNS 服务器，添加一条 TXT 类型的 DNS 记录，将子域名 `_acme-challenge.<domain>` 解析到上述字符串。
       3. CA 服务器向公网 DNS 服务器查询上述子域名，如果解析到上述字符串，则证明用户对该域名有控制权。
+      4. challenge 成功之后，用户可以删除上述 DNS 记录。
     - 用户可以手动添加 DNS 记录。也可以运行 Certbot 的 DNS 插件，调用 DNS 服务器的 API ，自动添加 DNS 记录。
+    - 用户可执行命令 `dig -t txt +short _acme-challenge.<domain>` ，检查当前的 DNS 记录。
     - 优点：
       - Web 服务器没有运行时，也能通过 DNS 方式申请 SSL 证书。
       - HTTP 方式每次只能 challenge 一个域名，而 DNS 方式可以同时 challenge 所有子域名，因此能对通配符域名申请 SSL 证书。
@@ -290,8 +294,8 @@
           --webroot -w /www/  # 指定网站的静态目录，让 certbot 在 /.well-known/acme-challenge/ 路径下创建一个文件，进行验证
 
           # DNS 方式的 challenge
-          --manual --preferred-challenges dns  # 手动添加 DNS 记录
-          --dns-goole         # 调用 Goole 云平台的 DNS 插件
+          --dns-goole         # 调用 DNS 插件，自动修改 Google 云平台上的 DNS 记录
+          --manual --preferred-challenges dns  # 让 certbot 打印期望的 DNS 记录，然后用户手动修改 DNS 记录
 
           # 关于 certbot 的配置
           --dry-run           # 向 CA 测试服务器发出请求，从而模拟执行命令
@@ -303,6 +307,7 @@
           revoke              # 撤销证书
           delete              # 删除本机存放的证书
   ```
+  - 建议让 certbot 自动化申请、续订证书。如果以 --manual 方式进行 challenge ，则需要用户手动操作，比较麻烦。
 
 - 例：
   1. 使用 Nginx 部署一个 HTTP 网站，监听以下 URI ：
@@ -319,9 +324,10 @@
       docker run -it --rm \
           -v $PWD/certbot/www:/www \
           -v $PWD/certbot/etc:/etc/letsencrypt \
-          certbot/certbot:v2.8.0 \
-          certonly --email xxx --webroot -w /www -d test.com  # HTTP 方式的 challenge
-          # certonly --email xxx --manual --preferred-challenges dns -d test.com -d *.test.com  # DNS 方式的 challenge
+          certbot/certbot:v2.9.0 \
+          certonly --email xxx \
+          --webroot -w /www -d www.test.com                    # HTTP 方式的 challenge
+          # --manual --preferred-challenges dns -d *.test.com  # DNS 方式的 challenge
       ```
       - 申请的证书文件会保存在 `certbot/etc/` 目录下。
   3. 修改 Nginx 配置，使用证书，提供 HTTPS 网站：
@@ -337,7 +343,7 @@
       ```
   4. 增加一个 crontab 定时任务，定期续订证书：
       ```sh
-      0 1 * * 1  docker run -i --rm -v /data/certbot/www:/www -v /data/certbot/etc:/etc/letsencrypt certbot/certbot:v2.8.0 renew &>> /var/log/cron
+      0 1 * * 1  docker run -i --rm -v /data/certbot/www:/www -v /data/certbot/etc:/etc/letsencrypt certbot/certbot:v2.9.0 renew &>> /var/log/cron
       0 2 * * 1  docker exec -i nginx nginx -s reload &>> /var/log/cron       # 让 Nginx 重新读取 ssl 证书文件
       ```
 

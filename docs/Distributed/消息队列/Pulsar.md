@@ -3,7 +3,7 @@
 ：一个消息队列服务器。
 - [官方文档](https://pulsar.apache.org/docs)
 - 发音为 `/ˈpʌlsɑː(r)/` 。
-- 采用 Java 开发。
+- 采用 Java 语言开发。
 - 2016 年由 Yahoo 公司开源，后来交给 ASF 基金会管理。
 
 ## 原理

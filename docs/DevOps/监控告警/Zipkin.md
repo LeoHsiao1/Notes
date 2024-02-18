@@ -2,7 +2,7 @@
 
 ：一个 Web 服务器，用于链路追踪。
 - [官方文档](https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md)
-- 由 Twitter 公司开源，采用 Java 开发。
+- 由 Twitter 公司开源，采用 Java 语言开发。
 
 ## 原理
 

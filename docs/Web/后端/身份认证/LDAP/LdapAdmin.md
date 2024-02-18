@@ -125,8 +125,8 @@
 
 常用工具：
 - Self Service Password
-  - ：一个 Web 服务器，采用 PHP 开发。允许用户通过 Web 页面自行修改密码，而不需要 LDAP 管理员修改。
+  - ：一个 Web 服务器，采用 PHP 语言开发。允许用户通过 Web 页面自行修改密码，而不需要 LDAP 管理员修改。
 - White Pages
-  - ：一个 Web 服务器，采用 PHP 开发。允许用户搜索、查看 LDAP 中的数据。
+  - ：一个 Web 服务器，采用 PHP 语言开发。允许用户搜索、查看 LDAP 中的数据。
 - Service Desk
-  - ：一个 Web 服务器，采用 PHP 开发。供 LDAP 管理员锁定、重置用户密码。
+  - ：一个 Web 服务器，采用 PHP 语言开发。供 LDAP 管理员锁定、重置用户密码。

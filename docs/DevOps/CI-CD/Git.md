@@ -541,7 +541,7 @@ Git 属于软件配置管理（Source Code Management ，SCM）工具，同类�
     └── trunk     # 存放主干分支的项目代码
     ```
   - 用户每次拉取、提交代码时，可以处理指定路径的目录、文件，而不必处理整个代码仓库。
-- Mercurial ：采用 Python 开发。
+- Mercurial ：采用 Python 语言开发。
 
 ### GPG 签名
 

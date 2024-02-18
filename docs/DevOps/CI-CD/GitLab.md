@@ -2,7 +2,7 @@
 
 ：一个 Web 网站，用于托管 Git 仓库。
 - [官方文档](https://docs.gitlab.com/ee/)
-- 采用 Ruby 开发，基于 Rails 框架。
+- 采用 Ruby 语言开发，基于 Rails 框架。
 - 可以访问公网上的 GitLab 官方网站，也可以自己部署社区版（CE）或企业版（EE）。
 - 除了托管 Git 仓库，还提供了 Issue、任务看板、Wiki、CI/CD、WebIDE 等丰富的功能。
 

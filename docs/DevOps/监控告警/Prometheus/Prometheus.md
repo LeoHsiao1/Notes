@@ -2,7 +2,7 @@
 
 ：一个 Web 服务器，用于采集大量对象的监控指标，供用户查询。
 - [官方文档](https://prometheus.io/docs/introduction/overview/)
-- 采用 Golang 开发。
+- 采用 Golang 语言开发。
 - 由 SoundCloud 公司的前 Google 员工于 2015 年发布，它起源于 Google 内部用于监控 Borg 系统的 Borgmon 系统。
 - 优点：
   - 采集文本格式的监控指标。

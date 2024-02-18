@@ -2,7 +2,7 @@
 
 ：一个 Web 服务器，提供了容器镜像仓库。
 - [官方文档](https://goharbor.io/docs/2.2.0/)
-- 采用 Golang 开发，由 VMware 公司开源。
+- 采用 Golang 语言开发，由 VMware 公司开源。
 - 支持存储 container image 和 Helm chart 。
 
 ## 同类产品

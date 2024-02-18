@@ -3,7 +3,7 @@
 ：一个 Web 服务器，提供了配置管理、服务发现、DNS 等功能。
 - [官方文档](https://www.consul.io/docs)
 - 发音为 `/ˈkɒnsl/` 。
-- 2014 年由 HashiCorp 公司开源，采用 Golang 开发。
+- 2014 年由 HashiCorp 公司开源，采用 Golang 语言开发。
 
 ## 原理
 

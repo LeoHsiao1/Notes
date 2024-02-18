@@ -6,7 +6,7 @@
 - Selenium 项目提供了多个工具：
   - WebDriver ：一个 HTTP 服务器，用于调用 Firefox、Chrome 等浏览器的 API 来访问网站。
   - IDE ：一个浏览器插件，用于记录用户在浏览器中的操作，记录成 Selenium 命令，便于快速创建测试用例。
-  - Grid ：一个 Web 服务器，采用 Java 开发，用于在多个主机上执行 WebDriver 任务。
+  - Grid ：一个 Web 服务器，采用 Java 语言开发，用于在多个主机上执行 WebDriver 任务。
 
 ## WebDriver
 

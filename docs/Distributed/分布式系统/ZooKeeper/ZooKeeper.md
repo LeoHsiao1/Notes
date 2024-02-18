@@ -2,7 +2,7 @@
 
 ：一个分布式键值对数据库，简称为 zk 。
 - [官方文档](https://zookeeper.apache.org/doc/current/index.html)
-- 于 2008 年发布，采用 Java 开发。
+- 于 2008 年发布，采用 Java 语言开发。
   - 原本是 Apache Hadoop 的子项目，后来成为了一个独立的 Apache 顶级项目。
   - 取名为 ZooKeeper 是因为 Yahoo 公司的 Pig 等项目都是以动物命名，ZooKeeper 可以协调它们。
 - 擅长担任分布式系统的底层数据库，起协调作用：

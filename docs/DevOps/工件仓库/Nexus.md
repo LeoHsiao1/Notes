@@ -2,7 +2,7 @@
 
 ：NXRM（Nexus Repository Manager），一个 Web 服务器，提供了多种格式的工件仓库。
 - [官方文档](https://help.sonatype.com/repomanager3)
-- 采用 Java 开发，由 Sonatype 公司开源。
+- 采用 Java 语言开发，由 Sonatype 公司开源。
   - 分为社区版（OSS）、专业版（PRO）。
 
 ## 部署

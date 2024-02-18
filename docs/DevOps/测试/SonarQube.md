@@ -1,6 +1,6 @@
 # SonarQube
 
-：一个 Web 服务器，用于检查代码质量，采用 Java 开发。
+：一个 Web 服务器，用于检查代码质量，采用 Java 语言开发。
 - [官方文档](https://docs.sonarqube.org/latest/)
 - 采用 C/S 架构：
   - 保持运行 SonarQube 服务器。

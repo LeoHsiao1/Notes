@@ -1,7 +1,7 @@
 # Logstash
 
 ：一个数据处理程序。可以收集多种格式的数据，加工处理之后，写入多种数据库。
-- 采用 Ruby 开发，通过 JRuby 解释器运行在 JVM 上。
+- 采用 Ruby 语言开发，通过 JRuby 解释器运行在 JVM 上。
 - 2009 年，Jordan Sissel 发布了 Logstash ，成为了流行的日志采集工具，也可处理其它类型的数据。
 - 2013 年，Logstash 被 Elastic 公司收购，组成了 ELK 系统。
 

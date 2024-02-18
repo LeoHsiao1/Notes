@@ -2,7 +2,7 @@
 
 ：一个命令行工具，用于批量管理主机、批量执行脚本。
 - [官方文档](https://docs.ansible.com/ansible/latest/user_guide/index.html)
-- 采用 Python 开发。于 2012 年发布，2015 年被红帽公司收购。
+- 采用 Python 语言开发。于 2012 年发布，2015 年被红帽公司收购。
 - 采用主从架构，比较轻量级。
   - 选取一个或多个主机安装 Ansible ，作为控制节点（Control node），负责控制其它远程主机。
   - 远程主机只需要能通过 SSH 登录，即可供 Ansible 执行 shell 命令。
@@ -698,7 +698,7 @@ Ansible 原本采用 include 选项导入其它 playbook 文件的内容到当�
 
 ## Ansible AWX
 
-Ansible Tower 提供了 Ansible 的 Web UI ，采用 Django 开发，其开源版本是 Ansible AWX 。
+Ansible Tower 提供了 Ansible 的 Web UI ，基于 Python 的 Django 框架，其开源版本是 Ansible AWX 。
 - [官方文档](https://docs.ansible.com/ansible-tower/latest/html/userguide/index.html)
 - 用 docker-compose 部署 Ansible AWX ：
   ```sh

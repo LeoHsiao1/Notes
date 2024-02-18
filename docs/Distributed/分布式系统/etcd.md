@@ -3,7 +3,7 @@
 ：一个分布式键值对数据库，与 Zookeeper 类似。
 - [官方文档](https://etcd.io/docs/v3.5/)
 - etcd 是 etc directory 的简称，表示存储配置文件的目录。
-- 2013 年，由 CoreOS 公司开源，采用 Golang 开发。
+- 2013 年，由 CoreOS 公司开源，采用 Golang 语言开发。
 - 与 Zookeeper 相比，etcd 更轻量级。
 - 与 Consul 相比，etcd 擅长存储键值对数据，但缺少服务发现等功能。
 

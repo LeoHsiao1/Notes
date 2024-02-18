@@ -2,7 +2,7 @@
 
 ：一个命令行工具，用于编排 Docker 容器。
 - [官方文档](https://docs.docker.com/compose/compose-file/)
-- 由 Docker 公司发布，采用 Python 开发。
+- 由 Docker 公司发布，采用 Python 语言开发。
 - 擅长管理当前主机上的多个容器，但不方便管理其它主机上的容器。
 
 ## 安装

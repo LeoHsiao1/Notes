@@ -18,7 +18,7 @@ ELK 系统主要由以下软件组成：
 
 ELK 系统还可以选择加入以下软件：
 - Beats
-  - 采用 Golang 开发，用于采集日志数据。比 Logstash 更轻量级，但功能较少。
+  - 采用 Golang 语言开发，用于采集日志数据。比 Logstash 更轻量级，但功能较少。
   - Beats 程序有多种类型：
     - Filebeat ：用于采集日志文件。
     - Packetbeat ：用于采集网络数据包的日志。
@@ -61,12 +61,12 @@ ELK 系统还可以选择加入以下软件：
 
 - Flume
   - ：一个命令行工具，用于日志采集。类似于 Logstash ，但功能较少。
-  - 由 Cloudera 公司采用 Java 开发，2012 年成为 ASF 的顶级项目。
+  - 由 Cloudera 公司采用 Java 语言开发，2012 年成为 ASF 的顶级项目。
   - 通过 tail -f 的方式采集日志文件的内容，因此重启采集进程之后会重复采集。
 
 - Fluentd
   - ：一个命令行工具，用于日志采集。类似于 Logstash ，也有丰富的插件。
-  - 2011 年由 Treasure Data 公司发布，采用 Ruby 开发。
+  - 2011 年由 Treasure Data 公司发布，采用 Ruby 语言开发。
   - 采集的数据解析为 JSON 对象，可以输出到 ES、MongoDB、Kafka 等。
   - 可以替换 ELK 系统中的 Logstash ，组成 EFK 。
 

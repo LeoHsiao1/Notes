@@ -141,9 +141,9 @@
 
 - 相关概念：
   - <https://etherscan.io/nodetracker> ：查看全球的节点统计。
-  - [Geth](https://github.com/ethereum/go-ethereum) ：最流行的一个以太坊执行客户端，采用 Golang 开发。
+  - [Geth](https://github.com/ethereum/go-ethereum) ：最流行的一个以太坊执行客户端，采用 Golang 语言开发。
     - Geth 会监听 HTTP 端口，与其它节点进行 RPC 通信。
-  - [Prysm](https://github.com/prysmaticlabs/prysm) ：一个以太坊共识客户端，采用 Golang 开发。
+  - [Prysm](https://github.com/prysmaticlabs/prysm) ：一个以太坊共识客户端，采用 Golang 语言开发。
 
 ## 账户
 

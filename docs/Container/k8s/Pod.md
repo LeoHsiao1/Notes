@@ -61,7 +61,7 @@
 
 - Static Pod 是一种特殊的 Pod ，由 kubelet 管理，不受 apiserver 控制，不能调用 ConfigMap 等对象。
   - 用法：启动 kubelet 时加上参数 `--pod-manifest-path=/etc/kubernetes/manifests`，然后将 Pod 的配置文件保存到该目录下。kubelet 会定期扫描配置文件，启动 Pod 。
-  - 例如用 kubeadm 部署 k8s 集群时，会以 Static Pod 的形式运行 kube-apiserver、kube-scheduler 等 k8s 组件。
+  - 例如用 kubeadm 部署 k8s 集群时，会先用 systemctl 方式部署 kubelet ，然后 kubelet 以 Static Pod 方式部署 apiserver、kube-scheduler 等 k8s 组件。
 
 ### containers
 

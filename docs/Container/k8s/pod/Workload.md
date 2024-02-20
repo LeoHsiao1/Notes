@@ -1,12 +1,12 @@
 # Workload
 
-- 用 kubectl 命令手动管理 Pod 比较麻烦，因此一般通过控制器（Controller）自动管理 Pod ，统称为工作负载（workload）。
-  - Workload 分为 Pod 、Deployment 、Job 等多种类型。
+- 用 kubectl 命令手动管理 Pod 比较麻烦，因此 k8s 提供了一些控制器（Controller）来自动管理 Pod ，例如 Deployment、Job 。
+  - Pod 和这些 controller ，都是用于在 k8s 中部署应用，统称为 Workload 。
   - 用户需要编写 workload 配置文件，描述如何部署一个 Pod 。然后创建该 workload 对象，k8s 就会自动创建并部署 Pod 。
 
 ## Deployment
 
-：适合部署无状态的 Pod ，可以在 k8s 集群内同时运行任意个 Pod 副本（又称为实例）。
+：用于在 k8s 集群内同时运行任意个 Pod ，并且这些 Pod 是从同一模板（template）创建的不同实例（又称为副本）。
 
 ### 配置
 
@@ -194,7 +194,7 @@
 
 ## StatefulSet
 
-：与 Deployment 类似，但适合部署有状态的 Pod 。
+：与 Deployment 类似。但 Deployment 适合部署无状态应用，而 StatefulSet 适合部署有状态应用。
 - 相关概念：
   - 无状态应用
     - ：历史执行的任务不会影响新执行的任务。因此 Pod 可以随时删除，然后从镜像重新创建 Pod ，能同样工作。
@@ -204,7 +204,6 @@
     - 无状态应用故障时，可以立即启动新实例、销毁旧实例。而有状态应用故障时，可能丢失状态数据，甚至不能通过重启来恢复运行，因此风险更大。
       - 对于有状态应用，如果将数据存储在容器中，则会随着容器一起销毁。因此通常将数据存储到挂载卷，或容器外的数据库。
       - 例如 Nginx 通常是无状态应用，MySQL 通常是有状态应用。
-    - 用 k8s 部署有状态应用时，通常使用 StatefulSet 。
 - 与 Deployment 相比，StatefulSet 的优点：
   - 有序性
     - ：StatefulSet 会按顺序创建 replicas 个 Pod ，给每个 Pod 分配一个从 0 开始递增的序号。
@@ -296,7 +295,7 @@
 
 ## Job
 
-：一次性任务，适合部署运行一段时间就会自行终止的 Pod 。
+：与 Deployment 类似，但不会自动重启 Pod ，而是期望 Pod 运行一段时间之后自行终止。
 - 创建 Job 之后，它会立即创建指定个 Pod 副本，这些 Pod 会被自动调度、运行。
 - 例：用以下配置创建一个 Job
   ```yml
@@ -406,7 +405,8 @@
 
 ## CronJob
 
-：定时任务，用于定时创建 Job 。
+：用于在指定时刻创建 Job 。
+- Job 适合执行一次性任务，而 CronJob 适合执行定时任务。
 - 例：
   ```yml
   apiVersion: batch/v1

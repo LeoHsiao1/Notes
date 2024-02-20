@@ -1398,20 +1398,20 @@ module.exports = {
                         },
                         {
                             title: "Pod",
-                            path: "/Container/k8s/Pod"
-                        },
-                        {
-                            title: "Workload",
-                            path: "/Container/k8s/workload/Workload",
+                            path: "/Container/k8s/pod/Pod",
                             collapsable: false,
                             children: [
                                 {
+                                    title: "Workload",
+                                    path: "/Container/k8s/pod/Workload"
+                                },
+                                {
                                     title: "自动伸缩",
-                                    path: "/Container/k8s/workload/自动伸缩"
+                                    path: "/Container/k8s/pod/自动伸缩"
                                 },
                                 {
                                     title: "keda",
-                                    path: "/Container/k8s/workload/keda"
+                                    path: "/Container/k8s/pod/keda"
                                 }
                             ]
                         },

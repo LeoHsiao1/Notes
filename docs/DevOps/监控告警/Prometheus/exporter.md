@@ -174,14 +174,14 @@
     tls_config:
       insecure_skip_verify: true
 
-  # 如果 service 中某个端口名称以 exporter 开头，则采集监控指标
+  # 如果 service 中某个端口名称以 exporter 结尾，则采集监控指标
   - job_name: k8s-service
     kubernetes_sd_configs:
     - role: service
     relabel_configs:
     - action: keep
       source_labels: [__meta_kubernetes_service_port_name]
-      regex: exporter.*
+      regex: .*exporter
     # __metrics_path__ 默认为 /metrics ，但允许在 annotation 中自定义路径 prometheus.io/path: 'xx'
     - action: replace
       source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
@@ -197,7 +197,7 @@
     # - action: labelmap
     #   regex: __meta_kubernetes_pod_label_(.+)
 
-  # 如果 Pod 中某个 containerPort 端口名称以 exporter 开头，则采集监控指标
+  # 如果 Pod 中某个 containerPort 端口名称以 exporter 结尾，则采集监控指标
   - job_name: k8s-pod
     kubernetes_sd_configs:
     - role: pod
@@ -207,7 +207,7 @@
       regex: Running
     - action: keep
       source_labels: [__meta_kubernetes_pod_container_port_name]
-      regex: exporter.*
+      regex: .*exporter
     - action: replace
       source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
       target_label: __metrics_path__
@@ -508,7 +508,7 @@
 
   container_memory_rss{id="/", instance="xx"}                 # 一个主机上，全部 Cgroup 节点的内存开销之和
   container_memory_rss{id="/kubepods.slice", instance="xx"}   # 一个主机上，全部 pod 的内存开销之和
-  container_memory_rss{id="/system.slice/docker.service", instance="xx"}  # 一个主机上，kube-proxy 等 k8s 组件的内存开销之和
+  container_memory_rss{id=~"/system.slice/docker.*", instance="xx"}  # 一个主机上，不属于 pod 的 docker 容器的内存开销
 
   container_processes{container="POD", pod="xx"}    1
   container_processes{container="nginx", pod="xx"}  1

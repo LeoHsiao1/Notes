@@ -584,8 +584,9 @@
 
 - 指标示例：
   ```sh
-  node_exporter_build_info{branch="HEAD", goversion="go1.15.8", instance="10.0.0.1:9100", job="node_exporter", revision="b597c1244d7bef49e6f3359c87a56dd7707f6719", version="1.1.2"}  # 版本信息
-  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}  # 主机信息
+  node_exporter_build_info{goarch="amd64", goos="linux", version="1.7.0"}  # node_exporter 的版本信息
+  node_uname_info{domainname="(none)", instance="10.0.0.1:9100", job="node_exporter", machine="x86_64", nodename="Centos-1", release="3.10.0-862.el7.x86_64", sysname="Linux", version="#1 SMP Fri Apr 20 16:44:24 UTC 2018"}   # 主机的内核信息
+  node_os_info{name="CentOS Linux",,version_id="7"} # 主机的系统信息
 
   # 关于时间
   node_boot_time_seconds                        # 主机的启动时刻
@@ -613,8 +614,8 @@
   sum(node_filesystem_avail_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint) # 磁盘可用量
   sum(rate(node_disk_read_bytes_total[1m]))     # 磁盘每秒读取量
   sum(rate(node_disk_written_bytes_total[1m]))  # 磁盘每秒写入量
-  node_filefd_maximum                           # 文件描述符的数量上限
-  node_filefd_allocated                         # 文件描述符的使用数量
+  node_filefd_allocated                         # 文件描述符的当前打开数量
+  node_filefd_allocated / node_filefd_maximum   # 文件描述符的使用率
 
   # 关于网口
   node_network_info{address="00:60:F6:71:20:18",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} # 网口的信息（broadcast 是广播地址，duplex 是双工模式，）
@@ -650,6 +651,11 @@
   node_netstat_Udp_InDatagrams              # 接收的 UDP 包数
   node_netstat_Udp_InErrors                 # 接收的 UDP 错误包数
   node_netstat_Udp_OutDatagrams             # 发送的 UDP 包数
+
+  # 关于 nf_conntrack
+  node_nf_conntrack_entries         # nf_conntrack 当前记录的连接数
+  node_nf_conntrack_entries / node_nf_conntrack_entries_limit # nf_conntrack 使用率
+  node_nf_conntrack_stat_drop       # 因为 nf_conntrack 写入失败而被 drop 的数据包的累计数量
   ```
 
 ### process-exporter

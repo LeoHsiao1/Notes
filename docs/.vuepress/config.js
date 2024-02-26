@@ -646,25 +646,25 @@ module.exports = {
                     ]
                 },
                 {
-                    title: "系统内核",
+                    title: "内核",
                     children: [
                         {
-                            title: "系统信息",
-                            path: "/Linux/系统内核/系统信息"
-                        },
-                        {
                             title: "开机",
-                            path: "/Linux/系统内核/开机"
+                            path: "/Linux/内核/开机"
                         },
                         {
                             title: "内核",
-                            path: "/Linux/系统内核/内核"
+                            path: "/Linux/内核/内核"
                         }
                     ]
                 },
                 {
                     title: "其它",
                     children: [
+                        {
+                            title: "系统信息",
+                            path: "/Linux/其它/系统信息"
+                        },
                         {
                             title: "安装软件",
                             path: "/Linux/其它/安装软件"

@@ -1000,10 +1000,10 @@ spec:
   ```sh
   memory.available    # 节点可用内存不足
   nodefs.available    # 节点可用磁盘不足
-  nodefs.inodesFree   # 节点可用的 inode 不足
+  nodefs.inodesFree   # 节点的 inode 数量达到最大值
   imagefs.available
   imagefs.inodesFree
-  pid.available       # 节点可用的 PID 不足
+  pid.available       # 节点的 PID 数量达到最大值
   ```
   - 计算关系：
     ```sh

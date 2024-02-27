@@ -409,9 +409,9 @@
     # 解析 JSON 的操作会在 multiline 之前执行。因此建议让 filebeat 只执行 multiline 操作，将日志发送到 Logstash 时才解析 JSON
     # 如果 JSON 解析失败，则会将日志文本保存在 message 字段，然后输出
     # json.add_error_key: true      # 如果解析出错，则给 event 添加 error.message 等字段
-    # json.message_key: log         # 指定存储日志内容的字段名。如果指定了该字段，当该字段为顶级字段、取值为字符串类型时，会进行 multiline、include、exclude 操作
-    # json.keys_under_root: false   # 是否将解析出的 JSON 字段保存为 event 的顶级字段
-    # json.overwrite_keys: false    # 在启用了 keys_under_root 时，如果解析出的字段与原有字段冲突，是否覆盖
+    # json.message_key: log         # 指定 JSON 中存储主要消息的字段名。如果指定了该字段，当该字段为顶级字段、取值为字符串类型时，会进行 multiline、include、exclude 操作
+    # json.keys_under_root: false   # 是否将解析出的所有 JSON 字段保存为 event 的顶级字段
+    # json.overwrite_keys: false    # 启用了 keys_under_root 时，如果解析出的任一 JSON 字段与原有字段同名，是否覆盖
 
     # 默认将每行日志文本视作一个 event ，可以通过 multiline 规则将连续的多行文本记录成同一个 event
     # multiline 操作会在 include_lines 之前执行
@@ -500,43 +500,42 @@
 
 ### 容器日志
 
-- 采集容器日志的配置示例：
+- 主机上可能运行了多个容器，它们的终端日志文件存放在一个系统目录下，可以统一采集。如下：
   ```yml
   filebeat.inputs:
   - type: container
     paths:
       - /var/lib/docker/containers/*/*.log
-    # stream: all                   # 从哪个流读取日志，可以取值为 stdout、stderr、all ，默认为 all
+    # stream: all                   # 从哪个流读取日志，默认为 all ，可以取值为 stdout、stderr、all
     # 兼容 type: log 的配置参数
   ```
-  - 注意 docker 的日志文件默认需要 root 权限才能查看。
+  - 注意需要以 root 用户运行 filebeat ，才有权读取容器日志文件。
+  - 上述配置会采集所有容器的日志，但更推荐 autodiscover 方案，功能更多。
 
-- 上述配置会采集所有容器的日志，而使用以下自动发现（autodiscover）的配置，可以只采集部分容器的日志：
-
-- filebeat 支持对容器的自动发现（autodiscover），还支持从容器的元数据中加载配置，称为基于提示（hints）的自动发现。
+- filebeat 支持自动发现（autodiscover）容器日志文件。还支持从容器的元数据中加载 filebeat 配置参数，称为基于提示（hints）的自动发现。
   - 配置示例：
     ```yml
     filebeat.autodiscover:
       providers:
         # - type: docker              # 声明一个自动发现的日志源，为 docker 类型。这会调用内置 docker 变量模板
-        #   templates:
-        #     - condition:            # 只采集满足该条件的日志
+        #   templates:                # 只采集满足某些条件的日志
+        #     - condition:
         #         contains:
         #           docker.container.name: elasticsearch
         #       config:
         #         - type: container   # 该 container 是指 filebeat.inputs 类型，不是指 providers 类型
         #           paths:
         #             - /var/lib/docker/containers/${data.docker.container.id}/*.log
-        #   hints.enabled: false      # 是否启用 hints ，从 Docker 容器的 Labels 加载配置
-        #   hints.default_config:     # 设置默认的 hints 配置
+        #   hints.enabled: false      # 是否启用 hints 。这会从 Docker 容器的 Labels 中读取 hints
+        #   hints.default_config:     # 设置默认的 hints 配置。如果一个容器未以 hints 方式配置某个字段，则会继承 hints.default_config 中的同名字段
         #     enabled: true           # 是否采集容器的日志，默认为 true 。如果禁用，则需要容器启用 co.elastic.logs/enabled 配置
         #     type: container
         #     paths:
         #       - /var/lib/docker/containers/${data.docker.container.id}/*.log  # Docker 引擎的日志路径
 
-        - type: kubernetes
+        - type: kubernetes        # 自动发现 k8s 的容器日志
           node: ${NODE_NAME}
-          hints.enabled: true     # 从 k8s Pod 的 Annotations 加载配置
+          hints.enabled: true     # 启用 hints 。这会从 k8s Pod 的 Annotations 中读取 hints
           hints.default_config:
             type: container
             paths:
@@ -544,19 +543,30 @@
             fields_under_root: true
             enabled: true         # 默认采集每个容器的日志
     ```
-  - provider 为 docker 类型时，可引用一些变量，比如：
+  - 如果同时配置了 templates 和 hints ，则当 templates 中所有 condition 都不生效时，hints 才会生效。
+  - provider 为 docker 类型时，可引用一些变量，例如：
     ```sh
     docker.container.id
     docker.container.image
     docker.container.name
     docker.container.labels
     ```
-  - 使用 hints 功能时，可以在容器的 Labels 或 Annotations 中添加配置参数：
+  - 启用 hints 功能时，可以在 Docker Container Labels 或 k8s Pod Annotations 中添加配置参数：
     ```sh
-    co.elastic.logs/enabled: true     # 是否采集容器的日志，默认为 true
+    co.elastic.logs/enabled: "true"     # 是否采集当前容器的日志，默认为 true
     co.elastic.logs/json.*: ...
     co.elastic.logs/multiline.*: ...
-    co.elastic.logs/exclude_lines: '^DEBUG'
+    co.elastic.logs/exclude_lines: ...
     co.elastic.logs/include_lines: ...
-    co.elastic.logs/processors.dissect.tokenizer: "%{key2} %{key1}"
+
+    # 可以添加 processors
+    co.elastic.logs/processors.1.add_fields.fields.logformat: "java"
+    co.elastic.logs/processors.1.add_fields.target: ""
+
+    # 可以插入原始的 filebeat.inputs 配置参数，这会覆盖其它所有 hints 配置
+    co.elastic.logs/raw: ...
+
+    # 一个 k8s Pod 中可能包含多个容器。在 k8s Pod Annotations 中添加上述 hints 时，会让 filebeat 按相同逻辑处理 Pod 中所有容器的日志
+    # 如果在 hints 字段名中插入容器名称，比如 sidecar ，则会让该 hints 参数只作用于该容器
+    co.elastic.logs.sidecar/exclude_lines: ...
     ```

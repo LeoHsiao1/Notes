@@ -268,15 +268,17 @@
   ```
   然后启动：
   ```sh
-  # ./filebeat setup    # 可选择进行初始化。这会先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
-  ./filebeat            # 在前台运行
-            -c /etc/filebeat/filebeat.yml # 指定配置文件
-            -e          # 将 filebeat 自身的日志输出到 stderr
+  # ./filebeat setup          # 可选择进行初始化。这会先连接到 ES 创建索引模板，再连接到 Kibana 创建仪表盘
+  ./filebeat                  # 启动 filebeat
+            -c filebeat.yml   # 指定配置文件
+            -e                # 相当于设置了 logging.to_stderr: true
+            -E "output.elasticsearch.hosts=['http://10.0.0.1:9200']"  # 覆盖配置文件中的一条参数
   ```
-- 在 k8s 中部署时，可参考[官方配置](https://github.com/elastic/beats/blob/main/deploy/kubernetes/filebeat-kubernetes.yaml) 。
-- filebeat v8.0 将 filebeat 自身日志文件的命名格式，从 `filebeat[.n]` 改为 `filebeat-<date>[-n].ndjson` 。
+- 在 k8s 中部署时，可参考官方文档中的 [filebeat-kubernetes.yaml](https://github.com/elastic/beats/blob/main/deploy/kubernetes/filebeat-kubernetes.yaml) 。
 
 ## 配置
+
+- 详细配置参数，参考官方文档中的 [filebeat-reference-yml](https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-reference-yml.html) 。
 
 - 所有类型的 beats 都支持以下 General 配置项：
   ```yml
@@ -297,24 +299,31 @@
   # filebeat.registry.flush: 0s                   # 每当 filebeat 发布一个 event 到输出端，等多久才记录到 registry 日志文件。v8.3 版本将默认值从 0s 改为 1s
 
   # 配置 filebeat 自身的日志
-  logging.level: info                     # 只记录不低于该级别的日志
-  logging.json: true                      # 输出的日志采用 JSON 格式
-  logging.to_files: true                  # 将日志保存到文件 ./logs/filebeat
-  # logging.to_stderr: true               # 将日志输出到终端
-  # logging.metrics.enabled: true         # 是否在日志中记录监控信息，包括 filebeat 的状态、系统负载
+  # logging.level: info                   # 日志级别，可选 error、warning、info、debug
+  # logging.json: false                   # 是否输出 JSON 格式的日志。filebeat v7.16 弃用该参数，只能输出 JSON 格式的日志
+  # logging.to_files: true                # 是否将日志都输出到磁盘文件
+  # logging.files:
+  #   path: /var/log/filebeat             # 将日志文件保存在哪个磁盘目录
+  #   name: filebeat                      # filebeat v8.0 将自己日志文件的命名格式，从 `filebeat[.n]` 改为 `filebeat-<date>[-n].ndjson`
+  #   keepfiles: 7
+  # logging.to_stderr: false              # 是否将日志都输出到 stderr ，适合容器化部署 filebeat 的情况
+  # logging.metrics.enabled: true         # 是否在日志中记录监控信息，包括 filebeat 的状态、CPU 负载
   # logging.metrics.period: 30s           # 记录监控信息的时间间隔
 
   filebeat.config.modules:                # 加载模块
     path: ${path.config}/modules.d/*.yml
   ```
+  - 默认启用了 `logging.to_files` ，如果启用 `logging.to_stderr` ，则会自动禁用 `logging.to_files` 。
 
 ### output
 
-- filebeat 支持多种输出端：
+- filebeat 支持多个不同类型的输出端：
   ```yml
   # 输出到终端，便于调试
   # output.console:
-  #   pretty: true
+  #   enabled: true
+  #   codec.json:
+  #     pretty: false
 
   # 输出到 Logstash
   output.logstash:
@@ -338,7 +347,7 @@
   #   keep_alive: 10                # 保持 TCP 连接的时长，默认为 0 秒
   #   max_message_bytes: 10485760   # 限制单个消息的大小为 10M ，超过则丢弃
   ```
-  - 同时只能启用一种输出端。
+  - 同时只能启用一个输出端。如果定义了多个输出端，则需要将其它输出端注释掉，或者给它们设置 `enabled: false` 。
 
 ### processors
 
@@ -406,20 +415,24 @@
     # fields_under_root: true
 
     # 如果启用任何一个以 json 开头的配置项，则会将每行日志文本按 JSON 格式解析，解析的字段默认保存为一个名为 json 的字段的子字段
-    # 解析 JSON 的操作会在 multiline 之前执行。因此建议让 filebeat 只执行 multiline 操作，将日志发送到 Logstash 时才解析 JSON
-    # 如果 JSON 解析失败，则会将日志文本保存在 message 字段，然后输出
+    # 如果 JSON 解析失败，则会将原始日志文本保存在 message 字段，然后输出
     # json.add_error_key: true      # 如果解析出错，则给 event 添加 error.message 等字段
-    # json.message_key: log         # 指定 JSON 中存储主要消息的字段名。如果指定了该字段，当该字段为顶级字段、取值为字符串类型时，会进行 multiline、include、exclude 操作
     # json.keys_under_root: false   # 是否将解析出的所有 JSON 字段保存为 event 的顶级字段
     # json.overwrite_keys: false    # 启用了 keys_under_root 时，如果解析出的任一 JSON 字段与原有字段同名，是否覆盖
+    # json.message_key: log         # 指定 JSON 中存储主要消息的字段名，必须为一个顶级字段、取值为 string 类型
+    # 如果同时配置了 json、multiline ，则会先按 JSON 格式解析，然后按 multiline、include、exclude 方式解析其中的 message_key 字段
 
     # 默认将每行日志文本视作一个 event ，可以通过 multiline 规则将连续的多行文本记录成同一个 event
     # multiline 操作会在 include_lines 之前执行
-    # multiline.type: pattern       # 采用 pattern 方式，根据正则匹配处理多行。也可以采用 count 方式，根据指定行数处理多行
+    # multiline.type: pattern       # 默认采用 pattern 方式，根据正则匹配处理多行
     # multiline.pattern: '^\s\s'    # 如果一行文本与 pattern 正则匹配，则按 match 规则与上一行或下一行合并
     # multiline.negate: false       # 是否反向匹配
     # multiline.match: after        # 取值为 after 则放到上一行之后，取值为 before 则放到下一行之前
     # multiline.max_lines: 500      # 多行日志最多包含多少行，超过的行数不会采集。默认为 500
+
+    # multiline 也可以采用 count 方式，将固定几行文本记录成同一个 event
+    # multiline.type: count
+    # multiline.count_lines: <int>
 
     # exclude_files: ['\.tgz$']           # 排除一些正则匹配的文件
     # exclude_lines: ['^DEBUG', '^INFO']  # 排除日志文件中正则匹配的那些行
@@ -551,7 +564,7 @@
     docker.container.name
     docker.container.labels
     ```
-  - 启用 hints 功能时，可以在 Docker Container Labels 或 k8s Pod Annotations 中添加配置参数：
+  - 启用 hints 功能时，filebeat 会从 Docker Container Labels 或 k8s Pod Annotations 中读取 `co.elastic.logs/` 开头的字段，作为配置参数。例如：
     ```sh
     co.elastic.logs/enabled: "true"     # 是否采集当前容器的日志，默认为 true
     co.elastic.logs/json.*: ...
@@ -560,13 +573,13 @@
     co.elastic.logs/include_lines: ...
 
     # 可以添加 processors
-    co.elastic.logs/processors.1.add_fields.fields.logformat: "java"
-    co.elastic.logs/processors.1.add_fields.target: ""
+    co.elastic.logs/processors.0.add_fields.fields.logformat: "java"
+    co.elastic.logs/processors.0.add_fields.target: ""
 
     # 可以插入原始的 filebeat.inputs 配置参数，这会覆盖其它所有 hints 配置
     co.elastic.logs/raw: ...
 
     # 一个 k8s Pod 中可能包含多个容器。在 k8s Pod Annotations 中添加上述 hints 时，会让 filebeat 按相同逻辑处理 Pod 中所有容器的日志
-    # 如果在 hints 字段名中插入容器名称，比如 sidecar ，则会让该 hints 参数只作用于该容器
-    co.elastic.logs.sidecar/exclude_lines: ...
+    # 可以在 co.elastic.logs/ 末尾添加 Pod 中的容器名称，比如 container1 ，从而给该容器单独配置 hints 。该容器依然会继承 co.elastic.logs/ 开头的 hints
+    co.elastic.logs.container1/exclude_lines: ...
     ```

@@ -66,7 +66,7 @@
   - 在 node2 上执行 `ssh 10.42.0.0` 也可以登录到 node1 ，此时网络流量的 src_ip 为 10.42.1.0 ，即 node2 的 Pod CIDR 的网络号。
   - 在 node3 上执行 `ssh 10.0.0.2` 可以访问到 node2 ，但执行 `ssh 10.42.1.0` 会找不到路由。
 
-k8s 常见的几种网络通信：
+下面假设 kube-proxy 采用 iptables 代理模式，分析 k8s 常见的几种网络通信：
 - node 之间的通信
   - 假设从 node1 访问 node2 ，发送 IP 协议的数据包：
     - 如果访问 node2 的 eth0 IP ，则数据包不进入 k8s 的虚拟子网， src_ip 为 node1 的 eth0 IP 。

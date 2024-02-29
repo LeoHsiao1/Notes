@@ -312,6 +312,15 @@
 
   filebeat.config.modules:                # 加载模块
     path: ${path.config}/modules.d/*.yml
+
+  # filebeat.inputs 通常会连续不断输入 event ，这些 event 会缓冲在内存 queue 中，然后以 batch 为单位发布到输出端
+  # 减少以下参数，可以降低 filebeat 的内存开销，但会降低 filebeat 采集日志的速度
+  queue.mem:
+    events: 3200            # queue 中最多缓冲的 event 数量。如果 queue 写满了，则不能输入新的 event
+    # 一个 batch 包含多少 event ？这取决于以下参数，以及 filebeat 输出端的 bulk_max_size 参数
+    flush.min_events: 1600  # queue 中至少缓冲多少个 event ，才能打包为一个 batch
+    flush.timeout: 10s      # 如果 queue 中的 event 数量少于 flush.min_events ，则最多等待 5s ，就会将 queue 中的所有 event 打包为一个 batch 然后输出
+                            # 将该值改为 0 ，则每次输入 event 就会立即输出，不会缓冲
   ```
   - 默认启用了 `logging.to_files` ，如果启用 `logging.to_stderr` ，则会自动禁用 `logging.to_files` 。
 
@@ -346,6 +355,7 @@
   #   compression: gzip             # 消息的压缩格式，默认为 gzip ，建议采用 lz4 。设置为 none 则不压缩
   #   keep_alive: 10                # 保持 TCP 连接的时长，默认为 0 秒
   #   max_message_bytes: 10485760   # 限制单个消息的大小为 10M ，超过则丢弃
+  #   bulk_max_size: 2048           # 每次发送请求到 kafka ，最多包含多少个 event
   ```
   - 同时只能启用一个输出端。如果定义了多个输出端，则需要将其它输出端注释掉，或者给它们设置 `enabled: false` 。
 

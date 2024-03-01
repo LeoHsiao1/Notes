@@ -404,9 +404,9 @@ pipeline 的语法与 Ruby 相似，特点如下：
 - 例：
   ```sh
   mutate {
-    copy       => { "field1" => "field2" }         # 拷贝一个字段的值，赋值给另一个字段
-    rename     => { "field1" => "field2" }         # 重命名一个字段
-    replace    => { "field1" => "new: %{field2}" } # 替换一个字段的值
+    copy       => { "field1" => "field2" }         # 将 field1 字段的值拷贝到 field2 字段
+    rename     => { "field1" => "field2" }         # 将 field1 字段重命名为 field2
+    replace    => { "field1" => "new: %{field2}" } # 替换 field1 字段的值
     convert    => {                                # 转换字段的数据类型，默认都是字符串类型
       "field1" => "boolean"
       "field2" => "integer"                        # 可以按这种格式同时处理多个字段

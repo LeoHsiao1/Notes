@@ -207,7 +207,7 @@
 2. 安装 NVIDIA 公司发布的 [显卡驱动](https://docs.NVIDIA.com/datacenter/tesla/tesla-installation-notes/index.html) 。
     - 如果自动安装失败，则需要根据本机的操作系统版本、GPU 型号，找到某个兼容版本的显卡驱动，手动安装。
     - 安装之后，会在 Linux 中保持运行一个内核进程。可执行命令 `ps auxf | grep NVIDIA` 查看
-    - 安装之后，会附带 nvidia-smi 命令，它提供了 NVIDIA 的系统管理接口（System Management Interface）。
+    - 安装之后，会附带 `nvidia-smi` 命令，它提供了 NVIDIA 的系统管理接口（System Management Interface）。
       - 可用该命令查看显卡驱动的版本、最高兼容的 CUDA 版本、GPU 上正在运行的进程列表。
     - 长期以来，NVIDIA 公司发布的显卡驱动程序都是闭源的。
       - 2012 年，nouveau 发布 1.0 版本。它是一个针对 NVIDIA 显卡的开源驱动程序，集成到了 Linux 内核。但功能较少，性能较低。
@@ -253,6 +253,17 @@
     - PyTorch、TensorFlow 可以在 CPU 或 GPU 上运行。如果本机启用了 GPU ，则优先使用 GPU 。如果设置环境变量 CUDA_VISIBLE_DEVICES 为空，则不允许使用 GPU 。
 
 6. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
+    - 先用 apt 或 yum 安装 nvidia-container-toolkit ，然后让本机采用 nvidia-container-runtime 作为容器运行时。例如在 `/etc/docker/daemon.json` 中加入：
+      ```json
+      "default-runtime": "nvidia",
+      "runtimes": {
+          "nvidia": {
+              "args": [],
+              "path": "nvidia-container-runtime"
+          }
+      }
+      ```
+      然后重启 dockerd 。
 
 7. 如果想让 k8s 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) ，它会以 k8s Daemonset 方式部署在启用 GPU 的每个主机上。
     - 执行以下命令，检查 k8s 是否识别到主机上的 GPU 资源：
@@ -283,8 +294,10 @@
       - 每个容器只能分配 GPU 的整数个核心，不支持小数。因为 GPU 的每个核心只能被一个容器占用，不能被多个容器共享。
       - 分配 GPU 核数时，取决于 limits 配额。如果配置了 requests 配额，则必须等于 limits 配额。
     - k8s-device-plugin 默认只允许每个 GPU 芯片设备中运行一个进程，如果想运行多进程，可采用时间分片（Time-Slicing）、MPS（Multi-Process Service）等方案。
-      - 大致原理：让一个 GPU 先后执行不同进程创建的 CUDA 内核函数。
-      - 参考文档：<https://developer.nvidia.com/blog/improving-gpu-utilization-in-kubernetes/>
+      - 大致原理：让一个 GPU 芯片先后执行不同进程创建的 CUDA 内核函数。
+      - 参考文档：
+        - <https://github.com/NVIDIA/k8s-device-plugin?tab=readme-ov-file#shared-access-to-gpus>
+        - <https://developer.nvidia.com/blog/improving-gpu-utilization-in-kubernetes/>
       - 优点：
         - 运行单进程不一定能用完 GPU 的计算资源，运行多进程可以提高 GPU 资源的利用率。
       - 缺点：

@@ -5,9 +5,9 @@
 - 采用 Golang 语言开发，基于 HTTP 通信。
 - 特点：
   - 轻量级，读写速度快，云原生架构。
-  - 支持生成文件的临时下载链接。
-  - 兼容 Amazon S3 的 API 。
-  - 提供了命令行客户端 mc ，支持 ls、cp、rm、find 等多种 Unix 风格的命令。
+  - 支持给文件生成 HTTP URL 形式的临时下载链接。
+  - 兼容 AWS S3 API 。
+  - 提供了命令行客户端 mc 。
   - 提供了 Python、Go、Java 等语言的客户端库。
 
 ## 部署
@@ -51,3 +51,57 @@
 
 - MinIO 支持部署多个服务器实例，将一个文件存储多个副本。
   - 基于纠删码（Erasure Code）算法存储数据，即使丢失一半数量的副本，也可以恢复数据。
+
+### 客户端
+
+- 除了访问 MinIO 的 Web 页面，用户还可以使用 MinIO 的命令行客户端 mc 。
+  - mc 支持 ls、cp、rm、find 等多种 Unix 风格的命令。
+  - mc 兼容 AWS S3 API 。
+- 可以运行 mc 的 docker 镜像：
+  ```sh
+  docker run -it --rm --entrypoint bash -v $PWD:$PWD -w $PWD minio/mc:RELEASE.2022-10-29T10-09-23Z
+  ```
+- 命令语法：
+  ```sh
+  mc
+    alias
+          list            # 列出已添加的所有 server 地址
+          remove <name>   # 删除一个 server 地址
+          set myminio http://10.0.0.1:9000 $ACCESS_KEY $SECRET_KEY # 添加一个 server 地址
+
+    ls <path>       # 显示指定 path 之下的文件列表。如果该 path 不存在，则 mc 命令的输出为空，但返回码依然为 0
+      -r            # 递归显示目录
+      --versions    # 显示每个文件的所有版本。否则默认只显示最新版本
+      --incomplete  # 只显示上传失败的文件
+
+    tree <path>     # 以树形图格式，递归显示指定 path 之下的所有目录
+      -f            # 增加显示每个目录下的文件
+      --depth <int> # 显示子目录的最大深度
+
+    du <path>       # 统计磁盘占用量
+
+    diff <dir> <dir>  # 比较两个目录下所有文件的差异
+
+    find <path>       # 查找文件
+      -name '*'
+      --maxdepth <int>
+      --newer-than 1d # 筛选 Last Modified 时间距今不超过 1d 的文件。注意 mv 操作也会刷新 Last Modified 时间
+      --older-than 1d
+      --larger 1G     # 筛选体积大于 1G 的文件
+      --smaller 1G
+
+    cp <SRC> <DST>  # 拷贝文件，可以在本机与 server 之间拷贝。比如 cp test/ myminio/bucket1/
+      -r            # 递归拷贝目录
+
+    mv <SRC> <DST>  # 移动文件
+
+    rm <path>       # 删除文件
+      -r            # 递归删除目录
+      --force       # 强制删除。否则如果目录不为空，则不能删除
+
+    mb myminio/bucket1  # 创建 bucket
+
+    rb myminio/bucket1  # 删除 bucket
+      --force           # 强制删除。否则如果 bucket 不为空，则不能删除
+  ```
+  - mc 客户端的配置文件存储在 `~/.mc/` 目录下。

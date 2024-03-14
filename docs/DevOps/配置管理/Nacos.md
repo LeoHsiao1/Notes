@@ -42,7 +42,7 @@
         # - 7848:7848   # gRPC 端口，供 Nacos 集群节点之间 Raft 选举
       volumes:
         - ./data:/home/nacos/data
-        - ./logs:/home/nacos/logs
+        - /tmp/nacos/logs:/home/nacos/logs
   ```
   - Nacos 默认采用内置数据库 Derby ，将数据存储在本机目录中，可配置以下环境变量，将数据存储到 MySQL 中：
     ```yml

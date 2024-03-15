@@ -92,6 +92,7 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
   spec:
     minReplicaCount: 0
     maxReplicaCount: 5
+    cooldownPeriod: 0
     scaleTargetRef:
       kind: Deployment
       name: nginx

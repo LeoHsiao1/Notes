@@ -9,8 +9,10 @@
   - 他们将 C++ 语言进行简化，抛弃了多继承、指针等复杂功能，并提高程序的兼容性。
   - 他们将这种语言取名为 Oak ，介绍给硬件厂商，但并没有受到欢迎。
 - 1995 年，Sun 公司发现 Oak 语言在互联网上的应用优势：它容易移植到不同平台上运行。于是将它改名为 Java 重新发布，终于成功推广。
-- 2010 年，Sun 公司被 Oracle（甲骨文）公司收购。
-- 从 2019 年 1 月开始，使用 Java 8 及以上版本的 Oracle JDK 需要付费。因此推荐使用 OpenJDK 。
+- 2001 年，IBM 公司发布了一个名为 Eclipse 的 IDE ，主要用于 Java 开发。
+  - 为了与微软公司的 Visual Studio IDE 竞争，IBM 公司开源了 Eclipse ，并成立了 Eclipse 开源软件基金会。
+- 2007 年，Sun 公司开源了 [OpenJDK](https://github.com/openjdk/jdk) 项目，它是 JDK 的官方标准实现。
+- 2010 年，Sun 公司被 Oracle 公司收购。而 OpenJDK 项目也由 Oracle 公司主导，但依然属于开源社区。
 
 ## 语法特点
 

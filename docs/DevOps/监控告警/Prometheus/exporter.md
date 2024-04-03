@@ -979,7 +979,7 @@
   services:
     kafka_exporter:
       container_name: kafka_exporter
-      image: danielqsj/kafka-exporter:v1.6.0
+      image: danielqsj/kafka-exporter:v1.7.0
       restart: unless-stopped
       command:
         # - --web.listen-address=:9308

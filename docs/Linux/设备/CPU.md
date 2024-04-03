@@ -111,7 +111,7 @@
   - 非一致内存访问（Non-Uniform Memory Access ，NUMA）
     - ：在计算机中划分多个节点（node），每个节点包含多核 CPU 、独立内存。
     - 各节点的 CPU 可以并发访问本节点的内存，也可以通过互联模块访问其它节点的内存，但比本地内存的访问速度慢。
-    - SMP 属于一致内存访问。与 SMP 相比，NUMA 大幅提高了 CPU 利用率，但跨节点访问内存时慢。
+    - SMP 属于一致内存访问。而 NUMA 大幅提高了 CPU 利用率，但跨节点访问内存时慢。
   - 大规模并行处理（Massive Parallel Processing ，MPP）
     - ：将多个 SMP 服务器通过网络连通，组成一个计算机系统。
     - 与 NUMA 相比，MPP 不存在跨节点的内存访问。增加 CPU 时，系统性能会线性提升。
@@ -268,7 +268,7 @@
   - 原理：
     1. 事先知道每个任务的 Burst Time 。
     2. 每执行完一个任务，就从 ready 队列取出 Burst Time 最小的一个任务，执行它。
-        - 如果 Burst Time 最小的任务有多个，则按 FCFS 算法决策。
+        - 如果 Burst Time 最小的任务有多个，如何决策？可以采用 FCFS、RR 等算法。
   - 特点：
     - 非抢占式调度
     - 静态调度
@@ -348,21 +348,21 @@
 
 - RR（Round Robin，循环赛）
   - 原理：
-    1. 将 CPU 可用时长分割成大量时间片段。每个时间片段是 CPU 时钟周期的数倍，比如 10ms 。
-    2. 将所有任务按 FCFS 算法排序。每个任务使用 CPU 一段时间，然后轮到下一个任务。
+    1. 将 CPU 可用时长分割成大量时间片段（time slice）。每个时间片段是 CPU 时钟周期的数倍，比如 10ms 。
+    2. 将所有任务按 FCFS 算法排序。每个任务使用 CPU 一个时间片段，然后轮到下一个任务。
   - 特点：
-    - 抢占式调度。每个任务尚未执行完毕，CPU 就会切换执行下一个任务。
+    - 抢占式调度。每个任务最多连续使用 CPU 一个时间片段，就会切换执行下一个任务。
   - 优点：
-    - 公平性最好。
+    - 公平性很好。
   - 缺点：
-    - 不能区分重要任务、次要任务。
-    - 频繁发生 CPU 上下文切换，效率低。因此平均 Turn Around Time 大，吞吐量低。
+    - 如果循环太慢，则效果接近 FCFS 算法。
+    - 如果循环太快，则会频繁发生 CPU 上下文切换，导致平均 Turn Around Time 大，吞吐量低。
 
 - PS（Priority Scheduling，优先级调度）
   - 原理：
     1. 事先给每个任务设定一个 Priority 数值，表示优先级。
     2. 每隔一定时间，从所有任务中，找出 Priority 最大的那个任务，执行它。
-        - 如果 Priority 最大的任务有多个，则按 FCFS 算法决策。
+        - 如果 Priority 最大的任务有多个，如何决策？可以采用 FCFS、RR 等算法。
         - 如果 CPU 执行一个任务时，新增一个 Priority 更大的任务，则切换执行新任务。
   - 特点：
     - 抢占式调度
@@ -398,7 +398,7 @@
         - 新增一个任务时，通常加入优先级最高的那个队列。
         - 如果一个任务已发生了较长的 Burst Time ，却依然没执行完毕，则移动到优先级更低的队列。这样，一个任务可能先后加入队列 1 、队列 2、队列 3 ，优先级依次降低。
         - 如果一个任务已发生了较长的 Waiting Time ，越来越饥饿，则进行老化，移动到优先级更高的队列。
-        - 如果一个任务是 IO 密集型（需要及时读写数据），或属于前台任务（需要与用户及时交互），则移动到优先级更高的队列。
+        - 如果一个任务属于 IO 密集型（需要及时读写数据），或交互式任务，则移动到优先级更高的队列。
   - MLFQ 算法是 MQS 算法的改进版。
     - MQS 算法中，每个任务被分配到某个队列之后，就不能移动到其它队列。
     - 而 MLFQ 算法通过反馈机制，改变每个任务所属的队列。
@@ -411,6 +411,20 @@
   - 缺点：
     - 算法复杂，调度开销大。
     - 大幅增加了 CPU 上下文切换。
+
+- CFS（Completely Fair Scheduler，完全公平调度）
+  - 设计初衷：尽量公平地调度，使得每个任务实际使用的 CPU 时长相等。
+  - 原理：
+    1. 给每个任务添加一个属性 vruntime ，用于累计该任务已经使用的 CPU 时长，单位为纳秒。
+        - 如果新增一个任务，或者一个正在使用 CPU 的任务回到 ready 队列，则将其 vruntime 重置为 min_vruntime 。
+    2. 每隔一定时间，将所有任务放在红黑树（rbtree）中，按 vruntime 大小进行排序，使得 vruntime 最小的任务位于 rbtree 最左端。
+    3. 每隔一定时间，执行 rbtree 最左端的那个任务。允许抢占式调度。
+  - 优点：
+    - 比 RR 算法更公平。
+      - 因为占用 CPU 时间更短的任务，其 vruntime 更小，会被优先调度。
+      - 相比之下，RR 算法是分配相等的 CPU 时长给所有任务，不考虑每个任务实际需要多少 CPU 时长。保证了分配的公平，但结果不一定公平。
+    - 比 RR 算法更灵活。能根据所有线程的 vruntime 动态排序，实现动态调度。
+    - 比 RR 算法的 Waiting Time 更小。因为新增任务的 vruntime 最小，会很快被调度。
 
 ### 算法评价
 
@@ -445,18 +459,12 @@
     - 每隔一定时间，检查所有任务的 Waiting Time 。如果某个任务的 Waiting Time 较长，则按比例提高其优先级。该机制称为老化（Aging）。
   - 通常认为，饥饿的任务越少，则公平性越好。
 
-
-### 算法应用
-
 - 根据 CPU 调度算法的不同，将操作系统分为几类：
   - 批处理系统（Batch Processing System）
     - 特点：串行工作，先提交一批任务，然后等待 CPU 执行完毕。
     - 优点：原理简单。
     - 缺点：不能优先执行重要任务。
     - 常用的调度算法：FCFS、SJF
-
-<!-- 批处理采用什么调度算法？ -->
-<!--
   - 实时系统（Real Time Operating System，RTOS）
     - 特点：
       - 抢占式调度
@@ -475,49 +483,175 @@
       - RT-Thread
       - VxWorks
       - RTLinux
-
   - 分时系统（Time Sharing System）
     - 特点：并发工作，将 CPU 可用时长分割成大量时间片段（比如以 10ms 为单位），然后决定每个时间片段分配给哪个任务使用。
     - 优点：每个任务或多或少都能使用 CPU ，比较公平。
     - 缺点：CPU 经常切换执行不同的任务，增加了开销。
 
-- Linux 的 CPU 调度策略主要有以下特点：
-  - 分时系统
-  - 抢占式调度
-    - 一个任务正在占用 CPU 、尚未执行完毕时，允许被其它任务抢占 CPU 。
-  - 公平调度
-  - 优先级调度
-  - 多级反馈队列 -->
+### Linux调度器
 
-- Linux 设计了多种 CPU 调度策略：
-  ```sh
-  SCHED_OTHER   # 对于多个进程尽量平均分配时间，因此占用 CPU 时间较短的进程会被优先调度
-  SCHED_BATCH   # 批处理
-  SCHED_IDLE    # 运行低优先级的后台 job
-  SCHED_FIFO    # 按先来后到的顺序执行进程，直到进程主动释放 CPU ，或被更高优先级的进程抢占 CPU
-  SCHED_RR      # 与 SCHED_FIFO 类似，但是给每个进程分配时间片，如果耗尽，则轮到相同优先级的其它进程
+- Linux 内核的 CPU 调度器，又称为进程调度器（process scheduler），负责决定 CPU 当前执行哪个线程。
+  - POSIX 规定以线程（thread）为单位进行 CPU 调度，不过 Linux 内核中的可调度实体是进程，又称为任务（task）。
+    - 因此分析 Linux 的 CPU 调度时，可能提到进程、线程、任务三个概念，本质上都是 Linux 进程，用 task_struct 表示。
+  - Linux 给每个线程设定了两个属性：
+    - 调度策略（scheduling policy）：支持让每个线程采用不同的调度算法。
+    - 静态调度优先级（static scheduling priority）：用变量 sched_priority 表示，取值范围为 0~99 。
+
+- Linux CPU 调度的特点：
+  - 多队列调度
+    - 将所有线程按 sched_priority 取值的不同，划分为多组。同组线程的 sched_priority 相同，组成一个队列。
+  - 优先级调度
+    - 总是执行当前优先级最高的那个队列（中的线程）。等它执行完毕，队列为空，才能执行优先级较低的队列。
+    - 一个队列正在占用 CPU 时，优先级更高的队列可以抢占 CPU 。
+  - 静态优先级
+    - 调度算法不会改变线程的 sched_priority 。因此同一队列中，不会发生抢占式调度。
+    - 不过用户可以调用 `setpriority()` 等系统接口，改变线程的优先级。
+  - 抢占式调度
+    - 一个线程正在使用 CPU 时，如果出现 sched_priority 更高的其它线程，则总是允许抢占式调度。
+  - 混合使用多种调度算法
+    - 每个队列中，所有线程最初根据 FIFO 排序，然后根据 policy 调整顺序。
+    - 假设某个队列中，一个线程正在占用 CPU ：
+      - 如果该线程采用 SCHED_FIFO 策略，则等该线程执行完毕，才会执行队列中的下一个线程。
+      - 如果该线程采用 SCHED_RR 策略，则最多连续执行一个时间片段，然后移到队列的尾部。
+      - 如果该线程主动释放 CPU ，比如进入 Sleeping 状态，则会移到队列的尾部。
+      - 如果被优先级更高的队列抢占 CPU ，则该线程会移到队列的头部，等待继续执行。
+    - 改变一个线程的 sched_priority ，则会改变其所属的队列。
+      - 如果提高一个线程的 sched_priority ，则会移到新队列的尾部。
+      - 如果降低一个线程的 sched_priority ，则会移到新队列的头部。
+  - 例：
+    - 假设线程 A、B、C 的 sched_priority 分别为 10、0、0 。则线程 A 会一直占用 CPU 的一个核心，而线程 B、C 会按 policy 竞争使用 CPU 的其它核心。
+
+- Linux 的调度策略分为两大类：
+  - 实时策略（realtime policy）
+    - ：用于处理追求实时性（Real Time，RT）的进程。这些进程的 sched_priority 取值范围为 1~99 。
+    - 包含多个调度策略：
+      ```sh
+      SCHED_FIFO
+      SCHED_RR
+      SCHED_DEADLINE
+      ```
+  - 普通策略（normal policy）
+    - ：用于处理普通进程。这些进程的 sched_priority 必须取值为 0 。
+    - 包含多个调度策略：
+      ```sh
+      SCHED_NORMAL
+      SCHED_BATCH
+      SCHED_IDLE
+      ```
+    - 所有 RT 进程的 sched_priority 都大于普通进程。因此等所有 RT 进程不使用 CPU 时，才允许普通进程使用 CPU 。
+    - 常见的几种普通进程：
+      - 交互式进程：例如 bash ，需要及时与用户交互，追求较弱的实时性，因此应该分配较高的优先级。
+      - 批处理进程：通常不追求实时性，因此可以分配较低的优先级。
+
+- Linux 调度器的演变历史：
+  - Linux v0.01 的调度器很简单，只有几十行代码。
+    - 原理：采用 RR 算法
+      1. 将 CPU 可用时长分割成大量时间片段（time slice），每个时间片段为 150ms 。
+      2. 使用一个数组作为队列，记录所有 ready 任务。每个任务使用 CPU 一个时间片段，然后轮到下一个任务。
+      3. 定时器每隔 10ms 触发一次中断，检查 CPU 当前执行的任务：
+          - 如果当前任务已耗尽一个时间片段，或者已执行完毕，则切换执行下一个任务。
+          - 如果当前任务未耗尽一个时间片段，则继续执行。
+  - Linux v2.2 定义了三个调度类（scheduling classes），表示三种调度策略：
+    ```sh
+    SCHED_OTHER # 是每个进程默认采用的调度策略，后来改名为 SCHED_NORMAL
+    SCHED_FIFO  # 采用 FCFS 算法。前一个任务执行完毕，才能执行下一个任务
+    SCHED_RR    # 采用 RR 算法。每个任务最多连续使用 CPU 一个时间片段（默认为 100ms），然后轮到下一个任务
+    ```
+  - Linux v2.4 让 SCHED_NORMAL 采用 O(n) 算法。
+    - 原理：像 RR 算法。总共有 n 个任务时，需要逐一执行，因此时间复杂度为 O(n) 。
+    - 缺点：Waiting Time 较大。
+  - Linux v2.6 让 SCHED_NORMAL 采用 O(1) 算法。
+    - 原理：总共有 n 个任务时，会在固定时间 t 内执行每个任务一段时间，因此时间复杂度为 O(1) 。
+    - 优点：Waiting Time 较小，实时性较好。
+  - Linux v2.6.16 添加了 SCHED_BATCH 调度策略。
+    - 原理：基于 SCHED_NORMAL ，但每个任务最多连续使用 CPU 一个时间片段，然后轮到下一个任务。
+      - 一个时间片段默认为 1.5s 。并且一个任务的优先级越高，其时间片段越长。
+    - 优点：减少了抢占式调度，适合批处理任务。
+  - 2007 年，Linux v2.6.23 添加了 CFS 调度器，实现了 SCHED_NORMAL、SCHED_BATCH、SCHED_IDLE 三种调度策略。
+    - SCHED_IDL 的原理：基于 SCHED_NORMAL ，但优先级比 nice 19 还低。因此当其它队列都为空时，才会执行 SCHED_IDLE 队列。
+  - Linux v3.14 添加了 SCHED_DEADLINE 调度策略。
+    - 原理：类似于 EDF 算法。属于实时调度策略。
+
+
+<!-- fork()、clone() 创建进程时，是否会继承当前进程的调度策略、优先级？ -->
+
+<!-- sched_priority 如何被 nice 影响？ -->
+
+  <!-- 2023 年，Linux内核6.6版本开始，CFS 被EEVDF调度器取代 -->
+
+
+
+
+
+
+- 相关 API ：
+  ```c
+  #include <sched.h>
+
+  int sched_getscheduler(pid_t tid);
+      // 查询某个 tid 的线程
+      // 如果指定 tid=0 ，则会指向调用该函数的当前线程
+
+  int sched_setscheduler(pid_t tid, int policy, const struct sched_param *param);
+      // 给某个 tid 的线程，配置调度策略、参数
+      // 如果 policy 取值为 SCHED_FIFO、SCHED_RR 实时策略，则 param->sched_priority 取值范围为 1~99
+      // 如果 policy 取值为 SCHED_NORMAL 等普通策略，则 param->sched_priority 必须取值为 0
+
+  int sched_yield(void);
+      // 主动放弃使用 CPU 。使得调用该函数的当前线程，被移到当前 sched_priority 调度队列的尾部
+      // 如果当前 sched_priority 调度队列只有这一个线程，则调用该函数之后，该线程会继续使用 CPU 。此时 CPU 使用率没有提高，反而增加了上下文切换
+      // 该函数适用于 SCHED_FIFO、SCHED_RR 实时策略
+      // 该函数不建议用于 SCHED_NORMAL 等普通调度策略，因为每个线程经常可能被抢占式调度，没必要主动放弃使用 CPU
   ```
-  - Linux v2.6 开始，默认采用 CFS（Completely Fair Scheduler）作为 CPU 调度算法。
-  - CPU 调度时，是以线程为单位。
-  - SCHED_FIFO、SCHED_RR 采用实时（Real Time ，RT）调度类，对应的进程称为 RT 类型。
+
+
 
 ### 优先级
 
 - 如何控制不同进程使用 CPU 的优先级？Linux 使用以下两个参数：
   - Priority
     - 取值范围为 -100~39 ，取值越小表示优先级越高。
-    - 对于普通进程，其 Priority = Nice + 20 ，取值范围为 0~39 。
+    - 对于普通进程，其 Priority = nice + 20 ，取值范围为 0~39 。
     - 对于 RT 类型的进程，其 Priority = -1 - rt_prior ，取值范围为 -100~-1 。
       - rt_prior 取值范围为 0~99 ，取值越大，优先级越高。
   - Nice
-    - Nice 表示谦让值。如果一个进程增加其 Nice ，就会降低优先级，对其它进程更友好。
-    - 取值范围为 -20~19 ，取值越小表示优先级越高。默认为 0 。
-    - 用户想调整进程的优先级时，一般只能修改进程的 Nice 谦让值，不能直接修改 Priority 优先级。
+    - nice 表示谦让值。如果一个进程增加其 nice ，则会降低优先级，对其它进程更友好。
+    - 取值范围为 -20~19 ，默认为 0 。
     - 相关命令：
       ```sh
       ps -eo pid,ni,cmd   # 查看所有进程的 nice 值
       renice <int> <pid>  # 修改一个进程的 nice 值
       ```
+
+<!--
+- 除了 sched_priority ，还可以配置其它优先级？
+  - nice
+    - 对于普通进程，其 param->sched_priority 必须取值为 0 。那么如何区分不同普通进程的优先级？可以修改 param->sched_nice 变量。
+    - nice 表示谦让值。取值范围为 -20~19 ，默认为 0 。
+    - 如果一个进程的 nice 值增加，则会降低其优先级，对其它进程更友好。
+
+    - 因此普通进程的优先级等于 `priority = 120 + nice`
+       因此 static_prio 取值范围为 100~139
+
+ -->
+
+
+
+
+- 相关 API ：
+  ```c
+  #include <sys/resource.h>
+
+  int getpriority(int which, id_t who);
+      // 查询某个对象的 nice 值
+      // which 表示该对象的类型，可取值为 PRIO_PROCESS、PRIO_PGRP、PRIO_USER ，表示进程、进程组、用户
+      // who 表示该对象的 id
+
+  int setpriority(int which, id_t who, int prio);
+      // 设置某个对象的 nice 值
+  ```
+  - POSIX 规定 nice 值是进程级别的属性。而 Linux 的 NPTL 线程库，配置的 nice 值是线程级别的属性，因此可以给同一进程的各个线程，设置不同的 nice 值。
+
 
 ### 上下文切换
 

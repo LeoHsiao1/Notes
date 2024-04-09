@@ -655,6 +655,10 @@ module.exports = {
                         {
                             title: "内核",
                             path: "/Linux/内核/内核"
+                        },
+                        {
+                            title: "CPU调度",
+                            path: "/Linux/内核/CPU调度"
                         }
                     ]
                 },

@@ -280,9 +280,9 @@
 
 - SRTF（Shortest Remaining Time First，最短剩余时间优先）
   - 原理：
-    1. 每隔一定时间，统计每个任务的 Remaining Time 。
+    1. 每隔一段时间，统计每个任务的 Remaining Time 。
         - Remaining Time 表示一个任务还需要被 CPU 执行多久，其值等于 Burst Time 减去已被 CPU 执行的时长。
-    2. 每隔一定时间，从所有任务中，找出 Remaining Time 最小的那个任务，执行它。
+    2. 每隔一段时间，从所有任务中，找出 Remaining Time 最小的那个任务，执行它。
   - 特点：
     - 抢占式调度
     - 动态调度
@@ -303,9 +303,9 @@
 
 - HRRN（Highest Response Ratio Next，最高响应率优先）
   - 原理：
-    1. 每隔一定时间，统计每个任务的 Response Ratio 。
+    1. 每隔一段时间，统计每个任务的 Response Ratio 。
         - Response Ratio 表示一个任务等待的程度，计算公式为 `(Waiting Time / Burst Time) + 1` 。
-    2. 每隔一定时间，从所有任务中，找出 Response Ratio 最大的那个任务，执行它。并且不允许抢占式调度。
+    2. 每隔一段时间，从所有任务中，找出 Response Ratio 最大的那个任务，执行它。并且不允许抢占式调度。
   - 特点：
     - 非抢占式调度
     - 动态调度
@@ -317,8 +317,8 @@
 
 - EDF（Earliest Deadline First，最早截止时间优先）
   - 原理：
-    1. 每隔一定时间，统计每个任务的 Deadline 。比如任务 A ，希望在时刻 t 之前被执行完毕，超时则可能导致任务失败、任务降级。
-    2. 每隔一定时间，从所有任务中，找出 Deadline 最早的那个任务，执行它。
+    1. 每隔一段时间，统计每个任务的 Deadline 。比如任务 A ，希望在时刻 t 之前被执行完毕，超时则可能导致任务失败、任务降级。
+    2. 每隔一段时间，从所有任务中，找出 Deadline 最早的那个任务，执行它。
   - 特点：
     - 抢占式调度
     - 动态调度
@@ -351,7 +351,7 @@
     1. 将 CPU 可用时长分割成大量时间片段（time slice）。每个时间片段是 CPU 时钟周期的数倍，比如 10ms 。
     2. 将所有任务按 FCFS 算法排序。每个任务使用 CPU 一个时间片段，然后轮到下一个任务。
   - 特点：
-    - 抢占式调度。每个任务最多连续使用 CPU 一个时间片段，就会切换执行下一个任务。
+    - 抢占式调度。每个任务最多使用 CPU 一个时间片段，就会切换执行下一个任务。
   - 优点：
     - 公平性很好。
   - 缺点：
@@ -361,7 +361,7 @@
 - PS（Priority Scheduling，优先级调度）
   - 原理：
     1. 事先给每个任务设定一个 Priority 数值，表示优先级。
-    2. 每隔一定时间，从所有任务中，找出 Priority 最大的那个任务，执行它。
+    2. 每隔一段时间，从所有任务中，找出 Priority 最大的那个任务，执行它。
         - 如果 Priority 最大的任务有多个，如何决策？可以采用 FCFS、RR 等算法。
         - 如果 CPU 执行一个任务时，新增一个 Priority 更大的任务，则切换执行新任务。
   - 特点：
@@ -415,10 +415,11 @@
 - CFS（Completely Fair Scheduler，完全公平调度）
   - 设计初衷：尽量公平地调度，使得每个任务实际使用的 CPU 时长相等。
   - 原理：
-    1. 给每个任务添加一个属性 vruntime ，用于累计该任务已经使用的 CPU 时长，单位为纳秒。
+    1. 给每个任务添加一个属性 vruntime ，表示该任务的虚拟运行时长，单位为纳秒。
+        - vruntime 不一定等于实际的 Burst Time ，因为 vruntime 取值可能被算法调整。
         - 如果新增一个任务，或者一个正在使用 CPU 的任务回到 ready 队列，则将其 vruntime 重置为 min_vruntime 。
-    2. 每隔一定时间，将所有任务放在红黑树（rbtree）中，按 vruntime 大小进行排序，使得 vruntime 最小的任务位于 rbtree 最左端。
-    3. 每隔一定时间，执行 rbtree 最左端的那个任务。允许抢占式调度。
+    2. 每隔一段时间，将所有任务放在红黑树（rbtree）中，按 vruntime 大小进行排序，使得 vruntime 最小的任务位于 rbtree 最左端。
+    3. 每隔一段时间，执行 rbtree 最左端的那个任务。允许抢占式调度。
   - 优点：
     - 比 RR 算法更公平。
       - 因为占用 CPU 时间更短的任务，其 vruntime 更小，会被优先调度。
@@ -456,7 +457,7 @@
   - 甚至可能不断出现优先级更高的新任务，导致这些饥饿的任务永远不被执行，该现象称为饿死。相当于从活锁，变成了死锁。
   - 对策：
     - 采用 RR 等算法，保障每个任务都会被 CPU 执行。
-    - 每隔一定时间，检查所有任务的 Waiting Time 。如果某个任务的 Waiting Time 较长，则按比例提高其优先级。该机制称为老化（Aging）。
+    - 每隔一段时间，检查所有任务的 Waiting Time 。如果某个任务的 Waiting Time 较长，则按比例提高其优先级。该机制称为老化（Aging）。
   - 通常认为，饥饿的任务越少，则公平性越好。
 
 - 根据 CPU 调度算法的不同，将操作系统分为几类：
@@ -498,45 +499,56 @@
     - 静态调度优先级（static scheduling priority）：用变量 sched_priority 表示，取值范围为 0~99 。
 
 - Linux CPU 调度的特点：
+  - 模块化设计
+    - 定义了多种调度类（scheduling classes），每个类实现几种调度策略（policy）。
+    - 例如 rt_sched_class 类实现了 SCHED_FIFO、SCHED_RR 策略。
+    - 每个线程同时只能采用一种调度策略，但可以切换策略。
   - 多队列调度
     - 将所有线程按 sched_priority 取值的不同，划分为多组。同组线程的 sched_priority 相同，组成一个队列。
   - 优先级调度
     - 总是执行当前优先级最高的那个队列（中的线程）。等它执行完毕，队列为空，才能执行优先级较低的队列。
-    - 一个队列正在占用 CPU 时，优先级更高的队列可以抢占 CPU 。
-  - 静态优先级
-    - 调度算法不会改变线程的 sched_priority 。因此同一队列中，不会发生抢占式调度。
-    - 不过用户可以调用 `setpriority()` 等系统接口，改变线程的优先级。
+    - 例：假设线程 A、B、C 的 sched_priority 分别为 6、5、5 。
+      - 线程 A 优先级更高，会一直占用 CPU 的一个核心。
+      - 线程 B、C 属于同一个 sched_priority 队列，会按 policy 竞争使用 CPU 的其它核心。
   - 抢占式调度
     - 一个线程正在使用 CPU 时，如果出现 sched_priority 更高的其它线程，则总是允许抢占式调度。
-  - 混合使用多种调度算法
-    - 每个队列中，所有线程最初根据 FIFO 排序，然后根据 policy 调整顺序。
-    - 假设某个队列中，一个线程正在占用 CPU ：
-      - 如果该线程采用 SCHED_FIFO 策略，则等该线程执行完毕，才会执行队列中的下一个线程。
-      - 如果该线程采用 SCHED_RR 策略，则最多连续执行一个时间片段，然后移到队列的尾部。
-      - 如果该线程主动释放 CPU ，比如进入 Sleeping 状态，则会移到队列的尾部。
-      - 如果被优先级更高的队列抢占 CPU ，则该线程会移到队列的头部，等待继续执行。
-    - 改变一个线程的 sched_priority ，则会改变其所属的队列。
-      - 如果提高一个线程的 sched_priority ，则会移到新队列的尾部。
-      - 如果降低一个线程的 sched_priority ，则会移到新队列的头部。
-  - 例：
-    - 假设线程 A、B、C 的 sched_priority 分别为 10、0、0 。则线程 A 会一直占用 CPU 的一个核心，而线程 B、C 会按 policy 竞争使用 CPU 的其它核心。
+
+- 每个 sched_priority 队列中，各个线程如何排序？
+  - 每个队列中，所有线程最初根据 FIFO 排序，然后根据 policy 调整顺序。
+  - 假设某个队列中，一个线程正在占用 CPU ：
+    - 如果该线程采用 SCHED_FIFO 策略，则等该线程执行完毕，才会执行队列中的下一个线程。
+    - 如果该线程采用 SCHED_RR 策略，则最多执行一个时间片段，然后移到队列的尾部。
+    - 如果该线程主动释放 CPU ，比如进入 sleeping 状态、进入 iowait 状态，则会等线程结束该状态，变回 ready 状态，然后重新加入 ready 队列的尾部。
+    - 如果被优先级更高的队列抢占 CPU ，则该线程会移到队列的头部，等待继续执行。
+  - 改变一个线程的 sched_priority ，则会改变其所属的队列。
+    - 如果提高一个线程的 sched_priority ，则会移到新队列的尾部。
+    - 如果降低一个线程的 sched_priority ，则会移到新队列的头部。
+
+- Linux 每隔多久触发一次 CPU 调度算法？
+  - 没有固定的间隔时间。可以监控 CPU 上下文切换的次数，估算两次切换之间的间隔时间。
+  - 通常倾向于让正在占用 CPU 的线程一直运行，直到遇到以下情况：
+    - 线程执行完毕。
+    - 线程尚未执行完毕，但主动释放 CPU 。
+    - 线程尚未执行完毕，但出现了优先级更高的线程，发生抢占式调度。
+    - 线程尚未执行完毕，但耗尽了 CPU 时间片段。常见于 RR 算法。
+    - 遇到系统调用，切换执行用户态代码、内核态代码。
+    - 遇到中断。
 
 - Linux 的调度策略分为两大类：
   - 实时策略（realtime policy）
     - ：用于处理追求实时性（Real Time，RT）的进程。这些进程的 sched_priority 取值范围为 1~99 。
     - 包含多个调度策略：
-      ```sh
-      SCHED_FIFO
-      SCHED_RR
-      SCHED_DEADLINE
+      ```c
+      #define SCHED_FIFO   1  // 采用 FCFS 算法。前一个任务执行完毕，才能执行下一个任务
+      #define SCHED_RR     2  // 采用 RR 算法。每个任务最多使用 CPU 一个时间片段（默认为 100ms），然后轮到下一个任务
       ```
   - 普通策略（normal policy）
     - ：用于处理普通进程。这些进程的 sched_priority 必须取值为 0 。
     - 包含多个调度策略：
-      ```sh
-      SCHED_NORMAL
-      SCHED_BATCH
-      SCHED_IDLE
+      ```c
+      #define SCHED_NORMAL 0  // 是每个进程默认采用的调度策略。原名为 SCHED_OTHER
+      #define SCHED_BATCH  3  // 基于 SCHED_NORMAL ，但每个任务最多使用 CPU 一个时间片段，然后轮到下一个任务
+      #define SCHED_IDLE   5  // 基于 SCHED_NORMAL ，但优先级最低。因此当其它线程都不使用 CPU 时，才会执行 SCHED_IDLE 线程
       ```
     - 所有 RT 进程的 sched_priority 都大于普通进程。因此等所有 RT 进程不使用 CPU 时，才允许普通进程使用 CPU 。
     - 常见的几种普通进程：
@@ -545,18 +557,13 @@
 
 - Linux 调度器的演变历史：
   - Linux v0.01 的调度器很简单，只有几十行代码。
-    - 原理：采用 RR 算法
+    - 原理：采用 RR 算法。
       1. 将 CPU 可用时长分割成大量时间片段（time slice），每个时间片段为 150ms 。
       2. 使用一个数组作为队列，记录所有 ready 任务。每个任务使用 CPU 一个时间片段，然后轮到下一个任务。
       3. 定时器每隔 10ms 触发一次中断，检查 CPU 当前执行的任务：
           - 如果当前任务已耗尽一个时间片段，或者已执行完毕，则切换执行下一个任务。
           - 如果当前任务未耗尽一个时间片段，则继续执行。
-  - Linux v2.2 定义了三个调度类（scheduling classes），表示三种调度策略：
-    ```sh
-    SCHED_OTHER # 是每个进程默认采用的调度策略，后来改名为 SCHED_NORMAL
-    SCHED_FIFO  # 采用 FCFS 算法。前一个任务执行完毕，才能执行下一个任务
-    SCHED_RR    # 采用 RR 算法。每个任务最多连续使用 CPU 一个时间片段（默认为 100ms），然后轮到下一个任务
-    ```
+  - Linux v2.2 添加了 SCHED_OTHER、SCHED_FIFO、SCHED_RR 调度策略。
   - Linux v2.4 让 SCHED_NORMAL 采用 O(n) 算法。
     - 原理：像 RR 算法。总共有 n 个任务时，需要逐一执行，因此时间复杂度为 O(n) 。
     - 缺点：Waiting Time 较大。
@@ -564,25 +571,14 @@
     - 原理：总共有 n 个任务时，会在固定时间 t 内执行每个任务一段时间，因此时间复杂度为 O(1) 。
     - 优点：Waiting Time 较小，实时性较好。
   - Linux v2.6.16 添加了 SCHED_BATCH 调度策略。
-    - 原理：基于 SCHED_NORMAL ，但每个任务最多连续使用 CPU 一个时间片段，然后轮到下一个任务。
-      - 一个时间片段默认为 1.5s 。并且一个任务的优先级越高，其时间片段越长。
+    - 原理：
+      - 每个任务最多使用 CPU 一个时间片段，然后轮到下一个任务。
+      - 每个时间片段默认为 1.5s 。
+      - 一个任务的优先级越高，其时间片段越长。
     - 优点：减少了抢占式调度，适合批处理任务。
-  - 2007 年，Linux v2.6.23 添加了 CFS 调度器，实现了 SCHED_NORMAL、SCHED_BATCH、SCHED_IDLE 三种调度策略。
-    - SCHED_IDL 的原理：基于 SCHED_NORMAL ，但优先级比 nice 19 还低。因此当其它队列都为空时，才会执行 SCHED_IDLE 队列。
-  - Linux v3.14 添加了 SCHED_DEADLINE 调度策略。
-    - 原理：类似于 EDF 算法。属于实时调度策略。
-
-
-<!-- fork()、clone() 创建进程时，是否会继承当前进程的调度策略、优先级？ -->
-
-<!-- sched_priority 如何被 nice 影响？ -->
-
-  <!-- 2023 年，Linux内核6.6版本开始，CFS 被EEVDF调度器取代 -->
-
-
-
-
-
+  - 2007 年，Linux v2.6.23 添加了 CFS 调度器，对应 fair_sched_class 调度类，实现了 SCHED_NORMAL、SCHED_BATCH、SCHED_IDLE 调度策略。
+  - Linux v3.14 添加了 SCHED_DEADLINE 调度策略，对应 dl_sched_class 调度类。
+    - 原理：类似于 EDF 算法。
 
 - 相关 API ：
   ```c
@@ -598,45 +594,99 @@
       // 如果 policy 取值为 SCHED_NORMAL 等普通策略，则 param->sched_priority 必须取值为 0
 
   int sched_yield(void);
-      // 主动放弃使用 CPU 。使得调用该函数的当前线程，被移到当前 sched_priority 调度队列的尾部
-      // 如果当前 sched_priority 调度队列只有这一个线程，则调用该函数之后，该线程会继续使用 CPU 。此时 CPU 使用率没有提高，反而增加了上下文切换
+      // 主动放弃使用 CPU 。使得调用该函数的当前线程，被移到当前 sched_priority 队列的尾部
+      // 如果当前 sched_priority 队列只有这一个线程，则调用该函数之后，该线程会继续使用 CPU 。此时 CPU 使用率没有提高，反而增加了上下文切换
       // 该函数适用于 SCHED_FIFO、SCHED_RR 实时策略
       // 该函数不建议用于 SCHED_NORMAL 等普通调度策略，因为每个线程经常可能被抢占式调度，没必要主动放弃使用 CPU
   ```
 
-
-
 ### 优先级
 
-- 如何控制不同进程使用 CPU 的优先级？Linux 使用以下两个参数：
-  - Priority
-    - 取值范围为 -100~39 ，取值越小表示优先级越高。
-    - 对于普通进程，其 Priority = nice + 20 ，取值范围为 0~39 。
-    - 对于 RT 类型的进程，其 Priority = -1 - rt_prior ，取值范围为 -100~-1 。
-      - rt_prior 取值范围为 0~99 ，取值越大，优先级越高。
-  - Nice
-    - nice 表示谦让值。如果一个进程增加其 nice ，则会降低优先级，对其它进程更友好。
-    - 取值范围为 -20~19 ，默认为 0 。
-    - 相关命令：
-      ```sh
-      ps -eo pid,ni,cmd   # 查看所有进程的 nice 值
-      renice <int> <pid>  # 修改一个进程的 nice 值
-      ```
+- 上文介绍了 sched_priority 全局优先级，影响所有调度策略。不过，Linux 还定义了其它几种优先级。
+  - Linux 中大部分进程都属于普通进程，它们的 sched_priority 都为 0 ，位于同一个 sched_priority 队列中。那么如何区分它们的优先级？答案是分配不同的 nice 值。
+  - 少部分进程属于 RT 进程，它们的 sched_priority 取值范围为 1~99 。
+    - 执行 `sched_setscheduler()` 函数时，会将 `param->sched_priority` 赋值给 `p->rt_priority` 。
 
-<!--
-- 除了 sched_priority ，还可以配置其它优先级？
-  - nice
-    - 对于普通进程，其 param->sched_priority 必须取值为 0 。那么如何区分不同普通进程的优先级？可以修改 param->sched_nice 变量。
-    - nice 表示谦让值。取值范围为 -20~19 ，默认为 0 。
-    - 如果一个进程的 nice 值增加，则会降低其优先级，对其它进程更友好。
+- task_struct 中定义了 4 种优先级：
+  - rt_priority
+    - ：表示 RT 进程的优先级。
+    - 取值越大，表示优先级越高。
+    - 取值范围为 1~99 。
+  - static_prio
+    - ：表示普通进程的优先级。
+    - 取值一般不会变化，除非修改进程的 nice 值。
+  - normal_prio
+    - ：static_prio 与 rt_priority ，在生效之前都会换算为 normal_prio ，从而统一语义。
+    - 取值越小，表示优先级越高。
+  - prio
+    - ：表示最终生效的优先级，又称为 effective_prio 。
+    - 取值通常等于 normal_prio 。
+    - 取值越小，表示优先级越高。
+    - 取值范围为 0~139 。
+      - 取值 0~98 专用于 RT 进程，对应 rt_priority 的取值 99~0 。
+      - 取值 99 未被使用。
+      - 取值 100~139 专用于普通进程，对应 nice 的取值 -20~19 。
 
-    - 因此普通进程的优先级等于 `priority = 120 + nice`
-       因此 static_prio 取值范围为 100~139
+- 如何计算每个进程的 prio 优先级？
+  - 对于 RT 进程，计算逻辑为：
+    ```c
+    normal_prio = MAX_RT_PRIO - 1 - rt_priority   = 99 - rt_priority
+    prio        = normal_prio
+    ```
+    相关源代码：
+    ```c
+    #define MAX_USER_RT_PRIO  100
+    #define MAX_RT_PRIO        MAX_USER_RT_PRIO
+    #define MAX_PRIO          (MAX_RT_PRIO + 40)
+    ```
+  - 对于普通进程，计算逻辑为：
+    ```c
+    static_prio = MAX_RT_PRIO + 20 + nice         = 120 + nice
+    normal_prio = static_prio
+    prio        = normal_prio
+    ```
+  - Linux 中大部分进程都属于普通进程，nice 等于 0 ，因此 prio 等于 120 。
+  - 在某些情况下，Linux 会跳过上述逻辑，直接修改 normal_prio、prio ，从而临时调整优先级。
 
- -->
+- 可用 chrt 命令查看、修改进程的调度策略、优先级。
+  ```sh
+  [root@CentOS ~]# chrt -p 1                # 查看某个 pid 进程的调度策略、优先级
+  pid 1's current scheduling policy: SCHED_OTHER
+  pid 1's current scheduling priority: 0
+  [root@CentOS ~]# chrt --other -p 0 1      # 设置调度策略为 SCHED_OTHER ，优先级为 0
+  ```
 
+### nice
 
+- 普通进程拥有一个 nice 属性，表示其谦让值。RT 进程没有 nice 属性。
+  - 如果一个进程增加其 nice 值，则会降低其优先级，在抢占 CPU 时长时，对其它进程更友好。
+  - nice 取值范围为 -20~19 ，默认为 0 。
+  - 比较 sched_priority 与 nice 。
+    - sched_priority 会导致多个进程串行工作。当 sched_priority 最大的进程执行完毕，才会执行其它进程。
+    - nice 会导致多个进程并发工作。nice 不同的多个进程，可以并发使用 CPU ，只是权重不同，分配的 CPU 时长不同。
 
+- nice 如何影响不同进程占用的 CPU 时长？
+  - 给进程配置的 nice 值，会映射成 weight 权重。nice 取值越大，对应的 weight 越小。
+    - 例如 nice=0 对应的 weight 为 1024 。
+    - 例如 nice=1 对应的 weight 为 820 。
+  - 每次 CPU 中止执行一个进程，Linux 会调用 update_curr() 函数，进行计算：
+    ```c
+    static void update_curr(struct cfs_rq *cfs_rq)
+    {
+        struct sched_entity *curr = cfs_rq->curr;   // 获取 CFS 队列中，当前执行的进程
+        delta_exec = now - curr->exec_start;        // 用当前时刻，减去进程刚开始执行的时刻，就得到了当前进程的 Burst Time
+        curr->sum_exec_runtime += delta_exec;       // 将 delta_exec 累加到 sum_exec_runtime
+        curr->vruntime += calc_delta_fair(delta_exec, curr);  // 将 delta_exec 除以 weight ，然后累加到 vruntime
+        curr->exec_start = now;                     // 用当前时刻，作为 CFS 队列下一个执行的进程的 exec_start
+        ...
+    }
+    ```
+    - 如果一个进程一直占用 CPU ，则其 exec_start、sum_exec_runtime、vruntime 一直不会更新。
+  - 因此：
+    - 当 nice=0 时，vruntime 的增长量，几乎等于 Burst Time 。
+    - 当 nice>0 时，vruntime 的增长量，会大于 Burst Time ，使得该进程的优先级降低。
+    - 当 nice<0 时，vruntime 的增长量，会小于 Burst Time ，使得该进程的优先级提高。
+    - 可以这样估算：进程的 nice 值每增加 1 ，会使得权重减小，导致未来分配的 CPU 时长减少 10% 左右。
 
 - 相关 API ：
   ```c
@@ -650,8 +700,75 @@
   int setpriority(int which, id_t who, int prio);
       // 设置某个对象的 nice 值
   ```
-  - POSIX 规定 nice 值是进程级别的属性。而 Linux 的 NPTL 线程库，配置的 nice 值是线程级别的属性，因此可以给同一进程的各个线程，设置不同的 nice 值。
+  - POSIX 规定 nice 值是进程级别的属性。而 Linux 的 NPTL 线程库中，nice 是线程级别的属性，因此可以给同一进程的各个线程，设置不同的 nice 值。
 
+- 相关命令：
+  ```sh
+  ps -eo pid,ni,cmd   # 查看所有进程的 nice 值
+  renice <int> <pid>  # 修改一个进程的 nice 值
+  ```
+
+### sched_entity
+
+- [相关源代码](https://github.com/torvalds/linux/blob/v2.6.34/include/linux/sched.h) ：
+  ```c
+  struct task_struct {            // 记录每个任务的元数据，这些任务可以被调度到 CPU 上执行
+      int prio, static_prio, normal_prio;     // 优先级
+      unsigned int rt_priority;               // 优先级
+      const struct sched_class *sched_class;  // 调度类，比如 rt_sched_class、fair_sched_class
+      struct sched_entity se;     // 该任务的调度信息
+
+      unsigned int policy;        // 调度策略，比如 SCHED_FIFO、SCHED_RR
+      cpumask_t cpus_allowed;     // 允许该进程使用 CPU 的哪些核心
+      ...
+  };
+
+  struct task_group {             // 允许将多个任务归为一组，以 group 为单位进行调度
+      struct sched_entity **se;
+      unsigned long shares;       // 根据该权重，为该 group 分配 CPU 时长。对应 Cgroup 的 cpu.shares 参数
+      ...
+  };
+
+  struct sched_entity {           // CFS 调度器会为每个任务创建一个 sched_entity 结构体，用于记录该任务的调度信息
+      struct load_weight load;    // 根据该权重，为该任务分配 CPU 时长。该权重是从 nice 值转换而来
+      struct rb_node     run_node;// 该任务在 rbtree 红黑树中，所处的节点
+      unsigned int       on_rq;   // 一个标志，表示该任务是否位于 ready 队列中
+
+      u64   exec_start;
+      u64   sum_exec_runtime;
+      u64   vruntime;
+
+      struct cfs_rq *cfs_rq;      // 该任务所属的 CFS 队列
+      ...
+  };
+
+  struct cfs_rq {                 // CFS 调度器会为每个 CPU 核心创建一个 ready 队列，又称为 runqueue
+      struct load_weight load;    // 队列中所有任务的 load_weight 之和
+      unsigned long nr_running;   // 队列中的任务数量
+      struct sched_entity *curr, *next, *last;  // 三个指针，分别指向当前执行的任务、下一个执行的任务、上一个执行的任务
+      ...
+  };
+
+  struct rt_rq;   // 实时进程的队列
+  ```
+
+- 可通过 /proc 查看进程的调度信息，如下：
+  ```sh
+  [root@CentOS ~]# cat /proc/1/sched
+  systemd (1, #threads: 1)                                              # 进程名称、pid、线程数
+  -------------------------------------------------------------------
+  se.exec_start                                :    2137352461.573646   # 进程最近一次 Burst Time 的开始时刻。该时刻不是 Unix 时间戳，而是主机的 uptime ，单位为毫秒
+  se.vruntime                                  :     351095853.820943   # 虚拟运行时长，单位为纳秒
+  se.sum_exec_runtime                          :        402964.351553   # 累计每次使用 CPU 的 Burst Time ，单位为毫秒
+  se.nr_migrations                             :               162345   # 每次线程被调度到不同 CPU 核心上，就将该值加 1
+  nr_switches                                  :              1434237   # 上下文切换的累计次数，等于 nr_voluntary_switches + nr_involuntary_switches
+  nr_voluntary_switches                        :              1426878   # 自愿的切换次数
+  nr_involuntary_switches                      :                 7359   # 非资源的切换次数
+  se.load.weight                               :                 1024   # nice 值对应的权重
+  policy                                       :                    0   # 调度策略，0 表示 SCHED_NORMAL
+  prio                                         :                  120   # 优先级
+  ...
+  ```
 
 ### 上下文切换
 

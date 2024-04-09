@@ -653,8 +653,12 @@ module.exports = {
                             path: "/Linux/内核/开机"
                         },
                         {
-                            title: "内核",
-                            path: "/Linux/内核/内核"
+                            title: "架构",
+                            path: "/Linux/内核/架构"
+                        },
+                        {
+                            title: "配置",
+                            path: "/Linux/内核/配置"
                         },
                         {
                             title: "CPU调度",

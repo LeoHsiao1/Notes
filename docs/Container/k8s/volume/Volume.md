@@ -87,10 +87,21 @@
     - name: vol-cache
       emptyDir:
         sizeLimit: 100Mi    # 限制 emptyDir 存储的文件大小，超过则驱逐该 Pod 。即使 emptyDir 未达到 sizeLimit ，也可能达到 limits.ephemeral-storage 而驱逐 Pod
-    - name: vol-tmpfs
-      emptyDir:
-        medium: Memory      # 在内存中创建 emptyDir ，挂载为 tmpfs 文件系统。此时 emptyDir 存储的文件不会占用磁盘，而是占用内存，受 sizeLimit、limits.memory 限制
-        sizeLimit: 100Mi
+  ```
+
+- 例：k8s 默认会给每个容器创建 64MB 大小的 shared memory ，不支持修改。但可以通过以下挂载方式，调整 /dev/shm 的容量。
+  ```yml
+  containers:
+  - name: nginx
+    image: nginx:1.23
+    volumeMounts:
+    - mountPath: /dev/shm
+      name: vol-memory
+  volumes:
+  - name: vol-memory
+    emptyDir:
+      medium: Memory    # 在内存中创建 emptyDir 。此时 emptyDir 中存储的文件不会占用磁盘，而是占用内存，不能超过 emptyDir.sizeLimit 和 limits.memory 限制
+      sizeLimit: 256Mi
   ```
 
 ## downwardAPI

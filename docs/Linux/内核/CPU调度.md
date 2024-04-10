@@ -97,9 +97,7 @@
     - 优点：每个任务或多或少都能使用 CPU ，比较公平。
     - 缺点：CPU 经常切换执行不同的任务，增加了开销。
 
-### 原理
-
-#### FCFS
+### xxxFirst算法
 
 - FCFS（First Come First Serve，先来先服务）
   - 原理：
@@ -115,8 +113,6 @@
     - 几乎不控制 CPU 调度过程，功能、性能不如其它算法。
     - 串行工作。排序越靠后的任务，Waiting Time 越久。
 
-#### SJF
-
 - SJF（Shortest Job First，最短任务优先）
   - 原理：
     1. 事先知道每个任务的 Burst Time 。
@@ -131,8 +127,6 @@
     - 难以实现。因为难以事先知道每个任务的 Burst Time 。
     - 公平性差。排序靠后的那部分任务，会饥饿，甚至饿死。
 
-#### SRTF
-
 - SRTF（Shortest Remaining Time First，最短剩余时间优先）
   - 原理：
     1. 每隔一段时间，统计每个任务的 Remaining Time 。
@@ -145,8 +139,6 @@
     - 假设 CPU 执行任务 A 时，新增一个 Waiting Time 更小的任务 B 。如果仅仅比较 Waiting Time ，就让 CPU 切换执行任务 B ，则没考虑到一种情况：任务 A 可能 Remaining Time 更短，就快执行完了。因此 SJF 不适合抢占式调度。
     - SRTF 是比较所有任务的 Remaining Time ，判断谁能更快执行完毕，因此更合理。
 
-#### LJF
-
 - LJF（Longest Job First，最长任务优先）
   - 原理：与 SJF 相反，是执行 Burst Time 最长的一个任务。
   - 缺点：
@@ -154,13 +146,9 @@
     - 公平性差。排序靠后的那部分任务，会饥饿，甚至饿死。
     - 吞吐量极低。
 
-#### LRTF
-
 - LRTF（Longest Remaining Time First，最长剩余时间优先）
   - 原理：与 SRTF 相反，是执行 Remaining Time 最长的一个任务。
   - LRTF 是 LJF 算法的改进版，允许抢占式调度。
-
-#### HRRN
 
 - HRRN（Highest Response Ratio Next，最高响应率优先）
   - 原理：
@@ -176,8 +164,6 @@
   - 缺点：
     - 难以实现。因为难以事先知道每个任务的 Burst Time 。
 
-#### EDF
-
 - EDF（Earliest Deadline First，最早截止时间优先）
   - 原理：
     1. 每隔一段时间，统计每个任务的 Deadline 。比如任务 A ，希望在时刻 t 之前被执行完毕，超时则可能导致任务失败、任务降级。
@@ -192,7 +178,7 @@
   - 缺点：
     - 如果 CPU 使用率超过 100% ，负载过大，则依然会尽量执行每个即将超时的任务，结果这些任务可能全部超时。不如放弃执行一些次要任务，减轻 CPU 负载。
 
-#### RMS
+### 周期性算法
 
 - RMS（Rate Monotonic Scheduling，速率单调调度）
   - 原理：
@@ -211,12 +197,11 @@
   - 缺点：
     - 难以处理非周期性任务。
 
-#### RR
-
 - RR（Round Robin，循环赛）
   - 原理：
     1. 将 CPU 可用时长分割成大量时间片段（time slice）。每个时间片段是 CPU 时钟周期的数倍，比如 10ms 。
     2. 将所有任务按 FCFS 算法排序。每个任务使用 CPU 一个时间片段，然后轮到下一个任务。
+    3. 执行一轮所有任务，就完成了一次循环周期。
   - 特点：
     - 抢占式调度。每个任务最多使用 CPU 一个时间片段，就会切换执行下一个任务。
   - 优点：
@@ -225,7 +210,7 @@
     - 如果循环太慢，则效果接近 FCFS 算法。
     - 如果循环太快，则会频繁发生 CPU 上下文切换，导致平均 Turn Around Time 大，吞吐量低。
 
-#### PS
+### 优先级算法
 
 - PS（Priority Scheduling，优先级调度）
   - 原理：
@@ -243,8 +228,6 @@
     - 人工调整 Priority 比较麻烦。
     - 公平性差。Priority 较低的那部分任务，会饥饿，甚至饿死。
 
-#### MQS
-
 - MQS（Multiple Queue Scheduling，多队列调度）
   - 原理：
     1. 划分多个 ready 队列，分别用于存放不同类型的任务。
@@ -257,8 +240,6 @@
   - 优点：
     - 可以组合使用多种算法，兼具它们的优点。
     - 可控性好。可以让不同任务，采用不同算法。
-
-#### MLFQ
 
 - MLFQ（Multilevel Feedback Queue Scheduling，多级反馈队列调度）
   - 1960 年代，麻省理工学院的教授 Corbató 发明了 MLFQ 算法，他是研发分时操作系统的先驱。
@@ -284,8 +265,6 @@
   - 缺点：
     - 算法复杂，调度开销大。
     - 大幅增加了 CPU 上下文切换。
-
-#### CFS
 
 - CFS（Completely Fair Scheduler，完全公平调度）
   - 设计初衷：尽量公平地调度，使得每个任务实际使用的 CPU 时长相等。
@@ -337,6 +316,8 @@
 
 ## Linux调度器
 
+- 上文介绍了 CPU 调度算法的大概原理，下文介绍 Linux 具体如何实现 CPU 调度。
+
 ### 特点
 
 - Linux 内核的 CPU 调度器，又称为进程调度器（process scheduler），负责决定 CPU 当前执行哪个线程。
@@ -383,26 +364,73 @@
 ### 版本
 
 - Linux v0.01 的调度器很简单，只有几十行代码。
-  - 原理：采用 RR 算法。
-    1. 将 CPU 可用时长分割成大量时间片段（time slice），每个时间片段为 150ms 。
-    2. 使用一个数组作为队列，记录所有 ready 任务。每个任务使用 CPU 一个时间片段，然后轮到下一个任务。
-    3. 定时器每隔 10ms 触发一次中断，检查 CPU 当前执行的任务：
-        - 如果当前任务已耗尽一个时间片段，或者已执行完毕，则切换执行下一个任务。
-        - 如果当前任务未耗尽一个时间片段，则继续执行。
-- Linux v2.2 添加了 SCHED_OTHER、SCHED_FIFO、SCHED_RR 调度策略。
-- Linux v2.4 让 SCHED_NORMAL 采用 O(n) 算法。
-  - 原理：像 RR 算法。总共有 n 个任务时，需要逐一执行，因此时间复杂度为 O(n) 。
-  - 缺点：Waiting Time 较大。
-- Linux v2.6 让 SCHED_NORMAL 采用 O(1) 算法。
-  - 原理：总共有 n 个任务时，会在固定时间 t 内执行每个任务一段时间，因此时间复杂度为 O(1) 。
-  - 优点：Waiting Time 较小，实时性较好。
+  - 原理：采用分时算法，并发执行多个进程
+    - 为每个进程分配一段 CPU 可用时长，记作 counter 变量。
+    - 进程的存在时间越久、优先级越高，分配的 counter 越多。因此既能减少饥饿，又能优先执行重要任务。
+    - 每次调度，找出当前 counter 最大的那个进程，执行它，直到耗尽其 CPU 可用时长。然后开始下一次调度。
+  - 源代码如下：
+    ```c
+    #define NR_TASKS 64
+    #define FIRST_TASK task[0]
+    #define LAST_TASK  task[NR_TASKS-1]
+
+    struct task_struct *task[NR_TASKS];   // 一个数组，用于存放主机的所有进程（不管进程是否需要运行）
+
+    void schedule(void)
+    {
+      ...
+
+      // 通过循环，遍历所有进程，找出状态为 TASK_RUNNING 且 counter 最大的那个进程，记在 next 变量中
+      while (1) {
+        c = -1;               // 变量 c 用于记录已发现的 counter 最大值
+        next = 0;
+        i = NR_TASKS;         // 变量 i 用作访问 task 数组的索引。最初给 i 赋值为 NR_TASKS ，然后递减 i
+        p = &task[NR_TASKS];  // 访问 task 数组中的第 i 个进程
+        while (--i) {
+          if (!*--p)
+            continue;
+          if ((*p)->state == TASK_RUNNING && (*p)->counter > c)
+            c = (*p)->counter, next = i;
+        }
+
+        // 如果已找到有效的 counter 最大值，则停止循环
+        if (c) break;
+
+        // 将每个进程的 counter 除以 2 ，并加上 priority
+        // counter >> 1 的作用是除以 2 ，避免 counter 增长太快
+        // 如果一个进程长时间睡眠，其 counter 会不断增加。未来该进程变为 TASK_RUNNING 状态时，会更容易占用 CPU
+        for(p = &LAST_TASK ; p > &FIRST_TASK ; --p)
+          if (*p)
+            (*p)->counter = ((*p)->counter >> 1) + (*p)->priority;
+      }
+
+      // 切换上下文，从而执行 next 进程
+      switch_to(next);
+    }
+    ```
+
+- Linux v2.2 划分了 SCHED_OTHER、SCHED_FIFO、SCHED_RR 三种调度策略。
+
+- Linux v2.4 的调度器改用 O(n) 算法。
+  - 在分时算法的基础上，引入 epoch 机制。
+    - 在每个 epoch 时间内，尽量执行一轮所有进程，并耗尽每个进程的 CPU 可用时长。
+    - 如果一个进程在当前 epoch 中剩余了 CPU 可用时长，则会保留一半时长到下一个 epoch 。
+  - 总共有 n 个任务时，需要遍历一遍，才能找到优先级最大的那个进程。因此时间复杂度为 O(n) 。
+
+- Linux v2.6 的调度器改用 O(1) 算法。
+  - 划分了 active 和 expired 两个队列。
+    - active 队列中的进程，耗尽 CPU 可用时长之后，会被移到 expired 队列。
+    - active 队列中的进程，优先级不会变化。优先级最大的那个进程，总是排在第一位。因此查找的时间复杂度为 O(1) 。
+
 - Linux v2.6.16 添加了 SCHED_BATCH 调度策略。
   - 原理：
     - 每个任务最多使用 CPU 一个时间片段，然后轮到下一个任务。
     - 每个时间片段默认为 1.5s 。
     - 一个任务的优先级越高，其时间片段越长。
   - 优点：减少了抢占式调度，适合批处理任务。
-- 2007 年，Linux v2.6.23 添加了 CFS 调度器，对应 fair_sched_class 调度类，实现了 SCHED_NORMAL、SCHED_BATCH、SCHED_IDLE 调度策略。
+
+- Linux v2.6.23 添加了 CFS 调度器，对应 fair_sched_class 调度类，实现了 SCHED_NORMAL、SCHED_BATCH、SCHED_IDLE 调度策略。
+
 - Linux v3.14 添加了 SCHED_DEADLINE 调度策略，对应 dl_sched_class 调度类。
   - 原理：类似于 EDF 算法。
 
@@ -452,7 +480,7 @@
 ### priority
 
 - 上文介绍了 sched_priority 全局优先级，影响所有调度策略。不过，Linux 还定义了其它几种优先级。
-  - Linux 中大部分进程都属于普通进程，它们的 sched_priority 都为 0 ，位于同一个 sched_priority 队列中。那么如何区分它们的优先级？答案是分配不同的 nice 值。
+  - 大部分进程都属于普通进程，它们的 sched_priority 都为 0 ，位于同一个 sched_priority 队列中。那么如何区分它们的优先级？答案是分配不同的 nice 值。
   - 少部分进程属于 RT 进程，它们的 sched_priority 取值范围为 1~99 。
     - 执行 `sched_setscheduler()` 函数时，会将 `param->sched_priority` 赋值给 `p->rt_priority` 。
 
@@ -509,14 +537,14 @@
 
 - 每个进程拥有一个 nice 属性，表示其谦让值。
   - 如果一个进程增加其 nice 值，则会降低其优先级，在抢占 CPU 时长时，对其它进程更友好。
-  - nice 主要用于普通进程，而 RT 进程很少使用 nice 。
+  - nice 主要用于普通进程，影响 CFS 算法的 vruntime 。而 RT 进程很少使用 nice 。
   - nice 取值范围为 -20~19 ，默认为 0 。
   - 比较 sched_priority 与 nice 。
     - sched_priority 会导致多个进程串行工作。当 sched_priority 最大的进程执行完毕，才会执行其它进程。
     - nice 会导致多个进程并发工作。nice 不同的多个进程，可以并发使用 CPU ，只是权重不同，分配的 CPU 时长不同。
 
 - nice 如何影响不同进程占用的 CPU 时长？
-  - 给进程配置的 nice 值，会映射成 weight 权重。nice 取值越大，对应的 weight 越小。
+  - 给进程配置的 nice 值，会转换成 weight 权重。nice 取值越大，对应的 weight 越小。
     - 例如 nice=0 对应的 weight 为 1024 。
     - 例如 nice=1 对应的 weight 为 820 。
   - 每次 CPU 中止执行一个进程，Linux 会调用 update_curr() 函数更新该进程的 sched_entity 。源代码如下：
@@ -526,17 +554,20 @@
         struct sched_entity *curr = cfs_rq->curr;   // 获取 CFS 队列中，当前执行的进程
         delta_exec = now - curr->exec_start;        // 用当前时刻，减去进程刚开始执行的时刻，就得到了当前进程的 Burst Time
         curr->sum_exec_runtime += delta_exec;       // 将 delta_exec 累加到 sum_exec_runtime
-        curr->vruntime += calc_delta_fair(delta_exec, curr);  // 将 delta_exec 除以 weight ，然后累加到 vruntime
+        curr->vruntime += calc_delta_fair(delta_exec, curr);  // 将 delta_exec 大概除以 weight ，然后累加到 vruntime
         curr->exec_start = now;                     // 用当前时刻，作为 CFS 队列下一个执行的进程的 exec_start
         ...
     }
     ```
     - 如果一个进程一直占用 CPU ，则其 exec_start、sum_exec_runtime、vruntime 一直不会更新。
   - 因此：
-    - 当 nice=0 时，vruntime 的增长量，几乎等于 Burst Time 。
-    - 当 nice>0 时，vruntime 的增长量，会大于 Burst Time ，使得该进程的优先级降低。
-    - 当 nice<0 时，vruntime 的增长量，会小于 Burst Time ，使得该进程的优先级提高。
+    - 当 nice=0 时，vruntime 的增长量，等于 Burst Time 。
+    - 当 nice>0 时，vruntime 的增长量，大于 Burst Time ，使得该进程的优先级降低。
+    - 当 nice<0 时，vruntime 的增长量，小于 Burst Time ，使得该进程的优先级提高。
     - 可以这样估算：进程的 nice 值每增加 1 ，会使得权重减小，导致未来分配的 CPU 时长减少 10% 左右。
+
+<!-- vruntime = (wall_time * ((NICE_0_LOAD * 2^32) / weight)) >> 32 -->
+
 
 - 相关 API ：
   ```c
@@ -561,6 +592,7 @@
 ### sched_entity
 
 - CFS 调度器会为每个任务创建一个 sched_entity 结构体，用于记录该任务的调度信息。
+
 - [相关源代码](https://github.com/torvalds/linux/blob/v2.6.34/include/linux/sched.h) ：
   ```c
   struct task_struct {            // 记录每个任务的元数据，这些任务可以被调度到 CPU 上执行
@@ -593,14 +625,16 @@
       ...
   };
 
-  struct cfs_rq {                 // CFS 调度器会为每个 CPU 核心创建一个 ready 队列，又称为 runqueue
-      struct load_weight load;    // 队列中所有任务的 load_weight 之和
+  struct rq {                     // Linux 会为每个 CPU 核心创建一个 ready 队列，又称为 runqueue 。分为 cfs_rq、rt_rq 两个队列
       unsigned long nr_running;   // 队列中的任务数量
-      struct sched_entity *curr, *next, *last;  // 三个指针，分别指向当前执行的任务、下一个执行的任务、上一个执行的任务
+      struct load_weight load;    // 队列中所有任务的 load_weight 之和
+      struct cfs_rq cfs;
+      struct rt_rq rt;
+      struct task_struct *curr, *idle;  // curr 指向当前执行的进程。idle 指向空闲进程，当 ready 队列为空时，会让 CPU 执行 idle 进程，相当于睡眠
       ...
   };
-
-  struct rt_rq;   // 实时进程的队列
+  struct cfs_rq;                  // CFS 队列
+  struct rt_rq;                   // 实时进程的队列
   ```
 
 - 可通过 /proc 查看进程的调度信息，如下：

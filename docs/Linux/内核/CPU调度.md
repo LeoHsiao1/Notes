@@ -97,7 +97,7 @@
     - 优点：每个任务或多或少都能使用 CPU ，比较公平。
     - 缺点：CPU 经常切换执行不同的任务，增加了开销。
 
-### xxxFirst算法
+### 关于排序
 
 - FCFS（First Come First Serve，先来先服务）
   - 原理：
@@ -178,7 +178,23 @@
   - 缺点：
     - 如果 CPU 使用率超过 100% ，负载过大，则依然会尽量执行每个即将超时的任务，结果这些任务可能全部超时。不如放弃执行一些次要任务，减轻 CPU 负载。
 
-### 周期性算法
+- PS（Priority Scheduling，优先级调度）
+  - 原理：
+    1. 事先给每个任务设定一个 Priority 数值，表示优先级。
+    2. 每隔一段时间，从所有任务中，找出 Priority 最大的那个任务，执行它。
+        - 如果 Priority 最大的任务有多个，如何决策？可以采用 FCFS、RR 等算法。
+        - 如果 CPU 执行一个任务时，新增一个 Priority 更大的任务，则切换执行新任务。
+  - 特点：
+    - 抢占式调度
+    - 动态调度
+  - 优点：
+    - 算法简单，容易实现。
+    - 可控性好。可以人工调整每个任务的 Priority ，从而区分重要任务、次要任务。
+  - 缺点：
+    - 人工调整 Priority 比较麻烦。
+    - 公平性差。Priority 较低的那部分任务，会饥饿，甚至饿死。
+
+### 关于分时
 
 - RMS（Rate Monotonic Scheduling，速率单调调度）
   - 原理：
@@ -210,23 +226,48 @@
     - 如果循环太慢，则效果接近 FCFS 算法。
     - 如果循环太快，则会频繁发生 CPU 上下文切换，导致平均 Turn Around Time 大，吞吐量低。
 
-### 优先级算法
-
-- PS（Priority Scheduling，优先级调度）
+- CFS（Completely Fair Scheduler，完全公平调度）
+  - 设计初衷：尽量公平地调度。
+    - 如果两个任务的 nice 优先级相同，则给它们分配相等的 Burst Time 。
+    - 如果两个任务的 nice 优先级不同，则按比例分配不同的 Burst Time 。因此每个任务或多或少都能使用 CPU ，比较公平。
   - 原理：
-    1. 事先给每个任务设定一个 Priority 数值，表示优先级。
-    2. 每隔一段时间，从所有任务中，找出 Priority 最大的那个任务，执行它。
-        - 如果 Priority 最大的任务有多个，如何决策？可以采用 FCFS、RR 等算法。
-        - 如果 CPU 执行一个任务时，新增一个 Priority 更大的任务，则切换执行新任务。
-  - 特点：
-    - 抢占式调度
-    - 动态调度
+    1. 设定一个调度周期 sched_latency ，单位为纳秒。在每个周期内，尽量将每个任务执行一次，使得每个任务或多或少都能使用 CPU 。
+        - 如果任务数增加，则自动延长调度周期。源代码如下：
+          ```c
+          static u64 __sched_period(unsigned long nr_running)
+          {
+            // sched_nr_latency 是指在每个调度周期内，最多运行多少个任务，从而保证每个任务至少占用 sched_min_granularity 纳秒的 CPU 时长
+            // 如果当前的任务总数 nr_running ，超过了 sched_nr_latency ，则延长 sched_latency
+            //  unlikely() 是一个宏定义，表示该条件表达式小概率为 true ，有助于编译器进行 if 分支预测
+            if (unlikely(nr_running > sched_nr_latency))
+              return nr_running * sysctl_sched_min_granularity;
+            else
+              return sysctl_sched_latency;
+          }
+          ```
+    2. 给每个任务添加一个属性 vruntime ，表示该任务的虚拟运行时长，单位为纳秒。
+        - 每经过一个 sched_latency ，通常所有任务都会占用一部分 CPU 时长，因此所有任务的 vruntime 都会增长。
+        - vruntime 不一定等于实际的 Burst Time ，因为 vruntime 的值可能被算法修改。
+    3. 将所有任务放在红黑树（rbtree）中，按 vruntime 大小进行排序，使得 vruntime 最小的任务位于 rbtree 最左端。
+        - 读取、插入 rbtree 的时间复杂度为 O(log n) 。
+        - 将 rbtree 中的 vruntime 最小值，记录在 min_vruntime 变量中。
+    4. 每次 CPU 调度时，执行 vruntime 最小的那个任务。
+        - 允许抢占式调度。
+  - vruntime 的值可能被算法修改。
+    - 如果一个任务的 nice 值变大，则放大其 vruntime 增长量，使得该任务未来分配的 CPU 时长更少。
+    - 如果新建一个任务时，将其 vruntime 赋值为 0 。而其它任务由于长时间运行，vruntime 取值大。此时新任务能长时间占用 CPU ，直到 vruntime 增长追上其它任务。这对其它任务不公平，怎么办？
+      - 将新任务的 vruntime 赋值为 min_vruntime 。使得它会立即占用 CPU ，但不能占用太长时间。
+    - 如果一个任务因为 iowait、sleep 等原因退出 ready 队列，一段时间之后重新进入 ready 队列。此时该任务的 vruntime 由于一段时间没有增长，比其它任务小很多，不公平。怎么办？
+      - 当任务退出 ready 队列时，对其执行 `vruntime -= min_vruntime` 。
+      - 当任务重进 ready 队列时，对其执行 `vruntime += min_vruntime` 。从而恢复该任务在 rbtree 中的排序。
   - 优点：
-    - 算法简单，容易实现。
-    - 可控性好。可以人工调整每个任务的 Priority ，从而区分重要任务、次要任务。
-  - 缺点：
-    - 人工调整 Priority 比较麻烦。
-    - 公平性差。Priority 较低的那部分任务，会饥饿，甚至饿死。
+    - 比 RR 算法更公平。
+      - 因为占用 CPU 时间更短的任务，其 vruntime 更小，会被优先调度，避免了饥饿。
+      - 相比之下，RR 算法是分配相等的 CPU 时长给所有任务，不考虑每个任务实际需要多少 CPU 时长。保证了分配的公平，但结果不一定公平。
+    - 比 RR 算法更灵活。能根据所有任务的 vruntime 动态排序，实现动态调度。
+    - 比 RR 算法的 Waiting Time 更小。因为新建任务的 vruntime 最小，会立即占用 CPU。
+
+### 关于多队列
 
 - MQS（Multiple Queue Scheduling，多队列调度）
   - 原理：
@@ -265,21 +306,6 @@
   - 缺点：
     - 算法复杂，调度开销大。
     - 大幅增加了 CPU 上下文切换。
-
-- CFS（Completely Fair Scheduler，完全公平调度）
-  - 设计初衷：尽量公平地调度，使得每个任务实际使用的 CPU 时长相等。
-  - 原理：
-    1. 给每个任务添加一个属性 vruntime ，表示该任务的虚拟运行时长，单位为纳秒。
-        - vruntime 不一定等于实际的 Burst Time ，因为 vruntime 取值可能被算法调整。
-        - 如果新增一个任务，或者一个正在使用 CPU 的任务回到 ready 队列，则将其 vruntime 重置为 min_vruntime 。
-    2. 每隔一段时间，将所有任务放在红黑树（rbtree）中，按 vruntime 大小进行排序，使得 vruntime 最小的任务位于 rbtree 最左端。
-    3. 每隔一段时间，执行 rbtree 最左端的那个任务。允许抢占式调度。
-  - 优点：
-    - 比 RR 算法更公平。
-      - 因为占用 CPU 时间更短的任务，其 vruntime 更小，会被优先调度。
-      - 相比之下，RR 算法是分配相等的 CPU 时长给所有任务，不考虑每个任务实际需要多少 CPU 时长。保证了分配的公平，但结果不一定公平。
-    - 比 RR 算法更灵活。能根据所有线程的 vruntime 动态排序，实现动态调度。
-    - 比 RR 算法的 Waiting Time 更小。因为新增任务的 vruntime 最小，会很快被调度。
 
 ### 评价
 
@@ -551,23 +577,35 @@
     ```c
     static void update_curr(struct cfs_rq *cfs_rq)
     {
-        struct sched_entity *curr = cfs_rq->curr;   // 获取 CFS 队列中，当前执行的进程
-        delta_exec = now - curr->exec_start;        // 用当前时刻，减去进程刚开始执行的时刻，就得到了当前进程的 Burst Time
-        curr->sum_exec_runtime += delta_exec;       // 将 delta_exec 累加到 sum_exec_runtime
-        curr->vruntime += calc_delta_fair(delta_exec, curr);  // 将 delta_exec 大概除以 weight ，然后累加到 vruntime
-        curr->exec_start = now;                     // 用当前时刻，作为 CFS 队列下一个执行的进程的 exec_start
+        // 获取 CFS 队列中，当前执行的进程
+        struct sched_entity *curr = cfs_rq->curr;
+
+        // 用当前时刻，减去进程刚开始执行的时刻，得到当前进程的 Burst Time
+        delta_exec = now - curr->exec_start;
+
+        // 将 delta_exec 累加到 sum_exec_runtime
+        curr->sum_exec_runtime += delta_exec;
+
+        // 将 delta_exec 缩放之后，累加到 vruntime
+        // 大概相当于 curr->vruntime += delta_exec * NICE_0_LOAD / curr->load.weight
+        curr->vruntime += calc_delta_fair(delta_exec, curr);
+
+        // 用当前时刻，作为 CFS 队列下一个执行的进程的 exec_start
+        curr->exec_start = now;
+
+        // 计算当前的 min_vruntime
+        // 这会检查红黑树最左端节点 cfs_rq->rb_leftmost 的 vruntime ，如果小于 cfs_rq->min_vruntime ，则赋值给 cfs_rq->min_vruntime
+        update_min_vruntime(cfs_rq);
         ...
     }
     ```
-    - 如果一个进程一直占用 CPU ，则其 exec_start、sum_exec_runtime、vruntime 一直不会更新。
+    - 如果一个进程一直占用 CPU ，则可能长时间不会调用 update_curr() ，导致 sched_entity 不会更新。
+
   - 因此：
     - 当 nice=0 时，vruntime 的增长量，等于 Burst Time 。
-    - 当 nice>0 时，vruntime 的增长量，大于 Burst Time ，使得该进程的优先级降低。
-    - 当 nice<0 时，vruntime 的增长量，小于 Burst Time ，使得该进程的优先级提高。
+    - 当 nice>0 时，vruntime 的增长量，大于 Burst Time ，使得该进程未来分配的 CPU 时长更少。
+    - 当 nice<0 时，vruntime 的增长量，小于 Burst Time ，使得该进程未来分配的 CPU 时长更多。
     - 可以这样估算：进程的 nice 值每增加 1 ，会使得权重减小，导致未来分配的 CPU 时长减少 10% 左右。
-
-<!-- vruntime = (wall_time * ((NICE_0_LOAD * 2^32) / weight)) >> 32 -->
-
 
 - 相关 API ：
   ```c
@@ -606,7 +644,7 @@
       ...
   };
 
-  struct task_group {             // 允许将多个任务归为一组，以 group 为单位进行调度
+  struct task_group {             // 允许将多个任务归为一组，以 group 为单位进行调度。该 group 的 vruntime ，等于其中所有任务的 vruntime 之和
       struct sched_entity **se;
       unsigned long shares;       // 根据该权重，为该 group 分配 CPU 时长。对应 Cgroup 的 cpu.shares 参数
       ...
@@ -625,16 +663,22 @@
       ...
   };
 
+  struct sched_rt_entity;         // 用于记录实时进程的调度信息
+
   struct rq {                     // Linux 会为每个 CPU 核心创建一个 ready 队列，又称为 runqueue 。分为 cfs_rq、rt_rq 两个队列
       unsigned long nr_running;   // 队列中的任务数量
       struct load_weight load;    // 队列中所有任务的 load_weight 之和
       struct cfs_rq cfs;
       struct rt_rq rt;
-      struct task_struct *curr, *idle;  // curr 指向当前执行的进程。idle 指向空闲进程，当 ready 队列为空时，会让 CPU 执行 idle 进程，相当于睡眠
+      struct task_struct *curr, *idle;  // curr 指向当前执行的进程。idle 指向空闲进程。当 ready 队列为空时，会让 CPU 执行 idle 进程，从而睡眠
       ...
   };
-  struct cfs_rq;                  // CFS 队列
-  struct rt_rq;                   // 实时进程的队列
+  struct cfs_rq {                   // CFS 队列
+      u64 min_vruntime;             // 所有任务的 vruntime 的最小值
+      struct rb_node *rb_leftmost;  // 指向 rbtreee 的最左端节点，这样节省了 O(log n) 的查找时间
+      ...
+  };
+  struct rt_rq;                     // 实时进程的队列
   ```
 
 - 可通过 /proc 查看进程的调度信息，如下：

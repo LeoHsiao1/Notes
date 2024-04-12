@@ -17,6 +17,7 @@
 - 每个任务使用 CPU 时，有几种状态：
   - ready ：调用系统接口，请求使用 CPU 。然后阻塞等待，直到轮到它开始使用 CPU 。
     - 通常有多个任务同时请求使用 CPU ，操作系统会将这些 ready 状态的任务放在一个队列中，称为 ready 队列。每次取出一个任务，交给 CPU 执行。
+    - 如果一个任务退出 ready 状态，比如进程终止、sleep、iowait，则将该任务从 ready 队列删除。
   - running ：正在使用 CPU 。
   - blocked ：任务暂停运行，直到某一条件满足时才继续使用 CPU 。例如等待磁盘 IO 完成。
   - finished ：该任务执行完毕，被删除。
@@ -194,7 +195,7 @@
     - 人工调整 Priority 比较麻烦。
     - 公平性差。Priority 较低的那部分任务，会饥饿，甚至饿死。
 
-### 关于分时
+### 关于循环
 
 - RMS（Rate Monotonic Scheduling，速率单调调度）
   - 原理：
@@ -223,49 +224,59 @@
   - 优点：
     - 公平性很好。
   - 缺点：
-    - 如果循环太慢，则效果接近 FCFS 算法。
-    - 如果循环太快，则会频繁发生 CPU 上下文切换，导致平均 Turn Around Time 大，吞吐量低。
+    - 如果循环周期太长，则效果接近 FCFS 算法。
+    - 如果循环周期太短，则会频繁发生 CPU 上下文切换，导致平均 Turn Around Time 大，吞吐量低。
 
 - CFS（Completely Fair Scheduler，完全公平调度）
-  - 设计初衷：尽量公平地调度。
-    - 如果两个任务的 nice 优先级相同，则给它们分配相等的 Burst Time 。
-    - 如果两个任务的 nice 优先级不同，则按比例分配不同的 Burst Time 。因此每个任务或多或少都能使用 CPU ，比较公平。
-  - 原理：
-    1. 设定一个调度周期 sched_latency ，单位为纳秒。在每个周期内，尽量将每个任务执行一次，使得每个任务或多或少都能使用 CPU 。
-        - 如果任务数增加，则自动延长调度周期。源代码如下：
-          ```c
-          static u64 __sched_period(unsigned long nr_running)
-          {
-            // sched_nr_latency 是指在每个调度周期内，最多运行多少个任务，从而保证每个任务至少占用 sched_min_granularity 纳秒的 CPU 时长
-            // 如果当前的任务总数 nr_running ，超过了 sched_nr_latency ，则延长 sched_latency
-            //  unlikely() 是一个宏定义，表示该条件表达式小概率为 true ，有助于编译器进行 if 分支预测
-            if (unlikely(nr_running > sched_nr_latency))
-              return nr_running * sysctl_sched_min_granularity;
-            else
-              return sysctl_sched_latency;
-          }
-          ```
-    2. 给每个任务添加一个属性 vruntime ，表示该任务的虚拟运行时长，单位为纳秒。
-        - 每经过一个 sched_latency ，通常所有任务都会占用一部分 CPU 时长，因此所有任务的 vruntime 都会增长。
-        - vruntime 不一定等于实际的 Burst Time ，因为 vruntime 的值可能被算法修改。
-    3. 将所有任务放在红黑树（rbtree）中，按 vruntime 大小进行排序，使得 vruntime 最小的任务位于 rbtree 最左端。
-        - 读取、插入 rbtree 的时间复杂度为 O(log n) 。
-        - 将 rbtree 中的 vruntime 最小值，记录在 min_vruntime 变量中。
-    4. 每次 CPU 调度时，执行 vruntime 最小的那个任务。
-        - 允许抢占式调度。
-  - vruntime 的值可能被算法修改。
-    - 如果一个任务的 nice 值变大，则放大其 vruntime 增长量，使得该任务未来分配的 CPU 时长更少。
-    - 如果新建一个任务时，将其 vruntime 赋值为 0 。而其它任务由于长时间运行，vruntime 取值大。此时新任务能长时间占用 CPU ，直到 vruntime 增长追上其它任务。这对其它任务不公平，怎么办？
+  - 这是 Linux 引入的一种调度算法，核心理念是给每个任务分配公平的 CPU 时长。
+  - 像 RR 算法，CFS 算法存在循环周期，但周期长度是可变的。
+    - 变量 sched_latency 表示循环周期，单位为纳秒。在每个周期内，会将每个任务都执行一次。
+    - 变量 sched_min_granularity 表示在每个周期内，给每个任务至少分配多少 CPU 时长（比如 1ms）。
+      - 如果一个任务正在占用 CPU ，且时长不足 sched_min_granularity ，则禁止被抢占式调度，以免频繁发生上下文切换。
+    - 变量 sched_nr_latency 表示在每个周期内，理论上最多运行多少个任务，才能满足 sched_min_granularity 条件。
+    - 如果任务数量增加，则自动延长周期。源代码如下：
+      ```c
+      static u64 __sched_period(unsigned long nr_running)
+      {
+        // 如果当前的任务总数 nr_running ，超过了 sched_nr_latency ，则延长 sched_latency
+        // unlikely() 是一个宏定义，表示该条件表达式小概率为 true ，有助于编译器进行 if 分支预测
+        if (unlikely(nr_running > sched_nr_latency))
+          return nr_running * sysctl_sched_min_granularity;
+        else
+          return sysctl_sched_latency;
+      }
+      ```
+
+  - 每个周期内，RR 算法是给每个任务分配相等的 CPU 时间片段，而 CFS 算法是按权重比例分配 CPU 时长，从而区分重要任务。
+    - 给每个任务添加一个 weight 属性（从 nice 谦让值换算而来），表示该任务的权重。
+    - 每个 sched_latency 周期内，每个任务分配的 CPU 时长等于 `timeslice = (weight / total_weight) * sched_latency` 。
+    - 权重更大的任务，会被分配更多 CPU 时长。但每个周期内，每个任务或多或少都能使用 CPU ，比较公平。
+
+  - 每个周期内，RR 算法是按 FCFS 顺序执行所有任务，而 CFS 算法是根据 vruntime 动态排序。
+    - 给每个任务添加一个 vruntime 属性，表示该任务的虚拟运行时长，单位为纳秒。
+    - 一个任务每使用 CPU 一段时间，其 vruntime 就增长一些。
+    - 每次 CPU 调度时，选取 ready 队列中 vruntime 最小的那个任务来执行。
+    - 因此，虽然每个周期内，每个任务都会被执行一次，但 vruntime 更小的任务，会更早被执行。
+
+  - 为了提高 vruntime 排序的效率，CFS 算法使用红黑树（rbtree）的数据结构。将所有任务按 vruntime 大小进行排序，使得 vruntime 最小的任务位于 rbtree 最左端。
+    - 读取、插入 rbtree 的时间复杂度为 O(log n) 。
+    - 将 rbtree 中 vruntime 的最小值，记录在 min_vruntime 变量中。
+
+  - 一个任务的 vruntime ，不一定等于其 Burst Time ，因为 vruntime 的值可能被算法调整，这是为了解决以下问题：
+    - 假设一个重要任务，设置了很大的 weight 值，从而分配很多 CPU 时长。但它的 vruntime 增长量也很大，导致这个重要任务排序靠后，可能被耽误，怎么办？
+      - 每当一个进程退出 CPU 时，按比例缩放其实际执行时长 delta_exec ，算法为 `curr->vruntime += delta_exec * NICE_0_LOAD / curr->load.weight` 。
+      - 因此，如果一个任务的 weight 很大，则可能每个周期占用很多 CPU 时长，还把 vruntime 伪装得很小，从而排序靠前。
+
+    - 假设新建一个任务时，将其 vruntime 赋值为 0 。而其它任务由于长时间运行，vruntime 取值大。此时新任务能长时间占用 CPU ，直到 vruntime 增长追上其它任务。这对其它任务不公平，怎么办？
       - 将新任务的 vruntime 赋值为 min_vruntime 。使得它会立即占用 CPU ，但不能占用太长时间。
-    - 如果一个任务因为 iowait、sleep 等原因退出 ready 队列，一段时间之后重新进入 ready 队列。此时该任务的 vruntime 由于一段时间没有增长，比其它任务小很多，不公平。怎么办？
+
+    - 假设一个任务因为 iowait、sleep 等原因退出 ready 队列，一段时间之后重新进入 ready 队列。此时该任务的 vruntime 由于一段时间没有增长，比其它任务小很多，不公平。怎么办？
       - 当任务退出 ready 队列时，对其执行 `vruntime -= min_vruntime` 。
       - 当任务重进 ready 队列时，对其执行 `vruntime += min_vruntime` 。从而恢复该任务在 rbtree 中的排序。
+
   - 优点：
-    - 比 RR 算法更公平。
-      - 因为占用 CPU 时间更短的任务，其 vruntime 更小，会被优先调度，避免了饥饿。
-      - 相比之下，RR 算法是分配相等的 CPU 时长给所有任务，不考虑每个任务实际需要多少 CPU 时长。保证了分配的公平，但结果不一定公平。
-    - 比 RR 算法更灵活。能根据所有任务的 vruntime 动态排序，实现动态调度。
-    - 比 RR 算法的 Waiting Time 更小。因为新建任务的 vruntime 最小，会立即占用 CPU。
+    - 比 RR 算法更灵活，可以改变循环周期的长度，可以通过 weight 区分重要任务。
+    - 比 RR 算法的 Waiting Time 更小。因为 vruntime 更小的任务，会被更早执行，减少了饥饿。例如 IO 密集型任务的 vruntime 较小。
 
 ### 关于多队列
 
@@ -460,6 +471,10 @@
 - Linux v3.14 添加了 SCHED_DEADLINE 调度策略，对应 dl_sched_class 调度类。
   - 原理：类似于 EDF 算法。
 
+<!-- - Linux v6.6 将 CFS 调度器改为 EVDF 调度器。 -->
+
+
+
 ### policy
 
 - Linux 的调度策略分为两大类：
@@ -562,50 +577,14 @@
 ### nice
 
 - 每个进程拥有一个 nice 属性，表示其谦让值。
-  - 如果一个进程增加其 nice 值，则会降低其优先级，在抢占 CPU 时长时，对其它进程更友好。
-  - nice 主要用于普通进程，影响 CFS 算法的 vruntime 。而 RT 进程很少使用 nice 。
+  - 如果一个进程增加其 nice 值，则会降低其 weight 权重，使得每个周期分配的 CPU 时长更少，对其它进程更友好。
   - nice 取值范围为 -20~19 ，默认为 0 。
-  - 比较 sched_priority 与 nice 。
-    - sched_priority 会导致多个进程串行工作。当 sched_priority 最大的进程执行完毕，才会执行其它进程。
-    - nice 会导致多个进程并发工作。nice 不同的多个进程，可以并发使用 CPU ，只是权重不同，分配的 CPU 时长不同。
 
-- nice 如何影响不同进程占用的 CPU 时长？
-  - 给进程配置的 nice 值，会转换成 weight 权重。nice 取值越大，对应的 weight 越小。
+- 每个进程的 nice ，决定了其 weight 权重，但是呈反比关系。
+  - nice 取值越大，对应的 weight 越小。
     - 例如 nice=0 对应的 weight 为 1024 。
     - 例如 nice=1 对应的 weight 为 820 。
-  - 每次 CPU 中止执行一个进程，Linux 会调用 update_curr() 函数更新该进程的 sched_entity 。源代码如下：
-    ```c
-    static void update_curr(struct cfs_rq *cfs_rq)
-    {
-        // 获取 CFS 队列中，当前执行的进程
-        struct sched_entity *curr = cfs_rq->curr;
-
-        // 用当前时刻，减去进程刚开始执行的时刻，得到当前进程的 Burst Time
-        delta_exec = now - curr->exec_start;
-
-        // 将 delta_exec 累加到 sum_exec_runtime
-        curr->sum_exec_runtime += delta_exec;
-
-        // 将 delta_exec 缩放之后，累加到 vruntime
-        // 大概相当于 curr->vruntime += delta_exec * NICE_0_LOAD / curr->load.weight
-        curr->vruntime += calc_delta_fair(delta_exec, curr);
-
-        // 用当前时刻，作为 CFS 队列下一个执行的进程的 exec_start
-        curr->exec_start = now;
-
-        // 计算当前的 min_vruntime
-        // 这会检查红黑树最左端节点 cfs_rq->rb_leftmost 的 vruntime ，如果小于 cfs_rq->min_vruntime ，则赋值给 cfs_rq->min_vruntime
-        update_min_vruntime(cfs_rq);
-        ...
-    }
-    ```
-    - 如果一个进程一直占用 CPU ，则可能长时间不会调用 update_curr() ，导致 sched_entity 不会更新。
-
-  - 因此：
-    - 当 nice=0 时，vruntime 的增长量，等于 Burst Time 。
-    - 当 nice>0 时，vruntime 的增长量，大于 Burst Time ，使得该进程未来分配的 CPU 时长更少。
-    - 当 nice<0 时，vruntime 的增长量，小于 Burst Time ，使得该进程未来分配的 CPU 时长更多。
-    - 可以这样估算：进程的 nice 值每增加 1 ，会使得权重减小，导致未来分配的 CPU 时长减少 10% 左右。
+  - weight 权重越大，该进程分配的 CPU 时长越多，vruntime 增长量越小。
 
 - 相关 API ：
   ```c
@@ -675,11 +654,39 @@
   };
   struct cfs_rq {                   // CFS 队列
       u64 min_vruntime;             // 所有任务的 vruntime 的最小值
-      struct rb_node *rb_leftmost;  // 指向 rbtreee 的最左端节点，这样节省了 O(log n) 的查找时间
+      struct rb_node *rb_leftmost;  // 用一个指针，记录 rbtreee 的最左端节点。这样不必花 O(log n) 时间查找 rebtree ，时间复杂度缩短为 O(1)
       ...
   };
   struct rt_rq;                     // 实时进程的队列
   ```
+
+- 每当一个进程退出 CPU 时，Linux 会调用 update_curr() 函数更新该进程的 sched_entity 。源代码如下：
+  ```c
+  static void update_curr(struct cfs_rq *cfs_rq)
+  {
+      // 获取 CFS 队列中，当前执行的进程
+      struct sched_entity *curr = cfs_rq->curr;
+
+      // 用当前时刻，减去进程刚开始执行的时刻，得到当前进程的 Burst Time
+      delta_exec = now - curr->exec_start;
+
+      // 将 delta_exec 累加到 sum_exec_runtime
+      curr->sum_exec_runtime += delta_exec;
+
+      // 将 delta_exec 按比例缩放之后，累加到 vruntime
+      // 这行代码相当于 curr->vruntime += delta_exec * NICE_0_LOAD / curr->load.weight
+      curr->vruntime += calc_delta_fair(delta_exec, curr);
+
+      // 用当前时刻，作为 CFS 队列下一个执行的进程的 exec_start
+      curr->exec_start = now;
+
+      // 计算当前的 min_vruntime
+      // 这会检查红黑树最左端节点 cfs_rq->rb_leftmost 的 vruntime ，如果小于 cfs_rq->min_vruntime ，则赋值给 cfs_rq->min_vruntime
+      update_min_vruntime(cfs_rq);
+      ...
+  }
+  ```
+  - 如果一个进程一直占用 CPU ，则可能长时间不会调用 update_curr() ，导致该进程的 sched_entity 没有更新。
 
 - 可通过 /proc 查看进程的调度信息，如下：
   ```sh

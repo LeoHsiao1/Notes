@@ -264,7 +264,7 @@
 
   - 一个任务的 vruntime ，不一定等于其 Burst Time ，因为 vruntime 的值可能被算法调整，这是为了解决以下问题：
     - 假设一个重要任务，设置了很大的 weight 值，从而分配很多 CPU 时长。但它的 vruntime 增长量也很大，导致这个重要任务排序靠后，可能被耽误，怎么办？
-      - 每当一个进程退出 CPU 时，按比例缩放其实际执行时长 delta_exec ，算法为 `curr->vruntime += delta_exec * NICE_0_LOAD / curr->load.weight` 。
+      - 每当一个任务退出 CPU 时，按比例缩放其实际执行时长 delta_exec ，算法为 `curr->vruntime += delta_exec * NICE_0_LOAD / curr->load.weight` 。
       - 因此，如果一个任务的 weight 很大，则可能每个周期占用很多 CPU 时长，还把 vruntime 伪装得很小，从而排序靠前。
 
     - 假设新建一个任务时，将其 vruntime 赋值为 0 。而其它任务由于长时间运行，vruntime 取值大。此时新任务能长时间占用 CPU ，直到 vruntime 增长追上其它任务。这对其它任务不公平，怎么办？
@@ -354,6 +354,9 @@
 ## Linux调度器
 
 - 上文介绍了 CPU 调度算法的大概原理，下文介绍 Linux 具体如何实现 CPU 调度。
+- 参考文档：
+  - <https://man7.org/linux/man-pages/man7/sched.7.html>
+  - <https://docs.kernel.org/scheduler/sched-design-CFS.html>
 
 ### 特点
 
@@ -471,7 +474,7 @@
 - Linux v3.14 添加了 SCHED_DEADLINE 调度策略，对应 dl_sched_class 调度类。
   - 原理：类似于 EDF 算法。
 
-- Linux v6.6 的调度器，从 CFS 算法改为 EVDF 算法。
+- Linux v6.6 的调度器改用 EVDF 算法，取代了 CFS 算法。
   - EVDF（Earliest Eligible Virtual Deadline First，最早合格虚拟截止时间优先）的原理：
     - 给每个任务添加一个 virtual deadline 属性。
     - 每次 CPU 调度时，选取 virtual deadline 最早的那个任务来执行。
@@ -494,7 +497,7 @@
       ```c
       #define SCHED_NORMAL 0  // 是每个进程默认采用的调度策略。原名为 SCHED_OTHER
       #define SCHED_BATCH  3  // 基于 SCHED_NORMAL ，但每个任务最多使用 CPU 一个时间片段，然后轮到下一个任务
-      #define SCHED_IDLE   5  // 基于 SCHED_NORMAL ，但优先级最低。因此当其它线程都不使用 CPU 时，才会执行 SCHED_IDLE 线程
+      #define SCHED_IDLE   5  // 基于 SCHED_NORMAL ，但优先级最低。因此当其它进程都不使用 CPU 时，才会执行 SCHED_IDLE 进程
       ```
     - 所有 RT 进程的 sched_priority 都大于普通进程。因此等所有 RT 进程不使用 CPU 时，才允许普通进程使用 CPU 。
     - 常见的几种普通进程：
@@ -505,21 +508,41 @@
   ```c
   #include <sched.h>
 
-  int sched_getscheduler(pid_t tid);
-      // 查询某个 tid 的线程
-      // 如果指定 tid=0 ，则会指向调用该函数的当前线程
+  int sched_getscheduler(pid_t pid);
+      // 查询某个 pid 的进程
+      // 如果指定 pid=0 ，则会指向调用该函数的当前进程
 
-  int sched_setscheduler(pid_t tid, int policy, const struct sched_param *param);
-      // 给某个 tid 的线程，配置调度策略、参数
+  int sched_setscheduler(pid_t pid, int policy, const struct sched_param *param);
+      // 给某个 pid 的进程，配置调度策略、参数
       // 如果 policy 取值为 SCHED_FIFO、SCHED_RR 实时策略，则 param->sched_priority 取值范围为 1~99
       // 如果 policy 取值为 SCHED_NORMAL 等普通策略，则 param->sched_priority 必须取值为 0
 
   int sched_yield(void);
-      // 主动放弃使用 CPU 。使得调用该函数的当前线程，被移到当前 sched_priority 队列的尾部
-      // 如果当前 sched_priority 队列只有这一个线程，则调用该函数之后，该线程会继续使用 CPU 。此时 CPU 使用率没有提高，反而增加了上下文切换
+      // 主动放弃使用 CPU 。使得调用该函数的当前进程，被移到当前 sched_priority 队列的尾部
+      // 如果当前 sched_priority 队列只有这一个进程，则调用该函数之后，该进程会继续使用 CPU 。此时 CPU 使用率没有提高，反而增加了上下文切换
       // 该函数适用于 SCHED_FIFO、SCHED_RR 实时策略
-      // 该函数不建议用于 SCHED_NORMAL 等普通调度策略，因为每个线程经常可能被抢占式调度，没必要主动放弃使用 CPU
+      // 该函数不建议用于 SCHED_NORMAL 等普通调度策略，因为每个进程经常可能被抢占式调度，没必要主动放弃使用 CPU
   ```
+
+- 一个进程，可能长时间占用 CPU 而不释放，导致其它优先级更低的进程长时间等待。此时认为该进程失控了，锁死了 CPU 。如何解决该问题？Linux 采用了多种措施：
+  - 通过 ulimit 进行限制：
+    ```sh
+    RLIMIT_CPU    # 限制每个进程连续占用的 CPU 时长，不能超过该值，单位为秒。否则先发送 SIGXCPU 信号来请求终止该进程，等一会再发送 SIGKILL 信号来强制终止。
+    RLIMIT_RTTIME # 限制每个 RT 进程连续占用的 CPU 时长，单位为微秒
+    ```
+  - 每个 sched_rt_period_us 周期内，最多分配 sched_rt_runtime_us 时长给 RT 进程。如下，至少分配 5% 的 CPU 时长给普通进程。
+    ```sh
+    [root@CentOS ~]# cat /proc/sys/kernel/sched_rt_period_us
+    1000000
+    [root@CentOS ~]# cat /proc/sys/kernel/sched_rt_runtime_us
+    950000
+    ```
+
+- 默认情况下，调用 fork() 创建子进程时，会继承父进程的调度策略、参数。
+  - 如果调用 sched_getscheduler() 修改父进程，并添加 SCHED_RESET_ON_FORK 标志。则父进程调用 fork() 创建子进程时，会将 policy 重置为 SCHED_NORMAL 、将 nice 重置为 0 。
+    - 例如：`sched_setscheduler(pid, SCHED_FIFO|SCHED_RESET_ON_FORK, &param);`
+  - SCHED_RESET_ON_FORK 不会重置所有调度参数。
+    - 例如：如果一个 RT 进程受 RLIMIT_RTTIME 限制，则它创建的子进程也应该受到 RLIMIT_RTTIME 限制。该限制不能被该进程自己放开，只能被 root 用户放开。
 
 ### priority
 
@@ -615,6 +638,8 @@
 
 - [相关源代码](https://github.com/torvalds/linux/blob/v2.6.34/include/linux/sched.h) ：
   ```c
+  #include <sched.h>
+
   struct task_struct {            // 记录每个任务的元数据，这些任务可以被调度到 CPU 上执行
       int prio, static_prio, normal_prio;     // 优先级
       unsigned int rt_priority;               // 优先级

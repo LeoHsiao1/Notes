@@ -466,14 +466,17 @@
     - 一个任务的优先级越高，其时间片段越长。
   - 优点：减少了抢占式调度，适合批处理任务。
 
-- Linux v2.6.23 添加了 CFS 调度器，对应 fair_sched_class 调度类，实现了 SCHED_NORMAL、SCHED_BATCH、SCHED_IDLE 调度策略。
+- Linux v2.6.23 的调度器改用 CFS 算法，对应 fair_sched_class 调度类，实现了 SCHED_NORMAL、SCHED_BATCH、SCHED_IDLE 调度策略。
 
 - Linux v3.14 添加了 SCHED_DEADLINE 调度策略，对应 dl_sched_class 调度类。
   - 原理：类似于 EDF 算法。
 
-<!-- - Linux v6.6 将 CFS 调度器改为 EVDF 调度器。 -->
-
-
+- Linux v6.6 的调度器，从 CFS 算法改为 EVDF 算法。
+  - EVDF（Earliest Eligible Virtual Deadline First，最早合格虚拟截止时间优先）的原理：
+    - 给每个任务添加一个 virtual deadline 属性。
+    - 每次 CPU 调度时，选取 virtual deadline 最早的那个任务来执行。
+  - 优点：
+    - 实时性好。
 
 ### policy
 

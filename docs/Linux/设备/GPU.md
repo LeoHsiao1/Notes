@@ -293,22 +293,68 @@
     - 缺点：
       - 每个容器只能分配 GPU 的整数个核心，不支持小数。因为 GPU 的每个核心只能被一个容器占用，不能被多个容器共享。
       - 分配 GPU 核数时，取决于 limits 配额。如果配置了 requests 配额，则必须等于 limits 配额。
-    - k8s-device-plugin 默认只允许每个 GPU 芯片设备中运行一个进程，如果想运行多进程，可采用时间分片（Time-Slicing）、MPS（Multi-Process Service）等方案。
-      - 大致原理：让一个 GPU 芯片先后执行不同进程创建的 CUDA 内核函数。
-      - 参考文档：
-        - <https://github.com/NVIDIA/k8s-device-plugin?tab=readme-ov-file#shared-access-to-gpus>
-        - <https://developer.nvidia.com/blog/improving-gpu-utilization-in-kubernetes/>
-      - 优点：
-        - 运行单进程不一定能用完 GPU 的计算资源，运行多进程可以提高 GPU 资源的利用率。
-      - 缺点：
-        - 每个进程使用一个独立的 CUDA context（上下文），包含程序代码等数据。GPU 运行多进程时，会因为上下文切换而增加耗时。
-        - GPU 运行多进程时，在硬件层面没有隔离。例如没有限制每个进程占用的显存，可能某个进程耗尽显存，连累其它进程。
+
+### 多进程
+
+- 传统的一个 GPU 芯片，同时只能运行一个进程。该进程不一定会用完 GPU 资源，存在浪费。因此，人们尝试运行多个进程，从而提高 GPU 的资源使用率。
+
+- 参考文档：
+  - <https://developer.nvidia.com/blog/improving-gpu-utilization-in-kubernetes/>
+  - <https://github.com/NVIDIA/k8s-device-plugin?tab=readme-ov-file#shared-access-to-gpus>
+
+- 几种 GPU 多进程方案：
+  - CUDA streams
+    - 原理：
+      - 将多个进程的 CUDA 内核函数，合并成一个 CUDA 指令流，共用一个 CUDA context（上下文），然后交给 GPU 执行。
+    - 缺点：
+      - 不能限制每个进程占用的资源用量，也不能隔离。
+
+  - Time-Slicing
+    - 原理：
+      - 将多个进程的数据，同时载入显存。
+      - GPU 同时只能执行一个进程，但可以先后执行多个进程。例如每秒的
+      - GPU 切换执行进程时，实际上是执行不同进程的 CUDA 内核函数。每个进程使用一个独立的 CUDA context（上下文），包含程序代码等数据。
+    - 优点：
+      - 可以限制每个进程的执行时长。例如将 GPU 每秒的可用时长分为 10 份，其中 2 份用于执行进程 A ，8 份用于执行进程 B 。
+    - 缺点：
+      - 没有限制每个进程占用的显存大小。可能某个进程占用很多显存，导致其它进程的显存不足。
+      - 如果经常切换执行进程，则上下文切换的开销较大。
+      - GPU 运行多进程时，在硬件层面没有隔离。例如多个进程并发使用 GPU 时，这些进程的数据需要同时存储在显存里，可能某个进程占用大部分显存，导致其它进程缺乏显存。
+
+  - MPS（Multi-Process Service）
+    - 原理：
+      - 运行多个进程，每个进程担任一个 MPS client ，发送自己需要执行的 CUDA 指令到 MPS server 。
+        - MPS 功能在驱动程序中隐式实现了，因此不需要修改进程代码，就可实现 MPS client 。
+      - 执行命令 `nvidia-cuda-mps-control -d` 运行一个 MPS server 进程，负责汇总所有 MPS client 的指令，合并为一个 CUDA Context ，在 GPU 中执行。
+    - 优点：
+      - 可以并行执行多个进程，不需要上下文切换。
+      - MPS server 能限制每个 MPS client 的资源用量，包括线程数量、显存大小。
+      - Volta 架构的 GPU 改进了 MPS 功能：
+        - 让 MPS client 直接发送指令到 GPU ，不需要经过 MPS server ，从而减少延迟。
+        - 每个 MPS client 使用一个独立的虚拟显存空间，因此相互隔离，寻址时不会冲突。
+    - 缺点：
+      - 显存带宽、编码器等资源依然没有隔离，被多个进程共享，可能冲突。
+      - 只能将 GPU 的资源总量平均分成 n 份，不能按自定义比例切分。例如将一个 GPU 的资源平均分成 10 份，给多个进程使用，每个进程最多只能使用 1 份。
+
+  - MIG（Multi-Instance GPU）
+    - 原理：
+      - 在一个 GPU 物理芯片中，隔离出多个 GPU 逻辑实例，模拟多个 GPU 芯片，从而可以并行执行多个进程。
+      - 每个 MIG 实例使用一份独立的 SM、显存等资源。
+    - 优点：
+      - 不但限制了每个进程的资源用量，还相互隔离。
+      - 可以组合使用 MIG 和 MPS 技术：在一个 MIG 实例中，运行多个 MPS client 。
+    - 缺点：
+      - 需要改进 GPU 硬件架构才能实现 MIG 功能。目前只有 Ampere、Hopper 等架构的 GPU 支持 MIG 功能。
+      - 每个 MIG 实例的规格容量，由 GPU 硬件架构锁定了，不能修改。例如显存可能只有 1G 和 2G 两种规格，而用户可能实际使用 1.5G 显存，容易浪费资源。
 
 ## 相关概念
 
-- OpenGL（Open Graphics Library）是一个跨语言、跨平台的 API 标准，用于渲染 2D、3D 矢量图形，于 1992 年发布。
+- OpenGL（Open Graphics Library）
+  - ：一个跨语言、跨平台的 API 标准，用于渲染 2D、3D 矢量图形。
+  - 于 1992 年发布。
 
-- OpenCL（Open Computing Language，开放计算语言）是一个并行编程框架。
+- OpenCL（Open Computing Language，开放计算语言）
+  - ：一个并行编程框架。
   - 2008 年，由 Apple 公司提出。后来与 NVIDIA、AMD 等公司共同制定标准，于 2009 年发布 1.0 版本。
   - 安装 OpenCL 驱动程序之后，能控制 CPU、GPU、DSP、FPGA 等硬件设备执行并行任务。
     - OpenCL 定义了一组 API 标准，但没有具体实现的驱动程序。
@@ -318,7 +364,7 @@
     - OpenCL 运行一个程序时，会在运行时编译，因此程序可以移植到不同平台上运行。
   - 比较 CUDA 与 OpenCL ：
     - CUDA 专用于 NVIDIA 显卡，而 OpenCL 是通用的，可用于 NVIDIA 或 AMD 公司的显卡，也可用于非显卡的其它设备。
-    - 用户面向 NVIDIA 显卡开发程序时，可以使用 CUDA 或 OpenCL 框架，但使用 CUDA 的性能更高，因为 NVIDIA 显卡在研发、生产时主要考虑 CUDA 。
+    - 用户面向 NVIDIA 显卡开发程序时，可以使用 CUDA 或 OpenCL 框架。但 CUDA 的性能更高，因为 CUDA 针对 NVIDIA 显卡做了优化。
 
 - 用户可以将一些由 CPU 运行的算法移植到 GPU 上运行，利用 GPU 的并行运算来加速执行。但亲自编写这些算法比较麻烦，NVIDIA 公司提供了一些 [算法库](https://developer.nvidia.com/gpu-accelerated-libraries) ，已经基于 CUDA 实现了常见的算法函数，可供用户调用。例如：
   - CUDA Math library ：实现了一些标准数学函数。

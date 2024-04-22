@@ -1,7 +1,8 @@
 # CPU调度
 
 - 操作系统中，通常运行了大量进程，同时申请使用 CPU 。如何决定让哪个进程使用 CPU 、使用多长时间？为了解决该问题，需要考虑 CPU 调度算法（scheduling algorithm）。
-  - 本文分析 CPU 只有 1 个核心时，如何调度。如果 CPU 有多个核心，即一张 CPU 物理芯片中存在多个逻辑 CPU ，则需要分别进行调度，问题更复杂些。
+  - 本文主要分析 CPU 只有 1 个核心时，如何调度。
+  - 如果 CPU 有多个核心，即一张 CPU 物理芯片包含多个逻辑 CPU ，则需要进行负载均衡，问题更复杂些。
   - 类似地，GPU、网卡等资源也可能被多个进程竞争使用，可以像 CPU 调度算法一样处理。
 
 ## 任务
@@ -13,15 +14,19 @@
 - 线程是 CPU 调度的基本单位。
   - 从程序的角度来看，启动每个程序会创建至少一个进程，每个进程包含至少一个线程。
   - 从操作系统的角度来看，决定哪些内存资源给哪个程序使用时，是以进程为单位调度。决定哪些 CPU 资源给哪个程序使用时，是以线程为单位调度。
-  - 从 CPU 的角度来看，主要关心操作系统让它执行什么任务。可能一会执行线程 A 的指令流，一会执行线程 B 的指令流。
+  - 从 CPU 的角度来看，主要关心操作系统让它执行什么任务。可能一会执行线程 A 的指令流，一会执行线程 B
 
-- 每个任务使用 CPU 时，有几种状态：
-  - ready ：调用系统接口，请求使用 CPU 。然后阻塞等待，直到轮到它开始使用 CPU 。
-    - 通常有多个任务同时请求使用 CPU ，操作系统会将这些 ready 状态的任务放在一个队列中，称为 ready 队列。每次取出一个任务，交给 CPU 执行。
-    - 如果一个任务退出 ready 状态，比如进程终止、sleep、iowait，则将该任务从 ready 队列删除。
-  - running ：正在使用 CPU 。
-  - blocked ：任务暂停运行，直到某一条件满足时才继续使用 CPU 。例如等待磁盘 IO 。
-  - finished ：该任务执行完毕，被删除。
+- Linux 中执行 top 命令，可以查看当前 running 状态的进程数量。
+  - 这些 running 进程，可能正在使用 CPU （属于真正的 running 状态），也可能等待使用 CPU （属于 ready 状态）。
+  - CPU 通常会轮流执行大量进程。每个进程，可能每秒只被 CPU 执行了几毫秒，而剩余的大部分时间处于 ready 状态。
+
+- 从 CPU 的角度来看，进程分为几种状态：
+  - ready ：进程调用系统接口，请求使用 CPU 。然后阻塞等待，直到轮到它开始使用 CPU 。
+    - 通常有多个进程同时请求使用 CPU ，操作系统会将这些 ready 状态的进程放在一个队列中，称为 ready 队列。每次取出一个进程，交给 CPU 执行。
+    - 如果一个进程退出 ready 状态，比如进程终止、sleep、iowait，则将该进程从 ready 队列删除。
+  - running ：进程正在使用 CPU 。
+  - blocked ：进程暂停运行，直到某一条件满足时才继续使用 CPU 。例如等待磁盘 IO 。
+  - finished ：该进程执行完毕，可以删除。
 
 - 相关的几个时间指标：
   - Arrival Time ：任务刚刚进入 ready 队列的时刻。
@@ -328,7 +333,7 @@
     - ：单位时间内，CPU 被使用时长的占比。
     - 理想情况下，应该不断安排任务让 CPU 执行，让 CPU 使用率接近 100% ，不空闲，不浪费。
   - 吞吐量
-    - ：单位时间内，CPU 完成任务的数量。
+    - ：单位时间内，CPU 完成的任务数量。
     - 有的场景希望吞吐量越高越好，比如磁盘 IO 。有的场景不在乎吞吐量。
   - Waiting Time
   - Turn Around Time
@@ -630,8 +635,19 @@
 - 相关命令：
   ```sh
   ps -eo pid,ni,cmd   # 查看所有进程的 nice 值
+  nice                # 查看当前终端的 nice 值
   renice <int> <pid>  # 修改一个进程的 nice 值
   ```
+  - Linux 中，非 root 用户可以增加自己的 nice 值，但不允许减小 nice 值。如下：
+    ```sh
+    [root@CentOS ~]$ ps -o pid,ni 1 # 查看 PID 为 1 的进程的 nice 值
+    PID  NI
+      1   0
+    [root@CentOS ~]$ renice 1 1     # 允许增加 nice 值
+    1 (process ID) old priority 0, new priority 1
+    [root@CentOS ~]$ renice 0 1     # 不允许减小 nice 值
+    renice: failed to set priority for 1 (process ID): Permission denied
+    ```
 
 ### sched_entity
 
@@ -678,7 +694,7 @@
       struct load_weight load;    // 队列中所有任务的 load_weight 之和
       struct cfs_rq cfs;
       struct rt_rq rt;
-      struct task_struct *curr, *idle;  // curr 指向当前执行的进程。idle 指向空闲进程。当 ready 队列为空时，会让 CPU 执行 idle 进程，从而睡眠
+      struct task_struct *curr, *idle;  // curr 指向当前执行的进程。idle 指向空闲进程。当 ready 队列为空时，会让 CPU 执行 idle 进程，进入睡眠状态，从而省电
       ...
   };
   struct cfs_rq {                   // CFS 队列

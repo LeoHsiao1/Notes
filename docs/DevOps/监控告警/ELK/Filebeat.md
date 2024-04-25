@@ -379,7 +379,7 @@
           - cpu.system
     - rate_limit:
         limit: 1000/m                     # 限制全局发送 event 的速率，时间单位可以是 s、m、h 。超过阈值的 event 会被丢弃
-        # fields:                         # 设置 fields 时，则考虑指定的所有字段的组合值，对每组不同的值分别限制速率
+        # fields:                         # 如果设置 fields ，则考虑指定的所有字段的组合值，对每个组合分别限制速率
         #   - log.file.path
   ```
   - processors 的详细语法见 [官方文档](https://www.elastic.co/guide/en/beats/filebeat/current/defining-processors.html) 。

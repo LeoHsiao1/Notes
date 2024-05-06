@@ -2,7 +2,7 @@
 
 ：轻型目录访问协议（Lightweight Directory Access Protocol），是一个管理树形结构数据的网络协议，相当于 NoSQL 数据库，常用于实现 SSO 。
 - [官网](https://ldap.com/)
-- 90 年代发布了 LDAP v3 版本，与 v2 版本不兼容。
+- 1990 年代发布了 LDAP v3 版本，与 v2 版本不兼容。
 - 采用 C/S 架构、TCP 通信。
   - server 负责存储数据。
   - client 可以访问 server ，对数据进行增删查改。

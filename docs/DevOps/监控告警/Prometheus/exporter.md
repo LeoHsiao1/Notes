@@ -3,7 +3,7 @@
 - [官方及社区的 exporter 列表](https://prometheus.io/docs/instrumenting/exporters/)
 - 主流软件大多提供了自己的 exporter 程序，比如 mysqld_exporter、redis_exporter 。有的软件甚至本身就集成了 exporter 格式的 HTTP API 。
   - 没必要为所有软件部署 exporter 程序，因为有的监控指标较少，不如自制。
-  - Prometheus 提供了多种编程语言的库，供用户开发 exporter 程序。例如 Python 的第三方库 prometheus-client 。
+  - Prometheus 提供了多种编程语言的库，供用户开发 exporter 程序。例如 Python 的第三方库 [prometheus-client](https://prometheus.github.io/client_python/) 。
 
 ## 集成类型
 

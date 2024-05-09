@@ -6,7 +6,7 @@
 
 ## Flannel
 
-- ：一个 CNI 软件，2014 年由 CoreOS 公司发布。
+- ：一个 CNI 软件，于 2014 年由 CoreOS 公司发布。
 - [GitHub](https://github.com/flannel-io/flannel)
 - 原理：在每个主机运行一个守护进程 flanneld ，它会自动完成以下工作：
   - 为每个主机分配一个虚拟子网 subnet ，比如 `10.42.1.0/24` 。每次部署一个 Pod 时，从当前主机的 subnet 中分配一个虚拟 IP ，给该 Pod 使用。
@@ -28,11 +28,11 @@
 - 综上，Flannel 的主要功能是，让多台主机组成一个 OSI 3 层的虚拟网络，传输指向虚拟 IP 的流量。
 - 缺点：
   - 用 VXLAN 技术在主机之间传输数据包，增加了一个 overlay 虚拟网络层，需要封包、拆包，存在少量的耗时。
-  - Flannel 不支持管控网络流量，不支持 k8s NetworkPolicy 。
+  - Flannel 不支持过滤网络流量，不支持 k8s NetworkPolicy 。
 
 ## Calico
 
-- ：一个 CNI 软件，2016 年发布。
+- ：一个 CNI 软件，于 2016 年发布。
 - [GitHub](https://github.com/projectcalico/calico)
 - 架构：
   - 在每个主机运行一个守护进程 felix ，负责管理网络流量，可配置路由规则、ACL 规则。
@@ -59,7 +59,7 @@
   - CrossSubnet
     - 原理：自动切换模式。在同一子网内通信时，采用 BGP 直接路由模式。跨子网通信时，采用 VXLAN 或 IPIP 隧道模式。
     - 用法：先启用 VXLAN 或 IPIP 模式，然后添加配置参数 `vxlanMode: CrossSubnet` 或 `ipipMode: CrossSubnet` 。
-- Calico 默认基于 Linux iptables 控制网络流量，也可改用 eBPF 技术，性能更高。
+- Calico 默认基于 Linux iptables 管理网络数据包，也可改用 eBPF 技术。
 
 ## Canal
 
@@ -86,3 +86,16 @@
     2. flanneld 将 OSI 3 层的 IP 数据包，封包成 OSI 2 层的以太网帧。然后将以太网帧，用 VXLAN 技术封包在 OSI 4 层的 UDP 报文中，目标 IP 设置为其它主机的以太网 IP ，而不是虚拟 IP 。
     3. 该 UDP 报文像普通流量一样被宿主机处理，先转换成 IP 协议包，然后通过物理网口 eth0 发向目标主机。
     4. 目标主机收到该 UDP 报文，发现它包含 VXLAN header ，于是交给 flanneld 处理。被后者拆包成原始的 IP 数据包，发送到对应的 Pod 。
+
+## Cilium
+
+- ：一个 CNI 方案，于 2015 年发布。
+- [GitHub](https://github.com/cilium/cilium)
+- 主要提供两个维度的功能：
+  - 担任 CNI
+    - 可以基于 VXLAN overlay、本机路由等网络模式，组建一个 OSI 3 层的虚拟网络。
+    - 支持过滤 OSI 3 层、7 层的网络流量，比如身份认证。
+  - 替代 kube-proxy
+    - Cilium 不基于 Linux iptables 管理网络数据包，而是基于 eBPF 技术，效率更高，吞吐量更大。
+    - kube-proxy 通常采用 iptables 代理模式，而 Cilium 通过 eBPF 使用哈希表进行代理，查找速度更快。
+    - 基于 eBPF 可以收集更多监控指标。可以用 Prometheus 采集监控指标，也可以使用 Cilium 自带的 Hubble 监控平台。

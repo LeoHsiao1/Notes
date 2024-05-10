@@ -40,7 +40,7 @@
 - Flannel 主要提供了虚拟网络的功能，而 Calico 提供了两大功能：
   - 虚拟网络
   - 网络策略
-    - Calico 支持 k8s NetworkPolicy ，因此可集成 Istio 等服务网格，管理微服务的流量。
+    - Calico 支持 k8s  ，因此可集成 Istio 等服务网格，管理微服务的流量。
 - Calico 虚拟网络有多种模式：
   - VXLAN
   - IP-in-IP

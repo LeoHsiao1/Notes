@@ -133,6 +133,32 @@
   ```
 - Pod 内进程有时需要知道一些 k8s 信息，比如当前的 Pod labels、namespace 。此时可使用 downwardAPI ，不过使用环境变量更方便，详见 [env](./Pod.md#env) 。
 
+## projected
+
+- 用途：将多个 volume 合并成一个目录，然后再挂载到容器中。
+- 例：
+  ```yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: nginx
+  spec:
+    containers:
+    - name: nginx
+      image: nginx:1.23
+      volumeMounts:
+      - name: all-in-one
+        mountPath: /tmp
+    volumes:
+    - name: all-in-one
+      projected:
+        sources:
+        - configMap:
+            name: nginx
+        - secret:
+            name: nginx
+  ```
+
 ## ConfigMap
 
 - 用途：记录一些非私密的配置参数。

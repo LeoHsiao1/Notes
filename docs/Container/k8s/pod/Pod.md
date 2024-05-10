@@ -599,7 +599,8 @@ spec:
 
   - preStop ：在终止容器时执行，使得 kubelet 终止容器的流程变成这样：
     1. kubelet 发现 Pod 的状态变为 Terminating （可能是因为 apiserver 要求终止该 Pod ），于是开始主动终止 Pod 。
-        - kubelet 主动终止 Pod 时，才会执行 preStop 钩子。如果容器自己终止、被 OOM 终止，该过程不受 kubelet 控制，因此不会执行 preStop 钩子。
+        - kubelet 主动终止 Pod 时，才会执行 preStop 钩子。
+        - 如果容器自己终止变为 Succeeded 或 Failed 状态，或者容器被 OOM 终止，这些过程不受 kubelet 控制，因此不会执行 preStop 钩子。
     2. kubelet 执行 preStop 钩子，然后等待容器终止。
     3. 如果 preStop 执行完了，容器仍未终止，则向容器内 1 号进程发送 SIGTERM 信号，然后继续等待容器终止。
     3. 等待宽限期（terminationGracePeriodSeconds）时长之后，如果容器仍未终止，则向容器内所有进程发送 SIGKILL 信号。

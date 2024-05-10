@@ -223,7 +223,10 @@
 ## Secret
 
 - 用途：与 ConfigMap 类似，但偏向于记录密码等私密的配置参数。
-- 不过 Secret 存储在 etcd 时默认没有加密，因此安全性与 ConfigMap 一样。需要在启动 apiserver 时启用加密功能。
+- k8s 默认情况下，Secret、ConfigMap 存储在 etcd 时都没有加密，因此安全性一样。
+  - 通过 k8s RBAC 可限制用户通过 apiserver 访问 Secret 的权限，但用户可能直接访问 etcd 中存储的数据，不安全。
+  - 因此，建议对 etcd 采取一些安全措施。
+
 - 例：一个 Secret
   ```yml
   apiVersion: v1

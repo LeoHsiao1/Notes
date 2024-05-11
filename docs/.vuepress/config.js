@@ -1410,6 +1410,10 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
+                                    title: "调度",
+                                    path: "/Container/k8s/pod/调度"
+                                },
+                                {
                                     title: "Workload",
                                     path: "/Container/k8s/pod/Workload"
                                 },

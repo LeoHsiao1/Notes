@@ -15,6 +15,7 @@
   - [部署](k8s/deploy/部署.md)
     - [权限](k8s/deploy/权限.md)
   - [Pod](k8s/pod/Pod.md)
+    - [调度](k8s/pod/调度.md)
     - [Workload](k8s/pod/Workload.md)
     - [自动伸缩](k8s/pod/自动伸缩.md)
     - [keda](k8s/pod/keda.md)

@@ -129,8 +129,13 @@
 ### 拉取镜像
 
 - Pod 中每个容器可分别配置 imagePullPolicy ，表示拉取镜像的策略。
-  - 默认配置为 Always ，表示每次创建容器时都要拉取镜像。
-  - 可改为 IfNotPresent ，表示本机不存在该镜像时才拉取。
+  - 默认配置为 Always ，表示每次创建容器时，都要拉取一次镜像。如果本机已存在该镜像，则只是校验哈希值。
+  - 可改为 IfNotPresent ，表示本机不存在该镜像时，才拉取一次。如果本机存在该镜像，则直接使用，不拉取。
+    - 优点：
+      - 即使 docker 仓库故障，也能使用本机已存在的镜像，启动 Pod 。
+    - 缺点：
+      - Pod 不一定采用最新版本的 Docker 镜像。
+      - 不需要 imagePullSecrets 就能使用本机已存在的镜像，存在安全风险。
 - 例：假设制作一个镜像 nginx:1.23 ，部署成 Pod 。然后制作一个新镜像，哈希值不同，但依然命名为 nginx:1.23 ，推送到镜像仓库。当重新部署 Pod 时，
   - 如果 imagePullPolicy 为 IfNotPresent ，则会使用本机已有的旧镜像。
   - 如果 imagePullPolicy 为 Always ，则会拉取新镜像。

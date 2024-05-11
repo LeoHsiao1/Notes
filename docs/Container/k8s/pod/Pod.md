@@ -112,16 +112,16 @@
 - 临时容器（Ephemeral Containers）
   - ：一种临时存在的容器，用于人工调试。
   - 临时容器不能在 Pod spec 中定义，只能通过 API 创建。不会自动重启，不会自动删除。
-  - 例：
+  - 例：在指定节点创建一个临时容器。这会创建一个 Pod ，名为 node-debugger-xxx ，采用 hostNetwork、hostPID 等
     ```sh
-    # 在指定节点创建一个临时容器。这会创建一个 Pod ，采用 hostNetwork、hostPID 等
     kubectl debug node/<node> -it --image=alpine/curl:latest -- sh
     kubectl delete pod node-debugger-xxx
-
-    # 创建一个临时容器，添加到指定的 Pod
+    ```
+  - 例：创建一个临时容器，添加到指定的 Pod
+    ```sh
     kubectl debug <pod> -it --image=alpine/curl:latest -- sh
-        -c <name>         # 指定临时容器的名称
-        --target=<name>   # 共用指定容器的 PID namespace
+        -c <name>         # 创建这个临时容器的名称
+        --target=<name>   # 共享指定容器的 PID namespace
     ```
 
 ### 拉取镜像
@@ -149,10 +149,6 @@
   - 如果从内网镜像仓库拉取镜像，网速很快，则建议采用串行拉取。
 
 ### 日志
-
-- 当 Pod 故障时，通常按以下方式进行排查：
-  - 执行命令 `kubectl describe pod <name>` ，查看 Pod status 中的信息。
-  - 执行命令 `kubectl logs <name> -f --tail 10` ，查看 Pod 的容器终端输出。
 
 - 容器内的应用程序，建议按以下方式输出日志：
   - 尽量将所有日志，输出到容器终端 stdout、stderr ，这样会被 k8s 自动采集、清理。

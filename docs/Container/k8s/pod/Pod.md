@@ -44,7 +44,7 @@
       - name: k1
         value: v1
       workingDir: /tmp                  # 容器的工作目录，这会覆盖 Dockerfile 的 WORKDIR 指令
-      # terminationMessagePath: /dev/termination-log  # 默认挂载一个文件到容器内指定路径，用于记录容器的终止信息
+      # terminationMessagePath: /dev/termination-log  # 挂载一个文件到容器内指定路径，用于记录容器的终止信息
       # terminationMessagePolicy: File
     imagePullSecrets:                   # 拉取镜像时使用的账号密码，从指定名称的 k8s secret 对象中读取
       - name: my_harbor
@@ -56,8 +56,6 @@
     # hostPID: false                    # 是否采用宿主机的 PID namespace
     # shareProcessNamespace:false       # 是否让所有容器共用 pause 容器的 PID namespace
   ```
-  - 容器内应用程序的的日志建议输出到 stdout、stderr ，方便被 k8s 采集。
-    - 如果输出到容器内的日志文件，可以增加一个 sidecar 容器，执行 `tail -f xx.log` 命令，将日志采集到容器终端。
 
 - Static Pod 是一种特殊的 Pod ，由 kubelet 管理，不受 apiserver 控制，不能调用 ConfigMap 等对象。
   - 用法：启动 kubelet 时加上参数 `--pod-manifest-path=/etc/kubernetes/manifests`，然后将 Pod 的配置文件保存到该目录下。kubelet 会定期扫描配置文件，启动 Pod 。
@@ -149,6 +147,21 @@
     - 优点：避免因为一个 Pod 拉取镜像慢，而阻塞其它 Pod 拉取镜像。
     - 缺点：如果 kubelet 同时启动多个 Pod ，且这些 Pod 采用相同的镜像，则并行拉取会重复拉取相同的镜像，反而比串行拉取慢。
   - 如果从内网镜像仓库拉取镜像，网速很快，则建议采用串行拉取。
+
+### 日志
+
+- 当 Pod 故障时，通常按以下方式进行排查：
+  - 执行命令 `kubectl describe pod <name>` ，查看 Pod status 中的信息。
+  - 执行命令 `kubectl logs <name> -f --tail 10` ，查看 Pod 的容器终端输出。
+
+- 容器内的应用程序，建议按以下方式输出日志：
+  - 尽量将所有日志，输出到容器终端 stdout、stderr ，这样会被 k8s 自动采集、清理。
+  - 如果将日志输出到容器内某个磁盘文件，则需要考虑如何采集、清理该文件，较麻烦。
+    - 可以在 Pod 中增加一个 sidecar 容器，保持运行 `tail -f xx.log` 命令，将文件中的日志，拷贝到容器终端输出。
+    - 可以在 Pod 中增加一个 sidecar 容器，保持运行 filebeat 进程，采集文件中的日志，发送到 kafka 等数据平台。
+  - 程序异常终止时，可以将少量信息记录到 /dev/termination-log 文件中。
+    - 默认 Pod 配置了 `terminationMessagePolicy: File` ，表示让 k8s 读取 /dev/termination-log 的内容，记录到 Pod 的 status 中，便于用户查看 Pod 的终止原因。
+    - 如果 Pod 配置了 `terminationMessagePolicy: FallbackToLogsOnError` ，则 Pod 异常终止时，k8s 会先尝试读取 /dev/termination-log 的内容。如果该文件为空，则读取容器终端输出的最后 2KB 内容，记录到 Pod 的 status 中。
 
 ### env
 

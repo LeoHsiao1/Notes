@@ -184,7 +184,9 @@
   - ConfigMap 没有 spec 字段，主要配置是 data 和 binaryData 字段至少存在一个，其下可以按键值对格式记录多个配置参数。
     - 每个配置参数的 key 必须是有效的 DNS 子域名。
     - data 类型的配置参数，其 value 是 utf-8 编码的字符串。
-    - binaryData 类型的配置参数，其 value 是 base64 编码的字符串。引用该 value 时，会自动进行 base64 解码。因此该 value 可用于保存二进制值。
+    - binaryData 类型的配置参数，其 value 是 base64 编码的字符串，因此可用于保存二进制数据。
+      - 用户填入一个值作为其 value 时，需要手动将该值转换成 base64 编码，比如执行命令 `echo -n 'xxx' | base64` ，比较麻烦。
+      - k8s 引用其 value 时，会自动进行 base64 解码。
   - etcd 默认限制了每个客户端请求的最大体积为 1.5MB ，而 k8s 限制了每个 ConfigMap、Secret 对象的最大体积为 1MB （不会进行压缩），超过则不允许创建。
 
 - 例：根据 ConfigMap 创建环境变量
@@ -253,27 +255,29 @@
   - 通过 k8s RBAC 可限制用户通过 apiserver 访问 Secret 的权限，但用户可能直接访问 etcd 中存储的数据，不安全。
   - 因此，建议对 etcd 采取一些安全措施。
 
-- 例：一个 Secret
+- Secret 有多种 type ：
+  ```sh
+  Opaque                              # 默认的 Secret 类型，用于记录任意用途的密钥
+  kubernetes.io/tls                   # 用于记录 tls 密钥文件
+  kubernetes.io/ssh-auth
+  kubernetes.io/basic-auth
+  kubernetes.io/dockerconfigjson      # 用于记录 ~/.docker/config.json 文件的值，该 Secret 可用作 Pod 的 imagePullSecrets
+  kubernetes.io/service-account-token
+  ```
+
+- 例：一个 Opaque 类型的 Secret
   ```yml
   apiVersion: v1
   kind: Secret
   metadata:
     name: redis
   type: Opaque
-  data:
-    username: dGVzdA==
+  data:                       # Secret 的 data 类型的配置参数，相当于 ConfigMap 的 binaryData
     password: MTIzNDU2Cg==
+  stringData:                 # Secret 的 stringData 类型的配置参数，相当于 ConfigMap 的 data
+    username: test
   ```
-  - Secret 的 data 类型的配置参数，相当于 ConfigMap 的 binaryData 。
-  - Secret 有多种 type ：
-    ```sh
-    Opaque                              # 默认的 Secret 类型，用于记录任意用途的密钥
-    kubernetes.io/tls                   # 用于记录 tls 密钥文件
-    kubernetes.io/ssh-auth
-    kubernetes.io/basic-auth
-    kubernetes.io/dockerconfigjson      # 用于记录 ~/.docker/config.json 文件的值，该 Secret 可用作 Pod 的 imagePullSecrets
-    kubernetes.io/service-account-token
-    ```
+
 - 例：根据 Secret 创建环境变量
   ```yml
   spec:
@@ -286,6 +290,7 @@
             key: password
             name: redis
   ```
+
 - 例：根据 Secret 创建 volume 并挂载
   ```yml
   apiVersion: v1

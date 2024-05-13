@@ -13,6 +13,7 @@
   - [Kubernetes](k8s/Kubernetes.md)
   - [原理](k8s/principle/原理.md)
   - [部署](k8s/deploy/部署.md)
+    - [客户端](k8s/deploy/客户端.md)
     - [权限](k8s/deploy/权限.md)
   - [Pod](k8s/pod/Pod.md)
     - [调度](k8s/pod/调度.md)

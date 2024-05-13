@@ -1399,6 +1399,10 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
+                                    title: "客户端",
+                                    path: "/Container/k8s/deploy/客户端"
+                                },
+                                {
                                     title: "权限",
                                     path: "/Container/k8s/deploy/权限"
                                 }

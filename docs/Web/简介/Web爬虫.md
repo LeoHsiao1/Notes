@@ -21,10 +21,14 @@ Web 服务器收到的 HTTP 请求一般都来自真人用户操纵的 Web 浏�
   - 常用于爬虫、Web 自动化测试、网页截图。
 - 有时，爬虫不能直接从网站的 HTTP 响应报文中提取有用的数据，还需要执行 JS 代码，此任务就适合调用无头浏览器来完成。
   - 例如网页的 HTML body 原本为空，需要经过 AJAX 动态加载，才会生成有效内容。
-- 常见的几种无头浏览器：
-  - [PhantomJS](https://github.com/ariya/phantomjs) ：于 2011 年发布，2018 年暂停开发。
-  - Chrome ：支持 Headless 模式。
-  - Firefox ：支持 Headless 模式。
+- 无头浏览器举例：
+  - [PhantomJS](https://github.com/ariya/phantomjs)
+    - ：基于 QtWebKit 浏览器渲染网页，允许用户编写 JS 脚本来控制。
+    - 于 2011 年发布，2018 年暂停开发。
+  - Chrome
+    - ：常见的一款浏览器软件，支持 Headless 模式。
+  - Firefox
+    - ：常见的一款浏览器软件，支持 Headless 模式。
 
 ## robots.txt
 

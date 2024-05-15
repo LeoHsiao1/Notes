@@ -161,27 +161,46 @@
 
 ### env
 
-- Pod 配置的 env 环境变量会被添加到容器终端，还可在 command、args 命令中引用：
-  ```sh
-  echo $var1 ${var2}          # 这不是在 shell 中执行命令，$ 符号不生效，会保留原字符串
-  sh -c "echo $var1 ${var2}"  # 这会读取 shell 环境变量
-  echo $(var)                 # 语法 $() 会在创建容器时引用 spec.containers[].env 中的环境变量，而不是读取 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会保留原字符串
-  ```
-  例：
+- Pod 中每个容器，可以配置一组 env 环境变量。例如：
   ```yml
   kind: Pod
   spec:
     containers:
     - name: curl
       image: alpine/curl:latest
-      command: ["echo", "$K1", "$(K2)"]
       env:
-      - name: K1
-        value: V1
-      - name: K2
-        value: V2
+      - name: IP
+        value: '127.0.0.1'
+      - name: PORT
+        value: '80'
   ```
-- 可以将 Pod 的 [一些字段](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/) 保存为环境变量，例：
+  - k8s 创建容器时，会自动将这些变量加入 shell 环境变量，供容器内进程读取。
+  - 用户可以进入容器终端，执行 `env` ，查看 shell 环境变量有哪些。
+
+- 进一步地，k8s 还支持在创建容器之前，引用 env 环境变量。例如：
+  ```yml
+  kind: Pod
+  spec:
+    containers:
+    - name: curl
+      image: alpine/curl:latest
+      command: ["echo", "$(URL)"]       # 配置容器时，可以在 command、args 命令中引用环境变量
+      env:
+      - name: IP
+        value: '127.0.0.1'
+      - name: PORT
+        value: '80'
+      - name: URL
+        value: 'http://$(IP):$(PORT)'   # 配置 env 时，可以在一个环境变量中，引用另一个已经赋值的环境变量
+  ```
+  注意区分以下几种语法：
+  ```yml
+  command: ["echo", "$IP:${PORT}"]          # 这是直接执行 echo 命令，不是在 shell 中执行命令，因此 $ 符号不会生效，输出结果为 $IP:${PORT}
+  command: ["sh", "-c", "echo $IP:${PORT}"] # 这是在 shell 中执行命令，因此 $ 符号会读取 shell 环境变量，输出结果为 127.0.0.1:80
+  command: ["echo", "$(IP):$(PORT)"]        # 语法 $() 会让 k8s 创建容器时引用 env 环境变量，而不是引用 shell 环境变量。如果该变量不存在，则 $ 符号不生效，会输出原字符串
+  ```
+
+- 可以将 Pod 的 [一些字段](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/) 保存为 env 环境变量，例：
   ```yml
   env:
   - name: POD_NAME
@@ -291,13 +310,13 @@
       fsGroup: 3000         # 指定容器内用户所属的扩展用户组，并且将 volume 中所有文件的 gid 改为该值
       fsGroupChangePolicy: Always           # 每次挂载 volume 时，递归修改其中所有文件的 gid 。这是默认策略，但如果有大量文件需要处理，则会拖慢 Pod 启动速度
       # fsGroupChangePolicy: OnRootMismatch # 每次挂载 volume 时，如果根目录的 gid 不符合 securityContext ，才递归修改
-      privileged: false     # 是否特权容器
       capabilities: ...     # 分配一些内核权限
       seLinuxOptions: ...
     containers:
     - name: curl
       image: alpine/curl:latest
-      # securityContext: ...
+      securityContext:
+        privileged: false     # 是否特权容器
       volumeMounts:
       - name: vol-data
         mountPath: /data

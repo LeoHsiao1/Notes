@@ -31,7 +31,7 @@
   spec:
     containers:
     - name: nginx
-      image: nginx:1.23
+      image: nginx:latest
       # imagePullPolicy: Always
       args:                             # 容器的启动命令，这会覆盖 Dockerfile 的 CMD 指令
       - nginx
@@ -89,7 +89,7 @@
       spec:
         containers:                 # 普通容器
         - name: nginx
-          image: nginx:1.23
+          image: nginx:latest
         initContainers:             # init 容器
         - name: init
           image: alpine/curl:latest
@@ -134,7 +134,7 @@
     - 缺点：
       - Pod 不一定采用最新版本的 Docker 镜像。
       - 不需要 imagePullSecrets 就能使用本机已存在的镜像，存在安全风险。
-- 例：假设制作一个镜像 nginx:1.23 ，部署成 Pod 。然后制作一个新镜像，哈希值不同，但依然命名为 nginx:1.23 ，推送到镜像仓库。当重新部署 Pod 时，
+- 例：假设制作一个镜像 nginx:latest ，部署成 Pod 。然后制作一个新镜像，哈希值不同，但依然命名为 nginx:latest ，推送到镜像仓库。当重新部署 Pod 时，
   - 如果 imagePullPolicy 为 IfNotPresent ，则会使用本机已有的旧镜像。
   - 如果 imagePullPolicy 为 Always ，则会拉取新镜像。
 - 每个节点的 kubelet 可以同时启动多个 Pod ，但默认以串行方式拉取镜像，即同时只拉取一个镜像。
@@ -504,7 +504,7 @@ status:
     lastTransitionTime: "2021-12-01T08:21:24Z"
   containerStatuses:      # 容器的状态
   - containerID: docker://2bc5f548736046c64a10d9162024ed102fba0565ff742e16cd032c7a1b75cc29
-    image: nginx:1.23
+    image: nginx:latest
     imageID: docker-pullable://nginx@sha256:db3c9eb0f9bc7143d5995370afc23f7434f736a5ceda0d603e0132b4a6c7e2cd
     name: nginx
     ready: true
@@ -669,7 +669,7 @@ spec:
   spec:
     containers:
     - name: nginx
-      image: nginx:1.23
+      image: nginx:latest
       resources:
         limits:
           cpu: 500m               # 每秒占用的 CPU 核数

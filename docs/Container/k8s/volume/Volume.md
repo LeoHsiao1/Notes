@@ -79,7 +79,7 @@
   spec:
     containers:
     - name: nginx
-      image: nginx:1.23
+      image: nginx:latest
       volumeMounts:
       - name: vol-cache
         mountPath: /cache
@@ -93,7 +93,7 @@
   ```yml
   containers:
   - name: nginx
-    image: nginx:1.23
+    image: nginx:latest
     volumeMounts:
     - mountPath: /dev/shm
       name: vol-memory
@@ -116,7 +116,7 @@
   spec:
     containers:
     - name: nginx
-      image: nginx:1.23
+      image: nginx:latest
       volumeMounts:
       - name: podinfo
         mountPath: /etc/podinfo
@@ -145,7 +145,7 @@
   spec:
     containers:
     - name: nginx
-      image: nginx:1.23
+      image: nginx:latest
       volumeMounts:
       - name: all-in-one
         mountPath: /tmp

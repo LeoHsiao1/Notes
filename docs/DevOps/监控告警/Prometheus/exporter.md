@@ -1097,7 +1097,7 @@
 
 - 先看 kube-state-metrics 的官方文档，找到与当前 k8s 版本兼容的 kube-state-metrics 版本。然后部署：
   ```sh
-  version=2.4.2
+  version=2.12.0
   wget https://github.com/kubernetes/kube-state-metrics/archive/refs/tags/v${version}.tar.gz
   tar -xf v${version}.tar.gz
   cd kube-state-metrics-${version}/examples/standard

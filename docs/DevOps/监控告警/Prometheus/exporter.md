@@ -231,17 +231,17 @@
   sum(delta(apiserver_request_duration_seconds_count[1m])) by(resource, verb)     # 各种 HTTP 请求的数量（每分钟）
   sum(delta(apiserver_request_duration_seconds_sum[1m])) by(resource, verb)       # 各种 HTTP 请求的耗时（每分钟）
   sum(delta(apiserver_response_sizes_sum[1m])) by(resource, verb)                 # 各种 HTTP 响应的体积（每分钟）
-  sum(apiserver_current_inflight_requests) by(request_kind)   # 读/写请求的正在执行数量
-  sum(apiserver_current_inqueue_requests) by(request_kind)    # 读/写请求的等待执行数量
-  sum(apiserver_storage_objects) by(resource)                 # 各种 resource 的数量
-  sum(apiserver_registered_watchers) by(kind)                 # 各种 watcher 的数量
+  sum(apiserver_current_inflight_requests) by(request_kind)   # 各种请求的正在执行数量
+  sum(apiserver_current_inqueue_requests) by(request_kind)    # 各种请求的等待执行数量
+  sum(apiserver_longrunning_requests) by(resource, verb)      # 各种长期请求的数量，比如 watch 请求、connect 请求
   sum(delta(apiserver_watch_events_total[1m])) by(kind)       # 各种 watch event 的数量（每分钟）
   sum(delta(apiserver_watch_events_sizes_sum[1m])) by(kind)   # 各种 watch event 的体积（每分钟）
 
   # 关于 etcd
-  etcd_request_duration_seconds_count
-  etcd_request_duration_seconds_sum
-  etcd_db_total_size_in_bytes
+  sum(apiserver_storage_objects) by(resource)                 # 各种 resource 的数量
+  apiserver_storage_size_bytes                                # etcd 总存储体积
+  sum(delta(etcd_request_duration_seconds_count[1m])) by(operation, type)   # 各种请求的数量（每分钟）
+  sum(delta(etcd_request_duration_seconds_sum[1m])) by(operation, type)     # 各种请求的耗时（每分钟）
 
   # 关于 kubelet
   kubernetes_build_info                                                     # k8s 版本信息

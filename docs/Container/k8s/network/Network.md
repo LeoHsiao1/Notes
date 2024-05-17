@@ -66,7 +66,7 @@
   - 在 node2 上执行 `ssh 10.42.0.0` 也可以登录到 node1 ，此时网络流量的 src_ip 为 10.42.1.0 ，即 node2 的 Pod CIDR 的网络号。
   - 在 node3 上执行 `ssh 10.0.0.2` 可以访问到 node2 ，但执行 `ssh 10.42.1.0` 会找不到路由。
 
-下面假设 kube-proxy 采用 iptables 代理模式，分析 k8s 常见的几种网络通信：
+下面假设 kube-proxy 采用 VXLAN overlay 虚拟网络，分析 k8s 常见的几种网络通信：
 - node 之间的通信
   - 假设从 node1 访问 node2 ，发送 IP 协议的数据包：
     - 如果访问 node2 的 eth0 IP ，则数据包不进入 k8s 的虚拟子网， src_ip 为 node1 的 eth0 IP 。
@@ -130,10 +130,11 @@
     - 假设外部地址为 IP ，则可创建指向该 IP 的 Endpoints 。
 
 - 让 Pod 被集群外主机访问：
-  - Pod 使用的是虚拟 IP ，不能被 k8s 集群外主机访问到，因为找不到路由。有几种解决方案：
-    - 修改 Pod 的配置，绑定 HostPort ，并固定调度到某个 Node 。
-    - 修改 Pod 的配置，启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
-    - 给 k8s Service 添加 externalIPs ，绑定 k8s node IP ，使得访问 `node_ip:port` 的流量被转发到 EndPoints 。
+  - Pod 使用的是虚拟 IP ，不能被 k8s 集群外主机访问到，因为找不到路由，除非给 Pod 绑定一个内网 IP 。比如：
+    - 修改 Pod 的配置，固定调度到某个 Node ，并绑定 HostPort 。
+    - 修改 Pod 的配置，固定调度到某个 Node，启用 `spec.hostNetwork: true` ，采用宿主机的 network namespace ，从而绑定宿主机的内网 IP 。
+  - 但上述做法需要将 Pod 固定调度到某个 Node ，不灵活。更常见的做法是，用 Service 反向代理 Pod ，并允许 Service 被集群外主机访问。比如：
+    - 给 Pod 创建 ClusterIP 类型的 Service ，并添加 externalIPs ，绑定 k8s node IP ，使得访问 `node_ip:port` 的流量被转发到 EndPoints 。
     - 给 Pod 创建 NodePort 类型的 Service 。缺点是端口范围默认为 30000-32767 。
     - 给 Pod 创建 LoadBalancer 类型的 Service ，绑定内网 IP 或公网 IP 。
     - 如果需要暴露大量 k8s service ，供集群外主机访问。则分别暴露每个 service 比较麻烦，不如只一个暴露 Ingress ，反向代理所有 service 。

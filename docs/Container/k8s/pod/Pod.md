@@ -222,10 +222,10 @@
 
 ### DNS
 
-- k8s 集群内通常会运行一个 DNS 服务器，比如 CoreDNS 。可以创建一些只在 k8s 集群内有效的域名，解析到 pod_ip 或 service_ip 。
-  - 默认会修改每个 Pod 内的 /etc/resolv.conf 文件，让 Pod 将 DNS 查询请求发送到该 DNS 服务器。
-  - 例如在 Pod 内访问 k8s service_name 时，默认会 DNS 解析到 service_ip 。
-- 建议让 Pod 慎用 DNS 查询。因为：
+- k8s 集群内通常会运行一个 DNS 服务器，比如 CoreDNS 。允许创建一些只在 k8s 集群内有效的域名，解析到 pod_ip 或 service_ip 。
+  - k8s 默认会修改每个 Pod 内的 /etc/resolv.conf 文件，让 Pod 将 DNS 查询请求发送到该 DNS 服务器。
+  - 例如在 Pod 内访问任一 k8s service_name 时，默认会 DNS 解析到 service_ip 。
+- 建议让 Pod 慎用 DNS 查询功能。因为：
   - 进行 DNS 查询需要一定耗时。
   - Pod 里运行的程序可能不尊重 DNS 查询结果的 TTL ，甚至无限期缓存 DNS 查询结果，直到重启程序。
 
@@ -261,6 +261,22 @@
       - name: timeout
         value: "3"
   ```
+
+- 除了修改 DNS 服务器，也可以修改 Pod 中的 /etc/hosts 文件，从而影响 DNS 解析。例：
+  ```yml
+  kind: Pod
+  spec:
+    hostAliases:        # 修改 Pod 中的 /etc/hosts 文件，添加一些解析规则
+    - ip: 127.0.0.1
+      hostnames:
+      - localhost
+    - ip: 10.0.0.1
+      hostnames:
+      - node1
+      - server1
+  ```
+  - /etc/hosts 文件的内容，来源于容器镜像。用户不应该手动修改该文件，否则重建容器时，该文件会被还原。
+  - 不管是否配置 hostAliases ，k8s 都会修改 Pod 中的 /etc/hosts 文件，添加一条规则 `<pod_ip>  <pod_name>` 。
 
 ### priority
 

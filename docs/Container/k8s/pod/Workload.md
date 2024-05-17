@@ -313,7 +313,7 @@
           - baidu.com
           name: curl
           image: alpine/curl:latest
-        restartPolicy: Never      # Job 下级 Pod 的重启策略，是必填字段，只能为 Never 或 OnFailure
+        restartPolicy: Never    # Job 下级 Pod 的重启策略，是必填字段，只能为 Never 或 OnFailure
   ```
   创建 Job 之后再查看其配置，可见 k8s 自动添加了一些配置参数：
   ```yml
@@ -402,6 +402,34 @@
   ```
   - 暂停执行 Job 时，会优雅地终止所有 Running Pod 。
   - 恢复执行 Job 时，会重新设置 status.startTime 字段，导致 activeDeadlineSeconds 重新计时。
+
+- k8s v1.21 给 Job 增加了 spec.completionMode 字段，可选取值如下：
+  - `NonIndexed`
+    - 这是默认值。表示只要存在 spec.completions 个 Succeeded Pod ，就让 Job 变为 Complete 状态。
+  - `Indexed`
+    - 这会修改每个 Pod 的 spec.containers[].env 配置，添加一个环境变量 `JOB_COMPLETION_INDEX=<int>` ，表示该 Pod 的序号。
+    - 各个 Pod 的序号从 0 开始递增，最大值为 spec.completions - 1 。
+    - 当各个序号的 Pod 都变为 Succeeded 状态时，才让 Job 变为 Complete 状态。
+    - 优点：一个 Job 创建多个 Pod 时，可以控制这些 Pod 的顺序。
+    - 例：
+      ```yml
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: test-job
+      spec:
+        completions: 3
+        parallelism: 3
+        completionMode: Indexed
+        template:
+          spec:
+            containers:
+            - command:
+              - echo
+              - ${JOB_COMPLETION_INDEX}
+              image: alpine/curl
+            restartPolicy: Never
+      ```
 
 ## CronJob
 

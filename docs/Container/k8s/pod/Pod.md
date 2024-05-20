@@ -326,8 +326,13 @@
       fsGroup: 3000         # 指定容器内用户所属的扩展用户组，并且将 volume 中所有文件的 gid 改为该值
       fsGroupChangePolicy: Always           # 每次挂载 volume 时，递归修改其中所有文件的 gid 。这是默认策略，但如果有大量文件需要处理，则会拖慢 Pod 启动速度
       # fsGroupChangePolicy: OnRootMismatch # 每次挂载 volume 时，如果根目录的 gid 不符合 securityContext ，才递归修改
-      capabilities: ...     # 分配一些内核权限
-      seLinuxOptions: ...
+      capabilities: ...     # 给容器分配某些方面的 Linux 权限，参考 https://man7.org/linux/man-pages/man7/capabilities.7.html
+        drop:
+          - all
+        add:
+          - NET_BIND_SERVICE
+      seLinuxOptions: ...   # 基于 seLinux 这个 Linux 内核模块，限制容器的权限
+      seccompProfile: ...   # 基于 seccomp 这个 Linux 内核模块，限制容器的权限
     containers:
     - name: curl
       image: alpine/curl:latest

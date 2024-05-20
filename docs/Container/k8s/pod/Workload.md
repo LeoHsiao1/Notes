@@ -82,7 +82,7 @@
     - 创建 Deployment 之后不允许修改 spec.selector 。
 
 - Deployment 的更新部署策略（strategy）有两种：
-  - RollingUpdate
+  - `RollingUpdate`
     - ：滚动更新，这是默认策略。先创建新 Pod ，等它们可用了，再删除旧 Pod 。
     - 例：
       ```yml
@@ -102,7 +102,7 @@
       - 旧 Pod 被终止时，不会接受新请求，但可能还有旧请求未处理完，比如还有客户端的 TCP 连接在传输数据。
         - 可以给容器添加 preStop 钩子，等准备好了才终止容器，实现优雅终止（Graceful Shutdown）。
         - 实现了 Graceful Shutdown 时，Deployment 的滚动重启就能保证 TCP 连接零中断，不会被用户感知到，又称为优雅重启（Graceful Restart）、平滑重启。
-  - Recreate
+  - `Recreate`
     - ：直接重建。先删除旧 ReplicaSet 的 Pod ，再创建新 ReplicaSet 的 Pod 。
 
 ### 状态
@@ -189,8 +189,10 @@
   ```
 - DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
 - DaemonSet 的更新部署策略（strategy）有两种：
-  - RollingUpdate ：滚动更新，这是默认策略。
-  - OnDelete ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
+  - `RollingUpdate`
+    - ：滚动更新，这是默认策略。
+  - `OnDelete`
+    - ：等用户删除当前版本的 Pod ，才自动创建新版本的 Pod 。
 
 ## StatefulSet
 
@@ -275,23 +277,23 @@
     - 如果 StatefulSet 不需要被其它服务访问，可省略 serviceName 字段。
 
 - podManagementPolicy 表示管理多个 Pod 时的策略，有两种：
-  - OrderedReady
+  - `OrderedReady`
     - 这是默认策略。
     - 创建多个 Pod 时，按从小到大的序号逐个创建，等一个 Pod 变为 Ready 状态，才创建下一个 Pod 。
       - k8s v1.25 开始支持给 StatefulSet 设置 spec.minReadySeconds ，等一个 Pod 保持 Ready 状态几秒之后，才创建下一个 Pod 。
     - 删除多个 Pod 时，按从大到小的序号逐个删除，等一个 Pod 删除成功，才删除下一个 Pod 。
-  - Parallel
+  - `Parallel`
     - ：创建、删除多个 Pod 时，都并行处理，像 Deployment 。
 
 - StatefulSet 的更新部署策略（updateStrategy），与 DaemonSet 的 strategy 相似，有两种：
-  - RollingUpdate
+  - `RollingUpdate`
     - ：滚动更新，这是默认策略。
     - 按序号从大到小的顺序，逐个更新 Pod 。先删除序号为 n 的旧版 Pod ，然后创建序号为 n 的新版 Pod ，等它变为 Ready 状态，才更新序号为 n-1 的 Pod 。
     - 设置了 updateStrategy.rollingUpdate.partition 时，则会将该 StatefulSet 的所有 Pod 分为两个分区：
       - 旧分区：序号小于 partition 的 Pod 。这些 Pod 会一直采用设置 partition 时的那个版本，即使更新 StatefulSet 、删除重建 Pod ，也会停留在旧版本。
       - 新分区：序号大于等于 partition 的 Pod ，会正常更新部署。
       该功能适合灰度发布。
-  - OnDelete
+  - `OnDelete`
 
 ## Job
 

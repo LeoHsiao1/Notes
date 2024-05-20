@@ -179,7 +179,7 @@
       daemonize yes
   # binaryData:
   #   k1: ...
-  # immutable: false  # 可选将 ConfigMap、Secret 声明为不可变类型，此时只能删除该对象，不能修改。
+  # immutable: false  # 可选将 ConfigMap、Secret 声明为不可变类型，此时只能删除该对象，不能修改
   ```
   - ConfigMap 没有 spec 字段，主要配置是 data 和 binaryData 字段至少存在一个，其下可以按键值对格式记录多个配置参数。
     - 每个配置参数的 key 必须是有效的 DNS 子域名。

@@ -57,10 +57,10 @@
     ```
   - 需要在 MySQL 中为 nacos 专门创建一个数据库、账号：
     ```sql
-    create database nacos;
-    create user nacos@'%' identified by '******';
-    grant  all on nacos.* to nacos@'%';
-    flush privileges;
+    CREATE DATABASE nacos;
+    CREATE USER nacos @'%' IDENTIFIED BY '******';
+    GRANT ALL ON nacos.* TO nacos @'%';
+    FLUSH PRIVILEGES;
     ```
     然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.2/distribution/conf/mysql-schema.sql)
 

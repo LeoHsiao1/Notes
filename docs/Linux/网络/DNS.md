@@ -68,8 +68,8 @@ Linux 系统会读取如下三处 DNS 配置，它们的优先级从高到低：
   dig [name] [type]
       @<ip>     # 指定 DNS 服务器的地址。默认采用 /etc/resolv.conf
       -p 53     # 指定 DNS 服务器的端口
-      -x <ip>   # 反向查询与一个 IP 关联的域名
       -t <type> # 查询指定类型的 DNS 记录，默认为 A 类型
+      -x <ip>   # 反向查询与一个 IP 关联的域名
 
       +short    # 只显示查询结果。默认会显示详细信息
   ```

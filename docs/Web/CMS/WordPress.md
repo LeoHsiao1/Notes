@@ -10,10 +10,10 @@
 
 WordPress 服务器有 Linux 版、Windows 版，这里在 Linux 上安装它：
 1. 安装 MySQL 数据库，并创建账号：
-    ```sh
-    create database wordpress;
-    create user wordpress@"%" identified by "******";
-    grant all on wordpress.* to wordpress@"%";
+    ```sql
+    CREATE DATABASE wordpress;
+    CREATE USER wordpress@"%" IDENTIFIED BY "******";
+    GRANT ALL ON wordpress.* TO wordpress@"%";
     ```
 
 2. 用 docker-compose 部署 WordPress 服务器，该镜像集成了 php、Apache 环境

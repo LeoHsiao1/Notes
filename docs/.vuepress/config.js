@@ -747,20 +747,50 @@ module.exports = {
                             path: "/Network/网络协议/简介"
                         },
                         {
-                            title: "网络模型",
-                            path: "/Network/网络协议/网络模型"
+                            title: "网络层协议",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "IP",
+                                    path: "/Network/网络协议/网络层协议/IP"
+                                },
+                                {
+                                    title: "ICMP",
+                                    path: "/Network/网络协议/网络层协议/ICMP"
+                                },
+                                {
+                                    title: "ARP",
+                                    path: "/Network/网络协议/网络层协议/ARP"
+                                }
+                            ]
                         },
                         {
-                            title: "IP",
-                            path: "/Network/网络协议/IP"
+                            title: "传输层协议",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "TCP",
+                                    path: "/Network/网络协议/传输层协议/TCP"
+                                },
+                                {
+                                    title: "UDP",
+                                    path: "/Network/网络协议/传输层协议/UDP"
+                                }
+                            ]
                         },
                         {
-                            title: "DNS",
-                            path: "/Network/网络协议/DNS"
-                        },
-                        {
-                            title: "TCP/UDP",
-                            path: "/Network/网络协议/TCP-UDP"
+                            title: "应用层协议",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "DHCP",
+                                    path: "/Network/网络协议/应用层协议/DHCP"
+                                },
+                                {
+                                    title: "DNS",
+                                    path: "/Network/网络协议/应用层协议/DNS"
+                                }
+                            ]
                         }
                     ]
                 },

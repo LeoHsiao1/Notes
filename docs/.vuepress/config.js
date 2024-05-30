@@ -747,6 +747,10 @@ module.exports = {
                             path: "/Network/网络协议/简介"
                         },
                         {
+                            title: "网络模型",
+                            path: "/Network/网络协议/网络模型"
+                        },
+                        {
                             title: "网络层协议",
                             collapsable: false,
                             children: [
@@ -789,6 +793,10 @@ module.exports = {
                                 {
                                     title: "DNS",
                                     path: "/Network/网络协议/应用层协议/DNS"
+                                },
+                                {
+                                    title: "HTTP",
+                                    path: "https://leohsiao.com/Web/通信协议/HTTP.html"
                                 }
                             ]
                         }
@@ -838,16 +846,16 @@ module.exports = {
                     title: "通信协议",
                     children: [
                         {
-                            title: "简介",
-                            path: "/Web/通信协议/简介"
-                        },
-                        {
                             title: "HTTP",
                             path: "/Web/通信协议/HTTP"
                         },
                         {
                             title: "HTTPS",
                             path: "/Web/通信协议/HTTPS"
+                        },
+                        {
+                            title: "相关概念",
+                            path: "/Web/通信协议/相关概念"
                         }
                     ]
                 },

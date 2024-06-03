@@ -181,12 +181,14 @@
   ```
   - src_path 只能是相对路径，且不能使用 .. 指向超出构建上下文的路径。
     - src_path 可以包含通配符 ? 和 * 。
-    - src_path 为目录时，不会拷贝该目录，而是拷贝该目录下的所有文件。
-  - dst_path 可以是相对路径或绝对路径。
-    - 为相对路径时，起点为 WORKDIR 。不会受到 RUN 指令中的 cd 命令的影响，因为每个构建步骤都是创建一个新的中间容器，工作目录复位为 WORKDIR 。
+    - 如果 src_path 是一个目录，则不会拷贝该目录，而是拷贝该目录下的所有文件。
+  - dst_path 可以是相对路径，或绝对路径。
+    - 如果为相对路径，则起点为 WORKDIR 。不会受到 RUN 指令中的 cd 命令的影响，因为每个构建步骤都会创建一个新的中间容器，工作目录复位为 WORKDIR 。
 - 例：
   ```sh
-  COPY *.py /tmp/
+  COPY *.py /tmp/                 # 用通配符拷贝多个文件
+  COPY configs/   /tmp/configs/   # 拷贝 configs/ 目录下的所有文件，拷贝到 /tmp/configs/ 目录下。如果目标目录不存在，则会自动创建
+  COPY configs/*  /tmp/configs/   # 不要用通配符来拷贝目录。否则，会将 configs/ 目录下的子目录展开，将子目录中的文件放到 configs/ 目录下
   ```
 
 ### ADD

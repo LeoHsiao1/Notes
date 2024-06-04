@@ -140,12 +140,12 @@ module.exports = {
                             collapsable: false,
                             children: [
                                 {
-                                    title: "构建",
-                                    path: "/Programming/language/Java/构建"
-                                },
-                                {
                                     title: "语法",
                                     path: "/Programming/language/Java/语法"
+                                },
+                                {
+                                    title: "构建",
+                                    path: "/Programming/language/Java/构建"
                                 },
                                 {
                                     title: "GC",

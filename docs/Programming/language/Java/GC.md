@@ -256,20 +256,18 @@
 
 - ：Garbage First Garbage Collector ，垃圾优先的垃圾收集器。
 
-- 上述几个传统的垃圾收集器，将堆内存分为 young、old 两个区域，晋升对象时需要从 young 区域拷贝到 old 区域。拷贝的开销大、耗时久，为了解决该问题， G1GC 引入了 region 的概念。
-  - 在物理上，G1GC 将堆内存分为几千个 region 空间。
+- 上述几个传统的垃圾收集器，将堆内存分为 young、old 两个区域，以 bytes 为单位管理内存。而 G1GC 以 region 为单位管理管理。
+  - 在物理上，G1GC 将堆内存分为很多个 region 空间。
     - 每个 region 是一小块地址连续的内存空间，用于存储数据。
     - 每个 region 的容量相同，默认为几 MB 。
     - 如果一个对象的体积，超过 region 容量的 50% ，则称为 humongous object 。一个 region 可能容不下该对象，会用几个地址连续的 region 存储该对象。
   - 在逻辑上，G1GC 将堆内存分为 eden、survivor、old 三个区域，并记录每个区域分别由哪些 region 组成。
-    - 如果 eden、survivor 区域中的某个对象需要晋升，则不必将对象拷贝到 old 区域，而是将对象所在的 region 改到 old 区域名下。
-  - 使用 region 的优点：
-    - 晋升对象时，不需要拷贝 region 中的数据，开销很小、耗时很小。
-    - 容易调整 eden、survivor、old 区域的体积。
+    - 改变某个区域包含的 region 集合，就可以增减该区域的容量。
 
 - G1GC 定义了三种 GC 模式：
   - young GC
-    - ：清理年轻代中的 eden 区域，然后将其中幸存的 region 分配给 survivor 区域。
+    - ：清理年轻代中的 eden 区域，然后将其中幸存的对象，拷贝到 survivor 区域。
+    - 拷贝的过程称为撤离（evacuation）。
   - mixed GC
     - ：清理年轻代的所有 region ，还会清理老年代包含较多垃圾对象的 region 。
   - full GC
@@ -280,7 +278,7 @@
   1. 初始标记（initial mark）
       - 此时发生一段短时间的 STW 。
       - 该阶段的目标：标记 GC Roots 直接关联的所有 Java 对象。
-      - 该阶段之前，会先发生一次 young GC ，清理年轻代。
+      - 当堆内存使用率达到 -XX:InitiatingHeapOccupancyPercent 百分比时，G1GC 就会触发一次 mixed GC 。但不会立即开始 mixed GC ，而是等待下一次 young GC ，在 young GC 的 STW 期间，趁机进行 mixed GC 的初始标记。
   2. 根区域扫描（root region scan）
       - 此时不会 STW 。
       - 该阶段的目标：标记 survivor 区域引用的所有老年代 Java 对象。
@@ -292,6 +290,7 @@
       - 每次 mixed GC 时，G1GC 会创建一个 CSet（Collection Set） 数据结构，用于记录哪些老年代 region 等待清理。
       - 为了更快地扫描 region ，G1GC 会在 Java 进程启动时，为每个 region 创建一个 Rset 数据结构，用于记录哪些 region 引用了当前 region 中的对象。
         - 这样 GC 时只需扫描 RSet ，不需要扫描 region 中的所有对象。
+        - 即使这样，并发标记依然耗时较久，期间可能发生多次 young GC 。
   3. 重新标记（remark）
       - 此时发生一段短时间的 STW 。
       - 该阶段的目标：并发标记时采用三色标记法，可能漏标，因此需要进入 STW 状态，重新标记。
@@ -304,7 +303,7 @@
   - 只要不发生 full GC ，STW 时长就较短。
   - 可以通过 -XX:MaxGCPauseMillis 命令行参数，软性限制 STW 时长，这样容易预测 STW 时长，避免停顿太久。
   - 处理大量内存的性能更好。
-    - 以 region 为单位管理内存空间，因此晋升对象时，不需要拷贝。
+    - 以 region 为单位管理内存空间，容易增减 eden、survivor、old 三个区域的容量。
     - ConcMarkSweepGC 容易产生内存碎片，而 G1GC 通过拷贝、集中内存中的数据，避免了内存碎片。
     - 与 G1GC 相比，传统的 SerialGC、ParallelGC 只适合处理 4G 以下的堆内存，因为堆内存越大，STW 时长越久。
 

@@ -6,6 +6,7 @@
   - [微服务](简介/微服务.md)
 - 分布式系统
   - [简介](分布式系统/简介.md)
+  - [共识算法](分布式系统/共识算法.md)
   - [ZooKeeper](分布式系统/ZooKeeper/ZooKeeper.md)
     - [原理](分布式系统/ZooKeeper/原理.md)
     - [部署](分布式系统/ZooKeeper/部署.md)

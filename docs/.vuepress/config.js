@@ -765,10 +765,6 @@ module.exports = {
                     title: "网络协议",
                     children: [
                         {
-                            title: "简介",
-                            path: "/Network/网络协议/简介"
-                        },
-                        {
                             title: "网络模型",
                             path: "/Network/网络协议/网络模型"
                         },
@@ -1571,6 +1567,10 @@ module.exports = {
                         {
                             title: "简介",
                             path: "/Distributed/分布式系统/简介"
+                        },
+                        {
+                            title: "共识算法",
+                            path: "/Distributed/分布式系统/共识算法"
                         },
                         {
                             title: "ZooKeeper",

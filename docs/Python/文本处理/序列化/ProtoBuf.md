@@ -1,6 +1,6 @@
 # ProtoBuf
 
-：Protocol Buffer ，一种序列化数据的二进制格式。
+：Protocol Buffer ，一种序列化数据的格式，属于二进制格式。
 - [官方文档](https://developers.google.com/protocol-buffers/docs/proto3)
 - 2008 年，由 Google 公司发布。
 - 与 JSON 相比， ProtoBuf 格式不能供人阅读，但被机器解析的速度更快、存储体积更小，提高了在不同程序之间传递数据的效率。

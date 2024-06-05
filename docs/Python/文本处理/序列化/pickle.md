@@ -1,6 +1,6 @@
 # import pickle
 
-：Python 的标准库，可以将 Python 对象序列化成二进制形式。
+：Python 的标准库，可以将 Python 对象序列化成二进制格式。
 - [官方文档](https://docs.python.org/3/library/pickle.html)
 - 它序列化后的数据不是 XML、JSON 等通用格式，只能被 Python 解析读取。
 

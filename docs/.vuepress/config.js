@@ -726,16 +726,38 @@ module.exports = {
                     title: "网络设备",
                     children: [
                         {
-                            title: "简介",
-                            path: "/Network/网络设备/简介"
+                            title: "第一层设备",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "分类",
+                                    path: "/Network/网络设备/第一层设备/分类"
+                                }
+                            ]
                         },
                         {
-                            title: "交换机",
-                            path: "/Network/网络设备/交换机"
+                            title: "第二层设备",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "网桥",
+                                    path: "/Network/网络设备/第二层设备/网桥"
+                                },
+                                {
+                                    title: "交换机",
+                                    path: "/Network/网络设备/第二层设备/交换机"
+                                }
+                            ]
                         },
                         {
-                            title: "路由器",
-                            path: "/Network/网络设备/路由器"
+                            title: "第三层设备",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "路由器",
+                                    path: "/Network/网络设备/第三层设备/路由器"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -751,48 +773,48 @@ module.exports = {
                             path: "/Network/网络协议/网络模型"
                         },
                         {
-                            title: "网络层协议",
+                            title: "第三层协议",
                             collapsable: false,
                             children: [
                                 {
                                     title: "IP",
-                                    path: "/Network/网络协议/网络层协议/IP"
+                                    path: "/Network/网络协议/第三层协议/IP"
                                 },
                                 {
                                     title: "ICMP",
-                                    path: "/Network/网络协议/网络层协议/ICMP"
+                                    path: "/Network/网络协议/第三层协议/ICMP"
                                 },
                                 {
                                     title: "ARP",
-                                    path: "/Network/网络协议/网络层协议/ARP"
+                                    path: "/Network/网络协议/第三层协议/ARP"
                                 }
                             ]
                         },
                         {
-                            title: "传输层协议",
+                            title: "第四层协议",
                             collapsable: false,
                             children: [
                                 {
                                     title: "TCP",
-                                    path: "/Network/网络协议/传输层协议/TCP"
+                                    path: "/Network/网络协议/第四层协议/TCP"
                                 },
                                 {
                                     title: "UDP",
-                                    path: "/Network/网络协议/传输层协议/UDP"
+                                    path: "/Network/网络协议/第四层协议/UDP"
                                 }
                             ]
                         },
                         {
-                            title: "应用层协议",
+                            title: "第七层协议",
                             collapsable: false,
                             children: [
                                 {
                                     title: "DHCP",
-                                    path: "/Network/网络协议/应用层协议/DHCP"
+                                    path: "/Network/网络协议/第七层协议/DHCP"
                                 },
                                 {
                                     title: "DNS",
-                                    path: "/Network/网络协议/应用层协议/DNS"
+                                    path: "/Network/网络协议/第七层协议/DNS"
                                 },
                                 {
                                     title: "HTTP",

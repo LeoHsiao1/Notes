@@ -77,7 +77,7 @@ for i in range(100):
 
 - Matplotlib 提供了显示图像的 GUI 窗口，称为 Figure 。其结构如下：
 
-  ![](./matplotlib_1.jpg)
+  ![](./Matplotlib_1.jpg)
 
   - 每个 Figure 上可以显示一个或多个坐标区（Axes）。
   - 坐标区的坐标轴（Axis）有多种类型：

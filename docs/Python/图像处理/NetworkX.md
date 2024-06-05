@@ -48,14 +48,14 @@ plt.show()
 
 效果图：
 
-![](./networkx_1.png)
+![](./NetworkX_1.png)
 
 
 相关 API ：
 ```py
 def draw_networkx(G,                        # 一个 NetworkX 的图对象
-                  
-                  pos:dict,                 # 各节点的坐标，比如 pos={1: (0, 0), 2: (10, -10)} 
+
+                  pos:dict,                 # 各节点的坐标，比如 pos={1: (0, 0), 2: (10, -10)}
                   # 指定的坐标值可以为任意大小、正负的浮点数，最终用 Matplotlib 显示时会自动缩放至适合窗口的大小
                   # 如果指定坐标则必须指定所有节点，如果不指定坐标则随机生成
 

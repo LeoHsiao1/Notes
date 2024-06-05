@@ -85,7 +85,7 @@
   {% endblock %}
   ```
 
-## ♢ Jinja2
+## import jinja2
 
 ：Python 的第三方库，提供了 Jinjia 模板引擎。
 - 安装：`pip install Jinja2`

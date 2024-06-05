@@ -1,4 +1,4 @@
-# ♢ http
+# import http
 
 ：Python 的标准库，提供了进行 HTTP 通信的基础功能。
 - [官方文档](https://docs.python.org/3/library/http.html)

@@ -1,4 +1,4 @@
-# ♢ sqlite3
+# import sqlite3
 
 ：Python 的标准库，用于连接 SQLite 数据库，执行 SQL 命令。
 

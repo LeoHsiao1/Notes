@@ -1,4 +1,4 @@
-# ♢ subprocess
+# import subprocess
 
 ：Python 的标准库，用于创建一个子进程去执行命令。
 - [官方文档](https://docs.python.org/3/library/subprocess.html)

@@ -1,4 +1,4 @@
-# ♢ Django
+# import django
 
 ：Python 的第三方库，是一个大型的 Web 应用开发框架。
 - [官方文档](https://docs.djangoproject.com/)

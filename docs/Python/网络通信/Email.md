@@ -29,7 +29,7 @@
 2. SMTP 服务器将邮件转发到 POP 服务器或 IMAP 服务器。
 3. 接收方的用户启动邮箱软件，通过 POP 或 IMAP 协议从服务器拉取邮件。
 
-## ♢ smtplib
+## import smtplib
 
 ：Python 的标准库，提供了 SMTP 客户端的功能。
 - [官方文档](https://docs.python.org/3/library/smtplib.html)
@@ -74,7 +74,7 @@ finally:
     server.quit()                      # 关闭连接
 ```
  
-## ♢ smtpd
+## import smtpd
 
 ：Python 的标准库，可用于运行一个简单的 SMTP 服务器。
 - [官方文档](https://docs.python.org/3/library/smtpd.html)
@@ -96,7 +96,7 @@ server = CustomSMTPServer(("127.0.0.1", 25), None)    # 创建 SMTP 服务器，
 asyncore.loop()                                       # 异步循环运行
 ```
 
-## ♢ poplib
+## import poplib
 
 ：Python 的标准库，提供了 POP 客户端的功能。
 - [官方文档](https://docs.python.org/3/library/poplib.html)

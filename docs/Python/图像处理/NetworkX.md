@@ -1,4 +1,4 @@
-# ♢ NetworkX
+# import networkx
 
 ：Python 的第三方库，用于绘制无向图、有向图等图结构。
 - [官方文档](https://networkx.org/documentation/stable/)
@@ -48,7 +48,7 @@ plt.show()
 
 效果图：
 
-![](./NetworkX_1.png)
+![](./networkx_1.png)
 
 
 相关 API ：

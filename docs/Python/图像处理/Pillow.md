@@ -1,4 +1,4 @@
-# ♢ Pillow
+# import pillow
 
 ：Python 的第三方库，提供了丰富的图像处理功能。
 - [官方文档](https://pillow.readthedocs.io/)

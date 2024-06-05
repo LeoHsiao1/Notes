@@ -41,7 +41,7 @@
     ```
   - value 为空时，写作 `null` 或 `~` 。为空字符串时，写作 `''` 或 `""` 。
 
-## ♢ PyYAML
+## import yaml
 
 ：Python 的第三方库，用于生成、解析 YAML 格式的文本。
 - [官方文档](https://pyyaml.org/wiki/PyYAMLDocumentation)

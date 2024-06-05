@@ -1,4 +1,4 @@
-# ♢ Cython
+# import Cython
 
 ：Python 的第三方库，用于 Python 与 C/C++ 的混合开发。
 - [官方文档](https://cython.readthedocs.io/en/latest/)

@@ -6,7 +6,7 @@
   - [事务](简介/事务.md)
 - SQLite
   - [SQLite](SQLite/SQLite.md)
-  - [♢ sqlite3](SQLite/sqlite3.md)
+  - [import sqlite3](SQLite/sqlite3.md)
 - MySQL
   - [MySQL](MySQL/MySQL.md)
   - [部署](MySQL/部署.md)
@@ -19,14 +19,14 @@
     - [索引](MySQL/查询/索引.md)
     - [复合操作](MySQL/查询/复合操作.md)
   - [性能优化](MySQL/性能优化.md)
-  - [♢ PyMySQL](MySQL/PyMySQL.md)
+  - [import pymysql](MySQL/pymysql.md)
 - MongoDB
   - [MongoDB](MongoDB/MongoDB.md)
   - [部署](MongoDB/部署.md)
   - [配置](MongoDB/配置.md)
   - [管理单元](MongoDB/管理单元.md)
   - [性能优化](MongoDB/性能优化.md)
-  - [♢ pymongo](MongoDB/pymongo.md)
+  - [import pymongo](MongoDB/pymongo.md)
 - Redis
   - [Redis](Redis/Redis.md)
   - [部署](Redis/部署.md)
@@ -34,7 +34,7 @@
   - [管理单元](Redis/管理单元.md)
   - [数据类型](Redis/数据类型.md)
   - [性能优化](Redis/性能优化.md)
-  - [♢ redis](Redis/redis-py.md)
+  - [import redis](Redis/redis-py.md)
 - ES
   - [ElasticSearch](ES/ElasticSearch.md)
   - [部署](ES/部署.md)

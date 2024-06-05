@@ -1,4 +1,4 @@
-# ♢ typing
+# import typing
 
 ：Python 的标准库，定义了一些类型，常用于类型注释。
 - [官方文档](https://docs.python.org/3/library/typing.html)

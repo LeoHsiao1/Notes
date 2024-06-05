@@ -1,4 +1,4 @@
-# ♢ decimal
+# import decimal
 
 ：Python 的标准库，用于存储高精度的浮点数。
 - [官方文档](https://docs.python.org/3/library/decimal.html)

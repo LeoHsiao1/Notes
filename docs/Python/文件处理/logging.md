@@ -1,4 +1,4 @@
-# ♢ logging
+# import logging
 
 ：Python 的标准库，用于记录日志。
 - [官方文档](https://docs.python.org/3/library/logging.html)

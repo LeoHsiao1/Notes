@@ -53,6 +53,6 @@ Web 服务器收到的 HTTP 请求一般都来自真人用户操纵的 Web 浏�
 
 ：搜索引擎优化（Search Engine Optimization），指通过多种方式提高网站在搜索引擎的排名，从而提高网站的曝光量、访问量。
 
-### ♢ scrapy
+### import scrapy
 
 ：Python 的第三方库，是一个爬虫框架，支持异步处理多个并发请求。

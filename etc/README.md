@@ -29,7 +29,6 @@
   python3 etc/set_sidebar.py
   ```
 - 书籍目录显示的名称用 《 》 包住。
-- 以 ♢ 开头的章节名表示 Python 模块。
 
 ### 字符间距
 

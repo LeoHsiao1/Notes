@@ -196,7 +196,7 @@
 - AnsiColor
   - 用于在 Jenkins 网页上查看 Console Output 时，识别 ANSI 颜色编码。
 
-## ♢ jenkinsapi
+## import jenkinsapi
 
 ：Python 的第三方库，用于通过 HTTP 协议调用 Jenkins 的 API 。
 - 安装：`pip install jenkinsapi`

@@ -34,7 +34,7 @@
   }
   ```
 
-## ♢ json
+## import json
 
 ：Python 的标准库，用于生成、解析 JSON 格式的文本。
 - [官方文档](https://docs.python.org/3/library/json.html)

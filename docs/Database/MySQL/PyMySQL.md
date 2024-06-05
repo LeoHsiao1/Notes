@@ -1,4 +1,4 @@
-# ♢ PyMySQL
+# import pymysql
 
 ：Python 的第三方库，提供了 MySQL 客户端的功能，直接执行 SQL 命令。
 - [GitHub](https://github.com/PyMySQL/PyMySQL)
@@ -43,7 +43,7 @@
 
 ## 相关概念
 
-### ♢ SQLAlchemy
+### import sqlalchemy
 
 ：Python 的第三方库，是一个实现 SQL 操作的 ORM 框架。
 - [GitHub](https://github.com/sqlalchemy/sqlalchemy)

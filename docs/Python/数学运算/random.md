@@ -1,4 +1,4 @@
-# ♢ random
+# import random
 
 ：Python 的标准库，用于生成随机数。
 - [官方文档](https://docs.python.org/3/library/random.html)

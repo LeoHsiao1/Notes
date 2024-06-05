@@ -78,7 +78,7 @@
   ```
   - Zipkin 的 v2.21 版本更换了 UI ，并且支持的 ES 版本从 v6 改为 v7 。
 
-## ♢ py-zipkin
+## import py-zipkin
 
 ：Python 的第三方库，用作 Zipkin 客户端。
 - [GitHub](https://github.com/Yelp/py_zipkin)

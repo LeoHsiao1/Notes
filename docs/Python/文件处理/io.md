@@ -1,4 +1,4 @@
-# ♢ io
+# import io
 
 ：Python 的标准库，提供了进行 IO 操作的功能，也可用于创建缓存区。
 - [官方文档](https://docs.python.org/3/library/io.html)

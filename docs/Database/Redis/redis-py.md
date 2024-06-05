@@ -1,4 +1,4 @@
-# ♢ redis-py
+# import redis
 
 ：Python 的第三方库，提供了 Redis 客户端的功能。
 - [GitHub](https://github.com/andymccurdy/redis-py)

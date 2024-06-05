@@ -240,11 +240,11 @@ module.exports = {
                             path: "/Python/文件处理/文件对象"
                         },
                         {
-                            title: "♢ io",
+                            title: "import io",
                             path: "/Python/文件处理/io"
                         },
                         {
-                            title: "♢ logging",
+                            title: "import logging",
                             path: "/Python/文件处理/logging"
                         }
                     ]
@@ -320,19 +320,19 @@ module.exports = {
                     title: "数学运算",
                     children: [
                         {
-                            title: "♢ random",
+                            title: "import random",
                             path: "/Python/数学运算/random"
                         },
                         {
-                            title: "♢ decimal",
+                            title: "import decimal",
                             path: "/Python/数学运算/decimal"
                         },
                         {
-                            title: "♢ math",
+                            title: "import math",
                             path: "/Python/数学运算/math"
                         },
                         {
-                            title: "♢ numpy",
+                            title: "import numpy",
                             path: "/Python/数学运算/numpy"
                         }
                     ]
@@ -345,19 +345,19 @@ module.exports = {
                             path: "/Python/图像处理/电子图片"
                         },
                         {
-                            title: "♢ Pillow",
+                            title: "import pillow",
                             path: "/Python/图像处理/Pillow"
                         },
                         {
-                            title: "♢ Matplotlib",
+                            title: "import matplotlib",
                             path: "/Python/图像处理/Matplotlib"
                         },
                         {
-                            title: "♢ NetworkX",
+                            title: "import networkx",
                             path: "/Python/图像处理/NetworkX"
                         },
                         {
-                            title: "♢ pyecharts",
+                            title: "import pyecharts",
                             path: "/Python/图像处理/pyecharts"
                         }
                     ]
@@ -370,15 +370,15 @@ module.exports = {
                             path: "/Python/网络通信/Email"
                         },
                         {
-                            title: "♢ http",
+                            title: "import http",
                             path: "/Python/网络通信/http"
                         },
                         {
-                            title: "♢ urllib",
+                            title: "import urllib",
                             path: "/Python/网络通信/urllib"
                         },
                         {
-                            title: "♢ requests",
+                            title: "import requests",
                             path: "/Python/网络通信/requests"
                         }
                     ]
@@ -387,7 +387,7 @@ module.exports = {
                     title: "Django",
                     children: [
                         {
-                            title: "Django",
+                            title: "import django",
                             path: "/Python/Django/Django"
                         },
                         {
@@ -416,15 +416,15 @@ module.exports = {
                             path: "/Python/混合开发/简介"
                         },
                         {
-                            title: "♢ ctypes",
+                            title: "import ctypes",
                             path: "/Python/混合开发/ctypes"
                         },
                         {
-                            title: "♢ Cython",
+                            title: "import Cython",
                             path: "/Python/混合开发/Cython"
                         },
                         {
-                            title: "♢ pybind11",
+                            title: "import pybind11",
                             path: "/Python/混合开发/pybind11"
                         },
                         {
@@ -1027,7 +1027,7 @@ module.exports = {
                             path: "/Database/SQLite/SQLite"
                         },
                         {
-                            title: "♢ sqlite3",
+                            title: "import sqlite3",
                             path: "/Database/SQLite/sqlite3"
                         }
                     ]
@@ -1086,8 +1086,8 @@ module.exports = {
                             path: "/Database/MySQL/性能优化"
                         },
                         {
-                            title: "♢ PyMySQL",
-                            path: "/Database/MySQL/PyMySQL"
+                            title: "import pymysql",
+                            path: "/Database/MySQL/pymysql"
                         }
                     ]
                 },
@@ -1115,7 +1115,7 @@ module.exports = {
                             path: "/Database/MongoDB/性能优化"
                         },
                         {
-                            title: "♢ pymongo",
+                            title: "import pymongo",
                             path: "/Database/MongoDB/pymongo"
                         }
                     ]
@@ -1148,7 +1148,7 @@ module.exports = {
                             path: "/Database/Redis/性能优化"
                         },
                         {
-                            title: "♢ redis",
+                            title: "import redis",
                             path: "/Database/Redis/redis-py"
                         }
                     ]

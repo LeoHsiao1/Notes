@@ -1,4 +1,4 @@
-# ♢ requests
+# import requests
 
 ：Python 的第三方库，提供了访问 HTTP 服务器的功能。
 - [官方文档](https://requests.readthedocs.io/en/master/)

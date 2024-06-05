@@ -1,4 +1,4 @@
-# ♢ ctypes
+# import ctypes
 
 ：Python 的标准库。
 - [官方文档](https://docs.python.org/3/library/ctypes.html)

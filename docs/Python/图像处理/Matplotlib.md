@@ -1,4 +1,4 @@
-# ♢ Matplotlib
+# import matplotlib
 
 ：Python 的第三方库，提供了一些模仿 MATLAB 的数学绘图函数，并基于 tkinter、qt5 等 GUI 库显示图像。
 - [官方文档](https://matplotlib.org/users/index.html)
@@ -77,7 +77,7 @@ for i in range(100):
 
 - Matplotlib 提供了显示图像的 GUI 窗口，称为 Figure 。其结构如下：
 
-  ![](./Matplotlib_1.jpg)
+  ![](./matplotlib_1.jpg)
 
   - 每个 Figure 上可以显示一个或多个坐标区（Axes）。
   - 坐标区的坐标轴（Axis）有多种类型：

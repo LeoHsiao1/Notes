@@ -1,4 +1,4 @@
-# ♢ math
+# import math
 
 ：Python 的标准库，提供了幂运算、三角函数等数学函数。
 - [官方文档](https://docs.python.org/3/library/math.html)

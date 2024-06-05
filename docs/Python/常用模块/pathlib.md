@@ -1,4 +1,4 @@
-# ♢ pathlib
+# import pathlib
 
 ：Python 的标准库，以面向对象的方式处理文件路径。
 - [官方文档](https://docs.python.org/3/library/pathlib.html)

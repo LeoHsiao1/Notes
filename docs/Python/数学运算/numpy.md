@@ -1,4 +1,4 @@
-# ♢ numpy
+# import numpy
 
 ：Python 的第三方库，用于进行多维数组、矩阵的运算。
 - [官方文档](https://numpy.org/doc/stable/)

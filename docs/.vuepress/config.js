@@ -203,19 +203,15 @@ module.exports = {
                     path: "/Python/"
                 },
                 {
-                    title: "简介",
+                    title: "解释器",
                     children: [
                         {
-                            title: "Python",
-                            path: "/Python/简介/Python"
-                        },
-                        {
                             title: "解释器",
-                            path: "/Python/简介/解释器"
+                            path: "/Python/解释器/解释器"
                         },
                         {
                             title: "版本",
-                            path: "/Python/简介/版本"
+                            path: "/Python/解释器/版本"
                         }
                     ]
                 },

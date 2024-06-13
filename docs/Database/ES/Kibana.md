@@ -48,7 +48,8 @@ elasticsearch.hosts: ['http://10.0.0.1:9200']   # 要连接的 ES 地址。可�
 elasticsearch.ssl.verificationMode: none        # 不验证 ES 的 SSL 证书是否有效
 # elasticsearch.username: kibana_system         # 让 Kibana 通过该账号访问 ES
 # elasticsearch.password: ******
-# kibana.index: '.kibana'   # 在 ES 中创建该索引，用于存储 Kibana 的数据
+# kibana.index: '.kibana'               # 在 ES 中创建该索引，用于存储 Kibana 的数据
+# elasticsearch.requestTimeout: 30000   # 每次向 ES 发送 HTTP 请求时，等待 HTTP 响应的超时时间。默认为 30
 
 # 默认的日志格式不是 JSON ，因此需要主动配置
 logging:

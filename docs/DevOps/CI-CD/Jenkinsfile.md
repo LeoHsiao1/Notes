@@ -207,6 +207,7 @@ Pipeline 中可以创建多种变量，比如 Groovy 变量、Shell 变量。
 - 可以通过 currentBuild 字典获取当前的构建信息。如下：
   ```sh
   currentBuild.buildCauses       # Build 的执行原因，返回一个字典，包括 userId、userName 等
+  currentBuild.upstreamBuilds[0].buildCauses    # 如果当前 Build 存在上游 Build ，则可获取其信息
   currentBuild.displayName       # Build 的名称，格式为 #number
   currentBuild.fullDisplayName   # Build 的全名，格式为 JOB_NAME #number
   currentBuild.description       # Build 的描述，默认为 null
@@ -366,13 +367,13 @@ pipeline{} 流水线的主要内容写在 stages{} 中，其中可以定义一�
       job: 'job1',
       parameters: [
           string(name: 'AGENT', value: 'master'),  // 这里的 string 是指输入值的类型，可输入给大部分类型的 parameters
-      ]
+      ],
       // wait: true,        // 是否等待下游 job 执行完毕，才继续执行当前 job
-      // propagate: true,   // 是否让下游 job 的构建结果影响当前 job 。需要启用 wait 才生效
+      // propagate: true,   // 是否让下游 job 的构建结果影响当前 job 。需要启用 wait 才能生效
       // quietPeriod: 5,    // 设置静默期，默认为 5 秒
   )
   ```
-  - 如果给下游 job 传入未定义的 parameters ，则后者并不会接收。
+  - 如果给下游 job 传入未定义的 parameters ，则后者会忽略该参数。
 
 ### checkout
 

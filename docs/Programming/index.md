@@ -21,3 +21,8 @@
   - [哈希算法](algorithm/哈希算法.md)
   - [加密算法](algorithm/加密算法.md)
   - [图片相似算法](algorithm/图片相似算法.md)
+- 软件工程
+  - [软件开发](software/软件开发.md)
+  - [软件设计](software/软件设计.md)
+  - [软件测试](software/软件测试.md)
+  - [软件运维](software/软件运维.md)

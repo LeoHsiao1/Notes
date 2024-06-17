@@ -195,6 +195,27 @@ module.exports = {
                             path: "/Programming/algorithm/图片相似算法"
                         }
                     ]
+                },
+                {
+                    title: "软件工程",
+                    children: [
+                        {
+                            title: "软件开发",
+                            path: "/Programming/software/软件开发"
+                        },
+                        {
+                            title: "软件设计",
+                            path: "/Programming/software/软件设计"
+                        },
+                        {
+                            title: "软件测试",
+                            path: "/Programming/software/软件测试"
+                        },
+                        {
+                            title: "软件运维",
+                            path: "/Programming/software/软件运维"
+                        }
+                    ]
                 }
             ],
             "/Python/": [

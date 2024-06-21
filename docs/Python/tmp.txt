@@ -5,190 +5,6 @@
 
 
 
-##
-##
-##
-
-运算符
-## 算术运算符。
->>> 1 + 2        # 加
-3
->>> 1 - 2        # 减
--1
->>> 1 * 2        # 乘
-2
->>> 2 ** 3        # 幂运算
-8
->>> 2 / 1        # 一个斜杠 / 表示算术除（保留商的小数部分，结果为浮点型）
-2.0
->>> 1 // 2        # 两个斜杠 // 表示整除（去除商的小数部分，结果为整型）
-0
->>> 1 % 2        # 取模（即取余数）
-1
-- 整型与浮点型混合运算时，整数会被自动转换成浮点数。
-- 数字不可以与字符串混合运算。
-- Python中没有自加、自减运算符，可以用 a+=1 、a-=1 的格式实现相同的功能。
-- 被除数为0时会抛出异常。如下：
->>> 1 / 0
-ZeroDivisionError: division by zero
->>> 1 // 0
-ZeroDivisionError: integer division or modulo by zero
-## 赋值运算符：即等号 = 。
-- 复合赋值运算符：将算术运算符与赋值运算符组合使用。比如x+=1、x-=1。
-- 可以用多个等号给多个变量连续赋值：（赋值运算符按照从右往左的运算顺序）
-a = b = c = 1
-- 可以在等号左边对多个变量同时赋值：
->>> a, b = b, a            # 此时解释器会把等号右边的值复制成元组再依次赋值，所以可以交换变量的值
->>> a, b = [1, 2, 3]        # 等号右边的元素个数要与等号左边的变量数一致
-ValueError: too many values to unpack (expected 2)
-## 比较（关系）运算符：与C语言相同，包括 >、<、>=、<=、==、!= 。
-- 比较的结果为真则返回True，结果为假则返回False。
-- 连续比较的例子：
->>> 1<2<3        # 相当于1<2 and 2<3 ，类似数学中的写法
-True
->>> 1<2<2
-False
->>> (1<2)<2        # 首先比较1<2，得到True。再比较True<2即1<2，得到True
-True
-
-比较运算符可以用于int型对象之间，或str型对象之间。
-
->>> 1 < 2
-True
->>> 1 < 'a'                 # 不能混合比较一个int型对象与一个str型对象
-TypeError: '<' not supported between instances of 'int' and 'str'
->>> 'a' < 'b' < 'c'
-True
->>> 'ac' < 'b'                 # 用于str型对象之间时，是比较首字母的大小
-True
->>> 'ca' < 'b'
-False
-## 逻辑运算符：与C语言不同，与、或、非运算符分别写作and、or、not。
-- x and y    相当于：
-if x:
-    return y
-else:
-    return x
-- x or y    相当于：
-if x:
-    return x
-else:
-    return y
-- not x    相当于 !bool(x)
-  - Python可以使用 ! 、not两种逻辑非运算符，! 通常用于表达式中，not通常与关键字if、in、is搭配使用。
-- 例：
->>> 0 and 1
-0
->>> 1 and 0
-0
->>> 0 or 1
-1
->>> 1 or 0
-1
->>> not "Hello"
-False
-## 三目运算符：与C语言的 ... ? ... : ... 不同，写作以下格式：
->>> True if 1>2 else False
-False
-## 位运算符：与C语言相同。
->>> x=1; y=0
->>> x & y        # 按位与
-0
->>> x | y        # 按位或
-1
->>> x ^ y        # 按位异或
-1
->>> ~ x            # 取反（相当于 -x-1 ）
--2
->>> x << 1        # 左移
-2
->>> x >> 1        # 右移
-0
-## 成员运算符。
-- in    ：判断成员是否在序列或集合中。例如：
->>> 'H' in "Hello"
-True
-- not in
-## 身份运算符。
-- is    ：判断两个对象是否相同。例如：
->>> a=1; b=1
->>> a is b        # 相当于id(a)==id(b)
-True
-  - 运算符 is 是判断两个对象的id是否相同，运算符 == 是判断两个对象的值是否相等。如下：
->>> 0 == 0.0
-True
->>> 0 is 0.0
-False
-- is not：相当于id(...)!=id(...)。
-##
-##
-##
-
-选择结构
-## Python的选择结构只有if语句。
-## if语句：一般格式如下：
-if condition:        # if、else语句的末尾要加上冒号
-statement_block
-elif condition:
-statement_block
-else:
-statement_block
-##
-##
-##
-
-循环结构
-## Python的循环结构只有for语句和while语句。
-- 可以用break跳出当前层循环，用continue跳到下一次循环。
-- for语句、while语句可以与else语句连用，当循环正常结束时就会执行else语句，如果是因为break等原因退出循环，则不会执行else语句。
-## for语句：不是用于进行指定次数的循环，而是用于遍历一个迭代器中的元素。
-- 一般格式如下：
-for var in iterable:
-statement_block
-else:
-statement_block
-- 遍历时，每次可以取出多个元素。
-for var1,var2 in sequence:        # 相当于for line in sequence；var1,var2 = line
-statement_block
-else:
-statement_block
-- for语句在开始遍历一个可迭代对象时，会暂存该对象的值。
->>> def fun1():
-...     print("fun1")
-...     return [1, 2, 3]
-...
->>> for i in fun1():            # Python解释器会调用fun1()，获得一个可迭代对象，然后暂存它
-...     print(i)
-...
-fun1                            # fun1()只会被执行一次
-1
-2
-3
-- 用range()可以方便地控制for语句的循环次数。如下：
->>> for i in range(4):
-...     print(i)
-...
-1
-2
-3
-## while语句：一般格式如下：
-while condition:
-    statement_block
-else:
-statement_block
-##
-##
-##
-
-Python的for、while循环支持与else连用，如下：
-```py
-for i in "Hello":
-    print(i)
-    # break
-else:
-    print('else...')
-```
-如果正常结束循环，则执行else语句块；如果用break等方式跳出循环，则不执行else语句块。
 
 
 变量
@@ -5574,6 +5390,40 @@ https://ilmvfx.wordpress.com/2016/02/16/use-promoted-widgets-in-qt-designer/
 ##
 ##
 
+
+
+# 设计模式
+
+## 设计模式的根本目的是解耦、提高效率。
+## Python作为动态语言，其设计模式的实现方法与Java等静态语言不同。有些设计模式Python用自身的语法就可以实现。
+##
+## 面向对象编程（Object Oriented Programming，OOP）
+##
+##
+- 模块化设计：把可以独立实现的功能分离成一个个模块。
+  - 高内聚：将每个功能需要用到的代码都封装到模块中，使模块内部尽量不依赖外部。
+  - 低耦合）：让模块与外部的各种联系尽可能地少。
+- 单一职责原则    ：每个模块只做它应该做的事，少管闲事，且能独立地把自己的事做好。
+- 开闭原则        ：每个模块对扩展开放、对修改关闭。
+- 依赖抽象原则    ：每个模块依赖于外部的抽象接口，而不是具体细节。
+- 组合优于继承    ：如果两个类之间是is a的关系，应该用继承进行管理，否则使用组合更好。
+  - 组合和继承都能实现对象的多态性、提高代码的复用性，但组合能避免类之间的耦合。
+  - 继承会加深父类与子类的耦合，破坏子类和父类的封装（导致它们的成员混合在一起）。
+## 测试驱动的开发：先规划开发需求、编写测试用例，再开始开发代码。
+##
+- 发布/订阅（publish/subscribe）模式：消息的发布者（Publisher）会把消息发送到代理（Broker），由代理接受订阅者（Subscriber）的订阅请求并发布消息。
+  - Publisher可以同时是Subscriber。
+  - 代理可以是一台设备或一个应用程序。
+  - 从客户端/服务器模式来看，Publisher和Subscriber都是客户端（Client），Broker则是服务器（Server）。
+- 观察者模式与发布/订阅模式很像，但是被观察对象会直接将消息推送给各个观察者，不存在代理。
+##
+##
+## MVC模式：
+Model（模型）：负责读写数据库
+View（视图）：负责从Model读取数据，显示给用户
+Controller（控制器）：从View读取用户的输入信息，向Model发送数据。
+
+软件架构没有银弹，往往是取舍。
 
 
 ##

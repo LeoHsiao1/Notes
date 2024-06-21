@@ -204,10 +204,6 @@ module.exports = {
                             path: "/Programming/software/软件开发"
                         },
                         {
-                            title: "软件设计",
-                            path: "/Programming/software/软件设计"
-                        },
-                        {
                             title: "软件测试",
                             path: "/Programming/software/软件测试"
                         },

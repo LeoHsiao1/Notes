@@ -214,60 +214,7 @@ TypeError: 'tuple' object does not support item assignment
 ##
 ##
 
-str、bytes
-## Python中没有字符类型，只有字符串类型。一个字符就是一个长度为1的字符串。
-## Python3中，解释器在内存中处理字符串时默认采用str类型，与外部交互时才转换成bytes类型。
-- str：字符串类型，以字符为单位处理字符串。
-  - str相当于只能存储字符的tuple。
-  - 采用 Unicode 编码，每个字符占用 8 字节。
-- bytes：字节类型，与str的用法相同，但采用更底层的编码格式（比如utf-8、ASCII），以字节为单位处理字符串。
-- bytearray：相当于列表类型的bytes，可以被修改。
-  - 例：
->>> bytearray(3)                # 直接输入数字，是创建一个指定长度的bytearray
-bytearray(b'\x00\x00\x00')
->>> bytearray('hello')        # 不能直接输入str类型，要转换成bytes类型
-TypeError: string argument without an encoding
->>> bytearray('hello'.encode())
-bytearray(b'hello')
->>> b = bytearray('hello'.encode())
->>> del b[0]
->>> b
-bytearray(b'ello')
-## 字符串常量。
-- 字符串常量的定界符有三种。
-  - 单引号 ' ：此时字符串中不能包含单引号。
-  - 双引号 " ：此时字符串中不能包含双引号。
-  - 三引号 ''' 或 """    ：此时字符串中可以包含单引号、双引号，而且可以在写入时换行。例如：
->>> """,,,'hello',,,"world"
-...    ,,,"""
-',,,\'hello\',,,"world"\n\t,,,'
-- 字符串常量的可用前缀。
-  - r：声明为raw（原始字符)，让反斜杠不发生转义。
->>> print(r"Hello!\n")
-Hello!\n
 
->>> 'hello\"world'
-'hello"world'
->>> 'hello\\"world'
-'hello\\"world'
->>> print('hello\\"world')
-hello\"world
->>> r'hello\"world'
-'hello\\"world'
-
-  - b：声明为bytes对象。
->>> b"Hello"
-b'Hello'
->>> b"你好"            # 该字符串只能包含ASCII字符，否则不能声明为bytes对象
-SyntaxError: bytes can only contain ASCII literal characters.
-  - u：声明为Unicode字符。
->>> u"你好"
-'你好'
->>> u"\u4f60\u597d"
-'你好'
-  - ASCII码中的非显示字符可以用一个\x加两个十六进制数表示。
->>> '\v\f\b'
-'\x0b\x0c\x08'
 ## 常用方法。
 - str(...)
   - 功能：创建str对象。
@@ -554,70 +501,8 @@ TypeError: sequence item 0: expected str instance, int found
 ##
 ##
 
-字符串的转换
-## 字符串的转换。
-- 可以用int()把int格式的字符串转换成int型对象。
->>> int("123")
-123
->>> int("3.14")
-ValueError: invalid literal for int() with base 10: '3.14'
-- 不能用int()把字符转换成数字，因为Python并不是按ASCII码存储字符。
->>> int("H")
-ValueError: invalid literal for int() with base 10: 'H'
-- 可以用float()把float格式的字符串转换成float型对象。
->>> float("3.14")
-3.14
->>> float("314")
-314.0
-- 将list转换成str。
-  - 直接用str()转换会留下两端的中括号。
-"['Hello', 'World', '!']"
->>> str([1, 2, 3])
-'[1, 2, 3]'
-  - 如果list中的元素全是字符串，可以用join()合并成一个字符串。
->>> ''.join(["Hello", "World"])
-'HelloWorld'
-  - 如果list中的元素不全是字符串，就先将它们转换成字符串，再用join()合并。
->>> list1 = [1, 2, 3]
->>> list2 = []
->>> for i in list1:
-...     list2.append(str(i))
-...
->>> ",".join(list2)
-'1,2,3'
-## 单个字符的转换。
-- def chr(code: int) -> str
-  - 功能：根据编码值生成一个Unicode字符。code的取值范围为区间 [0 , 0x110000)。
-  - 例：
->>> chr(0)
-'\x00'
->>> chr(65)
-'A'
->>> chr(1000)
-'Ϩ'
-- def ord(char:[str, bytes]) -> int
-  - 功能：返回一个Unicode字符的编码值。
-  - 例：
->>> ord("A")
-65
 
 
-在 Python 的底层，存储字符串时是存储其 Unicode 值，因此不能用 int() 强制类型转换成 ASCII 码。
-```py
->>> int('A')
-ValueError: invalid literal for int() with base 10: 'A'
->>> int(b'A')
-ValueError: invalid literal for int() with base 10: b'A'
-```
-
-但是存储 bytes 对象时是存储每个字符的 ASCII 码，因此索引单个元素时是返回其 ASCII 码，索引切片时是返回字符。
-```py
->>> b = b'Hello'
->>> b[0]
-72
->>> b[0:1]
-b'H'
-```
 
 
 

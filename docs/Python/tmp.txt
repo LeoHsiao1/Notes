@@ -8,54 +8,7 @@
 
 
 
-变量的作用域
-## Python中，变量的作用域分为四种级别。
-- 局部作用域（Local）
-- 外部非全局作用域（Enclosing）
-- 全局作用域（Global）
-- 内建作用域（Built-in）
-## 访问一个变量的标识符时，解释器会按照L→E→G→B的顺序寻找该变量。
-- 例：
-dir                    # 访问内建作用域中的函数
-g = 3                # 全局作用域
-def outer():
-e = 2            # 外部非全局作用域
-def inner():
-l = 1        # 局部作用域
-- Python中，只有模块（module）、类（class）和函数（def、lambda）才会创建作用域。
-  - 在if语句、for语句、while语句等语句块中创建的变量不会被立即销毁、可以被外部访问。
-  - 例：
->>> if True:
-...     x=1
-...
->>> x
-1
-- Python中，在局部作用域中可以直接读取外部变量的值（如果不重名的话），但是不可以直接修改外部变量。
-  - 如果是外部非全局变量，要用关键字 nonlocal 声明才能修改。
-  - 如果是全局变量，要用关键字 global 声明才能修改。
-  - 例：
->>> a = 1
->>> def fun1():
-...     a = 2        # 不能直接修改外部变量，所以这条语句会创建一个局部变量a
-...
->>> def fun2():
-...     b = a        # 此时变量a是指全局变量a
-...     a = 2        # 此时变量a依然是指全局变量a，不能对它进行赋值，这会导致函数在运行时报错
-...
->>> fun2()
-UnboundLocalError: local variable 'a' referenced before assignment
-  - 例：
-a = 1
-def outer():
-global a
-a = 2        # 此时变量a是指全局变量a
-b = 2
-def inner():
-nonlocal b
-b = 3
-##
-##
-##
+
 
 基本数据类型
 ## Python的基本数据类型。

@@ -32,9 +32,8 @@
     - [通信协议](Web服务器/Nginx/通信协议.md)
   - [Tomcat](Web服务器/Tomcat.md)
 - CMS
-  - [简介](CMS/简介.md)
   - [Jekyll](CMS/Jekyll.md)
-  - [WordPress](CMS/WordPress.md)
   - [gitbook](CMS/gitbook.md)
   - [docsify](CMS/docsify.md)
   - [VuePress](CMS/VuePress.md)
+  - [WordPress](CMS/WordPress.md)

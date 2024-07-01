@@ -1002,16 +1002,8 @@ module.exports = {
                     title: "CMS",
                     children: [
                         {
-                            title: "简介",
-                            path: "/Web/CMS/简介"
-                        },
-                        {
                             title: "Jekyll",
                             path: "/Web/CMS/Jekyll"
-                        },
-                        {
-                            title: "WordPress",
-                            path: "/Web/CMS/WordPress"
                         },
                         {
                             title: "gitbook",
@@ -1024,6 +1016,10 @@ module.exports = {
                         {
                             title: "VuePress",
                             path: "/Web/CMS/VuePress"
+                        },
+                        {
+                            title: "WordPress",
+                            path: "/Web/CMS/WordPress"
                         }
                     ]
                 }

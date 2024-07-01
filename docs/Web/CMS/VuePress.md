@@ -1,9 +1,10 @@
 # VuePress
 
-：一个制作静态网站的工具。
-- [官方文档](https://vuepress.vuejs.org/guide/)
-- 基于 Vue ，显示美观。
-- 与 docsify 相似，也是 SPA 网站，但每个页面会事先构建出 HTML 文件，有利于 SEO 。
+：一个 SSG 工具，用于制作静态网站。
+- 采用 Vue 前端框架，显示美观的网页。
+- 与 docsify 相似，VuePress 也是显示 SPA 网站，但会事先构建出每个网页的 HTML 文件，有利于 SEO 。
+- [VuePress](https://github.com/vuejs/vuepress) 项目由 Vue 团队开源，但目前已经停止更新。
+  - 2020 年，Vue 团队决定重构 VuePress 项目，基于 Vue3 重新开发，于是创建了 [VuePress v2](https://github.com/vuepress/vuepress-next) 项目。但又被 [VitePress](https://github.com/vuejs/vitepress) 项目取代。
 
 ## 用法示例
 

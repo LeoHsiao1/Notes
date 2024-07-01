@@ -1,10 +1,13 @@
 # WordPress
 
-：一个 CMS 平台，基于 Php、Mysql ，可以让用户不必编程就设计网站，非常流行。
+：一个 CMS 平台，基于 php 语言开发。
 - [官方文档](https://www.tutorialspoint.com/wordpress/)
-- 功能丰富，使用门槛难度低。
+- 可以让用户不必编程就设计网站，在全球很流行。
 - 既可以制作静态网站，也可以制作动态网站。
-- 可以安装 WordPress 服务器，在它的 Web 页面上设计网站。也可以在其 [官网](https://wordpress.com) 上设计网站。
+- 功能丰富，使用门槛难度低。
+- 有两种使用方式：
+  - 用户登录 WordPress 的 [官网](https://wordpress.com) ，使用其 SaaS 服务。
+  - 用户自己准备一个 Linux 服务器，在上面部署 WordPress 服务器，然后登录 WordPress 的 admin 页面，设计网站。
 
 ## 部署
 

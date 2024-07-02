@@ -8,17 +8,38 @@
   ```
 - Python 中，没有 char 数据类型，只有 str 数据类型，用于存储一个字符串。
 
-## 字符串常量
 
-- 在 Python 终端中，当用户输入一个字符串常量之后，会被自动保存为 str 对象。例：
+
+## 创建
+
+### str()
+
+- 功能：创建一个 str 对象。
+- 例：
   ```py
-  >>> type('hello')
-  <class 'str'>
+  >>> str()   # 不输入参数时，是创建一个长度为 0 的 str 对象
+  ''
+  >>> str(5)  # 将其它类型的对象转换成 str 对象
+  '5'
   ```
 
 ### 定界符
 
-- 每输入一个字符串常量，用户需要在它两侧添加定界符，从而让 Python 解释器识别该字符串的开始位置、结束位置。
+- 在 Python 代码中，
+  - 如果用户直接输入 hello 这个字符串，则 Python 解释器会将它视作标识符（比如一个变量名）。如果没找到同名的标识符，则会报错。
+    ```py
+    >>> hello
+    NameError: name 'hello' is not defined
+    ```
+  - 如果用户在字符串的左右两侧，加上引号，作为定界符。则 Python 解释器会将它视作一个字符串，然后保存为 str 对象。
+    ```py
+    >>> 'hello'
+    'hello'
+    >>> type(_)
+    <class 'str'>
+    ```
+
+- 定界符的作用是，声明一个字符串的开始位置、结束位置。
 - Python 中可以使用三种定界符：
   - 单引号 `'`
     - 此时字符串不能包含单引号、换行符。如果包含了它们，则需要添加反斜杠，变成转义字符。
@@ -36,8 +57,8 @@
 
 ### 前缀
 
-- 用户可以给字符串常量添加几种前缀：
-  - `u` 前缀，是声明为 Unicode 字符。每个字符串常量，默认都采用这种方式。
+- 用户可以给字符串添加几种前缀：
+  - `u` 前缀，是声明为 Unicode 字符。每个字符串，默认都采用这种方式。
     ```py
     >>> u'你好'
     '你好'
@@ -63,9 +84,32 @@
 
 ## 编码
 
+### ASCII
+
+- C 语言中，每个 char 字符，以 ASCII 码的形式存储，因此可以直接转换成 int 类型。
+  ```c
+  char c = 'A';   // 这里实际上存储的是 'A' 的 ASCII 码值 65
+  ```
+- 而 Python 中，不能将一个字符或字节，直接转换成 int 类型：
+  ```py
+  >>> int('A')
+  ValueError: invalid literal for int() with base 10: 'A'
+  >>> int(b'A')
+  ValueError: invalid literal for int() with base 10: b'A'
+  ```
+- 除非这个字符或字节，是阿拉伯数字：
+  ```py
+  >>> int('1')
+  1
+  >>> int(b'1')
+  1
+  ```
+
+### Unicode
+
 - 在 Python 解释器的底层，每个 str 对象会按照 Unicode 编码，转换成一段二进制格式的数据，然后存储。
   - Python 解释器不会显示每个 str 对象对应的 Unicode 编码值是什么，因为用户通常关注的是 utf-8 编码值。
-  - 如果用户希望查看 str 对象的 Unicode 值，可以采用 unicode_escape 格式进行编码：
+  - 如果用户希望查看 str 对象的 Unicode 值，可以用 unicode_escape 格式进行编码：
     ```py
     >>> 'www.你好.com'.encode('unicode_escape')
     b'www.\\u4f60\\u597d.com'
@@ -73,7 +117,25 @@
     'www.你好.com'
     ```
 
-- 用户可以将一个 str 对象，按照任意编码格式，转换成一段二进制数据（bytes 对象）：
+- 可用 `chr()` 函数，将一个 Unicode 编码（int 类型），转换成一个字符（str 类型）。例：
+  ```py
+  >>> chr(65)
+  'A'
+  >>> chr(128)
+  '\x80'
+  ```
+
+- 可用 `ord()` 函数，将一个字符（str 或 bytes 类型），转换成一个 Unicode 编码（int 类型）。例：
+  ```py
+  >>> ord('A')
+  65
+  >>> ord('你')
+  20320
+  ```
+
+### str 转换 bytes
+
+- 一个 str 对象，可以按照任意编码格式，转换成一段二进制数据（bytes 对象）。例：
   ```py
   >>> 'hello'.encode('utf-8')
   b'hello'
@@ -81,53 +143,45 @@
   b'\xc4\xe3\xba\xc3'
   ```
 
-- 关于 ASCII 码。
-  - C 语言中，每个 char 字符，以 ASCII 码的形式存储，因此可以直接转换成 int 类型。
-    ```c
-    char c = 'A';   // 这里实际上存储的是 'A' 的 ASCII 码值 65
-    ```
-  - 而 Python 中，不能将一个字符或字节，直接转换成 int 类型：
+- 一个 bytes 对象，不一定能转换成 str 对象。
+  - 有的 bytes 对象，是从 str 对象编码生成的二进制数据。使用正确的解码格式，就能转换成 str 对象。
     ```py
-    >>> int('A')
-    ValueError: invalid literal for int() with base 10: 'A'
-    >>> int(b'A')
-    ValueError: invalid literal for int() with base 10: b'A'
+    >>> b'\xc4\xe3\xba\xc3'.decode('utf-8')
+    UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc4 in position 0: invalid continuation byte
+    >>> b'\xc4\xe3\xba\xc3'.decode('gbk')
+    '你好'
     ```
-  - 除非这个字符或字节，是阿拉伯数字：
+  - 有的 bytes 对象，是其它类型的二进制数据，例如一个图片文件，不能转换成 str 对象。
     ```py
-    >>> int('1')
-    1
-    >>> int(b'1')
-    1
+    >>> b'\xFF'.decode('utf-8')
+    UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
     ```
 
-- 关于 Unicode 码。
-  - 可用 `chr()` 函数，将一个 Unicode 编码（int 类型），转换成一个字符（str 类型）。例：
-    ```py
-    >>> chr(65)
-    'A'
-    >>> chr(128)
-    '\x80'
-    ```
-  - 可用 `ord()` 函数，将一个字符（str 或 bytes 类型），转换成一个 Unicode 编码（int 类型）。例：
-    ```py
-    >>> ord('A')
-    65
-    >>> ord('你')
-    20320
-    ```
-
-## 增
-
-### str()
-
-- 功能：创建一个 str 对象。
-- 例：
+- 将十六进制字符串（str 对象），转换成 bytes 对象：
   ```py
-  >>> str()     # 不输入参数时，是创建一个长度为 0 的 str 对象
-  ''
-  >>> str(5)    # 将其它类型的对象转换成 str 对象
-  '5'
+  >>> bytes.fromhex('e4bda0')
+  b'\xe4\xbd\xa0'
+  >>> bytes.fromhex('0xe4bda0')   # 输入的十六进制字符串，不能包含 0x 前缀
+  ValueError: non-hexadecimal number found in fromhex() arg at position 1
+  ```
+
+- 将 bytes 对象，转换成十六进制字符串（str 对象）：
+  ```py
+  >>> '你'.encode()       # 创建一个 bytes 对象
+  b'\xe4\xbd\xa0'
+  >>> bytes.hex(_)        # 调用 bytes 对象的 hex() 方法
+  'e4bda0'
+  >>> '你'.encode().hex() # 可以简写为一行语句
+  'e4bda0'
+  ```
+  也可以手动转换每一个字符：
+  ```py
+  >>> [i for i in '你'.encode()]
+  [228, 189, 160]
+  >>> [hex(i) for i in '你'.encode()]
+  ['0xe4', '0xbd', '0xa0']
+  >>> ''.join(['{:02x}'.format(i) for i in '你'.encode()])
+  'e4bda0'
   ```
 
 ## 读
@@ -411,7 +465,7 @@ str.format(*args, **kwargs) -> str
   'Hello World!'
   >>> '{} {}!'.format(123, [1, 2])        # format() 中的参数如果不是 str 类型，则会被自动转换成 str 类型，然后替换
   '123 [1, 2]!'
-  >>> '{{ {} {} }}'.format('Hello', 'World')  # 如果想在 str 中显示花括号，则要转义成 {{ }}
+  >>> '{{ {} {} }}'.format('Hello', 'World')      # 如果想在 str 中显示花括号，则要转义成 {{ }}
   '{ Hello World }'
   >>> '{0} {1}!'.format('Hello', 'World')         # 可以用 {int} 的格式，指定 format() 中第几个元组参数
   'Hello World!'
@@ -445,11 +499,11 @@ str.format(*args, **kwargs) -> str
   ```
 - 关于浮点数：
   ```py
-  >>> '{:f}'.format(12)     # 输出为 float 类型（小数点后默认保留 6 位）
+  >>> '{:f}'.format(12)       # 输出为 float 类型（小数点后默认保留 6 位）
   '12.000000'
-  >>> '{:e}'.format(12)     # 输出为科学计数法（小数点后默认保留 6 位）
+  >>> '{:e}'.format(12)       # 输出为科学计数法（小数点后默认保留 6 位）
   '1.200000e+01'
-  >>> '{:.2f}'.format(12.345)     # 小数点后最多保留 2 位（会进行四舍五入）
+  >>> '{:.2f}'.format(12.345) # 小数点后最多保留 2 位（会进行四舍五入）
   '12.35'
   >>> '{:.4}'.format(12.345)  # 总共最多输出 4 位有效数字（会进行四舍五入）
   '12.35'
@@ -458,7 +512,7 @@ str.format(*args, **kwargs) -> str
   ```py
   >>> '{:b}'.format(12)     # 输出数字时，转换成二进制。此时 format() 中的输入参数必须为 int 类型
   '1100'
-  >>> '{:#b}'.format(12)    # 加上 # ，则会根据当前进制，自动加上 0b、0o、0x 前缀
+  >>> '{:#b}'.format(12)    # 加上 # 时，会根据当前进制，自动加上 0b、0o、0x 前缀
   '0b1100'
   >>> '{:o}'.format(12)     # 输出为八进制
   '14'

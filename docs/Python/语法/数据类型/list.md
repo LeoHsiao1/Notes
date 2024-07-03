@@ -1,8 +1,7 @@
 # list
 
-- list 类型的对象，用于存放一组其它对象。
-  - list 汉语译为列表。
-  - list 包含的每个对象，称为一个元素。
+- list 类型的对象，用于有序地存放一组元素。每个元素，可以是任意类型的对象。
+  - list 汉语译为"列表"。
 
 - Python 的 list ，用途像 C 语言的数组，但更灵活、功能更强：
   - C 语言中，创建一个数组时，就固定了它的长度、数据类型。如下：
@@ -45,7 +44,7 @@ list(iterable=()) -> str
     >>> type(_)
     <class 'str'>
     ```
-  - 如果用户在数字的左右两侧，加上中括号，作为定界符。则 Python 解释器会将它保存为 list 对象。
+  - 如果用户在数字的左右两侧，加上中括号 `[ ]` ，作为定界符。则 Python 解释器会将它保存为 list 对象。
     ```py
     >>> [1]
     [1]
@@ -87,19 +86,41 @@ list(iterable=()) -> str
     >>> [i for i in range(3) if i>0]  # 可以添加 if 条件，当 item 满足条件时，才生成一个 list_item
     [1, 2]
     ```
-  - 可以使用多个 for 语句，遍历多个 iterable 对象：
-    ```py
-    >>> [x+str(y) for x in 'ABC' for y in range(3)]
-    ['A0', 'A1', 'A2', 'B0', 'B1', 'B2', 'C0', 'C1', 'C2']
-    ```
-    这并不是同时遍历，而是像多维数组一样逐层遍历，相当于：
-    ```py
-    a = []
-    for x in 'ABC':
-        for y in range(3):
-            list_item = x+str(y)
-            a.append(list_item)
-    ```
+
+- 可以使用多个 for 语句，遍历多个 iterable 对象：
+  ```py
+  >>> [x+str(y) for x in 'ABC' for y in range(3)]
+  ['A0', 'A1', 'A2', 'B0', 'B1', 'B2', 'C0', 'C1', 'C2']
+  ```
+  这并不是并行遍历，而是像多维数组一样逐层遍历，相当于：
+  ```py
+  a = []
+  for x in 'ABC':
+      for y in range(3):
+          list_item = x+str(y)
+          a.append(list_item)
+  ```
+
+- 如果想并行遍历多个 iterable 对象，同时取出每个对象中的第 n 项元素，则可采用以下方式：
+  ```py
+  >>> iterables = 'ABC', range(3)
+  >>> [i for i in zip(*iterables)]
+  [('A', 0), ('B', 1), ('C', 2)]
+  ```
+
+- 如果只遍历一个 iterable 对象，但每次希望获取多个元素，则可采用以下方式：
+  ```py
+  >>> iterable = iter(range(6))   # 创建一个迭代器
+  >>> iterables = [iterable] * 2  # 将迭代器拷贝多份，这样并行遍历时，会累加迭代进度
+  >>> [i for i in zip(*iterables)]
+  [(0, 1), (2, 3), (4, 5)]
+  ```
+  ```py
+  >>> iterable = iter(range(6))
+  >>> iterables = [iterable] * 4
+  >>> [i for i in zip(*iterables)]  # 这里每次获取 4 个元素。如果 iterables 中任一对象为空，则会停止迭代，可能遗漏一些元素，没有获取
+  [(0, 1, 2, 3)]
+  ```
 
 ## 查
 

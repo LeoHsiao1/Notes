@@ -26,7 +26,7 @@
   - 第七层协议
     - [DHCP](网络协议/第七层协议/DHCP.md)
     - [DNS](网络协议/第七层协议/DNS.md)
-    - [HTTP](/Web/通信协议/HTTP)
+    - [HTTP](https://leohsiao.com/Web/通信协议/HTTP.html)
 - 计算机安全
   - [恶意代码](计算机安全/恶意代码.md)
   - [网络安全](计算机安全/网络安全.md)

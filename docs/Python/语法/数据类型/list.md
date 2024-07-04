@@ -125,6 +125,19 @@ list(iterable=()) -> list
 
 ## 查
 
+### list.copy()
+
+```py
+list.copy() -> list
+```
+- 功能：对 list 进行浅拷贝，返回一个新的 list 对象。
+- 例：
+  ```py
+  >>> a = [1, 2, 3]
+  >>> a.copy()
+  [1, 2, 3]
+  ```
+
 ### list.count()
 
 ```py
@@ -155,19 +168,6 @@ list.index(object, start: int=..., stop: int=...) -> int
   2
   >>> a.index(3, 0, 2)
   ValueError: 3 is not in list
-  ```
-
-### list.copy()
-
-```py
-list.copy() -> list
-```
-- 功能：对 list 进行浅拷贝，返回一个新的 list 对象。
-- 例：
-  ```py
-  >>> a = [1, 2, 3]
-  >>> a.copy()
-  [1, 2, 3]
   ```
 
 ## 增
@@ -307,7 +307,7 @@ list.remove(object) -> None
 ```py
 list.pop(index=-1) -> object
 ```
-- 功能：删除 list 中序号等于 index 的那个元素，然后返回它。
+- 功能：删除 list 中序号等于 index 的那个元素，返回该元素的值。
   - index 默认值为 -1 ，会取出最后一个元素。
 - 例：
   ```py

@@ -46,7 +46,7 @@ set(iterable=()) -> set
     >>> type(_)
     <class 'set'>
     ```
-  - 如果用户想创建一个空集合，则只能用 set() 。因为一对空的花括号 `{}` ，会被 Python 解释器视作 dict 类型。
+  - 如果用户想创建一个空集合，则只能用 `set()` 。因为一对空的花括号 `{}` ，会被 Python 解释器视作 dict 类型。
     ```py
     >>> set()
     set()
@@ -212,7 +212,7 @@ set.discard(object) -> None
 ```py
 set.pop() -> object
 ```
-- 功能：删除 set 中随机一个元素，然后返回它。
+- 功能：删除 set 中随机一个元素，返回该元素的值。
   - 如果 set 为空，则抛出异常。
 - 例：
   ```py

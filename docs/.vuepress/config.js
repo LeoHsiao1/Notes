@@ -163,7 +163,7 @@ module.exports = {
                         },
                         {
                             title: "Python",
-                            path: "https://leohsiao.com/Python/"
+                            path: "/Python/"
                         },
                         {
                             title: "Perl",
@@ -871,7 +871,7 @@ module.exports = {
                                 },
                                 {
                                     title: "HTTP",
-                                    path: "https://leohsiao.com/Web/通信协议/HTTP.html"
+                                    path: "/Web/通信协议/HTTP"
                                 }
                             ]
                         }
@@ -1302,7 +1302,7 @@ module.exports = {
                 },
                 {
                     title: "容器",
-                    path: "https://leohsiao.com/Container/"
+                    path: "/Container/"
                 },
                 {
                     title: "测试",

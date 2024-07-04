@@ -233,6 +233,50 @@ module.exports = {
                     ]
                 },
                 {
+                    title: "语法",
+                    children: [
+                        {
+                            title: "基本语法",
+                            path: "/Python/语法/基本语法"
+                        },
+                        {
+                            title: "变量",
+                            path: "/Python/语法/变量"
+                        },
+                        {
+                            title: "数据类型",
+                            path: "/Python/语法/数据类型/数据类型",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "list",
+                                    path: "/Python/语法/数据类型/list"
+                                },
+                                {
+                                    title: "str",
+                                    path: "/Python/语法/数据类型/str"
+                                },
+                                {
+                                    title: "set",
+                                    path: "/Python/语法/数据类型/set"
+                                },
+                                {
+                                    title: "dict",
+                                    path: "/Python/语法/数据类型/dict"
+                                }
+                            ]
+                        },
+                        {
+                            title: "运算符",
+                            path: "/Python/语法/运算符"
+                        },
+                        {
+                            title: "流程控制",
+                            path: "/Python/语法/流程控制"
+                        }
+                    ]
+                },
+                {
                     title: "模块与包",
                     children: [
                         {
@@ -240,8 +284,8 @@ module.exports = {
                             path: "/Python/模块与包/模块与包"
                         },
                         {
-                            title: "软件包",
-                            path: "/Python/模块与包/软件包"
+                            title: "第三方库",
+                            path: "/Python/模块与包/第三方库"
                         }
                     ]
                 },

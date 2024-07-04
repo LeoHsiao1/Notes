@@ -2,6 +2,7 @@
 
 - list 类型的对象，用于有序地存放一组元素。每个元素，可以是任意类型的对象。
   - list 汉语译为"列表"。
+  - 往 list 对象中写入多个元素时，这些元素会按照写入的先后顺序，依次存放。
 
 - Python 的 list ，用途像 C 语言的数组，但更灵活、功能更强：
   - C 语言中，创建一个数组时，就固定了它的长度、数据类型。如下：
@@ -21,7 +22,7 @@
 ### list()
 
 ```py
-list(iterable=()) -> str
+list(iterable=()) -> list
 ```
 - 功能：创建一个 list 对象。
 - 例：
@@ -156,6 +157,19 @@ list.index(object, start: int=..., stop: int=...) -> int
   ValueError: 3 is not in list
   ```
 
+### list.copy()
+
+```py
+list.copy() -> list
+```
+- 功能：对 list 进行浅拷贝，返回一个新的 list 对象。
+- 例：
+  ```py
+  >>> a = [1, 2, 3]
+  >>> a.copy()
+  [1, 2, 3]
+  ```
+
 ## 增
 
 ### list.append()
@@ -205,7 +219,7 @@ list.extend(iterable) -> None
 ```py
 list.insert(index: int, object) -> None
 ```
-- 功能：往 list 中插入一个对象，成为 list 中序号为 index 的那个元素。
+- 功能：往 list 中插入一个对象，成为 list 中序号等于 index 的那个元素。
   - 或者说，放在原来的第 index 个元素之后。
 - 例：
   ```py
@@ -293,7 +307,7 @@ list.remove(object) -> None
 ```py
 list.pop(index=-1) -> object
 ```
-- 功能：删除 list 中序号为 index 的那个元素，然后返回它。
+- 功能：删除 list 中序号等于 index 的那个元素，然后返回它。
   - index 默认值为 -1 ，会取出最后一个元素。
 - 例：
   ```py

@@ -231,7 +231,6 @@ list.insert(index: int, object) -> None
   >>> a
   [1, 2, 'hello', 3, 'world']
   ```
-- 与 `list.append()` 相比，`list.insert()` 的运行效果较低，因为每插入一个元素，都要移动后面所有元素的位置，改变它们的索引。
 
 ## 改
 

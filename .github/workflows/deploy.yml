@@ -18,18 +18,17 @@ jobs:
         yarn vuepress build docs
         mv docs/.vuepress/dist .
         tar -zcvf dist.tgz dist/
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: dist.tgz
-        path: |
-          dist.tgz
+        path: dist.tgz
         retention-days: 1
 
   copy_dist:
     needs: build_vuepress
     runs-on: self-hosted
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v4
       with:
         name: dist.tgz
         path: artifacts

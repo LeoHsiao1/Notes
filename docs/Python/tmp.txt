@@ -1418,6 +1418,9 @@ TypeError: '>' not supported between instances of 'int' and 'str'
 >>> max(d, key=d.get)
 'c'
 
+- 用 max() 可以找出最大的一个元素。那么如何找出最大的 n 个元素？可以用 `sorted(iterable)[:n]` ，先排序，再提取元素。
+
+
 - min()函数的原理与max()类似，不过是找出最小值。
 
 ## def sum(iterable, start=0) -> value

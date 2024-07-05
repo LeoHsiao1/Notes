@@ -18,6 +18,55 @@
   True
   ```
 
+## Counter
+
+- 假设一个 list 包含一些重复的元素，如何统计每个元素的出现次数？
+  - 可以对于每个元素，调用一次 `list.count(xx)` ，统计该元素的出现次数。但这样比较麻烦，性能低。
+  - 可以基于 list 创建一个 `collections.Counter` 对象，自动统计每个元素的出现次数。
+
+- 定义：
+  ```py
+  Counter(iterable=None, /, **kwargs)
+  ```
+  - Counter 类是 dict 类的子类，因此兼容 dict 的大部分方法。
+  - 调用 Counter(iterable) 时，会将 iterable 对象中的每个元素，保存为字典中一个 key 。然后将每个元素的出现次数，保存为 key 对应的 value 。
+
+- 例：统计每个字母的出现次数
+  ```py
+  >>> from collections import Counter
+  >>> c = Counter('hello')
+  >>> c
+  Counter({'l': 2, 'h': 1, 'e': 1, 'o': 1})
+  >>> c['h']      # 查询某个元素的出现次数
+  1
+  >>> c['x']      # 如果查询的元素不存在，则返回 0 ，而不是抛出 KeyError 异常
+  0
+  >>> c['x'] = 1  # 可以修改元素的出现次数，像修改一个 dict 对象的 value
+  >>> c.most_common(2)  # 返回出现次数最多的 n 个元素
+  [('l', 2), ('h', 1)]
+  >>> c.update('hi')    # 统计更多元素的出现次数，累加到当前 Counter 。这相当于 c += Counter('hi')
+  >>> c
+  Counter({'h': 2, 'l': 2, 'e': 1, 'o': 1, 'i': 1})
+  ```
+
+- 两个 Counter 对象之间，支持以下运算符：
+  ```py
+  >>> c1 = Counter('aab')
+  >>> c1
+  Counter({'a': 2, 'b': 1})
+  >>> c2 = Counter('abb')
+  >>> c2
+  Counter({'b': 2, 'a': 1})
+  >>> c1 & c2       # 交集
+  Counter({'a': 1, 'b': 1})
+  >>> c1 | c2       # 并集
+  Counter({'a': 2, 'b': 2})
+  >>> c1 - c2       # 差集
+  Counter({'a': 1})
+  >>> c1 + c2       # 累加
+  Counter({'a': 3, 'b': 3})
+  ```
+
 ## deque
 
 - list 类型没有长度限制，可以存放任意个元素。而 deque 类型，相当于一个限制了长度的 list 。
@@ -27,13 +76,13 @@
 
 - 定义：
   ```py
-  collections.deque(iterable=[], maxlen=None)
+  deque(iterable=[], maxlen=None)
   ```
   - maxlen 默认值为 None ，表示不限制长度。
 
 - 例：创建
   ```py
-  from collections import deque
+  >>> from collections import deque
   >>> deque()
   deque([])
   >>> deque(maxlen=3)
@@ -54,10 +103,10 @@
 - 例：插入
   ```py
   >>> q = deque('hello', maxlen=3)
-  >>> q.append(4)       # 从右端插入元素
+  >>> q.append(4)       # 从右端插入元素，时间复杂度为 O(1)
   >>> q
   deque(['l', 'o', 4], maxlen=3)
-  >>> q.appendleft(5)   # 从左端插入元素
+  >>> q.appendleft(5)   # 从左端插入元素，时间复杂度为 O(1)
   >>> q
   deque([5, 'l', 'o'], maxlen=3)
   >>> q.extend('hi')

@@ -1,7 +1,5 @@
 ::: v-pre
 
-待看：
-- https://python3-cookbook.readthedocs.io/zh_CN/latest/
 
 
 
@@ -2106,16 +2104,7 @@ cel.conf.beat_schedule = {
 ##
 ##
 
-♢ collections
-## collections：Python的标准库，提供了一些容器类。
-- 可迭代对象、迭代器。
->>> from collections.abc import Iterable, Iterator
->>> isinstance("Hello", Iterable)
-True
->>> isinstance(iter("Hello"), Iterator)
-True
-##
-##
+
 
 关于调试
 ♢ traceback

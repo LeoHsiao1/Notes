@@ -236,8 +236,8 @@ module.exports = {
                     title: "语法",
                     children: [
                         {
-                            title: "基本语法",
-                            path: "/Python/语法/基本语法"
+                            title: "特点",
+                            path: "/Python/语法/特点"
                         },
                         {
                             title: "变量",

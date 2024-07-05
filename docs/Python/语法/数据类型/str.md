@@ -371,10 +371,10 @@ str.replace(old: str, new: str, count=-1) -> str
   - 如果没找到 old 字符串，则相当于替换 0 次，返回的 str 与原 str 相同。
 - 例：
   ```py
-  >>> 'Hello'.replace('l', 'L')
-  'HeLLo'
-  >>> 'Hello'.replace('he', 'He', 1)    # 最多替换1次
-  'Hello'
+  >>> 'hello'.replace('l', 'L')
+  'heLLo'
+  >>> 'hello'.replace('lo', 'LO', 1)
+  'helLO'
   ```
 
 ### str.split()

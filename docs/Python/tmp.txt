@@ -879,6 +879,12 @@ hello
 1
 >>> next(n)
 2
+
+
+
+
+
+
 ## 相关函数。
 - def iter(iterable) -> iterator
   - 功能：将一个可迭代对象转换成迭代器。实际上是调用对象的__iter__()方法。
@@ -933,9 +939,28 @@ StopIteration
 0
 >>> next(g)
 1
-##
-##
-##
+
+
+为什么使用生成式？通常是为了减少开销，提高 Python 程序的性能。
+- 假设存在一个 iterable 对象，占用 100MB 内存空间。现在想将 iterable 中每个元素转换成 str 类型。
+  - 如果使用列表生成式 `result = [str(i) for i in iterable]` ，此时 result 也会占用 100MB 内存，加上 iterable 就占用 200MB 内存。
+  - 如果使用生成器生成式 `result = (str(i) for i in iterable)` ，此时 result 同时只获取一个元素，几乎不占用内存。
+
+- 除了内存开销，还需要考虑时间开销。
+  - 假设遍历 iterable 对象的全部元素，耗时较久（比如几分钟）。等遍历完成之后，才开始处理这些元素，导致用户需要等一段时间才能看到处理结果。
+    ```py
+    result = [str(i) for i in iterable] # 这一步可能耗时较久
+    for i in result:
+        print(i)
+    ```
+  - 而使用生成器，可以每获取一个元素，就立即处理。从而更早地让用户看到处理结果，虽然并不能减少整体耗时。
+    ```py
+    result = (str(i) for i in iterable) # 这一步几乎没有耗时
+    for i in result:
+        print(i)
+    ```
+
+
 
 异常处理
 ## Python程序的错误分为两种。

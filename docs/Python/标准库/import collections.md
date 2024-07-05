@@ -2,19 +2,28 @@
 
 - 除了 list、str 等基础数据类型，Python 还在 collections 这个标准库中，提供了一些额外的数据类型，用作存放数据的容器。
 
-## Iterable
+## collections.abc
 
-- 如果一个对象实现了内置方法 `__iter__()` ，则可以视作可迭代对象（Iterable）。
+- collections.abc 提供了一些抽象的基类，可用于判断一个对象，是否属于某种抽象的数据类型。
+
+- 如果一个对象实现了内置方法 `__iter__()` ，则属于可迭代对象（Iterable）。
   ```py
   >>> from collections.abc import Iterable
   >>> isinstance('Hello', Iterable)
   True
   ```
 
-- 如果一个对象实现了内置方法 `__iter__()` 和 `__next__()` ，则可以视作迭代器（Iterator）。
+- 如果一个对象实现了内置方法 `__iter__()` 和 `__next__()` ，则属于迭代器（Iterator）。
   ```py
   >>> from collections.abc import Iterator
   >>> isinstance(iter('Hello'), Iterator)
+  True
+  ```
+
+- 如果一个对象实现了内置方法 `__hash__()` ，则属于可哈希对象（Hashable）。
+  ```py
+  >>> from collections.abc import Hashable
+  >>> isinstance(1, Hashable)
   True
   ```
 

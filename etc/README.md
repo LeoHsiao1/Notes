@@ -5,14 +5,14 @@
 - 调试时，只需启动开发环境的服务器：
   ```sh
   yarn
-  yarn vuepress dev docs
+  yarn run dev
   ```
 
 - 正式部署的步骤：
   1. 先构建网站：
       ```sh
       yarn
-      yarn vuepress build docs
+      yarn run build
       ```
       构建结果会保存到 `docs/.vuepress/dist/` 目录下，用 Nginx 代理即可。
   2. 启动一个 Nginx 服务器，代理网站的 dist 目录。并启用 SSL 证书。

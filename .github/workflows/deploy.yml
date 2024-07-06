@@ -15,7 +15,7 @@ jobs:
     - name: Build
       run: |
         yarn
-        yarn vuepress build docs
+        yarn run build
         mv docs/.vuepress/dist .
         tar -zcvf dist.tgz dist/
     - uses: actions/upload-artifact@v4

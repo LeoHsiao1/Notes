@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress dev docs",
-    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress build docs"
+    "dev": "export NODE_OPTIONS=--openssl-legacy-provider && vuepress dev docs",
+    "build": "export NODE_OPTIONS=--openssl-legacy-provider && vuepress build docs"
   },
   "dependencies": {
     "@vuepress/plugin-google-analytics": "^1.9.7",

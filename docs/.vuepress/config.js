@@ -273,6 +273,10 @@ module.exports = {
                         {
                             title: "流程控制",
                             path: "/Python/语法/流程控制"
+                        },
+                        {
+                            title: "函数",
+                            path: "/Python/语法/函数"
                         }
                     ]
                 },

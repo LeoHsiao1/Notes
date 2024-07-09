@@ -323,7 +323,7 @@ module.exports = {
                         },
                         {
                             title: "序列化",
-                            path: "/Python/文本处理/序列化/序列化"
+                            path: "/Python/文本处理/序列化"
                         },
                         {
                             title: "字符串匹配",

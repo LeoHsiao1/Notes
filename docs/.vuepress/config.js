@@ -277,6 +277,10 @@ module.exports = {
                         {
                             title: "函数",
                             path: "/Python/语法/函数"
+                        },
+                        {
+                            title: "类",
+                            path: "/Python/语法/类"
                         }
                     ]
                 },

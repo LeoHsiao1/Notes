@@ -323,52 +323,13 @@ module.exports = {
                         },
                         {
                             title: "序列化",
-                            path: "/Python/文本处理/序列化/序列化",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "INI",
-                                    path: "/Python/文本处理/序列化/INI"
-                                },
-                                {
-                                    title: "XML",
-                                    path: "/Python/文本处理/序列化/XML"
-                                },
-                                {
-                                    title: "JSON",
-                                    path: "/Python/文本处理/序列化/JSON"
-                                },
-                                {
-                                    title: "YAML",
-                                    path: "/Python/文本处理/序列化/YAML"
-                                },
-                                {
-                                    title: "pickle",
-                                    path: "/Python/文本处理/序列化/pickle"
-                                },
-                                {
-                                    title: "ProtoBuf",
-                                    path: "/Python/文本处理/序列化/ProtoBuf"
-                                },
-                                {
-                                    title: "Jinja",
-                                    path: "/Python/文本处理/序列化/Jinja"
-                                },
-                                {
-                                    title: "Markdown",
-                                    path: "/Python/文本处理/序列化/Markdown"
-                                }
-                            ]
+                            path: "/Python/文本处理/序列化/序列化"
                         },
                         {
                             title: "字符串匹配",
                             path: "/Python/文本处理/字符串匹配/字符串匹配",
                             collapsable: false,
                             children: [
-                                {
-                                    title: "通配符",
-                                    path: "/Python/文本处理/字符串匹配/通配符"
-                                },
                                 {
                                     title: "正则匹配",
                                     path: "/Python/文本处理/字符串匹配/正则匹配"

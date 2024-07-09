@@ -9,7 +9,7 @@
 类的方法
 ## 类的方法。
 - 实例方法：第一个参数必须是self。
-  - 调用实例对象的普通方法时，会自动传入该对象的引用作为第一个参数。一般把该参数命名为self。
+  - 调用实例的普通方法时，会自动传入该对象的引用作为第一个参数。一般把该参数命名为self。
   - 普通方法一般通过 "对象名.方法名" 的方式访问，也可以通过 "类名.方法名" 的方式访问，此时需要传入第一个参数self。如下：
 >>> Test.getNum()
 TypeError: getNum() missing 1 required positional argument: 'self'
@@ -183,88 +183,6 @@ __slots__ 用于限制动态添加到实例中的成员。
 参考：https://www.liaoxuefeng.com/wiki/1016959663602400/1017501655757856
 
 
-对象的内置属性
-## 函数的内置属性。
-- __name__：一个str，存储函数名。
-  - 例：
->>> f = print
->>> f.__name__
-'print'
-- __doc__：一个str，存储函数的说明文档。
-  - 例：
->>> print.__doc__
-"print(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\n
-- __closure__：对于非闭包函数，它是None。对于闭包函数，它是一个tuple，记录函数引用的所有自由变量。
-  - 例：
->>> def fun1():
-...     x = 1
-...     def fun2():
-...         print(x)
-...     return fun2
-...
->>> f = fun1()
->>> f.__closure__
-(<cell at 0x0000020398E80828: int object at 0x00007FF8C8196290>,)
->>> f.__closure__[0].cell_contents
-1
-- __defaults__：一个tuple，存储函数的默认值形参。
-  - 如果函数形参的默认值为可变类型，就可能被修改。因此，应该尽量使用不可变类型，或者检查函数中所有用到它的语句是否修改了它。
-  - 例：
->>> def fun2(x=[], y=[]):
-...     print(x, y)        # 没有传入实参时，解释器会用__defaults__[0]、__ddefaults__[1]给形参赋值
-...     y.append(0)
-...     print(fun2.__defaults__)
-...
->>> fun2()
-[] []
-([], [0])            # 对__defaults__的修改会一直保留，直到解释器关闭
->>> fun2()
-[] [0]
-([], [0, 0])
-- __annotations__：一个dict，存储有注释的形参。
-  - 例：
->>> def fun1(a, b: "字符串或None", c: int = 0)-> int:    # 定义函数时，可以用冒号 : 给形参加上注释
-...     pass
-...
->>> fun1.__annotations__
-{'b': '字符串或None', 'c': <class 'int'>, 'return': <class 'int'>}
-
-__class__：指向对象所属的类，返回值与type()一样。
-self.__class__相当于cls
-
->>> a = 1
->>> a.__class__
-<class 'int'>
->>> int.__class__
-<class 'type'>
-
-
-## 实例方法的私有属性。
->>> class Test(int):
-...     def fun1(self):
-...         pass
-...
-- __self__：指向类的实例。实例的普通方法、类方法具有该属性。
-  - 例：
->>> Test().fun1.__self__
-0
->>> Test(1).fun2.__self__            # 类方法的__self__属性指向类名
-<class '__main__.Test'>
->>> Test(1).fun3.__self__            # 静态方法实际上是个函数，没有__self__属性
-AttributeError: 'function' object has no attribute '__self__'
-- __func__：指向该方法绑定的函数名。非built-in类的实例的普通方法、类方法具有该属性。
-  - 普通方法、类方法本身会绑定到一个静态函数，各个实例对象都是调用该静态函数。
-  - 例：
->>> Test(1).fun1
-<bound method Test.fun1 of 1>            # 该方法绑定到Test.fun1函数
->>> Test(1).fun1.__func__
-<function Test.fun1 at 0x000001AD6E0CA048>
->>> Test(1).fun1.__func__ is Test(2).fun1.__func__
-True
->>> Test(1).fun2
-<bound method Test.fun2 of <class '__main__.Test'>>
->>> Test(1).fun3                        # 静态方法本身不会绑定
-<function Test.fun3 at 0x000001AD6E0CA2F0>
 ##
 ##
 ##

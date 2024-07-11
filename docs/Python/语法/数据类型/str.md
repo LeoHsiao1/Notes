@@ -417,6 +417,28 @@ str.join(iterable) -> str
   '1,2,3'
   ```
 
+### 拼接
+
+- 为了方便用户处理较长的字符串，Python 提供了一种便捷的语法：通过加号 `+` ，将两个字符串，拼接成一个字符串。
+  - 例：
+    ```py
+    >>> 'hello' + 'world'
+    'helloworld'
+    ```
+  - 甚至可以省略加号，两个相邻的字符串，会被 Python 解释器自动拼接：
+    ```py
+    >>> 'hello' 'world'
+    'helloworld'
+    ```
+  - 但是变量与字符串相邻时，不会被 Python 解释器自动拼接：
+    ```py
+    >>> a = 'hello'
+    >>> a 'world'
+    SyntaxError: invalid syntax
+    >>> a + 'world'     # 此时不能省略加号 +
+    'helloworld'
+    ```
+
 ## 删
 
 ### str.strip()

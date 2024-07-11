@@ -11,78 +11,6 @@
 
 
 
-##
-##
-##
-
-类的继承
-## 在定义类名时，在类名后加上括号并填入某个类名，就可以让当前类继承某个类的成员。
-- Python3中，所有类都隐式地继承object类。
-- 例：
->>> class Person:
-...     num = 0
-...
->>> class Man(Person):        # 创建一个继承类Person的类Man
-...     pass
-...
-
-- 子类继承父类的类变量之后，会保留相同的引用。
-
->>> Person.num, Man.num
-(0, 0)
->>> Person.num is Man.num   # 此时子类的类变量，与父类的类变量，实际上是引用同一个对象
-True
-
->>> Person.num = []         # 改变父类的类变量的引用，会导致子类的类变量也变化，因为子类与父类的类变量依然引用同一个对象
->>> Person.num, Man.num
-([], [])
->>> Person.num is Man.num
-True
-
->>> Person.num.append(0)    # 修改父类的类变量的值，子类与父类的类变量依然引用同一个对象
->>> Person.num, Man.num
-([0], [0])
->>> Person.num is Man.num
-True
-
->>> Man.num.append(1)       # 修改子类的类变量的值，子类与父类的类变量依然引用同一个对象
->>> Person.num, Man.num
-([0, 1], [0, 1])
->>> Person.num is Man.num
-True
-
->>> Man.num = [2]           # 但是，改变子类的类变量的引用，会与父类的该类变量从此取消关联
->>> Person.num, Man.num
-([0, 1], [2])
->>> Person.num is Man.num
-False
-
-
-
-
-- 类的定义语句执行完之后，该类的定义就确定了。即使重新定义父类，它依然继承的是之前的父类。
->>> class Person:
-...     num = 0
-...     name = ""
-...
->>> Man.name                        # 子类不会继承父类的新成员
-AttributeError: type object 'Man' has no attribute 'name'
-
-
-
-C++等语言中支持定义多个名称相同、形参列表不同的方法，实现更丰富的多态性。如下，当调用 Test.get(x=1) 时，根据输入的实参与哪个形参列表匹配，从而判断调用哪个方法。
-但Python不支持这样的多态性，同名的多个方法中，只有最后一个定义的方法会生效。
-
-class Test:
-
-    def get(self):
-        pass
-
-    def get(self, x):
-        pass
-
-    def get(self, x, y):
-        pass
 
 ##
 
@@ -144,6 +72,7 @@ A end
 ##
 
 元类
+- Python3中，所有类都隐式地继承object类。
 ## 一般的类实际上是type类的实例。当Python解释器执行到class定义语句时，实际上是调用type()创建该类。
 - 在代码中可用type()动态创建类，使程序更加灵活。
 ## class type(name: str, bases: Tuple[type, ...], dict: Dict[str, Any]) -> a new type

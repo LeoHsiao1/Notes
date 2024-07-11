@@ -80,7 +80,7 @@
 
 - list 类型没有长度限制，可以存放任意个元素。而 deque 类型，相当于一个限制了长度的 list 。
   - deque 缩写自 double-end queue（双端队列）。
-  - deque 只能从左端或右端插入元素，不能从中间插入。
+  - deque 只能从左端或右端插入元素，不能从中间插入。因此时间复杂度为 O(1) ，性能高。
   - deque 从某一端插入一个元素时，如果 deque 已达到最大长度，则会从另一端删除一个元素。
 
 - 定义：
@@ -112,10 +112,10 @@
 - 例：插入
   ```py
   >>> q = deque('hello', maxlen=3)
-  >>> q.append(4)       # 从右端插入元素，时间复杂度为 O(1)
+  >>> q.append(4)       # 从右端插入元素
   >>> q
   deque(['l', 'o', 4], maxlen=3)
-  >>> q.appendleft(5)   # 从左端插入元素，时间复杂度为 O(1)
+  >>> q.appendleft(5)   # 从左端插入元素
   >>> q
   deque([5, 'l', 'o'], maxlen=3)
   >>> q.extend('hi')

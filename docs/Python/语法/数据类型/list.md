@@ -66,9 +66,9 @@ list(iterable=()) -> list
     SyntaxError: invalid syntax
     ```
 
-### 列表生成式
+### 列表推导式
 
-- 列表生成式，是另一种创建 list 的语法。
+- 列表推导式（List comprehensions），是另一种创建 list 的语法。
   - 格式：`[<list_item> for <item> in iterable]`
   - 原理：通过 for 语句，遍历一个可迭代对象中的元素（这里记作 item ），每获取一个 item 就生成一个 list_item 值，最后将这些 list_item 值组成一个 list 。
   - 效果相当于：

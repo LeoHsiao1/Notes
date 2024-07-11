@@ -130,26 +130,6 @@ dict.keys() -> set
   >>> set(_)
   {'k2', 'k1'}
   ```
-- 在迭代字典的过程中，如果增减字典的 key ，则会引发异常：
-  ```py
-  >>> dic = {'k1': 1, 'k2': 2}
-  >>> for k in dic.keys():
-  ...     dic.pop(k)
-  ...
-  1
-  RuntimeError: dictionary changed size during iteration
-  >>> d
-  {'k2': 10}
-  ```
-  因此应该先迭代完毕，暂存迭代结果，然后才增减字典的 key ：
-  ```py
-  >>> dic = {'k1': 1, 'k2': 2}
-  >>> for k in list(dic.keys()):
-  ...     dic.pop(k)
-  ...
-  1
-  2
-  ```
 
 ### dict.values()
 

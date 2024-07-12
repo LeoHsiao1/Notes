@@ -2,44 +2,6 @@
 
 
 
-##
-##
-##
-
-元类
-- Python3中，所有类都隐式地继承object类。
-## 一般的类实际上是type类的实例。当Python解释器执行到class定义语句时，实际上是调用type()创建该类。
-- 在代码中可用type()动态创建类，使程序更加灵活。
-## class type(name: str, bases: Tuple[type, ...], dict: Dict[str, Any]) -> a new type
-- 功能：创建一个类。（实际上是type类的实例）
-- name参数是类名，bases参数是一个包含所有父类的元组，dict参数是一个包含所有方法名及其绑定的函数的字典。
-- 例：
->>> Test = type("Test", (int,), {"fun1": fun1})
->>> Test
-<class '__main__.Test'>
->>> Test().fun1()
-hello
-  - 相当于以下定义：
-class Test(int):
-    def fun1(self):
-        print("hello")
-## 元类：继承自type类，可用于创建其它类。
-- 使用元类可以方便地初始化其它类，设置成员，比setattr()更方便。
-  - 创建一个类时，Python解释器会优先用它或它父类的元类来创建它，如果没有元类则用type()来创建它。
-- 例：
->>> class Mymeta(type):
-...     def  __new__(cls, name, bases, attrs):
-...         attrs["fun1"] = lambda self: print("hello")
-...         return super().__new__(cls, name, bases, attrs)
-...
->>> class Test(metaclass=Mymeta):
-...     pass
-...
->>> Test().fun1()
-hello
-##
-##
-##
 
 迭代器
 ## 迭代：遍历某个对象中的所有元素。

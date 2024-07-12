@@ -2,69 +2,6 @@
 
 
 
-
-迭代器
-## 迭代：遍历某个对象中的所有元素。
-- 不同的容器实现了迭代器接口之后，就可以使用相同的API进行遍历。
-## 可迭代对象（iterable）：具有__iter__()方法。可以被for语句遍历，不能被next()遍历。
-- __iter__()：返回一个迭代器。
-  - for语句在遍历可迭代对象时，就是先调用对象的__iter__()方法，获得迭代器。
-  - 例：
->>> list1 = [1, 2, 3]
->>> list1.__iter__()
-<list_iterator object at 0x7fa01109d048>
->>> next(list1.__iter__())
-1
-## 迭代器（iterator）：具有__iter__()、__next__()方法。可以被for语句、next()遍历。
-- Python中的迭代器属于单向只读迭代器：只能向前遍历，不能后退。
-  - 大部分迭代器遍历完所有元素之后就停止迭代，也可以创建无限循环的迭代器。
-  - 迭代器只能通过迭代获取其中的元素，不能进行索引。
-- __next__()：返回迭代器中的下一个元素，如果没有下一个元素则抛出异常StopIteration。
-  - 例：
->> class Number:
-...     def __init__(self):
-...         self.a = 0
-...     def __iter__(self):
-...         return self
-...     def __next__(self):
-...         if self.a < 10:             # 最多迭代10次
-...             self.a += 1
-...             return self.a
-...         else:
-...             raise StopIteration
-...
->>> n = Number()
->>> next(n)
-1
->>> next(n)
-2
-
-
-
-
-
-
-## 相关函数。
-- def iter(iterable) -> iterator
-  - 功能：将一个可迭代对象转换成迭代器。实际上是调用对象的__iter__()方法。
-  - 例：
->>> iter("Hello")
-<iterator object at 0x7f19cd6e6810>
->>> list(iter("Hello"))
-['H', 'e', 'l', 'l', 'o']
-- def next(iterator, default=...) -> object
-  - 功能：获取迭代器中的下一个元素。如果不存在则报错，或者返回default参数。
-  - 实际上是调用对象的__next__()方法。
-  - 例：
->>> i = iter("Hello")
->>> next(i)
-'H'
->>> next(i)
-'e'
-##
-##
-##
-
 生成器
 ## 生成器（generator）：Python特有的一种迭代器。
 - 使用yield关键字给出函数的返回值时，函数会返回一个生成器。
@@ -100,24 +37,24 @@ StopIteration
 1
 
 
-为什么使用推导式？通常是为了减少开销，提高 Python 程序的性能。
-- 假设存在一个 iterable 对象，占用 100MB 内存空间。现在想将 iterable 中每个元素转换成 str 类型。
-  - 如果使用列表推导式 `result = [str(i) for i in iterable]` ，此时 result 也会占用 100MB 内存，加上 iterable 就占用 200MB 内存。
-  - 如果使用生成器推导式 `result = (str(i) for i in iterable)` ，此时 result 同时只获取一个元素，几乎不占用内存。
+- 为什么使用生成器？通常是为了提高 Python 程序的性能。
+  - 假设存在一个 iterable 对象，占用 100MB 内存空间。现在想将 iterable 中每个元素转换成 str 类型。
+    - 如果使用列表推导式 `result = [str(i) for i in iterable]` ，此时 result 也会占用 100MB 内存，加上 iterable 就占用 200MB 内存。
+    - 如果使用生成器推导式 `result = (str(i) for i in iterable)` ，此时 result 同时只获取一个元素，几乎不占用内存。
 
-- 除了内存开销，还需要考虑时间开销。
-  - 假设遍历 iterable 对象的全部元素，耗时较久（比如几分钟）。等遍历完成之后，才开始处理这些元素，导致用户需要等一段时间才能看到处理结果。
-    ```py
-    result = [str(i) for i in iterable] # 这一步可能耗时较久
-    for i in result:
-        print(i)
-    ```
-  - 而使用生成器，可以每获取一个元素，就立即处理。从而更早地让用户看到处理结果，虽然并不能减少整体耗时。
-    ```py
-    result = (str(i) for i in iterable) # 这一步几乎没有耗时
-    for i in result:
-        print(i)
-    ```
+  - 除了内存开销，还需要考虑时间开销。
+    - 假设遍历 iterable 对象的全部元素，耗时较久（比如几分钟）。等遍历完成之后，才开始处理这些元素，导致用户需要等一段时间才能看到处理结果。
+      ```py
+      result = [str(i) for i in iterable] # 这一步可能耗时较久
+      for i in result:
+          print(i)
+      ```
+    - 而使用生成器，可以每获取一个元素，就立即处理。从而更早地让用户看到处理结果，虽然并不能减少整体耗时。
+      ```py
+      result = (str(i) for i in iterable) # 这一步几乎没有耗时
+      for i in result:
+          print(i)
+      ```
 
 
 

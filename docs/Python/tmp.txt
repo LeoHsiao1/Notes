@@ -222,48 +222,6 @@ __main__.MyExcept: test...
 ##
 ##
 
-其它知识
-pass 和 ...
-## pass在Python中是一个关键字，可用于填补语句块的空缺。
-- 例：
->>> def fun1():
-...     pass
-...
-## 省略号...在Python中是一个属于ellipsis类的单例对象Ellipsis，其布尔值为True。
->>> ...
-Ellipsis
->>> type(...)
-<class 'ellipsis'>
->>> bool(...)
-True
-- ...可以替代pass填补语句块的空缺。
->>> def fun1():
-...     ...
-...
-- ...可以用于赋值。
->>> x = ...
->>> x
-Ellipsis
-  - 而pass是一个关键字，不能用于赋值。
->>> x = pass
-SyntaxError: invalid syntax
-- 当对象中的某个元素是对自身的循环引用时，会被解释器替代为...。
->>> list1 = [1, 2, 3]
->>> list1.append(list1)
->>> list1
-[1, 2, 3, [...]]
->>> list1[3]
-[1, 2, 3, [...]]
->>> list1[3][3]
-[1, 2, 3, [...]]
-  - 但直接用list1赋值时，不会造成循环引用。
->>> list1 = [1, 2, 3]
->>> list1 = [1, 2, 3, list1]
->>> list1
-[1, 2, 3, [1, 2, 3]]
-##
-##
-##
 
 内置函数
 ## Python解释器启动时会自动导入builtins模块，它提供了一些内置函数。

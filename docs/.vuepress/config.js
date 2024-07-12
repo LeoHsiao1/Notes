@@ -280,7 +280,18 @@ module.exports = {
                         },
                         {
                             title: "类",
-                            path: "/Python/语法/类"
+                            path: "/Python/语法/类/类",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "内置变量",
+                                    path: "/Python/语法/类/内置变量"
+                                },
+                                {
+                                    title: "内置变量",
+                                    path: "/Python/语法/类/内置方法"
+                                }
+                            ]
                         }
                     ]
                 },

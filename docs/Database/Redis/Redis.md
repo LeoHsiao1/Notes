@@ -2,7 +2,7 @@
 
 ：远程字典服务器（Remote Dictionary Server），一个键值对型数据库，存储在内存中。
 - [官方文档](https://redis.io/documentation)
-- 发音为 `/ˈrɪdɪs/` 。
+- 发音像单词 red + diss 。
 - 采用 ANSI C 语言开发。
 - 采用 C/S 架构、TCP 通信。
 - 将数据保存在内存中，因此读写速度很快，常用作缓存。也可以将数据持久化保存到磁盘中，用作 NoSQL 数据库。

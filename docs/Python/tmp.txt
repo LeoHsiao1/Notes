@@ -3,111 +3,6 @@
 
 
 
-
-
-
-异常处理
-## Python程序的错误分为两种。
-- SyntaxError：语法错误，在编译时报出错误。
-- exception：异常，在运行时被抛出。
-  - 除了语法错误，其它的都算异常。
-  - 变量未定义、数据类型不符合要求等问题在运行时才能发现，不属于语法错误。
-## 使用try-except语句可以捕捉异常。
-- 其语法为：首先执行try语句块，如果有异常抛出，则立即执行异常名与其匹配的except语句块。如果没有与其匹配的except，该异常就会被抛出。
-- 例：
-try:
-x = int(input("Please enter a number: "))
-except Exception as e:                # 捕捉一个Exception类的异常并实例化成对象e
-print(str(e))                    # 显示用str()提取的简要异常信息
-except (RuntimeError, TypeError):        # 一个except可以捕捉多种异常
-print("RuntimeError / TypeError")
-except :                                # 最后一个except可以不设异常名，从而匹配所有类型的异常
-print("Unexpected error:", sys.exc_info()[0])
-raise        # 将异常抛出
-else:            # 可以在try-except语句后加上一个else语句，没有发生异常时就执行该语句块
-pass
-finally:            # 可以在try-except语句后加上一个finally语句，不管是否发生异常都会执行该语句块
-pass            # 即使有return语句，也会在return之前先执行finally语句块
-## 用关键字with可以实现try-finally的作用，保证在执行语句块时一定会执行某种操作。
-- 如下，定义一个支持with操作的类，使用with时会调用类的__enter__()方法，当语句块执行结束或出现异常时会调用类的__exit__()方法。
-- 例：
->>> class Test():
-...     def __enter__(self):
-...         return self
-...     def __exit__(self, type, value, trace):
-...         print("exit")
-...
->>> with Test() as t:
-...     print("inside")
-...
-inside
-exit
-
-- 例：
-class Test:
-    def __init__(self, filename, mode='r'):
-        self.filename = filename
-        self.mode = mode
-    def __enter__(self):
-        self.f = open(self.filename, self.mode)
-        return self.f
-    def __exit__(self, *args):   # 抛出异常时会传入异常名、异常内容、traceback对象
-        self.f.close()
-
-with Test("1.txt") as t:
-    t.read()
-  - 执行with Test("1.txt")时，Python解释器会先创建对象f=Test("1.txt")，然后调用f.__enter__()。当执行完with语句块或者抛出异常时，就调用f.__exit__()。
-
-
-## 抛出异常。
-- 使用“raise X”的格式可以主动抛出一个异常。X可以是一个异常类或者异常的实例。
-- 在 except 语句块中，单独使用关键字raise ，会抛出已捕捉的异常。
->>> raise NameError
-NameError
->>> raise NameError('test...')
-NameError: test...
-- 使用关键字assert可以写一个断言，当表达式结果为假时则抛出AssertionError异常。
->>> assert 1 == 0
-AssertionError
->>> assert 1 == 0, "not equal"        # 可以给该异常加上描述信息
-AssertionError: not equal
-## BaseException：所有异常类的基类。
-- SystemExit
-- KeyboardInterrupt
-- GeneratorExit
-- Exception：Common base class for all non-exit exceptions.
-  - EOFError        ：Read beyond end of file
-  - ImportError    ：Import can't find module, or can't find name in module.
-  - NameError    ：Name not found globally.
-  - OSError        ：Base class for I/O related errors.
-  - KeyError        ：字典中没有该key。
-  - AttributeError：对象没有该属性。
-  - RuntimeError    ：Unspecified run-time error.
-  - SystemError    ：Python解释器的内部错误。
-  - TypeError    ：参数的数据类型错误。
-  - ValueError    ：参数的值错误（数据类型正确）。
-  - Warning        ：Base class for warning categories.
-## 下例是自定义一个异常类：
-
-class MyException(Exception):
-    def __init__(self, msg=''):
-        self.msg = msg
-
-    def __repr__(self):
-        return 'MyException({})'.format(repr(self.msg))
-
-    def __str__(self):
-        return self.__repr__()
-
->>> raise MyExcept
-__main__.MyExcept
->>> raise MyExcept('test...')
-__main__.MyExcept: test...
-##
-##
-##
-
-
 内置函数
 ## Python解释器启动时会自动导入builtins模块，它提供了一些内置函数。
 ##
@@ -1154,6 +1049,7 @@ cel.conf.beat_schedule = {
 
 
 关于调试
+
 ♢ traceback
 ## traceback：Python的标准库，用于获取stack的信息。
 - 例：

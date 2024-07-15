@@ -292,6 +292,10 @@ module.exports = {
                                     path: "/Python/语法/类/内置方法"
                                 }
                             ]
+                        },
+                        {
+                            title: "异常",
+                            path: "/Python/语法/异常"
                         }
                     ]
                 },

@@ -300,15 +300,15 @@ module.exports = {
                     ]
                 },
                 {
-                    title: "模块与包",
+                    title: "模块",
                     children: [
                         {
-                            title: "模块与包",
-                            path: "/Python/模块与包/模块与包"
+                            title: "模块",
+                            path: "/Python/模块/模块"
                         },
                         {
-                            title: "第三方库",
-                            path: "/Python/模块与包/第三方库"
+                            title: "库",
+                            path: "/Python/模块/库"
                         }
                     ]
                 },

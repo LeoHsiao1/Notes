@@ -132,8 +132,6 @@
   // 显示：java.util.regex.Matcher[pattern=He region=0,5 lastmatch=]
   println 'Hello' ==~ 'He.*'              // ==~ 运算符相当于 String.matches()
   // 显示：true
-  println !('Hello' ==~ 'He.*')           // 否定整个表达式
-  // 显示：false
   println 'Hello    World'.split('\\s+')  // 用正则表达式分割字符串，默认用连续的空字符分割
   // 显示：[Hello, World]
   ```
@@ -155,20 +153,24 @@
   // 显示：1
   println a[0..-1]      // 获取切片
   // 显示：[1, 2, Hello]
-  println a.join(', ')  // 将列表元素拼接成字符串
-  // 显示：1, 2, Hello
+  println a.contains(1) // 判断是否存在某个元素
+  // 显示：true
   println a.unique()    // 将列表元素去重之后返回
   // 显示：[1, 2, Hello]
+  println a.join(', ')  // 将列表元素拼接成字符串
+  // 显示：1, 2, Hello
+
   ```
 
 ### 字典
 
 - 例：
   ```groovy
-  def map = [a:1, b:'Hello', c:[1, 2]]  // 可省略关键字 def
+  map = [:]             // 这是创建一个空的字典
+  map = [a:1, b:'Hello', c:[1, 2]]
   println map
   // 显示：[a:1, b:Hello, c:[1, 2]]
-  println map['a']      // 通过索引取值
+  println map['a']      // 通过索引取值。如果该 key 不存在，则返回 null
   // 显示：1
   println map.a         // 通过属性取值
   // 显示：1
@@ -200,6 +202,11 @@
   } else {
       echo 'C'
   }
+  ```
+
+- 用 `!` 可以否定整个表达式：
+  ```groovy
+  if ( !(...) )
   ```
 
 - 所有表达式的值都可以转换成布尔值。如下：
@@ -239,22 +246,37 @@
 
 - 例：循环
   ```groovy
-  for(i = 0; i <= 3; i++) {
+  for( i = 0; i <= 3; i++) {
       println i
   }
   ```
 
 - 例：遍历数组
   ```groovy
-  for(i in [0, 1, 2, 3]) {
+  for( i in [0, 1, 2]) {
       println i
   }
   ```
+  也可调用数组的内置方法，进行遍历：
+  ```groovy
+  a = [0, 1, 2]
+  a.eachWithIndex { item, index ->
+      println "${index+1}, ${item}"
+  }
+  ```
+
 - 例：遍历字典
   ```groovy
   map = [a:1, b:'Hello']
   for ( i in map ) {
       println "${i.key}: ${i.value}"
+  }
+  ```
+  也可调用字典的内置方法，进行遍历：
+  ```groovy
+  map = [a:1, b:'Hello']
+  map.each { key, value ->
+      println "${key}: ${value}"
   }
   ```
 
@@ -314,16 +336,16 @@
 - 例：
   ```groovy
   class Test {
-  int x = 100
+      int x = 100
 
-  int get_value() {
-      return this.x
-  }
+      int get_value() {
+          return this.x
+      }
 
-  static void main(String[] args) {
-      Test t = new Test()
-      println t.get_value()
-  }
+      static void main(String[] args) {
+          Test t = new Test()
+          println t.get_value()
+      }
   }
   ```
 

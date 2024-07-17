@@ -2,54 +2,16 @@
 
 
 
+### xx()
 
-关于类
-## class type(object) -> className
-- 功能：返回对象的类型（即类名）。
+```py
+xx(obj)
+```
+- 功能：
 - 例：
->>> type(1)
-<class 'int'>
->>> type(int)        # 一般的类实际上是type类的实例
-<class 'type'>
->>> type(object)
-<class 'type'>
-## def isinstance(object, type) -> bool
-- 功能：判断一个对象是否是某个类的实例。
-- type参数可以是一个类名，或者一个包含多个类名的元组。
-- 例：
->>> isinstance(1.0, int)
-False
->>> isinstance(1.0, (int, float))
-True
-## def issubclass(cls, another_cls) -> bool
-- 功能：判断一个类是否是某个类的子类或同一个类。
-- another_cls参数可以是一个类名，或者一个包含多个类名的元组。
-- 例：
->>> class Test(int):
-...     pass
-...
->>> issubclass(Test, int)
-True
->>> issubclass(Test, Test)
-True
->>> issubclass(Test, (float, str))
-False
-## class super(type, object) -> superclass
-- 功能：获取一个对象的父类。
-- type是一个类名，object是该类或其子类的一个实例。例如，
-- 例：
->>> super(int, 1)            # 获取int类在实例1的MRO列表中的下一个父类
-<super: <class 'int'>, <int object>>
-- 下例是调用父类的构造方法：
->>> class Test(int):
-...     def __init__(self):
-...         super(Test, self).__init__()    # 在Python3中可将super(Test, self)简写为super()
-...
->>> Test()
-0
-##
-##
-##
+  ```py
+  ```
+
 
 关于类的成员
 ## 反射：根据类的成员的名称字符串，获得它的引用。
@@ -96,9 +58,8 @@ this is fun2
 - 例：
 >>> delattr(str(), "encode")
 AttributeError: 'str' object attribute 'encode' is read-only
-##
-##
-##
+
+
 
 关于迭代
 ## class range(stop: int) -> iterable

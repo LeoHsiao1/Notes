@@ -380,7 +380,7 @@ str.replace(old: str, new: str, count=-1) -> str
 ### str.split()
 
 ```py
-str.split(sep=None, maxsplit=-1) -> list`
+str.split(sep=None, maxsplit=-1) -> list
 ```
 - 功能：以 sep 作为分隔符，将 str 最多分割 maxsplit 次。分割得到多个 str ，将它们组成一个 list 对象，然后返回。
   - sep 默认值为 None ，会以所有空白字符 `\t\n\r\x0b\x0c` 作为分隔符。

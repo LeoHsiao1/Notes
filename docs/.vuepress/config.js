@@ -280,35 +280,39 @@ module.exports = {
                         },
                         {
                             title: "类",
-                            path: "/Python/语法/类/类",
-                            collapsable: false,
-                            children: [
-                                {
-                                    title: "内置变量",
-                                    path: "/Python/语法/类/内置变量"
-                                },
-                                {
-                                    title: "内置变量",
-                                    path: "/Python/语法/类/内置方法"
-                                }
-                            ]
+                            path: "/Python/语法/类"
                         },
                         {
                             title: "异常",
                             path: "/Python/语法/异常"
+                        },
+                        {
+                            title: "模块",
+                            path: "/Python/语法/模块/模块",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "库",
+                                    path: "/Python/语法/模块/库"
+                                }
+                            ]
                         }
                     ]
                 },
                 {
-                    title: "模块",
+                    title: "内置功能",
                     children: [
                         {
-                            title: "模块",
-                            path: "/Python/模块/模块"
+                            title: "内置变量",
+                            path: "/Python/内置功能/内置变量"
                         },
                         {
-                            title: "库",
-                            path: "/Python/模块/库"
+                            title: "内置函数",
+                            path: "/Python/内置功能/内置函数"
+                        },
+                        {
+                            title: "内置方法",
+                            path: "/Python/内置功能/内置方法"
                         }
                     ]
                 },

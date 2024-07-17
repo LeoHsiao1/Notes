@@ -2,51 +2,6 @@
 
 
 
-关于执行代码
-## def exec(src, globals=..., locals=...) -> None
-- 功能：执行一段代码。
-- 例：
->>> exec("1+2")
->>> exec("a=0")
->>> a
-0
-- 执行时可以访问外部变量：
->>> a = 1
->>> exec("print(a)")                        # 默认使用当前作用域的可用变量
-1
->>> exec("print(a)", {"a":2})                # 可以给定变量
-2
->>> exec("print(a)", globals(), locals())    # 传入当前的全局变量、局部变量
-1
-## def eval(src, globals=..., locals=...) -> object
-- 功能：执行一段代码，返回其结果。
-- 例：
->>> eval("1+2")
-3
->>> eval("int")                    # 返回值是某个对象的引用，不是单纯的字符串
-<class 'int'>
->>> eval("print('hello')")        # 返回值可以来自stdout
-hello
->>> eval("a = 1")                    # 不能执行赋值语句
-    a = 1
-      ^
-SyntaxError: invalid syntax
->>> eval("print(1);print(2)")        # 只能执行一条语句，返回一个结果
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-  File "<string>", line 1
-    print(1);print(2)
-            ^
-SyntaxError: invalid syntax
-## def compile(src, filename, mode) -> code
-- 功能：将字符串编译成code对象，可以被exec()或eval()执行。
-- 例：
->>> code = compile("print(1+2)", '<string>', "eval")
->>> eval(code)
-3
-##
-##
-##
 
 关于类
 ## class type(object) -> className

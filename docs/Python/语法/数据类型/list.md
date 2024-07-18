@@ -119,7 +119,7 @@ list(iterable=()) -> list
   ```py
   >>> iterable = iter(range(6))
   >>> iterables = [iterable] * 4
-  >>> [i for i in zip(*iterables)]  # 这里每次获取 4 个元素。如果 iterables 中任一对象为空，则会停止迭代，可能遗漏一些元素，没有获取
+  >>> [i for i in zip(*iterables)]  # 这里每次获取 4 个元素。如果 iterables 中任一对象为空，则会停止迭代。因此可能遗漏一些元素，没有迭代
   [(0, 1, 2, 3)]
   ```
 

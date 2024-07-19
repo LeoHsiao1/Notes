@@ -369,8 +369,8 @@ module.exports = {
                             path: "/Python/数学运算/random"
                         },
                         {
-                            title: "import decimal",
-                            path: "/Python/数学运算/decimal"
+                            title: "浮点数",
+                            path: "/Python/数学运算/浮点数"
                         },
                         {
                             title: "import math",
@@ -415,16 +415,15 @@ module.exports = {
                             path: "/Python/网络通信/Email"
                         },
                         {
-                            title: "import http",
-                            path: "/Python/网络通信/http"
-                        },
-                        {
-                            title: "import urllib",
-                            path: "/Python/网络通信/urllib"
-                        },
-                        {
-                            title: "import requests",
-                            path: "/Python/网络通信/requests"
+                            title: "HTTP",
+                            path: "/Python/网络通信/http/http",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "import requests",
+                                    path: "/Python/网络通信/http/requests"
+                                }
+                            ]
                         }
                     ]
                 },

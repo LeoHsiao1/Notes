@@ -23,6 +23,15 @@ False
 True
 ```
 
+## 整数运算
+
+```py
+>>> math.ceil(x)    # 向上取整（ceiling），即大于等于 x 的最近整数
+4
+>>> math.floor(x)   # 向下取整（floor），即小于等于 x 的最近整数
+3
+```
+
 ## 幂运算
 
 ```py
@@ -90,13 +99,4 @@ ValueError: math domain error
 1.810991348900196
 >>> math.atanh(x)
 ValueError: math domain error
-```
-
-## 其它
-
-```py
->>> math.ceil(x)    # 向上取整（ceiling），即大于等于 x 的最近整数
-4
->>> math.floor(x)   # 向下取整（floor），即小于等于 x 的最近整数
-3
 ```

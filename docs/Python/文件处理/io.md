@@ -1,6 +1,6 @@
 # import io
 
-：Python 的标准库，提供了进行 IO 操作的功能，也可用于创建缓存区。
+：Python 的标准库，用于进行 IO 操作，也可用于创建缓存区。
 - [官方文档](https://docs.python.org/3/library/io.html)
 
 ## IO 对象
@@ -35,7 +35,7 @@
   'Wor'
   >>> s.close()
   ```
-- 操作完 IO 对象之后，应该调用 close() 方法关闭它，或者通过 with 关键字创建 IO 对象：
+- 操作完 IO 对象之后，应该调用 close() 方法关闭它。或者通过 with 关键字创建 IO 对象，会自动关闭它：
   ```py
   with io.StringIO() as s:
       s.write('Hello')

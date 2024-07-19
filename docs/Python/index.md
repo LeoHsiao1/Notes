@@ -34,7 +34,7 @@
     - [正则匹配](文本处理/字符串匹配/正则匹配.md)
 - 数学运算
   - [import random](数学运算/random.md)
-  - [import decimal](数学运算/decimal.md)
+  - [浮点数](数学运算/浮点数.md)
   - [import math](数学运算/math.md)
   - [import numpy](数学运算/numpy.md)
 - 图像处理
@@ -45,9 +45,8 @@
   - [import pyecharts](图像处理/pyecharts.md)
 - 网络通信
   - [Email](网络通信/Email.md)
-  - [import http](网络通信/http.md)
-  - [import urllib](网络通信/urllib.md)
-  - [import requests](网络通信/requests.md)
+  - [HTTP](网络通信/http/http.md)
+    - [import requests](网络通信/http/requests.md)
 - Django
   - [import django](Django/Django.md)
   - [部署](Django/部署.md)

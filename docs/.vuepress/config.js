@@ -324,10 +324,6 @@ module.exports = {
                             path: "/Python/文件处理/文件对象"
                         },
                         {
-                            title: "import io",
-                            path: "/Python/文件处理/io"
-                        },
-                        {
                             title: "import logging",
                             path: "/Python/文件处理/logging"
                         }

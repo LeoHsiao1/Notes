@@ -549,6 +549,14 @@ str.format(*args, **kwargs) -> str
   'C'
   ```
 
+- 除了使用 `str.format()` 方法，也可以使用内置函数 `format(value, format_spec='')` ，不过只能格式化一个值。
+  ```py
+  >>> format(12, 'b')
+  '1100'
+  >>> format(12, '#b')
+  '0b1100'
+  ```
+
 ### str.center()
 
 ```py

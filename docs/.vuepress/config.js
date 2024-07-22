@@ -317,21 +317,12 @@ module.exports = {
                     ]
                 },
                 {
-                    title: "文件处理",
-                    children: [
-                        {
-                            title: "文件对象",
-                            path: "/Python/文件处理/文件对象"
-                        },
-                        {
-                            title: "import logging",
-                            path: "/Python/文件处理/logging"
-                        }
-                    ]
-                },
-                {
                     title: "文本处理",
                     children: [
+                        {
+                            title: "文件读写",
+                            path: "/Python/文本处理/文件读写"
+                        },
                         {
                             title: "字节编码",
                             path: "/Python/文本处理/字节编码"

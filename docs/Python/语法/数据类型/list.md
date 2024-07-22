@@ -88,41 +88,6 @@ list(iterable=()) -> list
     [1, 2]
     ```
 
-- 可以使用多个 for 语句，遍历多个 iterable 对象：
-  ```py
-  >>> [x+str(y) for x in 'ABC' for y in range(3)]
-  ['A0', 'A1', 'A2', 'B0', 'B1', 'B2', 'C0', 'C1', 'C2']
-  ```
-  这并不是并行遍历，而是像多维数组一样逐层遍历，相当于：
-  ```py
-  a = []
-  for x in 'ABC':
-      for y in range(3):
-          list_item = x+str(y)
-          a.append(list_item)
-  ```
-
-- 如果想并行遍历多个 iterable 对象，同时取出每个对象中的第 n 项元素，则可采用以下方式：
-  ```py
-  >>> iterables = 'ABC', range(3)
-  >>> [i for i in zip(*iterables)]
-  [('A', 0), ('B', 1), ('C', 2)]
-  ```
-
-- 如果只遍历一个 iterable 对象，但每次希望获取多个元素，则可采用以下方式：
-  ```py
-  >>> iterable = iter(range(6))   # 创建一个迭代器
-  >>> iterables = [iterable] * 2  # 将迭代器拷贝多份，这样并行遍历时，会累加迭代进度
-  >>> [i for i in zip(*iterables)]
-  [(0, 1), (2, 3), (4, 5)]
-  ```
-  ```py
-  >>> iterable = iter(range(6))
-  >>> iterables = [iterable] * 4
-  >>> [i for i in zip(*iterables)]  # 这里每次获取 4 个元素。如果 iterables 中任一对象为空，则会停止迭代。因此可能遗漏一些元素，没有迭代
-  [(0, 1, 2, 3)]
-  ```
-
 ## 查
 
 ### list.copy()

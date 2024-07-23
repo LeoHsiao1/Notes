@@ -332,14 +332,6 @@ module.exports = {
                             path: "/Python/文本处理/字符编码"
                         },
                         {
-                            title: "序列化",
-                            path: "/Python/文本处理/序列化"
-                        },
-                        {
-                            title: "文本模板",
-                            path: "/Python/文本处理/文本模板"
-                        },
-                        {
                             title: "字符串匹配",
                             path: "/Python/文本处理/字符串匹配/字符串匹配",
                             collapsable: false,
@@ -347,6 +339,29 @@ module.exports = {
                                 {
                                     title: "正则匹配",
                                     path: "/Python/文本处理/字符串匹配/正则匹配"
+                                }
+                            ]
+                        },
+                        {
+                            title: "序列化",
+                            path: "/Python/文本处理/序列化/序列化",
+                            collapsable: false,
+                            children: [
+                                {
+                                    title: "关于二进制",
+                                    path: "/Python/文本处理/序列化/关于二进制"
+                                },
+                                {
+                                    title: "关于键值对",
+                                    path: "/Python/文本处理/序列化/关于键值对"
+                                },
+                                {
+                                    title: "关于表格",
+                                    path: "/Python/文本处理/序列化/关于表格"
+                                },
+                                {
+                                    title: "关于模板",
+                                    path: "/Python/文本处理/序列化/关于模板"
                                 }
                             ]
                         }

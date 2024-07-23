@@ -336,6 +336,10 @@ module.exports = {
                             path: "/Python/文本处理/序列化"
                         },
                         {
+                            title: "文本模板",
+                            path: "/Python/文本处理/文本模板"
+                        },
+                        {
                             title: "字符串匹配",
                             path: "/Python/文本处理/字符串匹配/字符串匹配",
                             collapsable: false,

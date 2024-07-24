@@ -1222,10 +1222,10 @@
         # - --web.telemetry-path=/metrics
         # - --log.level=error
         - --mongodb.uri=mongodb://127.0.0.1:27017/admin
-        - --mongodb.collstats-colls=db1.col1,db1.col2   # 监控指定集合的状态，可以只指定库名
-        - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引的状态
+        - --mongodb.collstats-colls=db1.col1,db1.col2   # 监控指定集合的状态。如果只指定 db 名称，则会监控其中所有集合。如果不指定该参数，则会监控所有 db
+        - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引的状态。如果不指定该参数，则会监控所有索引
         - --collect-all                                 # 启用全部监控指标，包括 dbstats、collstats、indexstats、replicasetstatus 等
-        - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 的数据库的其它集合
+        - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 指定 db 中的所有集合
       restart: unless-stopped
       ports:
         - 9216:9216

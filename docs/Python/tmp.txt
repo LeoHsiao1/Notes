@@ -991,30 +991,6 @@ pyinstaller  D:\1\1.py     # 打包成一个文件夹，包含一堆运行库
 ##
 
 其它模块
-## import functools
-## functools：Python的标准库，提供了一些功能函数、装饰器。
-##
-## class partial(func, *args, **keywords)
-- 功能：给函数传入一些参数，装饰成一个新函数。又称为偏函数。
-- 例：
->>> import functools
->>> def fun1(a, b, c=0, d=0):
-...     print(a, b, c, d)
-...
->>> fun1_new = functools.partial(fun1, 1, 2, c=3)
->>> fun1_new
-functools.partial(<function fun1 at 0x7f58aa51aa60>, 1, 2, c=3)
->>> fun1_new()
-1 2 3 0
->>> fun1_new('c')            # 此时传入的位置参数会被赋值给参数c
-TypeError: fun1() got multiple values for argument 'c'
->>> fun1_new(c='c')        # 以关键字的形式传入参数，就不会报错重复赋值
-1 2 c 0
-##
-##
-##
-
-
 
 
 

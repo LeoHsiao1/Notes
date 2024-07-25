@@ -1216,16 +1216,26 @@
   services:
     mongodb_exporter:
       container_name: mongodb_exporter
-      image: bitnami/mongodb-exporter:0.37.0
+      image: bitnami/mongodb-exporter:0.40.0
       command:
         # - --web.listen-address=:9216
         # - --web.telemetry-path=/metrics
         # - --log.level=error
         - --mongodb.uri=mongodb://127.0.0.1:27017/admin
-        - --mongodb.collstats-colls=db1.col1,db1.col2   # 监控指定集合的状态。如果只指定 db 名称，则会监控其中所有集合。如果不指定该参数，则会监控所有 db
-        - --mongodb.indexstats-colls=db1.col1,db1.col2  # 监控指定索引的状态。如果不指定该参数，则会监控所有索引
-        - --collect-all                                 # 启用全部监控指标，包括 dbstats、collstats、indexstats、replicasetstatus 等
-        - --discovering-mode                            # 自动发现 collstats-colls、indexstats-colls 指定 db 中的所有集合
+
+        # 如果以下三个参数都不配置，则不会监控任何集合的状态
+        # 如果配置了 --discovering-mode ，但没有配置 --mongodb.collstats-colls 和 --mongodb.indexstats-colls ，则会监控所有 db 中的所有集合
+        - --discovering-mode                            # 自动发现 db 中的所有集合
+        - --mongodb.collstats-colls=db1.col1,db1.col2   # 只监控哪些集合。如果只指定 db 名称，则会监控其中所有集合
+        - --mongodb.indexstats-colls=db1.col1,db1.col2  # 只监控哪些索引
+
+        # 采集哪些类型的监控指标
+        # - --collect-all
+        - --collector.diagnosticdata
+        - --collector.dbstats
+        - --collector.dbstatsfreestorage
+        - --collector.indexstats
+        - --collector.collstats
       restart: unless-stopped
       ports:
         - 9216:9216

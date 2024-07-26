@@ -1,6 +1,6 @@
 # import typing
 
-：Python 的标准库，定义了一些类型，常用于类型注释。
+：Python 的标准库，定义了一些类型，常用于类型注释、类型检查。
 - [官方文档](https://docs.python.org/3/library/typing.html)
 
 ## 类型
@@ -23,7 +23,8 @@ Tuple       # 元组。比如 Tuple[int, str] 表示取值为一个元组，包�
 Sequence    # 序列
 Set
 Dict
-Iterable    # 可迭代对象
+Iterator
+Iterable  
 ```
 
 ### Callable

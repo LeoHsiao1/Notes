@@ -4,7 +4,7 @@
 
 ## collections.abc
 
-- collections.abc 提供了一些抽象类（abstract class），可用于判断一个对象，是否属于某种抽象的数据类型。
+- collections.abc 提供了一些抽象类（abstract class），常用于类型注释、类型检查。
 
 - 如果一个对象实现了内置方法 `__next__()` ，则属于迭代器（Iterator）。
   ```py

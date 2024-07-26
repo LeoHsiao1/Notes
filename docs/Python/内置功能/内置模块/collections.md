@@ -4,19 +4,23 @@
 
 ## collections.abc
 
-- collections.abc 提供了一些抽象的基类，可用于判断一个对象，是否属于某种抽象的数据类型。
+- collections.abc 提供了一些抽象类（abstract class），可用于判断一个对象，是否属于某种抽象的数据类型。
+
+- 如果一个对象实现了内置方法 `__next__()` ，则属于迭代器（Iterator）。
+  ```py
+  >>> from collections.abc import Iterator
+  >>> isinstance('Hello', Iterator)
+  False
+  >>> isinstance(iter('Hello'), Iterator)
+  True
+  ```
 
 - 如果一个对象实现了内置方法 `__iter__()` ，则属于可迭代对象（Iterable）。
   ```py
   >>> from collections.abc import Iterable
   >>> isinstance('Hello', Iterable)
   True
-  ```
-
-- 如果一个对象实现了内置方法 `__iter__()` 和 `__next__()` ，则属于迭代器（Iterator）。
-  ```py
-  >>> from collections.abc import Iterator
-  >>> isinstance(iter('Hello'), Iterator)
+  >>> isinstance(iter('Hello'), Iterable)
   True
   ```
 

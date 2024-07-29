@@ -1,7 +1,7 @@
 # dict
 
 - C++、Java 等高级编程语言中，存在 Map 数据结构，用于存储一些 key、value ，并将每个 key 映射到一个 value 。
-- Python 中，目前只存在一种 Map 数据结构，称为 dict 。
+- Python 中，只有一种常用的 Map 数据结构，称为 dict 。
   - dict 汉语译为"字典"。
   - dict 类型的对象，用于存放一些 `key:value` 形式的元素。
     - 每个元素由一个 key 和一个 value 组成。

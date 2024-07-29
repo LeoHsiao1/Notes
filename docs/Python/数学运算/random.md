@@ -4,7 +4,7 @@
 - [官方文档](https://docs.python.org/3/library/random.html)
 - 基于 Mersenne Twister 算法生成为伪随机数。
   - 生成速度快，但是生成的随机数可能被预测，安全性低，因此不适合用作密码。
-  - 用户想生成密码时，建议使用 `os.urandom()` ，更安全。
+  - 用户想生成密码时，建议调用 `os.urandom(<int>)` 生成一段指定长度的 bytes ，取值随机，更安全。
 
 ## 用法
 

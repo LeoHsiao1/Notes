@@ -57,9 +57,12 @@ class Popen(args,           # 待执行的命令
   >>> p.returncode                        # 获取子进程的返回码，如果它尚未退出则返回 None
   0
   >>> p.kill()                            # 终止子进程（在 POSIX 系统上是发送 SIGKILL 信号）
-  >>> import signal
-  >>> p.send_signal(sig=signal.SIGTERM)   # 发送信号
   ```
+  - 也可通过其它方式，终止进程：
+    ```py
+    >>> import signal
+    >>> p.send_signal(sig=signal.SIGTERM) # 发送信号
+    ```
 
 - 可以不指定可执行文件的扩展名，Python 会自动根据当前的操作系统进行判断：
   ```py

@@ -20,35 +20,6 @@ xx(obj)
 [Python 的内置模块列表](https://docs.python.org/3.8/py-modindex.html)
 
 
-## import sys
-## sys：Python的标准库，提供了一些与Python解释器进行交互的方法。
-- 例：
->>> import sys
->>> sys.path                # 查看搜索模块时采用的所有路径，第一个''的作用是指向当前目录
-['','C:\\Users\\Will\\AppData\\Local\\Programs\\Python\\Python37-32\\Python37.zip', 'C:\\Users\\Will\\AppData\\Local\\Programs\\Python\\Python37-32\\DLLs', 'C:\\Users\\Will\\AppData\\Local\\Programs\\Python\\Python37-32\\lib', 'C:\\Users\\Will\\AppData\\Local\\Programs\\Python\\Python37-32', 'C:\\Users\\Will\\AppData\\Roaming\\Python\\Python37\\site-packages', 'C:\\Users\\Will\\AppData\\Local\\Programs\\Python\\Python37-32\\lib\\site-packages', 'C:\\Users\\Will\\AppData\\Local\\Programs\\Python\\Python37-32\\lib\\site-packages\\win32', 'C:\\Users\\Will\\AppData\\Local\\Programs\\Python\\Python37-32\\lib\\site-packages\\win32\\lib','C:\\Users\\Will\\AppData\\Local\\Programs\\Python\\Python37-32\\lib\\site-packages\\Pythonwin']
->>> sys.exit(1)            # 退出程序，并返回一个值
->>> sys.exit(1)
-- >>> sys.getsizeof('a')    # 返回对象占用的内存大小
-50
->>> sys.getsizeof('ab')
-51
-## 可以对stdin、stdout、stderr进行操作。
->>> sys.stdout
-<_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
->>> sys.stdout.write("hello")
-hello5
->>> sys.stdout.flush()
-- 下例是重定向stout、stderr：
->>> f = open("stdout.txt", "w")
->>> sys.stdout = f
->>> sys.stderr = f
->>> print("hello")
->>> raise RuntimeError("testing...")
-  - 如果想恢复原本的stdout、stderr，需要先备份：
->>> __stdout__, __stderr__ = sys.stdout, sys.stderr
-##
-##
-##
 
 ## import shutil
 ## shutil：Python的标准库，提供了一些拷贝文件的方法。
@@ -831,11 +802,6 @@ False
 1
 
 
-还可以直接获取命令行参数列表：
-import sys
-print(sys.argv)
-
-注意argv[0]是执行的文件名
 
 
 ## import pyinstaller

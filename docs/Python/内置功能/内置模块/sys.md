@@ -5,7 +5,7 @@
 
 ## 用法
 
-- 关于进程：
+- 关于当前进程：
   ```py
   >>> import sys
   >>> sys.argv        # 返回当前进程启动时，被传入的命令行参数。不过手动解析 sys.argv 比较麻烦，更推荐使用 argparse 标准库
@@ -25,7 +25,7 @@
   ['', '/usr/lib64/python36.zip', '/usr/lib64/python3.6', ...]
   >>> sys.modules     # 取值为 dict 类型，存储当前加载的所有 Python 模块
   {'sys': <module 'sys' (built-in)>, 'builtins': <module 'builtins' (built-in)>, ...}
-  >>> sys.platform    # 返回本机操作系统的类型，比如 linux、win32、darwin
+  >>> sys.platform    # 返回本机操作系统的类型，比如 linux、darwin、win32
   'linux'
   >>> sys.implementation  # 返回 Python 解释器的版本信息。不过这些信息不多，更推荐使用 platform 模块
   namespace(_multiarch='x86_64-linux-gnu', cache_tag='cpython-36', hexversion=50727152, name='cpython', version=sys.version_info(major=3, minor=6, micro=8, releaselevel='final', serial=0))

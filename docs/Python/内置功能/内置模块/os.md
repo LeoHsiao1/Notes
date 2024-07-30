@@ -5,17 +5,9 @@
 
 ## 关于进程
 
-- 获取系统信息：
-  ```py
-  >>> import os
-  >>> os.name     # 返回操作系统的接口类型。Windows 系统通常是 nt 类型，类 Unix 系统通常是 posix 类型
-  'nt'
-  >>> os.uname()  # 返回主机名称、系统版本（类 Unix 系统才支持该功能）
-  posix.uname_result(sysname='Linux', nodename='...', release='3.10.0-1160.71.1.el7.x86_64', version='...', machine='x86_64')
-  ```
-
 - 关于环境变量：
   ```py
+  >>> import os
   >>> os.environ  # 它存储了当前进程的所有终端环境变量，取值为 Map 类型
   environ({...})
   >>> os.environ.get('PATH')        # 返回名为 'PATH' 的环境变量

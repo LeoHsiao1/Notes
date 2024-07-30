@@ -141,26 +141,7 @@ psutil.net_connections(kind="tcp")
 ##
 ##
 
-## import platform
-## platform：Python的标准库，用于获取当前运行平台的信息。
-- 关于Python解释器。
->>> import platform
->>> platform.architecture()[0]    # 返回Python解释器的位数
-'64bit'
->>> platform.python_version()        # 返回Python解释器的版本
-'3.7.3'
-- 关于操作系统。
->>> platform.system()                # 返回操作系统的名字（在Linux系统上是返回'Linux')
-'Windows'
->>> platform.platform()            # 返回操作系统的具体名字
-'Windows-10-10.0.17763-SP0'
->>> platform.machine()            # 返回CPU的架构类型
-'AMD64'
->>> platform.processor()            # 返回CPU的具体名字
-'Intel64 Family 6 Model 158 Stepping 10, GenuineIntel'
->>> platform.node()                # 返回该主机在网络中的名字
-'Leo'
-- 以上函数的返回值大多为str类型。如果没有确定的答案，则返回空字符串。
+
 ##
 ##
 ##

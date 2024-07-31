@@ -4,9 +4,7 @@
 - [官方文档](https://docs.python.org/3/library/subprocess.html)
 - 与 `os.system()`、`os.popen()` 的用途相同，但功能更强。
 
-## Popen
-
-### 定义
+## Popen()
 
 ```py
 class Popen(args,           # 待执行的命令
@@ -19,25 +17,23 @@ class Popen(args,           # 待执行的命令
             env=None,       # 可以传入一个字典，作为子进程的所有环境变量。默认继承当前进程的所有环境变量
             ...)
 ```
-- `args` 是在系统终端执行的命令，不是 Python 语句。
+- `args` 是在系统终端（比如 shell 终端）执行的命令，不是 Python 语句。
   - 可以是一个字符串，表示可执行文件名或路径（可以是相对路径）。比如 `args='ls'` 。
   - 也可以是一个字符串列表，其中第一个字符串表示可执行文件，之后的字符串表示命令参数。比如 `args=['echo', 'Hello']` 。
-- `bufsize` 可用的取值如下：
+- `bufsize` 可选几种取值：
   ```sh
   0       # 无缓冲
   1       # 行缓冲
   +int    # 使用 int 大小的缓冲
   -int    # 使用系统默认大小的缓冲（默认是 8KB）
   ```
-- `stdin`、`stdout`、`stderr` 可用的取值如下：
+- `stdin`、`stdout`、`stderr` 可选几种取值：
   ```sh
   None                # 重定向到当前进程
   subprocess.PIPE     # 缓存到 Pipe 中
   subprocess.STDOUT   # 重定向到 stdout
   subprocess.DEVNULL  # 丢弃
   ```
-
-### 例
 
 - 常用属性和方法：
   ```py

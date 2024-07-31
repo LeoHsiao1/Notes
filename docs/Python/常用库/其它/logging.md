@@ -3,38 +3,6 @@
 ：Python 的标准库，用于记录日志。
 - [官方文档](https://docs.python.org/3/library/logging.html)
 
-## 用法示例
-
-```py
-import logging
-
-formatter = logging.Formatter(             # 创建一个格式器
-    fmt='{asctime} {levelname:5} {threadName:15}  {message}',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    style='{')
-
-handler = logging.FileHandler('error.log') # 创建一个 handler 实例
-handler.setLevel(logging.INFO)             # 设置日志级别，它会忽略该级别以下的日志
-handler.setFormatter(formatter)            # 设置该 handler 的格式器
-
-handler = logging.FileHandler(filename='error.log', mode='a', encoding='utf-8') # 创建一个 handler 实例
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(formatter)
-
-logger = logging.getLogger('logger1')      # 创建一个 logger 实例
-logger.setLevel(logging.ERROR)             # 设置日志级别，它会忽略该级别以下的日志
-logger.addHandler(handler)                 # 为该 logger 添加一个 handle
-logger.addHandler(console_handler)         # 一个 logger 可以添加多个 handle ，将日志同时传给它们
-
-logger.debug('测试日志')                    # 记录一条 DEBUG 级别的日志事件
-logger.error('测试日志')
-```
-
-上例中输出的日志为：
-```
-2020-01-12 12:27:14 ERROR MainThread      测试日志
-```
-
 ## 原理
 
 - 开发应用程序时，应该让程序自动记录日志（log），描述程序运行时发生的某些事件，便于用户了解程序的运行状态，排查问题。
@@ -61,34 +29,34 @@ logger.error('测试日志')
 
 ## 日志类
 
-logging 模块的主要功能分别由四个类实现：
-- Logger ：日志的记录器。
-- Formatter ：日志的格式器，负责根据日志事件的内容、当前时间等信息，按特定格式生成日志文本。
-- Filter ：日志的过滤器，可以定义比日志级别更复杂的过滤规则。
-- Handler ：日志的处理器，负责将日志输出到某个地方。
+- logging 模块的主要功能由四个类实现：
+  - Logger ：日志的记录器。
+  - Formatter ：日志的格式器，负责根据日志事件的内容、当前时间等信息，按特定格式生成日志文本。
+  - Filter ：日志的过滤器，可以定义比日志级别更复杂的过滤规则。
+  - Handler ：日志的处理器，负责将日志输出到某个地方。
 
-一个日志事件的处理过程：
-1. 程序调用 logger 实例，输入一个字符串，产生一个日志事件。
-2. logger 根据 filter 过滤日志，然后将日志传给 handle 。
-3. handle 根据 formatter 生成日志文件，然后输出。
+- 每个日志事件的处理流程：
+  1. 程序调用 logger 对象，输入一个字符串，产生一个日志事件。
+  2. logger 根据 filter 过滤日志，然后将日志传给 handle 。
+  3. handle 根据 formatter 生成日志文件，然后输出。
 
 ### logger
 
-- 调用 `logging.getLogger(name)` 会创建一个指定名称的 logger 实例。
+- 调用 `logging.getLogger(name)` 会创建一个指定名称的 logger 对象。
   - 如果指定的 name 与某个已存在的 logger 相同，则返回那个 logger 的引用（可以跨源文件引用）。
   - 如果不指定 name ，则默认返回名为 root 的 logger 。
     - root logger 默认采用 WARN 日志级别，将日志输出到 sys.stderr 。
   - 例：
     ```py
     >>> logger = logging.getLogger('logger1')
-    >>> logger             
+    >>> logger
     <Logger logger1 (ERROR)>
     >>> logger.name
     'logger1'
     >>> logger.level
     40
     ```
-  
+
 - name 可以声明多个层级，用 . 作为分隔符。
   - 例如 `logger1.logger2.logger3` ， 当最低层的 logger3 收到一条日志时，会将日志传递给更高层的 logger1.logger2 。
     - 传递时不受 filter 限制。
@@ -98,11 +66,11 @@ logging 模块的主要功能分别由四个类实现：
     ```py
     >>> logger.parent
     <RootLogger root (WARNING)>
-    >>> logger.getChild('logger2')    # 返回指定后缀的低层 logger 实例
+    >>> logger.getChild('logger2')    # 返回指定后缀的低层 logger 对象
     <Logger logger1.logger2 (ERROR)>
     ```
 
-- 用户可以调用 logger 实例的以下方法，记录不同级别的日志：
+- 用户可以调用 logger 对象的以下方法，记录不同级别的日志：
   ```py
   logger.debug(msg)
   logger.info(msg)
@@ -114,7 +82,7 @@ logging 模块的主要功能分别由四个类实现：
 
 - logger 的其它成员：
   ```py
-  >>> logger.filters 
+  >>> logger.filters
   []
   >>> logger.handlers
   [<FileHandler D:\1\error.log (INFO)>, <StreamHandler <stderr> (INFO)>]
@@ -152,6 +120,38 @@ logging 模块的主要功能分别由四个类实现：
   threadName  # 当前的线程名称
   ```
 
+## 用例
+
+```py
+import logging
+
+formatter = logging.Formatter(             # 创建一个格式器
+    fmt='{asctime} {levelname:5} {threadName:15}  {message}',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    style='{')
+
+handler = logging.FileHandler('error.log') # 创建一个 handler 对象
+handler.setLevel(logging.INFO)             # 设置日志级别，它会忽略该级别以下的日志
+handler.setFormatter(formatter)            # 设置该 handler 的格式器
+
+handler = logging.FileHandler(filename='error.log', mode='a', encoding='utf-8') # 创建一个 handler 对象
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+
+logger = logging.getLogger('logger1')      # 创建一个 logger 对象
+logger.setLevel(logging.ERROR)             # 设置日志级别，它会忽略该级别以下的日志
+logger.addHandler(handler)                 # 为该 logger 添加一个 handle
+logger.addHandler(console_handler)         # 一个 logger 可以添加多个 handle ，将日志同时传给它们
+
+logger.debug('测试日志')                    # 记录一条 DEBUG 级别的日志事件
+logger.error('测试日志')
+```
+
+上例中输出的日志为：
+```
+2020-01-12 12:27:14 ERROR MainThread      测试日志
+```
+
 ## dictConfig
 
 可以用字典形式声明 logging 模块的全局配置，如下：
@@ -163,7 +163,7 @@ from datetime import datetime
 
 LOGGING = {
     'version': 1,                               # 声明配置格式的版本
-    'disable_existing_loggers': False,          # 是否禁用已存在的其它 logger 实例
+    'disable_existing_loggers': False,          # 是否禁用已存在的其它 logger 对象
     'formatters': {
         'verbose': {                            # 定义一个日志的格式器
             'format': '{asctime} {levelname:5} {threadName:15}  {message}',

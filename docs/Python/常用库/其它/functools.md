@@ -1,6 +1,7 @@
 # import functools
 
 ：Python的标准库，提供了一些有用的函数、装饰器。
+- [官方文档](https://docs.python.org/3/library/functools.html)
 
 ## partial()
 

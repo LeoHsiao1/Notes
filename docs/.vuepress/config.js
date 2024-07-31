@@ -317,6 +317,27 @@ module.exports = {
                     ]
                 },
                 {
+                    title: "常用库",
+                    children: [
+                        {
+                            title: "关于类型",
+                            path: "/Python/常用库/关于类型"
+                        },
+                        {
+                            title: "关于主机",
+                            path: "/Python/常用库/关于主机"
+                        },
+                        {
+                            title: "关于文件",
+                            path: "/Python/常用库/关于文件"
+                        },
+                        {
+                            title: "关于调试",
+                            path: "/Python/常用库/关于调试"
+                        }
+                    ]
+                },
+                {
                     title: "文本处理",
                     children: [
                         {

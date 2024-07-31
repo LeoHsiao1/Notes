@@ -1,6 +1,6 @@
 # import shutil
 
-：Python 的标准库，用于管理磁盘文件。用法像 shell 终端的 cp、mv 等常用命令。
+：Python 的标准库，用于管理磁盘文件。用途像 Linux 的 cp、mv、rm 等命令。
 - [官方文档](https://docs.python.org/3/library/shutil.html)
 
 ## 用法

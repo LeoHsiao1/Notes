@@ -20,7 +20,7 @@
     >>> from http import server
     >>> server.test(HandlerClass=server.SimpleHTTPRequestHandler, bind='0.0.0.0', port='8000')
     Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-    
+
     # 该函数会阻塞当前线程
     ```
 
@@ -49,19 +49,19 @@
 - 例：使用 urllib 发出 HTTP 请求
   ```py
   >>> from urllib import request
-  >>> with request.urlopen("http://www.baidu.com") as f:  # 访问指定的 URL
-  ...     data = f.read()    # 获取 HTTP 响应报文的 body（bytes 类型）
-  ...     print(f.status)    # 获取状态码
+  >>> with request.urlopen('http://www.baidu.com') as r:  # 访问指定的 URL
+  ...     data = r.read()   # 获取 HTTP 响应报文的 body（bytes 类型）
+  ...     print(r.status)   # 获取状态码
   ...
   200
-  >>> data.decode()          # 将报文 body 从 bytes 类型解码成 str 类型
+  >>> data.decode()   # 将报文 body 从 bytes 类型解码成 str 类型
   '<!DOCTYPE html>\n<!--STATUS OK-->\n\r...
   ```
 
 - 使用 quote()、unquote() 可进行 URL 转码、反转码：
   ```py
   >>> from urllib import parse
-  >>> r = parse.quote("http://www.你好.com")  # 转换成 Query String 格式的字符串
+  >>> r = parse.quote('http://www.你好.com')  # 转换成 Query String 格式的字符串
   >>> r
   'http%3A//www.%E4%BD%A0%E5%A5%BD.com'
   >>> parse.unquote(r)                        # 还原
@@ -70,7 +70,7 @@
 
 - 使用 urlencode() 可以直接将 dict 类型转换成 Query String 格式的字符串：
   ```py
-  >>> dict1 = {"id": 1, "wd": "你好"}
+  >>> dict1 = {'id': 1, 'wd': '你好'}
   >>> parse.urlencode(dict1)
   'id=1&wd=%E4%BD%A0%E5%A5%BD'
   ```

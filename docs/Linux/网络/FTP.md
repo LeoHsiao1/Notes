@@ -187,6 +187,9 @@ pasv_max_port=22000
 # 被动模式下，服务器默认会检查客户端建立 TCP 数据连接时的目标 ip ，是否与 TCP 控制连接相同。可将该参数改为 YES ，即使目标 ip 不同，也允许连接
 # pasv_promiscuous=NO
 
+# 当客户端进行登录时，是否将其 IP 地址自动转换成主机名。建议禁止该功能，从而减少登录耗时
+reverse_lookup_enable=NO
+
 # 允许用户下载文件
 # download_enable=YES
 # 允许用户写文件

@@ -16,49 +16,6 @@ xx(obj)
 
 
 
-## import apscheduler
-## apscheduler：Python的第三方库，用于执行定时任务。
-- 安装：pip install apscheduler
-- 原理：当一个任务到达触发时刻时，就创建一个子线程来运行它。
-- 例：
-from apscheduler.schedulers.blocking import BlockingScheduler
-from datetime import datetime, timedelta
-
-schedule = BlockingScheduler()        # 创建一个任务表，它在运行时会阻塞当前线程
-
-# 添加一个定时任务，只会执行一次
-schedule.add_job(func=print, args=('hello',), kwargs=None, trigger='date', next_run_time=datetime(2012, 10, 1, 0, 0, 0))
-
-# 添加一个周期性任务，每隔一段时间就执行一次
-schedule.add_job(func=print, args=('hello',), trigger='interval', seconds=3)
-
-# 添加一个日常循环任务，在每天的12:30执行一次
-schedule.add_job(func=print, args=('hello',), trigger='cron', hour=12, minute=30)
-
-schedule.start()            # 启动任务表
-schedule.get_jobs()        # 返回一个列表，包含所有待执行的任务（不包含已经失效的任务）
-schedule.shutdown()        # 终止任务表
-
-- 关于add_job()方法。
-  - trigger参数表示任务的触发方式。
-  - 可传入max_instances参数，控制任务的运行实例数量。默认为1。
-  - 对于'interval'类型的任务，可使用以下参数控制任务的间隔时间：
-weeks(int)    间隔几周
-days(int)    间隔几天
-hours(int)    间隔几小时
-minutes(int)    间隔几分钟
-seconds(int)    间隔多少秒
-start_date(datetime or str)    开始日期
-end_date(datetime or str)    结束日期
-  - 对于'cron'类型的任务，可使用以下参数控制任务的启动时刻：
-year、month、week、day_of_week（取值为0~6）、hour、minute、second、start_date、end_date
-- 删除任务：
-job = scheduler.add_job(func=print, args=('hello',), trigger='interval', seconds=3)
-job.remove()
-##
-##
-##
-
 ## import celery
 ## celery：Python的第三方库，是一个分布式的任务队列，常用于执行大量的异步任务、定时任务。
 - 安装：pip install celery

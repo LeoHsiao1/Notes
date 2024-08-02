@@ -332,6 +332,10 @@ module.exports = {
                             path: "/Python/常用库/关于文件"
                         },
                         {
+                            title: "关于时间",
+                            path: "/Python/常用库/关于时间"
+                        },
+                        {
                             title: "关于调试",
                             path: "/Python/常用库/关于调试"
                         }

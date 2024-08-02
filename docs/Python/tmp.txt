@@ -15,64 +15,6 @@ xx(obj)
 
 
 
-
-## import celery
-## celery：Python的第三方库，是一个分布式的任务队列，常用于执行大量的异步任务、定时任务。
-- 安装：pip install celery
-- 原理：用户将任务保存到broker服务器。而worker会从broker服务器提取任务并执行，然后将执行结果保存到backend服务器。
-  - broker、backend服务器可以采用RabbitMQ，也可以采用Redis。
-  - celery采用分布式架构，可以有多个worker。
-- 任务有以下几种状态：
-  - PENDING    ：等待被执行。
-  - STARTED    ：已被启动，正在执行。
-  - RETRY    ：发生异常，正在重新执行。
-  - SUCCESS    ：执行成功。
-  - FAILURE    ：执行失败。
-## 例：
-- 创建异步任务：
->>> import celery
->>> cel = celery.Celery(backend='redis://127.0.0.1:6379/1', broker='redis://127.0.0.1:6379/2')
-    # 可以加上密码，例如'redis://:123456@127.0.0.1:6379/1'
-    # 此时只是创建客户端，等执行实际操作时才会连接到broker
->>> @cel.task            # 使用装饰器添加任务
-... def fun1(*args):        # 函数在第一次添加到celery时就固定了，不能再重新定义
-...     print(b)
-...
->>> fun1('hello')                    # 正常调用该函数
-hello
->>> task = fun1.delay('hello')    # 异步执行该函数（这会将任务发送到broker），用delay()方法传入参数
->>> task
-[2019-10-28 16:00:35,998: WARNING/MainProcess] <AsyncResult: c399d950-c16e-4912-8d19-624393abf1ef>
->>> result = celery.result.AsyncResult(id=task.id, app=cel)        # 获取任务的result
->>> result.status                    # 查看任务状态
-[2019-10-28 16:01:01,766: WARNING/MainProcess] 'PENDING'
-- 运行worker有两种方法。
-  - 在终端执行以下命令：
-celery worker
---app task1            # 指定任务所在的.py文件
---loglevel info
---logfile <file>        # 指定日志文件的保存路径（默认输出到stdout）
-  - 或者在python中执行主函数：
-cel.worker_main()
-- 创建定时任务：
->>> result = fun1.apply_async(args=('hello',), kwargs=None, countdown=10)
->>> result.status
-'PENDING'
-- 设置周期性任务：
-cel.conf.beat_schedule = {
-    'schedule1': {
-        'task': 'task1.fun1',                # 把task1.py文件中的fun1()函数添加成任务
-        'args': ('hello',)                    # 输入参数
-        'schedule': timedelta(seconds=2),    # 间隔时间
-    },
-    'schedule2': {
-        ...
-    },
-}
-##
-##
-##
-
 关于数据
 
 ##

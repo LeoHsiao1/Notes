@@ -19,57 +19,6 @@ xx(obj)
 
 
 
-关于运行
-## import argparse
-## argparse：Python的标准库，用于处理启动脚本时输入的命令行参数。
-- 输入命令行参数时通常有两种形式：
-D:\1\test_Python>python test.py --test            # 只输入选项名
-D:\1\test_Python>python test.py --test     1        # 输入选项名，并输入该选项的参数
-  - 选项名通常还可使用简写（如果程序支持这种操作的话），比如--test/-t。
-- 例如，在test.py中保存以下内容：
-import argparse
-parser = argparse.ArgumentParser(description="This script is use to test.")
-# description是该脚本的说明信息，使用选项--help/-h时会显示出来
-parser.add_argument("--test", "-t", help="just for test", action="store_true")
-    # help是该选项的说明信息，使用选项--help/-h时会显示出来
-    # action="store_true"表示当输入选项--test/-t时（不需要输入其值）会将args.test的值置为true
-parser.add_argument("--level", "-l", type=int, default=0)
-    # default=0表示该选项的默认值是0，而且限制输入值为int型
-
-, required=True)
-非必须参数才设置默认值
-
-args = parser.parse_args()        # 将启动脚本时输入的命令行参数解析并保存到args中
-print(args.test)                    # 获取选项test的值
-print(args.level)                # 获取选项level的值
-- 然后，在终端测试启动该脚本：
-  - argparse会自动生成选项--help/-h的相应内容，可直接使用：
-D:\1\test_Python>python test.py –h
-usage: test.py [-h] [--test] [--level LEVEL]
-This script is use to test.
-optional arguments:
-  -h, --help            show this help message and exit
-  --test, -t            just for test
-  --level LEVEL, -l LEVEL
-  - 这里使用选项--test/-t时不需要输入其值。
-D:\1\test_Python>python test.py --test
-True
-0
-  - 这里使用选项--level/-l时需要输入该选项的值，除非不使用该选项（会用默认值）。
-D:\1\test_Python>python test.py
-False
-0
-
-D:\1\test_Python>python test.py --level
-usage: test.py [-h] [--test] [--level LEVEL]
-test.py: error: argument --level/-l: expected one argument
-
-D:\1\test_Python>python test.py --level 1
-False
-1
-
-
-
 
 ## import pyinstaller
 ## pyinstaller：Python的第三方库，用于将Python脚本打包成可执行文件。

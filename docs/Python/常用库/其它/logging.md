@@ -120,7 +120,7 @@
   threadName  # 当前的线程名称
   ```
 
-## 用例
+## 示例
 
 ```py
 import logging

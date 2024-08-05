@@ -21,58 +21,12 @@ xx(obj)
 ##
 ##
 
-## import string
-## string：Python的标准库，提供了一些常用的字符集合。
-- 关于数字。
->>> import string
->>> string.digits                # 全部数字
-'0123456789'
->>> string.hexdigits            # 全部十六进制数字
-'0123456789abcdefABCDEF'
->>> string.octdigits            # 全部八进制数字
-'01234567'
-- 关于字母。
->>> string.ascii_letters        # 全部字母
-'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
->>> string.ascii_lowercase    # 全部小写字母
-'abcdefghijklmnopqrstuvwxyz'
->>> string.ascii_uppercase    # 全部大写字母
-'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-- 其它。
->>> string.whitespace            # 所有空白字符。
-' \t\n\r\x0b\x0c'
 
-# \x0b 表示让光标垂直换行，等价于 \v 。\x0c 表示让打印机换到下一张纸，等价于 '\f' 。
-# \b 表示让光标回退一格， \x20 表示一个空格。
-
->>> string.punctuation        # 所有标点符号
-'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
->>> string.printable            # 所有可打印字符（等于digits + letters + whitespace + punctuation）
-'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\x0b\x0c'
 ##
 ##
 ##
 
 
-
-关于调试
-
-## import traceback
-## traceback：Python的标准库，用于获取stack的信息。
-- 例：
-import traceback
-try:
-    ...
-except :                                # 使用时不需要实例化异常类
-    traceback.print_exc()                # 打印出完整的异常信息
-    list1 = traceback.format_exc()        # 保存异常信息
-##
-##
-##
-##
-##
-##
-##
 
 ## import inspect
 ## inspect：Python的标准库，提供了一些查询对象属性、查看堆栈的方法，常用于调试。

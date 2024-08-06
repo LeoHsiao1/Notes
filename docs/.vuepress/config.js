@@ -336,8 +336,12 @@ module.exports = {
                             path: "/Python/常用库/关于时间"
                         },
                         {
-                            title: "关于调试",
-                            path: "/Python/常用库/关于调试"
+                            title: "关于测试",
+                            path: "/Python/常用库/关于测试"
+                        },
+                        {
+                            title: "关于运行",
+                            path: "/Python/常用库/关于运行"
                         }
                     ]
                 },

@@ -12,62 +12,6 @@ xx(obj)
   ```py
 
 
-## import asyncio
-## 协程：即协同程序，又称为异步函数。是指系统在执行某个函数时中断，转去运行另一个函数。
-- 协程可以达到多线程并行工作的效果，但它依然是在一个线程内运行。
-- 优点：用户可以控制多个协程切换执行的顺序，不用担心线程安全，而且比切换线程的开销小很多。
-- 协程常用于实现异步IO。
-
-
-
-## Python中可以用关键字async创建协程，用关键字await实现异步工作。
-- Python的协程是通过生成器实现的。
-- await只能在async函数中使用。
-  - await只能调用实现了__await__()方法的对象。
-## asyncio：Python的标准库，提供了异步IO的方法。
->>> import asyncio
->>> async def fun1(n):
-...     for i in range(n):
-...         await asyncio.sleep(1)        # 表示这里要等待1秒的IO，让解释器去执行event_loop中的其它协程
-...         print(i)
-...
->>> loop = asyncio.get_event_loop()    # 创建事件循环
->>> loop.run_until_complete(fun1(5))    # 开始事件循环
-0
-1
-2
-3
-4
-- async函数不能直接使用，直接调用会返回一个coroutine对象。
->>> fun1(5)
-<coroutine object fun1 at 0x7f79d8348a40>
-- 可以在event_loop中加入多个任务。
->>> tasks = [asyncio.ensure_future(fun1(i)) for i in [2, 3, 3]]
->>> loop.run_until_complete(asyncio.wait(tasks))
-0
-0
-0
-1
-1
-1
-2
-2
-({<Task finished coro=<fun1() done, defined at <stdin>:1> result=None>, <Task finished coro=<fun1() done, defined at <stdin>:1> result=None>, <Task finished coro=<fun1() done, defined at <stdin>:1> result=None>}, set())
-##
-##
-##
-
-
-
-
-
-
-
-
-##
-##
-##
-
 
 GUI软件
 ## import tkinter

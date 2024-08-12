@@ -1,0 +1,124 @@
+# 插件
+
+## django-debug-toolbar
+
+：用于在浏览器上查看 Django 网页时，显示一个调试工具栏。
+- [官方文档](https://django-debug-toolbar.readthedocs.io/)
+- 安装：`pip install django-debug-toolbar`
+- 可以查看服务器配置、HTTP 报文、SQL 语句、静态文件等多种信息。
+- 需要开启 DEBUG 模式才能使用该插件，启用它时会明显增加 Django 的响应耗时。
+
+## import_export
+
+：提供了导入、导出数据表的功能。
+- [官方文档](https://django-import-export.readthedocs.io/)
+- 可以集成到 admin 页面，显示导入、导出的按钮
+- 支持导入、导出 csv、xlsx、json、yaml 等文件类型。
+- 导入时，可以先模拟导入，预览效果，比如增加哪些数据行、修改哪些数据行。确认之后，才保存到数据库。
+  - 默认根据 id 字段区分数据行。如果导入数据与已有数据的 id 相同，则会整行覆盖。
+
+<!-- ## simpleui -->
+
+
+## restframework
+
+：Python的第三方库，是Django的插件，用于更好地实现Django的Restful API。
+- 特点。
+  - 让Django通过Restful API与前端通信，返回JSON格式的数据。
+  - 提供了调试用的API网页，可以发出OPTIONS、GET、POST等请求。
+  - 提供了将Model序列化、反序列化的方法。
+## 用法示例。
+1.    安装模块：pip install djangorestframework
+2.    在settings.py的INSTALLED_APPS中加入'rest_framework'。
+3.    在app目录下的models.py文件中定义数据表：
+from django.db import models
+
+class Student(models.Model):
+    name = models.CharField(max_length=32, default='')
+    add_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+4.    在app目录下创建一个serializers.py文件，用于定义序列化器。
+from .models import Student
+from rest_framework import serializers
+
+class StudentSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Student
+        fields = ('name', 'add_date')
+)
+5.    在app目录下的views.py文件中加入如下内容，显示默认的API页面。
+from .models import Student
+from .serializers import StudentSerializer
+from rest_framework import viewsets
+
+class StudentViewSet(viewsets.ModelViewSet):
+    queryset = Student.objects.all().order_by('add_date')        # 重载ModelViewSet的两个属性
+    serializer_class = StudentSerializer
+6.    最后，在urls.py文件中注册URL路径，如下。
+from django.urls import path, include
+from rest_framework import routers
+from .views import StudentViewSet
+
+router = routers.DefaultRouter()
+router.register(r'students', StudentViewSet)    # 用routers路由器注册viewsets
+
+urlpatterns = [path(r'', include(router.urls))
+                ]
+7.    启动测试服务器之后，访问 127.0.0.1/students/ 即可看到对应的API页面。
+## 定义视图函数的示例。
+from rest_framework.decorators import api_view
+
+@api_view(['GET','POST'])
+def test(request, format=None):
+    if request.method == "GET":
+        ...
+    if request.method == "POST":
+        ...
+
+## 定义视图类的示例。
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import Student
+from .serializers import StudentSerializer
+
+class StudentView(APIView):
+    def get(self, request, format=None):
+        students = Student.objects.all()
+        # 创建序列化器，将多个Model实例序列化成JSON文本（默认many=False，用于序列化一个实例）
+        serializer = StudentSerializer(students, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = StudentSerializer(data=request.data)   # 创建序列化器，将JSON文本反序列化
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+    def put(self, request, pk, format=None):
+        student = get_object_or_404(Student, pk)
+        serializer = StudentSerializer(student, data=request.data)  # 反序列化并更新实例
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk, format=None):
+        student = get_object_or_404(Student, pk)
+        student.delete()
+        return Response(status=204)
+
+- 在urls.py文件中注册该URL：
+urlpatterns = [
+    path('students/', views.StudentView.as_view()),
+]
+- 可以基于Model示例或JSON文本创建serializer序列化器，然后可以用serializer.data导出JSON文本，也可以用serializer.save()保存到数据库中。
+- restframework修改了request对象，可通过request.data获取请求报文的body（dict类型）。
+- restframework提供了更灵活的Response()函数，直接请求127.0.0.1/students/会返回JSON格式的报文body，而请求127.0.0.1/students/?format=api时会返回HTML格式的报文body，用于显示API页面。
+## 可在settings.py中加入如下字典，用于保存restframework的配置：
+REST_FRAMEWORK = {
+    ...
+}

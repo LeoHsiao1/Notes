@@ -1,0 +1,9 @@
+tests
+## Django提供了django.test.TestCase类，通过继承它可以定义测试类，测试方法的名字要以test开头。如下：
+from django.test import TestCase
+
+class QuestionModelTests(TestCase):
+    def test_was_published(self):
+        self.assertIs(Question.was_published(), False)        # 断言某个值应该为False，否则报错
+- 也可以安装pytest-django模块，用pytest执行Django项目目录下的测试用例。
+- 原则上，应该对每个Model、视图都分别编写测试用例。

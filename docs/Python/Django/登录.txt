@@ -1,0 +1,48 @@
+
+## 登录模块。
+- 需要设计的页面：login页面、register页面、logout页面、home页面。
+  - 用户访问login页面即可登录。
+  - 在login页面有一个register页面的链接，用户可以点击它进行注册。
+  - 当用户登录之后，在一般页面上不再显示“登录”按钮，而是显示“注销”按钮。用户在注销之后会被重定向到logout页面，或者login页面。
+- 下例是一个处理登录请求的view函数：
+@require_http_methods(["POST"])
+def login(request):
+username = request.POST.get('username')        # 从POST表单中提取用户名、密码
+password = request.POST.get('password')
+
+if request.session.get("username"):            # 已登录的用户不能重复登录
+    return JsonResponse({'error': 'Already logged in.'}, status=403)
+
+user = models.User.objects.get(name=username)
+if check_hash(password, user.password):        # 根据哈希值判断密码是否正确
+    request.session["username"] = ...            # 将用户名保存到session中，表示该用户已登录
+    return redirect("/")                        # 登录成功之后，重定向到其它页面
+
+- 服务器每次收到用户的HTTP请求时，都要检查用户是否已登录。如果未登录，则重定向到login页面。
+if not request.session.get("username"):
+    return redirect("/login")
+- 除了密码，还可通过OAuth、SSH密钥、API密钥等方式进行认证。
+## 权限管理系统。
+
+RBAC  是基于角色的访问控制（Role-Based Access Control ）在 RBAC  中，权限与角色相关联，用户通过成为适当角色的成员而得到这些角色的权限。
+- 需要设计的数据表：User、Group、Permission
+  - User与Group、User与Permission、Group与Permission都是多对多关系。
+  - User的示例：
+class User(models.Model):
+    username = models.CharField('username', max_length=32, unique=True, validators=[username_validator])
+    password = models.CharField('password', max_length=32)        # 密码要按哈希值存储
+    email = models.EmailField('email address', blank=True)
+    date_joined = models.DateTimeField('date joined', auto_now_add=True)
+
+    is_superuser = models.BooleanField('is superuser', default=False)
+    groups = models.ManyToManyField(Group, verbose_name='groups', blank=True)
+    permissions = models.ManyToManyField(Permission, verbose_name='permissions', blank=True)
+
+    def has_permission(self, permission, obj=None):
+        if self.is_superuser:        # 如果用户是超级管理员，则拥有所有权限
+            return True
+        ...
+
+- 服务器每次收到用户的HTTP请求时，都要检查用户是否对该操作有权限。如下：
+if not self.has_permission(request, obj):
+    return JsonResponse({'error': '403 Forbidden'}, status=403)

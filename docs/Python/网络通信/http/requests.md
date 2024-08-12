@@ -1,9 +1,9 @@
 # import requests
 
-：Python 的第三方库，提供了访问 HTTP 服务器的功能。
+：Python 的第三方库，用作 HTTP 客户端，向服务器发送 HTTP 请求。
 - [官方文档](https://requests.readthedocs.io/en/master/)
 - 安装：`pip install requests`
-- 基于 Python 的标准库 urllib 实现，但是功能更多，更加便捷。
+- 它基于 Python 的标准库 urllib 进行工作，但功能更多，更加便捷。
 
 ## 关于请求报文
 
@@ -12,7 +12,7 @@
 - 发出 GET 请求：
   ```py
   >>> import requests
-  >>> r = requests.get("http://www.baidu.com")    # 目标 URL 的开头必须说明协议，比如 http://
+  >>> r = requests.get('http://www.baidu.com')    # 目标 URL 的开头必须说明协议，比如 http://
   >>> r                                           # 返回值是一个 Response 对象，通过它可以获取响应报文
   <Response [200]>
   ```
@@ -20,7 +20,7 @@
 - 在 URL 中添加 Query String ：
   ```py
   >>> params= {'key1': 'value1', 'key2': 'value2', 'key3': None}
-  >>> r = requests.get("http://httpbin.org/get", params=params)   # 添加的 params 会被转换成 Query String
+  >>> r = requests.get('http://httpbin.org/get', params=params)   # 添加的 params 会被转换成 Query String
   >>> r.url                                                       # 查看最终的 URL
   'http://httpbin.org/get?key1=value1&key2=value2'                # params 字典中 value 为 None 的 key 会被忽略
   ```
@@ -29,7 +29,7 @@
 
 - 发出 POST 请求：
   ```py
-  >>> url = "http://httpbin.org/post"
+  >>> url = 'http://httpbin.org/post'
   >>> r = requests.post(url, data='你好'.encode())
   ```
   - data 为 bytes 类型时，会直接作为 body 发送。
@@ -77,14 +77,14 @@
   ```py
   >>> s = requests.Session()             # 创建一个会话
   >>> s.auth = ('user', 'pass')          # 设置该会话的一些属性，作为 HTTP 通信的默认值
-  >>> r = s.get("http://www.baidu.com")
+  >>> r = s.get('http://www.baidu.com')
   >>> s.close()                          # 关闭会话
   ```
 
 - 可以通过 with 关键字创建一个会话，确保它会被关闭：
   ```py
   with requests.Session() as s:
-      r = s.get("http://www.baidu.com")
+      r = s.get('http://www.baidu.com')
       ...
   ```
 
@@ -108,8 +108,8 @@
 
 - requests 支持使用 HTTP 协议的代理服务器：
   ```py
-  proxies = {"http": "http://10.0.0.1:1080", "https": "http://10.0.0.1:1081"}
-  r = requests.get("http://example.org", proxies=proxies)
+  proxies = {'http': 'http://10.0.0.1:1080', 'https': 'http://10.0.0.1:1081'}
+  r = requests.get('http://example.org', proxies=proxies)
   ```
 
 - 也可使用 SOCKS 协议的代理服务器。需要先安装 `pip install requests[socks]` ，然后配置：
@@ -134,7 +134,7 @@ True
 {'Cache-Control': 'private, no-cache, no-store, proxy-revalidate, no-transform', 'Connection': 'keep-alive', 'Content-Encoding': 'gzip', 'Content-Type': 'text/html', ...}
 >>> r.encoding           # 查看响应报文的编码格式（ requests 会根据响应报文的 Content-Type 选择编码格式，如果没有则默认为 ISO-8859-1 ）
 'ISO-8859-1'
->>> r.encoding = "utf-8" # 可以修改 r.encoding 的值，指定一种编码格式
+>>> r.encoding = 'utf-8' # 可以修改 r.encoding 的值，指定一种编码格式
 >>> r.content            # 查看响应报文的 body（bytes 类型）
 b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
 >>> r.text               # 查看响应报文的 body（根据 r.encoding 自动解码成 str 类型）
@@ -195,33 +195,33 @@ b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
   ```
   需要将证书和私钥（必须是解密状态）的文件路径传给 cert 参数。
 
-## 例
+## 爬虫
 
-下例是爬取百度首页上的图片：
-```py
-import re
-import requests
+- 例：爬取网页上的图片
+  ```py
+  import re
+  import requests
 
+  url = 'https://www.baidu.com'
+  r = requests.get(url, timeout=1)
+  if r.status_code != 200:
+      raise RuntimeError
+  r.encoding = 'utf-8'
+  html = r.text
 
-url = 'https://www.baidu.com'
-r = requests.get(url, timeout=1)
-if r.status_code != 200:
-    raise RuntimeError
-r.encoding = 'utf-8'
-html = r.text
+  # 从 html 中提取图片的链接，例如字符串 src=//www.baidu.com/img/bd_logo1.png
+  result = re.findall(r'src=(.*\.png)', html)
+  print(result)
 
-# 从 html 中筛选 png 图片的链接
-# html 中的目标数据为 src=//www.baidu.com/img/bd_logo1.png
-result = re.findall(r'src=(.*\.png)', html)
-print(result)
+  # 合成图片的有效链接，下载到本地
+  for i in result:
+      url = 'https:' + i
+      filename = i.split('/')[-1]
+      r = requests.get(url, timeout=1)
+      if r.status_code != 200:
+          raise RuntimeError
+      with open(filename, 'wb') as f:
+          f.write(r.content)
+  ```
 
-# 合成图片的有效链接，下载到本地
-for i in result:
-    url = 'https:' + i
-    filename = i.split('/')[-1]
-    r = requests.get(url, timeout=1)
-    if r.status_code != 200:
-        raise RuntimeError
-    with open(filename, 'wb') as f:
-        f.write(r.content)
-```
+- requests 库的主要功能是发送 HTTP 请求，缺乏执行 JS 代码、反爬等功能。需要搭配其它工具，才能开发复杂的爬虫程序。

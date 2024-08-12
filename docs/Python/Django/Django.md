@@ -1,6 +1,6 @@
 # import django
 
-：Python 的第三方库，是一个大型的 Web 应用开发框架。
+：Python 的第三方库，是一个重量级的 Web 开发框架，用于开发复杂的 Web 应用。
 - [官方文档](https://docs.djangoproject.com/)
 - 读音为 `/ˈdʒæŋɡoʊ/`
 - 安装：`pip install django`

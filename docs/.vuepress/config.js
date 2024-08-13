@@ -501,6 +501,10 @@ module.exports = {
                         {
                             title: "import pyinstaller",
                             path: "/Python/软件开发/pyinstaller"
+                        },
+                        {
+                            title: "import tkinter",
+                            path: "/Python/软件开发/tkinter"
                         }
                     ]
                 },

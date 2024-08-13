@@ -324,6 +324,10 @@ module.exports = {
                             path: "/Python/常用库/关于类型"
                         },
                         {
+                            title: "关于函数",
+                            path: "/Python/常用库/关于函数"
+                        },
+                        {
                             title: "关于主机",
                             path: "/Python/常用库/关于主机"
                         },
@@ -338,10 +342,6 @@ module.exports = {
                         {
                             title: "关于测试",
                             path: "/Python/常用库/关于测试"
-                        },
-                        {
-                            title: "关于运行",
-                            path: "/Python/常用库/关于运行"
                         }
                     ]
                 },
@@ -484,6 +484,23 @@ module.exports = {
                                     path: "/Python/网络通信/http/flask"
                                 }
                             ]
+                        }
+                    ]
+                },
+                {
+                    title: "软件开发",
+                    children: [
+                        {
+                            title: "import argparse",
+                            path: "/Python/软件开发/argparse"
+                        },
+                        {
+                            title: "import logging",
+                            path: "/Python/软件开发/logging"
+                        },
+                        {
+                            title: "import pyinstaller",
+                            path: "/Python/软件开发/pyinstaller"
                         }
                     ]
                 },

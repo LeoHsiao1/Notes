@@ -24,11 +24,11 @@
   - [内置方法](内置功能/内置方法.md)
 - 常用库
   - [关于类型](常用库/关于类型.md)
+  - [关于函数](常用库/关于函数.md)
   - [关于主机](常用库/关于主机.md)
   - [关于文件](常用库/关于文件.md)
   - [关于时间](常用库/关于时间.md)
   - [关于测试](常用库/关于测试.md)
-  - [关于运行](常用库/关于运行.md)
 - 文本处理
   - [文件读写](文本处理/文件读写.md)
   - [字节编码](文本处理/字节编码.md)
@@ -61,6 +61,10 @@
   - [HTTP](网络通信/http/http.md)
     - [import requests](网络通信/http/requests.md)
     - [import flask](网络通信/http/flask.md)
+- 软件开发
+  - [import argparse](软件开发/argparse.md)
+  - [import logging](软件开发/logging.md)
+  - [import pyinstaller](软件开发/pyinstaller.md)
 - 混合开发
   - [简介](混合开发/简介.md)
   - [import ctypes](混合开发/ctypes.md)

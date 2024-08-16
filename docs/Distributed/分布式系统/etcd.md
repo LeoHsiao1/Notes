@@ -116,13 +116,12 @@
 
       # 关于键值对
       get <key>           # 读取键名等于 key 的键值对
-          --prefix        # 读取键名以 key 开头的键值对
-          --from-key      # 读取键名的二进制值大于等于 key 的键值对
-          --rev 0         # 查看距离现在第 n 个历史版本的 value 。如果不存在，则报错：required revision is a future revision
+          --prefix        # 读取键名以 key 开头的键值对          
           --limit 0       # 限制读取的键值对数量
           --count-only    # 只是返回键值对的数量
-          --keys-only
-          --print-value-only
+          --keys-only     # 只读取 key
+          --print-value-only  # 只读取 value
+          --rev 0         # 查看距离现在第 n 个历史版本的 value 。如果不存在，则报错：required revision is a future revision
       put <key> <value>   # 写入一个键值对
           --lease ''      # 绑定租约
           --prev-kv       # 返回前一个版本的 value

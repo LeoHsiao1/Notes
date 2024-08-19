@@ -70,6 +70,7 @@
 
   sys.exit(app.exec())          # 进入 app 的主循环，阻塞当前线程。一旦 app 结束，就终止当前 Python 进程
   ```
+  - QApplication 采用单例模式。可以重复调用 `QApplication.instance()` ，获取对 app 的引用。
 
 ## QtWidgets
 
@@ -258,11 +259,11 @@
 
 ### QLabel
 
-- ：用于显示一个标签，也就是一个只读的字符串。
+- ：标签，即一个只读的字符串。
 - 定义：
   ```py
   from PyQt6.QtWidgets import QLabel
-  QLabel(str, parent: QWidget = None)
+  QLabel(text: str, parent: QWidget = None)
   ```
 - 例：
   ```py
@@ -272,7 +273,7 @@
 
 ### QProgressBar
 
-- ：用于显示一个进度条。
+- ：进度条。
 - 定义：
   ```py
   from PyQt6.QtWidgets import QProgressBar
@@ -285,6 +286,70 @@
   # progressBar.value()     # 返回当前的进度值
   window.show()
   ```
+
+### QPushButton
+
+- ：普通按钮。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QPushButton
+  QPushButton(parent: QWidget = None)             # 只指定父控件，则显示一个空白按钮
+  QPushButton(text: str, parent: QWidget = None)  # 输入一个要显示的字符串，再指定父控件
+  QPushButton(icon: QIcon, text: str, parent: QWidget = None) # 输入图标、字符串、父控件
+  ```
+
+- 例：
+  ```py
+  >>> button = QPushButton('Quit', window)
+  >>> button.text()                     # 返回按钮中的字符串
+  'Quit'
+  >>> button.clicked.connect(app.quit)  # 将按钮按下的信号，绑定到一个槽函数
+  ```
+
+## QCheckBox
+
+- ：勾选按钮。有 "选中"、"未选中" 两种状态。
+
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QCheckBox
+  QCheckBox(parent: QWidget = None)
+  QCheckBox(text: str, parent: QWidget = None)
+  ```
+
+- 例：
+  ```py
+  def changeState(self, state):
+      if state == Qt.Checked:
+          print('on')
+      else:
+          print('off')
+
+  >>> checkBox = QCheckBox('debug', w)
+  >>> checkBox.stateChanged.connect(changeState)  # 将状态改变的信号，绑定到一个槽函数
+  >>> checkBox.isChecked()                        # 判断按钮是否被选中了
+  True
+  >>> checkBox.setChecked(True)                   # 设置状态
+  >>> checkBox.toggle()                           # 切换一次状态
+  ```
+
+- 例：让普通按钮，保持在 "按下" 或 "未按下" 状态，像一个勾选按钮
+  ```py
+  def changeState(pressed):
+      if pressed:
+          print('on')
+      else:
+          print('off')
+
+  button = QPushButton('debug', window)
+  button.setCheckable(True)                   # 使普通按钮可以保持状态
+  button.clicked[bool].connect(changeState)   # 绑定信号
+  button.toggle()                             # 切换一次状态
+  ```
+
+## QRadioButton
+
+- ：单选按钮。
 
 
 ## QtCore

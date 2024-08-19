@@ -5,7 +5,7 @@
 - 优点：
   - 兼容类 Unix 系统、Windows 系统，显示经典桌面风格的 GUI 界面。
 - 缺点：
-  - 功能简单，不如 PyQt5 。
+  - 功能简单，不如 PyQt 。
 
 ## 原理
 
@@ -18,7 +18,12 @@
 - 基于 tkinter 编写一个 Python 脚本之后，启动该 Python 脚本，就能显示 GUI 界面。
   - Python 脚本需要使用 Python 解释器才能启动，而用户电脑不一定安装了 Python 解释器。因此建议用 pyinstaller ，将 Python 脚本打包成可执行文件，鼠标双击就能启动。
 
-## 窗口
+- tkinter 可以显示 Window、Frame、Label、Button 等多种类型的 GUI 元素，它们统称为控件（widget）。
+  - 大部分 widget 之间存在父子关系。例如一个 Frame 可能包含多个 Label ，担任它们的父容器（parent）。
+  - 当父控件被销毁时，它的所有子控件都会被自动销毁。
+  - 一个 GUI 软件可能显示多个窗口。通常将第一个显示的窗口，称为主窗口。主窗口通常包含很多子控件。
+
+## 启动
 
 - 执行以下代码，即可显示一个 GUI 窗口：
   ```py
@@ -26,7 +31,6 @@
 
   root = tkinter.Tk()
       # 这是创建一个 tk 对象，代表一个 GUI 窗口
-      # 一个 GUI 软件可能显示多个窗口。通常将第一个显示的窗口，称为主窗口、根窗口
       # 如果在 Python 交互式终端执行 tkinter.Tk() ，则会立即显示窗口
       # 如果在 Python 脚本中执行 tkinter.Tk() ，则等到执行 root.mainloop() 才会显示窗口
 
@@ -56,9 +60,6 @@
 
 ## widget
 
-- 一个 GUI 窗口中，可以包含 Frame、Label、Button 等元素，它们统称为控件（widget）。
-  - 大部分 widget 之间存在父子关系。例如一个 Frame 可能包含多个 Label ，担任它们的父容器，记作 parent、master 。
-
 ### 布局
 
 - 如何显示一个 widget ？
@@ -71,6 +72,7 @@
     ```py
     root.destroy()
     ```
+  - 多个 widget 可以叠加显示在同一位置，最晚显示的那个 widget 会显示在最上层。
 
 - 每个 widget 都支持三种布局方法：
   - pack()
@@ -227,7 +229,7 @@
 
 ## event
 
-- 用户对 widget 进行的鼠标点击、键盘输入等操作，被 tkinter 统称为事件（event）。
+- 用户对 widget 进行的鼠标点击、键盘输入等操作，统称为事件（event）。
 
 - 每个 widget 可以用 `bind()` 方法，将某种 event 与某个函数绑定。如果当前 widget 发生这种 event ，则调用一次该函数，并将 event 对象输入给函数。
   - 例：

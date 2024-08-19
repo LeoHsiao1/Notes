@@ -1,7 +1,7 @@
 ## import PyQt
 
 ：Python 的第三方库，用于调用 Qt 的 API ，从而制作 GUI 软件。
-- [官方文档](https://www.riverbankcomputing.com/software/pyqt/)
+- [官方文档](https://doc.qt.io/qtforpython-6/index.html)
 - 安装：`pip install PyQt6` ，另外建议安装 Qt Designer 。
 
 ## Qt
@@ -79,7 +79,7 @@
   ```py
   from PyQt6.QtWidgets import QWidget
 
-  window = QWidget(parent= None)
+  window = QWidget(parent: QWidget= None)
       # 功能：创建一个窗口
       # 如果不指定 parent 父控件，则它会成为主窗口
   ```
@@ -132,6 +132,128 @@
   window.isMaximized() -> bool
       # 功能：判断窗口当前的显示，是否最小化
   ```
+
+### QMainWindow
+
+- ：用于创建一个主窗口。
+- 例：
+  ```py
+  from PyQt6.QtWidgets import QMainWindow
+  window = QMainWindow(parent: QWidget= None)
+  ```
+
+- QMainWindow 是 QWidget 的子类，增加了以下特性：
+  - 能显示菜单栏、工具栏、状态栏。
+  - 预先划分了布局，在工具栏与状态栏之间，存在一个 central 区域。调用以下方法，可将一个 widget 放在 central 区域：
+    ```py
+    window.setCentralWidget(QLabel('hello'))
+    ```
+
+- 菜单栏，是在窗口的顶部，显示一行动作按钮。
+  - 菜单栏（menu bar）可以包含一组菜单（menu），每个菜单可以包含一组动作按钮。
+  - 创建菜单栏：
+    ```py
+    menubar = window.menuBar()  # 第一次调用将创建菜单栏，重复调用将返回菜单栏这个单例对象的引用
+    ```
+  - 往菜单栏中，添加菜单：
+    ```py
+    menubar.addMenu(str)        -> QMenu  # 输入名字，添加一个菜单
+    menubar.addMenu(QIcon, str) -> QMenu  # 输入图标和名字，添加一个菜单
+    menubar.addMenu(QMenu)      -> QMenu  # 输入一个 QMenu 对象，添加一个菜单
+    ```
+  - 可以在一个菜单中，嵌套另一个菜单，称为子菜单。例：
+    ```py
+    file_menu = menubar.addMenu('File')
+    sub_menu = file_menu.addMenu('Open Recent File...')
+    ```
+  - 每个菜单，可以包含一组动作按钮：
+    ```py
+    QMenu.addAction(str)        -> QAction
+    QMenu.addAction(QIcon, str) -> QAction
+    QMenu.addAction(QAction)    -> QAction
+    ```
+
+- 例：添加一个动作按钮，会被鼠标单击触发
+  ```py
+  from PyQt6.QtGui import QAction
+
+  exit_action = QAction('Exit', window)
+  exit_action.setShortcut('Ctrl+Q')                 # 设置快捷键
+  exit_action.setStatusTip('Exit the application.') # 设置显示在状态栏的提示
+  exit_action.triggered.connect(app.quit)           # 绑定到一个槽函数。当用户点击该按钮时，就会调用槽函数
+
+  menubar = window.menuBar()
+  file_menu = menubar.addMenu('File') # 创建菜单
+  file_menu.addAction(exit_action)    # 添加动作
+  ```
+
+- 例：添加一个动作按钮，可以勾选
+  ```py
+  def debug_mode(state):    # 触发该槽函数时，会传入一个 state 参数，表示当前按钮是否被勾选
+      if state:
+          window.statusBar().showMessage('Debug mode is enabled')
+      else:
+          window.statusBar().showMessage('Debug mode is disabled')
+
+  debug_action = QAction('Debug Mode', window, checkable=True)
+  debug_action.setChecked(False)  # 设置按钮的初始状态，是否被勾选
+  debug_action.triggered.connect(debug_mode)
+
+  menubar = window.menuBar()
+  fileMenu = menubar.addMenu('File')
+  fileMenu.addAction(debug_action)
+  ```
+
+- 工具栏，是在菜单栏下方显示一行常用的动作按钮，方便用户点击。
+  ```py
+  window.exit_tool = window.addToolBar('Exit')
+  window.exit_tool.addAction(exit_action)
+  ```
+
+- 状态栏，是在窗口的底部显示一行文字，供用户查看。
+  - 例：
+    ```py
+    statuebar = window.statusBar()
+        # 功能：第一次调用将创建状态栏，重复调用将返回状态栏这个单例对象的引用
+
+    statuebar.showMessage(str, msecs: int = 0)
+        # 功能：在状态栏显示一行字符串
+        # msecs 参数表示显示多少毫秒。默认为 0 ，表示永久显示
+    ```
+
+- 上下文菜单，是单击鼠标右键会显示的一个菜单。
+  - 不止是 QMainWindow ， QWidget 窗口都支持显示上下文菜单。
+  - 定义上下文菜单，需要重载 contextMenuEvent() 方法。如下：
+    ```py
+    from PyQt6.QtWidgets import QApplication, QMainWindow, QMenu
+    import sys
+
+    app = QApplication(sys.argv)
+
+    class MyWindow(QMainWindow):
+        def contextMenuEvent(self, event):
+            # 创建一个菜单，以 self 作为父容器
+            contextMenu = QMenu(self)
+
+            # 在菜单中，添加动作按钮
+            open_action = contextMenu.addAction('open')
+            exit_action = contextMenu.addAction('exit')
+            exit_action.triggered.connect(app.exit)
+
+            # 在鼠标的当前坐标处，显示菜单
+            # 当用户点击任意动作按钮，就会关闭菜单的显示，并返回该按钮的引用
+            clicked_action = contextMenu.exec(self.mapToGlobal(event.pos()))
+
+            # 如果没有绑定槽函数，也可通过以下代码，检查用户点击了哪个按钮，然后执行相应的操作
+            # if clicked_action == open_action:
+            #     pass
+            # elif clicked_action == exit_action:
+            #     app.quit()
+
+    window = MyWindow()
+    window.show()
+    sys.exit(app.exec())
+    ```
 
 ### QIcon
 

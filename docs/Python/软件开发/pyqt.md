@@ -71,6 +71,68 @@
 
 ## widget
 
+### QWidget
+
+：用于创建普通窗口。
+- QWidget是所有窗口的基类，是 QMainWindow、QDialog、QFrame 的父类。
+- 例：
+  ```py
+  from PyQt6.QtWidgets import QWidget
+
+  window = QWidget(parent= None)
+      # 功能：创建一个窗口
+      # 如果不指定 parent 父控件，则它会成为主窗口
+  ```
+
+- 一般控件的通用方法：
+  ```py
+  window.show() -> None
+      # 功能：显示该控件
+      # 父控件在第一次显示时会初始化布局，将它的各个子控件也显示出来
+      # 如果在父控件初始化之后，才加入子控件，则需要主动调用子控件的 show() 方法
+
+  window.close() -> Bool
+    # 功能：关闭该控件的显示（但并没有销毁）
+    # 如果成功关闭显示，或者该控件本来就没有显示，则返回 True
+
+  window.setEnabled(bool) -> None
+      # 功能：设置控件是否可以被用户操作，即接收用户的鼠标点击、键盘输入
+      # 这会影响到它的所有子控件
+
+  window.setToolTip(str) -> None
+      # 功能：设置提示语
+      # 当鼠标悬停在一个控件上方时，会显示其提示语
+      # 可以设置字体，例如： QToolTip.setFont(QFont('微软雅黑', 12))
+      # 可以使用 HTML 语法，例如： window.setToolTip('This is a <font color="red">tip</font>.')
+
+  window.setFocus() -> None
+      # 功能：使控件得到屏幕焦点
+
+  window.isActiveWindow() -> bool
+      # 功能：判断控件是否获得了屏幕焦点
+
+  window.isVisible() -> bool
+      # 功能：判断控件是否正在显示
+      # 如果控件刚刚创建，尚未调用 show() ，则没有显示
+      # 如果控件调用了 close() ，则没有显示
+  ```
+
+- QWidget 的特有方法：
+  ```py
+  window.setWindowTitle(str) -> None
+      # 功能：设置窗口的标题
+
+  window.setWindowIcon(QIcon) -> None
+      # 功能：设置窗口的图标
+
+  window.isMaximized() -> bool
+      # 功能：判断窗口当前的显示，是否最大化
+      # 窗口最大化时，不一定是全屏。比如限制了窗口最大尺寸时，不能填满屏幕
+
+  window.isMaximized() -> bool
+      # 功能：判断窗口当前的显示，是否最小化
+  ```
+
 ### QIcon
 
 - ：用于显示图标。
@@ -92,6 +154,25 @@
   label.setPixmap(pixmap)   # 用图片填充 label ，作为背景图
   window.resize(pixmap.width(), pixmap.height())
   ```
+
+## 其它类
+
+### QTime
+
+- ：用于获取时间。
+- 例：
+  ```py
+  >>> from PyQt6.QtCore import QDateTime, QDate, QTime
+  >>> QDateTime.currentDateTime()
+  PyQt6.QtCore.QDateTime(2020, 1, 12, 10, 56, 40, 638)
+  >>> QDate.currentDate()
+  PyQt6.QtCore.QDate(2020, 1, 12)
+  >>> QTime.currentTime()
+  PyQt6.QtCore.QTime(10, 57, 14, 447)
+  >>> _.second()
+  14
+  ```
+- 也可使用 Python 自带的 time、datetime 模块，获取时间。
 
 ## 其它工具
 

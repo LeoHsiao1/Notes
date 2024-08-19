@@ -29,15 +29,17 @@
   - Qt GUI
   - Qt Widgets
     - ：提供一些传统风格的 widget 。
-  - Qt Quick
-    - ：提供一些动态的、可触摸的 widget ，更适合手机 app 。
   - Qt Creator
-    - ：一个 IDE ，只支持编写 C++ 代码。
+    - ：一个 IDE 。
   - Qt Designer
     - ：一个可视化编辑器。用户可以用鼠标拖动 widget ，来编辑 GUI 界面。
     - 编辑结果，通常保存为一个 .ui 文件，用于描述 GUI 界面，采用 XML 语法。比如显示哪些 widget 、每个 widget 的样式。
   - Qt QML
-    - Qt 最初只用 XML 文件来描述 GUI 界面，但它不方便人类阅读。于是发明了一种新的语言，称为 QML ，比 XML 更简洁、功能更多。
+    - Qt 最初采用 XML 语法来描述 GUI 界面，但它不方便人类阅读。于是 Qt 发明了一种新的语言，称为 QML ，比 XML 更简洁、功能更多。
+  - Qt Quick
+    - ：提供一些动态的、可触摸的 widget ，更适合手机 app 。
+    - 传统 Qt 开发模式，是用 Qt Designer 设计 GUI 界面，基于 Qt Widgets 显示各种 widget 。
+    - 新的 Qt 开发模式，是用 QML 设计 GUI 界面，基于 Qt Quick 显示各种 widget 。本文不介绍 Qt Quick 。
   - qmake
     - ：可以为 Windows、Linux 等不同平台，分别生成一个 Makefile 。
   - Qt Network
@@ -69,13 +71,13 @@
   sys.exit(app.exec())          # 进入 app 的主循环，阻塞当前线程。一旦 app 结束，就终止当前 Python 进程
   ```
 
-## widget
+## QtWidgets
 
 ### QWidget
 
 ：用于创建普通窗口。
 - QWidget是所有窗口的基类，是 QMainWindow、QDialog、QFrame 的父类。
-- 例：
+- 定义：
   ```py
   from PyQt6.QtWidgets import QWidget
 
@@ -135,19 +137,18 @@
 
 ### QMainWindow
 
-- ：用于创建一个主窗口。
-- 例：
-  ```py
-  from PyQt6.QtWidgets import QMainWindow
-  window = QMainWindow(parent: QWidget= None)
-  ```
-
 - QMainWindow 是 QWidget 的子类，增加了以下特性：
-  - 能显示菜单栏、工具栏、状态栏。
+  - 能显示菜单栏、工具栏、状态栏，因此更擅长担任主窗口。
   - 预先划分了布局，在工具栏与状态栏之间，存在一个 central 区域。调用以下方法，可将一个 widget 放在 central 区域：
     ```py
     window.setCentralWidget(QLabel('hello'))
     ```
+
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QMainWindow
+  window = QMainWindow(parent: QWidget= None)
+  ```
 
 - 菜单栏，是在窗口的顶部，显示一行动作按钮。
   - 菜单栏（menu bar）可以包含一组菜单（menu），每个菜单可以包含一组动作按钮。
@@ -255,6 +256,97 @@
     sys.exit(app.exec())
     ```
 
+### QLabel
+
+- ：用于显示一个标签，也就是一个只读的字符串。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QLabel
+  QLabel(str, parent: QWidget = None)
+  ```
+- 例：
+  ```py
+  label = QLabel('hello', window)   # 这里如果不指定 parent=window ，则该 label 不会显示在主窗口中
+  window.show()
+  ```
+
+### QProgressBar
+
+- ：用于显示一个进度条。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QProgressBar
+  QProgressBar(parent: QWidget = None)
+  ```
+- 例：
+  ```py
+  progressBar = QProgressBar(window)
+  progressBar.setValue(80)  # 设置进度值。取值范围为 0~100 。如果输入为 float 类型，则小数部分会被舍去
+  # progressBar.value()     # 返回当前的进度值
+  window.show()
+  ```
+
+
+## QtCore
+
+### QTime
+
+- ：用于获取时间。
+- 例：
+  ```py
+  >>> from PyQt6.QtCore import QDateTime, QDate, QTime
+  >>> QDateTime.currentDateTime()
+  PyQt6.QtCore.QDateTime(2020, 1, 12, 10, 56, 40, 638)
+  >>> QDate.currentDate()
+  PyQt6.QtCore.QDate(2020, 1, 12)
+  >>> QTime.currentTime()
+  PyQt6.QtCore.QTime(10, 57, 14, 447)
+  >>> _.second()
+  14
+  ```
+- 也可使用 Python 自带的 time、datetime 模块，获取时间。
+
+## QtGui
+
+### QPainter
+
+- 用于绘制 2D 图像。
+
+## QColor
+
+- ：用于选择颜色。
+- 定义：
+  ```py
+  from PyQt6.QtGui import QColor
+  QColor(int, int, int, alpha: int = 255)
+      # 前三个参数，代表 RGB 三个通道的值，取值范围为 0~255
+      # alpha 参数，表示不透明度。最大为 255 ，表示完全不透明
+  ```
+- 例：
+  ```py
+  >>> color = QColor(0, 0, 255) # 选择颜色
+  >>> color.name()              # 返回颜色的十六进制值
+  '#0000ff'
+  >>> color.isValid()           # 判断是否为有效的颜色值
+  True
+  ```
+- 可以单独读取 red、green、blue、alpha 通道，或者调用 `setxxx()` 进行赋值。
+  ```py
+  >>> color.alpha()
+  255
+  >>> color.setAlpha(0)
+  ```
+
+### QFont
+
+- ：用于选择字体。
+- 例：
+  ```py
+  >>> from PyQt6.QtGui import QFont
+  >>> QFont('微软雅黑', 12)        # 输入字体名称、字号
+  <PyQt5.QtGui.QFont object at 0x0000023BE20F9358>
+  ```
+
 ### QIcon
 
 - ：用于显示图标。
@@ -277,24 +369,36 @@
   window.resize(pixmap.width(), pixmap.height())
   ```
 
-## 其它类
+## 排版
 
-### QTime
 
-- ：用于获取时间。
-- 例：
-  ```py
-  >>> from PyQt6.QtCore import QDateTime, QDate, QTime
-  >>> QDateTime.currentDateTime()
-  PyQt6.QtCore.QDateTime(2020, 1, 12, 10, 56, 40, 638)
-  >>> QDate.currentDate()
-  PyQt6.QtCore.QDate(2020, 1, 12)
-  >>> QTime.currentTime()
-  PyQt6.QtCore.QTime(10, 57, 14, 447)
-  >>> _.second()
-  14
+### stylesheet
+
+- Qt 支持设置各个 widget 的样式（stylesheet），语法与 CSS 相似。
+  - [官方文档](https://doc.qt.io/qtforpython-6/overviews/stylesheet-examples.html)
+  - 例：
+    ```py
+    app.setStyleSheet("""
+    QWidget {
+        border: 2px solid green;
+        background-image: url(img/1.jpg);
+    }
+    """)
+    ```
+
+- 子控件默认会继承父控件的 stylesheet ，为了让它们的 stylesheet 不同，应该注明 stylesheet 的作用对象。如下：
+  ```css
+  QWidget{            /* 作用于 QWidget 类的所有对象 */
+      background-color: rgb(255, 255, 0);
+      color: rgb(255, 85, 0);
+  }
   ```
-- 也可使用 Python 自带的 time、datetime 模块，获取时间。
+  ```css
+  QWidget:window {    /* 作用于 QWidget 类，名为 window 的那个对象 */
+      background-color: rgb(255, 255, 0);
+      color: rgb(255, 85, 0);
+  }
+  ```
 
 ## 其它工具
 
@@ -303,7 +407,7 @@
 - Qt Designer 生成的 .ui 文件，如何在 Python 中使用？
   1. 先用 pyuic 工具，将 .ui 文件，转换成 .py 文件。如下：
       ```sh
-      pyuic5 mainwindow.ui -o mainwindow_ui.py
+      pyuic6 mainwindow.ui -o mainwindow_ui.py
       ```
   2. 然后在 mainwindow.py 中导入 mainwindow_ui.py ：
       ```py
@@ -341,11 +445,13 @@
       <pixmap resource="resource.qrc">:resource/img/1.jpg</pixmap>
       ```
 
-- Qt5 提供 pyrcc5 工具，用于将 .qrc 文件转换成 .py 文件。
-  - 例：
-    ```sh
-    pyrcc5 resource.qrc -o resource.py
-    ```
+- .qrc 文件，如何在 Python 中使用？
+  - 可用 pyrcc 工具，将 .qrc 文件转换成 .py 文件。这会将各个图片的二进制内容，存储在 .py 文件中。
+    - 例如使用 PyQt5 时，执行：
+      ```sh
+      pyrcc5 resource.qrc -o resource.py
+      ```
+    - 使用 PyQt6 时，该工具改名为 pyside6-rcc ，并且需要安装 `pip install PySide6` 。
   - 然后可在 Python 代码中，引用 .qrc 文件中的图片：
     ```py
     import resource
@@ -355,5 +461,3 @@
     ```sh
     pyinstaller mainwindow.py -w -i resource/img/1.jpg
     ```
-
-- PyQt6 删除了 pyrcc 程序。

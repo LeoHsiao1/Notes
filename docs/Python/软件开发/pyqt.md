@@ -306,7 +306,7 @@
   >>> button.clicked.connect(app.quit)  # 将按钮按下的信号，绑定到一个槽函数
   ```
 
-## QCheckBox
+### QCheckBox
 
 - ：勾选按钮。有 "选中"、"未选中" 两种状态。
 
@@ -347,10 +347,85 @@
   button.toggle()                             # 切换一次状态
   ```
 
-## QRadioButton
+### QRadioButton
 
 - ：单选按钮。
 
+### QLineEdit
+
+- ：单行输入框，用于输入一行字符串。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QLineEdit
+  QLineEdit(parent: QWidget = None)
+  QLineEdit(contents: str, parent: QWidget = None)  # 如果输入 contents 参数，则会作为输入框的初始内容
+  ```
+- 例：
+  ```py
+  >>> lineEdit = QLineEdit(window)
+  >>> lineEdit.show()
+  >>> lineEdit.setText('hello')   # 设置输入框的内容
+  >>> lineEdit.text()             # 获取输入框的内容
+  'hello'
+  >>> lineEdit.setMaxLength(10)   # 限制输入内容的最大长度，超过则无法输入
+  >>> lineEdit.setReadOnly(True)  # 使输入框变成只读。不能编辑，但可以选中、复制
+  >>> lineEdit.setEchoMode(QLineEdit.EchoMode.Password)  # 使输入框的内容，显示成 *
+  >>> lineEdit.clear()            # 清空输入框
+  ```
+- 常用信号：
+  ```py
+  lineEdit.textChanged.connect(...)       # 当输入框的内容改变时（不管是被用户改变，还是被程序改变）
+  lineEdit.editingFinished.connect(...)   # 当用户输入结束时（比如按下回车、焦点从输入框移动到其它控件）
+  lineEdit.selectionChanged.connect(...)  # 当用户的选中范围改变时（如果没有选中一段字符串，则不会触发）
+  ```
+
+## QTextEdit
+
+- ：多行输入框，用于输入多行字符串。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QTextEdit
+  QTextEdit(parent: QWidget = None)
+  QTextEdit(text: str, parent: QWidget = None)
+  ```
+- 例：
+  ```py
+  >>> textEdit = QTextEdit(window)
+  >>> textEdit.show()
+  >>> textEdit.setPlainText('hello')  # 在纯文本模式下，设置输入框的内容
+  >>> textEdit.toPlainText()          # 在纯文本模式下，获取输入框的内容
+  'hello'
+  >>> textEdit.clear()  # 清空输入框
+  ```
+  - 当输入的字符串行数过多时，会自动显示一个垂直滚动条。
+
+- QTextEdit 支持 HTML、Markdown 语法，从而显示富文本。
+  ```py
+  >>> textEdit.setHtml('<h1>标题一</h1>') # 在 HTML 模式下，设置输入框的内容
+  >>> textEdit.toHtml()                  # 在 HTML 模式下，获取输入框的内容
+  '<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN' ...'
+  >>> textEdit.toPlainText()             # 在屏幕上，会显示这段文本，而不是 HTML 源代码
+  '标题一'
+  ```
+  ```py
+  >>> textEdit.setMarkdown('# 标题一')  # 在 Markdown 模式下，设置输入框的内容
+  >>> textEdit.toMarkdown()            # 在 Markdown 模式下，获取输入框的内容
+  '# 标题一\n\n'
+  >>> textEdit.toPlainText()
+  '标题一'
+  ```
+
+- 关于插入文本：
+  ```py
+  textEdit.append('hello')                # 在末尾附加内容（这会新增一行）
+  ```
+  ```py
+  from PyQt6.QtGui import QTextCursor
+  textEdit.moveCursor(QTextCursor.Start)  # 将光标移动到最前面
+  textEdit.moveCursor(QTextCursor.End)    # 将光标移动到最后面
+  textEdit.insertPlainText('hello')       # 在光标处插入纯文本
+  textEdit.insertHtml('<h1>标题一</h1>')  # 在光标处插入 html
+  ```
 
 ## QtCore
 
@@ -409,7 +484,7 @@
   ```py
   >>> from PyQt6.QtGui import QFont
   >>> QFont('微软雅黑', 12)        # 输入字体名称、字号
-  <PyQt5.QtGui.QFont object at 0x0000023BE20F9358>
+  <PyQt6.QtGui.QFont object at 0x0000023BE20F9358>
   ```
 
 ### QIcon
@@ -435,7 +510,6 @@
   ```
 
 ## 排版
-
 
 ### stylesheet
 
@@ -486,9 +560,7 @@
               self.setupUi(self)
 
       app = QApplication(sys.argv)
-      window = QMainWindow()
-      ui = MyWindow()
-      ui.setupUi(window)
+      window = MyWindow()
       window.show()
       sys.exit(app.exec())
       ```

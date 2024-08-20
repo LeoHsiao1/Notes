@@ -469,6 +469,95 @@
   slider.sliderReleased.connect(print)  # 当用户松开鼠标左键时
   ```
 
+### 关于对话框
+
+- 对话框是一种小型窗口，通常只会短暂显示。
+- QDialog 是 QtWidget 的子类，是各种对话框窗口的父类。
+  - 创建一个对话框时，会立即显示它，不会等到调用 show() 方法。
+  - 显示一个对话框时，会阻塞当前线程，直到对话框被关闭。
+
+#### QInputDialog
+
+- 输入对话框，用于输入一行字符串。
+- 例：
+  ```py
+  >>> from PyQt6.QtWidgets import QInputDialog
+  >>> text, ret = QInputDialog.getText(window, 'Input Dialog', 'Please input your name:')
+  >>> text, ret
+  ('hello', True)
+  ```
+  - 显示该对话框时，用户可以点击 OK 或 Cancel 按钮，或右上角的 Close 按钮。
+    - 如果用户点击了 OK 按钮，则返回的 ret 为 True ，并且 text 存储了用户输入的文本。
+    - 如果用户点击了 Cancel 或 Close 按钮，则返回的 ret 为 False ，并且 text 总是为空。
+
+#### QColorDialog
+
+- 颜色对话框，用于选择一个颜色。
+- 例：
+  ```py
+  >>> from PyQt6.QtWidgets import QColorDialog
+  >>> color = QColorDialog.getColor(parent=window, title='Select Color')
+  >>> color
+  <PyQt6.QtGui.QColor object at 0x000001486A345E40>
+  >>> color.name()
+  '#ffffff'
+  ```
+
+#### QFileDialog
+
+- ：文件对话框，用于选择本机的文件或目录。
+- 选择一个文件：
+  ```py
+  >>> from PyQt6.QtWidgets import QFileDialog
+  >>> filename, _filter = QFileDialog.getOpenFileName(window, 'Open file', '.', '*.py') # 输入参数：父控件、对话框标题、打开的目录、筛选的文件名
+  >>> filename, _filter   # 返回的 filename 和 _filter ，都是 str 型
+  ('D:/test/1.py', '*.py')
+  ```
+- 选择多个文件：
+  ```py
+  >>> filenames, _filter = QFileDialog.getOpenFileNames(window, 'Open files', '.', '*.py')
+  >>> filenames, _filter  # 返回的 filenames 是一个字符串列表
+  (['D:/test/1.py', 'D:/test/2.py'], '*.py')
+  ```
+- 选择文件的保存路径：
+  ```py
+  >>> QFileDialog.getSaveFileName(window, 'Save to', '.', '*.py')
+  ('D:/test/3.py', '*.py')
+  ```
+- 选择一个目录：
+  ```py
+  >>> QFileDialog.getExistingDirectory(window, 'Open Directory', '.')
+  'D:/test'
+  ```
+
+#### QMessageBox
+
+- ：消息框，用于通知用户某个消息。
+
+- 提问框，有 Yes、No 两个选项。
+  ```py
+  >>> from PyQt6.QtWidgets import QMessageBox
+  >>> reply = QMessageBox.question(window, '标题', '内容')
+  >>> reply == QMessageBox.StandardButton.Yes
+  True
+  >>> reply == QMessageBox.StandardButton.No # 如果用户点击 No 或 Close 按钮，则返回值为 No
+  False
+  ```
+- 提示框，只有一个 OK 选项。
+  ```py
+  >>> reply = QMessageBox.information(window, '标题', '内容')
+  >>> reply == QMessageBox.StandardButton.Ok # 不管用户点击 Ok 还是 Close 按钮，返回值都为 Ok
+  True
+  ```
+- 警告框，只有一个 OK 选项。
+  ```py
+  >>> reply = QMessageBox.warning(w, '标题', '内容')
+  ```
+- 错误框：只有一个 OK 选项。
+  ```py
+  >>> reply = QMessageBox.critical(w, '标题', '内容')
+  ```
+
 ### 关于时间
 
 - 相关 widget ：

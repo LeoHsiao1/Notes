@@ -610,6 +610,36 @@
   ```
 - 也可使用 Python 自带的 time、datetime 模块，获取时间。
 
+### QTimer
+
+- ：定时器。用于在一段时间之后，执行特定操作。
+- 定义：
+  ```py
+  from PyQt6.QtCore import QTimer
+  QTimer(parent: QObject = None)
+  ```
+- 例：
+  ```py
+  >>> timer = QTimer(window)                  # 创建一个定时器
+  >>> timer.timeout.connect(lambda:print(1))  # 当定时器到达目标时刻时，会发出 timeout 信号。这里给 timeout 信号绑定一个槽函数
+  <PyQt6.QtCore.QMetaObject.Connection object at 0x000001F8DBC5DBA0>
+  >>> timer.setInterval(1000)                 # 设置定时器的间隔时间，即多久发出一次 timeout 信号，单位为毫秒
+  >>> timer.start()                           # 启动定时器。定时器会一直运行，循环发出 timeout 信号
+  1                                           # 可以用timer.start(1000)，在启动时设置间隔时间
+  1
+  1
+  >>> timer.stop()                            # 停止定时器。此后可以用 timer.start() 再次启动
+  ```
+  ```py
+  >>> timer.isActive()          # 定时器是否激活，正在运行
+  False
+  >>> timer.remainingTime()     # 距离 timeout 的剩余时间
+  -1
+  >>> timer.setSingleShot(True) # 采用 SingleShot 模式，让定时器发生一次 timeout 之后，自动 stop
+  >>> timer.isSingleShot()      # 判断是否采用 SingleShot 模式
+  True
+  ```
+
 ## QtGui
 
 ### QPainter

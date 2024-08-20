@@ -26,9 +26,11 @@
 
 - Qt5 的常用模块：
   - Qt Core
+    - ：提供 signal、slot 等核心的 Qt 功能。
   - Qt GUI
+    - ：提供 QPainter、QColor 等基础的 GUI 功能。
   - Qt Widgets
-    - ：提供一些传统风格的 widget 。
+    - ：提供 Window、Frame、Label、Button 等多种类型的 widget 。
   - Qt Creator
     - ：一个 IDE 。
   - Qt Designer
@@ -71,6 +73,7 @@
   sys.exit(app.exec())          # 进入 app 的主循环，阻塞当前线程。一旦 app 结束，就终止当前 Python 进程
   ```
   - QApplication 采用单例模式。可以重复调用 `QApplication.instance()` ，获取对 app 的引用。
+  - 同一 GUI 程序中，只能存在一个主窗口。如果重复调用 `QWidget()` 创建一个主窗口，则会自动销毁之前的主窗口。
 
 ## QtWidgets
 
@@ -271,86 +274,6 @@
   window.show()
   ```
 
-### QProgressBar
-
-- ：进度条。
-- 定义：
-  ```py
-  from PyQt6.QtWidgets import QProgressBar
-  QProgressBar(parent: QWidget = None)
-  ```
-- 例：
-  ```py
-  progressBar = QProgressBar(window)
-  progressBar.setValue(80)  # 设置进度值。取值范围为 0~100 。如果输入为 float 类型，则小数部分会被舍去
-  # progressBar.value()     # 返回当前的进度值
-  window.show()
-  ```
-
-### QPushButton
-
-- ：普通按钮。
-- 定义：
-  ```py
-  from PyQt6.QtWidgets import QPushButton
-  QPushButton(parent: QWidget = None)             # 只指定父控件，则显示一个空白按钮
-  QPushButton(text: str, parent: QWidget = None)  # 输入一个要显示的字符串，再指定父控件
-  QPushButton(icon: QIcon, text: str, parent: QWidget = None) # 输入图标、字符串、父控件
-  ```
-
-- 例：
-  ```py
-  >>> button = QPushButton('Quit', window)
-  >>> button.text()                     # 返回按钮中的字符串
-  'Quit'
-  >>> button.clicked.connect(app.quit)  # 将按钮按下的信号，绑定到一个槽函数
-  ```
-
-### QCheckBox
-
-- ：勾选按钮。有 "选中"、"未选中" 两种状态。
-
-- 定义：
-  ```py
-  from PyQt6.QtWidgets import QCheckBox
-  QCheckBox(parent: QWidget = None)
-  QCheckBox(text: str, parent: QWidget = None)
-  ```
-
-- 例：
-  ```py
-  def changeState(self, state):
-      if state == Qt.Checked:
-          print('on')
-      else:
-          print('off')
-
-  >>> checkBox = QCheckBox('debug', w)
-  >>> checkBox.stateChanged.connect(changeState)  # 将状态改变的信号，绑定到一个槽函数
-  >>> checkBox.isChecked()                        # 判断按钮是否被选中了
-  True
-  >>> checkBox.setChecked(True)                   # 设置状态
-  >>> checkBox.toggle()                           # 切换一次状态
-  ```
-
-- 例：让普通按钮，保持在 "按下" 或 "未按下" 状态，像一个勾选按钮
-  ```py
-  def changeState(pressed):
-      if pressed:
-          print('on')
-      else:
-          print('off')
-
-  button = QPushButton('debug', window)
-  button.setCheckable(True)                   # 使普通按钮可以保持状态
-  button.clicked[bool].connect(changeState)   # 绑定信号
-  button.toggle()                             # 切换一次状态
-  ```
-
-### QRadioButton
-
-- ：单选按钮。
-
 ### QLineEdit
 
 - ：单行输入框，用于输入一行字符串。
@@ -379,7 +302,7 @@
   lineEdit.selectionChanged.connect(...)  # 当用户的选中范围改变时（如果没有选中一段字符串，则不会触发）
   ```
 
-## QTextEdit
+### QTextEdit
 
 - ：多行输入框，用于输入多行字符串。
 - 定义：
@@ -427,6 +350,158 @@
   textEdit.insertHtml('<h1>标题一</h1>')  # 在光标处插入 html
   ```
 
+### 关于按钮
+
+#### QPushButton
+
+- ：普通按钮。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QPushButton
+  QPushButton(parent: QWidget = None)             # 只指定父控件，则显示一个空白按钮
+  QPushButton(text: str, parent: QWidget = None)  # 输入一个要显示的字符串，再指定父控件
+  QPushButton(icon: QIcon, text: str, parent: QWidget = None) # 输入图标、字符串、父控件
+  ```
+
+- 例：
+  ```py
+  >>> button = QPushButton('Quit', window)
+  >>> button.text()                     # 返回按钮中的字符串
+  'Quit'
+  >>> button.clicked.connect(app.quit)  # 将按钮按下的信号，绑定到一个槽函数
+  ```
+
+#### QCheckBox
+
+- ：勾选按钮。有 "选中"、"未选中" 两种状态。
+
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QCheckBox
+  QCheckBox(parent: QWidget = None)
+  QCheckBox(text: str, parent: QWidget = None)
+  ```
+
+- 例：
+  ```py
+  def changeState(self, state):
+      if state == Qt.Checked:
+          print('on')
+      else:
+          print('off')
+
+  >>> checkBox = QCheckBox('debug', w)
+  >>> checkBox.stateChanged.connect(changeState)  # 将状态改变的信号，绑定到一个槽函数
+  >>> checkBox.isChecked()                        # 判断按钮是否被选中了
+  True
+  >>> checkBox.setChecked(True)                   # 设置状态
+  >>> checkBox.toggle()                           # 切换一次状态
+  ```
+
+- 例：让普通按钮，保持在 "按下" 或 "未按下" 状态，像一个勾选按钮
+  ```py
+  def changeState(pressed):
+      if pressed:
+          print('on')
+      else:
+          print('off')
+
+  button = QPushButton('debug', window)
+  button.setCheckable(True)                   # 使普通按钮可以保持状态
+  button.clicked[bool].connect(changeState)   # 绑定信号
+  button.toggle()                             # 切换一次状态
+  ```
+
+#### QRadioButton
+
+- ：单选按钮。
+
+#### QComboBox
+
+- ：下拉列表。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QComboBox
+  QComboBox(parent: QWidget = None)
+  ```
+- 例：
+  ```py
+  >>> combo = QComboBox(window)
+  >>> combo.show()
+  >>> combo.addItem('one')  # 添加一个选项，并设置该选项显示的字符串
+  >>> combo.addItem('two')
+  >>> combo.currentText()   # 获取用户当前选中的选项
+  'one'
+  ```
+
+#### QScrollBar
+
+- ：滚动条，用于拖动显示区域。
+
+#### QSlider
+
+- ：滑块，用于调整某个数值。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QSlider
+  QSlider(parent: QWidget = None)
+  QSlider(orientation, parent: QWidget = None)
+  ```
+  - Qt.Orientation 表示显示方向，有两种取值：
+    ```py
+    from PyQt6.QtCore import Qt
+    Qt.Orientation.Horizontal # 垂直方向
+    Qt.Orientation.Vertical   # 水平方向
+    ```
+- 例：
+  ```py
+  >>> slider = QSlider(window)
+  >>> slider.show()
+  >>> slider.setValue(100)  # 设置数值，取值范围为 0~99 ，超出范围则自动赋值为最小值、最大值
+  >>> slider.value()        # 获取数值
+  99
+  ```
+
+- 常用信号：
+  ```py
+  slider.valueChanged.connect(print)    # 当滑块的数值改变时，会触发该信号，给槽函数传入当前的数值
+  slider.sliderPressed.connect(print)   # 当用户单击滑块时（只能使用鼠标左键，而鼠标右键无效）
+  slider.sliderReleased.connect(print)  # 当用户松开鼠标左键时
+  ```
+
+### 关于时间
+
+- 相关 widget ：
+  ```py
+  QDateEdit(parent: QWidget = None)
+      # 功能：显示单行输入框，只能输入年月日格式的字符串
+
+  QTimeEdit(parent: QWidget = None)
+      # 功能：显示单行输入框，只能输入 24 小时格式的字符串
+
+  QDateTimeEdit(parent: QWidget = None)
+      # 功能：显示单行输入框，只能输入年月日 + 24 小时格式的字符串
+
+  QCalendarWidget(parent: QWidget = None)
+      # 功能：显示一个日历，用户通过鼠标单击，即可选择一个日期
+  ```
+
+### QProgressBar
+
+- ：进度条。
+- 定义：
+  ```py
+  from PyQt6.QtWidgets import QProgressBar
+  QProgressBar(parent: QWidget = None)
+  ```
+- 例：
+  ```py
+  progressBar = QProgressBar(window)
+  progressBar.setValue(80)  # 设置进度值。取值范围为 0~100 。如果输入为 float 类型，则小数部分会被舍去
+  # progressBar.value()     # 返回当前的进度值
+  window.show()
+  ```
+
 ## QtCore
 
 ### QTime
@@ -452,7 +527,7 @@
 
 - 用于绘制 2D 图像。
 
-## QColor
+### QColor
 
 - ：用于选择颜色。
 - 定义：
@@ -518,26 +593,16 @@
   - 例：
     ```py
     app.setStyleSheet("""
-    QWidget {
-        border: 2px solid green;
+    QWidget{           # 作用于 QWidget 类的所有对象
         background-image: url(img/1.jpg);
+    }
+    QWidget:window {   # 作用于 QWidget 类，名为 window 的那个对象
+        background-color: rgb(255, 255, 0);
+        color: rgb(255, 85, 0);
     }
     """)
     ```
-
-- 子控件默认会继承父控件的 stylesheet ，为了让它们的 stylesheet 不同，应该注明 stylesheet 的作用对象。如下：
-  ```css
-  QWidget{            /* 作用于 QWidget 类的所有对象 */
-      background-color: rgb(255, 255, 0);
-      color: rgb(255, 85, 0);
-  }
-  ```
-  ```css
-  QWidget:window {    /* 作用于 QWidget 类，名为 window 的那个对象 */
-      background-color: rgb(255, 255, 0);
-      color: rgb(255, 85, 0);
-  }
-  ```
+  - 子控件默认会继承父控件的 stylesheet 。
 
 ## 其它工具
 

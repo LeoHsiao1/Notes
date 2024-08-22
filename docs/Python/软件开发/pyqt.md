@@ -55,10 +55,6 @@
   - 一个 GUI 软件可能显示多个窗口。通常将第一个显示的窗口，称为主窗口。主窗口通常包含很多子控件。
   - 除了 Qt 自带的各种 widget ，用户也可以自定义 widget ，做成插件，然后便可以显示在 Qt Designer 左侧的 widget 列表中，也可以通过 "promoted widget" 功能导入。
 
-- 用户对 widget 进行的鼠标点击、键盘输入等操作，统称为事件（event）。
-  - 每个 widget 发生一个 event 时，可以发送一个信号（signal），通知其它 widget 。
-  - 每个 widget 可以通过 slot 函数监听某个信号。一旦收到目标信号，则调用 slot 函数，从而执行特定的操作。这就是观察者模式。
-
 ## 启动
 
 - 执行以下代码，即可显示一个 GUI 窗口：
@@ -74,6 +70,187 @@
   ```
   - QApplication 采用单例模式。可以重复调用 `QApplication.instance()` ，获取对 app 的引用。
   - 同一 GUI 程序中，只能存在一个主窗口。如果重复调用 `QWidget()` 创建一个主窗口，则会自动销毁之前的主窗口。
+
+## QtCore
+
+### QEvent
+
+- 用户对 widget 进行的鼠标点击、键盘输入等操作，统称为事件（event）。
+  - Qt 自带了多种 widget ，每种 widget 支持多种 event 。
+
+- 可以重载 widget 对某种 event 的处理方法。使得每次发生该 event 时，就执行特定的操作。
+  - 例：
+    ```py
+    class MyWindow(QWidget):
+        def __init__(self):
+            super().__init__()
+        def keyPressEvent(self, event):
+            print(event.key())    # 获取用户按下的按键键值，比如按键 A 的键值是 65（不受大小写的影响）
+        def mouseMoveEvent(self, event):
+            print(event.pos())    # 获取鼠标的相对坐标（以窗口左上角为原点，当鼠标移到窗口外部时，坐标可能为负数）
+    ```
+    - 默认情况下，当用户按住鼠标并移动时，才会触发 mouseMoveEvent 事件。如果设置 `self.setMouseTracking(True)` ，则只要用户在窗口范围内移动鼠标，就会触发 mouseMoveEvent 事件。
+
+### Signal
+
+- widget 可以在发生某种 event 时，自动发送某种信号（signal），通知其它对象。
+  - 用户可以将 widget 的某种信号，绑定到一个函数，称为槽（slot）函数。使得每次发生该信号时，就调用一次槽函数，从而执行特定的操作。
+  - 每种 widget 自带了几种信号、槽函数。用户也可以增加新的信号、槽函数。
+- 例：
+  - QPushButton 按钮提供了几种信号：
+    ```py
+    >>> button = QPushButton('Close', window)
+    >>> button.show()
+    >>> button.pressed    # 用户在按钮区域，按下鼠标左键时，会触发该信号
+    <bound PYQT_SIGNAL pressed of QPushButton object at 0x000001DBBDEBCC10>
+    >>> button.clicked    # 用户在按钮区域，按下鼠标左键并释放时，会触发该信号
+    <bound PYQT_SIGNAL clicked of QPushButton object at 0x000001DBBDEBCC10>
+    ```
+  - 调用信号的 `connect()` 方法，可以将该信号，绑定到一个函数。
+    ```py
+    >>> button.clicked.connect(print)           # 绑定一个槽函数
+    <PyQt6.QtCore.QMetaObject.Connection object at 0x000001DBBDEF4C10>
+    >>> button.clicked.connect(window.close)    # 每种信号，可以绑定多个槽函数
+    <PyQt6.QtCore.QMetaObject.Connection object at 0x000001DBBDEF4C80>
+    ```
+  - 可以将一个信号，绑定到另一个信号。使得前一个信号发生时，自动触发后一个信号。
+    ```py
+    button2 = QPushButton('button2', window)
+    button2.clicked.connect(button2.clicked)
+    ```
+  - 调用信号的 `disconnect()` 方法，可以解绑一个槽函数。（如果不存在该绑定关系，则会抛出异常）
+    ```py
+    >>> button.clicked.disconnect(window.close)
+    ```
+  - 调用信号的 `emit()` 方法，可以主动触发一次该信号。
+    ```py
+    >>> button.clicked.emit()
+    ```
+- 例：自定义信号
+  ```py
+  >>> from PyQt6.QtCore import pyqtSignal
+  >>> class MyWindow(QWidget):
+  ...     _signal = pyqtSignal(str)   # 自定义一个信号，并声明其各个形参的数据类型
+  ...     def __init__(self):
+  ...         super().__init__()
+  ...         self._signal.connect(self._slot)
+  ...         self._signal.emit('testing')
+  ...     def _slot(self, string):
+  ...         print(string)
+  ...
+  >>> window = MyWindow()
+  testing
+  ```
+
+### QTime
+
+- ：用于获取时间。
+- 例：
+  ```py
+  >>> from PyQt6.QtCore import QDateTime, QDate, QTime
+  >>> QDateTime.currentDateTime()
+  PyQt6.QtCore.QDateTime(2020, 1, 12, 10, 56, 40, 638)
+  >>> QDate.currentDate()
+  PyQt6.QtCore.QDate(2020, 1, 12)
+  >>> QTime.currentTime()
+  PyQt6.QtCore.QTime(10, 57, 14, 447)
+  >>> _.second()
+  14
+  ```
+- 也可使用 Python 自带的 time、datetime 模块，获取时间。
+
+### QTimer
+
+- ：定时器。用于在一段时间之后，执行特定操作。
+- 定义：
+  ```py
+  from PyQt6.QtCore import QTimer
+  QTimer(parent: QObject = None)
+  ```
+- 例：
+  ```py
+  >>> timer = QTimer(window)                  # 创建一个定时器
+  >>> timer.timeout.connect(lambda:print(1))  # 当定时器到达目标时刻时，会发出 timeout 信号。这里给 timeout 信号绑定一个槽函数
+  <PyQt6.QtCore.QMetaObject.Connection object at 0x000001F8DBC5DBA0>
+  >>> timer.setInterval(1000)                 # 设置定时器的间隔时间，即多久发出一次 timeout 信号，单位为毫秒
+  >>> timer.start()                           # 启动定时器。定时器会一直运行，循环发出 timeout 信号
+  1                                           # 可以用timer.start(1000)，在启动时设置间隔时间
+  1
+  1
+  >>> timer.stop()                            # 停止定时器。此后可以用 timer.start() 再次启动
+  ```
+  ```py
+  >>> timer.isActive()          # 定时器是否激活，正在运行
+  False
+  >>> timer.remainingTime()     # 距离 timeout 的剩余时间
+  -1
+  >>> timer.setSingleShot(True) # 采用 SingleShot 模式，让定时器发生一次 timeout 之后，自动 stop
+  >>> timer.isSingleShot()      # 判断是否采用 SingleShot 模式
+  True
+  ```
+
+## QtGui
+
+### QPainter
+
+- 用于绘制 2D 图像。
+
+### QColor
+
+- ：用于选择颜色。
+- 定义：
+  ```py
+  from PyQt6.QtGui import QColor
+  QColor(int, int, int, alpha: int = 255)
+      # 前三个参数，代表 RGB 三个通道的值，取值范围为 0~255
+      # alpha 参数，表示不透明度。最大为 255 ，表示完全不透明
+  ```
+- 例：
+  ```py
+  >>> color = QColor(0, 0, 255) # 选择颜色
+  >>> color.name()              # 返回颜色的十六进制值
+  '#0000ff'
+  >>> color.isValid()           # 判断是否为有效的颜色值
+  True
+  ```
+- 可以单独读取 red、green、blue、alpha 通道，或者调用 `setxxx()` 进行赋值。
+  ```py
+  >>> color.alpha()
+  255
+  >>> color.setAlpha(0)
+  ```
+
+### QFont
+
+- ：用于选择字体。
+- 例：
+  ```py
+  >>> from PyQt6.QtGui import QFont
+  >>> QFont('微软雅黑', 12)        # 输入字体名称、字号
+  <PyQt6.QtGui.QFont object at 0x0000023BE20F9358>
+  ```
+
+### QIcon
+
+- ：用于显示图标。
+  ```py
+  from PyQt6.QtGui import QIcon
+  icon = QIcon(r'./1.jpg')
+  button = QPushButton('test', parent=window)
+  button.setIcon(icon)
+  ```
+
+### QPixmap
+
+- ：用于显示图片。
+- 例：
+  ```py
+  from PyQt6.QtGui import QPixmap
+  pixmap = QPixmap(r'./1.jpg')
+  label = QLabel(window)
+  label.setPixmap(pixmap)   # 用图片填充 label ，作为背景图
+  window.resize(pixmap.width(), pixmap.height())
+  ```
 
 ## QtWidgets
 
@@ -589,118 +766,6 @@
   progressBar.setValue(80)  # 设置进度值。取值范围为 0~100 。如果输入为 float 类型，则小数部分会被舍去
   # progressBar.value()     # 返回当前的进度值
   window.show()
-  ```
-
-## QtCore
-
-### QTime
-
-- ：用于获取时间。
-- 例：
-  ```py
-  >>> from PyQt6.QtCore import QDateTime, QDate, QTime
-  >>> QDateTime.currentDateTime()
-  PyQt6.QtCore.QDateTime(2020, 1, 12, 10, 56, 40, 638)
-  >>> QDate.currentDate()
-  PyQt6.QtCore.QDate(2020, 1, 12)
-  >>> QTime.currentTime()
-  PyQt6.QtCore.QTime(10, 57, 14, 447)
-  >>> _.second()
-  14
-  ```
-- 也可使用 Python 自带的 time、datetime 模块，获取时间。
-
-### QTimer
-
-- ：定时器。用于在一段时间之后，执行特定操作。
-- 定义：
-  ```py
-  from PyQt6.QtCore import QTimer
-  QTimer(parent: QObject = None)
-  ```
-- 例：
-  ```py
-  >>> timer = QTimer(window)                  # 创建一个定时器
-  >>> timer.timeout.connect(lambda:print(1))  # 当定时器到达目标时刻时，会发出 timeout 信号。这里给 timeout 信号绑定一个槽函数
-  <PyQt6.QtCore.QMetaObject.Connection object at 0x000001F8DBC5DBA0>
-  >>> timer.setInterval(1000)                 # 设置定时器的间隔时间，即多久发出一次 timeout 信号，单位为毫秒
-  >>> timer.start()                           # 启动定时器。定时器会一直运行，循环发出 timeout 信号
-  1                                           # 可以用timer.start(1000)，在启动时设置间隔时间
-  1
-  1
-  >>> timer.stop()                            # 停止定时器。此后可以用 timer.start() 再次启动
-  ```
-  ```py
-  >>> timer.isActive()          # 定时器是否激活，正在运行
-  False
-  >>> timer.remainingTime()     # 距离 timeout 的剩余时间
-  -1
-  >>> timer.setSingleShot(True) # 采用 SingleShot 模式，让定时器发生一次 timeout 之后，自动 stop
-  >>> timer.isSingleShot()      # 判断是否采用 SingleShot 模式
-  True
-  ```
-
-## QtGui
-
-### QPainter
-
-- 用于绘制 2D 图像。
-
-### QColor
-
-- ：用于选择颜色。
-- 定义：
-  ```py
-  from PyQt6.QtGui import QColor
-  QColor(int, int, int, alpha: int = 255)
-      # 前三个参数，代表 RGB 三个通道的值，取值范围为 0~255
-      # alpha 参数，表示不透明度。最大为 255 ，表示完全不透明
-  ```
-- 例：
-  ```py
-  >>> color = QColor(0, 0, 255) # 选择颜色
-  >>> color.name()              # 返回颜色的十六进制值
-  '#0000ff'
-  >>> color.isValid()           # 判断是否为有效的颜色值
-  True
-  ```
-- 可以单独读取 red、green、blue、alpha 通道，或者调用 `setxxx()` 进行赋值。
-  ```py
-  >>> color.alpha()
-  255
-  >>> color.setAlpha(0)
-  ```
-
-### QFont
-
-- ：用于选择字体。
-- 例：
-  ```py
-  >>> from PyQt6.QtGui import QFont
-  >>> QFont('微软雅黑', 12)        # 输入字体名称、字号
-  <PyQt6.QtGui.QFont object at 0x0000023BE20F9358>
-  ```
-
-### QIcon
-
-- ：用于显示图标。
-  ```py
-  from PyQt6.QtGui import QIcon
-  icon = QIcon(r'./1.jpg')
-  button = QPushButton('test', parent=window)
-  button.setIcon(icon)
-  ```
-
-### QPixmap
-
-- ：用于显示图片。
-- 例：
-  ```py
-  from PyQt6.QtGui import QPixmap
-  pixmap = QPixmap(r'./1.jpg')
-  label = QLabel(window)
-  label.setPixmap(pixmap)   # 用图片填充 label ，作为背景图
-  window.resize(pixmap.width(), pixmap.height())
   ```
 
 ## 排版

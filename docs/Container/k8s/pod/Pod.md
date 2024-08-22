@@ -49,6 +49,7 @@
     imagePullSecrets:                   # 拉取镜像时使用的账号密码，从指定名称的 k8s secret 对象中读取
       - name: my_harbor
     # restartPolicy: Always             # 重启策略
+    # schedulerName: default-scheduler  # 调度器的名称。默认采用 k8s 自带的 kube-scheduler ，用户也可以部署其它调度器
     # terminationGracePeriodSeconds: 30 # kubelet 主动终止 Pod 时的宽限期，默认为 30s
     # hostname: <string>                # 容器内的 hostname ，默认等于 pod name
     # hostIPC: false                    # 是否采用宿主机的 IPC namespace
@@ -284,7 +285,7 @@
   - ：多个 Pod 同时等待 kube-scheduler 调度时，会选出 priority 最高的 Pod 优先调度。如果该 Pod 调度成功或不可调度，才调度 priority 较低的 Pod 。
 - 抢占（Preemption）
   - ：当一个 Pod 缺乏可用资源来调度时，会自动驱逐某个节点上一些 priority 较低的 Pod （这会优雅地终止），腾出 CPU、内存等资源。
-  - 在抢占成功之前，如果出现另一个可调度节点，则停止抢占。
+  - 在抢占成功之前，如果出现另一个可用节点，则停止抢占。
   - 在抢占成功之前，如果出现另一个 priority 更高的 Pod ，则优先调度它。而当前 Pod 会重新调度。
 - PriorityClass
   - ：一种不受命名空间管理的 k8s 对象，用于配置 Pod priority 。

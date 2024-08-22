@@ -187,7 +187,7 @@
         - name: nginx
           image: nginx:latest
   ```
-- DaemonSet 默认会调度到每个节点，可通过 nodeSelector 等方式指定可调度节点。
+- DaemonSet 默认会调度到每个节点，用户可通过 nodeSelector 等方式指定节点。
 - DaemonSet 的更新部署策略（strategy）有两种：
   - `RollingUpdate`
     - ：滚动更新，这是默认策略。
@@ -355,7 +355,6 @@
           terminationMessagePolicy: File
         dnsPolicy: ClusterFirst
         restartPolicy: Never
-        schedulerName: default-scheduler
         terminationGracePeriodSeconds: 30
   status:
     active: 1         # 记录当前 Running 阶段的 Pod 数量

@@ -274,9 +274,13 @@
       # 父控件在第一次显示时会初始化布局，将它的各个子控件也显示出来
       # 如果在父控件初始化之后，才加入子控件，则需要主动调用子控件的 show() 方法
 
+  window.hide() -> Bool
+    # 功能：隐藏该控件的显示。但并没有销毁，还可以再次 show()
+
   window.close() -> Bool
-    # 功能：关闭该控件的显示（但并没有销毁）
-    # 如果成功关闭显示，或者该控件本来就没有显示，则返回 True
+    # 功能：关闭该控件。
+    # 如果成功关闭，或者该控件本来就没有显示，则返回 True
+    # close() 与 hide() 都会让控件不再显示。但 close() 还可能销毁控件的对象、数据
 
   window.setEnabled(bool) -> None
       # 功能：设置控件是否可以被用户操作，即接收用户的鼠标点击、键盘输入
@@ -318,12 +322,7 @@
 
 ### QMainWindow
 
-- QMainWindow 是 QWidget 的子类，增加了以下特性：
-  - 能显示菜单栏、工具栏、状态栏，因此更擅长担任主窗口。
-  - 预先划分了布局，在工具栏与状态栏之间，存在一个 central 区域。调用以下方法，可将一个 widget 放在 central 区域：
-    ```py
-    window.setCentralWidget(QLabel('hello'))
-    ```
+- QMainWindow 是 QWidget 的子类，增加了菜单栏、工具栏、状态栏，因此更擅长担任主窗口。
 
 - 定义：
   ```py
@@ -768,7 +767,7 @@
   window.show()
   ```
 
-## 布局
+## 样式
 
 ### 坐标
 
@@ -871,7 +870,94 @@
   window.setGeometry(0, 0, 400, 200)
   ```
 
-### stylesheet
+### Layout
+
+- 布局（Layout），是指考虑一个窗口中，包含哪些 widget ，以及它们的坐标、尺寸。
+- Qt 提供了一些布局方法，用于自动调整 widget 的坐标、尺寸。
+  ```py
+  QHBoxLayout   # 水平布局（Horizontal Layout），使多个控件在水平方向均匀排列
+  QVBoxLayout   # 垂直布局（Vertical Layout），使多个控件在垂直方向均匀排列
+  QGridLayout   # 网格布局，将显示空间分成多行多列，然后将控件放在某个格子内，或者占据多个格子
+  QFormLayout   # 表格布局
+
+  QFrame        # 框架，是一个透明的矩形框。通常给一个 QFrame 设置布局方法，然后容纳多个控件，方便统一管理
+  ```
+  - 自动布局通常比手动布局更好，因为可以在窗口放大、缩小时，按比例缩放各个 widget 。
+  - 一个布局，可以容纳多个 widget 。
+  - 一个布局，可以作为一个元素，嵌套放入另一个布局中。
+
+- 例：使用水平布局、垂直布局
+  ```py
+  from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout
+  import sys
+
+  app = QApplication(sys.argv)
+  window = QWidget()
+  window.show()
+
+  hbox = QHBoxLayout()    # 创建一个水平布局
+  hbox.addStretch(1)      # 添加一个伸展因子。它像一个透明的弹簧，会自动挤占空白空间。取值越大，弹力越大
+  hbox.addWidget(QPushButton('one')) # 添加一个控件。这些控件会按添加的先后顺序排列
+  hbox.addWidget(QPushButton('two'))
+  hbox.addStretch(1)      # 两侧各有一个 stretch ，就会将按钮挤到中间
+
+  window.setLayout(hbox)  # 让 window 采用 hbox 布局，此时会显示该布局的所有控件，此后不能更换 window 的布局
+
+  vbox = QVBoxLayout()    # 创建一个垂直布局
+  vbox.addStretch(1)
+  vbox.addWidget(QPushButton('three'))
+  hbox.addLayout(vbox)    # 添加一个嵌套的布局
+  ```
+  - QMainWindow 预先划分了布局，在工具栏与状态栏之间，存在一个 central 区域。因此不能调用 `setLayout()` 方法，只能调用 `setCentralWidget()` 方法，将一个控件放置到 central 区域。
+    ```py
+    window = QWidget()
+    window.setLayout(hbox)
+
+    main_window = QMainWindow()
+    main_window.setCentralWidget(window)
+    window.show()
+    ```
+  - 如果想从布局中删除一个控件，可以调用其 `close()` 方法。
+
+- 例：使用网格布局
+  ```py
+  from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout
+  import sys
+
+  app = QApplication(sys.argv)
+  window = QWidget()
+  window.show()
+
+  grid = QGridLayout()
+  window.setLayout(grid)
+  # grid.setSpacing(10) # 设置每个格子的间距。而每个格子的尺寸，取决于此处的控件的尺寸
+
+  grid.addWidget(QPushButton('one'), 0, 0)          # 添加一个控件，放在第 0 行、第 0 列
+  grid.addWidget(QPushButton('one'), 0, 1)
+  grid.addWidget(QPushButton('two'), 1, 1, 2, 2)    # 添加一个控件，占据从第 1 行、第 1 列，到第 2 行、第 2 列之间的格子
+  ```
+  - QGridLayout 会将显示空间分成多行多列。具体有多少行、多少列，取决于用户添加了多少个控件。
+  - QGridLayout 会自动添加 stretch ，使得其中的控件，位置居中。而 QFormLayout 会使得其中的控件，位置趋于左上角。
+
+- 例：使用网格布局，显示一个计算器
+  ```py
+  positions = [(i, j) for i in range(5) for j in range(4)]
+  keys = [
+      ['Clear', 'Back', '', 'Close'],
+      ['7', '8', '9', '/'],
+      ['4', '5', '6', '*'],
+      ['1', '2', '3', '-'],
+      ['0', '.', '=', '+'],
+  ]
+  for row_num,row in enumerate(keys):
+      for column_num,key in enumerate(row):
+          if key == '':
+              continue
+          button = QPushButton(key)
+          grid.addWidget(button, row_num, column_num)
+  ```
+
+### StyleSheet
 
 - Qt 支持设置各个 widget 的样式（stylesheet），语法与 CSS 相似。
   - [官方文档](https://doc.qt.io/qtforpython-6/overviews/stylesheet-examples.html)

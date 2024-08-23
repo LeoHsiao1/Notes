@@ -768,7 +768,108 @@
   window.show()
   ```
 
-## 排版
+## 布局
+
+### 坐标
+
+- 例：获取控件的坐标
+  ```py
+  >>> pos = window.pos()  # 返回控件的坐标
+  >>> pos                 # 取值为一个 QPoint 对象
+  PyQt6.QtCore.QPoint(10, 10)
+  >>> pos.x()   # 横坐标
+  10
+  >>> pos.y()   # 纵坐标
+  10
+  ```
+  - 主窗口的坐标，是其左上角，相对于屏幕左上角，的相对坐标。
+  - 普通控件的坐标，是其左上角，相对于父控件左上角，的相对坐标。
+  - 主窗口可能移动到屏幕的显示区域之外，普通控件可能移动到父控件的显示区域之外，因此坐标可能为负数。
+
+- 例：转换坐标系：
+  ```py
+  >>> window.mapToGlobal(QPoint(0, 0))    # 输入一个相对坐标（相当于当前控件），转换成全局坐标
+  PyQt6.QtCore.QPoint(10, 41)             # 全局坐标的原点，并不是 (0,0) 开始，因为计算机屏幕存在边框
+  >>> window.mapFromGlobal(QPoint(0, 0))  # 输入一个全局坐标，转换成相对坐标（相当于当前控件）
+  PyQt6.QtCore.QPoint(-10, -41)
+  ```
+
+- 例：移动控件到指定坐标
+  ```py
+  >>> window.move(10, 10) # 输入横坐标 x、纵坐标 y ，取值为 int 类型，单位为 pixel
+  ```
+  ```py
+  >>> from PyQt6.QtCore import QPoint
+  >>> window.move(QPoint(10, 10)) # 也可以输入一个 QPoint 对象
+  ```
+
+### 尺寸
+
+- 例：获取控件的尺寸
+  ```py
+  >>> size = window.size()
+  PyQt6.QtCore.QSize(200, 100)
+  >>> size
+  >>> size.width()
+  200
+  >>> size.height()
+  100
+  ```
+  - 对于窗口类型的控件，height 不是指整个窗口的高度，而是指标题栏下方区域的高度。
+
+- 例：修改控件的尺寸
+  ```py
+  >>> window.resize(400, 200) # 输入宽度 width 、高度 height ，取值为 int 类型，单位为 pixel
+  ```
+  ```py
+  >>> from PyQt6.QtCore import QSize
+  >>> window.resize(QSize(400, 200)) # 也可以输入一个 QSize 对象
+  ```
+  - 对于窗口类型的控件，最小宽度 width 为 120 ，因为标题栏需要显示三个按钮。
+  - 控件的尺寸，不能设置为 0 或负数，否则控件会关闭显示。
+  - 控件的尺寸，不能超过屏幕的可用显示范围。即使用 resize() 设置了更大的尺寸也不会生效，即使用户用鼠标拖动窗口边框也不能变得更大。
+
+- 其它方法：
+  ```py
+  # 根据控件需要显示的内容，自动调整尺寸
+  window.adjustSize() -> None
+
+  # 设置最大尺寸
+  window.setMaximumHeight(int)    -> None
+  window.setMaximumWidth(int)     -> None
+  window.setMaximumSize(int, int) -> None
+  window.setMaximumSize(QSize)    -> None
+
+  # 设置最小尺寸
+  window.setMinimumSize(int, int) -> None
+  window.setMinimumSize(QSize)    -> None
+  window.setMinimumHeight(int)    -> None
+  window.setMinimumWidth(int)     -> None
+
+  # 设置固定尺寸。此时用户将鼠标移动到窗口边框处，不能调整尺寸。只能由程序来调整尺寸
+  window.setFixedSize(int, int)   -> None
+  window.setFixedSize(QSize)      -> None
+  window.setFixedHeight(int)      -> None
+  window.setFixedWidth(int)       -> None
+  ```
+
+- 调用控件的 `geometry()` 方法，可以同时获取坐标、尺寸。
+  ```py
+  >>> geometry = window.geometry()
+  >>> geometry
+  PyQt6.QtCore.QRect(0, 0, 400, 200)
+  >>> geometry.x()
+  0
+  >>> geometry.y()
+  0
+  >>> geometry.width()
+  400
+  >>> geometry.height()
+  200
+  ```
+  ```py
+  window.setGeometry(0, 0, 400, 200)
+  ```
 
 ### stylesheet
 

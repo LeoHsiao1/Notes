@@ -505,6 +505,10 @@ module.exports = {
                         {
                             title: "import tkinter",
                             path: "/Python/软件开发/tkinter"
+                        },
+                        {
+                            title: "import PyQt",
+                            path: "/Python/软件开发/pyqt"
                         }
                     ]
                 },

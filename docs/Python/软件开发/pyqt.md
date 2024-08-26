@@ -1008,8 +1008,8 @@
   2. 不能直接使用磁盘中的图片文件。需要先创建一个 .qrc 文件，用于记录当前 GUI 软件使用的各个资源文件的磁盘路径，采用 XML 语法。例如：
       ```xml
       <RCC>
-        <qresource prefix="resource"> # 一个前缀，可以被多个资源文件共享
-          <file>img/1.jpg</file>      # 一个资源文件的磁盘路径（相对路径）
+        <qresource prefix="resource"> <!-- 一个前缀，可以被多个资源文件共享 -->
+          <file>img/1.jpg</file>      <!-- 一个资源文件的磁盘路径（相对路径） -->
         </qresource>
       </RCC>
       ```

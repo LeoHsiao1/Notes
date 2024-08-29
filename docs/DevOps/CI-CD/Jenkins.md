@@ -1,7 +1,7 @@
 # Jenkins
 
 ：一个 Web 服务器，用于 CI/CD ，采用 Java 语言开发。
-- [官方文档](https://jenkins.io/zh/doc/)
+- [官方文档](https://www.jenkins.io/doc/book/)
 - 支持托管大量脚本（称为任务、Job ），供用户在浏览器中执行，实现便捷的项目构建、测试、部署等目标。
 - 可体验官方在公网部署的 [Jenkins](https://ci.jenkins.io/job/Websites/job/jenkins.io/job/master/) 。
 

@@ -205,24 +205,35 @@
     ```
 
 2. 安装 NVIDIA 公司发布的 [显卡驱动](https://docs.NVIDIA.com/datacenter/tesla/tesla-installation-notes/index.html) 。
-    - 如果自动安装失败，则需要根据本机的操作系统版本、GPU 型号，找到某个兼容版本的显卡驱动，手动安装。
-    - 安装之后，会在 Linux 中保持运行一个内核进程。可执行命令 `ps auxf | grep NVIDIA` 查看
+    - 可以用 yum、apt 等命令进行安装。
+      - 如果自动安装失败，则需要根据本机的操作系统版本、GPU 型号，找到某个兼容版本的显卡驱动，手动安装。
+    - 安装之后，会在 Linux 中保持运行几个内核进程。可执行命令 `ps auxf | grep -i nvidia` 查看。
     - 安装之后，会附带 `nvidia-smi` 命令，它提供了 NVIDIA 的系统管理接口（System Management Interface）。
       - 可用该命令查看显卡驱动的版本、最高兼容的 CUDA 版本、GPU 上正在运行的进程列表。
     - 长期以来，NVIDIA 公司发布的显卡驱动程序都是闭源的。
       - 2012 年，nouveau 发布 1.0 版本。它是一个针对 NVIDIA 显卡的开源驱动程序，集成到了 Linux 内核。但功能较少，性能较低。
-        - 执行 `lsmod | grep nouveau` ，可检查 Linux 内核是否加载了 nouveau 。
-        - 如果本机启用了 nouveau ，则需要禁用它并重启主机，然后才能启动 NVIDIA 官方驱动。因为同时只能运行一个驱动程序来控制 GPU。
+        - 每个 Linux 主机，同时只能运行一个驱动程序来控制 GPU 。
+        - 执行 `lsmod | grep nouveau` ，可检查 Linux 内核是否启用了 nouveau 。
+        - 如果本机启用了 nouveau ，则需要 [禁用 nouveau 并重启主机](https://docs.nvidia.com/ai-enterprise/deployment-guide-vmware/0.1.0/nouveau.html) ，然后才能启动 NVIDIA 官方驱动。
       - 2022 年，NVIDIA 公司开源了 Linux GPU 内核驱动模块。
 
 3. 安装 NVIDIA 公司发布的 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 cuFFT 等加速库、CUDA 开发及调试工具、编译器、运行时。
+    - 可以用 yum、apt 等命令进行安装。
+    - 也可以下载其 runfile 包，这样能同时安装 NVIDIA 显卡驱动和 CUDA 。
+      ```sh
+      wget https://developer.download.nvidia.com/compute/cuda/12.6.1/local_installers/cuda_12.6.1_560.35.03_linux.run
+      chmod +x cuda_12.6.1_560.35.03_linux.run
+      sh cuda_12.6.1_560.35.03_linux.run
+      echo 'export PATH=$PATH:/usr/local/cuda/bin' > /etc/profile.d/cuda.sh
+      reboot
+      ```
     - CUDA 通常依赖较新版本的 NVIDIA 显卡驱动，参考：<https://docs.NVIDIA.com/cuda/cuda-toolkit-release-notes/index.html>
-    - CUDA 通常安装在 `/usr/local/cuda*` 目录下。
-    - 可执行以下命令，查看 CUDA 的版本号：
+    - 可执行以下命令，查看已安装 CUDA 的版本号：
       ```sh
       ls /usr/local/cuda*                     # CUDA 默认安装在该目录
       /usr/local/cuda-*/bin/nvcc --version    # nvcc 是 CUDA 编译器（NVIDIA CUDA Compiler）
       ```
+      - CUDA 通常安装在 `/usr/local/cuda*` 目录下。
       - 同一主机上可以安装多个版本的 CUDA 工具包，共用同一个 NVIDIA 显卡驱动。
 
 4. 安装 NVIDIA 公司发布的 [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html) ，它是一个常用的算法库，没有包含在 cuda-toolkit 中。
@@ -236,7 +247,7 @@
     ```py
     >>> import torch
     >>> torch.version.cuda
-    '12.4'
+    '12.6'
     >>> torch.cuda.is_available()       # 查看 CUDA 是否可用
     True
     >>> torch.cuda.device_count()       # 查看 GPU 设备数，如果本机拥有多张显卡的话

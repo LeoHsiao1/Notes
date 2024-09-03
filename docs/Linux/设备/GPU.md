@@ -225,7 +225,7 @@
       chmod +x cuda_12.6.1_560.35.03_linux.run
       sh cuda_12.6.1_560.35.03_linux.run
       echo 'export PATH=$PATH:/usr/local/cuda/bin' > /etc/profile.d/cuda.sh
-      reboot
+      source /etc/profile
       ```
     - CUDA 通常依赖较新版本的 NVIDIA 显卡驱动，参考：<https://docs.NVIDIA.com/cuda/cuda-toolkit-release-notes/index.html>
     - 可执行以下命令，查看已安装 CUDA 的版本号：

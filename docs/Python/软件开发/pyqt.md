@@ -1024,7 +1024,7 @@
       ```sh
       pyrcc5 resource.qrc -o resource.py
       ```
-    - 使用 PyQt6 时，该工具改名为 pyside6-rcc ，并且需要安装 `pip install PySide6` 。
+    - 使用 PyQt6 时，该工具改名为 pyside6-rcc ，需要安装 `pip install PySide6` 。
   - 然后可在 Python 代码中，引用 .qrc 文件中的图片：
     ```py
     import resource

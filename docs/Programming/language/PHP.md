@@ -8,8 +8,8 @@
 ## 语法特点
 
 - 脚本文件的扩展名为 .php 。
-- 每个语句的末尾以分号 ; 作为分隔符。
-- 用 // 声明单行注释，用 /* 和 */ 声明多行注释。
+- 每个语句的末尾以分号 `;` 作为分隔符。
+- 用 `//` 声明单行注释，用 `/*` 和 `*/` 声明多行注释。
 - 支持定义函数，支持面向对象编程。
 - PHP 代码可以通过标签 `<?php` 和 `?>` 嵌入到 HTML 文件中，但此时要将文件扩展名改为 .php 。如下：
   ```php
@@ -39,16 +39,6 @@
   yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install php72
   ```
-
-## 输入输出
-
-- 可以用关键字 echo 显示字符串，如下：
-  ```php
-  echo $x,"\nhello";
-  echo PHP_EOL;        // 显示换行符
-  ```
-  - 也可以换成关键字 print ，但它同时只能显示一个字符串。
-- 可以用函数 `print_r()` 或 `var_dump()` 按适当的排版显示变量的值，并且 `var_dump()` 还会显示变量的类型、长度。
 
 ## 变量
 
@@ -114,42 +104,60 @@
 - null ：空值。
 - int
 - float
-- bool ：布尔型，取值为 true 或 false 。
-- string
-  - 用单引号 ' 或双引号 " 作为定界符。
-  - 用 `<<<EOF` 和 `EOF;` 作为定界符时，会使字符串中的转义字符无效，但可以直接嵌入 PHP 的变量。如下：
-    ```php
-    str1 = <<<EOF
-        <h1>标题一</h1>
-        <p>x 的值是：$x</p>
-    EOF;
-    echo strlen($str1);    // 获取字符串的长度
-    ```
-  - 标识符的值不一定要是 EOL ，只需保证开始标识符与结束标识符相同。
+- bool
+  - ：布尔型，取值为 true 或 false 。
 
-- array ：数组。用 array() 函数定义，支持嵌套。
-  - 数值数组：访问时使用数字作为下标，像 C 语言的普通数组。如下：
+### string
+
+- ：字符串，用单引号 `'` 或双引号 `"` 作为定界符。
+- 用 `<<<标识符` 和 `标识符;` 作为定界符时，会使字符串中的转义字符无效。如下：
+  ```php
+  str1 = <<<EOF
+      <h1>标题一</h1>
+      <p>x 的值是：$x</p>
+  EOF;
+  ```
+
+- 如何显示一个字符串到终端？
+  - 可以用关键字 echo ，如下：
     ```php
-    $text = array("hello","world","!");
-    $text[0] = "hi";
-    echo count($text);  // 获取数组的长度
-    sort($text);        // 升序排列
-    rsort($text);       // 降序排列
+    $x = 1;
+    echo $x;
+    echo $x, "\nhello";           // 可以通过逗号，显示多个字符串
+    echo "hello{$x}world";        // 字符串的定界符为双引号时，可以嵌入变量的值
+    echo 'hello' . $x . 'world';  // 多个字符串，可以用 . 拼接为一个字符串
     ```
-  - 关联数组：访问时使用键名作为下标，像 Python 的字典。每个键值对用 => 连接。
-    ```php
-    $text = array("line1" => "hello", "line2" => "world","line3"=>"!");
-    $text["line1"] = "hi";
-    ksort($text);       // 根据键名升序排列
-    krsort($text);      // 根据键名降序排列
-    ```
-- 常量：用 define() 函数定义，常量名不需要加 $ 前缀。如下：
+  - 也可以用关键字 print ，但它同时只能显示一个字符串。
+  - 可以用函数 `print_r()` 或 `var_dump()` 按适当的排版显示变量的值，并且 `var_dump()` 还会显示变量的类型、长度。
+
+### array
+
+- ：数组。用 array() 函数定义，支持嵌套。
+- 数值数组：访问时使用数字作为下标，像 C 语言的普通数组。如下：
+  ```php
+  $text = array("hello","world","!");
+  $text[0] = "hi";
+  echo count($text);  // 获取数组的长度
+  sort($text);        // 升序排列
+  rsort($text);       // 降序排列
+  ```
+- 关联数组：访问时使用键名作为下标，像 Python 的字典。每个键值对用 => 连接。
+  ```php
+  $text = array("line1" => "hello", "line2" => "world","line3"=>"!");
+  $text["line1"] = "hi";
+  ksort($text);       // 根据键名升序排列
+  krsort($text);      // 根据键名降序排列
+  ```
+
+### 常量
+
+- ：用 define() 函数定义，常量名不需要加 $ 前缀。如下：
   ```php
   define("URL", "www.baidu.com");
   echo URL;
   ```
-  - 常量的值不能修改。
-  - 常量都是全局变量，而且可以在函数内直接访问，不需要用 global 关键字。
+- 常量的值不能修改。
+- 常量都是全局变量，而且可以在函数内直接访问，不需要用 global 关键字。
 
 ## 运算符
 

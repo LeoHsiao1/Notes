@@ -25,3 +25,4 @@
   - [软件开发](software/软件开发.md)
   - [软件测试](software/软件测试.md)
   - [软件运维](software/软件运维.md)
+  - [设计模式](software/设计模式.md)

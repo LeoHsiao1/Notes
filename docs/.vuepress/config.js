@@ -210,6 +210,10 @@ module.exports = {
                         {
                             title: "软件运维",
                             path: "/Programming/software/软件运维"
+                        },
+                        {
+                            title: "设计模式",
+                            path: "/Programming/software/设计模式"
                         }
                     ]
                 }

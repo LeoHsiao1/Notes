@@ -471,6 +471,10 @@ module.exports = {
                     title: "网络通信",
                     children: [
                         {
+                            title: "Socket",
+                            path: "/Python/网络通信/Socket"
+                        },
+                        {
                             title: "Email",
                             path: "/Python/网络通信/Email"
                         },

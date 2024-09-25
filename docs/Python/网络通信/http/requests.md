@@ -132,13 +132,15 @@ True
 >>> r.raise_for_status() # 如果访问失败，则自动抛出异常
 >>> r.headers            # 查看响应报文的 headers
 {'Cache-Control': 'private, no-cache, no-store, proxy-revalidate, no-transform', 'Connection': 'keep-alive', 'Content-Encoding': 'gzip', 'Content-Type': 'text/html', ...}
->>> r.encoding           # 查看响应报文的编码格式（ requests 会根据响应报文的 Content-Type 选择编码格式，如果没有则默认为 ISO-8859-1 ）
+>>> r.content            # 查看响应报文的 body ，取值为 bytes 类型
+b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
+>>> r.encoding           # 查看响应报文的编码格式。取值来源于响应报文的 Content-Type 字段，如果没有该字段，则默认为 ISO-8859-1
 'ISO-8859-1'
 >>> r.encoding = 'utf-8' # 可以修改 r.encoding 的值，指定一种编码格式
->>> r.content            # 查看响应报文的 body（bytes 类型）
-b'<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
->>> r.text               # 查看响应报文的 body（根据 r.encoding 自动解码成 str 类型）
+>>> r.text               # 查看响应报文的 body ，取值为 str 类型。相当于执行 r.conent.decode(r.encoding)
 '<!DOCTYPE html>\r\n<!--STATUS OK--><html> <head>...
+>>> r.json()             # 将 r.text 按 JSON 格式解析，转换成 dict 类型。如果转换失败，则抛出异常
+requests.exceptions.JSONDecodeError
 >>> r.elapsed.total_seconds() # 计算从开始发送请求报文，到解析完响应报文 Headers 的耗时
 0.231441
 ```

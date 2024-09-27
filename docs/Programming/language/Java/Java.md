@@ -3,6 +3,16 @@
 ：一种编译型语言。
 - 通过 JVM 容易实现跨平台运行，因此常用于开发 Web 应用、Android 应用。
 
+## 相关历史
+
+- 1991 年，Sun 公司的 James Gosling 等人开始研发一种适用于单片机系统的编程语言。
+  - 他们将 C++ 语言进行简化，抛弃了多继承、指针等复杂功能，并提高程序的兼容性。
+  - 他们将这种语言取名为 Oak ，介绍给硬件厂商，但并没有受到欢迎。
+- 1995 年，Sun 公司发现 Oak 语言在互联网上的应用优势：它容易移植到不同平台上运行。于是将它改名为 Java 重新发布，终于成功推广。
+- Sun 公司设计 Java 编程语言时，最初研发了一款 JVM 程序，但性能差。于是在 1999 年，Sun 公司研发了一款新的 JVM 程序，称为 HotSpot ，性能更好。
+- 2007 年，Sun 公司将 HotSpot 与一些配套软件开源，这个开源项目称为 [OpenJDK](https://github.com/openjdk/jdk) 。
+- 2010 年，Sun 公司被 Oracle 公司收购。而 OpenJDK 项目也由 Oracle 公司主导，但依然属于开源社区。
+
 ## 相关概念
 
 - JMX（Java Management Extensions）

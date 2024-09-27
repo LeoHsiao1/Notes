@@ -422,23 +422,19 @@ module.exports = {
                     ]
                 },
                 {
-                    title: "数学运算",
+                    title: "数学",
                     children: [
                         {
-                            title: "import random",
-                            path: "/Python/数学运算/random"
-                        },
-                        {
                             title: "浮点数",
-                            path: "/Python/数学运算/浮点数"
+                            path: "/Python/数学/浮点数"
                         },
                         {
-                            title: "import math",
-                            path: "/Python/数学运算/math"
+                            title: "数学函数",
+                            path: "/Python/数学/数学函数"
                         },
                         {
                             title: "import numpy",
-                            path: "/Python/数学运算/numpy"
+                            path: "/Python/数学/numpy"
                         }
                     ]
                 },

@@ -45,11 +45,10 @@
   - [进程](线程与进程/进程.md)
   - [协程](线程与进程/协程.md)
   - [定时任务](线程与进程/定时任务.md)
-- 数学运算
-  - [import random](数学运算/random.md)
-  - [浮点数](数学运算/浮点数.md)
-  - [import math](数学运算/math.md)
-  - [import numpy](数学运算/numpy.md)
+- 数学
+  - [浮点数](数学/浮点数.md)
+  - [数学函数](数学/数学函数.md)
+  - [import numpy](数学/numpy.md)
 - 图像处理
   - [电子图片](图像处理/电子图片.md)
   - [import pillow](图像处理/Pillow.md)

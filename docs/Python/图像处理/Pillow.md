@@ -3,7 +3,7 @@
 ：Python 的第三方库，提供了丰富的图像处理功能。
 - [官方文档](https://pillow.readthedocs.io/)
 - 安装：`pip install pillow`
-- Python 2 有一个流行的图像处理库 PIL（Python Imaging Library），但它不支持 Python 3 且更新缓慢。因此，2010 年社区从 PIL 分叉出 Pillow ，转向 Python 3 开发。
+- Python 2 有一个流行的图像处理库 PIL（Python Imaging Library），但它不兼容 Python 3 。因此，社区于 2010 年从 PIL 分叉出 Pillow ，基于 Python 3 开发。
 
 ## 查看图片
 
@@ -23,7 +23,7 @@
   ```
   - 这会释放图片主体数据占据的内存，释放图片的文件描述符。
   - 可以通过 with 关键字打开图片，从而自动关闭：
-    ```sh
+    ```py
     with Image.open('./1.jpg') as img:
         img.show()
     ```
@@ -33,7 +33,7 @@
   >>> img.show()
   ```
   - 这会将图片缓存到磁盘中的一个临时文件中，然后调用系统默认的看图软件查看该图片。
-  - 显示期间会一直阻塞线程。
+  - 显示期间会一直阻塞当前线程。
 
 - 保存图片：
   ```py

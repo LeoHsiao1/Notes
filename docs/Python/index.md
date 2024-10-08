@@ -49,6 +49,7 @@
   - [浮点数](数学/浮点数.md)
   - [数学函数](数学/数学函数.md)
   - [import numpy](数学/numpy.md)
+  - [import pandas](数学/pandas.md)
 - 图像处理
   - [电子图片](图像处理/电子图片.md)
   - [import pillow](图像处理/Pillow.md)

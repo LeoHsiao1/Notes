@@ -435,6 +435,10 @@ module.exports = {
                         {
                             title: "import numpy",
                             path: "/Python/数学/numpy"
+                        },
+                        {
+                            title: "import pandas",
+                            path: "/Python/数学/pandas"
                         }
                     ]
                 },

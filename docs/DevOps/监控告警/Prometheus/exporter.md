@@ -612,9 +612,12 @@
   # 关于磁盘
   sum(node_filesystem_size_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint)  # 磁盘总量
   sum(node_filesystem_avail_bytes{fstype=~`ext\d|xfs`, mountpoint!~`/boot`}) without(device, fstype, mountpoint) # 磁盘可用量
-  sum(rate(node_disk_read_bytes_total[1m]))     # 磁盘每秒读取量
-  sum(rate(node_disk_written_bytes_total[1m]))  # 磁盘每秒写入量
-  node_filefd_allocated                         # 文件描述符的当前打开数量
+  delta(node_disk_read_bytes_total[1m])         # 磁盘读取量（每分钟）
+  delta(node_disk_written_bytes_total[1m])      # 磁盘写入量（每分钟）
+  irate(node_disk_reads_completed_total[5m])    # 磁盘读次数（平均每秒）
+  irate(node_disk_writes_completed_total[5m])   # 磁盘写次数（平均每秒）
+  irate(node_disk_io_time_seconds_total[5m])    # 磁盘 IO 工作时间占比  
+  node_filefd_allocated                         # 文件描述符的打开数量
   node_filefd_allocated / node_filefd_maximum   # 文件描述符的使用率
 
   # 关于网口

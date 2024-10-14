@@ -29,20 +29,20 @@
   - C99 在 C89 的基础上，做了少量改进，基本向下兼容 C89 。
   - C99 的主要变化：
     - 以前，只支持 `/* comment */` 格式的多行注释。现在，从 C++ 借鉴了 `// comment` 格式的单行注释。
-    - 从 C++ 借鉴了关键字 inline ，用于定义内联函数。
-    - 增加了头文件 `<complex.h>` ，提供了 complex 数据类型。
-    - 增加了头文件 `<stdbool.h>`，通过宏定义提供了 bool 数据类型，取值可以为 true 或 false ，相当于整数 1 或 0 。例：
+    - 从 C++ 借鉴了关键字 inline ，用于定义内联函数，但用处不大。
+    - 增加了头文件 `<complex.h>` ，定义了 complex 数据类型。
+    - 增加了头文件 `<stdbool.h>`，定义了 bool 数据类型，取值可以为 true 或 false ，相当于整数 1 或 0 。例：
       ```c
       #include <stdbool.h>
       bool x = true;
       ```
-    - 增加了头文件 `<stdint.h>` ，通过宏定义提供了 int8_t、int16_t、int32_t、int64_t 等整型，以及 uint8_t、uint16_t 等无符号整型。它们在 32 位上的容量，与 64 位 CPU 上的容量相同，因此便于移植程序。
+    - 增加了头文件 `<stdint.h>` ，定义了 int8_t、int16_t、int32_t、int64_t 等整型，以及 uint8_t、uint16_t 等无符号整型。它们在 32 位上的容量，与 64 位 CPU 上的容量相同，因此便于移植程序。
 
 - 2011 年，ISO 发布了新的 C 语言标准。因为所在年份，又被称为 C11 。
   - C11 的主要变化：
     - 在 `<stdio.h>` 中删除了 `gets()` 函数，因为容易发生内存越界访问。请改用 `gets_s()`、`scanf()` 等函数。
     - 增加了头文件 `<threads.h>` ，用于创建多线程。
-    - 增加了头文件 `<uchar.h>` ，用于处理 Unicode 字符。它通过宏定义提供了 char16_t、char32_t 数据类型，用于存储 UTF-16、UTF-32 编码的字符。
+    - 增加了头文件 `<uchar.h>` ，用于处理 Unicode 字符。它定义了 char16_t、char32_t 数据类型，用于存储 UTF-16、UTF-32 编码的字符。
 
 ### C++
 

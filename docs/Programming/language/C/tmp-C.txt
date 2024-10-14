@@ -3,41 +3,6 @@
 
 
 
-
-
- 
-C语言简介
-
- 
-基本语法
-程序示例
-## 如下是一个简单的输入输出程序：
-#include <stdio.h>        // 导入头文件stdio.h，从而可以使用printf()和scanf()函数
-
-void main(void){                                    // 定义main()函数
-int x=0,y=0;                                    // 创建两个变量
-printf("Please input integers (x,y) :\n");        // 显示一行字符
-scanf("%d, %d", &x, &y);                        // 从终端读取两个值，保存到两个变量中
-printf("x=%d, and y=%d\n ", x, y);                // 显示两个变量的值
-return 0;                                        // 函数最后返回0值，告诉外界它运行正常
-}
-## main函数又称为主函数。
-- 程序会从main函数处开始运行。
-- 每个程序有且仅有一个主函数。
-## main函数常见的三种函数头：
-- void main(void)                        //没有返回值，没有形参
-  - void表示主函数没有返回值，而main()括号内的void表示该函数不允许输入参数。
-- int main(void)                         //有返回值，没有形参
-- int main(int argc, char *argv[])         //有返回值，有形参
-  - 在终端运行C语言程序时，可以给main函数传递一些参数。例如：
-C:\Users\Will>D:\1.exe a b 3 4
-  - argc用于存储从命令行输入的参数的个数。（在上例中为5）
-  - argv[]用于存储argc个参数，其中argv[0]存储的是程序名。（在上例中为D:\1.exe）
-  - 需要注意的是，argv[]是char *型指针数组，其中存储的参数都是字符串的形式。
-##
-##
-##
- 
 输入输出
 ## printf是格式化输出函数，语法为：printf("格式控制字符串", 输出项);
 - &x表示将输入值存储在变量x的内存空间中，& 称为取地址运算符。

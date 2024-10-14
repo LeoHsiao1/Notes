@@ -1,23 +1,7 @@
 ::: v-pre
 
 
-英文单词
-Visual 可视的
-Menu bar 菜单栏
-View 查看
-ClassView 类视图
-FileView 文件视图
-Build 组建
 
-Binary File 二进制文件
-Header File 头文件
-Console Application 控制台应用程序
-
-
-《The C Programming Language》
-The header file contains the declaration of function prototypes
-declare the type of global variables
-the definition of local variables
 
 
 
@@ -56,50 +40,7 @@ C语言简介
 ##
 ##
  
-C语言的版本
-## C语言的发展过程。
-- 1964年，贝尔实验室、麻省理工学院、通用电气公司开始合作研发一个前所未有的分时操作系统multics，目的是安装在通用电力公司的大型机上，支持300个用户同时使用。
-  - multics项目提出了许多新概念，比如动态链接、分层文件系统。
-  - 1966年，Ken Thompson在加州大学伯克利分校毕业，拿到电子工程硕士学位。他加入名满天下的贝尔实验室，参与multics项目。
-  - 在研发multics的过程中，Thompson发明了B语言，在multics系统中编写了一个名叫“Space Travel”的小游戏。
-  - 1967年，Dennis Ritchie来到贝尔实验室，负责多道处理机的BCPL语言等。他在次年拿到哈佛的数学博士学位，论文为《递归函数的层次》。
-- 1969年，multics项目的诸多远大目标仍然没有实现，研发进度缓慢，贝尔实验室决定退出该项目。因此，Thompson不得不将他的小游戏移植到另一台老机器上，移植的过程是：借鉴multics系统的设计思路、用汇编语言开发了一个新系统，取名为Unix。然后在BCPL语言的基础上发明了B语言，用B语言混合汇编语言在Unix系统中开发应用程序。
-  - 但是使用B语言移植程序时仍然比较麻烦。于是，1972 年，Thompson和Ritchie将解释型的B语言改进成编译型的C语言，用它重写了Unix系统，终于轻松地移植了那款游戏。
-  - 吸取了multics项目夭折的教训，Ritchie在设计Unix系统时采用“Keep it simple stupid”的原则，将复杂的程序拆分成多个小模块分别实现，然后再灵活地组合。
-- 1978年，Brian Kernighan和Dennis Ritchie出版了《The C Programming Language》，将C语言介绍给全世界。
-  - 这是第一本介绍C语言编程的书籍，书中的第一个示例程序是显示“hello world”，成为了众多编程语言教程的传统。
-  - 这本书中描述的C语言还没有正式的语法标准，被称为“K&R C”。
-  - 随着C语言的传播，Unix系统逐渐成为了主流的操作系统。
-- 1989年，ANSI（美国国家标准学会）制定了第一个C语言标准，称为ANSI C。又因为所在年份被称为C89。
-- 1990年，ISO（国际标准化组织）将C89采纳为国际标准，称为ISO C。又因为所在年份被称为C90。
-- 1999年，ISO发布了第二个C语言标准，因为所在年份被称为C99。
-  - C99在C89的基础上做了少量改进，基本向下兼容C89。
-  - 基本所有C语言编译器都支持C89，但有些编译器没实现C99的全部要求，所以不完全兼容C99。
-- 2011年，ISO发布了第三个C语言标准，因为所在年份被称为C11。
-## C99的主要变化。
-- 支持可变参数的宏。
-- 支持C++的注释方式 // 。（C89只支持 /*…*/ 的注释方式）
-- 关于变量。
-  - 增加了头文件<stdbool.h>，以支持C++的bool类型。
-  - 增加了头文件<complex.h>，以支持复数类型。
-  - 增加了头文件<wctype.h>，以定义宽字符。
-  - 增加了头文件<stdint.h>，提供了宏定义的整型。
-  - 增加了long long int、unsigned long long int、float _Complex等数据类型。
-  - 变量声明不必放在语句块的开头，提倡for(int i=0; i<10;i++)这样的写法。
-  - 支持不定长数组，数组的长度可以用变量创建了。
-- 关于函数。
-  - 增加了关键字inline，支持内联函数。
-  - 取消了函数没有声明返回值类型时默认为int型的设定，因此main函数的返回值必须声明为int型，并在末尾有一个返回语句return 0;。
-  - 增加了一个内置的局部静态字符数组变量__func__，用于获得当前函数的函数名。
-## C11的主要变化。
-- 增加了头文件<threads.h>，以支持多线程。
-- 增加了头文件<uchar.h>，以更好地处理Unicode字符。
-- 删除了函数gets()，取而代之的是函数gets_s()。
-- 增加了fopen()模式。
-- 增加了匿名结构体。
-##
-##
-##
+
  
 基本语法
 程序示例
@@ -1286,24 +1227,7 @@ system("exit");            //退出DOS窗口
 ##
 ##
  
-<stdint.h>
-## math.h提供了一些宏定义的整型，在32位、64位的CPU上都是同样的容量，便于移植程序。
-- 整型
-  - int8_t
-  - int16_t
-  - int32_t
-  - int64_t：对应的格式控制符为 %lld 。
-- 无符号整型
-  - uint8_t
-  - uint16_t
-  - uint32_t
-  - uint64_t：对应的格式控制符为 %llu 。
-- 整型指针。
 
-##
-##
-##
-##
  
 <time.h>
 ## time.h提供了获取时间、日期的函数。如下：

@@ -3,54 +3,6 @@
 
 
 
-输入输出
-## printf是格式化输出函数，语法为：printf("格式控制字符串", 输出项);
-- &x表示将输入值存储在变量x的内存空间中，& 称为取地址运算符。
-- 格式控制字符串中的格式控制符会被变量替换，而其它字符会原样输出到终端（或从终端输入，用于排版）。
-- 格式控制符说明了此处是什么类型的数据。如下。
-  - %d    ：int或short类型
-  - %u    ：unsigned int、unsigned short
-  - %ld    ：long
-  - %lu    ：unsigned long
-  - %f    ：float
-  - %lf    ：double、long double
-  - %e    ：指数格式的float
-  - %c    ：char
-  - %s    ：字符串
-  - %o    ：八进制
-  - %x    ：十六进制
-- 可以用 print("%m.nf",x) 的格式控制输出的位数，规定总位数（包括小数点）为m、小数点后的位数为n。
-  - 例如：print("%.2f",x);
-  - 输出浮点型数据时，小数点后默认是6位。
-  - 实际总位数大于m时留下实际位数，小于m时在前面加空格补上。
-  - 小数点后实际位数大于n时四舍五入再丢掉多余的位数，小于n时在后面加0补上。
-  - %+m.n是让正负号都输出，%-m.n是让输出改为左对齐。
-- 输出十六进制值的例子。
-int i = 47;
-printf("%x\n", i);        // %x表示输出小写的十六进制值
-printf("%X\n", i);        // %X表示输出大写的十六进制值
-printf("%#x\n", i);        // 加上#表示输出的十六进制加上0x前缀，即标准格式
-printf("%#X\n", i);
-// 输出分别为2f、2F、0x2f、0X2F
-## scanf是格式化输入函数，语法为：scanf("格式控制字符串", 输出项);
-- 可以用 scanf("%3d",&x) 的格式控制输入的位数，这里是取前三位。
-  - 不过scanf函数不能控制输入的小数位数。
-- 若在scanf()的%后插入 * ，比如 %*d ，则这个输入值被读取后不会存储。
-- 例：
-  - scanf("%2d",&x);                // 输入123456，则x=12
-  - scanf("x=%d,y=%d",&x,&y);        // 格式控制字符串中包含非格式字符，输入时要对齐排版，即输入x=~,y=~
-  - scanf("%d%d",&x,&y);            // 两个格式控制符之间没有间隔，输入时要用空格或Tab或回车作为定界符
-  - scanf("%2d%2d",&x,&y);        // 输入123456，则x=12，y=34
-- 使用 %[扫描列表]s 的格式读取输入时，只存储扫描列表中包含的字符，其它字符则看作定界符。
-  - 减号 – 应放在扫描列表的最后位置。
-  - 使用 %[^非扫描列表] 的格式读取输入时，会将非扫描列表中的字符都看作定界符。
-  - 例如 scanf("%3[abcd]s",&x); ，若输入"abcdabcd"，则存储的结果为"abc"。若输入"abecd"，则存储的结果为"ab"。若输入"eabcd"，则没有存储的数据。
-## 定界符：用于标明数据值的界限。例如字符的定界符是单引号 ' ，字符串的定界符是双引号 " 。
-- scanf()中，%s默认的定界符是空格，即出现空格就表示这次输入结束。scanf()会从第一个非空格字符开始读取数据，所以有效字符之前的空格都无效。
-  - 例如，若输入"Hello C!"，用 scanf("%s", &x); 只会得到空格前的Hello，而用 gets(x); 则会得到回车前的全部内容。
-##
-##
-##
  
 运算符
 ## 表达式由运算符（又称为操作符）和操作数组成。
@@ -1083,50 +1035,7 @@ printf("max = %d\n", MAX(x++, y++));
 ##
 ##
 ##
- 
-C语言的标准库
-## C语言的标准库里定义了一些基本的函数、常量、宏定义等，通过包含对应的头文件来调用。
-- 在MinGW库中，所有头文件都导入了基本的<_mingw.h>。
-## stddef.h：定义了一些变量类型和宏，其它标准库头文件通常都导入了这个头文件。
-- 宏定义了一种数据类型size_t。
-  - 在32位机上，size_t被定义为long unsigned int，占4个字节。
-size_t t = 4;
-printf("%d, %d\n", t, sizeof(t));        //显示为 4, 4
-##
-##
-##
- 
-<stdio.h>
-## stdio.h是标准输入输出库（standard input and output）。
-- 定义了一种结构体FILE，主要用于存储文件流。
-## 格式化输入/输出函数。
-- int scanf(const char *, args...);
-// 从stdin读取一个字符串，提取输入参数
-- int printf(const char *, args...);
-// 生成一个字符串，输出到stdout
-- int sscanf(const char *buffer, const char *format, args...);
-// 从buffer读取一个字符串，提取输入参数
-- int sprintf(char *buffer, const char *format, args...);
-// 生成一个字符串，写入buffer
-// 如果函数执行成功，则返回生成的字符串长度（不包括末尾的空字符\0）；否则返回一个负数。
-- int snprintf (char *buffer, size_t n, const char *, args...);
-// 生成的字符串最大长度为n（包括末尾的空字符\0）
-// 如果生成的字符串长度大于n，则只取前 n-1 个字符，然后加上一个空字符结尾，写入buffer。
-// 如果函数执行成功，不管生成的字符串长度是否大于n，总是返回生成的字符串长度
-  - 例：
-char *buffer = malloc(sizeof(char) * 10);
-int x = 1, len = 0;
-len = snprintf(buffer, 10, "x=%d.0123456789\n", x);        // 结果len为15
-## 非格式化输入/输出函数。
-- int getchar(void);                // 从stdin读取一个字符
-  - 例如：char c = getchar();
-- int putchar(int);                    // 输出一个字符到stdin
-  - 例如：putchar('\n');
-- char *gets(char *);                // 从stdin读取一个字符串
-- int puts(const char *);            // 输出一个字符串到stdout，并在末尾加上\n
-## 错误处理。
-- void perror(const char *str);        //输出一个字符串到标准错误stderr
-  - 例如运行语句 perror("Error"); 会显示 Error: No error 。会自动在后面加上一个冒号和空格。
+
 ##
 ##
 ##
@@ -1223,19 +1132,7 @@ printf("Weekday:  %d\n", ptime->tm_wday);
 ##
 ##
  
-第三方库
-## windows.h：导入了很多Windows系统的头文件，提供了很多Windows系统的API。
-- void Sleep(DWORD);        // 使进程暂停一定毫秒
--
-##
-## curl/curl.h：提供一些通过URL通信的函数。它来自libcurl库，支持http、https、ftp、telnet等协议。
-## cJSON.h：提供一些用于构建、解析JSON格式的字符串的函数。
-- JSON原本是JavaScript的对象表示格式，后来发展成为一种独立的、用于数据交换的文本格式，可用于多种编程语言。
-## mosquitto.h：提供一些实现mqtt协议的函数。
-- mosquitto是一款实现了mqtt协议的开源消息代理服务软件。
-## hmac_sha256.h：提供一些实现哈希算法sha-256的函数。
-##
-## stdafx.h：VS2010中把stdio.h、stdlib.h、windows.h等头文件都包含到了stdafx.h（标准应用程序框架的扩展）中，所以编程时要调用stdafx.h，而且要用双引号的格式调用。stdafx.h属于预编译头文件，把一些经常调用的代码预先编译好了。
+
 ##
 ##
 ##

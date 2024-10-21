@@ -1,7 +1,7 @@
 # docsify
 
 ：一个 SSG 工具，用于制作静态网站。它与 gitbook 相似，但功能多一些。
-- [官方文档](https://docsify.js.org/#/)
+- [官方文档](https://docsify.js.org/)
 - 采用 Vue 前端框架，显示美观的网页。
 - 使用它时，无需安装 npm 插件，只需引入一个 java script 文件。
   - 使用它时，不需要事先将 MarkDown 文件转换成 HTML 文件。当用户查看网页时，才会在浏览器中即时渲染成 HTML 。
@@ -14,25 +14,25 @@
 1. 在网站根目录下创建一个 index.html 文件，内容如下：
     ```html
     <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>Document</title>
-      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-      <meta name="description" content="Description">
-      <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-      <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
-    </head>
-    <body>
-      <div id="app"></div>
-      <script>
-        window.$docsify = {
-          name: '',
-          repo: ''
-        }
-      </script>
-      <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
-    </body>
+    <html>
+      <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta charset="UTF-8" />
+        <link
+          rel="stylesheet"
+          href="//cdn.jsdelivr.net/npm/docsify@4/themes/vue.css"
+        />
+      </head>
+      <body>
+        <div id="app"></div>
+        <script>
+          window.$docsify = {
+            //...
+          };
+        </script>
+        <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
+      </body>
     </html>
     ```
 
@@ -83,9 +83,9 @@ window.$docsify = {
 - 第二章                      # 可以不给链接，只显示名字
   - [第一节](Chapter2/1.md)
 ```
-- 可以给各个目录分别创建 sidebar.md ，从而分别显示侧边栏目录。
+- 可以给各个目录分别创建 sidebar.md ，从而显示不同的侧边栏目录。
   - 如果 URL 所在目录下没有 sidebar.md ，则使用上一层目录的。
-  - navbar.md 的使用规则同理。
+  - navbar.md 的用法同理。
 
 ### 导航栏
 
@@ -168,10 +168,10 @@ window.$docsify = {
   }
 }
 </script>
-<script src="//unpkg.com/docsify/lib/plugins/search.js"></script>
+<script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
 ```
 
-### 控制图片的尺寸
+### 嵌入图片
 
 ```markdown
 ![logo](https://docsify.js.org/_media/icon.svg ':size=50x100')
@@ -197,26 +197,18 @@ code    |other file extension
 [](https://www.baidu.com/index.html ':include :type=iframe width=100% height=400px')
 ```
 
-### 拷贝代码块
-
-在 index.html 中添加如下脚本，即可在每个代码块右上角显示拷贝按钮。
-
-```markdown
-<script src="//unpkg.com/docsify-copy-code"></script>
-```
-
 ### 代码高亮
 
-导入[Prism](https://prismjs.com/)的 js 文件之后，可实现 MarkDown 文档代码块语法高亮：
+导入 [Prism](https://prismjs.com/) 的 js 文件之后，即可实现 MarkDown 文档代码块语法高亮。例如以下是支持 bash、C 语言的语法高亮：
 
 ```html
-<script src="//unpkg.com/prismjs/components/prism-bash.js"></script>
-<script src="//unpkg.com/prismjs/components/prism-c.js"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-c.min.js"></script>
 ```
 
 ### 分页按钮
 
-在 index.html 中添加如下脚本，即可在每个页面的底部显示跳转到前一文件、后一文件的按钮。
+在 index.html 中添加如下脚本，即可在每个页面的底部显示跳转到前一文件、后一文件的按钮：
 
 ```markdown
 <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>

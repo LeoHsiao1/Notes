@@ -47,7 +47,7 @@
   ```sh
   open [host]   # 连接服务器
   close         # 断开服务器
-  bye           # 关闭客户端
+  user          # 输入用户名、密码进行登录
 
   status        # 显示状态信息
   ascii         # 切换到 ASCII 码传输模式，可能会乱码

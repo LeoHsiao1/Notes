@@ -118,8 +118,17 @@ module.exports = {
                         },
                         {
                             title: "C",
+                            path: "/Programming/language/C/C",
                             collapsable: false,
                             children: [
+                                {
+                                    title: "语法",
+                                    path: "/Programming/language/C/语法"
+                                },
+                                {
+                                    title: "常用库",
+                                    path: "/Programming/language/C/常用库"
+                                },
                                 {
                                     title: "编译",
                                     path: "/Programming/language/C/编译"

@@ -3,7 +3,9 @@
 - 编程语言
   - [简介](language/简介.md)
   - [Batch](language/Batch.md)
-  - C
+  - [C](language/C/C.md)
+    - [语法](language/C/语法.md)
+    - [常用库](language/C/常用库.md)
     - [编译](language/C/编译.md)
   - [Golang](language/Golang.md)
   - [Groovy](language/Groovy.md)

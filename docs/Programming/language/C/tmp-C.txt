@@ -321,30 +321,7 @@ ASCII码
 ##
 ##
  
-枚举
-- 枚举：列举出变量可能的各种取值。
-- 例子：
-enum Day{Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday};
-enum Day d1;
-d1 = Sunday;                // 给枚举变量赋值
-printf("%d\n", d1);        // 显示为6
-d1 = 10;                    // 理论上只能给枚举变量赋值一个已有的枚举元素，但编译器不一定会报错
-  - 这里Day是枚举类型名，d1是这种类型的枚举变量，Monday、Tuesday……是枚举元素。
-  - 可以在定义枚举类型的同时创建枚举变量：
-enum Day{Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday} d1;
-- 枚举元素是一些符号常量，像宏定义。默认取值依次为0、1、2、3……。
-  - 可以在定义枚举类型时设置枚举元素的值（可以为int型、char型）：
-enum Day{Monday ='M', Tuesday='T', Wednesday, Thursday, Friday, Saturday, Sunday='S'};
-  - 可以像普通常量一样使用枚举元素：
-d1 = Monday;
-if(d1 == Monday)
-    printf("This is Monday.");
-  - 枚举元素是符号常量，不能修改其值:
-Sunday = 7;    // 错误
-- 其它例子：
-enum Bool{false=0,true=1};
-enum Bool b1 = true;
-##
+
 ##
 ##
  

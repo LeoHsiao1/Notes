@@ -127,38 +127,6 @@ if(p){
 
 
 
-
-
-<stdlib.h>
-- stdlib.h是标准函数库（standard library）。
-- 随机数。
-- int rand(void);                    //按预定的序列生成伪随机数，每次重新运行程序时得到的随机数是相同的
-  - <stdlib.h>里宏定义了rand()返回的最大值为0x7FFF、最小值为0。
-  - 例如：
-x = rand()%(B-A)+A;            //生成A与B之间的伪随机数
-- void srand(unsigned int);            //用于设置随机数的种子，使得rand()函数产生不同的随机数序列
-  - 例如：
-srand(time(0));
-x = rand();
-- 调用系统的API
-- int system(const char *string);    //给DOS窗口发出一个命令（采用字符串的形式）
-  - 例如：
-system("pause");            //暂停运行，按下任意键继续
-system("cls");            //清屏
-system("color 0A");        //设置DOS窗口的颜色，取值为0~F，前一位0表示背景色，后一位A表示前景色
-system("del D:\\1.txt");    //删除文件D:\1.txt（在字符串中输入 \ 要转义，所以是 \\）
-system("dir");            //列出当前目录下的所有文件和文件夹列表
-system("dir D:\");        //列出指定目录下的所有文件和文件夹列表
-system("D:");            //进入D盘
-system("cd D:\1");        //进入指定目录（cd代表change directory），cd只能在同一个盘符内移动
-system("exit");            //退出DOS窗口
-- void abort(void);                //使进程非正常终止
-- void exit(int status);        //使进程正常终止，并向父进程返回一个状态值
-##
-##
-##
- 
-
  
 <time.h>
 - time.h提供了获取时间、日期的函数。如下：

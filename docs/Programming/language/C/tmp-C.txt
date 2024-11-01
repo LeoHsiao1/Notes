@@ -124,102 +124,8 @@ if(p){
 ##
 ##
  
-字符串
-字符串的存储
-
-    typedef char * String;
-    String str = "Hello";
-    printf("%s\n", str);
 
 
-- 存储单个字符串的方法：
-- 创建char型一维数组，存储字符串。
-char str[] = "Hello World!";
-printf("%s\n", str);
-// 显示：Hello World!
-printf("len = %d\n",sizeof(str));
-// 显示：len = 13
-  - 存储字符串时，编译器会自动在字符串末尾加上一个空字符 \0 ，因此数组的实际存储长度 = 字符总数 + 1 。
-  - 不能把一个字符串或一个字符数组，直接赋值给另一个字符数组：
-char str2[10];
-str2 = "Hello";        // 错误，因为不能批量修改数组的元素
-str2 = str;            // 错误，因为不能修改数组名的地址
-- 创建char *型指针，指向字符串的地址。
-char *pstr = "Hi";            // 让char *型指针指向字符串常量的地址
-pstr = str;                    // 让char *型指针指向char型数组的地址
-printf("%s\n", pstr);
-// 显示：Hello World!
-printf("%c\n", *pstr);        // 取消对字符指针的引用时，只能得到字符串的第一项元素（相当于str[0]）
-// 显示：H
-printf("%s\n", pstr + 1);        // 从字符串的指定位置开始显示，直到遇到末尾的空字符 \0
-// 显示：ello World!
-printf("%c\n", pstr);            // 以%c格式显示一个字符串
-// 显示：▊
-  - 不能取消char *型指针的引用，否则只能得到一个字符。
-- 存储多个字符串的方法：
-- 创建char型二维数组，数组第一维的每项元素可以存储一个字符串。
-char strs[][10] = {"Hello", "World!"};
-printf("%s\n", strs[0]);
-// 显示：Hello
-- 创建char *型指针数组，数组第一维的每项元素可以指向一个字符串的地址。
-char *pstrs[] = {"Hi", "World!"};
-pstrs[0] = strs[0];
-printf("%s\n", pstrs[0]);
-// 显示：Hello
-- 创建char **型二级指针，指向char *型指针数组。
-char **ppstr = pstrs;
-printf("%s\n", *ppstr);            // *ppstr指向一个字符串
-//显示：Hello
-  - 不能用 char **ppstr = {"Hi", "World!"}; 或 char **ppstr = strs; 赋值，否则程序运行时会报错。
-  - 例：
-int n = 4, i = 0;
-char **ppstr = malloc(sizeof(char *) * n);        // 分配n个char *型指针的内存，地址连续
-*ppstr = NULL;
-*(ppstr + 1) = "Hello";
-*(ppstr + 2) = "World!";
-*(ppstr + 3) = malloc(sizeof(char)*10);
-
-for (i = 0; i < n; i++){
-    printf("%s\n", *(ppstr + i));
-}
-##
-##
-##
- 
-字符串的类型转换
-- 将十六进制数字转换成字符串。
-- 通过计算ASCII码值把数字逐个转换成字符。
-int x = rand() % 15;
-char c;
-if (x >= 0 && x <= 9)    //数字、大写字母（'A'=65）、小写字母三段的ASCII码并不是连续的，所以要分段处理
-    c = '0' + x;
-else if (x >= 10 && x <= 15)
-    c = 'A' + x % 10;
-else
-    return -1;
-- 用sprintf()函数将数字输出到指定字符串（会覆盖原字符串的内容）。
-int x = rand() % 15;
-char str1[10];
-while (1)
-{
-    sprintf(str1, "color 0%x", x);
-    system(str1);
-    y = rand() % (999 - 100) + 100;
-    printf("%d", y);
-}
-- 将字符串转换成数字。
-- stdlib.h定义了将字符串转换成数字的函数atoi()、atol()、atof()。
-- int atoi(const char *);            //将字符串转换成int型（ascii to int），默认返回值为0
-  - 例如：
-int x = atoi("3.14");            //x的值为 3
-- long atol(const char *);            //将字符串转换成long型（ascii to long），默认返回值为0
-- double atof(const char *);        //将字符串转换成double型（ascii to float），默认返回值为0.000000
-  - 例如：
-double d = atof("3.14");        //d的值为3.140000
-##
-##
-##
- 
 <string.h>
 - string.h提供了一些处理字符串的函数。
 - 获取字符串的信息。
@@ -282,42 +188,7 @@ memset(str, NULL, sizeof(str));
 ##
 ##
  
-ASCII码
-- C语言按照ASCII码表处理每个字符的编码，总共有128种字符。
-- 非打印字符：不能显示（或者显示时会乱码），用于控制排版、传输。
-十进制值    名称
-0    NULL（空字符）
-1    SOH(标题开始)
-2    STX（正文开始）
-3    ETX（正文结束）
-4    EOT（传输结束）
-5    ENQ（请求）
-6    ACK（确认）
-7    BEL（响铃）
-8    Backspace（退格）
-9    HT（水平制表符）
-10    LF（换行符）
-11    VT（垂直制表符）
-12    换页符
-13    CR（回车符）
 
-127    DEL（删除）
-- 可打印字符：可以在文本阅读器中显示出来，用于表示文本信息。
-32    space（空格）
-33    !
-
-48    0
-57    9
-
-65    A
-90    Z
-
-97    a
-122    z
-- 转义字符：一些以反斜杠 \ 开头的特殊字符。
-- \' 表示单引号、\" 表示双引号、\n 表示换行符、\b表示退格、\t 表示输出八个空格、\\ 表示反斜杠。
-- 特别地，百分号的转义字符是 %% 。
-注释和除号都是用正斜杠 /（它是45度角），而转义字符是用反斜杠 \ 。
 
 
  

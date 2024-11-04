@@ -1,47 +1,6 @@
 ::: v-pre
 
 
-
-## stdlib.h
-
-- 动态分配内存。
-- void *malloc(size_t size);
-  - 请求分配一块内存空间，大小为size字节。如果请求成功则返回一个指向该内存地址的void *指针，否则返回NULL。
-  - 例如：
-char *str1 = malloc(10*sizeof(char));
-if(str1 == NULL)            // 动态分配内存之后应该先检查返回的指针是否有效
-    return -1;            // windows存在虚拟内存机制，因此一般不会无内存可分配
-printf("%s\n", str1);        // 显示为乱码，因为该内存空间存储着垃圾数据
-strcpy(str1, "Hello");
-printf("%s\n", str1);        // 显示为：Hello
-free(str1);                // 使用完之后应该及时释放这块内存空间
-  - malloc()返回的指针类型是void *，但是不必转换其数据类型，因为：
-1. void *指针在赋值时会自动转换指针的数据类型。
-2. C语言中，如果编译器调用一个函数时没有找到它的声明，则会自动进行隐式声明（implicit declaration），使其返回值为int型。因此如果忘了导入头文件stdlib.h，malloc()函数的返回值会是int型，不能给指针类型的变量赋值，编译时就会及时报错。
-  - 如下，C++中使用malloc()函数时需要进行强制类型转换，否则会报错：无法从 void * 类型转换成 char *类型。
-char *str1 = (char *)malloc(10*sizeof(char));
-- void *calloc(size_t num, size_t size);
-  - 请求分配一块内存空间，大小为num*size字节，并将其初始化为0。如果请求成功则返回一个指向该内存地址的void *指针，否则返回NULL。
-  - 例如：
-char *str1 = calloc(10, sizeof(char));        // 相当于malloc(10*sizeof(char))
-if(str1 == NULL)
-    return -1;
-printf("%s\n", str1);        // 显示为空
-strcpy(str1, "Hello");
-printf("%s\n", str1);        // 显示为： Hello
-free(str1);
-- void *realloc(void *p, size_t size);
-  - p指向一个用malloc()或calloc()分配的内存空间，请求改变其大小为size字节。如果请求成功则返回原指针p，否则返回NULL。
-  - 如果p为空指针，则realloc()会创建一个size字节的内存空间。
-  - 例如：
-char *str1 = malloc(10*sizeof(char));
-char *rc = realloc(str1, 20);
-if(rc == NULL)
-    return -1;
-- void free(void *);            // 释放动态分配的内存空间
-  - 应该及时释放不用的内存，以免程序占用越来越多的内存，导致内存泄露（memory leaks），使得系统变得卡顿甚至使程序奔溃。
-
-
 C程序启动时，会向操作系统申请一定大小的内存空间。然后将该内存空间划分成几个区域：
 - 堆区（heap）：动态存储区
   - 堆区内存由程序员主动分配、释放（通过执行malloc、free等函数），如果没有释放则会一直保留，当程序终止时会被系统自动释放。

@@ -4,36 +4,6 @@
 
 
 
- 
-
-##
-##
-##
- 
-<assert.h>
-- assert.h提供了断言函数assert()，适用于打印调试信息。
-- assert()被宏定义如下：
-# undef assert
-# ifdef NDEBUG
-# define assert(x)    ((void)0)
-# else
-# define assert(e)    ((e) ? (void)0 : _assert(# e, __FILE__, __LINE__))
-# endif
-  - 当assert()的输入为假时，它会向stderr打印错误信息，并调用函数abort()来终止程序。当assert()的输入为真时，它不会起作用。
-  - void _assert(const char *, const char *, int)会显示错误信息并调用abort()终止程序。
-  - 在生产环境，可以宏定义NDEBUG，使assert()失效。（要保证该宏定义在头文件assert.h之前被编译）
-- 例如，在以下语句中插入断言，
-    int x = 0;
-    while(1)
-    {
-        printf("%d", x++);
-        assert(0 < x && x < 10);
-    }
-// 显示为：0123456789Assertion failed: 0 < x && x < 10, file d:\1\test_C\1.c, line 21
-##
-##
-##
- 
 <math.h>
 - math.h提供了一些数学函数。
 - 三角函数。

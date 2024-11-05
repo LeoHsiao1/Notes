@@ -5,21 +5,7 @@
 
 
  
-<time.h>
-- time.h提供了获取时间、日期的函数。如下：
-#include <time.h>
 
-time_t timep;
-struct tm *ptime;
-time(&timep);
-ptime = localtime(&timep);        // 获取当前时间（本地时区）
-printf("Year:  %d\n", 1900 + ptime->tm_year);
-printf("Month:  %d\n", 1 + ptime->tm_mon);
-printf("Day:  %d\n", ptime->tm_mday);
-printf("Hour:  %d\n", ptime->tm_hour);
-printf("Minute:  %d\n", ptime->tm_min);
-printf("Second:  %d\n", ptime->tm_sec);
-printf("Weekday:  %d\n", ptime->tm_wday);
 ##
 ##
 ##

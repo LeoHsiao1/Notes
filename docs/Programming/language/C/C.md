@@ -45,18 +45,6 @@
     - 增加了头文件 `<threads.h>` ，用于创建多线程。
     - 增加了头文件 `<uchar.h>` ，用于处理 Unicode 字符。它定义了 char16_t、char32_t 数据类型，用于存储 UTF-16、UTF-32 编码的字符。
 
-### C++
-
-- 1967 年，挪威的 Ole Johan Dahl 和 Kristen Nygaard 发布了 Simula 语言。
-  - 它是世界上第一个面向对象的编程语言，引入了对象、类、继承的概念。
-- 1975 年，施乐公司的 Alan Kay 发明了 Smalltalk 语言。它是世界上第二个面向对象的编程语言，并提供了世界上第一个集成开发环境（IDE）。
-- 1979 年，Bjarne Stroustrup 来到贝尔实验室工作。他借鉴 Simula 等语言，开始将 C 语言改进为一个新语言，称为 C Plus Plus ，简称为 Cpp、C++ 。
-  - C++ 是 C 语言的升级版。在 C 原有语法的基础上，增加了面向对象编程等语法。
-- 1985 年，Bjarne Stroustrup 出版书籍《The C++ Programming Language》，介绍了 C++ 的各种语法。此后几年，又给 C++ 增加了一些语法。
-- 1998 年，ISO 发布了新的 C++ 语言标准，被称为 C++98 。2000 年代的程序员们，大多使用 C++98 标准。
-- 2011 年，ISO 发布了新的 C++ 语言标准，被称为 C++11 。
-- 2017 年，ISO 发布了新的 C++ 语言标准，被称为 C++17 。
-
 ### C#
 
 - 1964 年，Dartmouth 学院的 John Kemeny 和 Thomas Kurtz 发明了一种高级编程语言 BASIC 。它的语法简单，适合让学生们学习编程。

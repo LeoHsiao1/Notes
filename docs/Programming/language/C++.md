@@ -24,13 +24,13 @@
     ```cpp
     int array = {1, 2, 3, 4, 5};
     for (int i = 0; i < 5; i++)
-        std::cout << arr[i] << std::endl;
+        cout << arr[i] << endl;
     ```
     现在可以简化为：
     ```cpp
     int array = {1, 2, 3, 4, 5};
     for (auto i : array)
-        std::cout << i << std::endl;
+        cout << i << endl;
     ```
   - 头文件 `<memory>` 中，弃用 `auto_ptr` 类型的指针，增加 `unique_ptr`、`shared_ptr`、`weak_ptr` 三种类型的指针。
   - 增加头文件 `<regex>` ，用于处理正则表达式。
@@ -55,7 +55,7 @@ int main()
   - iostream 等标准库的所有标识符，都位于 std 命名空间。因此，用户可通过两种方式来调用这些标识符：
     - 每次调用标识符时，都加上 std 命名空间的前缀，比如 `std::cout` 。
     - 在源文件中声明 `using namespace std;` ，选用 std 命名空间，然后可以直接调用其中的标识符，比如 `cout` 。
-- 标准库 iostream 定义了一个 iostream 类，表示输入输出流。
+- 标准库 `<iostream>` 定义了一个 iostream 类，表示输入输出流。
   - `cout` 是从 iostream 类创建的一个对象，表示 character output 。
     - 用户可通过 `<<` 运算符，向 `cout` 写入一个值，该值会被输出到终端。
     - `endl` 表示输出一个换行符，并刷新缓冲区。`std::cout << std::endl;` 相当于 `std::cout << '\n' << std::flush;`
@@ -67,9 +67,99 @@ int main()
       std::cout << "name: " << name << std::endl;
       ```
 
-## 变量
+## 数据类型
 
-## 字符串
+- C++ 提供了以下基本数据类型：
+  ```cpp
+  bool      // 布尔型，容量为 1 字节，但 8 个 bool 变量可以压缩为 1 字节
+
+  char      // 字符型，容量为 1 字节
+
+  short int // 短整型，容量为 2 字节
+  int       // 整型，容量为 4 字节
+  long int  // 长整型，容量为 8 字节
+
+  float     // 单精度浮点型，容量为 4 字节
+  double    // 双精度浮点型，容量为 8 字节
+  long double // 容量为 16 字节
+
+  void      // 无类型
+  wchar_t   // 宽字符。相当于 typedef short int wchar_t;
+  ```
+
+- 字符型、整型、浮点型，还可添加 signed、unsigned 两种修饰符，例如：
+  ```cpp
+  signed int    // 带符号整型。最高的一个二进制位，用于存储正负号
+  unsigned int  // 无符号整型。没有正负号，只能存储整数
+  ```
+
+- 除了上述基本数据类型，用户可以自定义一个类，代表一种新的数据类型。
+
+### 字符串
+
+C++ 中如何用变量存储字符串？有多种方式：
+
+- 可以创建 char 数组，这像 C 语言的风格。
+  ```cpp
+  char str[] = "Hello"; // 会在字符串末尾，自动添加一个空字符 \0 ，表示该字符串的结束
+  ```
+
+- 可以导入标准库 `<string>` ，从 string 类创建一个对象，用于存储字符串。例：
+  ```cpp
+  #include <iostream>
+  #include <string>
+  using namespace std;
+
+  int main()
+  {
+      string str1 = string("Hello");  // string("Hello") 是创建一个 string 对象，可简写为字符串常量 "Hello"
+
+      cout << str1 << endl;           // 输出为：Hello
+      cout << str1.size() << endl;    // 输出为：5 。这是获取字符串的长度，即字符总数，不考虑末尾的空字符
+
+      string str2 = str1 + " World";  // 可通过加号，拼接两个字符串
+      cout << str2 << endl;           // 输出为：Hello World
+      str2 = str1;                    // string 对象之间，可以直接赋值
+
+      return 0;
+  }
+  ```
+  - 如果字符串中间包含空字符 `\0` ，则会提前结束字符串。
+    ```cpp
+    cout << string("ab\0cd")           << endl; // 输出为：ab
+    cout << string("ab\0cd").size()    << endl; // 输出为：2
+    ```
+    为了保留空字符，可以指定 string 的长度。这样不依靠空字符，就能判断字符串何时结束。
+    ```cpp
+    cout << string("ab\0cd", 5)        << endl; // 输出为：abcd
+    cout << string("ab\0cd", 5).size() << endl; // 输出为：5
+    ```
+  - 调用 `string.c_str()` ，会返回一个 `const char*` 类型的指针，指向字符串的内存首地址，可像字符数组一样访问。
+    ```cpp
+    string str1 = "Hello";
+    cout << str1.c_str() << endl;   // 输出为：Hello
+    const char *cstr = str1.c_str();
+    ```
+
+- 可以导入标准库 `<sstream>` ，从 stringstream 类创建一个对象，表示字符串流。用法像 iostream 。
+  ```cpp
+  #include <sstream>
+
+  stringstream ss;
+  ss << 5;
+  ss << "Hello";  // 用户可以向 stringstream ，写入多个不同类型的值，它们会拼接为一个字符串
+  cout << ss.str() << endl;  // 将 stringstream ，转换成一个 string 对象。输出为：5Hello
+
+  string str = string(ss.str()); // 调用 ss.str() 会返回一个临时的 string 对象，可将它另存为一个长期的 string 对象
+
+  ss.str("1 3.14");   // 输入一个字符串，作为 stringstream 的内容
+  float a,b;
+  ss >> a >> b;       // 从 stringstream 读取两个值，赋值给到变量 a、b
+  cout << a << endl;  // 输出为：1
+  cout << b << endl;  // 输出为：3.14
+
+  ss.clear();   // 清除 stringstream 的内容
+  ```
 
 
 ## 类
@@ -82,7 +172,7 @@ int main()
   - 实例变量
     - 创建每个对象时，会为该对象单独存储一份实例变量，专门给该对象使用。当该对象被销毁时，其实例变量也会被销毁。
   - 类变量
-    - 声明为 static 类型，又称为静态变量。
+    <!-- - 声明为 static 类型，又称为静态变量。 -->
     - 每个类，只存储一份类变量，被该类的所有对象共用。
 
 - 在类中定义的方法，分为几类：
@@ -91,15 +181,15 @@ int main()
 
 ## 对象
 
-- C++ 中创建对象时，有两种方式：
+- C++ 创建对象时，有两种方式：
   - 在内存的栈区，创建对象
     - 这种对象，像普通变量一样创建，声明类型、赋值。
     - 这种对象，当作用域结束时，会被自动销毁，释放内存空间。
     - 这种对象的成员，要用 `.` 运算符来访问。
     - 例：
       ```cpp
-      std::string str1 = "Hello";
-      std::cout << str1.length() << std::endl;
+      string str = string("Hello");
+      cout << str.length() << endl;
       ```
   - 在内存的堆区，创建对象
     - 这种对象，要用关键字 `new` 创建，调用一个类，传入参数。
@@ -109,84 +199,84 @@ int main()
     - 这种对象的成员，要用 `->` 运算符来访问。
     - 例：
       ```cpp
-      std::string *str2 = new std::string("Hello");
-      std::cout << str2->length() << std::endl;
+      string *str = new string("Hello");
+      cout << str->length() << endl;
 
-      delete str2;
+      delete str;
       ```
 
 ### 指针
 
-C++ 的头文件 `<memory>` 提供了几种智能指针，用于自动销毁堆区的对象：
-- `auto_ptr`
-  - ：这种指针，当作用域结束时，会自动调用它所指对象的析构函数，销毁该对象。
-  - 例：
-    ```cpp
-    #include <iostream>
-    #include <memory>
+- C++ 不仅继承了 C 语言的指针语法，还通过头文件 `<memory>` 提供了几种智能指针，用于自动销毁堆区的对象：
+  - `auto_ptr`
+    - ：这种指针，当作用域结束时，会自动调用它所指对象的析构函数，销毁该对象。
+    - 例：
+      ```cpp
+      #include <iostream>
+      #include <memory>
 
-    int main()
-    {
-        int* x = new int(5);
-        std::auto_ptr<int> p1(x);   // 创建 auto_ptr 类型的指针 p1 ，指向 int 类型的对象 x
-        // 可以合并为一行代码：std::auto_ptr<int> p1(new int(5));
+      int main()
+      {
+          int* x = new int(5);
+          auto_ptr<int> p1(x);   // 创建 auto_ptr 类型的指针 p1 ，指向 int 类型的对象 x
+          // 可以合并为一行代码：auto_ptr<int> p1(new int(5));
 
-        std::cout << p1 << std::endl;   // 语法错误，不支持将 auto_ptr 指针写入 ostream
-        std::cout << *p1 << std::endl;  // 输出为：5
-        std::cout << p1.get() << std::endl; // 获取对象的内存地址。输出为：0x1b2fe70
+          cout << p1 << endl;   // 语法错误，不支持将 auto_ptr 指针写入 ostream
+          cout << *p1 << endl;  // 输出为：5
+          cout << p1.get() << endl; // 获取对象的内存地址。输出为：0x1b2fe70
 
-        p1.reset(new int(6));           // 重置指针，让它指向另一个对象
-        std::cout << *p1 << std::endl;  // 输出为：6
+          p1.reset(new int(6)); // 重置指针，让它指向另一个对象
+          cout << *p1 << endl;  // 输出为：6
 
-        int *p2 = p1.release();         // 释放指针。这会将它置为空指针，然后返回对象的内存地址
-        std::cout << p1.get() << std::endl; // 输出为：0
-        std::cout << *p1 << std::endl;  // 读取空指针，这会导致程序崩溃，报错 Segmentation fault
+          int *p2 = p1.release();   // 释放指针。这会将它置为空指针，然后返回对象的内存地址
+          cout << p1.get() << endl; // 输出为：0
+          cout << *p1 << endl;      // 读取空指针，这会导致程序崩溃，报错 Segmentation fault
 
-        return 0;
-    }
+          return 0;
+      }
 
-    ```
-  - 缺点：不能将一个 auto_ptr 指针，赋值给另一个 auto_ptr 指针。因为赋值时会自动调用 release() 释放前一个指针，如果用户继续使用前一个指针，就会出错。
-    ```cpp
-    std::auto_ptr<int> p1(new int(5));
-    std::auto_ptr<int> p2;
-    p2 = p1;
-    std::cout << *p1 << std::endl;  // 此时 p1 已经是空指针，读取它会导致程序崩溃
-    ```
+      ```
+    - 缺点：不能将一个 auto_ptr 指针，赋值给另一个 auto_ptr 指针。因为赋值时会自动调用 release() 释放前一个指针，如果用户继续使用前一个指针，就会出错。
+      ```cpp
+      auto_ptr<int> p1(new int(5));
+      auto_ptr<int> p2;
+      p2 = p1;
+      cout << *p1 << endl;  // 此时 p1 已经是空指针，读取它会导致程序崩溃
+      ```
 
-- `unique_ptr`
-  - ：每个 unique_ptr 指针，禁止赋值给其它 unique_ptr 指针。
-  - 例：
-    ```cpp
-    std::unique_ptr<int> p1(new int(5));
-    std::unique_ptr<int> p2;
-    p2 = p1;  // 编译时会报错，不允许这样赋值
-    ```
+  - `unique_ptr`
+    - ：每个 unique_ptr 指针，禁止赋值给其它 unique_ptr 指针。
+    - 例：
+      ```cpp
+      unique_ptr<int> p1(new int(5));
+      unique_ptr<int> p2;
+      p2 = p1;  // 编译时会报错，不允许这样赋值
+      ```
 
-- `shared_ptr`
-  - ：多个 shared_ptr 指针，允许指向同一个对象。此时会自动记录，该对象被多少个指针引用了。如果引用计数变为 0 ，则自动销毁对象。
-    ```cpp
-    auto p1 = std::make_shared<int>(5);
-    std::cout << *p1 << std::endl;  // 输出为：5
+  - `shared_ptr`
+    - ：多个 shared_ptr 指针，允许指向同一个对象。此时会自动记录，该对象被多少个指针引用了。如果引用计数变为 0 ，则自动销毁对象。
+      ```cpp
+      auto p1 = make_shared<int>(5);
+      cout << *p1 << endl;  // 输出为：5
 
-    auto p2 = p1;
-    std::cout << p1.use_count() << std::endl;   // 查看此时的引用计数。输出为：2
-    ```
-  - 缺点：假设对象 A 有一个 shared_ptr 指针变量，引用对象 B 。对象 B 也有一个 shared_ptr 指针变量，引用对象 A 。此时两个对象循环引用，引用计数不会变为 0 ，除非用户主动 delete 对象。
+      auto p2 = p1;
+      cout << p1.use_count() << endl;   // 查看此时的引用计数。输出为：2
+      ```
+    - 缺点：假设对象 A 有一个 shared_ptr 指针变量，引用对象 B 。对象 B 也有一个 shared_ptr 指针变量，引用对象 A 。此时两个对象循环引用，引用计数不会变为 0 ，除非用户主动 delete 对象。
 
-- `weak_ptr`
-  - ：与 shared_ptr 指针类似，但 weak_ptr 指针不会影响一个对象的引用计数。因此 shared_ptr 指针全部被销毁时，不管剩下多少个 weak_ptr 指针，引用计数都为 0 ，不怕循环引用。
-  - shared_ptr 被称为强引用，决定了引用计数。weak_ptr 被称为弱引用，不影响引用计数。
+  - `weak_ptr`
+    - ：与 shared_ptr 指针类似，但 weak_ptr 指针不会影响一个对象的引用计数。因此 shared_ptr 指针全部被销毁时，不管剩下多少个 weak_ptr 指针，引用计数都为 0 ，不怕循环引用。
+    - shared_ptr 被称为强引用，决定了引用计数。weak_ptr 被称为弱引用，不影响引用计数。
 
 ### 引用
 
 - C++ 中，可以用 & 运算符，创建对某个对象的引用。如下：
   ```cpp
   int a = 1;
-  int &b = a;                   // 创建一个引用 b ，指向变量 a
-  std::cout << b << std::endl;  // 输出为：1 。因为此时变量 b 指向变量 a
-  b = 2;                        // 给变量 b 赋值，实际上是给变量 a 赋值
-  std::cout << a << std::endl;  // 输出为：2
+  int &b = a;         // 创建一个引用 b ，指向变量 a
+  cout << b << endl;  // 输出为：1 。因为此时变量 b 指向变量 a
+  b = 2;              // 给变量 b 赋值，实际上是给变量 a 赋值
+  cout << a << endl;  // 输出为：2
   ```
   - 创建一个引用时，必须同时对它进行初始化赋值，而且以后不能改变它的指向。
   - 引用相当于对象的别名。如果一个对象拥有多个引用，则相当于拥有多个标识符名称。

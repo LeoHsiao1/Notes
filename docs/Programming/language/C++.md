@@ -2,8 +2,8 @@
 
 - C++ 是 C 语言的升级版。在 C 原有语法的基础上，增加了面向对象编程等语法。
 - 用 C++ 语言编写的源代码，一般保存为两种文件：
-  - 源文件（source file）：扩展名为 `.cpp`
-  - 头文件（header file）：扩展名为 `.h`
+  - 源文件（source file）：扩展名为 `.cpp` 。
+  - 头文件（header file）：扩展名为 `.h` 或 `.hpp` 或没有后缀。
 
 ## 相关历史
 
@@ -35,6 +35,37 @@
   - 头文件 `<memory>` 中，弃用 `auto_ptr` 类型的指针，增加 `unique_ptr`、`shared_ptr`、`weak_ptr` 三种类型的指针。
   - 增加头文件 `<regex>` ，用于处理正则表达式。
 - 2017 年，ISO 发布了新的 C++ 语言标准，被称为 C++17 。
+
+## 程序示例
+
+编写一个源文件 test.cpp ：
+```cpp
+#include <iostream>       // 导入头文件
+// using namespace std;
+
+int main()
+{
+    std::cout << "Hello" << std::endl;
+    return 0;
+}
+```
+- C++ 早期的头文件，扩展名 `.h` 或 `.hpp` 。但 C++98 修改了头文件的格式，去掉了扩展名。
+- C++98 的头文件，引入了 namespace 的机制，用于分组管理标识符。
+  - 每个 namespace 用于容纳一组标识符。同一 namespace 的各个标识符不能重名，不同 namespace 的各个标识符可以重名。
+  - iostream 等标准库的所有标识符，都位于 std 命名空间。因此，用户可通过两种方式来调用这些标识符：
+    - 每次调用标识符时，都加上 std 命名空间的前缀，比如 `std::cout` 。
+    - 在源文件中声明 `using namespace std;` ，选用 std 命名空间，然后可以直接调用其中的标识符，比如 `cout` 。
+- 标准库 iostream 定义了一个 iostream 类，表示输入输出流。
+  - `cout` 是从 iostream 类创建的一个对象，表示 character output 。
+    - 用户可通过 `<<` 运算符，向 `cout` 写入一个值，该值会被输出到终端。
+    - `endl` 表示输出一个换行符，并刷新缓冲区。`std::cout << std::endl;` 相当于 `std::cout << '\n' << std::flush;`
+  - `cin` 是从 iostream 类创建的一个对象，表示 character input 。
+    - 用户可通过 `>>` 运算符，从 `cin` 读取一个值，赋值给一个变量。
+      ```cpp
+      char name[10];
+      std::cin >> name;
+      std::cout << "name: " << name << std::endl;
+      ```
 
 ## 变量
 

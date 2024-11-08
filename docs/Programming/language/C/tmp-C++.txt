@@ -1,15 +1,6 @@
 C++
 
 
-##
-##
-## 输入输出流。
-#include <iostream>
-
-char name[10];
-std::cin >> name;
-std::cout << "The name is: " << name << std::endl;
-
 ## 字符串流：可以输入各种类型的值，合成一个字符串对象。
 #include <sstream>
 

@@ -112,7 +112,8 @@ C++ 中如何用变量存储字符串？有多种方式：
 
   int main()
   {
-      string str1 = string("Hello");  // string("Hello") 是创建一个 string 对象，可简写为字符串常量 "Hello"
+      string str1 = string("Hello");  // string("Hello") 是创建一个 string 对象
+      str1 = "Hello";                 // 可以将一个字符串常量（的首地址），赋值给 string 对象
 
       cout << str1 << endl;           // 输出为：Hello
       cout << str1.size() << endl;    // 输出为：5 。这是获取字符串的长度，即字符总数，不考虑末尾的空字符
@@ -282,6 +283,33 @@ C++ 中如何用变量存储字符串？有多种方式：
       cout << i << endl;
   ```
 
+### template
+
+- 使用关键字 template 可以声明泛型。
+  - 如果某个值被声明为泛型，则在编译时，编译器会自动选用一种具体的数据类型。
+
+- 将一个函数的参数声明为泛型，就可以让该函数支持不同类型的值。而不必为每种数据类型，重复定义一个函数。例：
+  ```cpp
+  #include <iostream>
+  #include <string>
+  using namespace std;
+  template <typename T>   // 创建一种泛型，名为 T 。这里的 typename 也可写作 class
+
+  T add(T a, T b) {       // 定义一个函数，形参、返回值都是泛型
+      return a + b;
+  }
+
+  int main()
+  {
+      cout << add(1, 2)      << endl; // 输出为：3
+      cout << add(1.0, 3.14) << endl; // 输出为：4.14
+      cout << add(1, 3.14)   << endl; // 编译时报错，输入的两个值分别为 int、double 类型，但 T 同时只能采用一种类型
+      cout << add(string("Hello"), string("World")) << endl;  // 输出为：HelloWorld
+
+      return 0;
+  }
+  ```
+
 ## 类
 
 - 使用关键字 class ，可以定义一个类。
@@ -297,7 +325,6 @@ C++ 中如何用变量存储字符串？有多种方式：
   ```cpp
   #include <iostream>
   using namespace std;
-
 
   class Horse   // 定义一个类，名为 Horse
   {

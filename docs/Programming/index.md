@@ -7,6 +7,7 @@
     - [语法](language/C/语法.md)
     - [常用库](language/C/常用库.md)
     - [编译](language/C/编译.md)
+  - [C++](language/C++.md)
   - [Golang](language/Golang.md)
   - [Groovy](language/Groovy.md)
   - [Java](language/Java/Java.md)

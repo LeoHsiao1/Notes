@@ -136,6 +136,10 @@ module.exports = {
                             ]
                         },
                         {
+                            title: "C++",
+                            path: "/Programming/language/C++"
+                        },
+                        {
                             title: "Golang",
                             path: "/Programming/language/Golang"
                         },

@@ -314,16 +314,12 @@ C++ 中如何用变量存储字符串？有多种方式：
 
 - 使用关键字 class ，可以定义一个类。
   - 类中可以定义多个变量、函数，统称为该类的成员。
-
-- 每个成员可以用一种修饰符，声明访问权限。
-  - private ：私有成员。只能从当前类中访问。
-  - protected ：受保护成员。只能从当前类，或者子类中，访问。
-  - public ：公有成员。可以从所有位置访问，包括类外。
-  - 一个成员，如果未使用访问控制修饰符，则默认会当作 private 类型处理。
+  - 类中定义的函数，通常称为方法。
 
 - 例：
   ```cpp
   #include <iostream>
+  #include <string>
   using namespace std;
 
   class Horse   // 定义一个类，名为 Horse
@@ -357,7 +353,92 @@ C++ 中如何用变量存储字符串？有多种方式：
   }
   ```
 
-## 对象
+- 可以先在类内，声明一个方法的头部。然后在类外，定义该方法的具体内容。
+  ```cpp
+  class Horse
+  {
+      public:
+          void print();
+  };
+
+  void Horse::print() {
+      cout << "age: " << age << endl;
+      cout << "name: " << name << endl;
+  }
+  ```
+
+### 成员
+
+- 类中声明的变量，分为几类：
+  - 局部变量
+    - ：在某个方法内声明的变量，作用域仅限于该方法内。
+  - 实例变量
+    - ：在类内、方法外声明的变量。
+  - 静态变量
+    - ：在类内、方法外声明的变量，并添加关键字 static 。
+    - 假设从一个类，创建 n 个实例对象：
+      - 这 n 个对象，会各自创建一份实例变量。修改一个对象的实例变量，不会影响其它对象。
+      - 该类只存在一份静态变量，被 n 个对象共用。
+
+- 类中声明的方法，分为几类：
+  - 实例方法
+    - ：像普通函数一样声明的方法。
+    - 实例方法通常会调用实例变量。因此不同对象的实例方法虽然使用相同的源代码，但调用它们的结果通常不同。
+  - 静态方法
+    - ：添加关键字 static 的方法。
+    - 静态方法通常不会调用实例变量。因此不同对象调用静态方法，结果通常相同。
+
+- 每个成员可以用一种修饰符，声明访问权限。
+  - private ：私有成员。只能从当前类中访问。
+  - protected ：受保护成员。只能从当前类，或者子类中，访问。
+  - public ：公有成员。可以从所有位置访问，包括类外。
+  - 一个成员，如果未使用访问控制修饰符，则默认会当作 private 类型处理。
+
+- 例：
+  ```cpp
+  #include <iostream>
+  #include <string>
+  using namespace std;
+
+  class Horse
+  {
+      public:
+          int age = 0;  // 在类中，定义实例变量时，可以赋值，用作每个实例的默认值
+          string name;
+          static string description;  // 在类中，可以声明静态变量，但不能赋值
+
+          Horse(int a, string n)
+          {
+              age = a;
+              name = n;
+          }
+
+          void print() {
+              cout << "age: " << age << endl;
+              cout << "name: " << name << endl;
+          }
+
+          static void test() {
+              cout << "Hello" << endl;
+          }
+  };
+
+  string Horse::description = "this is for test";   // 在类外，对静态变量赋值
+
+  int main()
+  {
+      Horse h(5, "Jack");
+      h.print();        // 普通方法，需要从类创建一个对象，通过对象名访问该方法
+      Horse::print();   // 编译时报错：cannot call member function without object
+
+      Horse::test();    // 静态方法，可以通过类名访问
+      h.test();         // 静态方法，也可以通过对象名访问
+
+      return 0;
+  }
+  ```
+
+### 对象
 
 - C++ 创建对象时，有两种方式：
   - 在内存的栈区，创建对象

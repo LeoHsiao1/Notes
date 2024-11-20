@@ -16,12 +16,13 @@
     - 如果一个问题可以表示成算法形式，即可计算，则可以被图灵机解决。
   - 这设计了计算机的基本运行逻辑。
   - 如果一个编程语言能实现图灵机的基本功能，比如算术运算、逻辑运算、条件判断、循环，则称为图灵完备（Turing Completeness）。
-- 1945 年 3 月，参与美国原子弹研制的冯·诺依曼起草了一份论述 EDVAC（Electronic Discrete Variable Automatic Computer）的报告，将计算机设计成五个基本部分：运算器、控制器、存储器、输入设备、输出设备。
-  - 这设计了计算机的基本架构，沿用至今。
+- 1945 年，参与美国原子弹研制的冯·诺依曼起草了一份论述 EDVAC（Electronic Discrete Variable Automatic Computer）的报告。
+  - 它将计算机设计成五个基本部分：运算器、控制器、存储器、输入设备、输出设备。
+  - 它设计了计算机的基本架构，被人们沿用至今。
 - 1950 年，图灵发表论文《计算机器与智能》，提出了图灵测试：如果一台机器让人不能分辨出它是机器，则可以判断该机器具备人工智能。
 - 1954 年，IBM 公司的 John Backus 发明了 Fortran 语言。
   - 它是世界上第一种高级编程语言，主要用于公式计算。
-- 1956 年 8 月，John McCarthy 在 Dartmouth 学院发起一场会议，与香农、Nathaniel Rochester、Marvin Minsky 等人在讨论中首次提出了人工智能的概念。
+- 1956 年，John McCarthy 在 Dartmouth 学院发起一场会议，与香农、Nathaniel Rochester、Marvin Minsky 等人在讨论中首次提出了人工智能的概念。
 - 1958 年，John McCarthy 因为 Fortran 的功能不满足需求，发明了 Lisp 语言。
   - 它是第一种支持递归函数的高级编程语言。
 

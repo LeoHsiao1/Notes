@@ -48,9 +48,9 @@
 
 ### C#
 
-- 1964 年，Dartmouth 学院的 John Kemeny 和 Thomas Kurtz 发明了一种高级编程语言 BASIC 。它的语法简单，适合让学生们学习编程。
+- 1964 年，Dartmouth 学院的 John Kemeny 和 Thomas Kurtz ，基于 Fortran 发明了一个高级编程语言 BASIC 。它的语法简单，适合让学生们学习编程。
 
-- 1991 年，微软公司基于 BASIC 语言，发布了一个新语言 Visual Basic 。
+- 1991 年，微软公司基于 BASIC 语言，发明了一个新语言 Visual Basic 。
   - 优点：可以通过 GUI 界面进行可视化的编程，入门门槛低。
   - 缺点：GUI 界面尚不成熟，功能少。
 

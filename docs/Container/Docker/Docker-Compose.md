@@ -114,6 +114,7 @@ services:                     # 开始定义服务
     restart: unless-stopped   # 容器的重启策略
     # stop_signal: SIGTERM    # 执行 docker stop 时向容器发送的信号
     # stop_grace_period: 10s  # 执行 docker stop 之后，如果容器超时未终止，则发送 SIGKILL 信号强制杀死
+    # shm_size: 64m           # 设置共享内存 /dev/shm 的容量
 
     # 关于环境变量
     environment:              # 环境变量，采用数组的格式声明

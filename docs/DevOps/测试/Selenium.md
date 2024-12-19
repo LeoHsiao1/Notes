@@ -4,7 +4,7 @@
 - [官网](https://www.selenium.dev/)
 - 发音为 `/səˈliːniəm/` 。
 - Selenium 项目提供了多个工具：
-  - WebDriver ：一个 HTTP 服务器，用于调用 Firefox、Chrome 等浏览器的 API 来访问网站。
+  - WebDriver ：一个 HTTP 服务器，用于调用 Chrome、Firefox 等浏览器的 API 来访问网站。
   - IDE ：一个浏览器插件，用于记录用户在浏览器中的操作，记录成 Selenium 命令，便于快速创建测试用例。
   - Grid ：一个 Web 服务器，采用 Java 语言开发，用于在多个主机上执行 WebDriver 任务。
 
@@ -13,7 +13,7 @@
 ### 安装
 
 1. 安装 webdriver 。
-    - 如果安装在本机，则需要安装某种浏览器，再下载对应版本的 webdriver 二进制文件。
+    - 如果安装在本机，则需要安装 Chrome、Firefox 等浏览器，再安装对应版本的 webdriver 二进制文件。
     - 也可以在其它主机部署 Grid 服务器，然后在本机调用。
 
 2. 安装 Python 的第三方库作为客户端：`pip install selenium`
@@ -100,12 +100,12 @@
 
 ### 部署
 
-- 下载 jar 包，然后执行：
+- 可以下载 jar 包，然后运行：
   ```sh
   java -jar selenium-server.jar
   ```
 
-- 用 docker-compose 部署：
+- 或者用 docker-compose 部署：
   ```yml
   version: '3'
 
@@ -113,7 +113,7 @@
 
     selenium:
       container_name: selenium
-      image: selenium/standalone-chrome:92.0-20210804
+      image: selenium/standalone-chrome:131.0-20241204
       restart: unless-stopped
       shm_size: 2g
       ports:
@@ -125,18 +125,25 @@
   - 容器启动时总是会重新生成配置文件 config.toml ，除非没有写入权限。可以挂载 config.toml ，内容示例：
     ```ini
     [network]
-    relax-checks = true               # 是否放宽检查客户端 HTTP 请求的 Headers、Content-Type
+    # relax-checks = true           # 是否放宽检查客户端 HTTP 请求的 Headers、Content-Type
 
     [node]
-    # detect-drivers = true           # 是否自动发现本机上可用的 WebDriver
-    # session-timeout = "300"         # 删除超过一定时长未活动的 session
-    # max-sessions = 1                # 每个 node 可以分配的最大 session 数，默认等于 CPU 核数
-    # override-max-sessions = false   # 是否允许设置的 max-sessions 超过 CPU 核数
+    # detect-drivers = true         # 是否自动发现本机上可用的 WebDriver
+    # session-timeout = "300"       # 如果一个 session 超过 n 秒未活动，则删除该 session
+    # max-sessions = 1              # 每个 node 允许同时运行的 session 数，默认等于 CPU 核数
+    # override-max-sessions = false # 是否允许设置的 max-sessions 超过 CPU 核数
+    # drain-after-session-coun = 0  # 执行 n 个 session 之后，清空并关闭该 node ，这适合 k8s 的部署模式
 
     [router]
-    username = admin                  # 给网站开启 Basic Auth 认证
+    username = admin                # 给网站开启 Basic Auth 认证
     password = ******
 
     # [server]
     # port = 4444
+    ```
+  - 除了修改 config.toml 文件，也可添加环境变量来配置 selenium ：
+    ```yml
+    SE_NODE_SESSION_TIMEOUT: '70'
+    SE_NODE_MAX_SESSIONS: '4'
+    SE_NODE_OVERRIDE_MAX_SESSIONS: 'true'
     ```

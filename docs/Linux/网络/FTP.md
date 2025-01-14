@@ -203,7 +203,7 @@ allow_writeable_chroot=YES
 # chroot_list_enable=YES
 # 一个用户列表，每行记录一个用户名
 # chroot_list_file=/etc/vsftpd.chroot_list
-# 是否拒绝 userlist_file 中的用户登录
+# 是否启用黑名单 userlist_file ，拒绝其中的用户登录
 # userlist_enable=NO
 # 一个用户列表，每行记录一个用户名
 # userlist_file=/etc/vsftpd/user_list

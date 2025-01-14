@@ -1,4 +1,4 @@
-# Docker Compose
+# docker-compose
 
 ：一个命令行工具，用于编排 Docker 容器。
 - [官方文档](https://docs.docker.com/compose/compose-file/)

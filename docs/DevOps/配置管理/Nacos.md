@@ -33,8 +33,8 @@
         EMBEDDED_STORAGE: embedded    # 采用内置数据库
         NACOS_AUTH_ENABLE: 'true'     # 让 API 启用密码认证
         NACOS_AUTH_TOKEN: ***         # 用于生成客户端的 accessToken
-        NACOS_AUTH_IDENTITY_KEY: ***  # 用于 Nacos 集群节点之间的身份认证
-        NACOS_AUTH_IDENTITY_VALUE: ***
+        NACOS_AUTH_IDENTITY_KEY: <str>  # 用于 Nacos 集群节点之间的身份认证
+        NACOS_AUTH_IDENTITY_VALUE: ***  # key 的值，要求为 32 位字符，然后按 base64 编码
       ports:
         - 8848:8848     # HTTP 端口，供客户端访问
         - 9848:9848     # gRPC 端口，供客户端访问
@@ -44,25 +44,26 @@
         - ./data:/home/nacos/data
         - /tmp/nacos/logs:/home/nacos/logs
   ```
-  - Nacos 默认采用内置数据库 Derby ，将数据存储在本机目录中，可配置以下环境变量，将数据存储到 MySQL 中：
-    ```yml
-    EMBEDDED_STORAGE: none
-    SPRING_DATASOURCE_PLATFORM: mysql
-    MYSQL_SERVICE_HOST: 10.0.0.1
-    MYSQL_SERVICE_PORT: 3306
-    MYSQL_SERVICE_USER: nacos
-    MYSQL_SERVICE_PASSWORD: ******
-    MYSQL_SERVICE_DB_NAME: nacos
-    MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
-    ```
-  - 需要在 MySQL 中为 nacos 专门创建一个数据库、账号：
-    ```sql
-    CREATE DATABASE nacos;
-    CREATE USER nacos @'%' IDENTIFIED BY '******';
-    GRANT ALL ON nacos.* TO nacos @'%';
-    FLUSH PRIVILEGES;
-    ```
-    然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.2/distribution/conf/mysql-schema.sql)
+
+- Nacos 默认采用内置数据库 Derby ，将数据存储在本机目录中。如果想将数据存储到 MySQL 中，则需要添加以下环境变量：
+  ```yml
+  EMBEDDED_STORAGE: none
+  SPRING_DATASOURCE_PLATFORM: mysql
+  MYSQL_SERVICE_HOST: 10.0.0.1
+  MYSQL_SERVICE_PORT: 3306
+  MYSQL_SERVICE_USER: nacos
+  MYSQL_SERVICE_PASSWORD: ******
+  MYSQL_SERVICE_DB_NAME: nacos
+  MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
+  ```
+  还需要在 MySQL 中为 nacos 专门创建一个数据库、账号：
+  ```sql
+  CREATE DATABASE nacos;
+  CREATE USER nacos @'%' IDENTIFIED BY '******';
+  GRANT ALL ON nacos.* TO nacos @'%';
+  FLUSH PRIVILEGES;
+  ```
+  然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.2/distribution/conf/mysql-schema.sql)
 
 - Nacos 启动慢，重启时容易导致所有微服务不可用，因此在生产环境建议部署集群模式的 Nacos ，参考 [官方示例](https://github.com/nacos-group/nacos-k8s) 。
   - Nacos 集群的各节点通过 Raft 协议实现分布式一致性。自动选出一个节点担任 leader ，其它节点担任 follower 。

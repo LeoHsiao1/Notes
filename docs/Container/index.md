@@ -8,7 +8,7 @@
   - [容器](Docker/容器.md)
   - [镜像](Docker/镜像.md)
   - [Dockerfile](Docker/Dockerfile.md)
-  - [Docker Compose](Docker/Docker-Compose.md)
+  - [docker-compose](Docker/docker-compose.md)
 - Kubernetes
   - [Kubernetes](k8s/Kubernetes.md)
   - [原理](k8s/principle/原理.md)

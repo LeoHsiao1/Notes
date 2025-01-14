@@ -1554,8 +1554,8 @@ module.exports = {
                             path: "/Container/Docker/Dockerfile"
                         },
                         {
-                            title: "Docker Compose",
-                            path: "/Container/Docker/Docker-Compose"
+                            title: "docker-compose",
+                            path: "/Container/Docker/docker-compose"
                         }
                     ]
                 },

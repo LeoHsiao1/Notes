@@ -554,15 +554,14 @@
         #     enabled: true           # 是否采集容器的日志，默认为 true 。如果禁用，则需要容器启用 co.elastic.logs/enabled 配置
         #     type: container
         #     paths:
-        #       - /var/lib/docker/containers/${data.docker.container.id}/*.log  # Docker 引擎的日志路径
+        #       - /var/lib/docker/containers/${data.docker.container.id}/*.log  # Docker 容器引擎的日志路径
 
         - type: kubernetes        # 自动发现 k8s 的容器日志
-          node: ${NODE_NAME}
           hints.enabled: true     # 启用 hints 。这会从 k8s Pod 的 Annotations 中读取 hints
           hints.default_config:
             type: container
             paths:
-              - /var/log/containers/*-${data.kubernetes.container.id}.log   # CRI 标准的日志路径
+              - /var/log/containers/*-${data.container.id}.log   # CRI 容器引擎的日志路径
             fields_under_root: true
             enabled: true         # 默认采集每个容器的日志
     ```

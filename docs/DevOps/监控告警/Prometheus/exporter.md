@@ -579,6 +579,10 @@
                  # --web.telemetry-path="/metrics"
                  # --log.level=info
                  # --log.format=logfmt
+
+                # 有些指标，默认不采集，因为开销大。需要手动启动
+                --collector.processes   # 监控 node_processes_pids 进程数量、 node_processes_threads 线程数量
+                --collector.tcpstat     # 监控 node_tcp_connection_states 各种状态的 TCP 连接的数量
   ```
   默认的访问地址为 <http://localhost:9100/metrics>
 
@@ -616,7 +620,7 @@
   delta(node_disk_written_bytes_total[1m])      # 磁盘写入量（每分钟）
   irate(node_disk_reads_completed_total[5m])    # 磁盘读次数（平均每秒）
   irate(node_disk_writes_completed_total[5m])   # 磁盘写次数（平均每秒）
-  irate(node_disk_io_time_seconds_total[5m])    # 磁盘 IO 工作时间占比  
+  irate(node_disk_io_time_seconds_total[5m])    # 磁盘 IO 工作时间占比
   node_filefd_allocated                         # 文件描述符的打开数量
   node_filefd_allocated / node_filefd_maximum   # 文件描述符的使用率
 

@@ -424,13 +424,13 @@ git gc                      # 清理磁盘文件，比如删除 orphan commit �
 	- 基于 HTTPS 协议：
 		1. 先在 Git 服务器上创建账号。
 		2. 然后在本机连接到 Git 服务器，输入账号、密码进行认证。 \
-       每次 pull、push 都需要输入账号、密码，比较麻烦，可以将输入的凭证缓存起来：
+       每次 pull、push 都需要输入账号、密码，比较麻烦，可以将输入的凭证保存起来：
         ```sh
-        git config --global credential.helper cache   # 将凭证在内存中缓存 15 分钟
-        git config --global credential.helper store   # 将凭证持久保存，以明文形式保存到 ~/.git-credentials 文件中
+        git config --global credential.helper cache   # 将凭证保存在 git-credential-cache--daemon 进程的内存中，过期时间默认为 --timeout=900 秒
+        git config --global credential.helper store   # 将凭证以明文形式保存在 ~/.git-credentials 文件中
         ```
 
-- 常见的 Git 服务器软件：
+- 有多种软件提供了 Git 服务器的功能：
   - GitLab ：提供了代码托管、项目管理、Wiki、CI/CD 等丰富的功能。可使用公网版、私有部署版。
   - GitHub ：功能比 GitLab 少些。只可使用公网版。
   - Gogs   ：只有代码托管功能，轻量级。可使用公网版、私有部署版。

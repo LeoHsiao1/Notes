@@ -172,7 +172,7 @@
     # externalIPs:          # 可以给 Service 额外绑定多个 IP 作为访问地址
     # - None
     # externalTrafficPolicy: Cluster  # 从 k8s 外部访问 Service 时的路由策略。默认为 Cluster
-    # internalTrafficPolicy: Cluster  # 从 k8s 内部访问 Servier 时的路由策略。默认为 Cluster
+    # internalTrafficPolicy: Cluster  # 从 k8s 内部访问 Service 时的路由策略。默认为 Cluster
 
     ports:                  # 让 Service 的端口反向代理到 Pod 的端口
     - name: redis           # Service 的端口名。如果 Service 只监听一个端口，则可以省略 name

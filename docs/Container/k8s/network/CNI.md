@@ -10,21 +10,65 @@
 - [GitHub](https://github.com/flannel-io/flannel)
 - 原理：在每个主机运行一个守护进程 flanneld ，它会自动完成以下工作：
   - 为每个主机分配一个虚拟子网 subnet ，比如 `10.42.1.0/24` 。每次部署一个 Pod 时，从当前主机的 subnet 中分配一个虚拟 IP ，给该 Pod 使用。
-  - 在每个主机创建一个虚拟网口 flannel.1 ，负责在主机之间传输指向虚拟 IP 的流量。所有主机通过虚拟网口 flannel.1 相互连通，组成一个虚拟局域网。如下：
-    ```sh
-    [root@CentOS ~]# ip addr
-    7: flannel.1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default
-        link/ether e6:4a:c6:ec:7e:07 brd ff:ff:ff:ff:ff:ff
-        inet 10.42.1.0/32 scope global flannel.1
-          valid_lft forever preferred_lft forever
-    ...
-    [root@CentOS ~]# ip neighbour show dev flannel.1
-    10.42.2.0 lladdr 1a:4b:83:67:93:03 PERMANENT
-    10.42.3.0 lladdr 7a:54:a4:bf:ce:28 PERMANENT
-    ```
-    可见本机通过虚拟网口 flannel.1 连通了多个主机，每个主机都有一个虚拟网口 flannel.1 ，绑定了一个虚拟 IP 、虚拟 Mac 地址。
-  - 在每个主机添加一些 route 规则。表示将指向某些虚拟 IP 的网络包，发送给本机上的 Pod ，或者用 VXLAN 技术转发给其它主机上的 Pod 。
+  - 在每个主机创建一个虚拟网口 flannel.1 ，负责在主机之间路由指向虚拟 IP 的流量。所有主机通过虚拟网口 flannel.1 相互连通，组成一个虚拟局域网。
+    - 查看本机的虚拟网口 flannel.1 ：
+      ```sh
+      [root@CentOS ~]# ip addr show dev flannel.1
+      7: flannel.1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default
+          link/ether e6:4a:c6:ec:7e:07 brd ff:ff:ff:ff:ff:ff
+          inet 10.42.1.0/32 scope global flannel.1
+            valid_lft forever preferred_lft forever
+          inet6 fe80::14b4:8ff:fec3:4e67/64 scope link
+            valid_lft forever preferred_lft forever
+      ```
+    - 查看隔壁主机的虚拟网口 flannel.1 ：
+      ```sh
+      [root@CentOS ~]# ip neighbour show dev flannel.1
+      10.42.2.0 lladdr 1a:4b:83:67:93:03 PERMANENT
+      10.42.3.0 lladdr 7a:54:a4:bf:ce:28 PERMANENT
+      ```
+    - 可见，每个主机都有一个虚拟网口 flannel.1 ，绑定了一个虚拟 IP 、虚拟 Mac 地址。
+  - 在每个主机添加一些 route 规则，处理指向虚拟 IP 的数据包：
+    - 如果数据包的目标 IP 属于当前主机的 subnet ，则发送给本机的 Pod 。
+    - 如果数据包的目标 IP 属于隔壁主机的 subnet ，则通过虚拟网口 flannel.1 发送给隔壁主机。
   - flanneld 默认会调用 kube-apiserver ，将网络、配置等数据存储到 k8s 自带的 etcd 数据库，因此不必单独部署数据库。
+
+- 假设在主机 A 上， ping 主机 B 上的一个 Pod IP ，则数据包的传输路径为：
+  ```yml
+  主机 A ：
+      ping 发送数据包
+            ↓
+      虚拟网口 flannel.1
+            ↓
+      以太网网口 eth0
+            ↓
+  主机 B ：
+      以太网网口 eth0
+            ↓
+      虚拟网口 flannel.1
+            ↓
+      Pod 的虚拟网口
+  ```
+  - 虚拟网口 flannel.1 负责在主机之间路由指向虚拟 IP 的流量。但它是虚拟网口，并不能实现主机之间的以太网通信。
+  - 为了将数据包通过以太网传输，从主机 A 发送到主机 B ，虚拟网口 flannel.1 会将数据包进行封装，交给以太网网口发送。工作流程如下：
+    - 虚拟网口 flannel.1 收到的是 OSI 3 层的 IP 数据包，会将它封包成 OSI 2 层的以太网帧。
+    - 然后将以太网帧，用 VXLAN 技术封包在 OSI 4 层的 UDP 报文中。
+      - 该 UDP 报文的目标 IP ，是主机 B 的以太网 IP 。
+      - flanneld 怎么知道每个主机的以太网 IP ？
+        - 每个主机的 flanneld 进程在启动时，会自动发现本机的第一张以太网网口（通常名为 eth0 ），上报该网口绑定的以太网 IP 。
+        - 用户可以在启动 flanneld 进程时，添加 `'--iface=eth1'` 命令行参数，从而使用其它网口。
+    - 然后将 UDP 报文，像普通流量一样处理：封装成 IP 数据包，然后从本机的以太网网口发出。
+    - 主机 B 的以太网网口收到 IP 数据包时，会发现它包含 VXLAN header ，于是交给 flanneld 处理，进行解包：
+      ```yml
+      IP 数据包 （目标 IP 是主机 B 的以太网 IP ）
+      ↓
+      UDP 数据包 （目标 IP 是主机 B 的以太网 IP ）
+      ↓
+      以太网帧
+      ↓
+      IP 数据包 （目标地址是 Pod 的虚拟 IP ）
+      ```
+
 - 综上，Flannel 的主要功能是，让多台主机组成一个 OSI 3 层的虚拟网络，传输指向虚拟 IP 的流量。
 - 缺点：
   - 用 VXLAN 技术在主机之间传输数据包，增加了一个 overlay 虚拟网络层，需要封包、拆包，存在少量的耗时。
@@ -40,7 +84,7 @@
 - Flannel 主要提供了虚拟网络的功能，而 Calico 提供了两大功能：
   - 虚拟网络
   - 网络策略
-    - Calico 支持 k8s  ，因此可集成 Istio 等服务网格，管理微服务的流量。
+    - Calico 支持 k8s ，因此可集成 Istio 等服务网格，管理微服务的流量。
 - Calico 虚拟网络有多种模式：
   - VXLAN
   - IP-in-IP
@@ -64,9 +108,11 @@
 ## Canal
 
 - ：一个 CNI 方案，是组合使用 Flannel 提供的 VXLAN overlay 网络、Calico 提供的网络策略。
-- Canal 项目于 2016 年发布，于 2018 年停止更新。后来 Calico 也提供了 [类似 Canal 的方案](https://projectcalico.docs.tigera.io/getting-started/kubernetes/flannel/flannel) ，还增加了 VXLAN overlay 的原生功能。
+- [GitHub](https://github.com/projectcalico/canal)
+- Canal 项目于 2016 年发布，于 2018 年停止更新。
+- 后来 Calico 也提供了 [类似 Canal 的方案](https://projectcalico.docs.tigera.io/getting-started/kubernetes/flannel/flannel) ，还增加了 VXLAN overlay 的原生功能。
 - 例：
-  - 查看一个主机的路由表：
+  - 查看本机的路由表：
     ```sh
     [root@CentOS ~]# route
     Kernel IP routing table
@@ -79,13 +125,8 @@
     10.42.3.0       10.42.3.0       255.255.255.0   UG    0      0        0 flannel.1
     ```
     - 可见当前主机有一个虚拟网口 flannel.1 ，每个 Pod 有一个虚拟网口 cali*** 。
-    - 如果目标 IP 属于当前主机的虚拟子网，则通过对应 Pod 的虚拟网口 cali*** 发出。
-    - 如果目标 IP 属于其它主机的虚拟子网，则通过虚拟网口 flannel.1 发出。
-  - 假设本机某个 Pod 发出一个 IP 数据包，目标 IP 是 10.42.2.1 ，则传输流程如下：
-    1. 宿主机根据 route 规则，将 IP 数据包通过虚拟网口 flannel.1 发出，从而被 flanneld 处理。
-    2. flanneld 将 OSI 3 层的 IP 数据包，封包成 OSI 2 层的以太网帧。然后将以太网帧，用 VXLAN 技术封包在 OSI 4 层的 UDP 报文中，目标 IP 设置为其它主机的以太网 IP ，而不是虚拟 IP 。
-    3. 该 UDP 报文像普通流量一样被宿主机处理，先转换成 IP 协议包，然后通过物理网口 eth0 发向目标主机。
-    4. 目标主机收到该 UDP 报文，发现它包含 VXLAN header ，于是交给 flanneld 处理。被后者拆包成原始的 IP 数据包，发送到对应的 Pod 。
+    - 如果数据包的目标 IP 属于当前主机的 subnet ，则通过虚拟网口 cali*** 发送给 Pod 。
+    - 如果数据包的目标 IP 属于隔壁主机的 subnet ，则通过虚拟网口 flannel.1 发送给隔壁主机。
 
 ## Cilium
 

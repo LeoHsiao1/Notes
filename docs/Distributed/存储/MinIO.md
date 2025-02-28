@@ -6,7 +6,7 @@
 - 特点：
   - 轻量级，读写速度快，云原生架构。
   - 支持给文件生成 HTTP URL 形式的临时下载链接。
-  - 兼容 AWS S3 API 。
+  - 兼容 AWS S3 协议的 API 。
   - 提供了命令行客户端 mc 。
   - 提供了 Python、Go、Java 等语言的客户端库。
 
@@ -24,9 +24,13 @@
         - server
         - /data
       environment:
-        - MINIO_ACCESS_KEY=admin    # 账号，默认为 minioadmin
-        - MINIO_SECRET_KEY=******   # 密码，默认为 minioadmin
-        - MINIO_CONSOLE_ADDRESS=:9001
+        MINIO_CONSOLE_ADDRESS: :9001  # Web 端监听地址
+        MINIO_ACCESS_KEY: minioadmin  # 默认账号
+        MINIO_SECRET_KEY: minioadmin  # 默认密码
+
+        MINIO_COMPRESSION_ENABLE: on  # 将文件存储到磁盘时，是否进行压缩。默认为 off 。如果启用压缩，只会对
+        # MINIO_COMPRESSION_EXTENSIONS: ".txt, .log, .csv, .json, .tar, .xml, .bin"  # 启用压缩时，只压缩这些扩展名的文件
+        # MINIO_SCANNER_SPEED: default  # 每隔多久扫描一次所有文件。扫描时，才能发现过期的文件并删除，或者发现新文件并复制到其它 Minio
       ports:
         - 9000:9000   # API 端口
         - 9001:9001   # Web 端口
@@ -37,7 +41,9 @@
 ### 版本
 
 - MinIO 以日期作为版本号。
-- 2022 年，MinIO 宣布弃用 Gateway 模块、旧的文件系统模式。旧版本不能兼容升级到 RELEASE.2022-10-29T06-21-33Z, 或更高版本，只能用 mc 命令导出、导入 MinIO 数据。
+- 2022 年，MinIO 宣布弃用 Gateway 模块、旧的文件系统模式。
+  - 旧版本不能兼容升级到 RELEASE.2022-10-29T06-21-33Z, 或更高版本。
+  - 如果用户想升级到新版 Minio ，只能用 mc 命令从旧版 Minio 导出数据，然后导入新版 MinIO 。
 
 ## 用法
 
@@ -48,6 +54,7 @@
 - 用户可以创建多个 Bucket（存储桶），每个 Bucket 中可以存储多个文件。
   - 每个 Bucket 可设置访问权限为 private 或 public 。
   - Bucket 支持版本控制，存储每个文件的多个版本。
+  - Bucket 支持生命周期：每个文件在创建之后，经过多久就算过期，可以被自动删除。
 
 - MinIO 支持部署多个服务器实例，将一个文件存储多个副本。
   - 基于纠删码（Erasure Code）算法存储数据，即使丢失一半数量的副本，也可以恢复数据。
@@ -56,8 +63,8 @@
 
 - 除了访问 MinIO 的 Web 页面，用户还可以使用 MinIO 的命令行客户端 mc 。
   - mc 支持 ls、cp、rm、find 等多种 Unix 风格的命令。
-  - mc 兼容 AWS S3 API 。
-- 可以运行 mc 的 docker 镜像：
+  - mc 兼容 AWS S3 协议的 API 。
+- 用户可以运行 mc 的 docker 镜像：
   ```sh
   docker run -it --rm --entrypoint bash -v $PWD:$PWD -w $PWD minio/mc:RELEASE.2022-10-29T10-09-23Z
   ```
@@ -90,14 +97,14 @@
       --larger 1G     # 筛选体积大于 1G 的文件
       --smaller 1G
 
-    cp <SRC> <DST>  # 拷贝文件，可以在本机与 server 之间拷贝。比如 cp test/ myminio/bucket1/
-      -r            # 递归拷贝目录
+    cp <SRC> <DST>    # 拷贝文件，可以在本机与 server 之间拷贝。比如 cp test/ myminio/bucket1/
+      -r              # 递归拷贝目录
 
-    mv <SRC> <DST>  # 移动文件
+    mv <SRC> <DST>    # 移动文件
 
-    rm <path>       # 删除文件
-      -r            # 递归删除目录
-      --force       # 强制删除。否则如果目录不为空，则不能删除
+    rm <path>         # 删除文件
+      -r              # 递归删除目录
+      --force         # 强制删除。否则如果目录不为空，则不能删除
 
     mb myminio/bucket1  # 创建 bucket
 

@@ -261,7 +261,7 @@
     ```
     - 用 pip 安装 torch 的二进制 wheel 包时，它会内置一份 CUDA ，不使用本机的 CUDA 。下载 torch 的源代码然后编译、安装，才会使用本机的 CUDA 。
     - 可通过环境变量 `CUDA_VISIBLE_DEVICES=0,1` 指定可用的 GPU 设备编号。
-    - PyTorch、TensorFlow 可以在 CPU 或 GPU 上运行。如果本机启用了 GPU ，则优先使用 GPU 。如果设置环境变量 CUDA_VISIBLE_DEVICES 为空，则不允许使用 GPU 。
+    - PyTorch、TensorFlow 可以在 CPU 或 GPU 上运行。如果本机启用了 GPU ，则优先使用 GPU 。如果设置环境变量 `CUDA_VISIBLE_DEVICES=''` ，则不允许使用 GPU 。
 
 6. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
     - 先用 apt 或 yum 安装 nvidia-container-toolkit ，然后让本机采用 nvidia-container-runtime 作为容器运行时。例如在 `/etc/docker/daemon.json` 中加入：

@@ -141,7 +141,7 @@
       - __meta_kubernetes_namespace
       - __meta_kubernetes_service_name
       - __meta_kubernetes_endpoint_port_name
-      regex: default;kubernetes;https   # 要求完全正则匹配
+      regex: default;kubernetes;https   # 分别匹配三个 label 的值，要求完全正则匹配
 
   # 采集每个 kubelet 的监控指标
   - job_name: k8s-node

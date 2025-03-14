@@ -28,7 +28,7 @@
         MINIO_ACCESS_KEY: minioadmin  # 默认账号
         MINIO_SECRET_KEY: minioadmin  # 默认密码
 
-        MINIO_COMPRESSION_ENABLE: on  # 将文件存储到磁盘时，是否进行压缩。默认为 off 。如果启用压缩，只会对
+        MINIO_COMPRESSION_ENABLE: on  # 将文件存储到磁盘时，是否进行压缩。默认为 off ，因为每次读写压缩文件，会增加 CPU 负载
         # MINIO_COMPRESSION_EXTENSIONS: ".txt, .log, .csv, .json, .tar, .xml, .bin"  # 启用压缩时，只压缩这些扩展名的文件
         # MINIO_SCANNER_SPEED: default  # 每隔多久扫描一次所有文件。扫描时，才能发现过期的文件并删除，或者发现新文件并复制到其它 Minio
       ports:

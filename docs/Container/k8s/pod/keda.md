@@ -49,7 +49,7 @@
   spec:
     # pollingInterval:  30      # 每隔 30s 从 triggers 获取一次数据，检查是否出现 event
     # fallback:
-    #   failureThreshold: <int> # 备选方案：如果连续多次从 triggers 获取数据失败，则将 replicas 改为指定值
+    #   failureThreshold: <int> # 备选方案：如果连续 failureThreshold 次，从 triggers 获取数据失败，则修改 replicas 的值
     #   replicas: <int>
     # maxReplicaCount:  100     # 自动伸缩时，replicas 的最大值。默认为 100
     # minReplicaCount:  0       # 自动伸缩时，replicas 的最小值。默认为 0
@@ -60,7 +60,6 @@
       # horizontalPodAutoscalerConfig:        # 自定义 ScaledObject 下属的 HPA 对象
       #   name: keda-hpa-{ScaledObject.name}
       #   behavior: ...
-      # scalingModifiers: ...                 # 支持对多个 triggers 的值进行混合运算，将结果作为自动伸缩的依据
     scaleTargetRef:                           # 自动伸缩的目标对象，即某个 Deployment 或 StatefulSet
       # apiVersion: apps/v1
       # kind: Deployment
@@ -75,6 +74,16 @@
   ```
   - 将 replicas 改为 0 之前，至少需要等待 cooldownPeriod 时长。
   - 将 replicas 改为非 0 值之前，至少需要等待 stabilizationWindowSeconds 时长。
+
+- 可以配置多个 trigger ，此时取它们的最大值，用于给 replicas 赋值。也可以对多个 triggers 的值进行混合运算：
+  ```yml
+  advanced:
+    scalingModifiers:
+      formula: "(trigger1 + trigger2)/2"  # 支持多种算术运算，语法参考 https://expr-lang.org/docs/language-definition
+      target: 1                           # 计算 formula 取值，除以期望值 target ，然后赋值给 replicas
+      # activationTarget: 0               # 当 formula 取值超过该值时，才激活 keda scaler
+  ```
+  - formula 中可以根据名称，引用 trigger 的数值。但引用的是原始值，不会考虑 trigger 中的 Threshold 。
 
 ## triggers
 
@@ -139,7 +148,7 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
       # activationLagThreshold: '0'         # 激活 keda scaler 的阈值。如果查询到的滞后量，小于等于该值，则将 replicas 赋值为 0
       # allowIdleConsumers: 'false'         # 是否允许 replicas 数量大于 topic 的分区数，从而存在空闲的 consumer 。默认为 false
       # partitionLimitation: ...            # 统计 topic 的哪几个分区的滞后量之和，默认为所有分区。可指定逗号分隔的多个分区编号，还可指定编号范围，例如为 1,2,5-6
-      # scaleToZeroOnInvalidOffset: 'false' # 如果获取到无效的 offset ，是否将 replicas 赋值为 0 。默认为 false ，会将 replicas 赋值为 1
+      # scaleToZeroOnInvalidOffset: 'false' # 如果不能获取某个分区的 offset （比如 consumer 尚未消费），是否认为该分区的 offset 为 0 。默认配置了 false ，认为该 offset 为 1
   ```
   - replicas 的最大值，既受 maxReplicaCount 限制，也受 allowIdleConsumers 限制。
   - 如果想让 replicas 自动缩减到 0 ，则需要考虑多个因素：
@@ -157,8 +166,8 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     此时会根据 scaleToZeroOnInvalidOffset 设置 replicas 。
 
 - 下面举例说明上述 ScaledObject 配置文件的运行效果：
-  - 当 kafka_lag 为 12 时，因为 lagThreshold 为 5 ，所以 keda 会计算出 desiredReplicas 赋值为 kafka_lag / lagThreshold = 12 / 5 = 2.4 ，然后向上取整为 3 。
-  - 当 kafka_lag 为 0 时，keda 会计算出 desiredReplicas 为 0 / 5 = 0 。
+  - 当 kafka_lag 为 12 时，因为 lagThreshold 为 5 ，所以 keda 会给 desiredReplicas 赋值为 `kafka_lag / lagThreshold = 12 / 5 = 2.4` ，向上取整为 3 。
+  - 当 kafka_lag 为 0 时，keda 会给 desiredReplicas 赋值为 `0 / 5 = 0` 。
     - 当 kafka_lag 为 0 时，可能是因为 kafka 没有生产消息，此时将 replicas 赋值为 0 是合适的。
     - 当 kafka_lag 为 0 时，也可能是因为 kafka 每时每刻生产的消息都被消费了，此时将 replicas 赋值为 0 是不合适的，但毕竟 keda 掌握的情报有限，只能做出这样的决策。\
       此时消费者减少，kafka_lag 会增长，使得 keda 又自动增加 replicas 。如果经常这样，replicas 数量会频繁变化，导致频繁启动、停止 Pod ，增加了开销（比如 kafka rebalance 的耗时）。因此建议 HPA behavior ，避免 replicas 抖动。例如：

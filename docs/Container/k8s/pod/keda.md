@@ -148,7 +148,7 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
       # activationLagThreshold: '0'         # 激活 keda scaler 的阈值。如果查询到的滞后量，小于等于该值，则将 replicas 赋值为 0
       # allowIdleConsumers: 'false'         # 是否允许 replicas 数量大于 topic 的分区数，从而存在空闲的 consumer 。默认为 false
       # partitionLimitation: ...            # 统计 topic 的哪几个分区的滞后量之和，默认为所有分区。可指定逗号分隔的多个分区编号，还可指定编号范围，例如为 1,2,5-6
-      # scaleToZeroOnInvalidOffset: 'false' # 如果不能获取某个分区的 offset （比如 consumer 尚未消费），是否认为该分区的 offset 为 0 。默认配置了 false ，认为该 offset 为 1
+      # scaleToZeroOnInvalidOffset: 'false' # 如果不能获取某个分区的 offset ，是否假定该分区的 lag 为 0 。默认配置了 false ，假定 lag 为 1
   ```
   - replicas 的最大值，既受 maxReplicaCount 限制，也受 allowIdleConsumers 限制。
   - 如果想让 replicas 自动缩减到 0 ，则需要考虑多个因素：
@@ -160,10 +160,6 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     error describing topics: kafka server: Request was for a topic or partition that does not exist on this broker
     ```
     此时 keda scaler 不会工作。
-  - 如果指定的 topic 存在，但获取到无效的 offset ，则可能是以下几种原因：
-    - consumerGroup 从未提交过 offset ，可能是因为不存在新消息、消费失败。
-    - consumerGroup 提交过 offset ，但长时间停止运行，导致在 __consumer_offsets 中记录的 offset 被删除。
-    此时会根据 scaleToZeroOnInvalidOffset 设置 replicas 。
 
 - 下面举例说明上述 ScaledObject 配置文件的运行效果：
   - 当 kafka_lag 为 12 时，因为 lagThreshold 为 5 ，所以 keda 会给 desiredReplicas 赋值为 `kafka_lag / lagThreshold = 12 / 5 = 2.4` ，向上取整为 3 。
@@ -185,6 +181,25 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
               stabilizationWindowSeconds: 0   # 允许立即增加 replicas ，这样尽量及时消费 kafka 消息
       ```
       假设监控 Kafka 消费速度，发现每个消费者 Pod 在 30s 内最多消费 100 条消息。则建议将 lagThreshold 赋值为 100 ，并将 scaleDown.periodSeconds 赋值为 30s 的两倍以上。
+
+- keda 的源代码中，会调用 `getLagForPartition()` 函数，获取每个分区的 lag 。有几种结果：
+  - 指定的 topic 不存在，导致不能从 kafka 获取该 topic 的信息。
+    - 此时， 不会激活 keda scaler ，不会修改 replicas 。
+  - 指定的 topic 存在， 但某个分区不能获取到有效的 lag 。
+    - 如果配置了 `scaleToZeroOnInvalidOffset: 'false'` ，则假定该分区的 lag 为 1 。
+      - 如果有 n 个分区是这样，则总 lag 增加 n 。
+      - 总 lag 大于 0 时，除以 lagThreshold 之后，会使得 replicas 赋值为 1 。
+    - 如果配置了 `scaleToZeroOnInvalidOffset: 'true'` ，则假定该分区的 lag 为 0 。
+      - 此时，可能遇到一个死循环问题：
+        ```yml
+        新建一个 topic -> 尚未运行 consumer Pod -> 不存在 lag
+        -> 假定 lag 为 0 -> 给 replicas 赋值为 0 -> 依然不运行 consumer Pod
+        ```
+    - 什么样的 lag 算无效？ lag 是计算每个分区的 `latestOffset - consumerOffset` 差值，如果不存在 offset ，或者 lag 小于 0 ，则认为 lag 无效。
+    - 什么情况下会出现无效的 lag ？
+      - 生产者尚未写入消息，因此尚未累计 latestOffset 。
+      - consumerGroup 尚未消费，因此尚未累计 consumerOffset 。（可能某些分区存在 consumerOffset ，某些分区不存在）
+      - consumerGroup 提交过 consumerOffset ，但持续 offsets.retention.minutes 时间停止运行，因此它在 __consumer_offsets 中记录的 consumerOffset 被自动删除。
 
 ### mysql
 

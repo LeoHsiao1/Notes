@@ -144,7 +144,8 @@
 - 例：
   ```groovy
   List a = [1, 2]       // 可省略关键字 List
-  a << 'Hello'          // 追加元素
+  a << 'Hello'          // 追加元素，直接修改列表
+  a2 = a.plus([3, 4])   // 追加元素，返回一个新的列表
   println a
   // 显示：[1, 2, Hello]
   println a.size()      // 获取列表的长度

@@ -250,7 +250,7 @@ Content-Type: text/html; charset=utf-8
   If-None-Match: 5edd15a5-e42                     # 如果响应 body 的 Etag 值等于它，则请服务器返回 304 响应，让客户端使用本地缓存
   ```
 
-- 允许在响应报文中同时声明多种缓存字段。
+- 允许在响应报文中同时声明多种缓存字段：
   - HTTP/1.0 可以用 Expires、Last-Modified 字段控制缓存，而 HTTP/1.1 增加了 Cache-Control、Etag 字段，功能更多、优先级更高。
   - 强缓存：比如 Expires、Cache-Control 两种缓存方式，不会发出请求。例如 Chrome 浏览器会为该请求显示预配的请求头（Provisional headers），和缓存的响应头、状态码。
   - 协商缓存：比如 Etag、Last-Modified 两种缓存方式，依然有通信耗时，只是减少了响应 body 。

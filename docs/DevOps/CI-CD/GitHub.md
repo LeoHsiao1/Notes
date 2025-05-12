@@ -17,16 +17,9 @@
 
 - 执行 workflows 的主机称为 Runner 。
 
-- GitHub 免费提供了一些虚拟机作为 Runner ，供用户使用。规格如下：
-  - 配置都为：
-    - 2-core CPU
-    - 7 GB of RAM memory
-    - 14 GB of SSD disk space
-  - 可用的操作系统包括：
-    - ubuntu-18.04 、ubuntu-20.04 等
-    - macos-10.15
-    - windows-2019
-  - 取消了权限限制，比如使用 sudo 时不需要输入密码。
+- GitHub 免费提供了一些虚拟机作为 Runner ，供用户使用：
+  - <https://github.com/actions/runner-images?tab=readme-ov-file#available-images>
+  - <https://github.com/actions/partner-runner-images?tab=readme-ov-file#available-images>
 
 - 用户也可以添加自己的主机作为 Runner ，这需要在 Github 仓库的 `Settings -> Actions` 页面进行配置。
   - 作为 Runner 的主机要保持运行一个客户端进程，连接到 GitHub 仓库，接受控制。
@@ -133,7 +126,7 @@ jobs:                             # 该 workflow 的任务列表
 - workflow 支持通过 `${{ expression }}` 的格式嵌入一个表达式的值，从而可以获取任意上下文（context）的信息。
   - [上下文和表达式的语法](https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions)
   - GitHub 会在读取 workflow 时获取表达式的值，嵌入到 workflow 中，然后才执行 workflow 。
-  - 定义环境变量时，不能在同一个 env 块中读取它。
+  - 仅在定义 step.env 时，才允许读取上级作用域的 env.xx 变量。
 :::
 
 - `$GITHUB_ENV` 指向一个存储环境变量的文件，向该文件中添加变量，就可以被后续步骤调用。如下：

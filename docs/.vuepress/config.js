@@ -1456,6 +1456,10 @@ module.exports = {
                                     path: "/DevOps/监控告警/Prometheus/原理"
                                 },
                                 {
+                                    title: "PromQL",
+                                    path: "/DevOps/监控告警/Prometheus/PromQL"
+                                },
+                                {
                                     title: "部署",
                                     path: "/DevOps/监控告警/Prometheus/部署"
                                 },

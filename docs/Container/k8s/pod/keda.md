@@ -238,6 +238,22 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
       key: connectionString
   ```
 
+### metrics-api
+
+- 用途：向某个 url 发送 HTTP 请求，从 HTTP 响应中得到一个数值，然后按比例赋值给 replicas 。
+- 配置示例：
+  ```yml
+  triggers:
+  - type: metrics-api
+    metadata:
+      url: http://test:80/some-metrics
+      # authMode: bearer        # 访问该 url 时的身份认证方式，可选 bearer、 basic auth 等，详见官方文档
+      format: json              # 将 HTTP 响应按 JSON 格式解析
+      valueLocation: pod.counts # 读取 JSON 中一个字段的值，作为 value
+      targetValue: 5            # 将 value ，除以期望值 targetValue ，然后赋值给 replicas
+      activationTargetValue: 0  # 激活 keda scaler 的阈值。如果 value 小于等于该值，则将 replicas 赋值为 0
+  ```
+
 ### prometheus
 
 - 用途：连接到 Prometheus 并执行查询语句，得到一个数值，然后按比例赋值给 replicas 。

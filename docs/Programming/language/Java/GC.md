@@ -305,7 +305,7 @@
 
 - 优点：
   - 只要不发生 full GC ，STW 时长就较短。
-  - 可以通过 -XX:MaxGCPauseMillis 命令行参数，软性限制 STW 时长，这样容易预测 STW 时长，避免停顿太久。
+  - 可以配置 JVM 参数 `-XX:MaxGCPauseMillis` ，软性限制 STW 时长，这样容易预测 STW 时长，避免停顿太久。
   - 处理大量内存的性能更好。
     - 以 region 为单位管理内存空间，容易增减 eden、survivor、old 三个区域的容量。
     - ConcMarkSweepGC 容易产生内存碎片，而 G1GC 通过拷贝、集中内存中的数据，避免了内存碎片。
@@ -321,8 +321,33 @@
     - 如果用户启用 ConcMarkSweepGC ，则 JVM 会打印 warning 警告。
   - HotSpot 从 Java 10 开始，将 G1GC 的 full GC 改为并发收集。
   - HotSpot 从 Java 12 开始，允许 G1GC 将未使用的内存释放给操作系统。
-    - 原理：如果等待 G1PeriodicGCInterval 毫秒没有发生 STW ，则会定期触发 Concurrent Marking Cycle ，从而找出 heap 中的空闲内存，可以释放给操作系统。
-    - 用户可以配置 JVM 参数 `-XX:MinHeapFreeRatio` 和 `-XX:MaxHeapFreeRatio` ，决定释放多少空闲内存。
+    - 原理：如果等待 `-XX:G1PeriodicGCInterval` 毫秒没有发生 STW ，则会定期触发 Concurrent Marking Cycle ，从而找出 heap 中的空闲内存，可以释放给操作系统。
+    - 该功能默认关闭。用户可以添加 `-XX:MinHeapFreeRatio` 和 `-XX:MaxHeapFreeRatio` 两个 JVM 参数，从而启用该功能。
+
+### ZGC
+
+- 参考文档：
+  - <https://wiki.openjdk.org/display/zgc/>
+
+- 优点：
+  - 低延迟：大部分工作都是并发执行，保证 STW 时长不超过 1ms 。
+  - 可扩展性好：STW 时长与 heap 体积无关，最大支持 16TB 的 heap 。
+  - 使用难度低：会自动调整 GC 线程数量、老年代阈值等 JVM 参数，从而自动适应工作负载，不必用户亲自优化。
+
+- 缺点：
+  - 同时运行用户线程、GC 线程，因此降低了用户线程的吞吐量。
+
+- 版本变化：
+  - HotSpot 从 Java 11 开始，添加了 ZGC ，作为一项实验性功能。
+  - HotSpot 从 Java 13 开始，允许 ZGC 将未使用的内存释放给操作系统。
+    - 该功能默认开启。
+    - 用户可以将 `-Xmx` 和 `-Xms` 两个 JVM 参数，赋值相等，从而禁用该功能。
+  - HotSpot 从 Java 14 开始，将 ZGC 移植到 MacOS 和 Windows 。
+  - HotSpot 从 Java 15 开始， 宣布 ZGC 可用于生产环境。
+  - HotSpot 从 Java 21 开始， ZGC 采用分代收集算法，将内存分为年轻代、老年代两部分，分别处理。
+    - 如果配置 `-XX:+UseZGC` ，则会使用旧版的 ZGC 。
+    - 如果配置 `-XX:+UseZGC -XX:+ZGenerational` ，则会使用新版的 ZGC 。
+  - HotSpot 从 Java 23 开始，如果配置 `-XX:+UseZGC` ，则默认会采用分代收集。并且，弃用了旧版的 ZGC 。
 
 ### 性能指标
 
@@ -337,6 +362,7 @@
     - 例：假设 JVM 总共占用了 1s 时长的 CPU ，其中用户线程占用了 0.9s ，GC 线程占用了 0.1s ，则吞吐量为 90% 。
     - 吞吐量越高，用户线程占用的 CPU 时间越多，因此能执行更多业务代码。
     - ConcMarkSweepGC、G1GC 通过并发收集减少了 STW 时长，但增加了总的 GC 耗时。它们同时运行用户线程、GC 线程，因此降低了用户线程的吞吐量。
+
 - 上述三个指标最多同时追求两个。例如追求低延迟、高吞吐量，则减少了 GC 线程的执行时长，因此 GC 效果差，会占用更多堆内存。
   - 用户可根据自己的需求，优化 JVM 配置参数，从而提升性能。例如：
     - 如果 Java 程序直接为用户提供服务，追求低延迟，则采用 G1GC 。

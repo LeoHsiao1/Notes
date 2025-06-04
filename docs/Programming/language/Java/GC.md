@@ -30,7 +30,9 @@
   - 当 JVM 需要存储新数据（比如新建的 Java 对象）时，就会选用一些 free_memory 。如果当前的 free_memory 不足以存入新数据，则可能自动申请更多 committed_memory ，从而凭空增加 free_memory 。也可能自动进行 GC ，从而将 committed_memory 中的某些 used_memory 转换成 free_memory 。
     - 通常所说的"内存不足"，是指空闲内存不足以存入新数据。即空闲内存的体积，小于新数据的体积。
     - 当 JVM 进程申请的 committed_memory 达到 MaxHeapSize、MaxDirectMemorySize 等限制时，就不能继续增加。此时只能依靠 GC 在 Heap 中获得空闲内存。
-  - GC 一般不会减少 committed_memory ，也不会将 committed_memory 中的空闲内存释放给操作系统，而是留给 JVM 自己未来使用。因为释放内存、重新申请内存的开销较大。
+  - GC 一般不会减少 committed_memory ，也不会将 committed_memory 中的空闲内存释放给操作系统，而是留给 JVM 自己未来使用。
+    - 优点：避免频繁释放内存、重新申请内存，减少这种开销。
+    - 缺点：这部分空闲内存被 JVM 占着不用，不能被其它进程使用，挺浪费。
   - 如果 GC 之后依然内存不足，则 Java 进程会在终端打印 OutOfMemoryError 报错，表示内存不足。
     - java.lang.OutOfMemoryError 属于错误，不属于异常，但可以被 try catch 捕捉。
     - 发生 OutOfMemoryError 有什么后果？
@@ -240,17 +242,16 @@
   - old 区域的内存使用率，超过 CMSInitiatingOccupancyFraction 阈值。
   - Metaspace 内存不足。
   - young 区域的对象可能全部晋升到 old 区域，此时如果 old 区域内存不足则会晋升失败，触发 full GC 。为了避免该问题，当 young 区域的 used_memory 大于 old 区域的 free_memory 时，就会触发一次 old GC 。
+
 - 优点：
   - SerialGC、ParallelGC 不支持并发收集，全程处于 STW 状态。而 ConcMarkSweepGC 支持并发收集，使得 old GC 的大部分时间不处于 STW 状态。
+
 - 缺点：
   - young GC 依然处于 STW 状态。
   - old GC 会产生浮动垃圾，导致 old 区域占用内存增加 10% 左右。
   - old GC 采用 Mark-Sweep 算法，容易产生内存碎片。
     - 不采用 Mark-Compact、Mark-Copy 算法，是因为改变对象的内存地址时，必须处于 STW 状态。
     - JVM 对 ConcMarkSweepGC 默认启用了 `-XX:+UseCMSCompactAtFullCollection` 功能，在 full GC 时自动压缩内存碎片。
-
-- HotSpot 从 Java 9 开始，默认采用 G1GC ，并且弃用 ConcMarkSweepGC 。
-  - 如果用户启用 ConcMarkSweepGC ，则 JVM 会打印 warning 警告。
 
 ### G1GC
 
@@ -264,40 +265,43 @@
   - 在逻辑上，G1GC 将堆内存分为 eden、survivor、old 三个区域，并记录每个区域分别由哪些 region 组成。
     - 改变某个区域包含的 region 集合，就可以增减该区域的容量。
 
-- G1GC 定义了三种 GC 模式：
+- G1GC 提供了三种 GC 模式：
   - young GC
-    - ：清理年轻代中的 eden 区域，然后将其中幸存的对象，拷贝到 survivor 区域。
-    - 拷贝的过程称为撤离（evacuation）。
+    - ：清理年轻代中的 eden 区域，然后将其中幸存的对象，拷贝到 survivor 区域。该拷贝过程，又称为撤离（evacuation）。
   - mixed GC
-    - ：清理年轻代的所有 region ，还会清理老年代包含较多垃圾对象的 region 。
+    - ：清理年轻代的所有 region ，还会清理老年代中垃圾对象含量较多的一些 region 。
+    - 触发条件：
+      - 当堆内存使用率达到 `-XX:InitiatingHeapOccupancyPercent=45` 百分比时，G1GC 就会触发一次 Concurrent Marking Cycle ，找出老年代中哪些 region 应该清理。
+      - Concurrent Marking Cycle 触发之后，不会立即开始执行，而是等到下一次 young GC ，在 young GC 的 STW 期间，趁机进行 Concurrent Marking Cycle 的初始标记。
+      - 每次 Concurrent Marking Cycle 完成之后，会执行一次或多次 mixed GC 。
   - full GC
-    - G1GC 在 full GC 时，不会并发收集。而是单线程收集，采用 mark-sweep-compact 算法，容易导致长时间的 STW 。
-    - 因此，应该尽量让 G1GC 只进行 young GC 和 mixed GC ，避免 full GC 。
+    - G1GC 发生 full GC 时，不会并发收集，而是单线程收集，采用 mark-sweep-compact 算法，容易导致长时间的 STW 。
+    - 因此，应该尽量避免发生 full GC 。
 
-- mixed GC 分为多个阶段：
+- 并发标记周期（Concurrent Marking Cycle）分为多个阶段：
   1. 初始标记（initial mark）
-      - 此时发生一段短时间的 STW 。
       - 该阶段的目标：标记 GC Roots 直接关联的所有 Java 对象。
-      - 当堆内存使用率达到 -XX:InitiatingHeapOccupancyPercent 百分比时，G1GC 就会触发一次 mixed GC 。但不会立即开始 mixed GC ，而是等待下一次 young GC ，在 young GC 的 STW 期间，趁机进行 mixed GC 的初始标记。
+      - 该阶段会发生短时间的 STW 。
   2. 根区域扫描（root region scan）
-      - 此时不会 STW 。
       - 该阶段的目标：标记 survivor 区域引用的所有老年代 Java 对象。
-  2. 并发标记（concurrent mark）
-      - 此时不会 STW 。
-      - 该阶段的目标：扫描所有老年代 region ，如果某个 region 包含较多垃圾对象，则记录到 CSet 中，准备待会清理这个 region 。
-        - 该策略称为垃圾优先。即只清理包含较多垃圾对象的 region ，这样容易回收内存。
+      - 该阶段不会 STW 。
+  3. 并发标记（concurrent mark）
+      - 该阶段的目标：扫描所有老年代 region ，如果某个 region 包含较多垃圾对象，则记录到 CSet 中，准备在 mixed GC 时清理这个 region 。
+        - 该策略称为垃圾优先。即只清理垃圾对象含量较多的一些 region ，这样更容易回收内存。
         - 如果清理所有 region ，虽然能回收更多内存，但 GC 耗时更久。
-      - 每次 mixed GC 时，G1GC 会创建一个 CSet（Collection Set） 数据结构，用于记录哪些老年代 region 等待清理。
-      - 为了更快地扫描 region ，G1GC 会在 Java 进程启动时，为每个 region 创建一个 Rset 数据结构，用于记录哪些 region 引用了当前 region 中的对象。
+        - 执行 mixed GC 时，会将 Cset region 中的非垃圾对象，拷贝到空闲 region 中集中存储，然后将 Cset region 清空，变为空闲 region 。
+      - 该阶段不会 STW 。
+      - 每次 Concurrent Marking Cycle 时， G1GC 会创建一个 CSet（Collection Set） 数据结构，用于记录哪些老年代 region 等待清理。
+      - 为了更快地扫描 region ， G1GC 会在 Java 进程启动时，为每个 region 创建一个 Rset 数据结构，用于记录哪些 region 引用了当前 region 中的对象。
         - 这样 GC 时只需扫描 RSet ，不需要扫描 region 中的所有对象。
         - 即使这样，并发标记依然耗时较久，期间可能发生多次 young GC 。
-  3. 重新标记（remark）
-      - 此时发生一段短时间的 STW 。
+  4. 重新标记（remark）
       - 该阶段的目标：并发标记时采用三色标记法，可能漏标，因此需要进入 STW 状态，重新标记。
+      - 该阶段会发生短时间的 STW 。
       - G1GC 采用 SATB（Snapshot At The Beginning）算法来重新标记，比 ConcMarkSweepGC 的重新标记更快。
-  4. 清理（cleanup）
-      - 此时发生一段短时间的 STW 。
-      - 该阶段的目标：将 Cset region 中的非垃圾对象，拷贝、集中到一些空闲 region 中，然后 Cset region 清空，变为空闲 region 。
+  5. 清理（cleanup）
+      - 该阶段的目标：保留 CSet 数据结构，清理 Rset 数据结构，结束本次 Concurrent Marking Cycle 。
+      - 该阶段会发生短时间的 STW 。
 
 - 优点：
   - 只要不发生 full GC ，STW 时长就较短。
@@ -309,6 +313,16 @@
 
 - 缺点：
   - 需要创建大量 Rset 数据结构，占用堆内存的 5% 左右。
+  - 一般不会将 committed_memory 中的空闲内存释放给操作系统。
+    - 虽然发生 full GC 时允许释放空闲内存，但 G1GC 会尽量避免发生 full GC 。
+
+- 版本变化：
+  - HotSpot 从 Java 9 开始，默认采用 G1GC ，并且弃用 ConcMarkSweepGC 。
+    - 如果用户启用 ConcMarkSweepGC ，则 JVM 会打印 warning 警告。
+  - HotSpot 从 Java 10 开始，将 G1GC 的 full GC 改为并发收集。
+  - HotSpot 从 Java 12 开始，允许 G1GC 将未使用的内存释放给操作系统。
+    - 原理：如果等待 G1PeriodicGCInterval 毫秒没有发生 STW ，则会定期触发 Concurrent Marking Cycle ，从而找出 heap 中的空闲内存，可以释放给操作系统。
+    - 用户可以配置 JVM 参数 `-XX:MinHeapFreeRatio` 和 `-XX:MaxHeapFreeRatio` ，决定释放多少空闲内存。
 
 ### 性能指标
 

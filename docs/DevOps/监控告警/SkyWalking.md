@@ -14,9 +14,9 @@
     elasticsearch:
       image: elasticsearch:7.10.1
       environment:
-        - discovery.type=single-node
-        - bootstrap.memory_lock=true
-        - "ES_JAVA_OPTS=-Xms2G -Xmx2G"
+        discovery.type: single-node
+        bootstrap.memory_lock: 'true'
+        ES_JAVA_OPTS: -Xms2G -Xmx2G
       ports:
         - 9200:9200
       ulimits:
@@ -108,4 +108,4 @@
     -jar test.jar
     ```
     - 这样能监控到 Java 进程对外通信的流量。不过想实现链路追踪的功能，还需要在代码里埋点 traceId 。
-    - 详情参考[官方文档](https://skywalking.apache.org/docs/skywalking-java/v8.4.0/en/setup/service-agent/java-agent/readme/)
+    - 详情参考[官方文档](https://skywalking.apache.org/docs/skywalking-java/latest/en/setup/service-agent/java-agent/configurations/)

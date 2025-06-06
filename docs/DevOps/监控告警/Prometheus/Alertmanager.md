@@ -59,7 +59,7 @@
   services:
     alertmanager:
       container_name: alertmanager
-      image: prom/alertmanager:v0.22.2
+      image: prom/alertmanager:v0.28.1
       restart: unless-stopped
       command:
         - --config.file=alertmanager.yml

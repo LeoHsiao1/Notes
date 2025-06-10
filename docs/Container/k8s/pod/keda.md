@@ -7,22 +7,23 @@
 
 - 设计理念：
   - k8s 原生的 HPA 是根据监控指标调整 replicas 。如果所有 Pod 的平均 cpu、memory 负载升高，则增加 replicas ，反之则减少 replicas 。
-  - keda 是根据事件（event）调整 replicas 。默认将 replicas 设置为 minReplicaCount=0 。如果从 Prometheus、Kafka 等数据源收到 event ，代表业务负载出现，则自动增加 replicas 。等没有业务负载了，再减少 replicas 。
+  - keda 是根据事件（event）调整 replicas 。默认将 replicas 设置为 `minReplicaCount = 0` 。如果从 Prometheus、Kafka 等数据源收到 event ，代表业务负载出现，则自动增加 replicas 。等没有业务负载了，再减少 replicas 。
 
 - keda 提供了两种伸缩器（scaler）：
   - ScaledObject ：用于自动伸缩 Deployment、StatefulSet 类型的 Pod 。
   - ScaledJob ：用于自动伸缩 Job 类型的 Pod 。
 
-- keda scaler 划分了两种工作状态：
-  - not-active
-    - ：未激活，此时将 replicas 赋值为 0 。
-    - 此时，keda scaler 会直接修改 replicas 。不能依靠 HPA ，因为 k8s 原生的 HPA 不支持将 replicas 缩减到 0 。
-  - active
-    - ：激活，此时将 replicas 赋值为正数。
-    - 此时，keda scaler 会输入 External 类型的指标数据给 HPA ，通过 HPA 间接调整 replicas 。比如将 replicas 从一个正数，改为其它正数，该过程称为伸缩（scaling）。
-
-- 创建 keda scaler 对象时，会自动创建一个下属的 HPA 对象，用于间接调整 replicas 。
+- 创建一个 keda scaler 对象时，会自动创建一个下属的 HPA 对象，用于间接调整 replicas 。
   - 如果 scaleTargetRef 已经被其它 keda scaler 或 HPA 管理，则不允许创建新的 keda scaler 。
+
+- k8s 原生的 HPA 不支持将 replicas 缩减到 0 ，因此 keda scaler 划分了两种工作状态：
+  - active
+    - 当监控指标大于 activationThreshold 时， keda scaler 会激活 HPA 。
+    - 此时，keda scaler 会输入 External 类型的指标数据给 HPA ，通过 HPA 间接修改 replicas 。比如将 replicas 从一个正数，改为其它正数，该过程称为伸缩（scaling）。
+  - not-active
+    - 当监控指标小于等于 activationThreshold 并且 `minReplicaCount = 0`  时， keda scaler 不会激活 HPA 。
+    - 此时， keda scaler 会绕过 HPA ，直接修改 replicas 为 0 。
+    - 如果 `minReplicaCount > 0` ，则  keda scaler 一直会处于 active 状态，不考虑 activationThreshold 。
 
 - keda scaler 连接 Prometheus、Kafka 等数据源时可能需要身份认证。为此，keda 定义了一种名为 TriggerAuthentication 的 CRD 对象，用于从 k8s Secret 对象中读取密钥，然后传给 keda scaler 。
 
@@ -30,7 +31,7 @@
 
 - 执行：
   ```sh
-  kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.1/keda-2.12.1.yaml
+  kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.17.1/keda-2.17.1.yaml
   ```
   这会在 k8s 中新建一个 keda 命名空间，部署 keda 服务。
 
@@ -51,10 +52,10 @@
     # fallback:
     #   failureThreshold: <int> # 备选方案：如果连续 failureThreshold 次，从 triggers 获取数据失败，则修改 replicas 的值
     #   replicas: <int>
-    # maxReplicaCount:  100     # 自动伸缩时，replicas 的最大值。默认为 100
-    # minReplicaCount:  0       # 自动伸缩时，replicas 的最小值。默认为 0
+    # maxReplicaCount: 100      # 自动伸缩时，replicas 的最大值。默认为 100
+    # minReplicaCount: 0        # 自动伸缩时，replicas 的最小值。默认为 0
     # idleReplicaCount: 0       # 没有 event 时，replicas 的值。默认未配置 idleReplicaCount ，如果配置该参数，则只能取值为 0
-    # cooldownPeriod:   300     # 如果配置了 idleReplicaCount 或 minReplicaCount 为 0 ，则连续 300s 未收到 event 时，才能将 replicas 改为 0
+    # cooldownPeriod: 300       # 如果配置了 idleReplicaCount 或 minReplicaCount 为 0 ，则连续 300s 未收到 event 时，才能将 replicas 改为 0
     advanced:
       # restoreToOriginalReplicaCount: false  # 删除 ScaledObject 时，是否将 scaleTarget 的 replicas 改为原始值
       # horizontalPodAutoscalerConfig:        # 自定义 ScaledObject 下属的 HPA 对象
@@ -81,7 +82,7 @@
     scalingModifiers:
       formula: "(trigger1 + trigger2)/2"  # 支持多种算术运算，语法参考 https://expr-lang.org/docs/language-definition
       target: 1                           # 计算 formula 取值，除以期望值 target ，然后赋值给 replicas
-      # activationTarget: 0               # 当 formula 取值超过该值时，才激活 keda scaler
+      # activationTarget: 0               # 如果 formula 取值不超过该值，则允许切换到 not-active 状态
   ```
   - formula 中可以根据名称，引用 trigger 的数值。但引用的是原始值，不会考虑 trigger 中的 Threshold 。
 
@@ -145,21 +146,16 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
       consumerGroup: test_group_1
       topic: test_topic_1
       lagThreshold: '5.0'                   # 期望每个 Pod 的平均滞后量。keda 会将查询到的滞后量，除以该值，然后赋值给 replicas
-      # activationLagThreshold: '0'         # 激活 keda scaler 的阈值。如果查询到的滞后量，小于等于该值，则将 replicas 赋值为 0
-      # allowIdleConsumers: 'false'         # 是否允许 replicas 数量大于 topic 的分区数，从而存在空闲的 consumer 。默认为 false
+      # activationLagThreshold: '0'         # 如果查询到的滞后量，不超过该值，则允许切换到 not-active 状态
+      # allowIdleConsumers: 'false'         # 除以 lagThreshold 之后计算出的 replicas ，也就是该 trigger 的返回值，是否允许大于 topic 的分区数，从而存在空闲的 consumer 。默认为 false
       # partitionLimitation: ...            # 统计 topic 的哪几个分区的滞后量之和，默认为所有分区。可指定逗号分隔的多个分区编号，还可指定编号范围，例如为 1,2,5-6
       # scaleToZeroOnInvalidOffset: 'false' # 如果不能获取某个分区的 offset ，是否假定该分区的 lag 为 0 。默认配置了 false ，假定 lag 为 1
   ```
   - replicas 的最大值，既受 maxReplicaCount 限制，也受 allowIdleConsumers 限制。
-  - 如果想让 replicas 自动缩减到 0 ，则需要考虑多个因素：
-    - ScaledObject 的 minReplicaCount 或 idleReplicaCount 是否为 0 。
-    - activationLagThreshold 的优先级比 lagThreshold 更高。假设 lagThreshold 为 5 ，activationLagThreshold 为 10 ，查询到的滞后量为 10 。则优先考虑 activationLagThreshold ，将 replicas 赋值为 0 。
-    - HPA 等待 stabilizationWindowSeconds 时长才能减少 replicas 。
-  - 如果指定的 topic 不存在，则 keda-operator 每次从 triggers 获取数据时，就会打印报错日志：
-    ```sh
-    error describing topics: kafka server: Request was for a topic or partition that does not exist on this broker
-    ```
-    此时 keda scaler 不会工作。
+  - 如果想让 replicas 自动缩减到 0 ，则需要同时满足多个条件：
+    - ScaledObject 的 minReplicaCount 或 idleReplicaCount 为 0 。
+    - 查询到的滞后量，不超过 activationLagThreshold 。
+    - 等待 stabilizationWindowSeconds 或 cooldownPeriod 时长之后，才能减少 replicas 。
 
 - 下面举例说明上述 ScaledObject 配置文件的运行效果：
   - 当 kafka_lag 为 12 时，因为 lagThreshold 为 5 ，所以 keda 会给 desiredReplicas 赋值为 `kafka_lag / lagThreshold = 12 / 5 = 2.4` ，向上取整为 3 。
@@ -184,11 +180,15 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
 
 - keda 的源代码中，会调用 `getLagForPartition()` 函数，获取每个分区的 lag 。有几种结果：
   - 指定的 topic 不存在，导致不能从 kafka 获取该 topic 的信息。
-    - 此时， 不会激活 keda scaler ，不会修改 replicas 。
+    - 此时 keda scaler 不会工作，不会修改 replicas 。
+    - 此时 keda-operator 会打印报错日志：
+      ```sh
+      error describing topics: kafka server: Request was for a topic or partition that does not exist on this broker
+      ```
   - 指定的 topic 存在， 但某个分区不能获取到有效的 lag 。
     - 如果配置了 `scaleToZeroOnInvalidOffset: 'false'` ，则假定该分区的 lag 为 1 。
       - 如果有 n 个分区是这样，则总 lag 增加 n 。
-      - 总 lag 大于 0 时，除以 lagThreshold 之后，会使得 replicas 赋值为 1 。
+      - 总 lag 大于 0 时，除以 lagThreshold 之后，会使得 replicas 至少为 1 。
     - 如果配置了 `scaleToZeroOnInvalidOffset: 'true'` ，则假定该分区的 lag 为 0 。
       - 此时，可能遇到一个死循环问题：
         ```yml
@@ -211,7 +211,7 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
     metadata:
       query: SELECT CEIL(COUNT(*)/6) FROM tasks WHERE state='running'
       queryValue: '5.0'             # keda 会将查询到的值，除以该值，然后赋值给 replicas
-      # activationQueryValue: '0'   # 激活 keda scaler 的阈值。如果查询到的值，小于等于该值，则将 replicas 赋值为 0
+      # activationQueryValue: '0'   # 如果查询到的值，不超过该值，则允许切换到 not-active 状态
     authenticationRef:
       name: trigger-auth-mysql
   ```
@@ -251,7 +251,7 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
       format: json              # 将 HTTP 响应按 JSON 格式解析
       valueLocation: pod.counts # 读取 JSON 中一个字段的值，作为 value
       targetValue: 5            # 将 value ，除以期望值 targetValue ，然后赋值给 replicas
-      activationTargetValue: 0  # 激活 keda scaler 的阈值。如果 value 小于等于该值，则将 replicas 赋值为 0
+      activationTargetValue: 0  # 如果 value 不超过该值，则允许切换到 not-active 状态
   ```
 
 ### prometheus
@@ -265,7 +265,7 @@ keda 提供了多种方式来触发 Pod 自动伸缩，统称为 triggers 。
       serverAddress: http://prometheus:9090
       query: count(kube_pod_info{pod='nginx'})  # 查询语句应该返回一个 vector 或 scalar 类型的值
       threshold: '5.0'                          # keda 会将查询到的值，除以该值，然后赋值给 replicas
-      # activationThreshold: '0'                # 激活 keda scaler 的阈值。如果查询到的值，小于等于该值，则将 replicas 赋值为 0
+      # activationThreshold: '0'                # 如果查询到的值，不超过该值，则允许切换到 not-active 状态
       # ignoreNullValues: 'true'                # 如果查询结果为空，则将 replicas 赋值为 0 。并且不让 keda-operator 打印报错
       # customHeaders: header1=xxx,header2=xxx
       authModes: basic

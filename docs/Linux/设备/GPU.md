@@ -238,32 +238,7 @@
 
 4. 安装 NVIDIA 公司发布的 [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html) ，它是一个常用的算法库，没有包含在 cuda-toolkit 中。
 
-5. 启动 Python 解释器：
-    ```sh
-    pip install torch
-    python
-    ```
-    然后测试使用 CUDA ：
-    ```py
-    >>> import torch
-    >>> torch.version.cuda
-    '12.6'
-    >>> torch.cuda.is_available()       # 查看 CUDA 是否可用
-    True
-    >>> torch.cuda.device_count()       # 查看 GPU 设备数，如果本机拥有多张显卡的话
-    1
-    >>> torch.cuda.current_device()     # 查看当前使用的 GPU 设备的编号
-    0
-    >>> torch.cuda.get_device_name()    # 查看当前使用的 GPU 设备的名称
-    'GeForce GTX 950M'
-    >>> torch.backends.cudnn.version()  # 查看 cuDNN 版本
-    8500
-    ```
-    - 用 pip 安装 torch 的二进制 wheel 包时，它会内置一份 CUDA ，不使用本机的 CUDA 。下载 torch 的源代码然后编译、安装，才会使用本机的 CUDA 。
-    - 可通过环境变量 `CUDA_VISIBLE_DEVICES=0,1` 指定可用的 GPU 设备编号。
-    - PyTorch、TensorFlow 可以在 CPU 或 GPU 上运行。如果本机启用了 GPU ，则优先使用 GPU 。如果设置环境变量 `CUDA_VISIBLE_DEVICES=''` ，则不允许使用 GPU 。
-
-6. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
+5. 安装以上驱动之后，就可以让 Linux 进程运行在 GPU 上。但如果想让 Docker 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [nvidia-container-toolkit](https://docs.NVIDIA.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) ，它包括一个针对 NVIDIA GPU 的容器运行时。
     - 先用 apt 或 yum 安装 nvidia-container-toolkit ，然后让本机采用 nvidia-container-runtime 作为容器运行时。例如在 `/etc/docker/daemon.json` 中加入：
       ```json
       "default-runtime": "nvidia",
@@ -276,7 +251,7 @@
       ```
       然后重启 dockerd 。
 
-7. 如果想让 k8s 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) ，它会以 k8s Daemonset 方式部署在启用 GPU 的每个主机上。
+6. 如果想让 k8s 容器运行在 GPU 上，则还需要安装 NVIDIA 公司发布的 [k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) ，它会以 k8s Daemonset 方式部署在启用 GPU 的每个主机上。
     - 执行以下命令，检查 k8s 是否识别到主机上的 GPU 资源：
       ```sh
       kubectl get node -o yaml | grep gpu
@@ -304,6 +279,38 @@
     - 缺点：
       - 每个容器只能分配 GPU 的整数个核心，不支持小数。因为 GPU 的每个核心只能被一个容器占用，不能被多个容器共享。
       - 分配 GPU 核数时，取决于 limits 配额。如果配置了 requests 配额，则必须等于 limits 配额。
+
+安装 GPU 驱动之后，建议试用一下：
+- 用 gpu-burn 进行压力测试：
+  ```sh
+  git clone https://github.com/wilicc/gpu-burn
+  cd gpu-burn
+  docker build -t gpu_burn:latest .
+  docker run -it --rm --gpus all gpu_burn:latest /app/gpu_burn -i 0 # 试用第 0 号 GPU
+  ```
+- 尝试用 Python 调用 GPU ：
+  ```sh
+  pip install torch
+  python
+  ```
+  ```py
+  >>> import torch
+  >>> torch.version.cuda
+  '12.6'
+  >>> torch.cuda.is_available()       # 查看 CUDA 是否可用
+  True
+  >>> torch.cuda.device_count()       # 查看 GPU 设备数，如果本机拥有多张显卡的话
+  1
+  >>> torch.cuda.current_device()     # 查看当前使用的 GPU 设备的编号
+  0
+  >>> torch.cuda.get_device_name()    # 查看当前使用的 GPU 设备的名称
+  'GeForce GTX 950M'
+  >>> torch.backends.cudnn.version()  # 查看 cuDNN 版本
+  8500
+  ```
+  - 用 pip 安装 torch 的二进制 wheel 包时，它会内置一份 CUDA ，不使用本机的 CUDA 。下载 torch 的源代码然后编译、安装，才会使用本机的 CUDA 。
+  - 可通过环境变量 `CUDA_VISIBLE_DEVICES=0,1` 指定可用的 GPU 设备编号。
+  - PyTorch、TensorFlow 可以在 CPU 或 GPU 上运行。如果本机启用了 GPU ，则优先使用 GPU 。如果设置环境变量 `CUDA_VISIBLE_DEVICES=''` ，则不允许使用 GPU 。
 
 ### 多进程
 

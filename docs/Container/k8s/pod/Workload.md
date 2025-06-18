@@ -397,6 +397,11 @@
     - 因此，建议让 Job 采用 `restartPolicy: Never` 。
   - k8s v1.25 给 Job 增加了 spec.podFailurePolicy 字段，决定当容器退出码在什么范围时，让 Job 重试。在什么范围时，让 Job 直接变为 Failed 状态。
 
+- 例：等待 Job 执行完毕
+  ```sh
+  kubectl wait --for=condition=complete job/test-job
+  ```
+
 - 例：暂停执行 Job
   ```sh
   kubectl patch job/test-job -p '{"spec":{"suspend":true}}'

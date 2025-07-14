@@ -341,6 +341,7 @@
   - HotSpot 从 Java 11 开始，添加了 ZGC ，作为一项实验性功能。
   - HotSpot 从 Java 13 开始，允许 ZGC 将未使用的内存释放给操作系统。
     - 该功能默认开启。
+    - 由于该功能， ZGC 占用内存比 G1GC 减少 30% 左右。
     - 用户可以将 `-Xmx` 和 `-Xms` 两个 JVM 参数，赋值相等，从而禁用该功能。
   - HotSpot 从 Java 14 开始，将 ZGC 移植到 MacOS 和 Windows 。
   - HotSpot 从 Java 15 开始， 宣布 ZGC 可用于生产环境。

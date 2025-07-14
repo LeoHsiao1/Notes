@@ -1,8 +1,8 @@
 # Grafana
 
-：一个 Web 网站，可以显示丰富、美观的数据图表。
+：一个 Web 网站，可以显示多种美观的数据图表。
 - [官方文档](https://grafana.com/docs/grafana/latest/)
-- 本身不存储数据，而是需要从 MySQL、ES、Prometheus 等数据源获取数据，再显示图表。
+- 本身不存储数据，而是从 MySQL、ES、Prometheus 等数据源获取数据，然后绘制图表。
 
 ## 部署
 
@@ -344,4 +344,4 @@ Grafana 支持多种身份认证方式，比如 OAuth、LDAP 等。
     - 通过 OAuth ，GitLab 用户可以登录 Grafana 中的同名账号。
       - 开启 allow_sign_up 时，如果 Grafana 中不存在同名账号，则会自动创建，默认为 viewer 权限。
 
-3. 访问 Grafana 网站，在它的登录页面可以看到一个新增的按钮：“Sign in with GitLab”
+3. 访问 Grafana 网站，在它的登录页面可以看到一个新增的按钮："Sign in with GitLab"

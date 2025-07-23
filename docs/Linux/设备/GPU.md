@@ -216,6 +216,16 @@
         - 执行 `lsmod | grep nouveau` ，可检查 Linux 内核是否启用了 nouveau 。
         - 如果本机启用了 nouveau ，则需要 [禁用 nouveau 并重启主机](https://docs.nvidia.com/ai-enterprise/deployment-guide-vmware/0.1.0/nouveau.html) ，然后才能启动 NVIDIA 官方驱动。
       - 2022 年，NVIDIA 公司开源了 Linux GPU 内核驱动模块。
+    - 安装之后，建议禁止 apt 自动更新显卡驱动：
+      ```sh
+      for i in $(dpkg -l | grep nvidia | awk '{print $2}'); do
+          echo "apt-mark hold $i"
+          apt-mark hold $i
+      done
+
+      # 查看已固定的软件版本
+      apt-mark showhold
+      ```
 
 3. 安装 NVIDIA 公司发布的 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 cuFFT 等加速库、CUDA 开发及调试工具、编译器、运行时。
     - 可以用 yum、apt 等命令进行安装。

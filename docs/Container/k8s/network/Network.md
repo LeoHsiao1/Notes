@@ -189,7 +189,7 @@
     # publishNotReadyAddresses: false # 是否将非 Ready 状态的 Pod 端点加入 EndPoints 。默认为 false
     selector:                     # 通过 selector 选中一些 Pod
       k8s-app: redis
-    # sessionAffinity: ClientIP   # 会话保持的方式。默认为 None ，会将数据包随机转发到各个 pod_ip
+    # sessionAffinity: ClientIP   # 会话的亲和性。默认为 None ，会将数据包随机转发到各个 pod_ip
     # sessionAffinityConfig:
     #   clientIP:                 # 为每个 client_ip 创建一个会话。在会话持续时间内，将来自同一个 client_ip 的流量总是转发到同一个 pod_ip
     #     timeoutSeconds: 10800
@@ -480,7 +480,7 @@
   - Nginx Ingress Controller
     - 原理：
       - 以 DaemonSet 方式部署 Pod ，每个 Pod 内运行一个 Nginx 服务器，默认监听 Node 的 80、443 端口。
-      - 当用户修改了 Ingress 对象时，会自动更新 Nginx 配置文件，然后执行 nginx -s reload 。
+      - 当用户修改了 Ingress 对象时，会自动更新 Nginx 配置文件，然后执行 `nginx -s reload` 。
     - 缺点：
       - nginx -s reload 加载大量配置时，可能耗时十几秒。
       - 除了路由功能，其它方面的功能少。
@@ -489,6 +489,7 @@
 - 优点：
   - 如果需要暴露大量 k8s service ，供集群外主机访问。则分别暴露每个 service 比较麻烦，不如只一个暴露 Ingress ，反向代理所有 service 。
   - 有的 Ingress 还提供动态路由等额外功能。
+
 - 例：
   ```yml
   apiVersion: networking.k8s.io/v1
@@ -522,7 +523,7 @@
   - Ingress 中可定义多个 backend 。如果 HTTP 请求的 request_host、request_path 匹配某个 backend ，则交给该 backend 处理，不交给其它 backend 处理。
     - 如果 HTTP 请求不匹配任何 backend ，则交给 defaultBackend 处理。
 
-- backend.service 必须与 Ingress 位于同一 k8s namespace 。如果想让 Ingress 反向代理其它 namespace 的 service ，则可添加一个 externalName 类型的 service 进行转发，例如：
+- backend.service 必须与 Ingress 位于同一 k8s namespace 。如果想让 Ingress 反向代理其它 namespace 的 service ，则可添加一个 externalName 类型的 service 进行转发。例如：
   ```yml
   apiVersion: v1
   kind: Service
@@ -534,7 +535,7 @@
     externalName: nginx.other_namepsace.svc.cluster.local
   ```
 
-- rules[].host 中可使用通配符 * ，匹配任意内容的单个 DNS 字段。
+- rules[].host 中可使用通配符 `*` ，匹配任意内容的单个 DNS 字段。
   - 例如 `host: *.test.com` 匹配 `www.test.com` ，不匹配 `test.com`、`1.www.test.com` 。
   - 这与 Nginx 的 service_name 中通配符 * 的用法不同。
 
@@ -553,6 +554,74 @@
       - `path: /index/` 与 `path: /index` 的匹配效果一样，后缀的 / 可忽略。
     - 如果 request_path 同时匹配多个 prefix path ，则采用最长的那个。
   - Nginx Ingress Controller 支持让 path 采用正则表达式。
+
+- 可以通过注释，添加一些 nginx 的配置参数。
+  - 参考文档： <https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/>
+  - 例：
+    ```yml
+    kind: Ingress
+    metadata:
+      annotations:
+        nginx.ingress.kubernetes.io/proxy-send-timeout: xx
+        nginx.ingress.kubernetes.io/proxy-read-timeout: xx
+        nginx.ingress.kubernetes.io/proxy-body-size: 1m
+        nginx.ingress.kubernetes.io/proxy-buffering: "off"
+        nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+
+        nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com
+          # 返回 HTTP 301 永久重定向
+
+        nginx.ingress.kubernetes.io/temporal-redirect: https://www.google.com
+          # 返回 HTTP 302 临时重定向
+
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+          # 如果 Ingress 启用了 TLS ，收到 HTTP 请求时，是否自动返回 HTTP 308 ，重定向到 HTTPS 网址
+
+        nginx.ingress.kubernetes.io/use-regex: "false"
+          # Ingress 的 path 路由，是否采用正则匹配
+
+        # 可以添加一段 server 模块的 nginx 指令
+        nginx.ingress.kubernetes.io/server-snippet: |
+          set $agentflag 0;
+          if ($http_user_agent ~* "(Mobile)" ){
+            set $agentflag 1;
+          }
+          if ( $agentflag = 1 ) {
+            return 301 https://www.google.com;
+          }
+
+        # 可以添加其它 nginx 指令
+        nginx.ingress.kubernetes.io/configuration-snippet: |
+          more_set_headers "Request-Id: $req_id";
+
+      name: test
+    spec:
+      ingressClassName: nginx
+    ```
+  - 默认情况下， nginx 收到一个 HTTP 请求时，会反向代理到一个随机的 Pod 。可以根据哈希值，反向代理到一个确定的 Pod ：
+    ```yml
+    nginx.ingress.kubernetes.io/upstream-hash-by: xx
+      # 根据 HTTP 请求某些字段的哈希值，将 HTTP 请求转发到某一个 Pod
+      # 如果多个 HTTP 请求的哈希值相同，则会被转发到同一个 Pod
+      # 例如 "$request_uri$host" 、 "${request_uri}-test"
+      # nginx Ingress 采用 ketama 一致性哈希算法，使得 Pod 数量增减时，只有少数 hash_key 会被重新映射到不同的 Pod
+    ```
+    也可以根据 cookie ，反向代理到一个确定的 Pod ：
+    ```yml
+    nginx.ingress.kubernetes.io/affinity: cookie
+      # 亲和性的方式，目前只支持 cookie
+      # 启用 affinity 时， nginx 可能将收到的多个 HTTP 请求，判断属于同一个 session ，然后转发到同一个 Pod
+    nginx.ingress.kubernetes.io/affinity-mode: balanced
+      # 亲和性的模式，默认为 balanced ，表示增加 Pod 数量时，会重新分配部分会话到新 Pod ，从而负载均衡
+      # 如果取值为 persistent ，则增加 Pod 数量时，已建立的会话依然会转发到旧 Pod ，导致旧 Pod 的负载大、新 Pod 的负载小
+    nginx.ingress.kubernetes.io/session-cookie-name: INGRESSCOOKIE
+      # 给每个客户端分配一个 cookie ，取名为 INGRESSCOOKIE ，取值为随机，表示会话 id
+      # 客户端需要自己存储该 cookie ，每次发送 HTTP 请求时在 headers 中包含该 cookie ，表示自己属于哪个会话
+    nginx.ingress.kubernetes.io/session-cookie-max-age: '3600'
+      # cookie 在多少秒之后过期
+    nginx.ingress.kubernetes.io/session-cookie-expires: '3600'
+      # （兼容旧版浏览器）将 cookie 的 max-age 累加到当前日期之上，计算出 cookie 在什么时刻过期
+    ```
 
 ## NetworkPolicy
 

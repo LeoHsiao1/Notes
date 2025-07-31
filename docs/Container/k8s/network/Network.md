@@ -606,22 +606,28 @@
       # 例如 "$request_uri$host" 、 "${request_uri}-test"
       # nginx Ingress 采用 ketama 一致性哈希算法，使得 Pod 数量增减时，只有少数 hash_key 会被重新映射到不同的 Pod
     ```
-    也可以根据 cookie ，反向代理到一个确定的 Pod ：
+  - 也可以根据 cookie ，反向代理到一个确定的 Pod ：
     ```yml
     nginx.ingress.kubernetes.io/affinity: cookie
-      # 亲和性的方式，目前只支持 cookie
-      # 启用 affinity 时， nginx 可能将收到的多个 HTTP 请求，判断属于同一个 session ，然后转发到同一个 Pod
+      # 启用 affinity 亲和性时， nginx 可能将收到的多个 HTTP 请求，判断属于同一个 session ，然后转发到同一个 Pod
+      # affinity 的方式，目前只支持 cookie
     nginx.ingress.kubernetes.io/affinity-mode: balanced
-      # 亲和性的模式，默认为 balanced ，表示增加 Pod 数量时，会重新分配部分会话到新 Pod ，从而负载均衡
+      # affinity 的模式，默认为 balanced ，表示增加 Pod 数量时，会重新分配部分会话到新 Pod ，从而负载均衡
       # 如果取值为 persistent ，则增加 Pod 数量时，已建立的会话依然会转发到旧 Pod ，导致旧 Pod 的负载大、新 Pod 的负载小
     nginx.ingress.kubernetes.io/session-cookie-name: INGRESSCOOKIE
-      # 给每个客户端分配一个 cookie ，取名为 INGRESSCOOKIE ，取值为随机，表示会话 id
-      # 客户端需要自己存储该 cookie ，每次发送 HTTP 请求时在 headers 中包含该 cookie ，表示自己属于哪个会话
-    nginx.ingress.kubernetes.io/session-cookie-max-age: '3600'
+      # cookie 的名称。客户端可能在多个网页使用多个不同的 cookie ，因此通过名称来区分不同的 cookie
+    nginx.ingress.kubernetes.io/session-cookie-max-age: '600'
       # cookie 在多少秒之后过期
-    nginx.ingress.kubernetes.io/session-cookie-expires: '3600'
+    nginx.ingress.kubernetes.io/session-cookie-expires: '600'
       # （兼容旧版浏览器）将 cookie 的 max-age 累加到当前日期之上，计算出 cookie 在什么时刻过期
     ```
+    这种 cookie 的工作原理：
+    - 客户端可以自己生成 cookie 取值，也可以采用 nginx 分配的 cookie 取值。
+      - 客户端每次发送 HTTP 请求时，都应该在 request headers 中包含 cookie ，从而声明这些 HTTP 请求属于同一个会话。
+      - 例如 `curl http://test.com/ -H "Cookie: INGRESSCOOKIE=xxx"`
+    - nginx 收到一个 HTTP 请求时，如果 request headers 中没有 cookie ，则生成一个随机的 cookie 值，放在 HTTP response headers 中，告诉客户端。
+      - 例如 `Set-Cookie: INGRESSCOOKIE=xxx; Max-Age=600; Path=/; HttpOnly`
+    - nginx 收到一个 HTTP 请求时，如果 request headers 中包含 cookie ，则根据 cookie 的哈希值，决定反向代理到哪个 Pod 。
 
 ## NetworkPolicy
 

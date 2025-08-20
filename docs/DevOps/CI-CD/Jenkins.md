@@ -1,8 +1,11 @@
 # Jenkins
 
-：一个 Web 服务器，用于 CI/CD ，采用 Java 语言开发。
+：一个 Web 服务器，采用 Java 语言开发。
 - [官方文档](https://www.jenkins.io/doc/book/)
-- 支持托管大量脚本（称为任务、Job ），供用户在浏览器中执行，实现便捷的项目构建、测试、部署等目标。
+- 用于托管大量 shell、python 等脚本。
+  - 这些脚本又称为任务（Job）。
+  - 用户可以编写任意内容的脚本，比如进行项目构建、测试、部署，从而实现 CI/CD 。
+  - 用户可以在网页中执行这些脚本，也可以通过定时任务、webhook 等方式触发脚本。
 - 可体验官方在公网部署的 [Jenkins](https://ci.jenkins.io/job/Websites/job/jenkins.io/job/master/) 。
 
 ## 相关历史
@@ -30,22 +33,23 @@
   services:
     jenkins:
       container_name: jenkins
-      image: jenkins/jenkins:2.289.3
+      image: jenkins/jenkins:2.516.1-alpine
       restart: unless-stopped
       environment:
-        JAVA_OPTS: -Duser.timezone=GMT+08 -Xms4g -Xmx4g
+        JAVA_OPTS: -Duser.timezone=GMT+08 -Xms4g -Xmx4g -Dorg.jenkinsci.plugins.gitclient.Git.timeOut=30
       ports:
-        - 8080:8080                                   # 供用户访问 Jenkins 的 Web 页面
-        # - 50000:50000                               # 供 JNLP 类型的 agent 访问 Jenkins
+        - 8080:8080     # 供用户访问 Jenkins 的 Web 页面
+        # - 50000:50000 # 供 JNLP 类型的 agent 访问 Jenkins
       volumes:
         - ./jenkins_home:/var/jenkins_home
-        - /var/run/docker.sock:/var/run/docker.sock   # 使容器内的 Jenkins 能与 dockerd 通信
+        - /var/run/docker.sock:/var/run/docker.sock # 使容器内的 Jenkins 能与 dockerd 通信
   ```
   - 需要先修改挂载目录的权限：
     ```sh
     mkdir jenkins_home
     chown -R 1000:1000 .
     ```
+  - Jenkins 存在很多命令行配置参数，参考 <https://www.jenkins.io/doc/book/managing/system-properties/>
 
 ## 原理
 

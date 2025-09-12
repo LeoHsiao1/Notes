@@ -99,11 +99,13 @@
 - [部署文档](https://longhorn.io/docs/1.8.2/deploy/install/)
   - 部署 Longhorn 之前，需要在 k8s node 上安装依赖：
     ```yml
-    apt update
-    apt install -y open-iscsi   # 安装并启动 iscsi 服务器
+    # 安装并启动 iscsi 服务器
+    apt install -y open-iscsi
     systemctl enable iscsid
     systemctl start iscsid
-    apt install -y nfs-common   # 安装 nfs v4 客户端，而 nfs 服务器是 Longhorn 内置运行
+
+    # 安装 nfs v4 客户端，而 nfs 服务器是 Longhorn 内置运行
+    apt install -y nfs-common
     ```
   - 默认会在 k8s 中创建一个 longhorn-system 命名空间，用于部署 Longhorn 的所有组件。
   - 启动之后，用户需要修改 longhorn-frontend 这个 k8s Service ，通过它访问 Longhorn UI 的 Web 页面，没有密码认证。
@@ -193,6 +195,12 @@
   - `Automatically Delete Workload Pod when The Volume Is Detached Unexpectedly`
     - ：当 volume 意外断开连接时，是否让 Longhorn 自动删除挂载该 volume 的 Pod 。
     - 这样阻止了 Pod 在没有 volume 的情况下继续运行。即使 Pod 被重新创建，也会一直等待挂载 volume 。
+  - `Pod Deletion Policy When Node is Down`
+    - ：表示当一个 k8s node 宕机时，是否强制删除该节点上的 Pod 。
+    - 如果故障 Pod 由 Deployment 管理，则一旦进入 Terminating 状态，不必删除， Deployment 就会自动创建新 Pod ，部署到其它节点。
+      - 如果故障 Pod 挂载了 ReadWriteOnce 类型的 volume ，则等 Pod 被实际删除、释放 volume 之后，新 Pod 才能挂载旧 volume ，才能顺利启动。
+      - 如果故障 Pod 挂载了 ReadWriteMany 类型的 volume ，则不必删除 Pod ，新 Pod 就能挂载旧 volume 。
+    - 如果故障 Pod 由 StatefulSet 管理，则等 Pod 进入 Terminated 状态、被实际删除之后， StatefulSet 才能创建相同编号的新 Pod 。
   - `Default Data Path`
     - ：Longhorn 在每个 k8s node 上的数据目录，默认为 `/var/lib/longhorn/` 。
   - `Create Default Disk on Labeled Nodes`
@@ -228,4 +236,3 @@
     - 宿主机磁盘的 IO 延迟通常为 1ms 左右，而 Pod 通过 iSCSI 协议读写 volume 的 IO 延迟，大概增加 0.5ms 。
       - 增加 volume 副本数量时，读操作的延迟不变，而写操作的延迟会增加。因为每次执行写操作，都需要同步到所有 volume 副本。
   - 总之，大部分软件的 Pod 对磁盘读写速度不敏感，因此使用 Longhorn 不会明显降低性能。
-

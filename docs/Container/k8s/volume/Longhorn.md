@@ -204,9 +204,9 @@
   - `Default Data Path`
     - ：Longhorn 在每个 k8s node 上的数据目录，默认为 `/var/lib/longhorn/` 。
   - `Create Default Disk on Labeled Nodes`
-    - ：不启用该参数时， Longhorn 默认会将 volume 副本存储到任何 k8s node 上，这样不方便集中管理。
-    - 如果启用该参数，并给某些 k8s node 添加标签 `node.longhorn.io/create-default-disk=true` ，则只允许存储到这些 k8s node 。
-    - 也可以给 StorageClass 添加 `parameters.nodeSelector` 配置参数，选出一些 k8s node 。
+    - ：只在包含标签 `node.longhorn.io/create-default-disk=true` 的 k8s node 上存储 volume 副本。
+    - 默认不启用该参数， Longhorn 会将 volume 副本存储到任何 k8s node 上，这样不方便集中管理。
+    - 用户也可以给 StorageClass 添加 `parameters.nodeSelector` 配置参数，选出一些 k8s node 。
   - `Storage Reserved Percentage For Default Disk`
     - ：每个 k8s node 的磁盘中，保留多少百分比的磁盘空间不分配。默认为 25% 。
     - 假设磁盘容量为 100GB ，则其中 75GB 磁盘空间可用于创建 volume ，称为 AvailableStorage 。

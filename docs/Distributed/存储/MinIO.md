@@ -10,57 +10,14 @@
   - 提供了命令行客户端 mc 。
   - 提供了 Python、Go、Java 等语言的客户端库。
 
-## 部署
+## 原理
 
-### 版本
+### Bucket
 
-- minio 以日期作为版本号。
-- 2022 年，minio 宣布弃用 Gateway 模块、旧的文件系统模式。
-  - 旧版本不能兼容升级到 `RELEASE.2022-10-29T06-21-33Z` , 或更高版本。
-  - 如果用户想升级到新版 Minio ，只能用 mc 命令从旧版 Minio 导出数据，然后导入新版 minio 。
-
-### 启动
-
-- 用 docker-compose 部署：
-  ```yml
-  version: '3'
-
-  services:
-    elasticsearch:
-      container_name: minio
-      image: minio/minio:RELEASE.2022-10-24T18-35-07Z
-      command:
-        - server
-        - /data
-      environment:
-        MINIO_CONSOLE_ADDRESS: :9001  # Web 端监听地址
-        MINIO_ACCESS_KEY: minioadmin  # 默认账号
-        MINIO_SECRET_KEY: minioadmin  # 默认密码
-
-        # MINIO_COMPRESSION_ENABLE: off
-          # 将文件存储到磁盘时，是否进行压缩
-          # 默认为 off ，因为每次读写压缩文件，会增加 CPU 负载
-        # MINIO_COMPRESSION_EXTENSIONS: ".txt, .log, .csv, .json, .tar, .xml, .bin"
-          # 启用压缩时，只压缩这些扩展名的文件
-      ports:
-        - 9000:9000   # API 端口
-        - 9001:9001   # Web 端口
-      volumes:
-        - ./data:/data
-  ```
-
-- minio server 有多种部署方案：
-  ```yml
-  # 在一个主机上，部署一个 server 进程，将数据存储到一个目录
-  minio server /mnt/data
-
-  # 在一个主机上，部署一个 server 进程，将数据存储到多个目录。这些目录，通常属于不同硬盘，从而横向扩容 iops
-  minio server /mnt/data{1...4}
-
-  # 在多个主机上，执行以下命令，分别部署一个 server 进程，组成一个分布式集群
-  minio server http://10.0.0.{1...4}:9000/mnt/data{1...4}
-  ```
-
+- 用户可以创建多个 Bucket（存储桶），每个 Bucket 中可以存储多个文件。
+  - 每个 Bucket 可设置访问权限为 private 或 public 。
+  - Bucket 支持版本控制，存储每个文件的多个版本。
+  - Bucket 支持生命周期：每个文件在创建之后，经过多久就算过期，可以被自动删除（但等到扫描时，才会实际删除）。
 
 ### 扫描器
 
@@ -127,16 +84,53 @@
     - 存储冷数据时，推荐使用纠删码，因为占用磁盘少于多副本。
     - 存储热数据，并且是海量小型文件时，不推荐使用纠删码，因为磁盘 IOPS 容易达到瓶颈。
 
-## 用法
+## 部署
 
-- Web 页面示例：
+### 服务器
 
-  ![](./MinIO.png)
+- 用 docker-compose 部署：
+  ```yml
+  version: '3'
 
-- 用户可以创建多个 Bucket（存储桶），每个 Bucket 中可以存储多个文件。
-  - 每个 Bucket 可设置访问权限为 private 或 public 。
-  - Bucket 支持版本控制，存储每个文件的多个版本。
-  - Bucket 支持生命周期：每个文件在创建之后，经过多久就算过期，可以被自动删除（但等到扫描时，才会实际删除）。
+  services:
+    elasticsearch:
+      container_name: minio
+      image: minio/minio:RELEASE.2022-10-24T18-35-07Z
+      command:
+        - server
+        - /data
+      environment:
+        MINIO_CONSOLE_ADDRESS: :9001  # Web 端监听地址
+        MINIO_ACCESS_KEY: minioadmin  # 默认账号
+        MINIO_SECRET_KEY: minioadmin  # 默认密码
+
+        # MINIO_COMPRESSION_ENABLE: off
+          # 将文件存储到磁盘时，是否进行压缩
+          # 默认为 off ，因为每次读写压缩文件，会增加 CPU 负载
+        # MINIO_COMPRESSION_EXTENSIONS: ".txt, .log, .csv, .json, .tar, .xml, .bin"
+          # 启用压缩时，只压缩这些扩展名的文件
+      ports:
+        - 9000:9000   # API 端口
+        - 9001:9001   # Web 端口
+      volumes:
+        - ./data:/data
+  ```
+
+- minio server 有多种部署方案：
+  ```yml
+  # 在一个主机上，部署一个 server 进程，将数据存储到一个目录
+  minio server /mnt/data
+
+  # 在一个主机上，部署一个 server 进程，将数据存储到多个目录。这些目录，通常属于不同硬盘，从而横向扩容 iops
+  minio server /mnt/data{1...4}
+
+  # 在多个主机上，执行以下命令，分别部署一个 server 进程，组成一个分布式集群
+  minio server http://10.0.0.{1...4}:9000/mnt/data{1...4}
+  ```
+
+- 2022 年，minio 宣布弃用 Gateway 模块、旧的文件系统模式。
+  - 旧版本不能兼容升级到 `RELEASE.2022-10-29T06-21-33Z` , 或更高版本。
+  - 如果用户想升级到新版 Minio ，只能用 mc 命令从旧版 Minio 导出数据，然后导入新版 minio 。
 
 ### 客户端
 

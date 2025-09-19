@@ -203,8 +203,9 @@
     - 如果故障 Pod 由 StatefulSet 管理，则等 Pod 进入 Terminated 状态、被实际删除之后， StatefulSet 才能创建相同编号的新 Pod 。
   - `Default Data Path`
     - ：Longhorn 在每个 k8s node 上的数据目录，默认为 `/var/lib/longhorn/` 。
+    - 不方便修改这个路径，因为部署 Longhorn Pod 时，挂载了宿主机的 `/var/lib/longhorn` 路径。
   - `Create Default Disk on Labeled Nodes`
-    - ：只在包含标签 `node.longhorn.io/create-default-disk=true` 的 k8s node 上存储 volume 副本。
+    - ：只在包含标签 `node.longhorn.io/create-default-disk: 'true'` 的 k8s node 上存储 volume 副本，也就是创建 `/var/lib/longhorn/replicas/xx` 目录。
     - 默认不启用该参数， Longhorn 会将 volume 副本存储到任何 k8s node 上，这样不方便集中管理。
     - 用户也可以给 StorageClass 添加 `parameters.nodeSelector` 配置参数，选出一些 k8s node 。
   - `Storage Reserved Percentage For Default Disk`

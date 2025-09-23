@@ -22,11 +22,13 @@
 ## 相关协议
 
 - Reverse ARP
-  - ：反向地址解析协议。局域网的一些主机可能尚未分配 IP ，可发送 RARP 请求到 RARP 服务器，根据当前主机的 MAC 地址，申请分配一个 IP 地址。
+  - ：反向地址解析协议。局域网的一些主机可能尚未分配 IP ，可发送 RARP 请求到 RARP 服务器，根据当前主机的 Mac 地址，申请分配一个 IP 地址。
   - 该协议已被 DHCP 协议取代。
 - Proxy ARP
   - ：允许一个主机代替其它主机回复 ARP response 包。常用于路由器、NAT 网关。
-  - 假设主机 A 发出 ARP request 包，询问主机 B 的 Mac 地址。主机 C 收到 ARP request 包时，回复 ARP response 包，填入主机 C 的 Mac 地址，使得主机 A 将以太网帧发送到主机 C ，然后主机 C 再转发给主机 B 。
+  - 假设主机 A 发出 ARP request 包，询问另一个子网的主机 B 的 Mac 地址。
+    - ARP 消息不能跨子网传播，因此主机 B 不会收到 ARP request 包，主机 A 不会收到 ARP response 包。
+    - 可以让网关启用 Proxy ARP 功能，在收到 ARP request 包时，回复 ARP response 包，填入主机 B 的 Mac 地址。
 - Gratuitous ARP
   - ：允许一个主机在局域网内广播，说明自己的 IP 地址、Mac 地址是什么。
   - 假设主机 B 的 IP 地址或 Mac 地址变化了，

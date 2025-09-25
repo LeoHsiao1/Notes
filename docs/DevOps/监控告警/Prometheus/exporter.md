@@ -1410,7 +1410,7 @@
   redis_db_avg_ttl_seconds                    # 各个 db 的平均 TTL
 
   # 关于 key
-  delta(redis_expired_keys_total[1m])         # 每分钟过期的 key 数量
+  delta(redis_expired_keys_total[1m])         # 每分钟被删除的 expiring key 数量
   redis_evicted_keys_total                    # 被 maxmemory-policy 驱逐的 key 数量
   redis_keys_count{db="db0", key="test*"}     # 根据 REDIS_EXPORTER_COUNT_KEYS 监控的 key 数量
   redis_key_size{db="db0", key="test*"}       # 根据 REDIS_EXPORTER_CHECK_SINGLE_KEYS 监控的 value 的 size

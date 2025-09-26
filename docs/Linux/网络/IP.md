@@ -103,6 +103,7 @@
     G     # Gateway ，将数据包发送到一个网关
     ```
   - Metric 表示这条路由的跳数，即到目标主机需要经过几次路由转发。默认为 0 。
+
 - 例：修改路由表
   ```sh
   route add default gw 10.0.1.1 eth0  # 设置缺省路由
@@ -115,8 +116,9 @@
   route add -host 10.0.1.2 reject     # 拒绝发向指定主机的流量
   ```
 
-- 用 route、ip 命令修改的路由在主机重启之后不会保存。
-  - 可以将路由保存在 `/etc/sysconfig/network-scripts/route-xx` 文件中，然后执行 `systemctl restart network` 。
+- 用 route、ip 命令都可以修改路由，修改的是本机同一个路由表。
+  - 修改结果，在主机重启之后不会保存。
+  - 可以将路由保存在 `/etc/sysconfig/network-scripts/route-xx` 文件中，然后执行 `systemctl restart network` ，才会永久保存。
 
 ## ip
 

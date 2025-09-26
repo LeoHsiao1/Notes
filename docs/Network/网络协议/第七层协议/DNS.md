@@ -53,12 +53,12 @@
     ```sh
     A         # Address ，将域名解析到一个 IPv4 地址
     AAAA      # 将域名解析到一个 IPv6 地址
-    CNAME     # Canonical Name ，将域名解析到另一个域名
-    MX        # Mail eXchange ，将域名解析到一个邮件服务器
-    NS        # Name Server ，记录管理该域名的下游 DNS 服务器的域名
+    CNAME     # Canonical Name ，将域名解析到另一个域名，然后看另一个域名解析到什么 IP
+    MX        # Mail eXchange ，将域名解析到另一个域名，并声明它用作邮件服务器
+    NS        # Name Server ，声明管理该域名的 DNS 服务器的域名
     PTR       # Pointer ，将 IP 地址反向解析到域名
     SRV       # Service ，将域名解析到 IP 地址和 TCP/UDP 端口
-    TXT       # 将该域名解析到一段字符串
+    TXT       # 将域名解析到一段字符串，该字符串可以是任意内容
     ```
   - 例：
     ```sh

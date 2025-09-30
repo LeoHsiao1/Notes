@@ -204,14 +204,14 @@
     lspci | grep NVIDIA
     ```
 
-2. 安装 NVIDIA 公司发布的 [显卡驱动](https://docs.NVIDIA.com/datacenter/tesla/tesla-installation-notes/index.html) 。
+2. 安装 NVIDIA 公司发布的 [显卡驱动](https://docs.nvidia.com/cuda/cuda-installation-guide-linux) ，或者等下一步与 cuda 一起安装。
     - 可以用 yum、apt 等命令进行安装。
       - 如果自动安装失败，则需要根据本机的操作系统版本、GPU 型号，找到某个兼容版本的显卡驱动，手动安装。
     - 安装之后，会在 Linux 中保持运行几个内核进程。可执行命令 `ps auxf | grep -i nvidia` 查看。
     - 安装之后，会附带 `nvidia-smi` 命令，它提供了 NVIDIA 的系统管理接口（System Management Interface）。
       - 可用该命令查看显卡驱动的版本、最高兼容的 CUDA 版本、GPU 上正在运行的进程列表。
     - 长期以来，NVIDIA 公司发布的显卡驱动程序都是闭源的。
-      - 2012 年，nouveau 发布 1.0 版本。它是一个针对 NVIDIA 显卡的开源驱动程序，集成到了 Linux 内核。但功能较少，性能较低。
+      - 2012 年， Linux 内核添加了 nouveau 。它是一个针对 NVIDIA 显卡的开源驱动程序，但功能较少，性能较低。
         - 每个 Linux 主机，同时只能运行一个驱动程序来控制 GPU 。
         - 执行 `lsmod | grep nouveau` ，可检查 Linux 内核是否启用了 nouveau 。
         - 如果本机启用了 nouveau ，则需要 [禁用 nouveau 并重启主机](https://docs.nvidia.com/ai-enterprise/deployment-guide-vmware/0.1.0/nouveau.html) ，然后才能启动 NVIDIA 官方驱动。
@@ -226,6 +226,7 @@
       # 查看已固定的软件版本
       apt-mark showhold
       ```
+    - 安装之后，可以执行 `/usr/bin/nvidia-uninstall` 来卸载。
 
 3. 安装 NVIDIA 公司发布的 [cuda-toolkit](https://developer.NVIDIA.com/cuda-downloads) ，它包括 cuFFT 等加速库、CUDA 开发及调试工具、编译器、运行时。
     - 可以用 yum、apt 等命令进行安装。
@@ -245,6 +246,7 @@
       ```
       - CUDA 通常安装在 `/usr/local/cuda*` 目录下。
       - 同一主机上可以安装多个版本的 CUDA 工具包，共用同一个 NVIDIA 显卡驱动。
+    - 安装之后，可以执行 `/usr/local/cuda-*/bin/cuda-uninstaller` 来卸载。
 
 4. 安装 NVIDIA 公司发布的 [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html) ，它是一个常用的算法库，没有包含在 cuda-toolkit 中。
 

@@ -130,13 +130,16 @@
 
 ### SNI
 
-- SNI（Server Name Indication，服务器名称指示）
-  - 某个 IP 地址的 Web 服务器，可能同时提供多个 HTTPS 网站供用户访问。这些网站的域名不同，DNS 解析到相同 IP ，理论上可以申请同一个 SSL 证书用于验证，但通常会创建不同的 SSL 证书，分别管理。当 client 与 server 进行 SSL 握手时，server 如何判断发送哪个 SSL 证书给 client ？
-    - 常见的解决方案：在 TLS 握手的第一步，让 client 发送的 Client Hello 消息中包含 SNI 信息，说明 client 想访问的目标域名是什么（通常等于 HTTP 报文的 Host 字段）。然后 server 找到该域名对应的 SSL 证书，发送给 client 。
-    - 如果没有 SNI 信息，server 可能会发送一个默认域名的 SSL 证书，可能与 client 请求的域名不同，导致 SSL 握手失败。
-    - 如果没有 SNI 信息，server 也可能直接拒绝 SSL 握手。
-  - 缺点：发送的 SNI 信息默认未加密，第三方可能发现 client 访问的域名地址，进行审查、拦截。
-    - 对策：可采取一些措施来提高安全性。比如加密的 SNI、加密的 Client Hello、加密的 DNS 。
+- 某个 IP 地址的 Web 服务器，可能同时提供多个 HTTPS 网站供用户访问。
+  - 这些网站的域名不同，DNS 解析到相同 IP ，理论上可以申请同一个 SSL 证书用于验证，但通常会创建不同的 SSL 证书，分别管理。
+  - 当 client 与 server 进行 SSL 握手时，server 如何判断发送哪个 SSL 证书给 client ？
+- 常见的解决方案，是用 SNI（Server Name Indication，服务器名称指示）：
+  - 在 TLS 握手的第一步，让 client 发送的 Client Hello 消息中包含 SNI 信息，说明 client 想访问的目标域名是什么（通常等于 HTTP 报文的 Host 字段）。
+  - 然后 server 找到与 SNI 目标域名匹配的 SSL 证书，发送给 client 。
+  - 如果没有 SNI 信息，server 可能会发送一个默认域名的 SSL 证书，可能与 client 请求的域名不同，导致 SSL 握手失败。
+  - 如果没有 SNI 信息，server 也可能直接拒绝 SSL 握手。
+- SNI 的缺点： SNI 默认未加密传输，第三方可能发现 client 访问的域名地址，进行审查、拦截。
+  - 对策：可采取一些措施来提高安全性。比如加密的 SNI、加密的 Client Hello、加密的 DNS 。
 
 ## SSL证书
 

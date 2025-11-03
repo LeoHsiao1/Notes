@@ -1021,9 +1021,9 @@
   kafka_topic_partition_current_offset{topic="x", partition="x"}             # partition 的当前偏移量
   kafka_topic_partition_oldest_offset{topic="x", partition="x"}              # partition 的最早偏移量
 
-  kafka_consumergroup_members{consumergroup="x"}                                    # 某个 consumergroup 的成员数
-  kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"}   # 某个 consumergroup 在某个 partition 的偏移量
-  kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}              # 某个 consumergroup 在某个 partition 的滞后量
+  kafka_consumergroup_members{consumergroup="x"}                                  # 某个 consumergroup 对所有 topic 累计的成员数
+  kafka_consumergroup_current_offset{consumergroup="x", topic="x", partition="x"} # 某个 consumergroup 在某个 partition 的偏移量
+  kafka_consumergroup_lag{consumergroup="x", topic="x", partition="x"}            # 某个 consumergroup 在某个 partition 的滞后量
   ```
 - 同类产品：
   - kafka_exporter 没有监控 Topic 占用的磁盘空间，而 kminion 提供了该监控指标。

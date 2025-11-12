@@ -74,3 +74,5 @@
   - [import Cython](混合开发/Cython.md)
   - [import pybind11](混合开发/pybind11.md)
   - [SWIG](混合开发/SWIG.md)
+- AI
+  - [AI历史](AI/AI历史.md)

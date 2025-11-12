@@ -557,6 +557,15 @@ module.exports = {
                             path: "/Python/混合开发/SWIG"
                         }
                     ]
+                },
+                {
+                    title: "AI",
+                    children: [
+                        {
+                            title: "AI历史",
+                            path: "/Python/AI/AI历史"
+                        }
+                    ]
                 }
             ],
             "/Linux/": [

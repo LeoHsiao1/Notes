@@ -76,3 +76,4 @@
   - [SWIG](混合开发/SWIG.md)
 - AI
   - [AI历史](AI/AI历史.md)
+  - [AI绘图](AI/AI绘图.md)

@@ -564,6 +564,10 @@ module.exports = {
                         {
                             title: "AI历史",
                             path: "/Python/AI/AI历史"
+                        },
+                        {
+                            title: "AI绘图",
+                            path: "/Python/AI/AI绘图"
                         }
                     ]
                 }

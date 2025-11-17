@@ -77,6 +77,7 @@
 - 在 ComfyUI 网页上，用户可以添加多个节点（node），依次执行，组成一个工作流程（workflow）。
   - 初学者难以亲自配置一个 workflow ，建议使用 ComfyUI 网页上的 workflow 模板，从而快速开始 AI 绘图。
   - 打开 workflow 模板时，会自动提示用户，应该下载哪个模型文件，保存到哪个磁盘目录。
+  - 初学者不懂如何配置 workflow 中的 prompt、steps、cfg 等参数，可以参考网络上别人分享的参数，或者询问 chatgpt 。
 
 - 节点是 ComfyUI 内置的一种功能模块。
   - 用户可以从左侧菜单栏，点击新建一个节点。也可以在画布上双击鼠标，打开节点的搜索框，然后新建节点。
@@ -139,7 +140,7 @@
       - 第 1~5 次降噪，会让图片中模糊的马赛克，逐步变成清楚的图像。
       - 第 5~15 次降噪，图片的主要内容不变，会调整图案轮廓、颜色等细节。
       - 第 15~30 次降噪，会小幅调整图片细节，使图片更符合 prompt 。
-      - 继续增加降噪次数，会小幅调整图片细节，但不会提升图片质量。
+      - 继续增加降噪次数，会随机地小幅修改图片，但不会提升图片质量。
     - 有的模型只使用 1024x1024 分辨率的图片数据集进行训练，学习如何降噪。因此原生支持生成 1024x1024 分辨率的图片，不擅长生成更高分辨率的图片，除非使用插件。
   - cfg （Classifier Free Guidance，无分类的引导）
     - ：引导每次降噪时，对 prompt 的重视程度。
@@ -156,8 +157,8 @@
     - 有的算法，会让每个 step 去除尽可能多的噪声。这样可以减少 steps 总数，但是容易丢失图像细节。
   - denoise
     - ：整个降噪过程，去除多少比例的噪声。
-    - 取值越小，生成的图片越接近初始的马赛克图片。
     - 取值范围为 `0.00 ~ 1.00` ，建议赋值为 1 。
+      - 取值越小，降噪越少，生成的图片越接近初始的图片。
 
 ## 模型
 
@@ -197,9 +198,11 @@
     - image-edit
       - ：输入一张图片、一段 prompt ，输出一张图片。
     - inpainting
-      - 根据遮罩，选中图片中一块区域，然后修改这块区域。
+      - ：根据遮罩，选中图片中一块区域，然后修改这块区域。
+    - outpainting
+      - ：扩展图片，在图片外围自动填充内容。
     - upscale
-      - 用于将图片放大。
+      - ：将图片放大。
   - 视频生成
     - text-to-video
     - image-to-video
@@ -251,7 +254,7 @@
     - 用法举例：
       1. 社区开发者们，训练了一些 ControlNet 模型。
       2. 用户加载 Stable Diffusion 模型文件。再加载 ControlNet 文件，它会合并到 Stable Diffusion 模型的 UNet 模块。
-      3. 用户给模型输入 prompt 的同时，再输入一个扩展信息，比如轮廓边缘图、人物姿态图、空间深度图，从而控制构图。
+      3. 用户给模型输入 prompt 的同时，再输入一个提示图片（可以手绘），比如轮廓边缘图、人物姿态图、空间深度图，从而控制生成的图片结构。
 
   - LCM（Latent Consistency Model，潜在一致性模型）
     - 它是一种基于 LoRA 的微调技术，用于大幅加快 Stable Diffusion 的生图速度。
@@ -301,7 +304,7 @@
   - 它的主要模块：
     - Text Encoder
       - 负责将 prompt 转换成 embedding 向量。
-    - UNet（U-shaped Convolutional Neural Network，U 形卷积神经网络）
+    - UNet （U-shaped Convolutional Neural Network，U 形卷积神经网络）
       - 负责在 Latent Space 中对图片降噪。
     - VAE
       - 负责将图片映射到 Latent Space 。
@@ -323,6 +326,9 @@
       - 于 2023 年发布。
       - 使用 1024x1024 分辨率的图片数据集进行训练。
       - Text Encoder 采用两个模型： OpenAI CLIP 和 OpenCLIP 。两个模型同时工作，从两个角度分析 prompt 。
+      - UNet 模块采用两个模型：
+        - 前面一些降噪 steps ，用 SDXL Base 生成图像的大概内容。
+        - 后面一些降噪 steps ，用 SDXL Refiner UNet 调整图像的细节。
       - prompt 通常写作一个自然语言的句子。例如：
         ```yml
         A girl in a white dress is reading a book.

@@ -70,14 +70,24 @@
   # 启动，然后访问网站 http://127.0.0.1:8188/
   python main.py
   ```
-  - 推荐再安装 [ComfyUI-Manager](https://github.com/Comfy-Org/ComfyUI-Manager) ，提供额外的功能，比如安装插件、安装自定义节点。
 
-### workflow
+- 可以再安装一些自定义节点，作为插件：
+  - [ComfyUI-Manager](https://github.com/Comfy-Org/ComfyUI-Manager)
+    - 用于自动下载模型、安装自定义节点。
+  - [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF)
+    - 可以基于 GGUF 量化技术，缩小某个模型中的 Unet 模块，然后用 ComfyUI-GGUF 节点加载该模型。不过还要加载 CLIP、VAE ，才能组成一个完整的 workflow 。
+    - 参考教程： <https://www.nextdiffusion.ai/tutorials/how-to-run-flux-dev-gguf-in-comfyui-low-vram-guide>
 
-- 在 ComfyUI 网页上，用户可以添加多个节点（node），依次执行，组成一个工作流程（workflow）。
+### 工作流
+
+- 在 ComfyUI 网页上，用户可以添加多个节点（node），依次执行，组成一个工作流（workflow）。
+
+- 如何配置 workflow ？
   - 初学者难以亲自配置一个 workflow ，建议使用 ComfyUI 网页上的 workflow 模板，从而快速开始 AI 绘图。
-  - 打开 workflow 模板时，会自动提示用户，应该下载哪个模型文件，保存到哪个磁盘目录。
-  - 初学者不懂如何配置 workflow 中的 prompt、steps 等参数，可以参考网络上别人分享的参数，或者询问 chatgpt 。
+    - 打开 workflow 模板时，会自动提示用户，应该下载哪个模型文件，保存到哪个磁盘目录。
+    - 可以参考网络上别人分享的 prompt、steps 等参数，或者询问 chatgpt 。
+  - <https://docs.comfy.org/zh-CN/tutorials/basic/text-to-image> 讲解了一些 workflow 的用法、原理。
+  - <https://registry.comfy.org/> 网站上分享了一些社区用户的 workflow ，可供下载。
 
 - 如何保存 workflow ？
   - 可以保存为 JSON 格式的文件。
@@ -85,7 +95,7 @@
     - 这样的优点是，用户将该图片拖动到 ComfyUI 网页中，就会自动导入 workflow 。
     - 这样的缺点是，会增加图片体积。
 
-- workflow 的工作流程，一般如下：
+- 例：一个文生图的 workflow
   1. 用户输入 prompt 。
   2. 由 Text Encoder ，将 prompt 转换成特征向量。
   3. 由 VAE Image Encoder ，将一张随机的马赛克图片，映射到低维的潜在空间（Latent Space）。
@@ -96,19 +106,7 @@
       - 通常只显示最后一次降噪之后的图片。
       - 用户也可以在中间某次降噪使用 VAE Image Decoder ，从而预览中间图片。
 
-### 节点
-
-- 节点是 ComfyUI 内置的一种功能模块。
-  - 用户可以从左侧菜单栏，点击新建一个节点。也可以在画布上双击鼠标，打开节点的搜索框，然后新建节点。
-    - 例如有的节点负责加载模型，有的节点负责输入 prompt 。
-  - 一个节点在网页上显示为一个图框，用户可以用鼠标拖动、连线，进行可视化配置。
-    - 节点左上角的圆点，表示最小化，只显示节点的标题栏。
-    - 节点左侧的端点表示输入端，节点右侧的端点表示输出端。
-    - 端点分为多种颜色，某种颜色的输出端，只能连线到同种颜色的输入端。
-    - 节点的一个输入端，只能连线其它节点的一个输出端。换句话说，同时只能存在一个输入源。
-    - 节点的一个输出端，可以连线其它节点的多个输入端。
-
-- 在 ComfyUI 网页上，可以使用多个快捷键：
+- ComfyUI 网页上的常用快捷键：
   ```yml
   Ctrl + C  # 复制
   Ctrl + V  # 粘贴
@@ -117,19 +115,36 @@
   Ctrl + S  # 保存 workflow
   Ctrl + O  # 打开 workflow
 
-  Space         # 按住空格键，此时网页会进入只读模式，鼠标点击只能拖拽画布
-  Ctrl          # 按住 Ctrl 之后，可以鼠标多次点击，同时选中多个节点。也可以鼠标拖选一个方框，同时选中多个节点
-                # 另外，鼠标按住 Group 标题栏的情况下，再按住 Ctrl ，就可以移动 Group 方框
+  Space     # 按住空格键，此时网页会进入只读模式，鼠标点击只能拖拽画布
+  Ctrl      # 按住 Ctrl 之后，可以鼠标多次点击，同时选中多个节点。也可以鼠标拖选一个方框，同时选中多个节点
+            # 另外，鼠标按住 Group 标题栏的情况下，再按住 Ctrl ，就可以移动 Group 方框
 
   Ctrl + Enter  # 开始执行 workflow
   Ctrl + G      # 可以选中多个节点，按快捷键来创建一个 group 。然后给该 group 命名，比如 "step 1"
-  Ctrl + B      # 可以选中一个节点，按快捷键来 bypass 绕过它，使得 workflow 执行到该节点时会跳过
-  Ctrl + M      # 可以选中一个节点，按快捷键来 mute 禁用它，使得 workflow 执行到该节点时会暂停
+  Ctrl + B      # 可以选中一个节点，按快捷键来 bypass 绕过它，使得 workflow 执行到该节点时会跳过，相当于编程中的注释
+  Ctrl + M      # 可以选中一个节点，按快捷键来 mute 禁用它，使得 workflow 执行到该节点时会暂停，相当于编程中的断点
   ```
 
-### 采样器
+### 节点
 
-- 以 KSampler 为例，介绍采样器的配置参数：
+- 节点是 ComfyUI 设计的一种功能模块，相当于编程中的一个函数。
+  - 用户可以从左侧菜单栏，点击新建一个节点。也可以在画布上双击鼠标，打开节点的搜索框，然后新建节点。
+    - 例如有的节点负责加载模型，有的节点负责输入 prompt 。
+  - 一个节点在网页上显示为一个图框，用户可以用鼠标拖动，进行可视化配置。
+    - 节点左上角的圆点，表示最小化，只显示节点的标题栏。
+  - 节点左侧的圆点表示数据输入端，节点右侧的圆点表示数据输出端。
+    - 可以在两个节点的端点之间连线，控制数据的输入、输出方向。
+    - 端点分为多种颜色，某种颜色的输出端，只能连线到同种颜色的输入端。
+    - 一个输入端，同时只能连线一个输出端。换句话说，同时只能存在一个输入源。
+    - 一个输出端，同时可以连线多个输入端。
+
+- 例如 LoadImage 是一个 ComfyUI 官方制作的节点，属于 comfy-core 。
+  - 它允许用户在 ComfyUI 网页上传一个图片文件，然后加载该图片，交给模型处理。
+  - 用户可以在该节点的右键菜单中，点击 'Open in MaskEditor' ，打开遮罩编辑器，然后在图片上绘制一些图案作为遮罩。
+    - 还可以将该节点的 Mask 输出端，连线到 MaskPreview 节点，从而预览遮罩。
+  - 用户可以在 SaveImage 节点上，右键复制图片，然后在 LoadImage 节点上，右键粘贴图片，从而快速修改图片。
+
+- 例如 KSampler 是一个常用的采样器，配置参数如下：
   - model
     - ：采用哪种模型来负责降噪。
   - seed

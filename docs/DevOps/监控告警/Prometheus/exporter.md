@@ -1361,7 +1361,7 @@
   services:
     redis_exporter:
       container_name: redis_exporter
-      image: oliver006/redis_exporter:v1.43.0
+      image: oliver006/redis_exporter:v1.80.1
       restart: unless-stopped
       environment:
         # REDIS_EXPORTER_WEB_LISTEN_ADDRESS: 0.0.0.0:9121
@@ -1397,6 +1397,9 @@
   redis_connected_clients / redis_config_maxclients # 连接数使用率
   redis_rejected_connections_total            # 拒绝的客户端连接数
   redis_connected_slaves                      # slave 连接数
+  redis_acl_access_denied_auth_total          # ACL 拒绝登录的次数
+  redis_acl_access_denied_key_total           # ACL 拒绝访问 key 的次数
+  redis_acl_access_denied_cmd_total           # ACL 拒绝执行 command 的次数
 
   # 关于命令
   delta(redis_commands_total{cmd="xx"}[1m])   # 每分钟各种 command 的次数

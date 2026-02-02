@@ -1395,7 +1395,7 @@
   # 关于客户端
   redis_connected_clients                     # 客户端连接数
   redis_connected_clients / redis_config_maxclients # 连接数使用率
-  redis_rejected_connections_total            # 拒绝的客户端连接数
+  delta(redis_rejected_connections_total[1m]) # 超过 maxclients 之后拒绝的客户端连接数
   redis_connected_slaves                      # slave 连接数
   redis_acl_access_denied_auth_total          # ACL 拒绝登录的次数
   redis_acl_access_denied_key_total           # ACL 拒绝访问 key 的次数

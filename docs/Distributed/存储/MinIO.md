@@ -39,8 +39,8 @@
 
 - 用户可执行以下命令，查看当前扫描文件的速率：
   ```yml
-  mc alias set myminio http://127.0.0.1:9000 $ACCESS_KEY $SECRET_KEY
-  mc admin scanner info myminio
+  mc alias set minio1 http://127.0.0.1:9000 $ACCESS_KEY $SECRET_KEY
+  mc admin scanner info minio1
   ```
 
 ### 纠错码
@@ -108,7 +108,7 @@
           # 将文件存储到磁盘时，是否进行压缩
           # 默认为 off ，因为每次读写压缩文件，会增加 CPU 负载
         # MINIO_COMPRESSION_EXTENSIONS: ".txt, .log, .csv, .json, .tar, .xml, .bin"
-          # 启用压缩时，只压缩这些扩展名的文件
+          # 启用压缩时，默认只压缩这些扩展名的文件
       ports:
         - 9000:9000   # API 端口
         - 9001:9001   # Web 端口
@@ -145,11 +145,12 @@
   ```sh
   mc
     alias
-          list            # 列出已添加的所有 server 地址
-          remove <name>   # 删除一个 server 地址
-          set myminio http://10.0.0.1:9000 $ACCESS_KEY $SECRET_KEY # 添加一个 server 地址
+      list            # 列出已添加的所有 server 地址
+      remove <name>   # 删除一个 server 地址
+      set minio1 http://10.0.0.1:9000 $ACCESS_KEY $SECRET_KEY # 添加一个 server 地址
 
-    ls <path>       # 显示指定 path 之下的文件列表。如果该 path 不存在，则 mc 命令的输出为空，但返回码依然为 0
+    ls <path>       # 显示指定 path 之下的文件列表
+                    # 这里的 path 可以填本机路径，比如 test/ 。也可以填 s3 存储桶的路径，比如 minio1/bucket1/
       -r            # 递归显示目录
       --versions    # 显示每个文件的所有版本。否则默认只显示最新版本
       --incomplete  # 只显示上传失败的文件
@@ -160,18 +161,24 @@
 
     du <path>       # 统计磁盘占用量
 
-    diff <dir> <dir>  # 比较两个目录下所有文件的差异
+    diff <path> <path>  # 比较两个目录下所有文件的差异
 
-    find <path>       # 查找文件
+    find <path>         # 查找文件
       -name '*'
       --maxdepth <int>
-      --newer-than 1d # 筛选 Last Modified 时间距今不超过 1d 的文件。注意 mv 操作也会刷新 Last Modified 时间
+      --newer-than 1d   # 筛选 Last Modified 时间距今不超过 1d 的文件。注意 mv 操作也会刷新 Last Modified 时间
       --older-than 1d
-      --larger 1G     # 筛选体积大于 1G 的文件
+      --larger 1G       # 筛选体积大于 1G 的文件
       --smaller 1G
 
-    cp <SRC> <DST>    # 拷贝文件，可以在本机与 server 之间拷贝。比如 cp test/ myminio/bucket1/
-      -r              # 递归拷贝目录
+    cp <SRC> <DST>      # 拷贝文件，可以在本机与 server 之间拷贝，也可以在两个 server 之间拷贝
+      -r                # 递归拷贝目录
+
+    mirror <SRC> <DST>  # 像 rsync 的风格，同步文件
+      --overwrite       # 如果 DST 与 SRC 都存在某个路径的文件，但哈希值不同，则覆盖 DST 的该文件
+      --remove          # 如果 DST 存在某个路径的文件，但 SRC 不存在该文件，则删除 DST 的该文件
+      --watch           # 监控 SRC 的文件变化，实时同步到 DST
+      --exclude '*'     # 排除 SRC 某些路径的文件，不同步
 
     mv <SRC> <DST>    # 移动文件
 
@@ -179,9 +186,9 @@
       -r              # 递归删除目录
       --force         # 强制删除。否则如果目录不为空，则不能删除
 
-    mb myminio/bucket1  # 创建 bucket
+    mb minio1/bucket1 # 创建 bucket
 
-    rb myminio/bucket1  # 删除 bucket
-      --force           # 强制删除。否则如果 bucket 不为空，则不能删除
+    rb minio1/bucket1 # 删除 bucket
+      --force         # 强制删除。否则 bucket 不为空时，不能删除
   ```
   - mc 客户端的配置文件存储在 `~/.mc/` 目录下。

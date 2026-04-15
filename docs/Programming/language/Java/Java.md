@@ -22,6 +22,20 @@
   - 在 Java 应用中调用 JMX 库，实现其接口，便可以从外部通过 HTTP 通信等方式监控、管理该 Java 应用。
 - JAAS（Java Authentication and Authorization Service ，Java 认证和授权服务）
   - ：一个进行身份认证的 Java 框架，内置在 JRE 中。
+
+- Java 的日志框架
+  - java.util.logging ：Java 的标准库，是 JDK 内置的日志框架。
+  - Log4j ：一个 Apache 开源项目，已停止开发。使用一个配置文件 log4j.properties ，支持自动轮换日志文件。
+  - LogBack ：重新实现了 Log4j ，大幅优化。
+  - Log4j2 ：对 Log4j 进行了重构优化。
+
+- Scala
+  - ：一种基于 Java 的编译型语言，于 2004 年发布。
+  - 将源代码编译成 Java 字节码，然后由 JVM 运行。
+  - 支持面向对象编程、函数式编程，属于静态类型语言。
+
+### 关于数据库
+
 - JDBC（Java Database Connectivity）
   - ：Java 程序访问数据库的 API 规范，主要用于关系型数据库。
   - JDBC 通过特定格式的 URL 连接到数据库，配置示例：
@@ -32,24 +46,17 @@
       username: root
       password: ******
     ```
+
 - Mybatis
   - ：一个 Java 的持久化框架。
   - 用户不需要直接编写 JDBC 代码，而是先在 XML 文件中编写 SQL 语句，然后通过 Java 方法调用。但可读性差。
   - Java 持久化框架还有 Hibernate、JPA 等。
-  - 开发 Java Web 项目的常用框架：
-    - SSH（Spring + Struts + Hibernate）
-    - SSM（Spring + SpringMVC + MyBatis）
-- Java 的日志框架
-  - java.util.logging ：Java 的标准库，是 JDK 内置的日志框架。
-  - Log4j ：一个 Apache 开源项目，已停止开发。使用一个配置文件 log4j.properties ，支持自动轮换日志文件。
-  - LogBack ：重新实现了 Log4j ，大幅优化。
-  - Log4j2 ：对 Log4j 进行了重构优化。
-- Scala
-  - ：一种基于 Java 的编译型语言，于 2004 年发布。
-  - 将源代码编译成 Java 字节码，然后由 JVM 运行。
-  - 支持面向对象编程、函数式编程，属于静态类型语言。
 
 ### 关于 Web
+
+- 开发 Java Web 项目的常用框架：
+  - SSH（Spring + Struts + Hibernate）
+  - SSM（Spring + SpringMVC + MyBatis）
 
 - JSP（Java Server Pages）
   - ：一种动态网页开发技术，可以在 HTML 文件中通过特定的标签嵌入 Java 代码。

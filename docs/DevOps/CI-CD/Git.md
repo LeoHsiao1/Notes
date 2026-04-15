@@ -454,11 +454,10 @@ git remote                      # 显示已配置的所有远程仓库的名字
         rename <repo> <repo>    # 重命名一个远程仓库
         prune <repo>            # 如果一个 tracked 的远程分支在远程仓库不存在，则删除本地仓库中的 remote-tracking branch ，但本地分支依然保留，只是没有 tracked 到远程分支
 
-git fetch [repo 或 URL]         # 拉取远程仓库的最新内容（包括分支、标签），但只是下载到本地仓库，不会修改本地分支
-        --all                   # 拉取所有远程仓库（默认只是 origin 仓库）
-        --tags                  # 拉取标签
+git fetch [repo 或 URL]         # 拉取远程仓库的所有 branch ，但只是下载到本地仓库，不会修改本地分支
+        --all                   # 拉取所有远程仓库（默认只拉取 origin 仓库）
+        --tags                  # 拉取所有标签
         --prune                 # 先执行 git remote prune ，然后执行 fetch
-        --prune-tags            # 如果一个 tag 在远程仓库不存在，则删除本地仓库中的同名 tag 。然后执行 fetch
         --dry-run
 
 git pull [repo 或 URL]          # 先 fetch 远程仓库，然后将所有 tracked 的远程分支合并到本地分支

@@ -241,7 +241,7 @@ pipeline 的语法与 Ruby 相似，特点如下：
     if [level] =~ "DEBUG" or [level] =~ "WARN" or [level] =~ "ERROR"
     ```
     ```sh
-    if [level] in ["DEBUG", "WARN", "ERROR"]
+    if [level] in ["DEBUG", "WARN", "ERROR"]  # 这里至少要有一个逗号，否则不会被视作 list 数据类型
     ```
     ```sh
     if "_grokparsefailure" not in [tags]    # 判断一个 tag 是否在 tags 字段中存在

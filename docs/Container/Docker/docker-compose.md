@@ -17,41 +17,48 @@
   yum install docker-compose
   ```
 
+- docker-compose 软件的版本：
+  - v1
+  - v2
+    - 于 2020 年发布。
+    - 命令改为 `docker compose` ，去掉了中间的横杆。
+    - 忽略 compose 文件顶部的 `version: 'xx'` 参数，统一视作 Compose Specification 。
+
 ## 命令
 
 ```sh
 docker-compose
-            -f <file>                 # 指定 compose 文件。默认会在当前目录及祖父目录中寻找 docker-compose.yml 文件
-            -p <name>                 # --project-name ，指定项目名，默认采用 compose 文件所在的目录名
+    -f <file>                 # 指定 compose 文件。默认会在当前目录及祖父目录中寻找 docker-compose.yml 文件
+    -p <name>                 # --project-name ，指定项目名，默认采用 compose 文件所在的目录名
 
-            # 启动
-            up [service]...           # 启动服务，这会创建并启动容器
-                -d                    # 以 daemon 方式运行。默认会在当前终端的前台运行
-                --build               # 总是构建镜像。默认如果镜像已存在，则不会构建
-                --force-recreate      # 总是重新创建容器。默认会检查 compose 文件，如果配置变化则删除容器再重新创建
-                --scale web=2 redis=1 # 设置各服务运行的实例数量
-            ps      [service]...      # 显示正在运行的服务（的容器）
-            start   [service]...      # 启动已停止的服务
-            restart [service]...      # 重启服务
+    # 启动
+    up [service]...           # 启动服务，这会创建并启动容器
+        -d                    # 以 daemon 方式运行。默认会在当前终端的前台运行
+        --build               # 总是构建镜像。默认如果镜像已存在，则不会构建
+        --force-recreate      # 总是重新创建容器。默认会检查 compose 文件，如果配置变化则删除容器再重新创建
+        --scale web=2 redis=1 # 设置各服务运行的实例数量
+    ps      [service]...      # 显示正在运行的服务（的容器）
+    start   [service]...      # 启动已停止的服务
+    restart [service]...      # 重启服务
 
-            # 停止
-            stop    [service]...      # 停止服务
-                -t <n>                # 超时时间，默认为 10 秒
-            kill    [service]...      # 杀死服务
-                -s <signal>           # 发送的信号，默认为 SIGKILL
-            down                      # 停止并删除所有容器，默认会删除用到的网络
-                -v                    # --volumes ，同时删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
-                --rmi all             # 同时删除该服务用到的所有镜像
+    # 停止
+    stop    [service]...      # 停止服务
+        -t <n>                # 超时时间，默认为 10 秒
+    kill    [service]...      # 杀死服务
+        -s <signal>           # 发送的信号，默认为 SIGKILL
+    down                      # 停止并删除所有容器，默认会删除用到的网络
+        -v                    # --volumes ，同时删除 compose 文件中定义的 volumes 以及用到的匿名 volumes
+        --rmi all             # 同时删除该服务用到的所有镜像
 
-            exec <service> <command>  # 在服务的容器中执行一条命令
-                -d                    # 在后台执行命令
-                -T                    # 不分配终端（默认会分配一个 tty）
-                --index=n             # 指定该服务的第 n 个容器实例
+    exec <service> <command>  # 在服务的容器中执行一条命令
+        -d                    # 在后台执行命令
+        -T                    # 不分配终端（默认会分配一个 tty）
+        --index=n             # 指定该服务的第 n 个容器实例
 
-            logs <service>...         # 查看服务的日志
-                -f                    # 保持显示
-                -t                    # 显示时间戳
-                --tail 10             # 显示最后几行
+    logs <service>...         # 查看服务的日志
+        -f                    # 保持显示
+        -t                    # 显示时间戳
+        --tail 10             # 显示最后几行
 ```
 - 编写好 compose 文件之后，通常执行以下命令来启动容器：
   ```sh
@@ -66,10 +73,15 @@ docker-compose
 
 - docker-compose 命令根据 compose 配置文件来创建、管理 docker 容器。
   - compose 文件保存为 yaml 格式，扩展名为 .yaml 或 .yml 。
-- compose 文件的主要版本：
+
+- compose 文件的语法版本：
+  - v1
   - v2
   - v3
-    - 移除了 cpu_shares、mem_limit 等限制容器资源使用率的配置，改为通过 deploy 参数配置，但只支持部署到 docker swarm 集群。
+    - 于 2017 年发布。
+    - 移除了 cpu_shares、mem_limit 等配置参数，改为通过 deploy 参数来限制容器的资源使用量，这是为 docker swarm 集群设计的配置参数。
+  - Compose Specification
+    - 兼容 v2 与 v3 。
 
 ### 语法
 
@@ -115,6 +127,11 @@ services:                     # 开始定义服务
     # stop_signal: SIGTERM    # 执行 docker stop 时向容器发送的信号
     # stop_grace_period: 10s  # 执行 docker stop 之后，如果容器超时未终止，则发送 SIGKILL 信号强制杀死
     # shm_size: 64m           # 设置共享内存 /dev/shm 的容量
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'         # 限制容器使用的 CPU 核数
+          memory: 1G          # 限制容器使用的内存量，超过则会 OOM 杀死容器
 
     # 关于环境变量
     environment:              # 环境变量，采用数组的格式声明

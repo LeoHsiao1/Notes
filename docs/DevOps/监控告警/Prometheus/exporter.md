@@ -498,6 +498,7 @@
 - 假设一个容器启动之后不断增加内存，则当 container_memory_usage_bytes 达到 Cgroup 限制的 memory.limit_in_bytes 时，不会触发 OOM ，而是停止增长。
   - 因为 `container_memory_usage_bytes = rss + swap + cache` ，在总和 container_memory_usage_bytes 不变的情况下，容器可以减少 container_memory_cache ，继续增加 container_memory_rss 。
   - 当 container_memory_working_set_bytes 达到 Cgroup 内存限制时，会触发 OOM ，杀死容器内进程。
+  - Pod 重启之后，占用的 Page Cache 可能不会自动释放，导致主机的可用内存越来越少，引发节点驱逐。[相关 Issue](https://github.com/kubernetes/kubernetes/issues/43916s)
 
 - 假设用户在 k8s 中部署一个 Pod ，只包含一个 nginx 容器，则 k8s-cadvisor 会记录多个维度的监控指标：
   ```sh

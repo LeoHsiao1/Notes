@@ -254,7 +254,21 @@
 
 - Anthropic 公司
   - 2021 年， OpenAI 的几名员工离职，创立了 Anthropic 公司。
+    - 他们之所以离职，是不满 OpenAI 与 Microsoft 公司的商业化合作，脱离了非营利性组织的初衷。他们更重视 AI 的安全性。
   - 2023 年 3 月，发布一款名为 Claude 的模型。这个名字是致敬信息论的奠基人 Claude Shannon 。
+  - 2023 年，得到 Google、Amazon 公司几十亿美元的投资。
+  - 2024 年，发布 Claude 3 ，在多项基准测试上超越了 GPT-4 。
+  - 2024 年，发布 MCP 网络协议。
+    - MCP（Model Context Protocol）是一套 API 标准，用于让 AI 模型调用其它软件，进行协同工作。
+    - MCP 采用 client/server 架构，以 JSON 格式的文本相互通信，而 JSON 文本可以通过 HTTP 等协议传输。
+    - 例如：
+      - Claude Desktop、VS Code 等 AI 应用，可以作为 MCP Host ，运行一个 MCP client 进程，连接到 MCP server ，询问对方提供哪些能力。
+      - AI 应用自带了一些 MCP server 插件，可以直接启动。有的负责执行 shell 命令，有的负责访问数据库并执行 SQL 。
+  - 2025 年，发布 Claude 4 以及 Claude Code 。
+    - Claude Code 是一个专用于软件开发的 AI 代理工具，可以在 IDE、命令行终端中运行，分析代码仓库的所有文件，然后自动修改文件。
+    - 此时， GitHub Copilot 只能在用户按键盘 Tab 时自动补全代码，不如 Claude Code 能自主编辑任意文件。
+      - 前者被归类为 AI Agent ，负责执行单一类型的任务，比如调用 MCP 去执行 SQL 。
+      - 后者被归类为 Agentic AI ，通常包含多个不同类型的 AI Agent ，能自动规划任务，去满足用户的需求。
 
 - 微软公司
   - 2019 年，向 OpenAI 公司投资 10 亿美元，约定将 OpenAI 公司的模型部署到 Azure 云平台。

@@ -24,7 +24,7 @@
   services:
     nacos:
       container_name: nacos
-      image: nacos/nacos-server:v2.2.2
+      image: nacos/nacos-server:v2.5.2
       restart: unless-stopped
       environment:
         JVM_XMS: 2G
@@ -59,11 +59,11 @@
   还需要在 MySQL 中为 nacos 专门创建一个数据库、账号：
   ```sql
   CREATE DATABASE nacos;
-  CREATE USER nacos @'%' IDENTIFIED BY '******';
-  GRANT ALL ON nacos.* TO nacos @'%';
+  CREATE USER nacos@'%' IDENTIFIED BY '******';
+  GRANT ALL ON nacos.* TO nacos@'%';
   FLUSH PRIVILEGES;
   ```
-  然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.2.2/distribution/conf/mysql-schema.sql)
+  然后执行数据库的初始化脚本 [nacos-mysql.sql](https://github.com/alibaba/nacos/blob/2.5.2/distribution/conf/mysql-schema.sql)
 
 - Nacos 启动慢，重启时容易导致所有微服务不可用，因此在生产环境建议部署集群模式的 Nacos ，参考 [官方示例](https://github.com/nacos-group/nacos-k8s) 。
   - Nacos 集群的各节点通过 Raft 协议实现分布式一致性。自动选出一个节点担任 leader ，其它节点担任 follower 。

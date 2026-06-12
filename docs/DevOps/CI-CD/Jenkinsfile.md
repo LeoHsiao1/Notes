@@ -86,14 +86,20 @@ Pipeline 中可以创建多种变量，比如 Groovy 变量、Shell 变量。
 - 每次执行 sh 语句时，Jenkins 会将 Groovy 解释器中的 env、params 字典中的所有变量，加入 Shell 环境变量，因此可以在 Shell 中读取。例：
   ```groovy
   script {
-      echo env.NODE_NAME          // 在 Groovy 代码中，通过 env 字典读取
-      echo "${env.NODE_NAME}"     // 在字符串中，通过 $ 取值
+      echo env.NODE_NAME
+        // 可在 Groovy 代码中，通过 env 字典读取
+      echo "${env.NODE_NAME}"
+        // 可在字符串中，通过 $ 取值
 
       sh "echo ${env.NODE_NAME}"
       sh 'echo $NODE_NAME'
 
-      A = 'Hello'                 // 创建 Groovy 变量，可以在 Groovy 脚本中读取，但不会加入 Shell 环境变量
-      env.A = 'Hello'             // 可以直接在 env 字典中添加变量，从而加入 Shell 环境变量
+      A = 'Hello'
+        // 创建 Groovy 变量，可以在 Groovy 脚本中读取，但不会加入 Shell 环境变量
+      env.A = 'Hello'
+        // 用赋值语句，可以在 env 字典中添加变量，也会加入 Shell 环境变量
+        // 如果给已声明的 environment 变量赋值，则不会改变其值
+        // env 变量的取值，会被自动转换为 string 类型
   }
   ```
   - 调试时，可以在 Shell 中执行 `env` ，打印所有 Shell 环境变量。

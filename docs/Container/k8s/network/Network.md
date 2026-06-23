@@ -144,8 +144,10 @@
 
 - Service 是一种管理逻辑网络的对象，用于对某些 Pod 进行 TCP/UDP 反向代理，常用于实现服务发现、负载均衡。
 - 原理：
-  - 每个 Service 有一个 EndPoints 子对象，用于记录需要反向代理的 Pod 的 ip:port 。
-  - 每个 k8s node 上的 kube-proxy 会自动配置 iptables 规则，将访问每个 Service 的流量，转发到 EndPoints 记录的 ip:port 。
+  - 每个 Service 有一个 EndPoints 子对象，用于记录需要反向代理的各个 Pod 的 ip:port 。
+  - 每个 k8s node 上的 kube-proxy 会自动配置 iptables 规则，将访问每个 Service 的 TCP 流量，转发到 EndPoints 中记录的随机一个 ip:port 。
+    - 随机转发 TCP 流量时，一般能实现负载均衡，让各个 Pod 建立的 TCP 连接数相同。
+    - 如果使用一个 TCP 长连接传输多个 HTTP 请求，则会被转发到同一个 Pod ，不能实现负载均衡。此时可采用 Ingress ，它提供了多种负载均衡算法。
 - Service 表示一个抽象的服务，不会实际运行一个服务器进程，不会在 Node 上监听端口，因此执行 `ss -tapn` 看不到 Service 监听的端口。
   - 特别地，NodePort 类型的 Service ，会让 kube-proxy 在所有 Node 上监听端口，因此可能与其它进程监听的端口冲突。
 - Service 分为 ClusterIP、NodePort、LoadBalancer 等多种类型。
@@ -215,8 +217,19 @@
   ```
 
 - 可以给 Service 配置 `clusterIP: None` ，不分配 clusterIP 。这样的 Service 称为 Headless 类型。
-  - 此时只能通过 DNS 名称访问 Service ，会 DNS 解析到 EndPoints 中的某个 pod_ip 。
-  - 组合使用 StatefulSet 与 Headless Service 时，会为每个 Pod 创建一个 DNS 子域名，格式为 `<pod_name>.<service_name>...` 。
+  - 此时该 Service 的名称，不会 DNS 解析到 clusterIP ，而是解析到 EndPoints 中的各个 pod_ip 。如下：
+    ```sh
+    [root@CentOS ~]# dig nacos-headless.default.svc.cluster.local
+    nacos-headless.default.svc.cluster.local. 5 IN A   10.42.0.21
+    nacos-headless.default.svc.cluster.local. 5 IN A   10.42.1.63
+    nacos-headless.default.svc.cluster.local. 5 IN A   10.42.2.79
+    ```
+  - 如果给 StatefulSet 使用 Headless Service ，则 k8s 会自动为每个 Pod 创建一个 DNS 子域名，格式为 `<pod_name>.<service_name>...` 。如下：
+    ```sh
+    nacos-0.nacos-headless.base.svc.cluster.local
+    nacos-1.nacos-headless.base.svc.cluster.local
+    nacos-2.nacos-headless.base.svc.cluster.local
+    ```
 
 #### 环境变量
 
@@ -315,7 +328,8 @@
 ### LoadBalancer
 
 ：给 Service 绑定 k8s 集群外的一个内网 IP 或公网 IP ，从而能从集群外主机访问该 Service 。
-- 创建 LoadBalancer 类型的 Service 之前，需要在 k8s 安装负载均衡器。可以购买云平台的，也可以用 MetalLB、kube-vip、kube-router 等工具自建。
+- 原生 k8s 不支持运行 LoadBalancer 。
+  - 创建 LoadBalancer 类型的 Service 之前，需要在 k8s 安装负载均衡器。可以购买云平台的，也可以用 MetalLB、kube-vip、kube-router 等工具自建。
 - 例：
   ```yml
   apiVersion: v1
@@ -344,9 +358,6 @@
 - 优点：
   - 使用 NodePort 类型的 Service 时， client 通常只会访问一个 k8s Node 的内网 IP ，不会访问其它 k8s Node ，存在单点故障的风险。而使用 LoadBalancer 类型的 Service 时， client 依然只会访问一个 loadBalancerIP ，但流量会被分散到所有 k8s Node ，实现负载均衡。因此 LoadBalancer 类型比 ClusterIP、NodePort 的功能更多，是它们的超集。
   - 允许多个 LoadBalancer Service 使用同一个 loadBalancerIP ，只要监听的端口不同。
-- 缺点：
-  - 原生 k8s 不支持运行 LoadBalancer 。
-  - client 通过 TCP 长连接发起请求时， LoadBalancer 会一直转发到 EndPoints 中同一个端点，不能实现负载均衡。
 
 ### ExternalName
 

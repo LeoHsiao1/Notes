@@ -245,8 +245,9 @@
   - 它增强了多模态能力，能处理多种类型的数据（比如文字生成、图像生成、音频生成），不必为每种数据分别训练一个模型。
   - 它对涉及安全、道德的的内容，进行了更多的对抗训练、内容审查，使得模型很少生成带偏见、有害的内容。
 
-- 2025 年， OpenAI 公司发布 GPT 的 v5 版本。
+- 2025 年， OpenAI 公司发布 GPT 的 v5 版本，以及 Codex 。
   - 它带有一个路由器，会根据用户的提问难度，自动选择 GPT-5-main、GPT-5-thinking、GPT-5-mini 等模型来回答。
+  - Codex 是一个专用于编程的 AI 代理工具，对标 Claude Code 。
 
 ### LLM
 
@@ -264,8 +265,8 @@
     - 例如：
       - Claude Desktop、VS Code 等 AI 应用，可以作为 MCP Host ，运行一个 MCP client 进程，连接到 MCP server ，询问对方提供哪些能力。
       - AI 应用自带了一些 MCP server 插件，可以直接启动。有的负责执行 shell 命令，有的负责访问数据库并执行 SQL 。
-  - 2025 年，发布 Claude 4 以及 Claude Code 。
-    - Claude Code 是一个专用于软件开发的 AI 代理工具，可以在 IDE、命令行终端中运行，分析代码仓库的所有文件，然后自动修改文件。
+  - 2025 年，发布 Claude 4 ，以及 Claude Code 。
+    - Claude Code 是一个专用于编程的 AI 代理工具，可以在 IDE、命令行终端中运行，对代码仓库的文件进行自动分析、修改。
     - 此时， GitHub Copilot 只能在用户按键盘 Tab 时自动补全代码，不如 Claude Code 能自主编辑任意文件。
       - 前者被归类为 AI Agent ，负责执行单一类型的任务，比如调用 MCP 去执行 SQL 。
       - 后者被归类为 Agentic AI ，通常包含多个不同类型的 AI Agent ，能自动规划任务，去满足用户的需求。

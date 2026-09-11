@@ -377,10 +377,10 @@
   - 上例中，执行 `ping redis.default` ，相当于执行 `ping redis.test.com` ，最终 DNS 解析到 externalName 对应的 IP 。
   - externalName 字段必须填一个可被 DNS 解析的名称，不能填 IP 。
     - 如果该值不能被 DNS 解析，则创建该 Service 时会成功，但执行 `ping redis.default` 时会报错 bad address ，表示不能 DNS 解析。
-  - externalName 可以填 k8s 集群外部的域名。也可以填 k8s 内部定义的域名，但必须为 FQDN 格式，例如：
-    ```yml
-    externalName: redis.default.svc.cluster.local
-    ```
+    - externalName 可以填 k8s 集群外部的域名。也可以填 k8s 内部定义的域名，但必须为 FQDN 格式，例如：
+      ```yml
+      externalName: redis.default.svc.cluster.local
+      ```
 
 ## EndPoints
 

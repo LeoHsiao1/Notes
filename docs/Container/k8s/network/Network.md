@@ -224,6 +224,7 @@
     nacos-headless.default.svc.cluster.local. 5 IN A   10.42.1.63
     nacos-headless.default.svc.cluster.local. 5 IN A   10.42.2.79
     ```
+  - 此时也不必配置 Service 的 port ，因为 pod_ip 允许访问所有 port 。
   - 如果给 StatefulSet 使用 Headless Service ，则 k8s 会自动为每个 Pod 创建一个 DNS 子域名，格式为 `<pod_name>.<service_name>...` 。如下：
     ```sh
     nacos-0.nacos-headless.base.svc.cluster.local

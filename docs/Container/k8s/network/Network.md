@@ -305,9 +305,9 @@
     type: ClusterIP
   ```
 
-- 客户端发送多个 HTTP 请求到一个 Service 时，会被随机转发到各个 Pod IP 。
-  - 理论上，随机转发 TCP 流量，能实现负载均衡，比如让各个 Pod 建立的 TCP 连接数相同。
-  - 实际上，如果客户端使用同一个 TCP 长连接，发送多个 HTTP 请求到 Service ，则会被转发到同一个 Pod ，不能实现负载均衡。
+- 客户端发送 HTTP 请求到 k8s Service 时，会被随机转发到各个 Pod IP 。
+  - 一般情况下，这样能实现负载均衡，比如让各个 Pod 建立的 TCP 连接数相同。
+  - 如果一个客户端，使用一个 TCP 长连接，发送多个 HTTP 请求到 Service ，则会被转发到同一个 Pod ，不能实现负载均衡。
     - 此时可采用 Ingress ，它提供了多种负载均衡算法。
     - 或者创建 Headless Service ，让 nginx 反向代理到各个 Pod IP ，由 nginx 进行负载均衡。配置示例：
       ```sh

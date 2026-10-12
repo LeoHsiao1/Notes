@@ -12,12 +12,13 @@
   pip3 install docker-compose
   ```
 
-- 用 yum 安装：
+- 或者下载二进制文件：
   ```sh
-  yum install docker-compose
+  wget https://github.com/docker/compose/releases/download/v5.6.0/docker-compose-linux-x86_64 -O /usr/bin/docker-compose
+  chmod +x /usr/bin/docker-compose
   ```
 
-- docker-compose 软件的版本：
+- docker-compose 的主要版本：
   - v1
   - v2
     - 于 2020 年发布。
